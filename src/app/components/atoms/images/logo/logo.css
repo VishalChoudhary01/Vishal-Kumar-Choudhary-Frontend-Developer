@@ -1,0 +1,65 @@
+.logo-glow-dark::before {
+  content: "";
+  position: absolute;
+  inset: -2.4px;
+  border-radius: 9999px;
+  background: conic-gradient(
+    from 0deg,
+    #00ffff,
+    #aaaaf7,
+    #29f4a6,
+    #00ffff
+  );
+  animation: rotateShine 4s linear infinite;
+  z-index: 0;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  padding: 3px;
+  pointer-events: none;
+}
+
+@keyframes rotateShine {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* LIGHT Mode */
+.logo-glow-light::before {
+  content: "";
+  position: absolute;
+  inset: -2.8px;
+  border-radius: 9999px;
+  background: conic-gradient(
+    from 0deg,
+    #222222,
+    #444444,
+    #666666,
+    #222222
+  );
+  animation: rotateShine 4s linear infinite;
+  z-index: 0;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  padding: 3px;
+  pointer-events: none;
+}
+
+@keyframes rotateShine {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

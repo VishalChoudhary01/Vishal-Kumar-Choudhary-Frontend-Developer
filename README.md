@@ -1,69 +1,36 @@
-# Portfolio Website
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-Welcome to my professional portfolio website! This platform showcases my skills, projects, and experience as a front-end developer passionate about creating visually stunning and functional web applications.
+## Getting Started
 
-## 🚀 Features
+First, run the development server:
 
-- **Modern UI**: Clean, responsive design with smooth animations
-- **Project Showcase**: Detailed case studies of my work
-- **Skills Section**: Highlighting my technical expertise
-- **Contact Information**: Easy ways to get in touch
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-## 🛠️ Technologies Used
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-- **Frontend**: 
-  - React.js
-  - Tailwind CSS
-  - Framer Motion (for animations)
-- **Deployment**: Vercel/Netlify
+You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
-## 🌟 Featured Projects
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-### 1. Amurtam - Book Consultation with Certified Experts
-**🔗 Live Demo**: [Amurtam Live](#)  
-**📂 Code**: [GitHub Repository](#)  
-**🎨 Design**: [Figma](#)  
+## Learn More
 
-A comprehensive doctor booking platform with:
-- **Frontend**: React.js, React Router, Tailwind CSS
-- **Backend**: Express.js, MongoDB
-- **Key Features**:
-  - Pixel-perfect implementation of Figma designs
-  - Fully responsive interface
-  - Smooth animations for enhanced UX
-  - Secure appointment booking system
+To learn more about Next.js, take a look at the following resources:
 
-### 2. CrypTracker - Cryptocurrency Tracker
-**🔗 Live Demo**: [CrypTracker Live](#)  
-**📂 Code**: [GitHub Repository](#)  
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-A real-time cryptocurrency tracking application featuring:
-- **Tech Stack**: React.js, Tailwind CSS, Redux Toolkit
-- **Key Features**:
-  - Real-time API data fetching
-  - Interactive price charts
-  - Portfolio tracking functionality
-  - State management with Redux Toolkit
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-### 3. E-commerce Platform
-**🔗 Live Demo**: [E-commerce Live](#)  
-**📂 Code**: [GitHub Repository](#)  
+## Deploy on Vercel
 
-A full-stack e-commerce solution with:
-- **Frontend**: React.js, Tailwind CSS
-- **Backend**: Express.js, MongoDB
-- **Payment**: Stripe integration
-- **Authentication**: Clerk
-- **Key Features**:
-  - Product catalog with filters
-  - Shopping cart functionality
-  - Secure checkout process
-  - User authentication
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-## 📌 Installation
-
-To run this project locally:
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/VishalChoudhary01/Vishal-Kumar-Choudhary-frontend-developer.git
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

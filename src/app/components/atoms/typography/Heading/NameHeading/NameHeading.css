@@ -1,0 +1,29 @@
+.radGradNoPadding {
+  background: radial-gradient(
+    circle,
+    var(--grad-primary),
+    var(--grad-secondary),
+    var(--grad-tertiary),
+    var(--grad-quaternary)
+  );
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: radialAnimation 5s ease infinite;
+}
+
+.darkRadGradNoPadding {
+  background: radial-gradient(
+    circle,
+    var(--darkgrad-primary) 0%,
+    var(--darkgrad-secondary) 40%,
+    var(--darkgrad-tertiary) 70%,
+    var(--darkgrad-quaternary) 100%
+  );
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: radialAnimation 5s ease infinite;
+}

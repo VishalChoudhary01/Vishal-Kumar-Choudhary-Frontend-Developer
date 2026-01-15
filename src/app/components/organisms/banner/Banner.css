@@ -1,0 +1,84 @@
+.darktext-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--dark-shimmer-primary) 0%,
+    var(--dark-shimmer-secondary) 40%,
+    var(--dark-shimmer-tertiary) 45%,
+    var(--dark-shimmer-quaternary) 50%,
+    var(--dark-shimmer-primary) 100%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: shimmer 8s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.text-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--shimmer-primary) 0%,
+    var(--shimmer-primary) 40%,
+    var(--shimmer-secondary) 45%,
+    var(--shimmer-tertiary) 50%,
+    var(--shimmer-quaternary) 100%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: shimmer 8s ease-in-out infinite;
+}
+
+.darkRadGrad {
+  background: radial-gradient(
+    circle,
+    var(--darkgrad-primary) 0%,
+    var(--darkgrad-secondary) 40%,
+    var(--darkgrad-tertiary) 70%,
+    var(--darkgrad-quaternary) 100%
+  );
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  padding-bottom: 18px;
+  animation: radialAnimation 5s ease infinite;
+}
+
+.radGrad {
+  background: radial-gradient(
+    circle,
+    var(--grad-primary),
+    var(--grad-secondary),
+    var(--grad-tertiary),
+    var(--grad-quaternary)
+  );
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  padding-bottom: 18px;
+  animation: radialAnimation 5s ease infinite;
+}
+
+@keyframes radialAnimation {
+  0% {
+    background-position: 100% 100%;
+  }
+  50% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 100% 100%;
+  }
+}
