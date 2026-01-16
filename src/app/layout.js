@@ -37,11 +37,11 @@ export const metadata = {
     title: "Vishal Kumar Choudhary | Frontend Developer | React & Next.js",
     description:
       "Explore modern frontend projects built with React, Next.js, Redux Toolkit, Tailwind CSS, and Framer Motion.",
-    url: "https://vishal-portfolio.com",
+    url: "https://vishal-kumar-choudhary-frontend-developer.vercel.app",
     siteName: "Vishal Kumar Choudhary Portfolio",
     images: [
       {
-        url: "https://vishal-portfolio.com/og-image.webp",
+        url: "https://vishal-kumar-choudhary-frontend-developer.vercel.app/og-image.webp",
         width: 1200,
         height: 630,
         alt: "Vishal Kumar Choudhary Frontend Developer Portfolio",
@@ -74,7 +74,7 @@ export const metadata = {
   },
 
   alternates: {
-    canonical: "https://vishal-portfolio.com",
+    canonical: "https://vishal-kumar-choudhary-frontend-developer.vercel.app",
   },
 
   icons: {
@@ -149,8 +149,8 @@ export default function RootLayout({ children }) {
       "@context": "https://schema.org",
       "@type": "Person",
       name: "Vishal Kumar Choudhary",
-      url: "https://vishal-portfolio.com",
-      image: "https://vishal-portfolio.com/profile-image.jpg",
+      url: "https://vishal-kumar-choudhary-frontend-developer.vercel.app",
+      image: "https://vishal-kumar-choudhary-frontend-developer.vercel.app/profile-image.webp",
       jobTitle: "Frontend Developer",
       description:
         "Frontend Developer specializing in React, Next.js, Redux Toolkit, and modern UI development.",
@@ -160,9 +160,11 @@ export default function RootLayout({ children }) {
       },
       sameAs: [
         "https://github.com/VishalChoudhary01",
-        "https://www.linkedin.com/in/vishal-kumar-choudhary-664921229/",
+        "https://www.linkedin.com/in/vishal-kumar-choudhary-frontend-developer/",
         "https://www.naukri.com/",
         "https://www.indeed.com/",
+        "https://wellfound.com/",
+        "https://www.glassdoor.co.in/member/profile",
       ],
       knowsAbout: [
         "React",
@@ -204,11 +206,11 @@ export default function RootLayout({ children }) {
       "@context": "https://schema.org",
       "@type": "Organization",
       name: "Vishal Kumar Choudhary Portfolio",
-      url: "https://vishal-portfolio.com",
-      logo: "https://vishal-portfolio.com/favicon/android-chrome-512x512.png",
+      url: "https://vishal-kumar-choudhary-frontend-developer.vercel.app/",
+      logo: "https://vishal-kumar-choudhary-frontend-developer.vercel.app/favicon/android-chrome-512x512.png",
       sameAs: [
         "https://github.com/VishalChoudhary01",
-        "https://www.linkedin.com/in/vishal-kumar-choudhary-664921229/",
+        "https://www.linkedin.com/in/vishal-kumar-choudhary-frontend-developer/",
       ],
     }),
   }}
@@ -226,11 +228,43 @@ export default function RootLayout({ children }) {
         `}
       >
         <a
-          href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded"
-        >
-          Skip to main content
-        </a>
+  href="#main-content"
+  className="
+    sr-only
+    focus:not-sr-only
+    fixed
+    top-4
+    left-1/2
+    -translate-x-1/2
+    z-100
+    px-5
+    py-2.5
+    rounded-xl
+    text-sm
+    font-medium
+    transition-all
+    duration-300
+    ease-out
+
+    bg-white
+    text-h1
+    shadow-lg
+    ring-1
+    ring-black/10
+
+    dark:bg-gray-900
+    dark:text-Head1dark
+    dark:ring-white/10
+
+    focus:outline-none
+    focus:ring-2
+    focus:ring-grad-primary
+    dark:focus:ring-darkgrad-primary
+  "
+>
+  Skip to main content
+</a>
+
         <ScrollIndicator />
 
         <ClientMainProvider>
