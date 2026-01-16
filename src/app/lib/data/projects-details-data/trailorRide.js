@@ -71,7 +71,7 @@ const trailorRide =  {
       },
       {
         id: 2,
-        title: "Community BentoGrid",
+        title: "Community Mosaic (Masonry) Grid",
         description: "Community section with user stories and images.",
         image: trailor_bentoGrid,
         gridPosition: "md:col-span-2 md:row-span-2",
