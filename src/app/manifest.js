@@ -1,12 +1,17 @@
 export default function manifest() {
   return {
-    name: "Vishal Kumar Choudhary Portfolio",
+    name: "Vishal Kumar Choudhary | Portfolio",
     short_name: "Vishal",
     description: "Frontend Developer Portfolio",
     start_url: "/",
+    "scope": "/",
+     "lang": "en-IN",
+      "dir": "ltr",
     display: "standalone",
+     "display_override": ["standalone"],
     background_color: "#0f172a",
     theme_color: "#0f172a",
+     "categories": ["portfolio", "technology", "education"],
     icons: [
       {
         src: "/favicon/android-chrome-192x192.png",
@@ -19,6 +24,39 @@ export default function manifest() {
         type: "image/png",
       },
     ],
+    "screenshots": [
+    {
+      "src": "/screenshots/home.webp",
+      "sizes": "1280x720",
+      "type": "image/webp",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshots/mobile.webp",
+      "sizes": "375x812",
+      "type": "image/webp",
+      "form_factor": "narrow"
+    }
+  ],
+
+     "shortcuts": [
+    {
+      "name": "Projects",
+      "url": "/project-shortcuts/projects.webp",
+    },
+    {
+      "name": "Contact",
+      "url": "/project-shortcuts/contacts.webp"
+    },
+    {
+      "name": "Education",
+      "url": "/project-shortcuts/education.webp"
+    },
+    {
+      "name": "Work Experience",
+      "url": "/project-shortcuts/workExperience.webp"
+    },
+  ]
   };
 }
 
