@@ -6,9 +6,14 @@ import ContactHeader from "./contact/ContactHeader";
 import QuickContactCard from "./contact/QuickContactCard";
 import ContactFormCard from "./contact/ContactFormCard";
 import DownloadResumeCard from "./contact/DownloadResumeCard";
+import { showToast } from "@/app/redux/featuresSlice/toastSlice";
+import { useDispatch } from "react-redux";
+
 
 export default function ContactSection() {
   const { isDarkMode } = useDarkMode();
+  const dispatch = useDispatch();
+
   
   const email = "vishal.bhumca21@gmail.com";
   const phone = "+918083561822";
@@ -55,11 +60,44 @@ export default function ContactSection() {
  
 
 
-  const handleCopyEmail = async () => {
+
+ const handleCopyEmail = async () => {
+  try {
+    // 1️⃣ Copy email
     await navigator.clipboard.writeText(email);
     setCopied(true);
-    setTimeout(() => setCopied(false), 1000);
-  };
+
+    // 2️⃣ Show toast
+    dispatch(
+      showToast({
+        text: `Email copied to clipboard`,
+        iconType: "star",
+      })
+    );
+
+    // 3️⃣ Reset copied icon
+    setTimeout(() => setCopied(false), 1500);
+
+    // 4️⃣ Delay → then open Gmail
+    setTimeout(() => {
+      window.open(
+        `https://mail.google.com/mail/?view=cm&fs=1&to=${email}`,
+        "_blank",
+        "noopener,noreferrer"
+      );
+    }, 600); // 👈 UX sweet spot
+
+  } catch (error) {
+    dispatch(
+      showToast({
+        message: "Failed to copy email",
+        iconType: "eye",
+      })
+    );
+  }
+};
+
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
