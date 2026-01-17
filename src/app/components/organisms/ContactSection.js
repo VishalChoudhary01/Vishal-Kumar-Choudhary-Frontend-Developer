@@ -85,7 +85,7 @@ export default function ContactSection() {
         "_blank",
         "noopener,noreferrer"
       );
-    }, 600); // 👈 UX sweet spot
+    }, 900); 
 
   } catch (error) {
     dispatch(

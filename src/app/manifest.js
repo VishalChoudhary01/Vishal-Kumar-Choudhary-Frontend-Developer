@@ -42,19 +42,7 @@ export default function manifest() {
      "shortcuts": [
     {
       "name": "Projects",
-      "url": "/project-shortcuts/projects.webp",
-    },
-    {
-      "name": "Contact",
-      "url": "/project-shortcuts/contacts.webp"
-    },
-    {
-      "name": "Education",
-      "url": "/project-shortcuts/education.webp"
-    },
-    {
-      "name": "Work Experience",
-      "url": "/project-shortcuts/workExperience.webp"
+      "url": "/projects.webp",
     },
   ]
   };
