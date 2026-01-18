@@ -649,8 +649,8 @@ html {
   --animate-rotate-shine-slow: rotate-shine 4s linear infinite;
   --animate-rotate-shine-slower: rotate-shine 6s linear infinite;
   --animate-rotate-shine-slowest: rotate-shine 8s linear infinite;
-   --animate-fade-in-outLight: fadeInOutLight 8s ease-in infinite;   
-   --animate-fade-in-outDark: fadeInOutDark 8s ease-in infinite;   
+   --animate-fade-in-outLight: fadeInOutLight 6s ease-in infinite;   
+   --animate-fade-in-outDark: fadeInOutDark 6s ease-in infinite;   
 
   /* downloading flow */
   --animate-downloadingFlow: downloadingFlow 2.2s cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
