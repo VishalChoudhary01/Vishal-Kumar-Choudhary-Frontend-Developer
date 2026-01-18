@@ -649,10 +649,134 @@ html {
   --animate-rotate-shine-slow: rotate-shine 4s linear infinite;
   --animate-rotate-shine-slower: rotate-shine 6s linear infinite;
   --animate-rotate-shine-slowest: rotate-shine 8s linear infinite;
+   --animate-fade-in-outLight: fadeInOutLight 8s ease-in infinite;   
+   --animate-fade-in-outDark: fadeInOutDark 8s ease-in infinite;   
 
   /* downloading flow */
   --animate-downloadingFlow: downloadingFlow 2.2s cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
 
+  /* Keyframes   */
+  /* engraved Vishal Kumar Choudhary animation */
+@keyframes fadeInOutLight {
+  0% {
+    opacity: 0;
+    text-shadow: 
+      4px 4px 8px rgba(120, 130, 130, 0),
+      -4px -4px 8px rgba(255, 255, 255, 0),
+      2px 2px 1px rgba(150, 160, 160, 0),
+      -2px -2px 1px rgba(255, 255, 255, 0),
+      0 0 20px rgba(180, 180, 180, 0);
+  }
+  15% {
+    opacity: 0.4;
+    text-shadow: 
+      4px 4px 8px rgba(120, 130, 130, 0.15),
+      -4px -4px 8px rgba(255, 255, 255, 0.15),
+      2px 2px 1px rgba(150, 160, 160, 0.3),
+      -2px -2px 1px rgba(255, 255, 255, 0.15),
+      0 0 20px rgba(180, 180, 180, 0.2);
+  }
+  30% {
+    opacity: 0.7;
+    text-shadow: 
+      4px 4px 8px rgba(120, 130, 130, 0.3),
+      -4px -4px 8px rgba(255, 255, 255, 0.3),
+      2px 2px 1px rgba(150, 160, 160, 0.5),
+      -2px -2px 1px rgba(255, 255, 255, 0.25),
+      0 0 20px rgba(180, 180, 180, 0.4);
+  }
+  50% {
+    opacity: 1;
+    text-shadow: 
+      6px 6px 12px rgba(100, 110, 110, 0.7),
+      -6px -6px 12px rgba(255, 255, 255, 1),
+      3px 3px 2px rgba(140, 150, 150, 0.9),
+      -3px -3px 2px rgba(255, 255, 255, 0.6),
+      0 0 30px rgba(160, 170, 170, 0.8),
+      /* Inner engraved effect */
+      inset 1px 1px 0 rgba(255, 255, 255, 0.3),
+      inset -1px -1px 0 rgba(100, 110, 110, 0.3);
+  }
+  70% {
+    opacity: 0.7;
+    text-shadow: 
+      4px 4px 8px rgba(120, 130, 130, 0.3),
+      -4px -4px 8px rgba(255, 255, 255, 0.3),
+      2px 2px 1px rgba(150, 160, 160, 0.5),
+      -2px -2px 1px rgba(255, 255, 255, 0.25),
+      0 0 20px rgba(180, 180, 180, 0.4);
+  }
+  85% {
+    opacity: 0.4;
+    text-shadow: 
+      4px 4px 8px rgba(120, 130, 130, 0.15),
+      -4px -4px 8px rgba(255, 255, 255, 0.15),
+      2px 2px 1px rgba(150, 160, 160, 0.3),
+      -2px -2px 1px rgba(255, 255, 255, 0.15),
+      0 0 20px rgba(180, 180, 180, 0.2);
+  }
+  100% {
+    opacity: 0;
+    text-shadow: 
+      4px 4px 8px rgba(120, 130, 130, 0),
+      -4px -4px 8px rgba(255, 255, 255, 0),
+      2px 2px 1px rgba(150, 160, 160, 0),
+      -2px -2px 1px rgba(255, 255, 255, 0),
+      0 0 20px rgba(180, 180, 180, 0);
+  }
+}
+
+
+
+
+
+@keyframes fadeInOutDark {
+  0% {
+    opacity: 0;
+    text-shadow: 
+      0 0 1px rgba(0, 0, 0, 0),
+      2px 2px 4px rgba(0, 0, 0, 0),
+      -2px -2px 4px rgba(80, 80, 80, 0),
+      1px 1px 0 rgba(0, 0, 0, 0),
+      -1px -1px 0 rgba(70, 70, 70, 0);
+  }
+  25% {
+    opacity: 0.5;
+    text-shadow: 
+      0 0 1px rgba(0, 0, 0, 0.25),
+      2px 2px 4px rgba(0, 0, 0, 0.475),
+      -2px -2px 4px rgba(80, 80, 80, 0.15),
+      1px 1px 0 rgba(0, 0, 0, 0.4),
+      -1px -1px 0 rgba(70, 70, 70, 0.1);
+  }
+  50% {
+    opacity: 1;
+    text-shadow: 
+      0 0 1px rgba(0, 0, 0, 0.5),
+      2px 2px 4px rgba(0, 0, 0, 0.95),
+      -2px -2px 4px rgba(80, 80, 80, 0.3),
+      1px 1px 0 rgba(0, 0, 0, 0.8),
+      -1px -1px 0 rgba(70, 70, 70, 0.2);
+  }
+  75% {
+    opacity: 0.5;
+    text-shadow: 
+      0 0 1px rgba(0, 0, 0, 0.25),
+      2px 2px 4px rgba(0, 0, 0, 0.475),
+      -2px -2px 4px rgba(80, 80, 80, 0.15),
+      1px 1px 0 rgba(0, 0, 0, 0.4),
+      -1px -1px 0 rgba(70, 70, 70, 0.1);
+  }
+  100% {
+    opacity: 0;
+    text-shadow: 
+      0 0 1px rgba(0, 0, 0, 0),
+      2px 2px 4px rgba(0, 0, 0, 0),
+      -2px -2px 4px rgba(80, 80, 80, 0),
+      1px 1px 0 rgba(0, 0, 0, 0),
+      -1px -1px 0 rgba(70, 70, 70, 0);
+  }
+}
 @keyframes downloadingFlow {
   0% {
     transform: translate3d(0, -160%, 0) scale(0.2);
