@@ -1,10 +1,31 @@
 export const experiences = [
   {
+  id: "tetr",
+  company: "Tetr College of Business",
+  role: "Associate Software Developer",
+  duration: "February 2026 – May 2026",
+  color: "var(--dark-work-card-4-color)",
+  tech: ["HTML", "CSS", "JavaScript", "Astro", "Motion"],
+  tabs: {
+    overview:
+      "Developed and maintained production-ready web pages using HTML, CSS, and JavaScript. Converted Figma designs into pixel-perfect interfaces while ensuring responsiveness, accessibility, and smooth user interactions.",
+
+    build:
+      "Built responsive pages from Figma designs, implemented animations using Motion, optimized and managed image assets, and enhanced UI performance across devices. Worked on production deployments and frontend improvements.",
+
+    challenges:
+      "Achieving pixel-perfect implementation from Figma designs where even 1px differences mattered. Debugged complex layout and styling issues, handled cross-browser inconsistencies, and optimized images without affecting visual quality.",
+
+    impact:
+      "Delivered high-quality production pages with accurate design implementation, improved page performance through image optimization, and maintained a consistent user experience across multiple screen sizes and browsers.",
+  },
+},
+  {
     id: "bihub",
     company: "BI Hub Solution",
     role: "Frontend Developer Intern",
     duration: "August 2025 – October 2025",
-    color: "var(--dark-work-card-4-color)",
+    color: "var(--dark-work-card-1-color)",
     tech: ["React", "Tailwind CSS", "Swagger", "Figma", "REST API"],
     tabs: {
       overview:
@@ -20,7 +41,7 @@ export const experiences = [
   // {
   //   id: "udyog",
   //   company: "Udyog Guide",
-  //   role: "Frontend Developer",
+  //   role: "Frontend Developer ",
   //   duration: "March 2025 – June 2025",
   //   color: "var(--dark-work-card-1-color)",
   //   tech: ["Next.js", "React", "Tailwind CSS", "CSS"],

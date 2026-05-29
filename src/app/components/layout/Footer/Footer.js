@@ -6,10 +6,11 @@ import Resources from "./Resources";
 import Connect from "./Connect";
 import BottomFooter from "./BottomFooter";
 import { motion } from "motion/react";
+import { RESUME_PDF_PATH } from "@/app/constants/resume";
 
 export default function Footer() {
   const handleViewResume = () => {
-    window.open("/documents/Vishal_Kumar_Resume_frontend.pdf", "_blank");
+    window.open(RESUME_PDF_PATH, "_blank");
   };
 
   return (

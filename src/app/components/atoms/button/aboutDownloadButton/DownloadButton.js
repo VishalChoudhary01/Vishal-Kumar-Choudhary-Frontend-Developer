@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { LuArrowDownToLine, LuCheck } from "react-icons/lu";
+import { RESUME_PDF_PATH, RESUME_DOWNLOAD_FILENAME } from "@/app/constants/resume";
 import './ShineButton.css';
 
 const DownloadButton = ({ isDarkMode = false }) => {
@@ -20,8 +21,8 @@ const DownloadButton = ({ isDarkMode = false }) => {
           clearInterval(interval);
 
           const link = document.createElement("a");
-          link.href = "/documents/Vishal_Kumar_Resume_frontend.pdf";
-          link.download = "Vishal_Kumar_Choudhary_Resume.pdf";
+          link.href = RESUME_PDF_PATH;
+          link.download = RESUME_DOWNLOAD_FILENAME;
           link.click();
 
           setTimeout(() => {

@@ -49,12 +49,13 @@ export default function ExperienceList({ items, activeId, onChange }) {
           >
             <button
               onClick={() => onChange(exp.id)}
-              className={`text-left px-4 py-3 space-y-0.5 transition-all duration-300 backdrop-blur-md rounded-lg  border w-[210px] md:w-full ${
+              className={`text-left px-4 py-3 space-y-0.5 transition-all duration-300 backdrop-blur-md rounded-lg min-w-[212px] md:min-h-auto  border w-[210px] md:w-full ${
                 isActive
                   ? "border-gray-300/40 dark:border-gray-800/25    md:translate-x-1.5 backdrop-blur-md bg-white dark:bg-gray-100/10 shadow-sm shadow-neutral-200/50 dark:shadow-neutral-700/60 "
                   : "border-gray-300/25 dark:border-gray-600/30  hover:border-gray-300/40 dark:hover:border-gray-700/40 bg-gray-50/90      dark:bg-gray-900/25"
               } hover:shadow-sm active:scale-[0.98] md:active:scale-100`}
             >
+
               {/* ROLE */}
               <p
                 className={`font-roboto tracking-tight text-sm md:text-base lg:text-[1.1rem] ${
