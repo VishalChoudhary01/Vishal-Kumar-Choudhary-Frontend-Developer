@@ -1,9 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300..700;1,300..700&family=Lora:ital,wght@0,400..700;1,400..700&family=Manrope:wght@200..800&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Michroma&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Outfit:wght@100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
 
 @import "tailwindcss";
+
 html {
   scroll-behavior: smooth;
 }
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
@@ -651,7 +653,6 @@ html {
   --animate-rotate-shine-slowest: rotate-shine 8s linear infinite;
    --animate-fade-in-outLight: fadeInOutLight 6s ease-in infinite;   
    --animate-fade-in-outDark: fadeInOutDark 6s ease-in infinite;   
-
   /* downloading flow */
   --animate-downloadingFlow: downloadingFlow 2.2s cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
 

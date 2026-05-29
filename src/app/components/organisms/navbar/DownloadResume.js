@@ -1,11 +1,12 @@
 import { LuArrowDownToLine } from "react-icons/lu";
 import { Button } from "../../atoms/button/index";
+import { RESUME_PDF_PATH, RESUME_DOWNLOAD_FILENAME } from "@/app/constants/resume";
 
 const DownloadResume = ({ isScrolled, isDarkMode }) => {
   const handleDownloadResume = () => {
     const link = document.createElement("a");
-    link.href = "/documents/Vishal_Kumar_Resume_frontend.pdf";
-    link.download = "Vishal_Kumar_frontend_resume.pdf";
+    link.href = RESUME_PDF_PATH;
+    link.download = RESUME_DOWNLOAD_FILENAME;
     link.click();
   };
 

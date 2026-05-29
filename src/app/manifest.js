@@ -42,7 +42,7 @@ export default function manifest() {
      "shortcuts": [
     {
       "name": "Projects",
-      "url": "/projects.webp",
+      "url": "/projects",
     },
   ]
   };

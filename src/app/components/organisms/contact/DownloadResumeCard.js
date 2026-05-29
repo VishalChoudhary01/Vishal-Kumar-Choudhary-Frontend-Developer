@@ -3,6 +3,7 @@ import { FiDownload } from "react-icons/fi";
 import GlowingCard from "@/app/components/molecules/cards/GlowingCard";
 import ShineHoverCurtainButton from "@/app/components/atoms/button/ShineHoverCurtainButton/ShineHoverCurtainButton";
 import { HiDownload } from "react-icons/hi";
+import { RESUME_PDF_PATH } from "@/app/constants/resume";
 
 export default function DownloadResumeCard({ isDarkMode }) {
   const getGlowingCardColor = () => {
@@ -28,7 +29,7 @@ export default function DownloadResumeCard({ isDarkMode }) {
           <ShineHoverCurtainButton
             size="md"
             leftIcon={<HiDownload  className="text-xl animate-downloadingFlow"/>}
-            onClick={() => window.open("./documents/Vishal_Kumar_Resume_frontend.pdf", "_blank")}
+            onClick={() => window.open(RESUME_PDF_PATH, "_blank")}
             className="w-full max-w-[300px] md:max-w-[400px]   px-2 py-2 text-[0.92rem] md:px-6 md:py-3 md:text-base font-roboto"
             fullWidth={false}
           >
