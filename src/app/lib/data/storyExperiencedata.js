@@ -5,7 +5,7 @@ export const experiences = [
   role: "Associate Software Developer",
   duration: "February 2026 – May 2026",
   color: "var(--dark-work-card-4-color)",
-  tech: ["HTML", "CSS", "JavaScript", "Astro", "Motion"],
+  tech: ["HTML", "CSS", "JavaScript", "Astro", "Motion","SwiperJS"],
   tabs: {
     overview:
       "Developed and maintained production-ready web pages using HTML, CSS, and JavaScript. Converted Figma designs into pixel-perfect interfaces while ensuring responsiveness, accessibility, and smooth user interactions.",
