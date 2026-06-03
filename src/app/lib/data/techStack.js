@@ -15,7 +15,6 @@ export const skillsData = {
     "Redux Toolkit",
     "Next.js",
     "Motion",
-    "TypeScript",
     "Zustand",
     "React Query",
     "React Router",
