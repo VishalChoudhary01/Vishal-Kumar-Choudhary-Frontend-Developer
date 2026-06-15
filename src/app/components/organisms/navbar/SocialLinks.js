@@ -4,6 +4,7 @@ import { socialMenu } from "@/app/lib/data/menu";
 
 const SocialLinks = ({ isScrolled, isDarkMode }) => (
   <div className="flex">
+    
     {socialMenu.map(({ url, icon: Icon, brandColor, name }) => (
       <Link
         key={name}
