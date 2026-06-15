@@ -1,4 +1,4 @@
-export const experiences = [
+export const  experiences = [
   {
   id: "tetr",
   company: "Tetr College of Business",
@@ -78,7 +78,7 @@ export const experiences = [
     id: "cloudily",
     company: "Cloudily Scripts Pvt Ltd",
     role: "Web Developer",
-    duration: "May 2024 – June 2024",
+    duration: "June 2024 – June 2024",
     color: "var(--dark-work-card-3-color)",
     tech: ["Vue.js", "JavaScript", "Tailwind CSS"],
     tabs: {
