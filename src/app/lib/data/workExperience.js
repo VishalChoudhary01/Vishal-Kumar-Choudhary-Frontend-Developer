@@ -24,7 +24,7 @@ const timelineData = [
     tech: ["Next.js", "CSS", "Tailwind CSS", "Figma"],
   },
   {
-    date: "May 2024 - June 2024",
+    date: "June 2024 - June 2024",
     company: "Cloudily Scripts Pvt Ltd",
     role: "Web Developer",
     description: "Developed UI using Vue.js, CSS, and Tailwind CSS, creating streamlined modern designs that enhanced user engagement by 20%. Built a capital gain/loss calculator for Zero Coupon Bond and Real Estate.",

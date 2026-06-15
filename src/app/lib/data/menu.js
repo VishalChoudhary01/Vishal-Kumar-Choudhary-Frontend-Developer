@@ -20,7 +20,7 @@ export const menu = [
 export const socialMenu = [
     {
     name: 'LinkedIn',
-    url: 'https://www.linkedin.com/in/vishal-kumar-choudhary-664921229/',
+    url: 'https://www.linkedin.com/in/vishal-kumar-choudhary-frontend-developer/',
     target: '_blank',
     icon: FaLinkedinIn,
     brandColor:'group-hover:text-[#0293ce]',
