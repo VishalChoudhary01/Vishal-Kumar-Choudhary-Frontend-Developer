@@ -1,26 +1,448 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+html{
+   scroll-behavior: smooth;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+    color-scheme: light dark;
+  /* ---------------------------------------------------------
+     SURFACES
+  --------------------------------------------------------- */
+
+  --background: #f7f4ee;
+  --foreground: #1c1b19;
+
+  --surface-1: #fbf9f5;
+  --surface-2: #f1ece4;
+  --surface-3: #e8e1d7;
+  --surface-elevated: #fffcf7;
+  --surface-inset: #ece7de;
+
+  --surface-overlay: rgb(28 27 25 / 55%);
+
+  /* ---------------------------------------------------------
+     TEXT
+  --------------------------------------------------------- */
+
+  --text-primary: #111413;
+  --text-secondary: #625e57;
+  --text-tertiary: #817d75;
+  --text-muted: #938d83;
+  --text-disabled: #bdb7ae;
+  --text-inverse: #f1f0eb;
+
+  /* ---------------------------------------------------------
+     BORDERS
+  --------------------------------------------------------- */
+
+  --border-subtle: #eeeae3;
+  --border: #ded8cf;
+  --border-strong: #d3ccc1;
+
+  /* ---------------------------------------------------------
+     BRAND — DEEP PETROL
+  --------------------------------------------------------- */
+
+  --brand: #176b68;
+  --brand-hover: #0f5b58;
+  --brand-pressed: #124f4d;
+
+  --brand-soft: #dceceb;
+  --brand-muted: #c4dfdd;
+
+  --brand-contrast: #ffffff;
+
+  /* ---------------------------------------------------------
+     SUCCESS
+  --------------------------------------------------------- */
+
+  --success: #177452;
+  --success-hover: #125c41;
+  --success-soft: #eaf7f1;
+  --success-contrast: #ffffff;
+
+  /* ---------------------------------------------------------
+     WARNING
+  --------------------------------------------------------- */
+
+  --warning: #8a6115;
+  --warning-hover: #6f4e10;
+  --warning-soft: #fbf3e1;
+  --warning-contrast: #ffffff;
+
+  /* ---------------------------------------------------------
+     ERROR
+  --------------------------------------------------------- */
+
+  --error: #a33e38;
+  --error-hover: #87332e;
+  --error-soft: #fbecea;
+  --error-contrast: #ffffff;
+
+  /* ---------------------------------------------------------
+     INFO
+  --------------------------------------------------------- */
+
+  --info: #35627f;
+  --info-hover: #2b5068;
+  --info-soft: #ebf3fa;
+  --info-contrast: #ffffff;
+
+  /* ---------------------------------------------------------
+     FOCUS
+  --------------------------------------------------------- */
+
+  --focus-ring: var(--brand);
+
+  /* ---------------------------------------------------------
+     SHAPE
+  --------------------------------------------------------- */
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+
+  /* ---------------------------------------------------------
+     LIGHT SHADOWS
+  --------------------------------------------------------- */
+
+  --shadow-sm: 0 1px 2px rgb(28 27 25 / 4%);
+  --shadow-md: 0 8px 24px rgb(28 27 25 / 8%);
+  --shadow-lg: 0 16px 48px rgb(28 27 25 / 12%);
+
+  /* ---------------------------------------------------------
+     TYPOGRAPHY
+  --------------------------------------------------------- */
+ --font-display:  var(--font-newsreader);
+  --font-body: var(--font-manrope);
+  --font-mono: var(--font-azeret-mono);
+
+  /* ---------------------------------------------------------
+     THEME TRANSITION
+  --------------------------------------------------------- */
+
+  --theme-transition-duration: 520ms;
+  --theme-transition-easing: cubic-bezier(0.22, 1, 0.36, 1);
+  --theme-reveal-radius: 0%;
+  --theme-origin-x: 50%;
+  --theme-origin-y: 50%;
+
+  /* ---------------------------------------------------------
+     EDUCATION — ACADEMIC ARCHIVE SURFACES
+  --------------------------------------------------------- */
+
+  --education-card-bg: #fdfaf2;
+  --education-card-border: #e5dccb;
+  --education-card-hairline: #eee7da;
+  --education-shadow:
+    0 1px 2px rgb(64 55 40 / 5%),
+    0 24px 48px -28px rgb(64 55 40 / 30%);
+/* ---------------------------------------------------------
+     FOOTER ATMOSPHERE — LIGHT
+  --------------------------------------------------------- */
+
+  /* --atmosphere-light-a: #F3EDE3;
+--atmosphere-light-b: #EDE4D7;
+--atmosphere-light-c: #E7E3EC;
+--atmosphere-light-d: #E1E9E2; */
+
+--atmosphere-light-a: #F1E9DC;
+--atmosphere-light-b: #E8DED0;
+--atmosphere-light-c: #E5E0EC;
+--atmosphere-light-d: #DDE8DF;
+    
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html.dark {
+    /* ---------------------------------------------------------
+     SURFACES
+  --------------------------------------------------------- */
+
+  --background: #0b0f0c;
+  --foreground: #f3f4ee;
+
+  --surface-1: #111311;
+  --surface-2: #171917;
+  --surface-3: #1d1f1d;
+  --surface-elevated: #222421;
+  --surface-inset: #0e100f;
+
+  --surface-overlay: rgb(0 0 0 / 62%);
+
+  /* ---------------------------------------------------------
+     TEXT
+  --------------------------------------------------------- */
+
+  --text-primary: #f3f4ee;
+  --text-secondary: #b9bdb3;
+  --text-tertiary: #8e9489;
+  --text-muted: #747b70;
+  --text-disabled: #4a5148;
+  --text-inverse: #171a16;
+
+  /* ---------------------------------------------------------
+     BORDERS
+  --------------------------------------------------------- */
+
+  --border-subtle: #202320;
+  --border: #2b2e2b;
+  --border-strong: #383b38;
+
+  /* ---------------------------------------------------------
+     BRAND — DEEP PETROL
+  --------------------------------------------------------- */
+
+  --brand: #69bdb9;
+  --brand-hover: #7ad0cc;
+  --brand-pressed: #55b3af;
+
+  --brand-soft: #173332;
+  --brand-muted: #2a4b49;
+
+  --brand-contrast: #0b0f0c;
+
+  /* ---------------------------------------------------------
+     SUCCESS
+  --------------------------------------------------------- */
+
+  --success: #63d3a5;
+  --success-hover: #83dfb8;
+  --success-soft: #142820;
+  --success-contrast: #08130f;
+
+  /* ---------------------------------------------------------
+     WARNING
+  --------------------------------------------------------- */
+
+  --warning: #ebc66a;
+  --warning-hover: #f2d487;
+  --warning-soft: #2a2112;
+  --warning-contrast: #171107;
+
+  /* ---------------------------------------------------------
+     ERROR
+  --------------------------------------------------------- */
+
+  --error: #f08a83;
+  --error-hover: #f5a39d;
+  --error-soft: #2d1817;
+  --error-contrast: #190908;
+
+  /* ---------------------------------------------------------
+     INFO
+  --------------------------------------------------------- */
+
+  --info: #81bee0;
+  --info-hover: #9dcae4;
+  --info-soft: #17242d;
+  --info-contrast: #071117;
+
+  /* ---------------------------------------------------------
+     FOCUS
+  --------------------------------------------------------- */
+
+  --focus-ring: var(--brand);
+
+  /* ---------------------------------------------------------
+     DARK SHADOWS
+  --------------------------------------------------------- */
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 20%);
+  --shadow-md: 0 8px 24px rgb(0 0 0 / 28%);
+  --shadow-lg: 0 16px 48px rgb(0 0 0 / 38%);
+
+  /* ---------------------------------------------------------
+     EDUCATION — ACADEMIC ARCHIVE SURFACES
+  --------------------------------------------------------- */
+
+  --education-card-bg: #161a15;
+  --education-card-border: #33382f;
+  --education-card-hairline: #262b24;
+  --education-shadow:
+    0 1px 2px rgb(0 0 0 / 22%),
+    0 28px 60px -30px rgb(0 0 0 / 65%);
+
+
+     /* ---------------------------------------------------------
+     FOOTER ATMOSPHERE — DARK
+     --------------------------------------------------------- */
+
+   /* --atmosphere-dark-a: #111513;
+    --atmosphere-dark-b: #121923;
+    --atmosphere-dark-c: #181A15;
+    --atmosphere-dark-d: #1B161C;  */
+    --atmosphere-dark-a: #101412;
+    --atmosphere-dark-b: #111A25;
+    --atmosphere-dark-c: #191B15;
+    --atmosphere-dark-d: #1D171E;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    min-height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+    background: var(--background);
+    color: var(--foreground);
+    font-family:
+        var(--font-body),
+        Arial, 
+        Helvetica,
+        sans-serif;
 }
+
+
+@theme inline {
+  /* ---------------------------------------------------------
+     STABLE PRIMITIVE PALETTE — DEEP PETROL
+     ---------------------------------------------------------
+     These values do NOT change between themes.
+     Use petrol-* when a specific shade is intentionally needed.
+  --------------------------------------------------------- */
+
+  --color-petrol-50: #edf8f7;
+  --color-petrol-100: #dceceb;
+  --color-petrol-200: #c4dfdd;
+  --color-petrol-300: #9fcac7;
+  --color-petrol-400: #69bdb9;
+  --color-petrol-500: #3f9e9a;
+  --color-petrol-600: #176b68;
+  --color-petrol-700: #0f5b58;
+  --color-petrol-800: #124f4d;
+  --color-petrol-900: #173332;
+  --color-petrol-950: #102523;
+
+  /* ---------------------------------------------------------
+     STABLE PRIMITIVE PALETTE — WARM STONE
+  --------------------------------------------------------- */
+
+  --color-stone-50: #fbf9f5;
+  --color-stone-100: #f7f4ee;
+  --color-stone-200: #f1ece4;
+  --color-stone-300: #e8e1d7;
+  --color-stone-400: #ded8cf;
+  --color-stone-500: #d3ccc1;
+  --color-stone-600: #b6afa5;
+  --color-stone-700: #938d83;
+  --color-stone-800: #817d75;
+  --color-stone-900: #625e57;
+  --color-stone-950: #1c1b19;
+
+  /* ---------------------------------------------------------
+     SEMANTIC SURFACES
+  --------------------------------------------------------- */
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-inset: var(--surface-inset);
+  --color-surface-overlay: var(--surface-overlay);
+
+  /* ---------------------------------------------------------
+     SEMANTIC TEXT
+  --------------------------------------------------------- */
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-muted: var(--text-muted);
+  --color-text-disabled: var(--text-disabled);
+  --color-text-inverse: var(--text-inverse);
+
+  /* ---------------------------------------------------------
+     SEMANTIC BORDERS
+  --------------------------------------------------------- */
+
+  --color-border-subtle: var(--border-subtle);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  /* ---------------------------------------------------------
+     SEMANTIC BRAND
+     ---------------------------------------------------------
+     Use:
+       bg-brand
+       text-brand
+       border-brand
+       bg-brand-soft
+       text-brand-contrast
+       ring-brand
+
+     Do NOT use dark:bg-darkbrand.
+     The .dark class changes the underlying value.
+  --------------------------------------------------------- */
+
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-pressed: var(--brand-pressed);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-muted: var(--brand-muted);
+  --color-brand-contrast: var(--brand-contrast);
+
+  /* ---------------------------------------------------------
+     SEMANTIC STATUS
+  --------------------------------------------------------- */
+
+  --color-success: var(--success);
+  --color-success-hover: var(--success-hover);
+  --color-success-soft: var(--success-soft);
+  --color-success-contrast: var(--success-contrast);
+
+  --color-warning: var(--warning);
+  --color-warning-hover: var(--warning-hover);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-contrast: var(--warning-contrast);
+
+  --color-error: var(--error);
+  --color-error-hover: var(--error-hover);
+  --color-error-soft: var(--error-soft);
+  --color-error-contrast: var(--error-contrast);
+
+  --color-info: var(--info);
+  --color-info-hover: var(--info-hover);
+  --color-info-soft: var(--info-soft);
+  --color-info-contrast: var(--info-contrast);
+
+  /* ---------------------------------------------------------
+     FOCUS
+  --------------------------------------------------------- */
+
+  --color-focus-ring: var(--focus-ring);
+
+
+  /*! FONTS */
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+  --font-logo: var(--font-logo);
+
+
+    /* ---------------------------------------------------------
+     FOOTER ATMOSPHERE
+  --------------------------------------------------------- */
+
+  --color-atmosphere-light-a: var(--atmosphere-light-a);
+  --color-atmosphere-light-b: var(--atmosphere-light-b);
+  --color-atmosphere-light-c: var(--atmosphere-light-c);
+  --color-atmosphere-light-d: var(--atmosphere-light-d);
+
+  --color-atmosphere-dark-a: var(--atmosphere-dark-a);
+  --color-atmosphere-dark-b: var(--atmosphere-dark-b);
+  --color-atmosphere-dark-c: var(--atmosphere-dark-c);
+  --color-atmosphere-dark-d: var(--atmosphere-dark-d);
+}
+
