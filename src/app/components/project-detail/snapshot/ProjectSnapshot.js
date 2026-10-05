@@ -48,18 +48,92 @@ export default function ProjectSnapshot({ project }) {
     const show = reduced || isInView;
 
     return (
-        <section ref={sectionRef} id="project-snapshot" aria-labelledby="project-snapshot-title" className="relative bg-background">
+        <section
+            ref={sectionRef}
+            id="project-snapshot"
+            aria-labelledby="project-snapshot-title"
+            className="
+                relative
+                isolate
+                bg-background
+            "
+        >
             <Container>
-                <div className="grid gap-10 px-5 py-28 sm:px-8 sm:py-36 md:px-10 md:gap-14 lg:grid-cols-[180px_1fr] lg:gap-16 lg:px-12 lg:py-44">
+                <div
+                    className="
+                        grid
+                        gap-10
+                        px-5
+                        py-28
+
+                        sm:px-8
+                        sm:py-36
+
+                        md:gap-14
+                        md:px-10
+
+                        lg:grid-cols-[180px_1fr]
+                        lg:gap-16
+                        lg:px-12
+                        lg:py-44
+                    "
+                >
                     <div>
-                        <SectionHeading heading="SNAPSHOT" align="left" />
+                        <SectionHeading
+                            heading="SNAPSHOT"
+                            align="left"
+                        />
                     </div>
 
                     <div>
-                        <SectionHeading supporting="The work, reduced to what matters." supportingId="project-snapshot-title" align="left" />
+                        <SectionHeading
+                            supporting="The work, reduced to what matters."
+                            supportingId="project-snapshot-title"
+                            align="left"
+                        />
 
-                        <motion.div initial={reduced ? false : { opacity: 0, y: 24 }} animate={show ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }} transition={reduced ? { duration: 0 } : { duration: 0.8, delay: 0.18, ease: EASE_EDITORIAL }} className="mt-12 sm:mt-14 md:mt-16">
-                            <ProjectSnapshotList rows={rows} visible={show} reduced={reduced} />
+                        <motion.div
+                            initial={
+                                reduced
+                                    ? false
+                                    : {
+                                        opacity: 0,
+                                        y: 24,
+                                    }
+                            }
+                            animate={
+                                show
+                                    ? {
+                                        opacity: 1,
+                                        y: 0,
+                                    }
+                                    : {
+                                        opacity: 0,
+                                        y: 24,
+                                    }
+                            }
+                            transition={
+                                reduced
+                                    ? {
+                                        duration: 0,
+                                    }
+                                    : {
+                                        duration: 0.8,
+                                        delay: 0.18,
+                                        ease: EASE_EDITORIAL,
+                                    }
+                            }
+                            className="
+                                mt-12
+                                sm:mt-14
+                                md:mt-16
+                            "
+                        >
+                            <ProjectSnapshotList
+                                rows={rows}
+                                visible={show}
+                                reduced={reduced}
+                            />
                         </motion.div>
                     </div>
                 </div>

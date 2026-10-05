@@ -350,18 +350,17 @@ export default function Navbar({ context = "site" }) {
           ----------------------------------------------------------------- */}
 
           <div className="flex h-full items-center justify-end gap-1.5 lg:justify-self-end lg:gap-0">
-            {/* SOCIAL LINKS — portfolio context only */}
+            {/* SOCIAL LINKS — always visible in project context (incl. mobile, no
+                hamburger); portfolio landing keeps desktop-only */}
 
-            {!isProjectContext && (
-              <div className="hidden items-center lg:flex">
-                {socialLinks.map((link) => (
-                  <SocialIcon
-                    key={link.href}
-                    link={link}
-                  />
-                ))}
-              </div>
-            )}
+            <div className={cn("items-center", isProjectContext ? "flex" : "hidden lg:flex")}>
+              {socialLinks.map((link) => (
+                <SocialIcon
+                  key={link.href}
+                  link={link}
+                />
+              ))}
+            </div>
 
             {/* DIVIDER — portfolio context only */}
 

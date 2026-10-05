@@ -1,18 +1,3 @@
-/* ------------------------------------------------------------------
-   PROJECT DETAIL HERO — full-bleed, layered, cinematic opening.
-   Deterministic layers (spec §7):
-     LAYER 0   base background (inherited bg-background)
-     LAYER 1/2 atmosphere + grid (ProjectHeroBackground)
-     LAYER 5   readability gradient (inside background)
-     LAYER 10  content (eyebrow · h1 · description · meta)
-     LAYER 20  actions
-     LAYER 3/4 product visual
-     LAYER 30  scroll cue
-   The fixed header stays above everything; the hero accounts for
-   its real height with intentional top spacing, not giant padding.
-   Desktop is asymmetric (content ≈ 42% / visual ≈ 58%); tablet and
-   mobile recompose into a single column, content first.
------------------------------------------------------------------- */
 "use client";
 
 import { useRef } from "react";
@@ -20,45 +5,117 @@ import { useScroll, useTransform } from "motion/react";
 
 import useReducedMotion from "@/app/hooks/useReducedMotion";
 
+import ProjectHeroVisual from "./ProjectHeroVisual";
 import ProjectHeroBackground from "./ProjectHeroBackground";
 import ProjectHeroContent from "./ProjectHeroContent";
-import ProjectHeroVisual from "./ProjectHeroVisual";
 import ProjectHeroScrollCue from "./ProjectHeroScrollCue";
 
-export default function ProjectDetailHero({ project }) {
+export default function ProjectDetailHero({ project }) { 
     const reduced = useReducedMotion();
     const sectionRef = useRef(null);
 
-    /* Subtle depth: product y 0 → -24, background y 0 → -8 (spec §28). */
     const { scrollYProgress } = useScroll({
         target: sectionRef,
         offset: ["start start", "end start"],
     });
 
-    const visualY = useTransform(scrollYProgress, [0, 1], [0, -24]);
-    const backgroundY = useTransform(scrollYProgress, [0, 1], [0, -8]);
+    /*
+     * Background-only parallax.
+     *
+     * Typography never participates in the parallax transform.
+     */
+    const visualY = useTransform(
+        scrollYProgress,
+        [0, 1],
+        [0, reduced ? 0 : -18]
+    );
 
     return (
         <section
             ref={sectionRef}
             aria-labelledby="project-hero-title"
-            className="relative min-h-[100svh] overflow-clip bg-background"
+            className="
+                relative
+                min-h-[100svh]
+                overflow-clip
+                bg-background
+            "
         >
-            {/* LAYERS 0–2 + 5 — background, atmosphere, grid, readability */}
-            <ProjectHeroBackground parallaxStyle={reduced ? undefined : { y: backgroundY }} reduced={reduced} />
+            {/* =========================================================
+                LAYER 1 — FULL-BLEED PRODUCT VISUAL
+            ========================================================= */}
 
-            {/* LAYERS 10–30 — content, visual, cue */}
-            <div className="relative z-10 flex min-h-[100svh] flex-col">
-                <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center px-5 pb-10 pt-24 sm:px-8 sm:pt-28 md:px-10 lg:px-12 lg:pb-14 lg:pt-32">
-                    <div className="grid min-w-0 items-center gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,6.5fr)] lg:gap-10 xl:gap-14">
-                        <ProjectHeroContent project={project} />
+            <ProjectHeroVisual
+                project={project}
+                reduced={reduced}
+                parallaxStyle={
+                    reduced
+                        ? undefined
+                        : {
+                            y: visualY,
+                        }
+                }
+            />
 
-                        <ProjectHeroVisual
-                            project={project}
-                            reduced={reduced}
-                            parallaxStyle={reduced ? undefined : { y: visualY }}
-                        />
-                    </div>
+            {/* =========================================================
+                LAYERS 2–4 — ATMOSPHERE
+            ========================================================= */}
+
+            <ProjectHeroBackground reduced={reduced} />
+
+            {/* =========================================================
+                LAYERS 5–6 — CONTENT
+            ========================================================= */}
+
+            <div
+                className="
+                    relative
+                    z-10
+                    flex
+                    min-h-[100svh]
+                    flex-col
+                "
+            >
+                <div
+                    className="
+                        flex
+                        w-full
+                        flex-1
+                        flex-col
+
+                        /*
+                         * MOBILE
+                         *
+                         * Give the content a deliberate vertical zone
+                         * instead of pushing everything to the bottom.
+                         */
+                        justify-end
+                        px-5
+                        pt-28
+                        pb-24
+
+                        /*
+                         * TABLET — existing behavior
+                         */
+                        sm:justify-center
+                        sm:px-8
+                        sm:pt-28
+                        sm:pb-16
+
+                        md:px-10
+
+                        /*
+                         * DESKTOP — LOCKED
+                         */
+                        lg:justify-center
+                        lg:px-0
+                        lg:pr-[44vw]
+                        lg:pl-[7vw]
+                        lg:pt-28
+                        lg:pb-0
+                    "
+                >
+                    <ProjectHeroContent project={project} />
                 </div>
 
                 <ProjectHeroScrollCue reduced={reduced} />

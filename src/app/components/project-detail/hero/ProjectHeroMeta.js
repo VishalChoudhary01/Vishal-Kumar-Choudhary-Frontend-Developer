@@ -12,7 +12,7 @@ export default function ProjectHeroMeta({ project }) {
     }
 
     return (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[0.68rem] uppercase tracking-[0.18em] text-text-muted">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[0.72rem] uppercase tracking-[0.18em] text-text-secondary dark:text-text-tertiary sm:text-[0.8rem]">
             {items.map((item, index) => (
                 <span key={item} className="flex items-center gap-3">
                     {index > 0 && (

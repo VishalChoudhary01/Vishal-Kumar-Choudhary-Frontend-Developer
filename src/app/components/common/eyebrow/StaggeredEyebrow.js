@@ -1,7 +1,13 @@
 "use client";
 
-import { motion, useInView, useReducedMotion, } from "motion/react";
+import {
+    motion,
+    useInView,
+    useReducedMotion,
+} from "motion/react";
+
 import { useEffect, useRef, useState } from "react";
+
 import { usePageLoader } from "@/app/providers/PageLoaderProvider";
 import { cn } from "@/app/lib/utils";
 
@@ -41,12 +47,11 @@ export default function StaggeredEyebrow({
     const [revealCompleted, setRevealCompleted] = useState(false);
 
     /*
-     * Start the viewport animation only when:
-     *
-     * 1. Page loader has completed
-     * 2. Eyebrow is inside viewport
-     * 3. Motion is allowed
+     * ---------------------------------------------------------------
+     * START VIEW ANIMATION
+     * ---------------------------------------------------------------
      */
+
     useEffect(() => {
         if (
             heroReady &&
@@ -62,6 +67,12 @@ export default function StaggeredEyebrow({
         shouldReduceMotion,
         revealStarted,
     ]);
+
+    /*
+     * ---------------------------------------------------------------
+     * ANIMATION PHASE
+     * ---------------------------------------------------------------
+     */
 
     const getPhase = () => {
         if (shouldReduceMotion) {
@@ -85,7 +96,44 @@ export default function StaggeredEyebrow({
         <span
             ref={containerRef}
             aria-label={label}
-            className={`inline-flex items-center cursor-pointer text-brand text-xl ${className}`}
+            className={cn(
+                `
+                    inline-flex
+                    items-center
+                    cursor-pointer
+
+                    /*
+                     * ---------------------------------------------------
+                     * EYEBROW TYPE SCALE
+                     * ---------------------------------------------------
+                     *
+                     * Mobile:
+                     * ~13px
+                     *
+                     * Tablet:
+                     * ~13.75px
+                     *
+                     * Desktop:
+                     * ~15px
+                     *
+                     * This sits between the original text-xl size
+                     * and the overly reduced 0.72rem version.
+                     */
+                    text-[0.82rem]
+                    leading-[1]
+
+                    sm:text-[0.86rem]
+
+                    lg:text-[0.95rem]
+
+                    font-medium
+                    uppercase
+                    tracking-[0.16em]
+
+                    text-brand
+                `,
+                className
+            )}
             onMouseEnter={() => {
                 if (!shouldReduceMotion) {
                     setIsHovered(true);
@@ -114,22 +162,11 @@ export default function StaggeredEyebrow({
                         index === label.length - 1;
 
                     /*
-                     * ==========================================================
+                     * =====================================================
                      * ORIGINAL LETTER
-                     * ==========================================================
-                     *
-                     * REST
-                     * y = 0
-                     *
-                     * VIEW
-                     * 0 → -125% → 0
-                     *
-                     * HOVER
-                     * 0 → -125%
-                     *
-                     * LEAVE
-                     * -125% → 0
+                     * =====================================================
                      */
+
                     const originalAnimation =
                         phase === "reveal"
                             ? {
@@ -148,22 +185,11 @@ export default function StaggeredEyebrow({
                                 };
 
                     /*
-                     * ==========================================================
+                     * =====================================================
                      * INCOMING LETTER
-                     * ==========================================================
-                     *
-                     * REST
-                     * y = 125%
-                     *
-                     * VIEW
-                     * 125% → 0 → 125%
-                     *
-                     * HOVER
-                     * 125% → 0
-                     *
-                     * LEAVE
-                     * 0 → 125%
+                     * =====================================================
                      */
+
                     const incomingAnimation =
                         phase === "reveal"
                             ? {
@@ -181,6 +207,12 @@ export default function StaggeredEyebrow({
                                     y: "125%",
                                 };
 
+                    /*
+                     * =====================================================
+                     * TRANSITION
+                     * =====================================================
+                     */
+
                     const transition =
                         phase === "reveal"
                             ? {
@@ -196,23 +228,47 @@ export default function StaggeredEyebrow({
                             };
 
                     return (
-                        <span key={`${letter}-${index}`} className={cn("relative inline-grid h-[18px] place-items-center overflow-hidden tracking-widest font-bold leading-[18px]", isSpace ? "w-[0.28em]" : "min-w-[0.15em]")}>
+                        <span
+                            key={`${letter}-${index}`}
+                            className={cn(
+                                `
+                                    relative
+                                    inline-grid
+
+                                    /*
+                                     * Slightly taller than the previous
+                                     * 12px so the larger eyebrow doesn't
+                                     * clip during the letter animation.
+                                     */
+                                    h-[14px]
+
+                                    place-items-center
+                                    overflow-hidden
+
+                                    leading-[14px]
+                                    font-medium
+                                `,
+                                isSpace
+                                    ? "w-[0.28em]"
+                                    : "min-w-[0.12em]"
+                            )}
+                        >
                             {/* =================================================
                                 ORIGINAL
                             ================================================== */}
+
                             <motion.span
-                                className=" col-start-1 row-start-1 whitespace-pre "
+                                className="
+                                    col-start-1
+                                    row-start-1
+                                    whitespace-pre
+                                "
                                 initial={{
                                     y: "0%",
                                 }}
                                 animate={originalAnimation}
                                 transition={transition}
                                 onAnimationComplete={() => {
-                                    /*
-                                     * Only mark the entire viewport
-                                     * animation complete after the
-                                     * last letter finishes.
-                                     */
                                     if (
                                         phase === "reveal" &&
                                         isLastLetter
@@ -227,7 +283,19 @@ export default function StaggeredEyebrow({
                             {/* =================================================
                                 INCOMING
                             ================================================== */}
-                            <motion.span className=" col-start-1 row-start-1 whitespace-pre " initial={{ y: "125%", }} animate={incomingAnimation} transition={transition} >
+
+                            <motion.span
+                                className="
+                                    col-start-1
+                                    row-start-1
+                                    whitespace-pre
+                                "
+                                initial={{
+                                    y: "125%",
+                                }}
+                                animate={incomingAnimation}
+                                transition={transition}
+                            >
                                 {letter}
                             </motion.span>
                         </span>

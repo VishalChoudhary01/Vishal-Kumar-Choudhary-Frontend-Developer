@@ -22,14 +22,14 @@ export default function ProjectHeroActions({ project, prefersReduced }) {
             initial={prefersReduced ? false : { opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: prefersReduced ? 0 : 0.6, delay: prefersReduced ? 0 : DELAY.actions, ease: EASE }}
-            className="mt-8 flex flex-wrap items-center gap-6 sm:mt-9"
+            className="mt-6 flex flex-wrap items-center gap-6 sm:mt-8 sm:gap-7"
         >
             {hasLive && (
                 <a
                     href={project.links.live}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group/live inline-flex items-center gap-2 font-mono text-[0.72rem] font-medium uppercase tracking-[0.16em] text-brand transition-colors duration-200 hover:text-brand-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
+                    className="group/live inline-flex items-center gap-2 font-mono text-[0.75rem] font-medium uppercase tracking-[0.16em] text-brand transition-colors duration-200 hover:text-brand-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand sm:text-[0.8rem]"
                 >
                     <span>View Live</span>
 
@@ -44,7 +44,7 @@ export default function ProjectHeroActions({ project, prefersReduced }) {
                     href={project.links.github}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group/gh inline-flex items-center gap-2 font-mono text-[0.72rem] uppercase tracking-[0.16em] text-text-secondary transition-colors duration-200 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
+                    className="group/gh inline-flex items-center gap-2 font-mono text-[0.75rem] uppercase tracking-[0.16em] text-text-secondary transition-colors duration-200 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand sm:text-[0.8rem]"
                 >
                     <span>View Source</span>
 
