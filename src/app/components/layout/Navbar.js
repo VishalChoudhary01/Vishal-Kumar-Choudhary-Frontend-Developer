@@ -350,23 +350,27 @@ export default function Navbar({ context = "site" }) {
           ----------------------------------------------------------------- */}
 
           <div className="flex h-full items-center justify-end gap-1.5 lg:justify-self-end lg:gap-0">
-            {/* SOCIAL LINKS */}
+            {/* SOCIAL LINKS — portfolio context only */}
 
-            <div className="hidden items-center lg:flex">
-              {socialLinks.map((link) => (
-                <SocialIcon
-                  key={link.href}
-                  link={link}
-                />
-              ))}
-            </div>
+            {!isProjectContext && (
+              <div className="hidden items-center lg:flex">
+                {socialLinks.map((link) => (
+                  <SocialIcon
+                    key={link.href}
+                    link={link}
+                  />
+                ))}
+              </div>
+            )}
 
-            {/* DIVIDER */}
+            {/* DIVIDER — portfolio context only */}
 
-            <div
-              aria-hidden="true"
-              className="hidden h-[22px] w-px bg-border/15 lg:ml-2 lg:mr-[17px] lg:block"
-            />
+            {!isProjectContext && (
+              <div
+                aria-hidden="true"
+                className="hidden h-[22px] w-px bg-border/15 lg:ml-2 lg:mr-[17px] lg:block"
+              />
+            )}
 
             {/* THEME */}
 
@@ -374,37 +378,41 @@ export default function Navbar({ context = "site" }) {
               <ThemeToggle />
             </div>
 
-            {/* RESUME */}
+            {/* RESUME — portfolio context only */}
 
-            <div className="hidden items-center lg:ml-5 lg:flex">
-              <Link
-                target="_blank"
-                href="/resume/vishal_kumar_choudhary_frontend_developer.pdf"
-              >
-                <ActionButton
-                  type="button"
-                  label="Resume"
-                  icon={ArrowUpRightIcon}
-                  iconMotion={{
-                    direction: "up-right",
-                    distance: 4,
-                    rotate: 8,
-                    scale: 1,
-                    duration: 0.25,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                />
-              </Link>
-            </div>
+            {!isProjectContext && (
+              <div className="hidden items-center lg:ml-5 lg:flex">
+                <Link
+                  target="_blank"
+                  href="/resume/vishal_kumar_choudhary_frontend_developer.pdf"
+                >
+                  <ActionButton
+                    type="button"
+                    label="Resume"
+                    icon={ArrowUpRightIcon}
+                    iconMotion={{
+                      direction: "up-right",
+                      distance: 4,
+                      rotate: 8,
+                      scale: 1,
+                      duration: 0.25,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                  />
+                </Link>
+              </div>
+            )}
 
             {/* MOBILE MENU BUTTON */}
 
-            <HamburgerSVGButton
-              ref={menuButtonRef}
-              isOpen={mobileMenuOpen}
-              onClick={toggleMobileMenu}
-              className="lg:hidden"
-            />
+            {!isProjectContext && (
+              <HamburgerSVGButton
+                ref={menuButtonRef}
+                isOpen={mobileMenuOpen}
+                onClick={toggleMobileMenu}
+                className="lg:hidden"
+              />
+            )}
           </div>
         </nav>
       </header>
