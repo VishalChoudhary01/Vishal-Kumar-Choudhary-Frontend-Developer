@@ -104,7 +104,7 @@ export default function ExperienceDetailTabs({
                         tabIndex={active ? 0 : -1}
                         onClick={() => onSelect(tab)}
                         className={cn(
-                            "min-h-11 shrink-0 flex-1 whitespace-nowrap px-1 uppercase type-metadata",
+                            "min-h-11 shrink-0 flex-1 whitespace-nowrap px-1 uppercase text-[12px] leading-none tracking-[0.06em] md:text-[13px]",
                             "transition-colors duration-200",
                             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
                             "focus-visible:ring-offset-2 focus-visible:ring-offset-background",

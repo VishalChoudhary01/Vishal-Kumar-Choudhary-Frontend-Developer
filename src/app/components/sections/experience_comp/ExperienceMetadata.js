@@ -15,14 +15,14 @@ export default function ExperienceMetadata({
     ];
 
     return (
-        <dl className="mt-8 grid gap-6 border-t border-border pt-6 sm:grid-cols-2">
+        <dl className="mt-6 grid gap-5 border-t border-border pt-5 sm:grid-cols-2 md:mt-8 md:gap-6 md:pt-6">
             {items.map(({ label, value }) => (
                 <div key={label}>
-                    <dt className="type-metadata text-text-muted">
+                    <dt className="text-[11px] leading-[1.5] text-text-muted md:text-[12px]">
                         {label}
                     </dt>
 
-                    <dd className="mt-2 type-body-small text-text-primary">
+                    <dd className="mt-2 text-[0.875rem] leading-[1.55] text-text-primary md:text-[1rem]">
                         {value}
                     </dd>
                 </div>

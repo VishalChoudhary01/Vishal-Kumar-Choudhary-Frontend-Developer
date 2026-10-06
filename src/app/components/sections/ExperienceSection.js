@@ -133,7 +133,7 @@ export default function ExperienceSection() {
                                 delay: 0.1,
                                 ease: EASE,
                             }}
-                            className="mt-10 grid gap-10 md:mt-12 md:grid-cols-[0.28fr_0.72fr] md:gap-12 lg:grid-cols-[0.32fr_0.68fr] lg:gap-16"
+                            className="mt-8 grid gap-8 md:mt-12 md:grid-cols-[0.28fr_0.72fr] md:gap-12 lg:grid-cols-[0.32fr_0.68fr] lg:gap-16"
                         >
                             {/* Company navigation */}
                             <ExperienceCompanySelector
@@ -193,7 +193,7 @@ export default function ExperienceSection() {
                                 )}
 
                                 {/* Detail tabs */}
-                                <div className="mt-6 md:mt-8">
+                                <div className="mt-5 md:mt-8">
                                     <ExperienceDetailTabs
                                         tabs={tabs}
                                         activeTab={
@@ -209,7 +209,7 @@ export default function ExperienceSection() {
                                 </div>
 
                                 {/* Tab content */}
-                                <div className="pt-6 md:pt-8">
+                                <div className="pt-5 md:pt-8">
                                     {reducedMotion ? (
                                         <div
                                             key={`${active.id}-${activeTab}`}
