@@ -19,7 +19,7 @@ function SocialIcon({ link }) {
             rel="noopener noreferrer"
             aria-label={link.label}
             className={cn(
-                "group relative flex md:size-10 size-6 items-center justify-center",
+                "group relative hidden md:flex md:size-10 size-6 items-center justify-center",
 
                 // ---------------------------------------------------------
                 // DEFAULT
