@@ -22,19 +22,15 @@ export default function ProjectSnapshot({ project }) {
         margin: "0px 0px -8% 0px",
     });
 
+    /*
+     * SNAPSHOT = essential metadata owned here: the stack.
+     *
+     * Year and category already live in the hero eyebrow, and the role
+     * already lives in the hero meta line — repeating them here would
+     * duplicate facts the hero communicates immediately above
+     * (PROJECT-DETAIL-V2.md §9 / ownership table §7).
+     */
     const rows = [
-        {
-            label: "ROLE",
-            value: project?.role,
-        },
-        {
-            label: "YEAR",
-            value: project?.year,
-        },
-        {
-            label: "TYPE",
-            value: project?.type,
-        },
         {
             label: "STACK",
             value: project?.technologies?.join(" · "),
@@ -64,10 +60,10 @@ export default function ProjectSnapshot({ project }) {
                         grid
                         gap-10
                         px-5
-                        py-28
+                        py-16
 
                         sm:px-8
-                        sm:py-36
+                        sm:py-24
 
                         md:gap-14
                         md:px-10
@@ -75,7 +71,7 @@ export default function ProjectSnapshot({ project }) {
                         lg:grid-cols-[180px_1fr]
                         lg:gap-16
                         lg:px-12
-                        lg:py-44
+                        lg:py-28
                     "
                 >
                     <div>
@@ -124,9 +120,9 @@ export default function ProjectSnapshot({ project }) {
                                     }
                             }
                             className="
-                                mt-12
-                                sm:mt-14
-                                md:mt-16
+                                mt-8
+                                sm:mt-10
+                                md:mt-12
                             "
                         >
                             <ProjectSnapshotList

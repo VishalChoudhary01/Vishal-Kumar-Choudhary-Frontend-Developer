@@ -44,7 +44,14 @@ export default function ProjectHeroActions({ project, prefersReduced }) {
                     href={project.links.github}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group/gh inline-flex items-center gap-2 font-mono text-[0.75rem] uppercase tracking-[0.16em] text-text-secondary transition-colors duration-200 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand sm:text-[0.8rem]"
+                    /*
+                     * SOURCE IS DESKTOP-ONLY.
+                     *
+                     * `hidden` uses display:none, so on mobile the link is
+                     * neither visible nor keyboard-focusable
+                     * (PROJECT-DETAIL-V2.md §25 — mandatory responsive rule).
+                     */
+                    className="group/gh hidden items-center gap-2 font-mono text-[0.75rem] uppercase tracking-[0.16em] text-text-secondary transition-colors duration-200 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand lg:inline-flex sm:text-[0.8rem]"
                 >
                     <span>View Source</span>
 

@@ -13,16 +13,27 @@ const SmoothScroll = ({ children }) => {
             syncTouch: false,
         })
 
+        /*
+         * Expose the instance so route changes can reset the scroll
+         * through Lenis itself. Resetting only `window.scrollY` leaves
+         * Lenis animating back toward its previous target, so a newly
+         * opened page could keep the previous page's scroll position.
+         */
+        window.lenis = lenis
+
+        let rafId
         function raf(time) {
             lenis.raf(time)
-            requestAnimationFrame(raf)
+            rafId = requestAnimationFrame(raf)
         }
 
-
-        const animationFrame = requestAnimationFrame(raf)
+        rafId = requestAnimationFrame(raf)
 
         return () => {
-            cancelAnimationFrame(animationFrame)
+            cancelAnimationFrame(rafId)
+            if (window.lenis === lenis) {
+                window.lenis = undefined
+            }
             lenis.destroy()
         }
 

@@ -14,8 +14,8 @@ import Skeleton from "@/app/components/ui/Skeleton";
 
 const EASE = [0.22, 1, 0.36, 1];
 
-function ProjectImageButton({ slug, visible }) {
-    if (!slug) {
+function ProjectImageButton({ href, visible }) {
+    if (!href) {
         return null;
     }
 
@@ -34,7 +34,7 @@ function ProjectImageButton({ slug, visible }) {
             }}
         >
             <Link
-                href={`/projects/${slug}`}
+                href={href}
                 tabIndex={visible ? 0 : -1}
                 aria-label="View project"
                 className="pointer-events-auto group/project relative inline-flex items-center gap-2 overflow-hidden rounded-full border border-white/35 bg-surface-1/75 px-4 py-2.5 font-mono text-[0.7rem] font-medium tracking-[0.01em] text-text-primary shadow-[0_5px_20px_rgba(0,0,0,0.12)] backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-surface-1/90 hover:shadow-[0_8px_24px_rgba(0,0,0,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:border-white/15"
@@ -66,7 +66,7 @@ function ProjectImageButton({ slug, visible }) {
 
 export default function ProjectMedia({
     media,
-    projectSlug,
+    href,
     hoverPreset = "mediaScale",
     aspect = "16/9",
     radiusClass = "rounded-2xl",
@@ -335,7 +335,7 @@ export default function ProjectMedia({
                 />
 
                 <ProjectImageButton
-                    slug={projectSlug}
+                    href={href}
                     visible={hovered}
                 />
             </div>

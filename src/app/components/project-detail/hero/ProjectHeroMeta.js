@@ -1,11 +1,17 @@
 "use client";
 
+/*
+ * HERO META — one line of identity metadata.
+ *
+ * Year and category are already communicated by the hero eyebrow
+ * (`CATEGORY · YEAR`), and the stack lives in the Snapshot section.
+ * Keeping role here is the single owner for that fact
+ * (PROJECT-DETAIL-V2.md §9 — no repeated year/category in the hero).
+ */
 export default function ProjectHeroMeta({ project }) {
-    const year = project.year || null;
-    const type = project.type || project.categoryLabel || null;
-    const role = project.role || null;
+    const role = project?.role || null;
 
-    const items = [year, type, role].filter(Boolean);
+    const items = [role].filter(Boolean);
 
     if (!items.length) {
         return null;

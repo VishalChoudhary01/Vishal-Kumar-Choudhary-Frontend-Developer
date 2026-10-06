@@ -38,7 +38,7 @@ export default function ProjectContext({ project }) {
     return (
         <section ref={sectionRef} id="project-context" aria-labelledby="project-context-title" className="relative bg-background">
             <Container>
-                <div className="grid gap-10 px-5 py-28 sm:px-8 sm:py-36 md:gap-14 md:px-10 lg:grid-cols-[180px_1fr] lg:gap-16 lg:px-12 lg:py-44">
+                <div className="grid gap-10 px-5 py-16 sm:px-8 sm:py-24 md:gap-14 md:px-10 lg:grid-cols-[180px_1fr] lg:gap-16 lg:px-12 lg:py-28">
                     <div>
                         <SectionHeading heading="CONTEXT" align="left" />
                     </div>
@@ -46,10 +46,27 @@ export default function ProjectContext({ project }) {
                     <div>
                         <SectionHeading supporting="Why this project existed and what it needed to solve." supportingId="project-context-title" align="left" />
 
-                        <motion.div initial={reduced ? false : { opacity: 0, y: 24 }} animate={show ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }} transition={reduced ? { duration: 0 } : { duration: 0.8, delay: 0.18, ease: EASE_EDITORIAL }} className="mt-12 max-w-4xl sm:mt-14 md:mt-16">
+                        <motion.div initial={reduced ? false : { opacity: 0, y: 24 }} animate={show ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }} transition={reduced ? { duration: 0 } : { duration: 0.8, delay: 0.18, ease: EASE_EDITORIAL }} className="mt-8 max-w-4xl sm:mt-10 md:mt-12">
                             {statement && <ProjectContextStatement statement={statement} visible={show} reduced={reduced} />}
 
                             {body && <ProjectContextBody body={body} visible={show} reduced={reduced} />}
+
+                            {project?.contribution && (
+                                <motion.div
+                                    initial={reduced ? false : { opacity: 0, y: 24 }}
+                                    animate={show ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
+                                    transition={reduced ? { duration: 0 } : { duration: 0.8, delay: 0.24, ease: EASE_EDITORIAL }}
+                                    className="mt-8 max-w-2xl sm:mt-10 md:mt-12"
+                                >
+                                    <p className="mb-2 font-mono text-[0.68rem] uppercase tracking-[0.18em] text-text-muted">
+                                        My contribution
+                                    </p>
+
+                                    <p className="font-body text-base leading-7 text-text-secondary sm:text-lg sm:leading-8">
+                                        {project.contribution}
+                                    </p>
+                                </motion.div>
+                            )}
                         </motion.div>
                     </div>
                 </div>

@@ -6,33 +6,13 @@ export const projects = [
         slug: "class-fuse",
         category: "tool",
         categoryLabel: "Developer Tool",
-        type: "Developer Tool",
 
         description:
             "A Tailwind CSS utility for cleaning and organizing class lists by removing duplicate and conflicting utilities and producing cleaner, more readable class strings.",
 
-        hero: {
-            eyebrow: "DEVELOPER TOOL · 2026",
-            description:
-                "A Tailwind CSS utility for cleaning and organizing class lists by removing duplicate and conflicting utilities and producing cleaner, more readable class strings.",
-            media: {
-                type: "image",
-                src: "/projects/classfuse/classfuse_hero.webp",
-                alt: "ClassFuse Tailwind CSS utility formatter interface",
-            },
-        },
-
         role: "Frontend Developer",
 
         year: "2026",
-
-        snapshot: {
-            role: "Frontend Developer",
-            year: "2026",
-            type: "Developer Tool",
-            stack:
-                "Next.js · React · JavaScript · Tailwind CSS · Redux Toolkit · Motion · Lenis",
-        },
 
         technologies: [
             "Next.js",
@@ -246,33 +226,13 @@ export const projects = [
         slug: "spendwise",
         category: "product",
         categoryLabel: "Web App",
-        type: "Web App",
 
         description:
             "A shopping planning and price comparison web app that helps users organize what they need, compare supported product prices, calculate list totals, and keep track of their spending.",
 
-        hero: {
-            eyebrow: "PRODUCT · 2026",
-            description:
-                "A shopping planning and price comparison web app that helps users organize what they need, compare supported product prices, calculate list totals, and keep track of their spending.",
-            media: {
-                type: "image",
-                src: "/projects/spendwise/spendwise.webp",
-                alt: "Spendwise shopping planning and price comparison interface",
-            },
-        },
-
         role: "Frontend Developer",
 
         year: "2026",
-
-        snapshot: {
-            role: "Frontend Developer",
-            year: "2026",
-            type: "Web App",
-            stack:
-                "Next.js · React · JavaScript · Tailwind CSS · Redux Toolkit · Motion · Lenis",
-        },
 
         technologies: [
             "Next.js",
@@ -495,33 +455,13 @@ export const projects = [
         slug: "system-canvas",
         category: "product",
         categoryLabel: "Web App",
-        type: "Web App",
 
         description:
             "A frontend workspace for exploring and working with a structured color and theme system through an interactive React interface.",
 
-        hero: {
-            eyebrow: "WEB APP · 2026",
-            description:
-                "A frontend workspace for exploring and working with a structured color and theme system through an interactive React interface.",
-            media: {
-                type: "image",
-                src: "/projects/systemcanvas/Systemcanvas.webp",
-                alt: "System Canvas color and theme system interface",
-            },
-        },
-
         role: "Frontend Developer",
 
         year: "2026",
-
-        snapshot: {
-            role: "Frontend Developer",
-            year: "2026",
-            type: "Web App",
-            stack:
-                "React · Vite · Tailwind CSS · Redux Toolkit · Motion · Lenis",
-        },
 
         technologies: [
             "React",
@@ -736,33 +676,13 @@ export const projects = [
         slug: "nextjs-master",
         category: "product",
         categoryLabel: "Web App",
-        type: "Web App",
 
         description:
             "A Next.js frontend project built around reusable UI patterns, responsive layouts, centralized state, and polished interface interactions.",
 
-        hero: {
-            eyebrow: "WEB APP · 2026",
-            description:
-                "A Next.js frontend project built around reusable UI patterns, responsive layouts, centralized state, and polished interface interactions.",
-            media: {
-                type: "image",
-                src: "/projects/nextjs-master/nextjsmaster.webp",
-                alt: "Next.js Master responsive web application interface",
-            },
-        },
-
         role: "Frontend Developer",
 
         year: "2026",
-
-        snapshot: {
-            role: "Frontend Developer",
-            year: "2026",
-            type: "Web App",
-            stack:
-                "Next.js · React · JavaScript · Tailwind CSS · Redux Toolkit · Motion · Lenis",
-        },
 
         technologies: [
             "Next.js",

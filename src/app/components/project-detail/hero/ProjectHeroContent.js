@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 
 import SectionEyebrow from "@/app/components/common/SectionEyebrow";
 import useReducedMotion from "@/app/hooks/useReducedMotion";
+import { getProjectDescription, getProjectEyebrow } from "@/app/lib/projectHelpers";
 
 import ProjectHeroMeta from "./ProjectHeroMeta";
 import ProjectHeroActions from "./ProjectHeroActions";
@@ -12,13 +13,10 @@ import { heroEntrance, DELAY } from "./projectHeroMotion";
 export default function ProjectHeroContent({ project }) {
     const reduced = useReducedMotion();
 
-    const eyebrow = project.hero?.eyebrow ?? null;
+    const eyebrow = getProjectEyebrow(project);
     const title = project.name ?? null;
 
-    const description =
-        project.hero?.description ??
-        project.description ??
-        null;
+    const description = getProjectDescription(project);
 
     return (
         <div
@@ -215,20 +213,25 @@ export default function ProjectHeroContent({ project }) {
 
             {/* =========================================================
                 METADATA
+
+                Rendered only when it carries content so an empty
+                metadata block cannot leave a dead gap (§21).
             ========================================================= */}
 
-            <motion.div
-                {...heroEntrance(reduced, {
-                    delay: DELAY.meta,
-                    y: 14,
-                })}
-                className="
-                    mt-5
-                    sm:mt-6
-                "
-            >
-                <ProjectHeroMeta project={project} />
-            </motion.div>
+            {project?.role && (
+                <motion.div
+                    {...heroEntrance(reduced, {
+                        delay: DELAY.meta,
+                        y: 14,
+                    })}
+                    className="
+                        mt-5
+                        sm:mt-6
+                    "
+                >
+                    <ProjectHeroMeta project={project} />
+                </motion.div>
+            )}
 
             {/* =========================================================
                 ACTIONS

@@ -1,11 +1,10 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { motion,useInView } from "motion/react";
+import { motion, useInView } from "motion/react";
 
 import ProjectMedia from "./ProjectMedia";
 import ProjectMeta from "./ProjectMeta";
-import ProjectContribution from "./ProjectContribution";
 import ProjectActions from "./ProjectActions";
 
 import {
@@ -15,11 +14,20 @@ import {
 } from "@/app/lib/motion/projectPresets";
 
 import {
-    EASE_EDITORIAL,
-    PROJECT_TYPE_LABELS,
+    getProjectCardMeta,
+    getProjectCardTechnologies,
+    getProjectDetailHref,
+} from "@/app/lib/projectHelpers";
+
+import {
     PROJECT_VARIANTS,
     PRESENTATION_DEFAULTS,
 } from "./project.constants";
+
+/* Discovery card technology limits — desktop shows more, mobile fewer.
+   `technologies` in the project data stays the canonical complete list. */
+const CARD_TECH_LIMIT_DESKTOP = 6;
+const CARD_TECH_LIMIT_MOBILE = 4;
 
 export default function ProjectPresentation({
     project,
@@ -48,7 +56,12 @@ export default function ProjectPresentation({
 
     const hoverPreset = project.motion?.hover || defaults.hover;
 
-    const categoryLabel = project.categoryLabel || PROJECT_TYPE_LABELS[project.type] || project.type?.toUpperCase() || null;
+    const cardMeta = getProjectCardMeta(project);
+
+    const cardTechnologies = getProjectCardTechnologies(
+        project,
+        CARD_TECH_LIMIT_DESKTOP
+    );
 
     const isActive = titleHovered || mediaHovered;
 
@@ -56,183 +69,81 @@ export default function ProjectPresentation({
 
     const mediaFlagship = Boolean(project.featured) && mode === "editorial";
 
-    const projectSlug = project.slug || project.id;
+    const detailHref = getProjectDetailHref(project);
 
     return (
-        <article ref={cardRef} className="group relative" aria-label={`Project ${project.displayNumber}: ${project.name}`}>
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(80px,0.18fr)_minmax(0,1fr)] lg:gap-10">
-                <ProjectIndex
-                    project={project}
-                    isActive={isActive}
+        <article ref={cardRef} className="group relative" aria-label={`Project: ${project.name}`}>
+            <div className="min-w-0">
+                <ProjectMetaLine
+                    label={cardMeta}
                     isInView={isInView}
-                    entrance={entrance.label}
+                    entrance={entrance.category}
                     index={index}
                 />
 
-                <div className="min-w-0">
-                    <ProjectMobileIndex
-                        project={project}
+                <ProjectTitle
+                    name={project.name}
+                    isInView={isInView}
+                    entrance={entrance.title}
+                    index={index}
+                    onHoverChange={setTitleHovered}
+                    isActive={isActive}
+                />
+
+                {!mediaFirst && (
+                    <ProjectDescription
+                        description={project.description}
                         isInView={isInView}
-                        entrance={entrance.label}
+                        entrance={entrance.description}
                         index={index}
                     />
+                )}
 
-                    <ProjectCategory
-                        label={categoryLabel}
+                <div className="mt-6 sm:mt-8">
+                    <ProjectMedia
+                        media={project.media}
+                        href={detailHref}
+                        hoverPreset={hoverPreset}
+                        aspect={variant.aspect}
+                        radiusClass={variant.radius}
+                        isFlagship={mediaFlagship}
                         isInView={isInView}
-                        entrance={entrance.category}
-                        index={index}
-                    />
-
-                    <ProjectTitle
-                        name={project.name}
-                        isInView={isInView}
-                        entrance={entrance.title}
-                        index={index}
-                        onHoverChange={setTitleHovered}
-                        isActive={isActive}
-                    />
-
-                    {!mediaFirst && (
-                        <ProjectDescription
-                            description={project.description}
-                            isInView={isInView}
-                            entrance={entrance.description}
-                            index={index}
-                        />
-                    )}
-
-                    <div className="mt-6 sm:mt-8">
-                        <ProjectMedia
-                            media={project.media}
-                            projectSlug={projectSlug}
-                            hoverPreset={hoverPreset}
-                            aspect={variant.aspect}
-                            radiusClass={variant.radius}
-                            isFlagship={mediaFlagship}
-                            isInView={isInView}
-                            entrance={entrance.media}
-                            titleHovered={titleHovered}
-                            onHoverChange={setMediaHovered}
-                        />
-                    </div>
-
-                    {mediaFirst && (
-                        <ProjectDescription
-                            description={project.description}
-                            isInView={isInView}
-                            entrance={entrance.description}
-                            index={index}
-                        />
-                    )}
-
-                    <ProjectMeta
-                        technologies={project.technologies || project.tags}
-                        entrance={entrance.meta}
-                        isInView={isInView}
-                        className="mt-6 sm:mt-8"
-                    />
-
-                    <ProjectContribution
-                        text={project.contribution}
-                        entrance={entrance.contribution}
-                        isInView={isInView}
-                        className="mt-6 sm:mt-8"
-                    />
-
-                    <ProjectFeatures
-                        features={project.features}
-                        entrance={entrance.features}
-                        isInView={isInView}
-                        index={index}
-                    />
-
-                    <ProjectActions
-                        slug={projectSlug}
-                        links={project.links}
-                        entrance={entrance.actions}
-                        isInView={isInView}
-                        className="mt-6"
+                        entrance={entrance.media}
+                        titleHovered={titleHovered}
+                        onHoverChange={setMediaHovered}
                     />
                 </div>
+
+                {mediaFirst && (
+                    <ProjectDescription
+                        description={project.description}
+                        isInView={isInView}
+                        entrance={entrance.description}
+                        index={index}
+                    />
+                )}
+
+                <ProjectMeta
+                    technologies={cardTechnologies}
+                    mobileLimit={CARD_TECH_LIMIT_MOBILE}
+                    entrance={entrance.meta}
+                    isInView={isInView}
+                    className="mt-6 sm:mt-8"
+                />
+
+                <ProjectActions
+                    href={detailHref}
+                    links={project.links}
+                    entrance={entrance.actions}
+                    isInView={isInView}
+                    className="mt-6"
+                />
             </div>
         </article>
     );
 }
 
-function ProjectIndex({
-    project,
-    isActive,
-    isInView,
-    entrance,
-    index,
-}) {
-    return (
-        <motion.div
-            initial={isInView ? entrance.initial : false}
-            animate={isInView ? entrance.animate : entrance.initial}
-            transition={{
-                ...toTransition(entrance),
-                delay: (entrance.delay || 0) + index * 0.06,
-            }}
-            className="hidden lg:flex lg:flex-col lg:pt-1"
-        >
-            <motion.span
-                className="font-mono text-[clamp(1.8rem,3vw,2.75rem)] font-normal tabular-nums leading-none tracking-[-0.02em] text-text-muted transition-colors duration-300 ease-out"
-                animate={{
-                    color: isActive ? "var(--brand)" : "var(--text-muted)",
-                    scale: isActive ? 1.04 : 1,
-                    y: isActive ? -3 : 0,
-                }}
-                transition={{
-                    duration: 0.3,
-                    ease: EASE_EDITORIAL,
-                }}
-            >
-                {project.displayNumber}
-            </motion.span>
-
-            {project.year && (
-                <span className="mt-2 font-mono text-[0.68rem] tabular-nums tracking-[0.14em] text-text-muted">
-                    {project.year}
-                </span>
-            )}
-        </motion.div>
-    );
-}
-
-function ProjectMobileIndex({
-    project,
-    isInView,
-    entrance,
-    index,
-}) {
-    return (
-        <motion.div
-            initial={isInView ? entrance.initial : false}
-            animate={isInView ? entrance.animate : entrance.initial}
-            transition={{
-                ...toTransition(entrance),
-                delay: (entrance.delay || 0) + index * 0.06,
-            }}
-            className="mb-5 lg:hidden"
-        >
-            <span className="inline-flex items-baseline gap-2.5">
-                <span className="font-mono text-[1.35rem] font-normal tabular-nums leading-none tracking-[-0.02em] text-brand">
-                    {project.displayNumber}
-                </span>
-
-                {project.year && (
-                    <span className="font-mono text-[0.68rem] tabular-nums tracking-[0.14em] text-text-muted">
-                        {project.year}
-                    </span>
-                )}
-            </span>
-        </motion.div>
-    );
-}
-
-function ProjectCategory({
+function ProjectMetaLine({
     label,
     isInView,
     entrance,
@@ -248,7 +159,7 @@ function ProjectCategory({
                 ...toTransition(entrance),
                 delay: (entrance.delay || 0) + index * 0.06,
             }}
-            className="mb-2"
+            className="mb-3 sm:mb-4"
         >
             <span className="font-mono text-[0.68rem] uppercase tracking-[0.18em] text-text-muted">
                 {label}
@@ -312,42 +223,6 @@ function ProjectDescription({
         >
             {description}
         </motion.p>
-    );
-}
-
-function ProjectFeatures({
-    features,
-    entrance,
-    isInView,
-    index,
-}) {
-    if (!features?.length) return null;
-
-    return (
-        <motion.ul
-            initial={isInView ? entrance.initial : false}
-            animate={isInView ? entrance.animate : entrance.initial}
-            transition={{
-                ...toTransition(entrance),
-                delay: (entrance.delay || 0) + index * 0.06,
-            }}
-            className="mt-5 space-y-1.5"
-            aria-label="Key features"
-        >
-            {features.slice(0, 4).map((feature) => (
-                <li
-                    key={feature}
-                    className="flex items-baseline gap-2 font-body text-sm leading-relaxed text-text-tertiary"
-                >
-                    <span
-                        aria-hidden="true"
-                        className="mt-[0.4em] h-[3px] w-[3px] shrink-0 rounded-full bg-brand opacity-60"
-                    />
-
-                    <span>{feature}</span>
-                </li>
-            ))}
-        </motion.ul>
     );
 }
 

@@ -21,7 +21,7 @@ const ProjectNavigation = lazy(() => import("./navigation/ProjectNavigation"));
 
 function SectionSkeleton() {
     return (
-        <div className="px-5 py-28 sm:px-8 sm:py-36 md:px-10 lg:px-12 lg:py-44">
+        <div className="px-5 py-16 sm:px-8 sm:py-24 md:px-10 lg:px-12 lg:py-28">
             <div className="mx-auto max-w-5xl space-y-6">
                 <Skeleton className="h-8 w-32" rounded="rounded-md" />
                 <Skeleton className="h-4 w-64" rounded="rounded-md" />

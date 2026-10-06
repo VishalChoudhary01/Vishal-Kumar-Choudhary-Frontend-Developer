@@ -35,7 +35,7 @@ export default function ProjectEngineering({ project }) {
             className="relative bg-background"
         >
             <Container>
-                <div className="grid gap-10 px-5 py-28 sm:px-8 sm:py-36 md:gap-14 md:px-10 lg:grid-cols-[180px_1fr] lg:gap-16 lg:px-12 lg:py-44">
+                <div className="grid gap-10 px-5 py-16 sm:px-8 sm:py-24 md:gap-14 md:px-10 lg:grid-cols-[180px_1fr] lg:gap-16 lg:px-12 lg:py-28">
                     <div>
                         <SectionHeading heading="ENGINEERING" align="left" />
                     </div>
@@ -63,7 +63,7 @@ export default function ProjectEngineering({ project }) {
                                         ease: EASE_EDITORIAL,
                                     }
                             }
-                            className="mt-12 sm:mt-14 md:mt-16"
+                            className="mt-8 sm:mt-10 md:mt-12"
                         >
                             <ProjectEngineeringList
                                 items={engineering}

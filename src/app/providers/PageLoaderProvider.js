@@ -54,8 +54,18 @@ function resetScrollLocks() {
   /* Also remove Tailwind utility class locks */
   body.classList.remove("overflow-hidden");
 
-  /* Scroll to top on route change */
-  window.scrollTo(0, 0);
+  /*
+   * Scroll to top on route change.
+   *
+   * The reset must go through Lenis when it is active: resetting only
+   * `window.scrollY` leaves Lenis' internal target at the previous page's
+   * position, so it immediately scrolls the new page back down.
+   */
+  if (window.lenis && typeof window.lenis.scrollTo === "function") {
+    window.lenis.scrollTo(0, { immediate: true, force: true });
+  } else {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }
 }
 
 export function PageLoaderProvider({ children }) {

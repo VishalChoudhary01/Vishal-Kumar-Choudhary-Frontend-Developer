@@ -5,6 +5,7 @@ import { toTransition } from "@/app/lib/motion/projectPresets";
 
 export default function ProjectMeta({
     technologies,
+    mobileLimit,
     entrance,
     isInView = true,
     className = "",
@@ -15,6 +16,20 @@ export default function ProjectMeta({
     ) {
         return null;
     }
+
+    /*
+     * RESPONSIVE TECHNOLOGY VISIBILITY
+     *
+     * Mobile shows a shorter list than desktop so the card never
+     * becomes a wall of text. The hidden list uses `display: none`,
+     * so it is removed from the accessibility tree as well.
+     */
+    const mobileTechnologies = mobileLimit
+        ? technologies.slice(0, mobileLimit)
+        : technologies;
+
+    const hasResponsiveSplit =
+        mobileTechnologies.length < technologies.length;
 
     const config =
         entrance || {
@@ -45,29 +60,54 @@ export default function ProjectMeta({
             }
             transition={toTransition(config)}
         >
-            <ul className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[0.68rem] leading-relaxed text-text-muted">
-                {technologies.map(
-                    (technology, index) => (
-                        <li
-                            key={technology}
-                            className="inline-flex items-center gap-x-2"
-                        >
-                            {index > 0 && (
-                                <span
-                                    aria-hidden="true"
-                                    className="text-text-muted"
-                                >
-                                    ·
-                                </span>
-                            )}
+            {!hasResponsiveSplit ? (
+                <TechnologyList technologies={technologies} />
+            ) : (
+                <>
+                    <TechnologyList
+                        technologies={mobileTechnologies}
+                        className="lg:hidden"
+                    />
 
-                            <span>
-                                {technology}
-                            </span>
-                        </li>
-                    )
-                )}
-            </ul>
+                    <TechnologyList
+                        technologies={technologies}
+                        className="hidden lg:flex"
+                    />
+                </>
+            )}
         </motion.div>
+    );
+}
+
+function TechnologyList({ technologies, className = "" }) {
+    return (
+        <ul
+            className={[
+                "flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[0.68rem] leading-relaxed text-text-muted",
+                className,
+            ].join(" ")}
+        >
+            {technologies.map(
+                (technology, index) => (
+                    <li
+                        key={technology}
+                        className="inline-flex items-center gap-x-2"
+                    >
+                        {index > 0 && (
+                            <span
+                                aria-hidden="true"
+                                className="text-text-muted"
+                            >
+                                ·
+                            </span>
+                        )}
+
+                        <span>
+                            {technology}
+                        </span>
+                    </li>
+                )
+            )}
+        </ul>
     );
 }

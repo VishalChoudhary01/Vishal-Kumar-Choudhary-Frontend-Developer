@@ -10,6 +10,12 @@ export default function FooterSocialButton({
     icon: Icon,
     isExternal = true,
 }) {
+    const normalizedLabel = label?.toLowerCase() ?? "";
+
+    const isGithub = normalizedLabel === "github";
+    const isLinkedin = normalizedLabel === "linkedin";
+    const isEmail = normalizedLabel === "email";
+
     return (
         <Link
             href={href}
@@ -55,6 +61,11 @@ export default function FooterSocialButton({
             {/* =====================================================
                 ORIGINAL SOCIAL ICON
                 Center → travels upward
+
+                IMPORTANT:
+                - Color changes immediately
+                - Shift animation remains completely unchanged
+                - No delay added here
             ===================================================== */}
             <span
                 aria-hidden="true"
@@ -63,7 +74,23 @@ export default function FooterSocialButton({
 
                     "text-text-tertiary",
 
-                    // Same animation idea as your reference
+                    // -------------------------------------------------
+                    // BRAND COLOR
+                    // -------------------------------------------------
+
+                    isGithub &&
+                    "group-hover:text-[#2DA44E] dark:group-hover:text-[#3FB950]",
+
+                    isLinkedin &&
+                    "group-hover:text-[#0A66C2]",
+
+                    isEmail &&
+                    "group-hover:text-[#EA4335]",
+
+                    // -------------------------------------------------
+                    // EXISTING ICON ANIMATION — UNCHANGED
+                    // -------------------------------------------------
+
                     "transition-transform",
                     "duration-[320ms]",
                     "ease-[cubic-bezier(.22,1,.36,1)]",
@@ -73,7 +100,6 @@ export default function FooterSocialButton({
 
                     "motion-reduce:transition-none",
 
-                    // Keep brand icon visually light
                     "[&_svg]:size-[16px]",
                     "[&_svg]:shrink-0",
                 )}
@@ -84,6 +110,10 @@ export default function FooterSocialButton({
             {/* =====================================================
                 ARROW
                 Bottom → center
+
+                Only change:
+                Arrow waits 80ms before coming in so the user
+                can see the social icon's brand color first.
             ===================================================== */}
             <span
                 aria-hidden="true"
@@ -95,9 +125,13 @@ export default function FooterSocialButton({
 
                     "text-brand",
 
-                    // EXACT same animation curve/timing
+                    // -------------------------------------------------
+                    // ARROW ANIMATION
+                    // -------------------------------------------------
+
                     "transition-transform",
                     "duration-[320ms]",
+                    "delay-[80ms]",
                     "ease-[cubic-bezier(.22,1,.36,1)]",
 
                     "group-hover:translate-y-0",

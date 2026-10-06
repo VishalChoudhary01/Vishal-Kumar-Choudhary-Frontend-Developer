@@ -10,14 +10,15 @@ export default function ProjectHeroVisual({
     reduced = false,
     parallaxStyle,
 }) {
+    /* `media` is canonical; `hero.media` stays available as an explicit override. */
     const image =
-        project?.hero?.media?.src ||
         project?.media?.src ||
+        project?.hero?.media?.src ||
         null;
 
     const imageAlt =
-        project?.hero?.media?.alt ||
         project?.media?.alt ||
+        project?.hero?.media?.alt ||
         `${project?.name || "Project"} product interface`;
 
     if (!image) {
