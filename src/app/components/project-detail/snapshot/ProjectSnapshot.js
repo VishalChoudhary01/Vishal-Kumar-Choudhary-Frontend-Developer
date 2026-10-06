@@ -58,20 +58,19 @@ export default function ProjectSnapshot({ project }) {
                 <div
                     className="
                         grid
-                        gap-10
+                        gap-8
                         px-5
-                        py-16
+                        py-12
 
+                        sm:gap-10
                         sm:px-8
-                        sm:py-24
+                        sm:py-14
 
-                        md:gap-14
                         md:px-10
 
                         lg:grid-cols-[180px_1fr]
                         lg:gap-16
                         lg:px-12
-                        lg:py-28
                     "
                 >
                     <div>
@@ -86,6 +85,7 @@ export default function ProjectSnapshot({ project }) {
                             supporting="The work, reduced to what matters."
                             supportingId="project-snapshot-title"
                             align="left"
+                            size="compact"
                         />
 
                         <motion.div
@@ -122,7 +122,6 @@ export default function ProjectSnapshot({ project }) {
                             className="
                                 mt-8
                                 sm:mt-10
-                                md:mt-12
                             "
                         >
                             <ProjectSnapshotList

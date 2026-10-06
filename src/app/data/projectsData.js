@@ -81,12 +81,10 @@ export const projects = [
         story: {
             context: {
                 statement:
-                    "A developer utility focused on turning messy Tailwind CSS class lists into cleaner, easier-to-manage utility strings.",
+                    "A developer utility for cleaning up messy Tailwind class strings.",
 
                 body: [
-                    "ClassFuse is built around a common problem when working with Tailwind CSS: long utility class strings can become difficult to read and maintain as classes accumulate.",
-
-                    "The product provides a focused workflow for entering Tailwind classes, cleaning duplicate and conflicting utilities, and producing a more organized result.",
+                    "Long utility class strings become difficult to read and maintain as classes accumulate, so ClassFuse provides a focused workflow for entering Tailwind classes, cleaning duplicate and conflicting utilities, and producing a more organized result.",
                 ],
             },
 
@@ -118,7 +116,7 @@ export const projects = [
 
             design: {
                 statement:
-                    "A focused developer interface where the formatting workflow remains the primary visual priority.",
+                    "A focused interface where the formatting workflow stays primary.",
 
                 body:
                     "The interface is structured around the relationship between Tailwind class input and the resulting cleaned output. The design keeps supporting controls secondary so the main formatting task remains easy to understand.",
@@ -203,7 +201,7 @@ export const projects = [
 
             reflection: {
                 statement:
-                    "ClassFuse combines a focused developer utility with a frontend interface designed around immediate input, processing, and output.",
+                    "Immediate input, processing, and output in one focused interface.",
 
                 worked: [
                     "Keeping the product centered around one developer workflow makes the interface easy to understand.",
@@ -306,12 +304,10 @@ export const projects = [
         story: {
             context: {
                 statement:
-                    "A shopping workspace built around planning first, comparing prices second, and understanding spending throughout the process.",
+                    "A shopping workspace built to plan first, compare prices, and track spending.",
 
                 body: [
-                    "Spendwise was designed to make shopping more structured. Instead of treating a purchase as a single product lookup, the application organizes products inside shopping lists so users can plan what they need and compare supported prices before deciding what to buy.",
-
-                    "The product workflow centers around creating a list, adding products, comparing available prices, calculating totals, choosing an option, and tracking the resulting spending.",
+                    "Spendwise organizes products inside shopping lists instead of treating a purchase as a single product lookup, so users can plan what they need, compare available prices, calculate totals, choose an option, and track the resulting spending.",
                 ],
             },
 
@@ -343,7 +339,7 @@ export const projects = [
 
             design: {
                 statement:
-                    "A shopping workspace designed to keep planning, comparison, and spending information connected.",
+                    "Planning, comparison, and spending kept connected in one workspace.",
 
                 body:
                     "The interface separates the planning workflow from supporting information without losing the relationship between them. Lists provide the main workspace, product details provide context for individual items, and spending views summarize the financial side of the shopping activity.",
@@ -432,14 +428,14 @@ export const projects = [
 
             reflection: {
                 statement:
-                    "Spendwise became an exercise in connecting several frontend concerns into one product workflow: state management, product data extraction, comparison, responsive UI, and spending visualization.",
+                    "Connecting state, extraction, comparison, responsive UI, and spending views.",
 
                 worked: [
                     "The list-first model gives the product a clear relationship between shopping planning, products, prices, and spending.",
 
                     "Centralized state management helps coordinate interactions across the dashboard, lists, and product workflows.",
 
-                    "Building responsive list-detail interfaces reinforced the importance of treating mobile as a deliberate layout rather than simply shrinking the desktop interface.",
+                    "Building responsive list-detail interfaces reinforced that mobile is a deliberate layout, not a shrunken desktop.",
                 ],
 
                 improve:
@@ -531,12 +527,10 @@ export const projects = [
         story: {
             context: {
                 statement:
-                    "System Canvas explores how a structured color and theme system can become an interactive frontend workspace rather than remaining a static collection of design tokens.",
+                    "A structured color and theme system turned into an interactive frontend workspace.",
 
                 body: [
-                    "The project is built as a React-based web application focused on working with a structured color and theme system through an interactive interface.",
-
-                    "The implementation combines a component-driven frontend with centralized state, client-side routing, responsive Tailwind CSS styling, and an interaction layer built with Motion and Lenis.",
+                    "System Canvas is a React application built to work with a structured color and theme system through an interactive interface rather than leaving it as a static collection of design tokens.",
                 ],
             },
 
@@ -568,10 +562,10 @@ export const projects = [
 
             design: {
                 statement:
-                    "A visual workspace where the color system is treated as an interface rather than simply a set of static values.",
+                    "A workspace where the color system is treated as an interface, not static values.",
 
                 body:
-                    "The design focuses on presenting color and theme information through a structured application interface. Tailwind CSS provides the styling foundation while the theme system itself becomes part of the visual experience.",
+                    "The design focuses on presenting color and theme information through a structured application interface where the theme system itself becomes part of the visual experience.",
             },
 
             engineering: [
@@ -653,7 +647,7 @@ export const projects = [
 
             reflection: {
                 statement:
-                    "System Canvas brings together design-system thinking and frontend engineering in a single interactive workspace.",
+                    "Design-system thinking and frontend engineering in one workspace.",
 
                 worked: [
                     "The project combines a structured visual system with a component-driven React interface.",
@@ -753,12 +747,10 @@ export const projects = [
         story: {
             context: {
                 statement:
-                    "A Next.js frontend project focused on reusable interfaces, responsive implementation, and a polished interaction layer.",
+                    "Reusable interfaces, responsive layouts, and a polished interaction layer.",
 
                 body: [
-                    "Next.js Master is a frontend application built with Next.js and React, using Tailwind CSS as the styling foundation and Redux Toolkit for centralized application state.",
-
-                    "The project also includes Motion and Lenis, allowing the interface to combine reusable frontend architecture with animated interactions and smooth scrolling.",
+                    "Next.js Master is a frontend application built around reusable UI patterns, centralized application state, and responsive layouts, with a dedicated animation and smooth-scrolling layer.",
                 ],
             },
 
@@ -790,10 +782,10 @@ export const projects = [
 
             design: {
                 statement:
-                    "A structured frontend interface where reusable components and interaction quality work together.",
+                    "Reusable components and interaction quality working together.",
 
                 body:
-                    "The interface is built with Tailwind CSS and React components, keeping layout, responsive behavior, and interactive states within a consistent frontend system.",
+                    "The interface keeps layout, responsive behavior, and interactive states within a consistent component system.",
             },
 
             engineering: [
@@ -836,7 +828,7 @@ export const projects = [
 
             motion: {
                 statement:
-                    "The project combines component-level animation with smooth scrolling to create a more polished frontend experience.",
+                    "Component-level animation combined with smooth scrolling for a more polished experience.",
 
                 body:
                     "Motion provides the animation layer while Lenis handles smooth scrolling. Together they form an interaction system around the application's React and Next.js architecture.",
@@ -881,7 +873,7 @@ export const projects = [
 
             reflection: {
                 statement:
-                    "The project brings together modern Next.js architecture, reusable React components, centralized state, responsive styling, and a dedicated motion layer.",
+                    "Reusable components, centralized state, responsive styling, and motion.",
 
                 worked: [
                     "Reusable components provide a consistent foundation for the interface.",

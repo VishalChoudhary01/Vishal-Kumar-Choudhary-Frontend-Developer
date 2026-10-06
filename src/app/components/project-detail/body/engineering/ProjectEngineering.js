@@ -35,16 +35,17 @@ export default function ProjectEngineering({ project }) {
             className="relative bg-background"
         >
             <Container>
-                <div className="grid gap-10 px-5 py-16 sm:px-8 sm:py-24 md:gap-14 md:px-10 lg:grid-cols-[180px_1fr] lg:gap-16 lg:px-12 lg:py-28">
+                <div className="grid gap-8 px-5 py-12 sm:gap-10 sm:px-8 sm:py-14 md:px-10 lg:grid-cols-[180px_1fr] lg:gap-16 lg:px-12">
                     <div>
                         <SectionHeading heading="ENGINEERING" align="left" />
                     </div>
 
                     <div>
                         <SectionHeading
-                            supporting="How the interface was structured, implemented, and made maintainable."
+                            supporting="How the interface was structured and implemented."
                             supportingId="project-engineering-title"
                             align="left"
+                            size="compact"
                         />
 
                         <motion.div
@@ -63,7 +64,7 @@ export default function ProjectEngineering({ project }) {
                                         ease: EASE_EDITORIAL,
                                     }
                             }
-                            className="mt-8 sm:mt-10 md:mt-12"
+                            className="mt-8 sm:mt-10"
                         >
                             <ProjectEngineeringList
                                 items={engineering}

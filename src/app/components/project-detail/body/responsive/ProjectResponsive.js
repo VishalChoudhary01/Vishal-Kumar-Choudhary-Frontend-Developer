@@ -33,7 +33,7 @@ export default function ProjectResponsive({ project }) {
             className="relative bg-background"
         >
             <Container>
-                <div className="grid gap-10 px-5 py-16 sm:px-8 sm:py-24 md:gap-14 md:px-10 lg:grid-cols-[180px_1fr] lg:gap-16 lg:px-12 lg:py-28">
+                <div className="grid gap-8 px-5 py-12 sm:gap-10 sm:px-8 sm:py-14 md:px-10 lg:grid-cols-[180px_1fr] lg:gap-16 lg:px-12">
                     <div>
                         <SectionHeading
                             heading="RESPONSIVE"
@@ -43,9 +43,10 @@ export default function ProjectResponsive({ project }) {
 
                     <div>
                         <SectionHeading
-                            supporting="A flexible system designed to stay clear across every screen."
+                            supporting="The workflow adapts without losing its primary relationship."
                             supportingId="project-responsive-title"
                             align="left"
+                            size="compact"
                         />
 
                         <motion.div
@@ -68,7 +69,7 @@ export default function ProjectResponsive({ project }) {
                                         ease: EASE_EDITORIAL,
                                     }
                             }
-                            className="mt-8 sm:mt-10 md:mt-12"
+                            className="mt-8 sm:mt-10"
                         >
                             <ProjectResponsiveList
                                 responsive={project?.story?.responsive}

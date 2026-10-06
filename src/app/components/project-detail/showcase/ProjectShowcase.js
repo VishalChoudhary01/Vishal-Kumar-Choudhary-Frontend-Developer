@@ -45,6 +45,7 @@ export default function ProjectShowcase({ project }) {
                             supporting="The interface, captured in the details that matter."
                             supportingId="project-showcase-title"
                             align="left"
+                            size="compact"
                         />
 
                         <motion.div

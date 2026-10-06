@@ -21,7 +21,7 @@ export default function ProjectReflectionWorked({ items, visible, reduced }) {
                         initial={reduced ? false : { opacity: 0, y: 20 }}
                         animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
                         transition={reduced ? { duration: 0 } : { duration: 0.7, delay: index * 0.08, ease: EASE_EDITORIAL }}
-                        className="group relative border-b border-border py-7 sm:py-8 md:py-9 lg:py-10"
+                        className="group relative border-b border-border py-6 md:py-7"
                     >
                         <div className="relative max-w-3xl">
                             <span
@@ -32,12 +32,12 @@ export default function ProjectReflectionWorked({ items, visible, reduced }) {
                             </span>
 
                             <div className="relative z-10">
-                                <h3 className="font-display text-[clamp(1.45rem,2.2vw,2.15rem)] font-normal leading-[1.08] tracking-[-0.015em] text-text-primary">
+                                <h3 className="font-display text-xl font-normal leading-tight tracking-[-0.01em] text-text-primary md:text-2xl">
                                     {title}
                                 </h3>
 
                                 {body && (
-                                    <p className="mt-3 max-w-2xl font-body text-[0.95rem] leading-6 text-text-secondary sm:mt-4 sm:text-base sm:leading-7 lg:text-[1.05rem] lg:leading-8">
+                                    <p className="mt-2 max-w-2xl font-body text-base leading-7 text-text-secondary sm:mt-3 md:text-lg md:leading-7">
                                         {body}
                                     </p>
                                 )}
