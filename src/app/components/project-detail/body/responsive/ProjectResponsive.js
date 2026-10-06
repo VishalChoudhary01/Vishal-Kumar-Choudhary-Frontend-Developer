@@ -71,6 +71,7 @@ export default function ProjectResponsive({ project }) {
                             className="mt-8 sm:mt-10 md:mt-12"
                         >
                             <ProjectResponsiveList
+                                responsive={project?.story?.responsive}
                                 visible={show}
                                 reduced={reduced}
                             />

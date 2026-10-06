@@ -2,28 +2,40 @@
 
 import ProjectResponsiveItem from "./ProjectResponsiveItem";
 
-const responsivePrinciples = [
-    {
-        label: "01",
-        title: "Small screens",
-        body: "Layouts were designed to remain readable and usable when space becomes constrained, without treating mobile as an afterthought.",
-    },
-    {
-        label: "02",
-        title: "Flexible layouts",
-        body: "Spacing, typography, media, and content structures adapt progressively instead of relying on fixed dimensions.",
-    },
-    {
-        label: "03",
-        title: "Consistent experience",
-        body: "The visual language remains consistent across breakpoints while allowing each viewport to use the space it has effectively.",
-    },
-];
+/**
+ * RESPONSIVE SECTION CONTENT.
+ *
+ * Renders the project's own responsive story (`story.responsive.desktop`,
+ * `.tablet`, `.mobile`) — PROJECT-DETAIL-V2.md §5: generic filler that
+ * applies to every project is removed, not displayed.
+ */
+export default function ProjectResponsiveList({ responsive, visible, reduced }) {
+    if (!responsive) {
+        return null;
+    }
 
-export default function ProjectResponsiveList({ visible, reduced }) {
+    const items = [
+        {
+            title: "Desktop",
+            body: responsive.desktop,
+        },
+        {
+            title: "Tablet",
+            body: responsive.tablet,
+        },
+        {
+            title: "Mobile",
+            body: responsive.mobile,
+        },
+    ].filter((item) => item.body);
+
+    if (!items.length) {
+        return null;
+    }
+
     return (
         <div className="border-t border-border">
-            {responsivePrinciples.map((item, index) => (
+            {items.map((item, index) => (
                 <ProjectResponsiveItem
                     key={item.title}
                     item={item}

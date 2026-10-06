@@ -2,33 +2,31 @@
 
 import ProjectMotionItem from "./ProjectMotionItem";
 
-const motionPrinciples = [
-    {
-        title: "Purposeful movement",
-        body: "Motion is used to guide attention, communicate change, and make interactions feel intentional.",
-    },
-    {
-        title: "Editorial pacing",
-        body: "Transitions create rhythm between sections and states without competing with the content.",
-    },
-    {
-        title: "Subtle feedback",
-        body: "Small changes in position, opacity, and scale provide feedback while keeping the interface calm.",
-    },
-];
+/**
+ * MOTION SECTION CONTENT.
+ *
+ * Renders the project's own motion story (`story.motion.statement` +
+ * `story.motion.body`) — PROJECT-DETAIL-V2.md §5: generic filler that
+ * applies to every project is removed, not displayed.
+ */
+export default function ProjectMotionList({ motion, visible, reduced }) {
+    if (!motion) {
+        return null;
+    }
 
-export default function ProjectMotionList({ visible, reduced }) {
+    const paragraphs = Array.isArray(motion.body) ? motion.body : [motion.body];
+
     return (
         <div className="border-t border-border">
-            {motionPrinciples.map((item, index) => (
-                <ProjectMotionItem
-                    key={item.title}
-                    item={item}
-                    index={index}
-                    visible={visible}
-                    reduced={reduced}
-                />
-            ))}
+            <ProjectMotionItem
+                item={{
+                    title: motion.statement,
+                    body: paragraphs.filter(Boolean).join(" "),
+                }}
+                index={0}
+                visible={visible}
+                reduced={reduced}
+            />
         </div>
     );
 }

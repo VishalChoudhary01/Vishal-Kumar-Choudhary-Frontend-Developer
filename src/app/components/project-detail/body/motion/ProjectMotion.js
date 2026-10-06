@@ -68,6 +68,7 @@ export default function ProjectMotion({ project }) {
                             className="mt-8 sm:mt-10 md:mt-12"
                         >
                             <ProjectMotionList
+                                motion={project?.story?.motion}
                                 visible={show}
                                 reduced={reduced}
                             />

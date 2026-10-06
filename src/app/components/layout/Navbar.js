@@ -349,11 +349,11 @@ export default function Navbar({ context = "site" }) {
               RIGHT SIDE
           ----------------------------------------------------------------- */}
 
-          <div className="flex h-full items-center justify-end gap-1.5 lg:justify-self-end lg:gap-0">
+          <div className="flex h-full items-center justify-end gap-2.5 lg:justify-self-end lg:gap-0">
             {/* SOCIAL LINKS — always visible in project context (incl. mobile, no
                 hamburger); portfolio landing keeps desktop-only */}
 
-            <div className={cn("items-center", isProjectContext ? "flex" : "hidden lg:flex")}>
+            <div className={cn("items-center", isProjectContext ? "flex " : "hidden lg:flex  ")}>
               {socialLinks.map((link) => (
                 <SocialIcon
                   key={link.href}
