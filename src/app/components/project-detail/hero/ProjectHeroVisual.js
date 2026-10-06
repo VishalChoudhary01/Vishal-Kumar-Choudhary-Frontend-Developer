@@ -31,16 +31,18 @@ export default function ProjectHeroVisual({
                 reduced
                     ? false
                     : {
-                        opacity: 0,
-                        scale: 1.025,
-                    }
+                          opacity: 0,
+                          scale: 1.025,
+                      }
             }
             animate={{
                 opacity: 1,
                 scale: 1,
             }}
             transition={{
-                duration: reduced ? 0 : DURATION.atmosphere,
+                duration: reduced
+                    ? 0
+                    : DURATION.atmosphere,
                 delay: 0,
                 ease: EASE,
             }}
@@ -53,10 +55,6 @@ export default function ProjectHeroVisual({
                 overflow-hidden
             "
         >
-            {/* =====================================================
-                PRODUCT SCREENSHOT
-            ===================================================== */}
-
             <Image
                 src={image}
                 alt={imageAlt}
@@ -68,120 +66,36 @@ export default function ProjectHeroVisual({
                     object-cover
 
                     /*
-                     * -------------------------------------------------
+                     * =================================================
                      * MOBILE
-                     * -------------------------------------------------
+                     * =================================================
                      *
-                     * Keep the product interface toward the right,
-                     * but make the screenshot more atmospheric.
+                     * Keep the product interface toward the right.
+                     *
+                     * The background component now handles all
+                     * readability gradients, so we don't stack
+                     * additional white gradients here.
                      */
                     max-md:object-[84%_center]
-                    max-md:opacity-[0.72]
+                    max-md:opacity-[0.70]
 
                     /*
-                     * -------------------------------------------------
+                     * =================================================
                      * TABLET
-                     * -------------------------------------------------
+                     * =================================================
                      */
                     md:object-[64%_center]
+                    md:opacity-[0.82]
 
                     /*
-                     * -------------------------------------------------
-                     * DESKTOP — LOCKED
-                     * -------------------------------------------------
+                     * =================================================
+                     * DESKTOP
+                     * =================================================
                      */
                     lg:object-[62%_center]
+                    lg:opacity-[0.90]
+
                     xl:object-[60%_center]
-                "
-            />
-
-            {/* =====================================================
-                MOBILE ATMOSPHERIC SOFTENING
-
-                Reduces the heavy dark/grey area coming from:
-                  - top-right
-                  - right edge
-                  - upper-middle
-
-                The lower-left remains mostly untouched because
-                the hero content already has its own readability
-                treatment there.
-
-                Desktop: completely disabled.
-            ===================================================== */}
-
-            <div
-                aria-hidden="true"
-                className="
-                    pointer-events-none
-                    absolute
-                    inset-0
-                    hidden
-                    max-md:block
-
-                    bg-[radial-gradient(
-                        ellipse_85%_70%_at_100%_8%,
-                        rgba(255,255,255,0.24)_0%,
-                        rgba(255,255,255,0.15)_28%,
-                        rgba(255,255,255,0.07)_52%,
-                        rgba(255,255,255,0)_78%
-                    )]
-                "
-            />
-
-            {/* =====================================================
-                MOBILE RIGHT-EDGE SOFTENING
-
-                Very subtle horizontal fade.
-
-                Right side becomes lighter without creating a visible
-                rectangular boundary.
-
-                This is intentionally weaker than the content-side
-                readability gradient.
-            ===================================================== */}
-
-            <div
-                aria-hidden="true"
-                className="
-                    pointer-events-none
-                    absolute
-                    inset-0
-                    hidden
-                    max-md:block
-
-                    bg-[linear-gradient(
-                        to_left,
-                        rgba(255,255,255,0.12)_0%,
-                        rgba(255,255,255,0.07)_18%,
-                        rgba(255,255,255,0.025)_38%,
-                        rgba(255,255,255,0)_62%
-                    )]
-                "
-            />
-
-            {/* =====================================================
-                MOBILE TOP SOFTENING
-
-                Removes some of the heavy contrast at the very top
-                while preserving the technical screenshot texture.
-            ===================================================== */}
-
-            <div
-                aria-hidden="true"
-                className="
-                    pointer-events-none
-                    absolute
-                    inset-x-0
-                    top-0
-                    hidden
-                    max-md:block
-                    h-[32%]
-
-                    bg-linear-to-b
-                    from-white/[0.08]
-                    via-white/[0.035]
-                    to-transparent
                 "
             />
         </motion.div>

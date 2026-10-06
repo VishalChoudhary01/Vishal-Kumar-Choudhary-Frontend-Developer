@@ -23,20 +23,65 @@ export default function ProjectHeroContent({ project }) {
     return (
         <div
             className="
-                relative
-                min-w-0
+    relative
+    min-w-0
+    w-full
 
-                /*
-                 * MOBILE
-                 *
-                 * Keep the reading column controlled without
-                 * making the title unnecessarily wide.
-                 */
-                max-md:w-full
-                max-md:max-w-[350px]
+    max-w-[350px]
+    sm:max-w-[560px]
+    md:max-w-[650px]
+    lg:max-w-[780px]
 
-                sm:max-w-none
-            "
+    /*
+     * SUBTLE GLASS GRADIENT
+     *
+     * Light:
+     * slightly brighter behind typography,
+     * fades into the screenshot toward the right.
+     *
+     * Dark:
+     * very subtle black/white glass,
+     * preserving the green atmosphere underneath.
+     */
+
+    bg-linear-to-br
+    from-white/[0.075]
+    via-white/[0.035]
+    to-white/[0.008]
+
+    dark:from-white/[0.055]
+    dark:via-white/[0.018]
+    dark:to-transparent
+
+    backdrop-blur-md
+
+    /*
+     * Very restrained glass edge.
+     */
+    ring-1
+    ring-white/[0.08]
+    dark:ring-white/[0.07]
+
+    /*
+     * Small editorial radius.
+     */
+    rounded-sm
+
+    /*
+     * Content breathing room.
+     */
+    px-4
+    py-5
+
+    sm:px-5
+    sm:py-5
+
+    md:px-6
+    md:py-5
+
+    lg:px-7
+    lg:py-6
+"
         >
             {/* =========================================================
                 EYEBROW
@@ -65,59 +110,46 @@ export default function ProjectHeroContent({ project }) {
                     id="project-hero-title"
                     {...heroEntrance(reduced, {
                         delay: DELAY.title,
-                        y: 30,
-                        blur: 8,
+                        y: 22,
+                        blur: 7,
                     })}
                     className="
-                        mt-2
+        mt-2
+        max-w-full
 
-                        font-display
-                        font-normal
-                        leading-[0.9]
-                        tracking-[-0.035em]
-                        text-text-primary
+        font-display
+        font-normal
+        leading-[0.92]
+        tracking-[-0.035em]
+        text-text-primary
 
-                        /*
-                         * -------------------------------------------------
-                         * MOBILE
-                         * -------------------------------------------------
-                         *
-                         * Previous:
-                         * 3.25rem → 4rem
-                         *
-                         * Now:
-                         * 2.75rem → 3.45rem
-                         *
-                         * This keeps names such as:
-                         *
-                         * System Canvas
-                         * ClassFuse
-                         *
-                         * visually strong without dominating the
-                         * entire mobile hero.
-                         */
-                        text-[clamp(2.75rem,13vw,3.45rem)]
+        /*
+         * MOBILE
+         *
+         * Keep project names compact.
+         *
+         * Especially important for:
+         * - System Canvas
+         * - Next.js Master
+         * - longer future project names
+         */
+        text-[clamp(2.15rem,9.5vw,2.65rem)]
 
-                        /*
-                         * -------------------------------------------------
-                         * TABLET
-                         * -------------------------------------------------
-                         */
-                        sm:mt-4
-                        sm:text-[clamp(3.25rem,8vw,5rem)]
+        /*
+         * TABLET
+         */
+        sm:mt-4
+        sm:text-[clamp(2.75rem,6vw,4rem)]
 
-                        /*
-                         * -------------------------------------------------
-                         * DESKTOP
-                         * -------------------------------------------------
-                         *
-                         * Reduced from the previous 9.375rem maximum.
-                         * The title remains the dominant element but
-                         * no longer overwhelms the hero visual.
-                         */
-                        md:text-[clamp(3.25rem,7.5vw,5.75rem)]
-                        lg:text-[clamp(4rem,6.5vw,7.5rem)]
-                    "
+        /*
+         * DESKTOP
+         */
+        md:text-[clamp(3rem,4.8vw,4.75rem)]
+
+        lg:text-[clamp(3.4rem,4.2vw,5.25rem)]
+
+        xl:text-[clamp(3.75rem,3.9vw,5.75rem)]
+    "
                 >
                     {title}
                 </motion.h1>
@@ -143,28 +175,38 @@ export default function ProjectHeroContent({ project }) {
                         text-text-secondary
 
                         /*
+                         * =================================================
                          * MOBILE
-                         *
-                         * Keep the paragraph readable but quieter
-                         * than the title.
+                         * =================================================
                          */
+
                         max-md:max-w-[335px]
-                        max-md:text-[0.91rem]
+                        max-md:text-[0.9rem]
                         max-md:leading-[1.5]
 
                         /*
+                         * =================================================
                          * TABLET
+                         * =================================================
                          */
+
                         sm:mt-5
-                        sm:text-lg
+                        sm:text-[1.05rem]
+                        sm:leading-[1.5]
 
                         /*
+                         * =================================================
                          * DESKTOP
+                         * =================================================
                          */
-                        md:text-lg
+
+                        md:text-[1.08rem]
+
                         lg:mt-6
-                        lg:text-[1.18rem]
-                        xl:text-[1.28rem]
+                        lg:text-[1.16rem]
+                        lg:leading-[1.52]
+
+                        xl:text-[1.22rem]
                     "
                 >
                     {description}

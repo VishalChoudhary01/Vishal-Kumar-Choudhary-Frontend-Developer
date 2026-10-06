@@ -1,7 +1,10 @@
 "use client";
 
 import { useRef } from "react";
-import { useScroll, useTransform } from "motion/react";
+import {
+    useScroll,
+    useTransform,
+} from "motion/react";
 
 import useReducedMotion from "@/app/hooks/useReducedMotion";
 
@@ -10,7 +13,7 @@ import ProjectHeroBackground from "./ProjectHeroBackground";
 import ProjectHeroContent from "./ProjectHeroContent";
 import ProjectHeroScrollCue from "./ProjectHeroScrollCue";
 
-export default function ProjectDetailHero({ project }) { 
+export default function ProjectDetailHero({ project }) {
     const reduced = useReducedMotion();
     const sectionRef = useRef(null);
 
@@ -22,7 +25,7 @@ export default function ProjectDetailHero({ project }) {
     /*
      * Background-only parallax.
      *
-     * Typography never participates in the parallax transform.
+     * Content remains completely stable.
      */
     const visualY = useTransform(
         scrollYProgress,
@@ -42,7 +45,7 @@ export default function ProjectDetailHero({ project }) {
             "
         >
             {/* =========================================================
-                LAYER 1 — FULL-BLEED PRODUCT VISUAL
+                PRODUCT VISUAL
             ========================================================= */}
 
             <ProjectHeroVisual
@@ -58,13 +61,15 @@ export default function ProjectDetailHero({ project }) {
             />
 
             {/* =========================================================
-                LAYERS 2–4 — ATMOSPHERE
+                ATMOSPHERE
             ========================================================= */}
 
-            <ProjectHeroBackground reduced={reduced} />
+            <ProjectHeroBackground
+                reduced={reduced}
+            />
 
             {/* =========================================================
-                LAYERS 5–6 — CONTENT
+                CONTENT
             ========================================================= */}
 
             <div
@@ -84,41 +89,51 @@ export default function ProjectDetailHero({ project }) {
                         flex-col
 
                         /*
+                         * -------------------------------------------------
                          * MOBILE
                          *
-                         * Give the content a deliberate vertical zone
-                         * instead of pushing everything to the bottom.
+                         * Content sits toward the bottom, but leaves
+                         * enough breathing room around browser chrome.
+                         * -------------------------------------------------
                          */
                         justify-end
                         px-5
-                        pt-28
-                        pb-24
+                        pt-24
+                        pb-28
 
                         /*
-                         * TABLET — existing behavior
+                         * -------------------------------------------------
+                         * TABLET
+                         * -------------------------------------------------
                          */
                         sm:justify-center
                         sm:px-8
                         sm:pt-28
-                        sm:pb-16
+                        sm:pb-20
 
                         md:px-10
 
                         /*
-                         * DESKTOP — LOCKED
+                         * -------------------------------------------------
+                         * DESKTOP
+                         * -------------------------------------------------
                          */
                         lg:justify-center
                         lg:px-0
                         lg:pr-[44vw]
                         lg:pl-[7vw]
-                        lg:pt-28
+                        lg:pt-24
                         lg:pb-0
                     "
                 >
-                    <ProjectHeroContent project={project} />
+                    <ProjectHeroContent
+                        project={project}
+                    />
                 </div>
 
-                <ProjectHeroScrollCue reduced={reduced} />
+                <ProjectHeroScrollCue
+                    reduced={reduced}
+                />
             </div>
         </section>
     );

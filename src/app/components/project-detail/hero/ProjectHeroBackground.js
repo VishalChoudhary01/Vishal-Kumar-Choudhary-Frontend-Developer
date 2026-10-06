@@ -39,8 +39,8 @@ export default function ProjectHeroBackground({ reduced = false }) {
             {/* =========================================================
                 LAYER 2 — TECHNICAL GRID
 
-                Desktop remains unchanged.
-                Mobile becomes quieter.
+                DESKTOP — unchanged
+                MOBILE — intentionally quieter
             ========================================================= */}
 
             <div
@@ -65,16 +65,18 @@ export default function ProjectHeroBackground({ reduced = false }) {
 
                 Desktop unchanged.
 
-                Mobile transparent so the upper screenshot remains
-                atmospheric instead of becoming washed out.
+                Mobile intentionally almost transparent.
+                We do NOT want the top half washed out.
             ========================================================= */}
 
             <div
                 className="
                     absolute
                     inset-0
+
                     bg-white/[0.025]
                     dark:bg-black/[0.26]
+
                     max-md:bg-transparent
                     dark:max-md:bg-transparent
                 "
@@ -85,22 +87,18 @@ export default function ProjectHeroBackground({ reduced = false }) {
 
                 DESKTOP
                 ---------------------------------------------------------
-                Existing desktop treatment remains untouched.
+                Keep exactly as it is.
 
                 MOBILE
                 ---------------------------------------------------------
-                The readable zone moves to the lower-left because
-                mobile hero content lives there.
+                Completely redesigned.
 
-                The field is intentionally taller than before so the
-                eyebrow is included inside the readable atmosphere.
+                The readable area now lives at the BOTTOM-LEFT,
+                because the mobile hero content lives there.
 
-                Strongest:
-                    bottom-left
-
-                Fades toward:
-                    top
-                    right
+                TOP = transparent
+                MIDDLE = mostly transparent
+                BOTTOM LEFT = readable
             ========================================================= */}
 
             <div
@@ -112,19 +110,21 @@ export default function ProjectHeroBackground({ reduced = false }) {
 
                     dark:bg-[radial-gradient(ellipse_105%_115%_at_-8%_50%,rgba(0,0,0,0.90)_0%,rgba(0,0,0,0.78)_22%,rgba(0,0,0,0.58)_40%,rgba(0,0,0,0.36)_57%,rgba(0,0,0,0.15)_72%,rgba(0,0,0,0)_91%)]
 
-                    max-md:bg-[radial-gradient(ellipse_145%_72%_at_4%_78%,rgba(255,255,255,0.96)_0%,rgba(255,255,255,0.86)_18%,rgba(255,255,255,0.68)_34%,rgba(255,255,255,0.46)_50%,rgba(255,255,255,0.22)_66%,rgba(255,255,255,0.06)_82%,rgba(255,255,255,0)_100%)]
+                    max-md:bg-[radial-gradient(ellipse_145%_62%_at_8%_88%,rgba(255,255,255,0.82)_0%,rgba(255,255,255,0.66)_22%,rgba(255,255,255,0.46)_42%,rgba(255,255,255,0.22)_62%,rgba(255,255,255,0.06)_80%,rgba(255,255,255,0)_100%)]
 
-                    dark:max-md:bg-[radial-gradient(ellipse_145%_72%_at_4%_78%,rgba(0,0,0,0.86)_0%,rgba(0,0,0,0.76)_18%,rgba(0,0,0,0.62)_34%,rgba(0,0,0,0.44)_50%,rgba(0,0,0,0.22)_66%,rgba(0,0,0,0.07)_82%,rgba(0,0,0,0)_100%)]
+                    dark:max-md:bg-[radial-gradient(ellipse_145%_62%_at_8%_88%,rgba(0,0,0,0.78)_0%,rgba(0,0,0,0.62)_22%,rgba(0,0,0,0.42)_42%,rgba(0,0,0,0.20)_62%,rgba(0,0,0,0.06)_80%,rgba(0,0,0,0)_100%)]
                 "
             />
 
             {/* =========================================================
-                LAYER 5 — SECONDARY HORIZONTAL ATMOSPHERE
+                LAYER 5 — HORIZONTAL ATMOSPHERE
 
-                Desktop only.
+                DESKTOP — unchanged.
 
-                Mobile removed because the mobile composition is
-                vertically weighted rather than horizontally weighted.
+                MOBILE — REMOVED.
+
+                A horizontal gradient is the wrong geometry for
+                bottom-left mobile content.
             ========================================================= */}
 
             <div
@@ -152,33 +152,22 @@ export default function ProjectHeroBackground({ reduced = false }) {
             {/* =========================================================
                 LAYER 6 — CONTENT READABILITY CORE
 
-                DESKTOP
-                ---------------------------------------------------------
-                Existing desktop field stays unchanged.
+                DESKTOP — unchanged.
 
                 MOBILE
                 ---------------------------------------------------------
-                Stronger and taller.
+                A second bottom-left radial field.
 
-                This is the important mobile readability field.
+                This is softer than Layer 4.
 
-                It reaches the eyebrow from underneath while still
-                disappearing toward the upper-right.
+                It creates enough contrast for:
+                    eyebrow
+                    title
+                    description
+                    metadata
+                    action
 
-                Think:
-
-                         transparent
-                       ╱──────────────╲
-                     ╱                  ╲
-                   ╱     screenshot      ╲
-                  │                       │
-                  │   eyebrow             │
-                  │   ClassFuse            │
-                  │   description          │
-                  │   metadata             │
-                  │   VIEW LIVE            │
-                   ╲██████████████████████╱
-                    ██████████████████████
+                without creating a visible panel.
             ========================================================= */}
 
             <div
@@ -190,60 +179,25 @@ export default function ProjectHeroBackground({ reduced = false }) {
 
                     dark:bg-[radial-gradient(ellipse_58%_52%_at_22%_50%,rgba(0,0,0,0.20)_0%,rgba(0,0,0,0.11)_38%,rgba(0,0,0,0.04)_62%,transparent_86%)]
 
-                    max-md:bg-[radial-gradient(ellipse_140%_66%_at_4%_76%,rgba(255,255,255,0.62)_0%,rgba(255,255,255,0.48)_24%,rgba(255,255,255,0.32)_43%,rgba(255,255,255,0.17)_61%,rgba(255,255,255,0.055)_80%,transparent_100%)]
+                    max-md:bg-[radial-gradient(ellipse_135%_58%_at_10%_82%,rgba(255,255,255,0.28)_0%,rgba(255,255,255,0.18)_30%,rgba(255,255,255,0.08)_52%,rgba(255,255,255,0.025)_70%,transparent_90%)]
 
-                    dark:max-md:bg-[radial-gradient(ellipse_140%_66%_at_4%_76%,rgba(0,0,0,0.58)_0%,rgba(0,0,0,0.45)_24%,rgba(0,0,0,0.30)_43%,rgba(0,0,0,0.16)_61%,rgba(0,0,0,0.05)_80%,transparent_100%)]
+                    dark:max-md:bg-[radial-gradient(ellipse_135%_58%_at_10%_82%,rgba(0,0,0,0.30)_0%,rgba(0,0,0,0.20)_30%,rgba(0,0,0,0.10)_52%,rgba(0,0,0,0.035)_70%,transparent_90%)]
                 "
             />
 
             {/* =========================================================
-                LAYER 7 — MOBILE CONTENT WHITE LIFT
+                LAYER 7 — IMAGE SUPPRESSION
 
-                NEW.
+                DESKTOP — unchanged.
 
-                This specifically solves the issue visible in your
-                screenshot.
+                MOBILE
+                ---------------------------------------------------------
+                Do NOT suppress the entire left side.
 
-                The eyebrow was still sitting on the darker image.
+                Instead, only suppress the image underneath the
+                bottom-left content.
 
-                This field lifts the entire content column:
-
-                    eyebrow
-                    title
-                    description
-                    metadata
-                    action
-
-                without turning the entire mobile hero white.
-
-                IMPORTANT:
-
-                - very strong around content
-                - transparent toward top
-                - transparent toward right
-                - no rectangular edge
-            ========================================================= */}
-
-            <div
-                className="
-                    absolute
-                    inset-0
-
-                    hidden
-                    max-md:block
-
-                    bg-[radial-gradient(ellipse_125%_58%_at_2%_70%,rgba(255,255,255,0.48)_0%,rgba(255,255,255,0.34)_26%,rgba(255,255,255,0.20)_46%,rgba(255,255,255,0.09)_64%,rgba(255,255,255,0.025)_80%,transparent_100%)]
-
-                    dark:bg-[radial-gradient(ellipse_125%_58%_at_2%_70%,rgba(0,0,0,0.46)_0%,rgba(0,0,0,0.34)_26%,rgba(0,0,0,0.21)_46%,rgba(0,0,0,0.10)_64%,rgba(0,0,0,0.025)_80%,transparent_100%)]
-                "
-            />
-
-            {/* =========================================================
-                LAYER 8 — MOBILE LEFT/BOTTOM IMAGE SUPPRESSION
-
-                Only quietens the screenshot underneath the content.
-
-                The upper screenshot remains visible.
+                Therefore the top remains visually transparent.
             ========================================================= */}
 
             <div
@@ -255,16 +209,18 @@ export default function ProjectHeroBackground({ reduced = false }) {
 
                     dark:bg-[linear-gradient(90deg,rgba(0,0,0,0.38)_0%,rgba(0,0,0,0.31)_18%,rgba(0,0,0,0.21)_34%,rgba(0,0,0,0.10)_50%,rgba(0,0,0,0.025)_65%,transparent_78%)]
 
-                    max-md:bg-[radial-gradient(ellipse_125%_50%_at_4%_76%,rgba(255,255,255,0.28)_0%,rgba(255,255,255,0.18)_30%,rgba(255,255,255,0.09)_52%,rgba(255,255,255,0.025)_72%,transparent_94%)]
+                    max-md:bg-[radial-gradient(ellipse_125%_48%_at_8%_88%,rgba(255,255,255,0.34)_0%,rgba(255,255,255,0.22)_30%,rgba(255,255,255,0.10)_52%,rgba(255,255,255,0.035)_70%,transparent_92%)]
 
-                    dark:max-md:bg-[radial-gradient(ellipse_125%_50%_at_4%_76%,rgba(0,0,0,0.28)_0%,rgba(0,0,0,0.20)_30%,rgba(0,0,0,0.10)_52%,rgba(0,0,0,0.025)_72%,transparent_94%)]
+                    dark:max-md:bg-[radial-gradient(ellipse_125%_48%_at_8%_88%,rgba(0,0,0,0.34)_0%,rgba(0,0,0,0.24)_30%,rgba(0,0,0,0.12)_52%,rgba(0,0,0,0.035)_70%,transparent_92%)]
                 "
             />
 
             {/* =========================================================
-                LAYER 9 — LOWER ATMOSPHERE
+                LAYER 8 — LOWER ATMOSPHERE
 
-                Supports the transition without creating a hard line.
+                Desktop unchanged.
+
+                Mobile is concentrated near the content zone.
             ========================================================= */}
 
             <div
@@ -276,19 +232,26 @@ export default function ProjectHeroBackground({ reduced = false }) {
 
                     dark:bg-[radial-gradient(ellipse_72%_42%_at_25%_78%,rgba(0,0,0,0.12)_0%,rgba(0,0,0,0.055)_40%,transparent_78%)]
 
-                    max-md:bg-[radial-gradient(ellipse_135%_40%_at_8%_88%,rgba(255,255,255,0.16)_0%,rgba(255,255,255,0.07)_40%,transparent_78%)]
+                    max-md:bg-[radial-gradient(ellipse_135%_40%_at_10%_88%,rgba(255,255,255,0.16)_0%,rgba(255,255,255,0.07)_40%,transparent_78%)]
 
-                    dark:max-md:bg-[radial-gradient(ellipse_135%_40%_at_8%_88%,rgba(0,0,0,0.16)_0%,rgba(0,0,0,0.07)_40%,transparent_78%)]
+                    dark:max-md:bg-[radial-gradient(ellipse_135%_40%_at_10%_88%,rgba(0,0,0,0.16)_0%,rgba(0,0,0,0.07)_40%,transparent_78%)]
                 "
             />
 
             {/* =========================================================
-                LAYER 10 — HERO → SNAPSHOT TRANSITION
+                LAYER 9 — HERO → SNAPSHOT TRANSITION
 
-                Desktop stays strong.
+                IMPORTANT:
 
-                Mobile is softer and starts lower so the Snapshot
-                section does not wash into the hero content.
+                Desktop stays exactly as before.
+
+                Mobile:
+                - shorter
+                - softer
+                - starts lower
+
+                This prevents the Snapshot color from washing over
+                the project metadata and VIEW LIVE action.
             ========================================================= */}
 
             <div
@@ -316,7 +279,11 @@ export default function ProjectHeroBackground({ reduced = false }) {
             />
 
             {/* =========================================================
-                LAYER 11 — EDGE VIGNETTE
+                LAYER 10 — EDGE VIGNETTE
+
+                Desktop unchanged.
+
+                Mobile extremely subtle.
             ========================================================= */}
 
             <div
