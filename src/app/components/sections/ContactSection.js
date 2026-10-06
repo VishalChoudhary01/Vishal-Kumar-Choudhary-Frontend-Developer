@@ -28,7 +28,7 @@ export default function ContactSection({
                 <div className="grid gap-10 md:gap-14 lg:grid-cols-[180px_1fr] lg:gap-16">
                     <div>
                         <SectionHeading
-                            heading="CONTACT"
+                            label="CONTACT"
                             align="left"
                             number={"07"}
                         />

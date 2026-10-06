@@ -37,16 +37,14 @@ export default function ProjectShowcase({ project }) {
             <Container>
                 <div className="grid gap-10 px-5 py-16 sm:px-8 sm:py-24 md:gap-14 md:px-10 lg:grid-cols-[180px_1fr] lg:gap-16 lg:px-12 lg:py-28">
                     <div>
-                        <SectionHeading heading="SHOWCASE" align="left" />
+                        <SectionHeading label="SHOWCASE" align="left" />
                     </div>
 
                     <div>
                         <SectionHeading
                             supporting="The interface, captured in the details that matter."
                             supportingId="project-showcase-title"
-                            align="left"
-                            size="compact"
-                        />
+                            align="left" />
 
                         <motion.div
                             initial={

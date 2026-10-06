@@ -35,7 +35,7 @@ function DynamicSkills({ skills }) {
                 <div className="grid gap-10 md:gap-14 lg:grid-cols-[180px_1fr] lg:gap-16">
                     <div>
                         <SectionHeading
-                            heading="SKILLS"
+                            label="SKILLS"
                             align="left"
                             number={"04"}
                         />
@@ -46,6 +46,7 @@ function DynamicSkills({ skills }) {
                             supporting="What I build with."
                             align="left"
                             supportingId="skills-heading"
+                            size="compact"
                         />
 
                         <ol
@@ -80,7 +81,7 @@ function StaticSkills({ skills }) {
                 <div className="grid gap-10 md:gap-14 lg:grid-cols-[180px_1fr] lg:gap-16">
                     <div>
                         <SectionHeading
-                            heading="SKILLS"
+                            label="SKILLS"
                             align="left"
                         />
                     </div>

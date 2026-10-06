@@ -31,7 +31,7 @@ export default function EducationHeader({
                         label={educationData.eyebrow}
                         align="left"
 
-                        number={"03"}
+                        number={"03"} 
                     />
                 </div>
 

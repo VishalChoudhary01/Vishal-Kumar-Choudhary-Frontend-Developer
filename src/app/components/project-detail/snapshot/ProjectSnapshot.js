@@ -74,19 +74,11 @@ export default function ProjectSnapshot({ project }) {
                     "
                 >
                     <div>
-                        <SectionHeading
-                            heading="SNAPSHOT"
-                            align="left"
-                        />
+                        <SectionHeading label="SNAPSHOT" align="left" />
                     </div>
 
                     <div>
-                        <SectionHeading
-                            supporting="The work, reduced to what matters."
-                            supportingId="project-snapshot-title"
-                            align="left"
-                            size="compact"
-                        />
+                        <SectionHeading supporting="The work, reduced to what matters." supportingId="project-snapshot-title" align="left" />
 
                         <motion.div
                             initial={

@@ -152,7 +152,7 @@ export default function Projects() {
 
                     <div className="min-w-0">
                         <SectionHeading
-                            heading="PROJECTS"
+                            label="PROJECTS"
                             align="left"
                             number={"06"}
                         />
@@ -167,6 +167,7 @@ export default function Projects() {
                             supporting="What I actually built."
                             align="left"
                             supportingId="projects-heading"
+                            size="compact"
                         />
 
                         {/* ------------------------------------------------------------

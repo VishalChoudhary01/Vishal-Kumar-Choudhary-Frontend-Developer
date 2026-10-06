@@ -42,7 +42,7 @@ export default function ProjectDesign({ project }) {
             <Container>
                 <div className="grid gap-8 px-5 py-12 sm:gap-10 sm:px-8 sm:py-14 md:px-10 lg:grid-cols-[180px_1fr] lg:gap-16 lg:px-12">
                     <div>
-                        <SectionHeading heading="DESIGN" align="left" />
+                        <SectionHeading label="DESIGN" align="left" />
                     </div>
 
                     <div>

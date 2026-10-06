@@ -78,7 +78,7 @@ export default function ExperienceSection() {
                     {/* Section heading */}
                     <div>
                         <SectionHeading
-                            heading="EXPERIENCE"
+                            label="EXPERIENCE"
                             align="left"
                             number={"05"}
                         />
@@ -91,6 +91,7 @@ export default function ExperienceSection() {
                             <SectionHeading
                                 supporting="Where I've applied my craft."
                                 align="left"
+                                size="compact"
                             />
 
                             {!isMobile && (
