@@ -47,6 +47,7 @@ function DynamicSkills({ skills }) {
                             align="left"
                             supportingId="skills-heading"
                             size="compact"
+                            datum={false}
                         />
 
                         <ol
@@ -91,6 +92,7 @@ function StaticSkills({ skills }) {
                             supporting="What I build with."
                             align="left"
                             supportingId="skills-heading"
+                            datum={false}
                         />
 
                         <ol

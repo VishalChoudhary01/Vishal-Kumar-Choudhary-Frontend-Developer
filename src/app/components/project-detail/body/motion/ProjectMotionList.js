@@ -26,7 +26,7 @@ export default function ProjectMotionList({ motion: motionStory, visible, reduce
     }
 
     return (
-        <div className="max-w-2xl border-t border-border pt-6 sm:pt-7">
+        <div className="max-w-2xl pt-6 sm:pt-7">
             {paragraphs.map((paragraph, index) => (
                 <motion.p
                     key={`${index}-${paragraph}`}

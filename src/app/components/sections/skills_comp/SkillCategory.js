@@ -113,12 +113,12 @@ export default function SkillCategory({
     return (
         <li
             ref={ref}
-            className={`group relative border-t border-border py-6 sm:py-7 md:py-9 ${animate ? "md:[perspective:1200px]" : ""}`}
+            className={`group relative border-b border-border py-6 sm:py-7 md:py-9 ${animate ? "md:[perspective:1200px]" : ""}`}
         >
             {animate && (
                 <span
                     aria-hidden="true"
-                    className={`pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-brand to-transparent transition-[width,opacity] duration-500 ease-out ${active ? "w-[30%] opacity-40 md:group-hover:w-full md:group-hover:opacity-60" : "w-0 opacity-0 md:group-hover:w-full md:group-hover:opacity-60"}`}
+                    className={`pointer-events-none absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-brand to-transparent transition-[width,opacity] duration-500 ease-out ${active ? "w-[30%] opacity-40 md:group-hover:w-full md:group-hover:opacity-60" : "w-0 opacity-0 md:group-hover:w-full md:group-hover:opacity-60"}`}
                 />
             )}
 

@@ -1,19 +1,17 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useInView } from "motion/react";
+import { useInView } from "motion/react";
 
 import SectionHeading from "@/app/components/common/SectionHeading";
 import Container from "@/app/components/common/Container";
 
 import useReducedMotion from "@/app/hooks/useReducedMotion";
 
-import ProjectSnapshotList from "./ProjectSnapshotList";
-
-const EASE_EDITORIAL = [0.16, 1, 0.3, 1];
+import ProjectTechRail from "./ProjectTechRail";
 
 export default function ProjectSnapshot({ project }) {
-    const reduced = useReducedMotion();
+    const reducedMotion = useReducedMotion();
     const sectionRef = useRef(null);
 
     const isInView = useInView(sectionRef, {
@@ -22,35 +20,21 @@ export default function ProjectSnapshot({ project }) {
         margin: "0px 0px -8% 0px",
     });
 
-    /*
-     * SNAPSHOT = essential metadata owned here: the stack.
-     *
-     * Year and category already live in the hero eyebrow, and the role
-     * already lives in the hero meta line — repeating them here would
-     * duplicate facts the hero communicates immediately above
-     * (PROJECT-DETAIL-V2.md §9 / ownership table §7).
-     */
-    const rows = [
-        {
-            label: "STACK",
-            value: project?.technologies?.join(" · "),
-        },
-    ].filter((item) => item.value);
+    const technologies = project?.technologies ?? [];
 
-    if (!rows.length) {
+    if (!technologies.length) {
         return null;
     }
-
-    const show = reduced || isInView;
 
     return (
         <section
             ref={sectionRef}
             id="project-snapshot"
-            aria-labelledby="project-snapshot-title"
+            aria-label="Project technology stack"
             className="
                 relative
                 isolate
+                overflow-hidden
                 bg-background
             "
         >
@@ -67,61 +51,35 @@ export default function ProjectSnapshot({ project }) {
                         sm:py-14
 
                         md:px-10
+                        md:py-16
 
-                        lg:grid-cols-[180px_1fr]
+                        lg:grid-cols-[180px_minmax(0,1fr)]
                         lg:gap-16
                         lg:px-12
+                        lg:py-20
                     "
                 >
+                    {/* Section eyebrow */}
                     <div>
-                        <SectionHeading label="SNAPSHOT" align="left" />
+                        <SectionHeading
+                            label="SNAPSHOT"
+                            align="left"
+                        />
                     </div>
 
+                    {/* Section content */}
                     <div>
-                        <SectionHeading supporting="The work, reduced to what matters." supportingId="project-snapshot-title" align="left" />
+                        <SectionHeading
+                            supporting="The work, reduced to what matters."
+                            supportingId="project-snapshot-title"
+                            align="left"
+                        />
 
-                        <motion.div
-                            initial={
-                                reduced
-                                    ? false
-                                    : {
-                                        opacity: 0,
-                                        y: 24,
-                                    }
-                            }
-                            animate={
-                                show
-                                    ? {
-                                        opacity: 1,
-                                        y: 0,
-                                    }
-                                    : {
-                                        opacity: 0,
-                                        y: 24,
-                                    }
-                            }
-                            transition={
-                                reduced
-                                    ? {
-                                        duration: 0,
-                                    }
-                                    : {
-                                        duration: 0.8,
-                                        delay: 0.18,
-                                        ease: EASE_EDITORIAL,
-                                    }
-                            }
-                            className="
-                                mt-8
-                                sm:mt-10
-                            "
-                        >
-                            <ProjectSnapshotList
-                                rows={rows}
-                                visible={show}
-                                reduced={reduced}
-                            />
-                        </motion.div>
+                        <ProjectTechRail
+                            technologies={technologies}
+                            isInView={isInView}
+                            reducedMotion={reducedMotion}
+                        />
                     </div>
                 </div>
             </Container>

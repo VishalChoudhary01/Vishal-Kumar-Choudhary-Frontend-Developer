@@ -6,7 +6,7 @@ const EASE_EDITORIAL = [0.16, 1, 0.3, 1];
 
 export default function ProjectReflectionWorked({ items, visible, reduced }) {
     return (
-        <div className="border-t border-border">
+        <div>
             {items.map((item, index) => {
                 const number = String(index + 1).padStart(2, "0");
 

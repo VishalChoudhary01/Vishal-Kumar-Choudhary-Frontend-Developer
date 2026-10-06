@@ -8,7 +8,7 @@ export default function ProjectEngineeringList({
     reduced,
 }) {
     return (
-        <div className="border-t border-border">
+        <div>
             {items.map((item, index) => (
                 <ProjectEngineeringItem
                     key={`${item.title}-${index}`}

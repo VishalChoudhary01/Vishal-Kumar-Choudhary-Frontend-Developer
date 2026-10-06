@@ -34,7 +34,7 @@ export default function ProjectResponsiveList({ responsive, visible, reduced }) 
     }
 
     return (
-        <div className="border-t border-border">
+        <div>
             {items.map((item, index) => (
                 <ProjectResponsiveItem
                     key={item.title}

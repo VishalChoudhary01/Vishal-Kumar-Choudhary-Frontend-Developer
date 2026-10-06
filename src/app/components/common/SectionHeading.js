@@ -21,6 +21,7 @@ export default function SectionHeading({
     align = "left",
     supportingId,
     number,
+    datum = true,
 }) {
     const ref = useRef(null);
 
@@ -82,7 +83,7 @@ export default function SectionHeading({
                 </h2>
             )}
 
-            {supporting && (
+            {supporting && datum && (
                 <SectionHeadingDatum
                     mask={shouldAnimate}
                     show={show}

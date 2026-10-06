@@ -294,7 +294,7 @@ function ProjectList({
 
                     {index < projects.length - 1 && (
                         <div
-                            className="mt-20 h-px w-full bg-border-subtle sm:mt-24 lg:mt-28"
+                            className="mt-20 mb-10 h-px w-full bg-border-subtle sm:mt-24 sm:mb-12 lg:mt-28"
                             aria-hidden="true"
                         />
                     )}
