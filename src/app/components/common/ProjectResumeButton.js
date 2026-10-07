@@ -39,29 +39,101 @@ const EASE = [0.22, 1, 0.36, 1];
 
 const EDGE_OFFSET = 4;
 
+/*
+ * -------------------------------------------------------------
+ * RESPONSIVE SIZE SYSTEM
+ * -------------------------------------------------------------
+ *
+ * One component, three breakpoints — never a scaled-down copy
+ * of the desktop button.
+ *
+ *   mobile   (< 640px)  height 40  circle 32  label 0.68rem
+ *   tablet   (640-1023) height 44  circle 36  label 0.72rem
+ *   desktop  (1024+)    height 48  circle 40  label 0.76rem
+ *
+ * Horizontal padding always keeps a safe gap between the
+ * travelling circle and the label:
+ *
+ *   circle right edge at rest = EDGE_OFFSET + circle
+ *   label starts at pl        >= circle right edge + gap
+ */
+
 const SIZES = {
     sm: {
         shell: `
             min-h-10
-            min-w-[148px]
-            pl-14
-            pr-12
+            min-w-[140px]
+            pl-11
+            pr-11
+
+            sm:min-h-11
+            sm:min-w-[150px]
+            sm:pl-12
+            sm:pr-12
+
+            lg:min-h-12
+            lg:min-w-[160px]
+            lg:pl-14
+            lg:pr-14
         `,
-        label: "text-[0.68rem] sm:text-[0.72rem]",
-        circle: "size-8 sm:size-9",
+        label: "text-[0.68rem] sm:text-[0.72rem] lg:text-[0.76rem]",
+        circle: "size-8 sm:size-9 lg:size-10",
         icon: 15,
     },
 
     default: {
         shell: `
-            min-h-12
-            min-w-[166px]
+            min-h-10
+            min-w-[150px]
+            pl-11
+            pr-11
+
+            sm:min-h-11
+            sm:min-w-[158px]
+            sm:pl-12
+            sm:pr-12
+
+            lg:min-h-12
+            lg:min-w-[166px]
+            lg:pl-14
+            lg:pr-14
+        `,
+        label: "text-[0.68rem] sm:text-[0.72rem] lg:text-[0.76rem]",
+        circle: "size-8 sm:size-9 lg:size-10",
+        icon: 17,
+    },
+
+    /*
+     * -------------------------------------------------------------
+     * NAV VARIANT (variant="nav")
+     * -------------------------------------------------------------
+     *
+     * A deliberate, larger CTA for the mobile navigation menu only.
+     * It does NOT change the default / sm sizing used by the hero,
+     * project cards, project detail or navbar.
+     *
+     *   mobile  (< 640px)  height 56  circle 44  label 0.85rem semibold
+     *   tablet  (640+)     height 64  circle 48  label 0.92rem semibold
+     *
+     * `w-full` lives ONLY here — the caller constrains the outer
+     * wrapper (e.g. w-full max-w-sm mx-auto) so the button fills
+     * the menu width without touching the screen edges.
+     */
+
+    nav: {
+        shell: `
+            w-full
+            min-h-14
             pl-14
             pr-14
+
+            sm:min-h-16
+            sm:pl-15
+            sm:pr-15
         `,
-        label: "text-[0.72rem] sm:text-[0.76rem]",
-        circle: "size-9 sm:size-10",
-        icon: 17,
+        label: "text-[0.85rem] font-semibold sm:text-[0.92rem]",
+        circle: "size-11 sm:size-12",
+        icon: 18,
     },
 };
 
@@ -75,8 +147,23 @@ export default function ProjectResumeButton({
     iconSize,
     className,
     size = "default",
+    /*
+     * Contextual variant.
+     *
+     *   "default" — every portfolio CTA (hero, cards, detail, navbar)
+     *   "nav"     — the larger mobile-navigation Resume CTA only
+     *
+     * Never inferred from the label; callers opt in explicitly.
+     */
+    variant = "default",
     disabled = false,
     ariaLabel,
+    /*
+     * Direct file download (e.g. the resume PDF).
+     * Renders a native anchor with the `download` attribute
+     * instead of a Next.js navigation.
+     */
+    download = false,
 }) {
     const reducedMotion = useReducedMotion();
 
@@ -95,7 +182,10 @@ export default function ProjectResumeButton({
         return null;
     }
 
-    const tone = SIZES[size] ?? SIZES.default;
+    const tone =
+        variant === "nav"
+            ? SIZES.nav
+            : SIZES[size] ?? SIZES.default;
 
     const leftIconSize =
         iconSize ?? tone.icon;
@@ -186,7 +276,7 @@ export default function ProjectResumeButton({
                 updateTravel
             );
         };
-    }, [label, size]);
+    }, [label, size, variant]);
 
     /*
      * ---------------------------------------------------------
@@ -489,6 +579,16 @@ export default function ProjectResumeButton({
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
+                    aria-label={ariaLabel || label}
+                    {...motionProps}
+                >
+                    {content}
+                </motion.a>
+            ) : download ? (
+                <motion.a
+                    ref={linkRef}
+                    href={href}
+                    download={typeof download === "string" ? download : true}
                     aria-label={ariaLabel || label}
                     {...motionProps}
                 >

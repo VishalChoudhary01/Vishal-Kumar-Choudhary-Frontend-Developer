@@ -7,25 +7,18 @@ import VKrLogo from "../common/logo/TwoRingLogo";
 import HamburgerSVGButton from "../ui/HamburgerSVGButton";
 import { cn } from "@/app/lib/utils";
 import EditorialNumber from "../ui/EditorialNumber";
-import DownloadButton from "../common/buttons/DownloadButton";
-import { ArrowDownToLineIcon } from "@/app/components/ui/Icons";
+import ProjectResumeButton from "../common/ProjectResumeButton";
 import Link from "next/link";
-import {
-  useDownload,
-} from "@/app/hooks/useDownload";
+
+const RESUME_PDF = "/resume/vishal_kumar_choudhary_frontend_developer.pdf";
 
 export default function MobileMenu({ navLinks = [], socialLinks = [], activeHref = "", onNavigate, onClose, }) {
   const panelRef = useRef(null);
   const closeButtonRef = useRef(null);
 
   const [openGroups, setOpenGroups] = useState({});
-  const {
-    download,
-    progress,
-    downloading,
-    completed,
-    error,
-  } = useDownload();  /* ==========================================================================
+
+  /* ==========================================================================
      BODY SCROLL LOCK
   ========================================================================== */
 
@@ -508,23 +501,13 @@ export default function MobileMenu({ navLinks = [], socialLinks = [], activeHref
             ease: easeStandard,
           }}
         >
-          
-
-          <DownloadButton
+          <ProjectResumeButton
+            href={RESUME_PDF}
             label="Download Resume"
-            icon={ArrowDownToLineIcon}
-            iconPosition="right"
-            widthClass="w-full sm:w-[180px]"
-            heightClass="h-[52px]"
-            progress={progress}
-            downloading={downloading}
-            completed={completed}
-            onClick={() =>
-              download(
-                "/resume/vishal_kumar_choudhary_frontend_developer.pdf",
-                "vishal_kumar_choudhary_frontend_developer.pdf"
-              )
-            }
+            download="vishal_kumar_choudhary_frontend_developer.pdf"
+            ariaLabel="Download resume (PDF)"
+            variant="nav"
+            className="w-full max-w-sm"
           />
         </motion.div>
 

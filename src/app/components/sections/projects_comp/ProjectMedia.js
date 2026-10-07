@@ -288,37 +288,26 @@ export default function ProjectMedia({
                 {/*
                     CARD ACTION
 
-                    The media component owns WHEN and WHERE the action
-                    appears (hover visibility + entrance). The action
-                    itself — link, focus, arrow — is
-                    ProjectResumeButton.
-
-                    `inert` keeps the hidden action out of the tab
-                    order and out of hit-testing, which is what the
-                    old tabIndex switch did for the anchor.
+                    The pill is ALWAYS VISIBLE on mobile and desktop —
+                    touch users have no hover, and the action must not
+                    depend on it. Link, focus, arrow and responsive
+                    sizing all belong to ProjectResumeButton.
                 */}
                 {href && (
-                    <motion.div
-                        className="pointer-events-none absolute bottom-4 right-4 z-20 sm:bottom-5 sm:right-5"
-                        initial={false}
-                        animate={{
-                            opacity: hovered ? 1 : 0,
-                            y: hovered ? 0 : 6,
-                            scale: hovered ? 1 : 0.96,
-                        }}
-                        transition={{
-                            duration: 0.24,
-                            ease: EASE,
-                        }}
-                        inert={!hovered}
+                    <div
+                        className="
+                            absolute
+                            bottom-4 right-4
+                            z-20
+                            sm:bottom-5 sm:right-5
+                        "
                     >
                         <ProjectResumeButton
                             href={href}
                             label="View Project"
                             size="sm"
-                            className="pointer-events-auto"
                         />
-                    </motion.div>
+                    </div>
                 )}
             </div>
         </motion.div>
