@@ -42,7 +42,7 @@ export default function EducationCardMeta({
 
                     <span
                         aria-hidden="true"
-                        className="mb-[0.58em] ml-1.5 size-[5px] shrink-0 rounded-[1px] bg-brand"
+                        className="mb-[0.58em] ml-1.5 size-1.5 md:size-2 duration-1000    animate-pulse shrink-0 rounded-[1px] bg-brand"
                     />
                 </div>
             </div>

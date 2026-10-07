@@ -57,7 +57,8 @@ export function GmailIcon({ size, strokeWidth, className, ...props }) {
 export function CloudIcon({ size, strokeWidth, className, ...props }) {
     return (
         <SvgIcon size={size} strokeWidth={strokeWidth || 2} fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" />
+            <path d="M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973" />
+            <path d="m13 12-3 5h4l-3 5" />
         </SvgIcon>
     );
 }

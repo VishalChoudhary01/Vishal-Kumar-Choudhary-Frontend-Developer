@@ -19,7 +19,10 @@ const EASE = [0.22, 1, 0.36, 1];
  * BUTTON GEOMETRY
  * -------------------------------------------------------------
  *
- * The circular action sits 4px from either edge.
+ * The circular action sits 4px from either edge of the button's
+ * OUTER border box. The shell carries a 1px border, and absolute
+ * positioning resolves against the padding box, so the CSS offset
+ * is 3px + 1px border = 4px visual.
  *
  * Rest:
  *
@@ -176,11 +179,11 @@ export default function ProjectResumeButton({
      * ---------------------------------------------------------
      * INVALID ACTION PROTECTION
      * ---------------------------------------------------------
+     *
+     * The guard itself lives AFTER useLayoutEffect (see below),
+     * so every hook always runs in the same order even when
+     * href/disabled toggle between renders.
      */
-
-    if (!href || disabled) {
-        return null;
-    }
 
     const tone =
         variant === "nav"
@@ -278,13 +281,24 @@ export default function ProjectResumeButton({
         };
     }, [label, size, variant]);
 
+    if (!href || disabled) {
+        return null;
+    }
+
     /*
      * ---------------------------------------------------------
      * CIRCLE MOTION
      * ---------------------------------------------------------
      *
+     * States:
+     *
+     *   rest   → circle left
+     *   hover  → circle right   (desktop pointer, 0.42s)
+     *   focus  → circle right   (keyboard focus)
+     *   tap    → circle right   (touch / press, 0.28s)
+     *
      * Reduced motion:
-     *     circle remains stationary.
+     *     circle remains stationary, no press scaling.
      *
      * Normal:
      *     circle moves from left edge to right edge.
@@ -294,21 +308,93 @@ export default function ProjectResumeButton({
         ? {
             rest: {
                 x: 0,
+                scale: 1,
             },
 
             hover: {
                 x: 0,
+                scale: 1,
+            },
+
+            focus: {
+                x: 0,
+                scale: 1,
+            },
+
+            tap: {
+                x: 0,
+                scale: 1,
             },
         }
         : {
             rest: {
                 x: 0,
+                scale: 1,
             },
 
             hover: {
                 x: travel,
+                scale: 1,
+            },
+
+            focus: {
+                x: travel,
+                scale: 1,
+            },
+
+            /*
+             * TAP / PRESS
+             *
+             * Touch devices have no reliable hover, so the press
+             * state travels the full distance (quick tactile
+             * confirmation) and compresses the circle slightly.
+             */
+
+            tap: {
+                x: travel,
+                scale: 0.96,
+                transition: {
+                    duration: 0.28,
+                    ease: EASE,
+                },
             },
         };
+
+    /*
+     * ---------------------------------------------------------
+     * BUTTON SURFACE PRESS
+     * ---------------------------------------------------------
+     *
+     * The shell only ever compresses very slightly on press.
+     * It never stays active after navigation — these are
+     * actions, not navigation tabs.
+     */
+
+    const buttonVariants = {
+        rest: {
+            scale: 1,
+        },
+
+        hover: {
+            scale: 1,
+        },
+
+        focus: {
+            scale: 1,
+        },
+
+        tap: reducedMotion
+            ? {
+                scale: 1,
+            }
+            : {
+                scale: 0.98,
+                transition: {
+                    duration: 0.28,
+                    ease: EASE,
+                },
+            },
+    };
 
     /*
      * ---------------------------------------------------------
@@ -376,12 +462,23 @@ export default function ProjectResumeButton({
         "hover:bg-white/65",
 
         /*
+         * Subtle press surface — slightly stronger border and
+         * background while the finger/button is held down.
+         * No glow, no large shadow.
+         */
+        "active:border-black/20",
+        "active:bg-white/70",
+
+        /*
          * Keep hover shadow very subtle.
          */
         "hover:shadow-[0_3px_12px_rgba(0,0,0,0.10)]",
 
         "dark:hover:border-white/20",
         "dark:hover:bg-black/48",
+
+        "dark:active:border-white/25",
+        "dark:active:bg-black/55",
         "dark:hover:shadow-[0_3px_12px_rgba(0,0,0,0.22)]",
 
         /*
@@ -401,8 +498,14 @@ export default function ProjectResumeButton({
 
     const motionProps = {
         className: sharedClassName,
+        variants: buttonVariants,
         whileHover: "hover",
-        whileFocus: "hover",
+        whileFocus: "focus",
+        whileTap: "tap",
+        transition: {
+            duration: 0.28,
+            ease: EASE,
+        },
     };
 
     /*
@@ -479,7 +582,7 @@ export default function ProjectResumeButton({
             =================================================
             
             Initial:
-                4px from left edge.
+                4px from left edge (3px + 1px border).
 
             Hover:
                 4px from right edge.
@@ -495,7 +598,7 @@ export default function ProjectResumeButton({
                 }}
                 className={cn(
                     "absolute",
-                    "left-[4px]",
+                    "left-[3px]",
                     "top-1/2",
                     "-translate-y-1/2",
 

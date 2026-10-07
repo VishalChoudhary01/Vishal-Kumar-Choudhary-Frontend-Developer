@@ -15,6 +15,12 @@ export default function ExperienceWatermark({
 
     const LogoIcon = experience.logoIcon;
 
+    /*
+     * Icon fallback (e.g. Cloudily Scripts) occupies the EXACT
+     * same footprint as the image logos: same width bucket and
+     * the same 2:1 box, scaled to fill its height like an
+     * object-contained image.
+     */
     const imageSize = backdrop
         ? "w-[min(230px,60vw)]"
         : breakpoint === "mobile"
@@ -22,14 +28,6 @@ export default function ExperienceWatermark({
             : breakpoint === "tablet"
                 ? "w-[170px]"
                 : "w-[clamp(150px,14vw,240px)]";
-
-    const iconSize = backdrop
-        ? "text-[clamp(120px,44vw,190px)]"
-        : breakpoint === "mobile"
-            ? "text-[64px]"
-            : breakpoint === "tablet"
-                ? "text-[96px]"
-                : "text-[clamp(100px,8vw,140px)]";
 
     const opacityClass = backdrop
         ? "opacity-10"
@@ -53,16 +51,30 @@ export default function ExperienceWatermark({
 
     if (LogoIcon) {
         return (
-            <LogoIcon
-                aria-hidden="true"
+            <div
                 className={cn(
-                    "pointer-events-none select-none",
-                    "text-brand",
-                    iconSize,
-                    opacityClass
+                    "relative shrink-0 flex items-center justify-center",
+                    imageSize,
+                    "aspect-[2/1]"
                 )}
-                strokeWidth={1.5}
-            />
+            >
+                <LogoIcon
+                    aria-hidden="true"
+                    /*
+                     * SvgIcon bakes an inline 24×24 style; spreading a
+                     * `style` prop AFTER it wins, so the icon fills the
+                     * exact same 2:1 logo box and is drawn to its height
+                     * (preserveAspectRatio meet — like object-contain),
+                     * matching the image logos' footprint precisely.
+                     */
+                    style={{ width: "100%", height: "100%" }}
+                    className={cn(
+                        "pointer-events-none select-none",
+                        "text-brand",
+                        opacityClass
+                    )}
+                />
+            </div>
         );
     }
 

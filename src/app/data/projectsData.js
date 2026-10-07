@@ -47,6 +47,7 @@ export const projects = [
         links: {
             live: "https://class-fuse.vercel.app/",
             github: null,
+            figma: null,
         },
 
         presentation: {
@@ -270,6 +271,7 @@ export const projects = [
         links: {
             live: "https://spendwise-shop.vercel.app/",
             github: "https://github.com/VishalChoudhary01/spendwise",
+            figma: null,
         },
 
         presentation: {
@@ -493,6 +495,7 @@ export const projects = [
         links: {
             live: "https://system-canvas-colors.vercel.app/",
             github: null,
+            figma: null,
         },
 
         presentation: {
@@ -713,6 +716,7 @@ export const projects = [
         links: {
             live: "https://next-js-master-jet.vercel.app/",
             github: null,
+            figma: null,
         },
 
         presentation: {

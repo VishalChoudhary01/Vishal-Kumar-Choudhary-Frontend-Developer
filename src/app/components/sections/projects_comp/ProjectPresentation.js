@@ -5,7 +5,7 @@ import { motion, useInView } from "motion/react";
 
 import ProjectMedia from "./ProjectMedia";
 import ProjectMeta from "./ProjectMeta";
-import ProjectActions from "./ProjectActions";
+import ProjectActions from "@/app/components/common/ProjectActions";
 
 import {
     resolvePreset,
@@ -16,7 +16,6 @@ import {
 import {
     getProjectCardMeta,
     getProjectCardTechnologies,
-    getProjectDetailHref,
 } from "@/app/lib/projectHelpers";
 
 import {
@@ -69,8 +68,6 @@ export default function ProjectPresentation({
 
     const mediaFlagship = Boolean(project.featured) && mode === "editorial";
 
-    const detailHref = getProjectDetailHref(project);
-
     return (
         <article ref={cardRef} className="group relative" aria-label={`Project: ${project.name}`}>
             <div className="min-w-0">
@@ -99,10 +96,10 @@ export default function ProjectPresentation({
                     />
                 )}
 
-                <div className="mt-6 sm:mt-8">
+                <div className="mt-4 sm:mt-5">
                     <ProjectMedia
                         media={project.media}
-                        href={detailHref}
+                        liveHref={project.links?.live}
                         hoverPreset={hoverPreset}
                         aspect={variant.aspect}
                         radiusClass={variant.radius}
@@ -128,15 +125,15 @@ export default function ProjectPresentation({
                     mobileLimit={CARD_TECH_LIMIT_MOBILE}
                     entrance={entrance.meta}
                     isInView={isInView}
-                    className="mt-6 sm:mt-8"
+                    className="mt-4 sm:mt-5"
                 />
 
                 <ProjectActions
-                    href={detailHref}
-                    links={project.links}
+                    project={project}
+                    context="card"
                     entrance={entrance.actions}
                     isInView={isInView}
-                    className="mt-6"
+                    className="mt-4 sm:mt-5"
                 />
             </div>
         </article>
