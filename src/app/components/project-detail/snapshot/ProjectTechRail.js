@@ -2,7 +2,7 @@
 
 import {
     motion,
-    useScroll,
+    useMotionValue,
     useSpring,
     useTransform,
 } from "motion/react";
@@ -13,8 +13,8 @@ import ProjectTechItem from "./ProjectTechItem";
 const EASE_EDITORIAL = [0.16, 1, 0.3, 1];
 
 const SPRING_CONFIG = {
-    stiffness: 150,
-    damping: 26,
+    stiffness: 160,
+    damping: 28,
     mass: 0.5,
 };
 
@@ -32,26 +32,28 @@ export default function ProjectTechRail({
         track: 0,
     });
 
-    const [scrollRange, setScrollRange] = useState({
+    const [range, setRange] = useState({
         start: 0,
         end: 1,
     });
 
     /*
      * ---------------------------------------------------------
-     * GLOBAL PAGE SCROLL
+     * RAW PAGE SCROLL
      * ---------------------------------------------------------
      *
-     * Do NOT use the short rail section as the useScroll target.
-     *
-     * Mobile browsers are much more reliable when the horizontal
-     * movement is derived from the actual document scroll position.
+     * We use a MotionValue so the rail can update directly from
+     * the browser scroll position.
      */
-    const { scrollY } = useScroll();
+    const pageScroll = useMotionValue(
+        typeof window !== "undefined"
+            ? window.scrollY
+            : 0
+    );
 
     /*
      * ---------------------------------------------------------
-     * MEASURE RAIL
+     * MEASURE TRACK
      * ---------------------------------------------------------
      */
     useEffect(() => {
@@ -62,58 +64,74 @@ export default function ProjectTechRail({
             return;
         }
 
-        const updateMeasurements = () => {
-            const viewportWidth =
-                viewport.getBoundingClientRect().width;
-
-            const trackWidth =
-                track.scrollWidth;
-
+        const measure = () => {
             setDimensions({
-                viewport: viewportWidth,
-                track: trackWidth,
+                viewport:
+                    viewport.getBoundingClientRect()
+                        .width,
+
+                track: track.scrollWidth,
             });
         };
 
-        updateMeasurements();
+        measure();
 
-        const resizeObserver =
-            new ResizeObserver(updateMeasurements);
+        const observer =
+            new ResizeObserver(measure);
 
-        resizeObserver.observe(viewport);
-        resizeObserver.observe(track);
+        observer.observe(viewport);
+        observer.observe(track);
 
         window.addEventListener(
             "resize",
-            updateMeasurements
+            measure
         );
 
         return () => {
-            resizeObserver.disconnect();
+            observer.disconnect();
 
             window.removeEventListener(
                 "resize",
-                updateMeasurements
+                measure
             );
         };
     }, [technologies]);
 
     /*
      * ---------------------------------------------------------
-     * MEASURE PAGE SCROLL RANGE
+     * UPDATE PAGE SCROLL MOTION VALUE
      * ---------------------------------------------------------
-     *
-     * We explicitly calculate where this rail should start and
-     * finish responding to the page scroll.
-     *
-     * This avoids depending on:
-     *
-     *     offset: ["start 90%", "end 10%"]
-     *
-     * which is too dependent on the height of this small section.
      */
     useEffect(() => {
-        const updateScrollRange = () => {
+        const updateScroll = () => {
+            pageScroll.set(window.scrollY);
+        };
+
+        updateScroll();
+
+        window.addEventListener(
+            "scroll",
+            updateScroll,
+            {
+                passive: true,
+            }
+        );
+
+        return () => {
+            window.removeEventListener(
+                "scroll",
+                updateScroll
+            );
+        };
+    }, [pageScroll]);
+
+    /*
+     * ---------------------------------------------------------
+     * CALCULATE SECTION SCROLL RANGE
+     * ---------------------------------------------------------
+     */
+    useEffect(() => {
+        const updateRange = () => {
             const section = sectionRef.current;
 
             if (!section) {
@@ -123,72 +141,70 @@ export default function ProjectTechRail({
             const rect =
                 section.getBoundingClientRect();
 
-            const pageScroll =
-                window.scrollY;
+            const absoluteTop =
+                rect.top + window.scrollY;
 
-            const sectionTop =
-                rect.top + pageScroll;
-
-            const sectionBottom =
-                rect.bottom + pageScroll;
+            const absoluteBottom =
+                rect.bottom + window.scrollY;
 
             /*
-             * Start when the rail is approaching the viewport.
+             * Start before the rail reaches the viewport center.
              */
             const start =
-                sectionTop -
-                window.innerHeight * 0.9;
+                absoluteTop -
+                window.innerHeight * 0.75;
 
             /*
-             * Finish after the rail has moved through the
-             * viewport.
+             * Give the rail enough vertical distance to travel.
              */
-            const end =
-                sectionBottom -
-                window.innerHeight * 0.1;
+            const naturalEnd =
+                absoluteBottom -
+                window.innerHeight * 0.15;
 
             /*
-             * Ensure there is ALWAYS a useful scroll range.
+             * IMPORTANT:
              *
-             * This is particularly important on mobile where
-             * the section can be very short.
+             * The rail gets a guaranteed scroll interval even
+             * though the visual rail itself is short.
              */
             const minimumRange =
                 Math.max(
-                    window.innerHeight * 0.9,
-                    500
+                    window.innerHeight * 1.25,
+                    650
                 );
 
-            setScrollRange({
+            const end = Math.max(
+                naturalEnd,
+                start + minimumRange
+            );
+
+            setRange({
                 start,
-                end: Math.max(
-                    end,
-                    start + minimumRange
-                ),
+                end,
             });
         };
 
-        updateScrollRange();
+        updateRange();
 
         window.addEventListener(
             "resize",
-            updateScrollRange
+            updateRange
         );
 
         window.addEventListener(
             "orientationchange",
-            updateScrollRange
+            updateRange
         );
 
         return () => {
             window.removeEventListener(
                 "resize",
-                updateScrollRange
+                updateRange
             );
 
             window.removeEventListener(
                 "orientationchange",
-                updateScrollRange
+                updateRange
             );
         };
     }, [technologies]);
@@ -206,33 +222,27 @@ export default function ProjectTechRail({
 
     /*
      * ---------------------------------------------------------
-     * PAGE SCROLL → RAIL PROGRESS
+     * PAGE SCROLL → 0...1
      * ---------------------------------------------------------
-     *
-     * This is the important part.
-     *
-     * We directly convert document scrollY into a 0 → 1
-     * progress value.
      */
     const progress = useTransform(
-        scrollY,
-        (latestScrollY) => {
-            const range =
-                scrollRange.end -
-                scrollRange.start;
+        pageScroll,
+        (scroll) => {
+            const distance =
+                range.end -
+                range.start;
 
-            if (range <= 0) {
+            if (distance <= 0) {
                 return 0;
             }
 
-            const raw =
-                (latestScrollY -
-                    scrollRange.start) /
-                range;
+            const value =
+                (scroll - range.start) /
+                distance;
 
-            return Math.min(
-                1,
-                Math.max(0, raw)
+            return Math.max(
+                0,
+                Math.min(1, value)
             );
         }
     );
@@ -241,34 +251,27 @@ export default function ProjectTechRail({
      * ---------------------------------------------------------
      * PROGRESS → HORIZONTAL POSITION
      * ---------------------------------------------------------
-     *
-     * Mobile gets a little more travel.
-     *
-     * This creates the feeling that the technology rail is
-     * moving faster than the page itself.
      */
     const targetX = useTransform(
         progress,
         (value) => {
-            const mobile =
-                dimensions.viewport > 0 &&
-                dimensions.viewport < 768;
-
-            const multiplier = mobile
-                ? 1.2
-                : 1;
-
-            return (
-                -travel *
-                value *
-                multiplier
-            );
+            /*
+             * Travel exactly the overflow of the track.
+             *
+             * The track carries px-[50vw] padding at both ends, so
+             * landing on `-travel` frames the final item against the
+             * center optical field. Anything past `-travel` (the old
+             * mobile 1.2x multiplier) scrolls the last item off the
+             * left edge and leaves the rail empty at the end of the
+             * range.
+             */
+            return -travel * value;
         }
     );
 
     /*
      * ---------------------------------------------------------
-     * PHYSICAL INERTIA
+     * PHYSICAL SPRING
      * ---------------------------------------------------------
      */
     const railX = useSpring(
@@ -288,9 +291,7 @@ export default function ProjectTechRail({
             className="
                 relative
                 mt-8
-
                 sm:mt-10
-
                 md:mt-12
             "
         >
@@ -335,7 +336,7 @@ export default function ProjectTechRail({
                         border-border
                     "
                 >
-                    {/* Center optical axis */}
+                    {/* CENTER AXIS */}
                     <div
                         aria-hidden="true"
                         className="
@@ -350,7 +351,7 @@ export default function ProjectTechRail({
                         "
                     />
 
-                    {/* Optical focus */}
+                    {/* CENTER OPTICAL FIELD */}
                     <div
                         aria-hidden="true"
                         className="
@@ -385,9 +386,7 @@ export default function ProjectTechRail({
                             gap-0
                             px-[50vw]
                             py-8
-
                             sm:py-9
-
                             md:py-10
                         "
                     >

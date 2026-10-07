@@ -67,8 +67,21 @@ export default function ProjectSnapshot({ project }) {
                         />
                     </div>
 
-                    {/* Section content */}
-                    <div>
+                    {/*
+                        Section content
+
+                        min-w-0 is REQUIRED. Below lg this grid is a single
+                        implicit `auto` column, so the default
+                        `min-width: auto` of a grid item lets the column
+                        grow to the tech rail's max-content width (the
+                        track is w-max + whitespace-nowrap). The rail's
+                        clipping viewport then becomes exactly as wide as
+                        the track, `track - viewport` collapses to 0 and
+                        the rail never moves. min-w-0 keeps the column at
+                        the container width so the track overflows and
+                        scrolls.
+                    */}
+                    <div className="min-w-0">
                         <SectionHeading
                             supporting="The work, reduced to what matters."
                             supportingId="project-snapshot-title"

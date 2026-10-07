@@ -2,9 +2,13 @@
 
 import {
     motion,
+    useMotionValue,
     useTransform,
 } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import {
+    useEffect,
+    useRef,
+} from "react";
 
 const EASE_EDITORIAL = [0.16, 1, 0.3, 1];
 
@@ -19,75 +23,100 @@ export default function ProjectTechItem({
 }) {
     const itemRef = useRef(null);
 
-    const [itemCenter, setItemCenter] =
-        useState(0);
+    /*
+     * ---------------------------------------------------------
+     * ACTUAL ITEM CENTER
+     * ---------------------------------------------------------
+     *
+     * Instead of using offsetLeft, we continuously derive the
+     * item's real rendered position.
+     *
+     * This is important because the parent track is translated
+     * by Motion.
+     */
+    const itemCenterX = useMotionValue(0);
 
+    /*
+     * ---------------------------------------------------------
+     * UPDATE POSITION
+     * ---------------------------------------------------------
+     */
     useEffect(() => {
-        const item = itemRef.current;
-
-        if (!item) {
-            return;
-        }
-
         const updatePosition = () => {
-            setItemCenter(
-                item.offsetLeft +
-                item.offsetWidth / 2
+            const item = itemRef.current;
+
+            if (!item) {
+                return;
+            }
+
+            const rect =
+                item.getBoundingClientRect();
+
+            itemCenterX.set(
+                rect.left +
+                rect.width / 2
             );
         };
 
         updatePosition();
 
-        const observer =
-            new ResizeObserver(updatePosition);
-
-        observer.observe(item);
+        /*
+         * The track moves through MotionValue.
+         * Subscribe directly to that movement.
+         */
+        const unsubscribe =
+            railX.on("change", updatePosition);
 
         window.addEventListener(
             "resize",
             updatePosition
         );
 
+        window.addEventListener(
+            "scroll",
+            updatePosition,
+            {
+                passive: true,
+            }
+        );
+
         return () => {
-            observer.disconnect();
+            unsubscribe();
 
             window.removeEventListener(
                 "resize",
                 updatePosition
             );
+
+            window.removeEventListener(
+                "scroll",
+                updatePosition
+            );
         };
-    }, [technology]);
+    }, [railX]);
 
     /*
      * ---------------------------------------------------------
-     * DISTANCE FROM CENTER
+     * DISTANCE FROM OPTICAL CENTER
      * ---------------------------------------------------------
      */
-    const distance = useTransform(() => {
-        const currentX = railX.get();
+    const distance = useTransform(
+        itemCenterX,
+        (centerX) => {
+            const viewportCenter =
+                viewportWidth / 2;
 
-        const viewportCenter =
-            viewportWidth / 2;
-
-        return Math.abs(
-            currentX +
-            itemCenter -
-            viewportCenter
-        );
-    });
+            return Math.abs(
+                centerX -
+                viewportCenter
+            );
+        }
+    );
 
     /*
      * ---------------------------------------------------------
      * CONVEX LENS SCALE
      * ---------------------------------------------------------
-     *
-     * Mobile:
-     *      center  → ~1.16
-     *      edges   → ~0.82
-     *
-     * Desktop:
-     *      center  → ~1.05
-     *      edges   → ~0.94
      */
     const scale = useTransform(
         distance,
@@ -97,7 +126,7 @@ export default function ProjectTechItem({
                 viewportWidth < 768;
 
             const radius = mobile
-                ? 170
+                ? 180
                 : 280;
 
             const maxScale = mobile
@@ -114,10 +143,7 @@ export default function ProjectTechItem({
             );
 
             /*
-             * Smoothstep.
-             *
-             * Makes the center feel physically rounded
-             * rather than linearly scaled.
+             * Smooth optical falloff.
              */
             const smooth =
                 progress *
@@ -145,11 +171,11 @@ export default function ProjectTechItem({
                 viewportWidth < 768;
 
             const radius = mobile
-                ? 240
+                ? 250
                 : 360;
 
             const minOpacity = mobile
-                ? 0.32
+                ? 0.3
                 : 0.58;
 
             const progress = Math.min(
@@ -169,8 +195,6 @@ export default function ProjectTechItem({
      * ---------------------------------------------------------
      * VERTICAL LIFT
      * ---------------------------------------------------------
-     *
-     * The focal item slightly rises.
      */
     const y = useTransform(
         distance,
@@ -180,7 +204,7 @@ export default function ProjectTechItem({
                 viewportWidth < 768;
 
             const radius = mobile
-                ? 170
+                ? 180
                 : 240;
 
             const progress = Math.min(
