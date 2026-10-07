@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useSyncExternalStore } from "react";
 import { useInView } from "motion/react";
 
 import SectionHeading from "@/app/components/common/SectionHeading";
@@ -9,10 +9,54 @@ import Container from "@/app/components/common/Container";
 import useReducedMotion from "@/app/hooks/useReducedMotion";
 
 import ProjectTechRail from "./ProjectTechRail";
+import ProjectTechMobile from "./ProjectTechMobile";
+
+/*
+ * ---------------------------------------------------------
+ * RESPONSIVE STRATEGY
+ * ---------------------------------------------------------
+ *
+ * Desktop keeps the horizontal optical rail.
+ *
+ * Below the project's 768px breakpoint there is not enough
+ * width to make a premium focal composition out of
+ * `React · Vite · Tailwind · Redux`, so mobile renders a
+ * vertical kinetic list instead: the page's normal vertical
+ * scroll drives which technology is in focus.
+ */
+const MOBILE_QUERY = "(max-width: 767px)";
+
+function subscribeToMobile(callback) {
+    const mediaQuery = window.matchMedia(MOBILE_QUERY);
+
+    mediaQuery.addEventListener("change", callback);
+
+    return () => {
+        mediaQuery.removeEventListener("change", callback);
+    };
+}
+
+function getMobileSnapshot() {
+    return window.matchMedia(MOBILE_QUERY).matches;
+}
+
+function getServerMobileSnapshot() {
+    /*
+     * Server renders the desktop rail; the client switches to the
+     * vertical list right after hydration without a mismatch.
+     */
+    return false;
+}
 
 export default function ProjectSnapshot({ project }) {
     const reducedMotion = useReducedMotion();
     const sectionRef = useRef(null);
+
+    const isMobile = useSyncExternalStore(
+        subscribeToMobile,
+        getMobileSnapshot,
+        getServerMobileSnapshot
+    );
 
     const isInView = useInView(sectionRef, {
         once: true,
@@ -88,11 +132,18 @@ export default function ProjectSnapshot({ project }) {
                             align="left"
                         />
 
-                        <ProjectTechRail
-                            technologies={technologies}
-                            isInView={isInView}
-                            reducedMotion={reducedMotion}
-                        />
+                        {isMobile ? (
+                            <ProjectTechMobile
+                                technologies={technologies}
+                                reducedMotion={reducedMotion}
+                            />
+                        ) : (
+                            <ProjectTechRail
+                                technologies={technologies}
+                                isInView={isInView}
+                                reducedMotion={reducedMotion}
+                            />
+                        )}
                     </div>
                 </div>
             </Container>

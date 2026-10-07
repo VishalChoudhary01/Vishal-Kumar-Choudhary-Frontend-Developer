@@ -34,7 +34,7 @@ export default function ProjectTechRail({
 
     const [range, setRange] = useState({
         start: 0,
-        end: 1,
+        end: 0,
     });
 
     /*
@@ -127,19 +127,19 @@ export default function ProjectTechRail({
 
     /*
      * ---------------------------------------------------------
-     * CALCULATE SECTION SCROLL RANGE
+     * CALCULATE RAIL SCROLL RANGE
      * ---------------------------------------------------------
      */
     useEffect(() => {
-        const section = sectionRef.current;
-
-        if (!section) {
-            return;
-        }
-
         const computeRange = () => {
+            const viewport = viewportRef.current;
+
+            if (!viewport) {
+                return null;
+            }
+
             const rect =
-                section.getBoundingClientRect();
+                viewport.getBoundingClientRect();
 
             const absoluteTop =
                 rect.top + window.scrollY;
@@ -148,30 +148,38 @@ export default function ProjectTechRail({
                 rect.bottom + window.scrollY;
 
             /*
-             * Start before the rail reaches the viewport center.
+             * ANCHORED ON THE TECHNOLOGY VIEWPORT, NOT THE SECTION.
+             *
+             * The Snapshot heading establishes the section first.
+             * Tying the range to the rail itself keeps the track
+             * at its initial position while the heading is being
+             * read, and only starts the horizontal travel once the
+             * technology viewport is approaching the screen.
              */
             const start =
                 absoluteTop -
-                window.innerHeight * 0.75;
+                window.innerHeight * 0.8;
 
             /*
-             * Give the rail enough vertical distance to travel.
+             * Finish while the rail is still on screen: the range
+             * ends when the rail's bottom reaches 20% from the top
+             * of the viewport, so the final technology reaches the
+             * focal zone before the section scrolls away instead
+             * of finishing its travel off-screen.
              */
             const naturalEnd =
                 absoluteBottom -
-                window.innerHeight * 0.15;
+                window.innerHeight * 0.2;
 
             /*
-             * IMPORTANT:
-             *
-             * The rail gets a guaranteed scroll interval even
-             * though the visual rail itself is short.
+             * Guard for unusually short windows, where the
+             * natural interval would move the rail too fast per
+             * scroll pixel.
              */
-            const minimumRange =
-                Math.max(
-                    window.innerHeight * 1.25,
-                    650
-                );
+            const minimumRange = Math.max(
+                window.innerHeight * 0.75,
+                500
+            );
 
             const end = Math.max(
                 naturalEnd,
@@ -183,6 +191,10 @@ export default function ProjectTechRail({
 
         const updateRange = () => {
             const next = computeRange();
+
+            if (!next) {
+                return;
+            }
 
             /*
              * Only commit when the range actually moved, so plain
@@ -199,7 +211,7 @@ export default function ProjectTechRail({
         /*
          * MEASURING ONLY ON MOUNT IS NOT ENOUGH.
          *
-         * The section's document position changes after mount:
+         * The rail's document position can change after mount:
          * the hero entrance transform, the font swap and lazy
          * content above all shift it. Mount-time values left
          * `start` hundreds of pixels off, so the rail began
