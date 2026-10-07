@@ -4,8 +4,8 @@ const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const BASE = "http://localhost:3000/projects/class-fuse";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const DESKTOP_WIDTHS = [768, 820, 1024, 1280, 1440, 1920];
-const MOBILE_WIDTHS = [320, 375, 390, 430, 640, 767];
+const DESKTOP_WIDTHS = process.env.ONLY === "mobile" ? [] : [768, 820, 1024, 1280, 1440, 1920];
+const MOBILE_WIDTHS = process.env.ONLY === "desktop" ? [] : [320, 375, 390, 430, 640, 767];
 
 async function open(browser, width, height) {
     const page = await browser.newPage();
@@ -320,8 +320,8 @@ async function mobileCheck(browser, width) {
             failures.push("scale does not decrease with distance from the focus");
         if (!s.monotonicOpacity)
             failures.push("opacity does not decrease with distance from the focus");
-        if (s.visible >= 4 && s.maxOpacity - s.minOpacity < 0.08)
-            failures.push(`no optical hierarchy (opacity spread ${s.maxOpacity - s.minOpacity})`);
+        if (s.nearestDistance < 60 && s.maxOpacity - s.minOpacity < 0.15)
+            failures.push(`no optical hierarchy at focus (opacity spread ${s.maxOpacity - s.minOpacity})`);
         if (s.farthestDistance >= 300) {
             /* the far band is only asserted when an item is actually that far */
             if (s.minScale > 0.97)

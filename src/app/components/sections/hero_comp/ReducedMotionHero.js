@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 
-import EditorialCta from "@/app/components/ui/EditorialCta";
+import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";
 import SectionEyebrow from "../../common/SectionEyebrow";
 
 import { NAME, DESCRIPTION, CTA_TEXT, } from "./heroMotionConfig";
@@ -48,7 +48,7 @@ export function ReducedMotionHero() {
         </p>
 
         <div className="mt-5 flex justify-center">
-          <EditorialCta
+          <ProjectResumeButton
             href="#projects"
             label={CTA_TEXT}
           />

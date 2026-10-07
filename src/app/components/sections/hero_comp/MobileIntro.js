@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { motion, useInView } from "motion/react";
-import EditorialCta from "@/app/components/ui/EditorialCta";
+import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";
 import { DESCRIPTION, CTA_TEXT, MOTION, } from "./heroMotionConfig";
 import SectionEyebrow from "../../common/SectionEyebrow";
 
@@ -33,7 +33,7 @@ export function MobileIntro() {
         {...MOTION.mobileIntroEntrance.cta}
       >
         <div className="mt-6 flex justify-center">
-          <EditorialCta
+          <ProjectResumeButton
             href="#projects"
             label={CTA_TEXT}
           />

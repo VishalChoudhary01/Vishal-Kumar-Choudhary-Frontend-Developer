@@ -5,7 +5,7 @@ import { AnimatePresence, useMotionValueEvent, useScroll } from "motion/react";
 import { useMobileMenu } from "@/app/providers/MobileMenuProvider";
 import MobileMenu from "./MobileMenu";
 import DesktopNavigation from "./DesktopNavigation";
-import { ArrowUpRightIcon } from "@/app/components/ui/Icons";
+import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";
 import { portfolio } from "@/app/data/portfolio";
 import VKrLogo from "../common/logo/VKrLogo";
 import { ThemeToggle } from "../ui/ThemeToggle";
@@ -14,7 +14,6 @@ import { flattenNavLinks } from "@/app/helper/flattenNav.Links";
 import Link from "next/link";
 import { cn } from "@/app/lib/utils";
 import SocialIcon from "../ui/SocialIcon";
-import ActionButton from "../common/buttons/ActionButton";
 
 export default function Navbar({ context = "site" }) {
   const [scrolled, setScrolled] = useState(false);
@@ -381,24 +380,11 @@ export default function Navbar({ context = "site" }) {
 
             {!isProjectContext && (
               <div className="hidden items-center lg:ml-5 lg:flex">
-                <Link
-                  target="_blank"
+                <ProjectResumeButton
                   href="/resume/vishal_kumar_choudhary_frontend_developer.pdf"
-                >
-                  <ActionButton
-                    type="button"
-                    label="Resume"
-                    icon={ArrowUpRightIcon}
-                    iconMotion={{
-                      direction: "up-right",
-                      distance: 4,
-                      rotate: 8,
-                      scale: 1,
-                      duration: 0.25,
-                      ease: [0.22, 1, 0.36, 1],
-                    }}
-                  />
-                </Link>
+                  label="Resume"
+                  external
+                />
               </div>
             )}
 

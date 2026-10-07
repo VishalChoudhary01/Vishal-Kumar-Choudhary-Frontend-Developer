@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { motion, useMotionValue, useScroll, useTransform, } from "motion/react";
-import EditorialCta from "@/app/components/ui/EditorialCta";
+import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";
 import HeroAmbientBackground from "@/app/components/common/HeroAmbientBackground";
 import { usePageLoader } from "@/app/providers/PageLoaderProvider";
 import useBreakpoint from "@/app/hooks/useBreakpoint";
@@ -746,7 +746,7 @@ function CinematicHero() {
                             .cta
                         }
                       >
-                        <EditorialCta
+                        <ProjectResumeButton
                           href="#projects"
                           label={CTA_TEXT}
                         />

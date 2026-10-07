@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useRef, useState, useEffect } from "react";
 import { motion } from "motion/react";
 
@@ -10,59 +9,11 @@ import {
     HOVER_PRESETS,
 } from "@/app/lib/motion/projectPresets";
 
+import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";
+
 import Skeleton from "@/app/components/ui/Skeleton";
 
 const EASE = [0.22, 1, 0.36, 1];
-
-function ProjectImageButton({ href, visible }) {
-    if (!href) {
-        return null;
-    }
-
-    return (
-        <motion.div
-            className="pointer-events-none absolute bottom-4 right-4 z-20 sm:bottom-5 sm:right-5"
-            initial={false}
-            animate={{
-                opacity: visible ? 1 : 0,
-                y: visible ? 0 : 6,
-                scale: visible ? 1 : 0.96,
-            }}
-            transition={{
-                duration: 0.24,
-                ease: EASE,
-            }}
-        >
-            <Link
-                href={href}
-                tabIndex={visible ? 0 : -1}
-                aria-label="View project"
-                className="pointer-events-auto group/project relative inline-flex items-center gap-2 overflow-hidden rounded-full border border-white/35 bg-surface-1/75 px-4 py-2.5 font-mono text-[0.7rem] font-medium tracking-[0.01em] text-text-primary shadow-[0_5px_20px_rgba(0,0,0,0.12)] backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-surface-1/90 hover:shadow-[0_8px_24px_rgba(0,0,0,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:border-white/15"
-            >
-                <span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-0 bg-white/10 opacity-0 transition-opacity duration-300 group-hover/project:opacity-100"
-                />
-
-                <span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-x-3 top-0 h-px bg-white/65 opacity-70"
-                />
-
-                <span className="relative z-10">
-                    View project
-                </span>
-
-                <span
-                    aria-hidden="true"
-                    className="relative z-10 text-[0.8rem] leading-none text-text-primary transition-transform duration-250 group-hover/project:translate-x-0.5 group-hover/project:-translate-y-px"
-                >
-                    ↗
-                </span>
-            </Link>
-        </motion.div>
-    );
-}
 
 export default function ProjectMedia({
     media,
@@ -334,10 +285,41 @@ export default function ProjectMedia({
                     }}
                 />
 
-                <ProjectImageButton
-                    href={href}
-                    visible={hovered}
-                />
+                {/*
+                    CARD ACTION
+
+                    The media component owns WHEN and WHERE the action
+                    appears (hover visibility + entrance). The action
+                    itself — link, focus, arrow — is
+                    ProjectResumeButton.
+
+                    `inert` keeps the hidden action out of the tab
+                    order and out of hit-testing, which is what the
+                    old tabIndex switch did for the anchor.
+                */}
+                {href && (
+                    <motion.div
+                        className="pointer-events-none absolute bottom-4 right-4 z-20 sm:bottom-5 sm:right-5"
+                        initial={false}
+                        animate={{
+                            opacity: hovered ? 1 : 0,
+                            y: hovered ? 0 : 6,
+                            scale: hovered ? 1 : 0.96,
+                        }}
+                        transition={{
+                            duration: 0.24,
+                            ease: EASE,
+                        }}
+                        inert={!hovered}
+                    >
+                        <ProjectResumeButton
+                            href={href}
+                            label="View Project"
+                            size="sm"
+                            className="pointer-events-auto"
+                        />
+                    </motion.div>
+                )}
             </div>
         </motion.div>
     );
