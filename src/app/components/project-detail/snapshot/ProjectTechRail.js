@@ -131,13 +131,13 @@ export default function ProjectTechRail({
      * ---------------------------------------------------------
      */
     useEffect(() => {
-        const updateRange = () => {
-            const section = sectionRef.current;
+        const section = sectionRef.current;
 
-            if (!section) {
-                return;
-            }
+        if (!section) {
+            return;
+        }
 
+        const computeRange = () => {
             const rect =
                 section.getBoundingClientRect();
 
@@ -178,34 +178,95 @@ export default function ProjectTechRail({
                 start + minimumRange
             );
 
-            setRange({
-                start,
-                end,
+            return { start, end };
+        };
+
+        const updateRange = () => {
+            const next = computeRange();
+
+            /*
+             * Only commit when the range actually moved, so plain
+             * scrolling never re-renders this subtree.
+             */
+            setRange((previous) =>
+                previous.start === next.start &&
+                previous.end === next.end
+                    ? previous
+                    : next
+            );
+        };
+
+        /*
+         * MEASURING ONLY ON MOUNT IS NOT ENOUGH.
+         *
+         * The section's document position changes after mount:
+         * the hero entrance transform, the font swap and lazy
+         * content above all shift it. Mount-time values left
+         * `start` hundreds of pixels off, so the rail began
+         * responding at the wrong point in the page scroll.
+         *
+         * Re-measure whenever the page scrolls, coalesced to one
+         * measurement per animation frame. The equality guard
+         * above keeps this effectively free during normal
+         * scrolling.
+         */
+        let frame = 0;
+
+        const schedule = () => {
+            if (frame) {
+                return;
+            }
+
+            frame = requestAnimationFrame(() => {
+                frame = 0;
+                updateRange();
             });
         };
 
         updateRange();
 
         window.addEventListener(
-            "resize",
-            updateRange
+            "scroll",
+            schedule,
+            {
+                passive: true,
+            }
         );
+
+        window.addEventListener("resize", schedule);
 
         window.addEventListener(
             "orientationchange",
-            updateRange
+            schedule
         );
 
+        window.addEventListener("load", schedule);
+
+        if (document.fonts?.ready) {
+            document.fonts.ready.then(schedule);
+        }
+
         return () => {
+            if (frame) {
+                cancelAnimationFrame(frame);
+            }
+
+            window.removeEventListener(
+                "scroll",
+                schedule
+            );
+
             window.removeEventListener(
                 "resize",
-                updateRange
+                schedule
             );
 
             window.removeEventListener(
                 "orientationchange",
-                updateRange
+                schedule
             );
+
+            window.removeEventListener("load", schedule);
         };
     }, [technologies]);
 

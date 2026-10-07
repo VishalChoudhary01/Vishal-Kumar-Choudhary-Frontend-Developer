@@ -1,6 +1,7 @@
 "use client";
 
 import {
+    animate,
     motion,
     useMotionValue,
     useTransform,
@@ -52,9 +53,31 @@ export default function ProjectTechItem({
             const rect =
                 item.getBoundingClientRect();
 
+            /*
+             * item -> track -> viewport (the clipping box).
+             *
+             * The focal point must be the viewport's REAL center.
+             * The rail sits inside a padded container, so its left
+             * edge is not screen x = 0. Comparing against
+             * `viewportWidth / 2` alone shifted the whole lens
+             * left by the container offset and the item sitting on
+             * the center axis ended up at minimum scale.
+             */
+            const viewport =
+                item.parentElement?.parentElement;
+
+            const viewportRect =
+                viewport?.getBoundingClientRect();
+
+            const viewportCenter = viewportRect
+                ? viewportRect.left +
+                viewportRect.width / 2
+                : viewportWidth / 2;
+
             itemCenterX.set(
                 rect.left +
-                rect.width / 2
+                rect.width / 2 -
+                viewportCenter
             );
         };
 
@@ -93,7 +116,7 @@ export default function ProjectTechItem({
                 updatePosition
             );
         };
-    }, [railX]);
+    }, [railX, viewportWidth, itemCenterX]);
 
     /*
      * ---------------------------------------------------------
@@ -102,15 +125,8 @@ export default function ProjectTechItem({
      */
     const distance = useTransform(
         itemCenterX,
-        (centerX) => {
-            const viewportCenter =
-                viewportWidth / 2;
-
-            return Math.abs(
-                centerX -
-                viewportCenter
-            );
-        }
+        (offsetFromCenter) =>
+            Math.abs(offsetFromCenter)
     );
 
     /*
@@ -125,16 +141,23 @@ export default function ProjectTechItem({
                 viewportWidth > 0 &&
                 viewportWidth < 768;
 
+            /*
+             * MOBILE uses a deliberately softer lens.
+             *
+             * A 320-430px viewport cannot carry the desktop
+             * range: 1.16 -> 0.82 makes the focal technology
+             * oversized and its neighbours unreadably small.
+             */
             const radius = mobile
-                ? 180
+                ? 135
                 : 280;
 
             const maxScale = mobile
-                ? 1.16
+                ? 1.06
                 : 1.05;
 
             const minScale = mobile
-                ? 0.82
+                ? 0.93
                 : 0.94;
 
             const progress = Math.min(
@@ -160,22 +183,68 @@ export default function ProjectTechItem({
 
     /*
      * ---------------------------------------------------------
+     * ENTRANCE REVEAL
+     * ---------------------------------------------------------
+     *
+     * The reveal shares the same MotionValue pipeline as the
+     * lens instead of living on `animate`.
+     *
+     * Having `opacity` on BOTH `animate` and `style` made the
+     * entrance animation win: the DOM stayed at opacity 1 until
+     * the rail first moved, so distant technologies never faded
+     * while the rail was at rest.
+     */
+    const reveal = useMotionValue(
+        reducedMotion ? 1 : 0
+    );
+
+    useEffect(() => {
+        if (reducedMotion) {
+            reveal.set(1);
+            return;
+        }
+
+        const entrance = animate(
+            reveal,
+            visible ? 1 : 0,
+            {
+                duration: 0.5,
+                delay: index * 0.045,
+                ease: EASE_EDITORIAL,
+            }
+        );
+
+        return () => entrance.stop();
+    }, [
+        visible,
+        reducedMotion,
+        index,
+        reveal,
+    ]);
+
+    /*
+     * ---------------------------------------------------------
      * OPACITY
      * ---------------------------------------------------------
      */
-    const opacity = useTransform(
+    const lensOpacity = useTransform(
         distance,
         (value) => {
             const mobile =
                 viewportWidth > 0 &&
                 viewportWidth < 768;
 
+            /*
+             * MOBILE keeps its stack readable: mobile users have
+             * less spatial context, so the far technologies stay
+             * around 0.55 - 0.6 instead of fading to 0.3.
+             */
             const radius = mobile
-                ? 250
+                ? 220
                 : 360;
 
             const minOpacity = mobile
-                ? 0.3
+                ? 0.55
                 : 0.58;
 
             const progress = Math.min(
@@ -192,6 +261,16 @@ export default function ProjectTechItem({
     );
 
     /*
+     * REVEAL x LENS — the entrance fade and the optical falloff
+     * multiply instead of fighting over the same property.
+     */
+    const opacity = useTransform(
+        [lensOpacity, reveal],
+        ([lens, revealed]) =>
+            lens * revealed
+    );
+
+    /*
      * ---------------------------------------------------------
      * VERTICAL LIFT
      * ---------------------------------------------------------
@@ -204,7 +283,7 @@ export default function ProjectTechItem({
                 viewportWidth < 768;
 
             const radius = mobile
-                ? 180
+                ? 135
                 : 240;
 
             const progress = Math.min(
@@ -212,9 +291,12 @@ export default function ProjectTechItem({
                 1
             );
 
+            /*
+             * No bounce: 0-2px on mobile, a whisper on desktop.
+             */
             return (
                 -(1 - progress) *
-                (mobile ? 4 : 1.5)
+                (mobile ? 2 : 1.5)
             );
         }
     );
@@ -222,35 +304,6 @@ export default function ProjectTechItem({
     return (
         <motion.div
             ref={itemRef}
-            initial={
-                reducedMotion
-                    ? false
-                    : {
-                        opacity: 0,
-                        y: 10,
-                    }
-            }
-            animate={
-                reducedMotion || visible
-                    ? {
-                        opacity: 1,
-                    }
-                    : {
-                        opacity: 0,
-                    }
-            }
-            transition={
-                reducedMotion
-                    ? {
-                        duration: 0,
-                    }
-                    : {
-                        duration: 0.5,
-                        delay:
-                            index * 0.045,
-                        ease: EASE_EDITORIAL,
-                    }
-            }
             style={{
                 scale: reducedMotion
                     ? 1
@@ -313,7 +366,7 @@ export default function ProjectTechItem({
                 <span
                     aria-hidden="true"
                     className="
-                        mx-4
+                        mx-3
                         select-none
                         text-text-muted
                         sm:mx-5
