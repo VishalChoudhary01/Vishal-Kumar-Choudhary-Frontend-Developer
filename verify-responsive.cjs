@@ -37,12 +37,14 @@ const PAGE_HELPERS = `
             href: a.getAttribute("href"),
             target: a.getAttribute("target"),
             download: a.getAttribute("download"),
-            w: Math.round(r.width),
-            h: Math.round(r.height),
+            /* offset metrics are layout-based, so a scaled ancestor
+               (e.g. the Live overlay's rest scale 0.97) can't skew them */
+            w: a.offsetWidth,
+            h: a.offsetHeight,
             left: Math.round(r.left),
             right: Math.round(r.right),
             bottom: Math.round(r.bottom),
-            circle: Math.round(cr.width),
+            circle: circle.offsetWidth,
             circleLeftEdge: Math.round(cr.left - r.left),
             restGap: lr ? Math.round(lr.left - cr.right) : null,
             rightPad: lr ? Math.round(r.right - lr.right) : null,
@@ -197,7 +199,122 @@ function checkGeometry(tag, b, expect) {
         }
     }
 
-    /* ---- main page: Source is gone; pill always visible ---- */
+    /* ---- keyboard focus: circle travels to the right edge ---- */
+    {
+        const readResumeCircle = () =>
+            ev(page, () => {
+                const a =
+                    window.__btns().find((b) => b.label === "Resume") ||
+                    window.__btns()[0];
+                if (!a) return null;
+                const c = a.querySelector(":scope > span.rounded-full");
+                return {
+                    t: getComputedStyle(c).transform,
+                    ring: getComputedStyle(a).boxShadow,
+                };
+            });
+
+        const before = await readResumeCircle();
+        const handle = await evh(page, () =>
+            window.__btns().find((b) => b.label === "Resume") || window.__btns()[0]
+        );
+        const el = await handle.asElement();
+        if (el) await el.evaluate((a) => a.focus());
+        await sleep(600);
+        const after = await readResumeCircle();
+
+        if (!el || !before || !after) fail("focus test: no button found");
+        else {
+            const focusDelta = tx(after.t) - tx(before.t);
+            if (focusDelta < 50)
+                fail(`focus: circle only moved ${focusDelta.toFixed(1)}px on keyboard focus`);
+            else notes.push(`focus: circle moved ${focusDelta.toFixed(1)}px`);
+        }
+        await ev(page, () => document.activeElement?.blur?.());
+    }
+
+    /* ---- press / tap: button 0.98, circle 0.96, circle travels ---- */
+    {
+        /* Wait until the pill is fully rendered AND styled (a dev-server
+           reload can land mid-run with Tailwind CSS not yet applied, which
+           shrinks the circle below the detection threshold). */
+        await page.waitForFunction(
+            `(() => {
+                const links = [...document.querySelectorAll("a")].filter((a) => {
+                    const c = a.querySelector(":scope > span.rounded-full");
+                    if (!c) return false;
+                    if (c.getBoundingClientRect().width < 20) return false;
+                    if (!c.querySelector("svg")) return false;
+                    if (!a.textContent.trim()) return false;
+                    return true;
+                });
+                return links.some((a) => a.textContent.trim() === "Explore Projects");
+            })()`,
+            { timeout: 30000 }
+        );
+        const explore = await evh(page, () =>
+            window.__btns().find((b) => b.label === "Explore Projects")
+        );
+        const el = await explore.asElement();
+        if (!el) {
+            fail("tap test: Explore Projects button not found");
+        } else {
+        await el.hover();
+        await sleep(500);
+        await page.mouse.down();
+        await sleep(500);
+
+        const pressed = await ev(page, () => {
+            const a = window
+                .__btns()
+                .find((b) => b.label === "Explore Projects");
+            const c = a.querySelector(":scope > span.rounded-full");
+            const scaleOf = (tr) => {
+                if (!tr || tr === "none") return 1;
+                const m = tr.match(/matrix\(([^)]+)\)/);
+                return m ? Number(m[1].split(",")[0]) : 1;
+            };
+            return {
+                buttonScale: scaleOf(getComputedStyle(a).transform),
+                circleScale: scaleOf(getComputedStyle(c).transform),
+                circleX: (() => {
+                    const tr = getComputedStyle(c).transform;
+                    if (!tr || tr === "none") return 0;
+                    const m = tr.match(/matrix\(([^)]+)\)/);
+                    return m ? Number(m[1].split(",")[4]) : 0;
+                })(),
+            };
+        });
+        await page.mouse.up();
+        await sleep(500);
+
+        const restAfter = await ev(page, () => {
+            const a = window
+                .__btns()
+                .find((b) => b.label === "Explore Projects");
+            const c = a.querySelector(":scope > span.rounded-full");
+            const tr = getComputedStyle(a).transform;
+            if (!tr || tr === "none") return { buttonScale: 1 };
+            const m = tr.match(/matrix\(([^)]+)\)/);
+            return { buttonScale: m ? Number(m[1].split(",")[0]) : 1 };
+        });
+
+        if (Math.abs(pressed.buttonScale - 0.98) > 0.01)
+            fail(`tap: button scale ${pressed.buttonScale} (expected 0.98)`);
+        if (Math.abs(pressed.circleScale - 0.96) > 0.01)
+            fail(`tap: circle scale ${pressed.circleScale} (expected 0.96)`);
+        if (pressed.circleX < 50)
+            fail(`tap: circle did not travel on press (x=${pressed.circleX.toFixed(1)})`);
+        if (Math.abs(restAfter.buttonScale - 1) > 0.01)
+            fail(`tap: button did not return to rest (scale ${restAfter.buttonScale})`);
+        notes.push(
+            `tap: buttonScale=${pressed.buttonScale} circleScale=${pressed.circleScale} circleX=${pressed.circleX.toFixed(1)} released=${restAfter.buttonScale}`
+        );
+        }
+    }
+
+    /* ---- main page: Source gone, one View Project below image,
+           contextual Live revealed on desktop image hover ---- */
     {
         const srcAnchors = await page.evaluate(() =>
             [...document.querySelectorAll("a")].filter((a) =>
@@ -207,29 +324,115 @@ function checkGeometry(tag, b, expect) {
         if (srcAnchors.length)
             fail(`main page still shows Source action: ${JSON.stringify(srcAnchors)}`);
 
-        const readPill = () =>
-            page.evaluate(() => {
-                const media = [...document.querySelectorAll('[role="img"]')].find((m) =>
-                    m.querySelector('a[href^="/projects/"]')
+        /* Old text-style "View Project →" link must be gone — every action
+           is now a ProjectResumeButton (anchor with a rounded-full circle). */
+        const staleTextLinks = await page.evaluate(() =>
+            [...document.querySelectorAll("a")]
+                .filter(
+                    (a) =>
+                        !a.querySelector(":scope > span.rounded-full") &&
+                        /View Project|Live|Source/.test(a.textContent)
+                )
+                .map((a) => a.textContent.trim())
+        );
+        if (staleTextLinks.length)
+            fail(`main page still has text-style actions: ${JSON.stringify(staleTextLinks)}`);
+
+        const readCard = () =>
+            ev(page, () => {
+                const media = [...document.querySelectorAll('[role="img"]')].find(
+                    (m) => m.querySelector("a") || m.closest("article")?.querySelector("a")
                 );
                 if (!media) return null;
+                media.setAttribute("data-test-media", "");
+                const inside = [...media.querySelectorAll("a")].map((a) => ({
+                    label: a.textContent.trim(),
+                    target: a.getAttribute("target"),
+                    rel: a.getAttribute("rel"),
+                    hasRects: a.getClientRects().length > 0,
+                    /* anchor → button wrapper → overlay motion.div */
+                    wrapperOpacity: Number(
+                        getComputedStyle(a.parentElement.parentElement).opacity
+                    ),
+                    inert: Boolean(a.closest("[inert]")),
+                }));
+                const article = media.closest("article");
+                const row = article
+                    ? [...article.querySelectorAll("a")]
+                          .filter((a) => !media.contains(a))
+                          .map((a) => ({
+                              label: a.textContent.trim(),
+                              pill: Boolean(
+                                  a.querySelector(":scope > span.rounded-full")
+                              ),
+                              h: Math.round(a.getBoundingClientRect().height),
+                              target: a.getAttribute("target"),
+                          }))
+                    : [];
                 media.scrollIntoView({ block: "center" });
-                const a = media.querySelector('a[href^="/projects/"]');
-                const wrap = a.parentElement;
-                return {
-                    opacity: getComputedStyle(wrap).opacity,
-                    inert: wrap.hasAttribute("inert") || a.hasAttribute("inert"),
-                };
+                return { inside, row };
             });
 
         await sleep(600);
-        const pill = await readPill();
-        if (!pill) fail("card pill not found");
+        /* park the cursor away from the cards so no media is hovered
+           while we read the resting state */
+        await page.mouse.move(2, 2);
+        await sleep(300);
+        const card = await readCard();
+        if (!card) fail("project card not found");
         else {
-            if (Number(pill.opacity) < 0.9)
-                fail(`desktop card pill not visible without hover (opacity ${pill.opacity})`);
-            if (pill.inert) fail("card pill is inert while visible");
-            notes.push(`desktop card pill: opacity ${pill.opacity}, inert ${pill.inert}`);
+            /* exactly one View Project, below the image, never over it */
+            if (card.inside.some((b) => b.label === "View Project"))
+                fail("card: View Project still floats over the image");
+
+            const rowPills = card.row.filter((r) => r.pill).map((r) => r.label);
+            if (rowPills.filter((l) => l === "View Project").length !== 1)
+                fail(
+                    `card: expected exactly one View Project below image, got ${JSON.stringify(rowPills)}`
+                );
+            if (card.row.some((r) => r.label === "Live"))
+                fail("card: Live must not be a permanent button below the image");
+
+            /* contextual Live overlay: exists, hidden and inert at rest */
+            const live = card.inside.find((b) => b.label === "Live");
+            if (!live) fail("card: contextual Live overlay missing over image");
+            else {
+                if (live.target !== "_blank" || !/noopener/.test(live.rel || ""))
+                    fail("card: Live must open in a new tab with rel=noopener");
+                if (live.wrapperOpacity > 0.1)
+                    fail(`card: Live visible at rest (opacity ${live.wrapperOpacity})`);
+                if (!live.inert)
+                    fail("card: hidden Live overlay is not inert");
+                notes.push(
+                    `card rest: row=${JSON.stringify(rowPills)} liveOpacity=${live.wrapperOpacity} liveInert=${live.inert}`
+                );
+            }
+
+            /* desktop image hover reveals Live */
+            await page.hover("[data-test-media]");
+            await sleep(700);
+            const hoverState = await ev(page, () => {
+                const media = document.querySelector("[data-test-media]");
+                const a =
+                    media &&
+                    [...media.querySelectorAll("a")].find(
+                        (x) => x.textContent.trim() === "Live"
+                    );
+                if (!a) return null;
+                return {
+                    opacity: Number(
+                        getComputedStyle(a.parentElement.parentElement).opacity
+                    ),
+                    inert: Boolean(a.closest("[inert]")),
+                };
+            });
+            if (!hoverState) fail("card: Live overlay missing on image hover");
+            else {
+                if (hoverState.opacity < 0.9)
+                    fail(`card: Live not revealed on hover (opacity ${hoverState.opacity})`);
+                if (hoverState.inert) fail("card: Live still inert after hover");
+                notes.push(`card hover: liveOpacity=${hoverState.opacity}`);
+            }
         }
     }
 
@@ -248,12 +451,9 @@ function checkGeometry(tag, b, expect) {
     let downloadVerified = false;
 
     for (const s of navExpect) {
-        await page.setViewport({
-            width: s.w,
-            height: s.w < 768 ? 844 : 900,
-            isMobile: s.w < 768,
-            hasTouch: s.w < 768,
-        });
+        /* NOTE: never toggle isMobile/hasTouch — Puppeteer reloads the page
+           when those change, which races the dev server. */
+        await page.setViewport({ width: s.w, height: s.w < 768 ? 844 : 900 });
         await sleep(700);
 
         await page.evaluate(() => {
@@ -338,15 +538,13 @@ function checkGeometry(tag, b, expect) {
                 });
                 for (let i = 0; i < 40 && !downloadVerified; i++) {
                     await sleep(250);
-                    const files = fs.readdirSync(dlDir);
+                    const files = fs.readdirSync(dlDir).filter((f) => !f.endsWith(".crdownload"));
                     if (files.length) {
                         const f = path.join(dlDir, files[0]);
                         const size = fs.statSync(f).size;
                         if (size > 1000) {
                             downloadVerified = true;
-                            notes.push(
-                                `download OK: ${files[0]} (${size} bytes, ${size > 50000 ? "plausible PDF" : "small file"})`
-                            );
+                            notes.push(`download OK: ${files[0]} (${size} bytes)`);
                         }
                     }
                 }
@@ -357,9 +555,78 @@ function checkGeometry(tag, b, expect) {
         }
 
         await page.keyboard.press("Escape");
-        await sleep(600);
+        await sleep(1300);
         const closed = await page.evaluate(() => !document.getElementById("mobile-menu"));
-        if (!closed && s.w === 390) fail("mobile menu did not close on Escape");
+        if (!closed) fail(`${s.w}px: mobile menu did not close on Escape`);
+    }
+
+    /* ---- mobile card hierarchy: no overlay CTA, one View Project,
+           no permanent Live button ---- */
+    {
+        await page.setViewport({ width: 390, height: 844 });
+        await sleep(900);
+        const m = await ev(page, () => {
+            const cards = [...document.querySelectorAll("article")]
+                .map((article) => {
+                    const media = article.querySelector('[role="img"]');
+                    if (!media) return null;
+                    const inside = [...media.querySelectorAll("a")].map((a) => ({
+                        label: a.textContent.trim(),
+                        visible: a.getClientRects().length > 0,
+                    }));
+                    const row = [...article.querySelectorAll("a")]
+                        .filter((a) => !media.contains(a))
+                        .map((a) => ({
+                            label: a.textContent.trim(),
+                            pill: Boolean(
+                                a.querySelector(":scope > span.rounded-full")
+                            ),
+                            h: Math.round(a.getBoundingClientRect().height),
+                        }));
+                    return { inside, row };
+                })
+                .filter(
+                    (x) =>
+                        x &&
+                        (x.inside.length || x.row.some((r) => r.pill))
+                );
+            return {
+                cards,
+                overflow:
+                    document.documentElement.scrollWidth >
+                    window.innerWidth + 1,
+            };
+        });
+
+        if (m.overflow) fail("home 390px: horizontal overflow");
+        if (!m.cards.length) fail("home 390px: no project cards found");
+        for (const c of m.cards) {
+            const visibleInside = c.inside.filter((i) => i.visible);
+            if (visibleInside.length)
+                fail(
+                    `home 390px: overlay action visible on image: ${JSON.stringify(visibleInside)}`
+                );
+            const pills = c.row.filter((r) => r.pill).map((r) => r.label);
+            if (pills.filter((l) => l === "View Project").length !== 1)
+                fail(
+                    `home 390px: expected one View Project below image, got ${JSON.stringify(pills)}`
+                );
+            if (pills.includes("Live"))
+                fail("home 390px: Live must not be a permanent card button");
+            for (const r of c.row.filter((r) => r.pill)) {
+                if (r.h !== 40)
+                    fail(
+                        `home 390px: card button ${r.label} height ${r.h} (expected 40)`
+                    );
+            }
+        }
+        notes.push(
+            `mobile card rows: ${JSON.stringify(
+                m.cards.map((c) =>
+                    c.row.filter((r) => r.pill).map((r) => r.label)
+                )
+            )}`
+        );
     }
 
     /* ---- reduced motion: circle must not move on hover ---- */
@@ -406,37 +673,58 @@ function checkGeometry(tag, b, expect) {
     {
         const p2 = await open(browser, DETAIL, { width: 1440, height: 900 });
         await p2.waitForFunction(
-            () => document.body.innerText.includes("View Live"),
+            () =>
+                [...document.querySelectorAll("a")].some(
+                    (a) => a.textContent.trim() === "Live"
+                ),
             { timeout: 60000 }
         );
         await sleep(1200);
 
         const desktop = await ev(p2, () => {
-            const btns = window.__btns();
-            const find = (t) => btns.find((b) => b.textContent.includes(t));
-            const src = find("Source");
+            const raw = window.__btns();
+            const btns = raw.map(window.__read);
+            const find = (t) => btns.find((b) => b.label.includes(t));
+            const srcRaw = raw.find((b) => b.textContent.includes("Source"));
             return {
                 labels: btns.map((b) => b.label),
-                live: Boolean(find("View Live")),
+                live: Boolean(find("Live")),
                 figma: Boolean(find("Figma")),
-                sourceVisible: src
-                    ? getComputedStyle(src.parentElement).display !== "none"
+                selfLink: Boolean(find("View Project")),
+                sourceVisible: srcRaw
+                    ? getComputedStyle(srcRaw.parentElement).display !== "none"
                     : false,
-                sourceTarget: src && src.getAttribute("target"),
+                sourceTarget: srcRaw && srcRaw.getAttribute("target"),
                 heights: btns.map((b) => b.h),
             };
         });
         notes.push(`detail desktop: ${desktop.labels.join(" | ")} heights ${desktop.heights.join(",")}`);
-        if (!desktop.live) fail("detail desktop: View Live missing");
+        if (!desktop.live) fail("detail desktop: Live action missing");
+        if (desktop.selfLink) fail("detail: must not render a View Project self-link");
         if (!desktop.sourceVisible) fail("detail desktop: Source not visible");
         if (desktop.sourceTarget !== "_blank") fail("detail: Source must open in new tab");
+        if (desktop.figma) fail("detail: Figma rendered even though links.figma is null");
         if (desktop.heights.some((h) => h !== 48))
             fail(`detail desktop: button heights ${desktop.heights.join(",")} (expected 48)`);
 
-        await p2.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
-        await sleep(1200);
+        await p2.setViewport({ width: 390, height: 844 });
+        /* A dev-server reload can race the viewport switch — wait until the
+           hero actions are actually in the DOM before asserting. */
+        const heroReady = await p2
+            .waitForFunction(
+                () =>
+                    [...document.querySelectorAll("a")].some(
+                        (a) => a.textContent.trim() === "Live"
+                    ),
+                { timeout: 30000 }
+            )
+            .then(() => true)
+            .catch(() => false);
+        if (!heroReady) fail("detail mobile: Live action never appeared after resize");
+        await sleep(800);
         const mobile = await ev(p2, () => {
-            const btns = window.__btns();
+            const raw = window.__btns();
+            const btns = raw.map(window.__read);
             /* Source is wrapper-hidden (display:none) on mobile, so it has no
                box — search raw anchors instead of the sized-button filter. */
             const srcAll = [...document.querySelectorAll("a")].filter((a) =>
@@ -444,9 +732,12 @@ function checkGeometry(tag, b, expect) {
             );
             return {
                 labels: btns.map((b) => b.label),
-                sourceDisplay: srcAll.length
-                    ? getComputedStyle(srcAll[0].parentElement).display
-                    : "missing",
+                /* Hidden via an ancestor `hidden lg:block` wrapper — a
+                   display:none ancestor leaves the anchor with no client
+                   rects, which is the reliable visibility signal. */
+                sourceHidden: srcAll.length
+                    ? srcAll.every((a) => a.getClientRects().length === 0)
+                    : true,
                 overflow: document.documentElement.scrollWidth > window.innerWidth + 1,
                 clipped: btns.some((b) => b.clipped),
                 heights: btns.map((b) => b.h),
@@ -454,12 +745,12 @@ function checkGeometry(tag, b, expect) {
             };
         });
         notes.push(
-            `detail mobile: ${mobile.labels.join(" | ")} heights ${mobile.heights.join(",")} source=${mobile.sourceDisplay}`
+            `detail mobile: ${mobile.labels.join(" | ")} heights ${mobile.heights.join(",")} sourceHidden=${mobile.sourceHidden}`
         );
-        if (!mobile.labels.some((l) => l.includes("View Live")))
-            fail("detail mobile: View Live missing");
-        if (!["none", "missing"].includes(mobile.sourceDisplay))
-            fail(`detail mobile: Source must stay hidden (display=${mobile.sourceDisplay})`);
+        if (!mobile.labels.some((l) => l.includes("Live")))
+            fail("detail mobile: Live action missing");
+        if (!mobile.sourceHidden)
+            fail("detail mobile: Source must stay hidden below lg");
         if (mobile.overflow) fail("detail 390px: horizontal overflow");
         if (mobile.clipped) fail("detail 390px: label clipped");
         if (mobile.heights.some((h) => h !== 40))

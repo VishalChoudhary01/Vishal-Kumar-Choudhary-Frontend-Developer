@@ -4,8 +4,11 @@ import { motion } from "motion/react";
 import { ArrowDown } from "lucide-react";
 
 import { EASE, DELAY } from "./projectHeroMotion";
+import { usePageLoader } from "@/app/providers/PageLoaderProvider";
 
 export default function ProjectHeroScrollCue({ reduced = false }) {
+    const { heroReady } = usePageLoader();
+
     return (
         <div
             className="
@@ -31,9 +34,15 @@ export default function ProjectHeroScrollCue({ reduced = false }) {
                             opacity: 0,
                         }
                 }
-                animate={{
-                    opacity: 1,
-                }}
+                animate={
+                    heroReady
+                        ? {
+                            opacity: 1,
+                        }
+                        : {
+                            opacity: 0,
+                        }
+                }
                 transition={{
                     duration: reduced ? 0 : 0.7,
                     delay: reduced ? 0 : DELAY.cue,

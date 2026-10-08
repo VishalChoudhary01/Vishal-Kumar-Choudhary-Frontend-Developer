@@ -1,0 +1,37 @@
+
+NOTES
+  · navigated: http://localhost:3000/
+  · 320px: Explore Projects 172x40 circle32 10.88px | View Project 152x40 circle32 10.88px | View Project 152x40 circle32 10.88px | View Project 152x40 circle32 10.88px
+  · navigated: http://localhost:3000/
+  · 375px: Explore Projects 172x40 circle32 10.88px | View Project 152x40 circle32 10.88px | View Project 152x40 circle32 10.88px | View Project 152x40 circle32 10.88px
+  · 430px: Explore Projects 172x40 circle32 10.88px | View Project 152x40 circle32 10.88px | View Project 152x40 circle32 10.88px | View Project 152x40 circle32 10.88px
+  · 640px: Explore Projects 185x44 circle36 11.52px | View Project 163x44 circle36 11.52px | View Project 163x44 circle36 11.52px | View Project 163x44 circle36 11.52px
+  · 768px: Explore Projects 185x44 circle36 11.52px | View Project 163x44 circle36 11.52px | View Project 163x44 circle36 11.52px | View Project 163x44 circle36 11.52px
+  · 912px: Explore Projects 185x44 circle36 11.52px | View Project 163x44 circle36 11.52px | View Project 163x44 circle36 11.52px | View Project 163x44 circle36 11.52px
+  · 1024px: Resume 166x48 circle40 12.16px | Explore Projects 205x48 circle40 12.16px | Live 160x48 circle40 12.16px | View Project 183x48 circle40 12.16px | Live 160x48 circle40 12.16px | View Project 183x48 circle40 12.16px | Live 160x48 circle40 12.16px | View Project 183x48 circle40 12.16px
+  · 1440px: Resume 166x48 circle40 12.16px | Explore Projects 205x48 circle40 12.16px | Live 160x48 circle40 12.16px | View Project 183x48 circle40 12.16px | Live 160x48 circle40 12.16px | View Project 183x48 circle40 12.16px | Live 160x48 circle40 12.16px | View Project 183x48 circle40 12.16px
+  · 1920px: Resume 166x48 circle40 12.16px | Explore Projects 205x48 circle40 12.16px | Live 160x48 circle40 12.16px | View Project 183x48 circle40 12.16px | Live 160x48 circle40 12.16px | View Project 183x48 circle40 12.16px | Live 160x48 circle40 12.16px | View Project 183x48 circle40 12.16px
+  · travel 157.3px (expected 157), hover right gap 4px
+  · focus: circle moved 118.0px
+  · card rest: row=["View Project"] liveOpacity=0 liveInert=true
+  · card hover: liveOpacity=0
+  · menu 320px: nav 280x56 circle44 13.6px w600 marginL=20 centered±0.0
+  · menu 360px: nav 320x56 circle44 13.6px w600 marginL=20 centered±0.0
+  · menu 375px: nav 335x56 circle44 13.6px w600 marginL=20 centered±0.0
+  · menu 390px: nav 350x56 circle44 13.6px w600 marginL=20 centered±0.0
+  · download OK: vishal_kumar_choudhary_frontend_developer.pdf (55708 bytes)
+  · menu 430px: nav 384x56 circle44 13.6px w600 marginL=23 centered±0.0
+  · menu 640px: nav 384x64 circle48 14.72px w600 marginL=128 centered±0.0
+  · menu 768px: nav 384x64 circle48 14.72px w600 marginL=192 centered±0.0
+  · menu 912px: nav 384x64 circle48 14.72px w600 marginL=264 centered±0.0
+  · mobile card rows: [["View Project"],["View Project"],["View Project"]]
+  · reduced motion: circle stays at rest
+  · navigated: http://localhost:3000/projects/spendwise
+  · navigated: http://localhost:3000/projects/spendwise
+  · detail desktop: Live | Source heights 48,48
+  · detail mobile: Live heights 40 sourceHidden=true
+
+FAILURES:
+  ✗ tap test: Explore Projects button not found
+  ✗ card: Live not revealed on hover (opacity 0)
+  ✗ card: Live still inert after hover

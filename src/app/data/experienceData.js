@@ -37,7 +37,7 @@ export const experienceData = [
         company: "BI Hub Solution",
         role: "Frontend Developer Intern",
         date: "August 2025 – October 2025",
-        logo: "/images/companylogo/bi-hub.png",
+        logo: "/images/companylogo/bi_hub_solution.webp",
 
         overview:
             "Built responsive frontend experiences using React, connecting interface components to REST APIs and translating product designs into functional, maintainable web interfaces.",
@@ -67,7 +67,7 @@ export const experienceData = [
         company: "Cling Multi Solution Pvt. Ltd.",
         role: "Software Developer Intern",
         date: "September 2024 – December 2024",
-        logo: "/images/companylogo/cling.svg",
+        logo: "/images/companylogo/cling_multi_solutions_logo.webp",
 
         overview:
             "Worked on modern frontend development, transforming Figma designs into responsive interfaces using Next.js and Tailwind CSS with an emphasis on reusable UI patterns.",

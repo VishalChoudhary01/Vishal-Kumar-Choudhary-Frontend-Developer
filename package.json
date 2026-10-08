@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/validate-seo.cjs && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "validate:seo": "node scripts/validate-seo.cjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",

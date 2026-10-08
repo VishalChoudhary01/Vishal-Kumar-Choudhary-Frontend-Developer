@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 
 import SectionEyebrow from "@/app/components/common/SectionEyebrow";
 import useReducedMotion from "@/app/hooks/useReducedMotion";
+import { usePageLoader } from "@/app/providers/PageLoaderProvider";
 import { getProjectDescription, getProjectEyebrow } from "@/app/lib/projectHelpers";
 
 import ProjectHeroMeta from "./ProjectHeroMeta";
@@ -12,6 +13,7 @@ import { heroEntrance, DELAY } from "./projectHeroMotion";
 
 export default function ProjectHeroContent({ project }) {
     const reduced = useReducedMotion();
+    const { heroReady } = usePageLoader();
 
     const eyebrow = getProjectEyebrow(project);
     const title = project.name ?? null;
@@ -90,6 +92,7 @@ export default function ProjectHeroContent({ project }) {
                     {...heroEntrance(reduced, {
                         delay: DELAY.eyebrow,
                         y: 14,
+                        ready: heroReady,
                     })}
                 >
                     <SectionEyebrow
@@ -110,6 +113,7 @@ export default function ProjectHeroContent({ project }) {
                         delay: DELAY.title,
                         y: 22,
                         blur: 7,
+                        ready: heroReady,
                     })}
                     className="
         mt-2
@@ -162,6 +166,7 @@ export default function ProjectHeroContent({ project }) {
                     {...heroEntrance(reduced, {
                         delay: DELAY.description,
                         y: 16,
+                        ready: heroReady,
                     })}
                     className="
                         mt-4
@@ -223,6 +228,7 @@ export default function ProjectHeroContent({ project }) {
                     {...heroEntrance(reduced, {
                         delay: DELAY.meta,
                         y: 14,
+                        ready: heroReady,
                     })}
                     className="
                         mt-5

@@ -4,12 +4,14 @@ import Image from "next/image";
 import { motion } from "motion/react";
 
 import { EASE, DURATION } from "./projectHeroMotion";
+import { usePageLoader } from "@/app/providers/PageLoaderProvider";
 
 export default function ProjectHeroVisual({
     project,
     reduced = false,
     parallaxStyle,
 }) {
+    const { heroReady } = usePageLoader();
     /* `media` is canonical; `hero.media` stays available as an explicit override. */
     const image =
         project?.media?.src ||
@@ -36,10 +38,17 @@ export default function ProjectHeroVisual({
                           scale: 1.025,
                       }
             }
-            animate={{
-                opacity: 1,
-                scale: 1,
-            }}
+            animate={
+                heroReady
+                    ? {
+                          opacity: 1,
+                          scale: 1,
+                      }
+                    : {
+                          opacity: 0,
+                          scale: 1.025,
+                      }
+            }
             transition={{
                 duration: reduced
                     ? 0

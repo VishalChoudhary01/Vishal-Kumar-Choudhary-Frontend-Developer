@@ -27,27 +27,43 @@ export const DELAY = {
 };
 
 /* Entrance presets. Reduced motion renders instantly (no transform,
-   no blur, no parallax) so all content stays immediately accessible. */
-export function heroEntrance(reduced, { delay = 0, y = 18, blur = 0 } = {}) {
+   no blur, no parallax) so all content stays immediately accessible.
+
+   `ready` holds the element at its hidden state until the page loader
+   completes (spec §19: content exists in HTML before animation; the
+   entrance replays once the loader lifts). */
+export function heroEntrance(reduced, { delay = 0, y = 18, blur = 0, ready = true } = {}) {
+    const hidden = {
+        opacity: 0,
+        y,
+        ...(blur ? { filter: `blur(${blur}px)` } : {}),
+    };
+
+    const shown = {
+        opacity: 1,
+        y: 0,
+        ...(blur ? { filter: "blur(0px)" } : {}),
+    };
+
     if (reduced) {
         return {
             initial: false,
-            animate: { opacity: 1 },
+            animate: { opacity: ready ? 1 : 0 },
+            transition: { duration: 0 },
+        };
+    }
+
+    if (!ready) {
+        return {
+            initial: hidden,
+            animate: hidden,
             transition: { duration: 0 },
         };
     }
 
     return {
-        initial: {
-            opacity: 0,
-            y,
-            ...(blur ? { filter: `blur(${blur}px)` } : {}),
-        },
-        animate: {
-            opacity: 1,
-            y: 0,
-            ...(blur ? { filter: "blur(0px)" } : {}),
-        },
+        initial: hidden,
+        animate: shown,
         transition: { duration: DURATION.block, delay, ease: EASE },
     };
 }

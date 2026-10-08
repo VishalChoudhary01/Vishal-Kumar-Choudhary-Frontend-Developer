@@ -1,73 +1,25 @@
-"use client";
+import HomePage from "./components/HomePage";
+import JsonLd from "./components/seo/JsonLd";
+import { buildHomeMetadata, buildHomeJsonLd } from "./lib/seo/metadata";
+import { portfolio } from "./data/portfolio";
 
-import { lazy, Suspense } from "react";
-import PortfolioIntro from "./components/sections/Intro_loader/portfolioIntro";
-import { usePageLoader } from "./providers/PageLoaderProvider";
-import Navbar from "./components/layout/Navbar";
-
-/* ── Eager: visible above the fold ── */
-import { HeroSection } from "./components/sections";
-
-/* ── Lazy: below-the-fold sections ── */
-const AboutSection = lazy(() =>
-    import("./components/sections").then((m) => ({ default: m.AboutSection }))
-);
-const EducationSection = lazy(() =>
-    import("./components/sections").then((m) => ({ default: m.EducationSection }))
-);
-const SkillsSection = lazy(() =>
-    import("./components/sections").then((m) => ({ default: m.SkillsSection }))
-);
-const ExperienceSection = lazy(() =>
-    import("./components/sections").then((m) => ({ default: m.ExperienceSection }))
-);
-const ProjectsSection = lazy(() =>
-    import("./components/sections").then((m) => ({ default: m.ProjectsSection }))
-);
-const ContactSection = lazy(() =>
-    import("./components/sections").then((m) => ({ default: m.ContactSection }))
-);
-
-function SectionFallback() {
-    return (
-        <div className="flex min-h-[40vh] items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-brand" />
-        </div>
-    );
-}
+/*
+ * Homepage — server component (spec §2).
+ *
+ * Owns head metadata (canonical, Open Graph, Twitter/X) and the
+ * server-rendered JSON-LD graph (WebSite → ProfilePage → Person),
+ * guaranteed present in the initial HTML regardless of the client
+ * loader. The visible UI lives in components/HomePage.js.
+ */
+export const metadata = buildHomeMetadata();
 
 export default function Home() {
-    const { isLoading, heroReady, completeLoading } = usePageLoader();
+  const jsonLd = buildHomeJsonLd(portfolio.socialLinks);
 
-    return (
-        <main className="min-h-screen bg-background text-background">
-            {/* Page Loader */}
-            {isLoading && (
-                <PortfolioIntro
-                    onComplete={() => {
-                        completeLoading();
-                    }}
-                />
-            )}
-
-            {/* Portfolio content */}
-            <div
-                style={{
-                    visibility: heroReady ? "visible" : "hidden",
-                }}
-            >
-                <Navbar />
-                <HeroSection />
-
-                <Suspense fallback={<SectionFallback />}>
-                    <AboutSection />
-                    <EducationSection />
-                    <SkillsSection />
-                    <ExperienceSection />
-                    <ProjectsSection />
-                    <ContactSection />
-                </Suspense>
-            </div>
-        </main>
-    );
+  return (
+    <>
+      {jsonLd && <JsonLd data={jsonLd} />}
+      <HomePage />
+    </>
+  );
 }
