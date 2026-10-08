@@ -1,23 +1,14 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useInView } from "motion/react";
+import { motion } from "motion/react";
 import SectionHeading from "@/app/components/common/SectionHeading";
 import Container from "@/app/components/common/Container";
 import useReducedMotion from "@/app/hooks/useReducedMotion";
+import { projectItemReveal } from "@/app/lib/motion/projectPresets";
 import ProjectContextBody from "./ProjectContextBody";
-
-const EASE_EDITORIAL = [0.16, 1, 0.3, 1];
 
 export default function ProjectContext({ project }) {
     const reduced = useReducedMotion();
-    const sectionRef = useRef(null);
-
-    const isInView = useInView(sectionRef, {
-        once: true,
-        amount: 0.2,
-        margin: "0px 0px -8% 0px",
-    });
 
     const context = project?.story?.context;
 
@@ -32,10 +23,8 @@ export default function ProjectContext({ project }) {
         return null;
     }
 
-    const show = reduced || isInView;
-
     return (
-        <section ref={sectionRef} id="project-context" aria-labelledby="project-context-title" className="relative bg-background">
+        <section id="project-context" aria-labelledby="project-context-title" className="relative overflow-x-clip bg-background">
             <Container>
                 <div className="grid gap-8 px-5 py-12 sm:gap-10 sm:px-8 sm:py-14 md:px-10 lg:grid-cols-[180px_1fr] lg:gap-16 lg:px-12">
                     <div>
@@ -48,14 +37,12 @@ export default function ProjectContext({ project }) {
                             supportingId="project-context-title"
                             align="left"  />
 
-                        <motion.div initial={reduced ? false : { opacity: 0, y: 24 }} animate={show ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }} transition={reduced ? { duration: 0 } : { duration: 0.8, delay: 0.18, ease: EASE_EDITORIAL }} className="mt-8 sm:mt-10">
-                            {body && <ProjectContextBody body={body} visible={show} reduced={reduced} />}
+                        <div className="mt-8 sm:mt-10">
+                            {body && <ProjectContextBody body={body} reduced={reduced} />}
 
                             {project?.contribution && (
                                 <motion.div
-                                    initial={reduced ? false : { opacity: 0, y: 24 }}
-                                    animate={show ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
-                                    transition={reduced ? { duration: 0 } : { duration: 0.8, delay: 0.24, ease: EASE_EDITORIAL }}
+                                    {...projectItemReveal(0, reduced)}
                                     className="mt-8 max-w-2xl sm:mt-10"
                                 >
                                     <p className="mb-2 font-mono text-[0.68rem] uppercase tracking-[0.18em] text-text-muted">
@@ -67,7 +54,7 @@ export default function ProjectContext({ project }) {
                                     </p>
                                 </motion.div>
                             )}
-                        </motion.div>
+                        </div>
                     </div>
                 </div>
             </Container>

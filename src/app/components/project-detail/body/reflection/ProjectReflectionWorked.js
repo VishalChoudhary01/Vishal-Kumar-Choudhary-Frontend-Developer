@@ -1,10 +1,9 @@
 "use client";
 
 import { motion } from "motion/react";
+import { projectItemReveal } from "@/app/lib/motion/projectPresets";
 
-const EASE_EDITORIAL = [0.16, 1, 0.3, 1];
-
-export default function ProjectReflectionWorked({ items, visible, reduced }) {
+export default function ProjectReflectionWorked({ items, reduced }) {
     return (
         <div>
             {items.map((item, index) => {
@@ -18,9 +17,7 @@ export default function ProjectReflectionWorked({ items, visible, reduced }) {
                 return (
                     <motion.article
                         key={`${title}-${index}`}
-                        initial={reduced ? false : { opacity: 0, y: 20 }}
-                        animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                        transition={reduced ? { duration: 0 } : { duration: 0.7, delay: index * 0.08, ease: EASE_EDITORIAL }}
+                        {...projectItemReveal(index, reduced)}
                         className="group relative border-b border-border py-6 md:py-7"
                     >
                         <div className="relative max-w-3xl">

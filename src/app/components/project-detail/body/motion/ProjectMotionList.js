@@ -2,6 +2,7 @@
 
 import { motion } from "motion/react";
 import { cn } from "@/app/lib/utils";
+import { projectItemReveal } from "@/app/lib/motion/projectPresets";
 
 /**
  * MOTION SECTION CONTENT.
@@ -9,8 +10,11 @@ import { cn } from "@/app/lib/utils";
  * Renders the project's own motion story (`story.motion.body`) beneath the
  * statement, which the section heading now carries — PROJECT-DETAIL-V2.md §5:
  * generic filler that applies to every project is removed, not displayed.
+ *
+ * Each paragraph is its own content unit and reveals on its own viewport
+ * entry; there is no section-level block animation.
  */
-export default function ProjectMotionList({ motion: motionStory, visible, reduced }) {
+export default function ProjectMotionList({ motion: motionStory, reduced }) {
     if (!motionStory) {
         return null;
     }
@@ -30,9 +34,7 @@ export default function ProjectMotionList({ motion: motionStory, visible, reduce
             {paragraphs.map((paragraph, index) => (
                 <motion.p
                     key={`${index}-${paragraph}`}
-                    initial={reduced ? false : { opacity: 0, y: 20 }}
-                    animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                    transition={reduced ? { duration: 0 } : { duration: 0.7, delay: 0.08 + index * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                    {...projectItemReveal(index, reduced)}
                     className={cn(
                         "font-body text-base leading-7 text-text-secondary sm:text-lg sm:leading-8",
                         index > 0 && "mt-5"

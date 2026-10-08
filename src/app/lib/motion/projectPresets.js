@@ -333,6 +333,85 @@ export const SCROLL_PRESETS = {
 };
 
 /* ============================================================================
+   PROJECT ITEM REVEAL — per-item viewport entry for project-detail sections
+   ========================================================================== */
+
+/**
+ * PROJECT_ITEM_REVEAL — a single content item entering the viewport.
+ *
+ * Used by the project-detail body sections (context, approach, engineering,
+ * motion, responsive, reflection) so that EACH meaningful item owns its own
+ * entry animation instead of the whole list moving as one block.
+ *
+ * Direction is RIGHT → LEFT: the item slides in from the right while a
+ * clip-path wipe opens it from its right edge, plus a slight shear so the
+ * motion reads as designed rather than a bare fade.
+ *
+ * No bounce, no spring overshoot, no rotation, no scale, no vertical
+ * travel. Items are triggered by their own viewport position, with only a
+ * very small index stagger.
+ */
+export const PROJECT_ITEM_REVEAL = {
+    initial: {
+        opacity: 0,
+        x: 56,
+        skewX: -3,
+        clipPath: "inset(0 0 0 100%)",
+    },
+    whileInView: {
+        opacity: 1,
+        x: 0,
+        skewX: 0,
+        clipPath: "inset(0 0 0 0%)",
+    },
+    viewport: {
+        once: true,
+        /*
+         * amount is 0 (intersection, not ratio) on purpose: the initial
+         * clip-path wipe paints the item at zero area, so Chromium reports
+         * intersectionRatio === 0 while the item is in view. Triggering on
+         * isIntersecting keeps the reveal reliable in every browser.
+         */
+        amount: 0,
+        margin: "0px 0px -8% 0px",
+    },
+    transition: {
+        duration: 0.7,
+        ease: EASE_SMOOTH,
+    },
+};
+
+/**
+ * Build Motion props for one project-detail content item.
+ *
+ * Spreads directly onto a motion element that KEEPS its existing element
+ * type and classNames — never wrap an existing item in another container.
+ *
+ * @param {number} index - position in the list (drives the tiny 60ms stagger)
+ * @param {boolean} reduced - reduced-motion preference; renders immediately
+ * @returns {object} props for a motion element
+ */
+export function projectItemReveal(index = 0, reduced = false) {
+    if (reduced) {
+        return {
+            initial: false,
+            viewport: PROJECT_ITEM_REVEAL.viewport,
+            transition: { duration: 0 },
+        };
+    }
+
+    return {
+        initial: PROJECT_ITEM_REVEAL.initial,
+        whileInView: PROJECT_ITEM_REVEAL.whileInView,
+        viewport: PROJECT_ITEM_REVEAL.viewport,
+        transition: {
+            ...PROJECT_ITEM_REVEAL.transition,
+            delay: index * 0.06,
+        },
+    };
+}
+
+/* ============================================================================
    UTILITY — resolve a preset by name with fallback
    ========================================================================== */
 

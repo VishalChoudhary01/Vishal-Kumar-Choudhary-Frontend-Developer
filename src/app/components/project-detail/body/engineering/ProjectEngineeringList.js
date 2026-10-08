@@ -4,7 +4,6 @@ import ProjectEngineeringItem from "./ProjectEngineeringItem";
 
 export default function ProjectEngineeringList({
     items,
-    visible,
     reduced,
 }) {
     return (
@@ -14,7 +13,6 @@ export default function ProjectEngineeringList({
                     key={`${item.title}-${index}`}
                     item={item}
                     index={index}
-                    visible={visible}
                     reduced={reduced}
                 />
             ))}

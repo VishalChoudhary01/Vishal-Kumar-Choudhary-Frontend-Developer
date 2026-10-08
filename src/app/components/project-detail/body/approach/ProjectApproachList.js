@@ -2,7 +2,7 @@
 
 import ProjectApproachItem from "./ProjectApproachItem";
 
-export default function ProjectApproachList({ items, visible, reduced }) {
+export default function ProjectApproachList({ items, reduced }) {
     return (
         <div>
             {items.map((item, index) => (
@@ -10,7 +10,6 @@ export default function ProjectApproachList({ items, visible, reduced }) {
                     key={`${item.title}-${index}`}
                     item={item}
                     index={index}
-                    visible={visible}
                     reduced={reduced}
                 />
             ))}

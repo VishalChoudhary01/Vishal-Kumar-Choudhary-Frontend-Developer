@@ -1,34 +1,18 @@
 "use client";
 
 import { motion } from "motion/react";
-
-const EASE_EDITORIAL = [0.16, 1, 0.3, 1];
+import { projectItemReveal } from "@/app/lib/motion/projectPresets";
 
 export default function ProjectEngineeringItem({
     item,
     index,
-    visible,
     reduced,
 }) {
     const number = String(index + 1).padStart(2, "0");
 
     return (
         <motion.article
-            initial={reduced ? false : { opacity: 0, y: 20 }}
-            animate={
-                visible
-                    ? { opacity: 1, y: 0 }
-                    : { opacity: 0, y: 20 }
-            }
-            transition={
-                reduced
-                    ? { duration: 0 }
-                    : {
-                        duration: 0.7,
-                        delay: index * 0.08,
-                        ease: EASE_EDITORIAL,
-                    }
-            }
+            {...projectItemReveal(index, reduced)}
             className="group border-b border-border py-6 md:py-7"
         >
             <div className="relative max-w-3xl">

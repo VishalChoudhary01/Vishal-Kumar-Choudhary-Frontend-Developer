@@ -1,15 +1,16 @@
 "use client";
 
 import { motion } from "motion/react";
+import { projectItemReveal } from "@/app/lib/motion/projectPresets";
 
-const EASE_EDITORIAL = [0.16, 1, 0.3, 1];
-
-export default function ProjectReflectionImprove({ improve, visible, reduced }) {
+/**
+ * "What I would improve" stays a single content block — heading + prose
+ * reveal together as one viewport-triggered unit.
+ */
+export default function ProjectReflectionImprove({ improve, reduced }) {
     return (
         <motion.div
-            initial={reduced ? false : { opacity: 0, y: 20 }}
-            animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={reduced ? { duration: 0 } : { duration: 0.7, delay: 0.16, ease: EASE_EDITORIAL }}
+            {...projectItemReveal(0, reduced)}
             className="border-b border-border pt-7 sm:pt-8"
         >
             <div className="max-w-2xl">

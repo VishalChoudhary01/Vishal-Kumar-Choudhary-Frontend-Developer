@@ -8,8 +8,10 @@ import ProjectResponsiveItem from "./ProjectResponsiveItem";
  * Renders the project's own responsive story (`story.responsive.desktop`,
  * `.tablet`, `.mobile`) — PROJECT-DETAIL-V2.md §5: generic filler that
  * applies to every project is removed, not displayed.
+ *
+ * Each breakpoint is its own content unit and reveals independently.
  */
-export default function ProjectResponsiveList({ responsive, visible, reduced }) {
+export default function ProjectResponsiveList({ responsive, reduced }) {
     if (!responsive) {
         return null;
     }
@@ -40,7 +42,6 @@ export default function ProjectResponsiveList({ responsive, visible, reduced }) 
                     key={item.title}
                     item={item}
                     index={index}
-                    visible={visible}
                     reduced={reduced}
                 />
             ))}
