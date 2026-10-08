@@ -1,4 +1,9 @@
-import { Newsreader, Manrope, Azeret_Mono, Great_Vibes } from "next/font/google";
+import {
+  Newsreader,
+  Manrope,
+  Azeret_Mono,
+  Great_Vibes,
+} from "next/font/google";
 
 import "./globals.css";
 
@@ -36,11 +41,6 @@ const greatVibes = Great_Vibes({
   display: "swap",
 });
 
-/*
- * Root metadata — site-wide defaults (title/description fallbacks,
- * metadataBase so any relative URL resolves against the canonical origin).
- * Page-level metadata (homepage, project pages) overrides these.
- */
 export const metadata = {
   metadataBase: new URL(buildSiteUrl()),
   title: SITE_TITLE,
@@ -56,13 +56,56 @@ export default function RootLayout({ children }) {
       className={`${newsreader.variable} ${manrope.variable} ${azeretMono.variable} h-full antialiased`}
     >
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="preconnect"
+          href="https://fonts.googleapis.com"
+          crossOrigin="anonymous"
+        />
+
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+
+        {/* Theme-aware favicon */}
+        <link
+          id="theme-favicon"
+          rel="icon"
+          type="image/svg+xml"
+          href="/icon0.svg"
+        />
+
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (() => {
+                const favicon = document.getElementById("theme-favicon");
+
+                if (!favicon) return;
+
+                const media = window.matchMedia(
+                  "(prefers-color-scheme: dark)"
+                );
+
+                const updateFavicon = () => {
+                  favicon.href = media.matches
+                    ? "/icon0.svg"
+                    : "/favicon.svg";
+                };
+
+                updateFavicon();
+
+                media.addEventListener("change", updateFavicon);
+              })();
+            `,
+          }}
+        />
       </head>
+
       <body className="flex min-h-full flex-col bg-background">
         <AppProviders>
           <UIThemeProvider>
-            {/* Pages own their own <main> landmark — this must not be a second one. */}
             <div className="flex-1">{children}</div>
             <Footer />
           </UIThemeProvider>

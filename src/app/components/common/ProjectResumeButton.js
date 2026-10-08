@@ -86,24 +86,24 @@ const SIZES = {
 
     default: {
         shell: `
-            min-h-10
-            min-w-[150px]
-            pl-11
-            pr-11
+        min-h-12
+        min-w-[180px]
+        pl-14
+        pr-14
 
-            sm:min-h-11
-            sm:min-w-[158px]
-            sm:pl-12
-            sm:pr-12
+        sm:min-h-11
+        sm:min-w-[158px]
+        sm:pl-12
+        sm:pr-12
 
-            lg:min-h-12
-            lg:min-w-[166px]
-            lg:pl-14
-            lg:pr-14
-        `,
-        label: "text-[0.68rem] sm:text-[0.72rem] lg:text-[0.76rem]",
-        circle: "size-8 sm:size-9 lg:size-10",
-        icon: 17,
+        lg:min-h-12
+        lg:min-w-[166px]
+        lg:pl-14
+        lg:pr-14
+    `,
+        label: "text-[0.78rem] sm:text-[0.72rem] lg:text-[0.76rem]",
+        circle: "size-10 sm:size-9 lg:size-10",
+        icon: 18,
     },
 
     /*

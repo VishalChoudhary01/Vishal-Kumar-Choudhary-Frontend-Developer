@@ -6,6 +6,7 @@ import { motion, useInView } from "motion/react";
 import ProjectMedia from "./ProjectMedia";
 import ProjectMeta from "./ProjectMeta";
 import ProjectActions from "@/app/components/common/ProjectActions";
+import useReducedMotion from "@/app/hooks/useReducedMotion";
 
 import {
     resolvePreset,
@@ -21,6 +22,7 @@ import {
 import {
     PROJECT_VARIANTS,
     PRESENTATION_DEFAULTS,
+    EASE_EDITORIAL,
 } from "./project.constants";
 
 /* Discovery card technology limits — desktop shows more, mobile fewer.
@@ -34,6 +36,8 @@ export default function ProjectPresentation({
     mode = "editorial",
 }) {
     const cardRef = useRef(null);
+
+    const reduced = useReducedMotion();
 
     const isInView = useInView(cardRef, {
         once: true,
@@ -69,7 +73,29 @@ export default function ProjectPresentation({
     const mediaFlagship = Boolean(project.featured) && mode === "editorial";
 
     return (
-        <article ref={cardRef} className="group relative" aria-label={`Project: ${project.name}`}>
+        <motion.article
+            ref={cardRef}
+            className="group relative"
+            aria-label={`Project: ${project.name}`}
+            /*
+             * Card entry — one subtle scale settle (0.94 → 1), driven by
+             * the SAME isInView gate (once, -60px margin) that runs the
+             * per-part entrances, so the whole card visibly grows exactly
+             * as it scrolls into view. No overshoot, no scroll-linked
+             * scaling, no hover effect; opacity stays owned by the parts.
+             * Reduced motion skips the transform entirely and renders at
+             * natural size.
+             */
+            initial={reduced ? false : { scale: 0.94 }}
+            animate={
+                isInView || reduced ? { scale: 1 } : { scale: 0.94 }
+            }
+            transition={
+                reduced
+                    ? { duration: 0 }
+                    : { duration: 0.7, ease: EASE_EDITORIAL }
+            }
+        >
             <div className="min-w-0">
                 <ProjectMetaLine
                     label={cardMeta}
@@ -136,7 +162,7 @@ export default function ProjectPresentation({
                     className="mt-4 sm:mt-5"
                 />
             </div>
-        </article>
+        </motion.article>
     );
 }
 
