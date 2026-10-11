@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { usePathname } from "next/navigation";
 import { motion, useInView } from "motion/react";
 
 import { portfolio } from "@/app/data/portfolio";
@@ -34,6 +35,13 @@ export default function Footer() {
     const reduced = useReducedMotion();
 
     const { heroReady } = usePageLoader();
+
+    /* The four section links (#about, #experience, #projects, #contact)
+       only have targets on the homepage, so the footer navigation is
+       rendered on "/" and hidden on every other route (project detail
+       pages, 404, …) while the rest of the footer stays intact. */
+    const pathname = usePathname();
+    const isHome = pathname === "/";
 
     const isInView = useInView(sectionRef, {
         once: true,
@@ -145,9 +153,15 @@ export default function Footer() {
                                     delay: 0.15,
                                 }
                         }
-                        className="flex shrink-0 flex-col gap-5 md:flex-row md:items-center md:justify-between md:gap-10"
+                        className={`flex shrink-0 flex-col gap-5 md:flex-row md:items-center md:gap-10 ${
+                            isHome
+                                ? "md:justify-between"
+                                : "md:justify-end"
+                        }`}
                     >
-                        <FooterNavigation items={NAV_ITEMS} />
+                        {isHome && (
+                            <FooterNavigation items={NAV_ITEMS} />
+                        )}
 
                         <FooterSocials
                             links={portfolio.socialLinks}
