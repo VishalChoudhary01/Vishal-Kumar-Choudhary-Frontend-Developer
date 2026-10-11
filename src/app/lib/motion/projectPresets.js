@@ -318,12 +318,14 @@ export const HOVER_PRESETS = {
 
 export const SCROLL_PRESETS = {
   /**
-   * softDepth — extremely subtle depth shift as media enters viewport.
+   * softDepth — scroll-driven media growth for project listing cards.
+   * Media starts noticeably smaller (0.82) and grows to natural size (1)
+   * as its card travels from the bottom of the viewport to the focus
+   * position. Rendered on a dedicated wrapper layer so the hover scale,
+   * entrance, and 3D-depth animations keep their own graphs.
    */
   softDepth: {
-    translateY: [12, 0],
-    scale: [0.985, 1],
-    transition: { duration: 0.8, ease: EASE_SMOOTH },
+    scale: [0.82, 1],
   },
 
   /**

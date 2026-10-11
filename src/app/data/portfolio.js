@@ -2,14 +2,13 @@ import { CloudIcon } from "@/app/components/ui/Icons";
 import {body,email,subject} from "./contactEmail";
 import {navigationData,aboutData,educationData,socialData,skillsCategories,projects} from "./index"
 
-
 const gmailHref =
     `https://mail.google.com/mail/?` +
     `view=cm` +
     `&to=${encodeURIComponent(email)}` +
     `&su=${encodeURIComponent(subject)}` +
     `&body=${encodeURIComponent(body)}`;
- 
+
 export const portfolio = {
     name: "Vishal Kumar Choudhary",
 
@@ -207,10 +206,10 @@ export const portfolio = {
        PROJECTS
        Each project may carry a case-study `story` object that the
        /projects/[slug] detail page renders.
-       
+
        The SHOWCASE section is a dynamic bento/mosaic gallery:
          story.showcase = [ { type, src, alt, caption, layout? }, ... ]
-  
+
        - Add one entry per real screenshot.
        - One entry → full-width feature presentation.
        - 2+ entries → auto-composed bento mosaic.

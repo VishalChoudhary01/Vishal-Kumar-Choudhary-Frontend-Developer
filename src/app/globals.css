@@ -1,8 +1,18 @@
-@import "tailwindcss";
+/* source(none) + explicit @source: restrict Tailwind's automatic content
+   detection to the app source. Without this the scanner also reads stale
+   Next build outputs (.next/, .next-p9/) whose minified chunks contain
+   mangled class-name strings — it then emits corrupted utilities and the
+   CSS parser fails, 500-ing every route in dev. */
+@import "tailwindcss" source(none);
+@source "../../src/app";
 
 @custom-variant dark (&:where(.dark, .dark *));
 html{
-   scroll-behavior: smooth;
+   /* Lenis owns smooth scrolling (lib/lenis/SmoothScroll.js). CSS
+      scroll-behavior would re-animate every programmatic scroll a second
+      time — a second scroll system (Phase 8). scroll-padding-top keeps raw
+      #hash fallback jumps clear of the fixed header. */
+   scroll-padding-top: 94px;
 }
 
 :root {
@@ -428,7 +438,6 @@ body {
   --font-display: var(--font-display);
   --font-body: var(--font-body);
   --font-mono: var(--font-mono);
-  --font-logo: var(--font-logo);
 
 
     /* ---------------------------------------------------------

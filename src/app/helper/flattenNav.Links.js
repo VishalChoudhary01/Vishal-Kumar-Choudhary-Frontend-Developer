@@ -10,4 +10,3 @@ export const flattenNavLinks = (links) =>
         })),
     ]);
 
-    

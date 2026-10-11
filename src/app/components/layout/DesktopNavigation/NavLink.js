@@ -1,10 +1,11 @@
 import ActiveDot from "./ActiveDot";
 import Link from "next/link";
 
-function NavLink({ link, active,className }) {
+function NavLink({ link, active, className, onNavigate }) {
     return (
         <Link
             href={link.href}
+            onClick={(event) => onNavigate?.(event, link.href)}
             aria-current={active ? "page" : undefined}
             className={className}
         >
@@ -13,6 +14,5 @@ function NavLink({ link, active,className }) {
         </Link>
     );
 }
-
 
 export default NavLink

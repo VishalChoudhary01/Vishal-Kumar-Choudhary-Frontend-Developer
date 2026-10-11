@@ -3,6 +3,7 @@
 import { Fragment } from "react";
 import { motion } from "motion/react";
 
+import { cn } from "@/app/lib/utils";
 import SkillIcon from "./SkillIcon";
 
 export default function SkillPrimary({
@@ -92,54 +93,35 @@ function SkillItem({
             onFocus={() => onHoverStart(skill)}
             onBlur={onHoverEnd}
             onClick={() => onSelect(skill)}
-            className={[
+            className={cn(
                 "group/item relative inline-flex cursor-pointer items-center gap-1.5",
                 "font-body text-sm font-medium leading-none",
                 "outline-none",
                 "transition-[transform,color,background-color,border-color] duration-200 ease-out",
                 "focus-visible:outline-none",
                 "focus-visible:ring-1 focus-visible:ring-brand/50",
-
                 "rounded-full border border-border-subtle",
-                "px-2.5 py-1.5",
-                "bg-surface-1/40",
-
+                "px-2.5 py-1.5 bg-surface-1/40",
                 "text-text-secondary",
-
-                "hover:-translate-y-px",
-                "hover:border-brand/40",
-                "hover:text-brand",
-
-                selected
-                    ? "border-brand/50 bg-brand/5 text-brand"
-                    : "",
-
-                "md:rounded-none",
-                "md:border-0",
-                "md:border-b",
-                "md:border-border-subtle",
-                "md:bg-transparent",
-                "md:px-0",
-                "md:py-0.5",
-                "md:text-base",
-                "md:leading-normal",
-                "md:hover:-translate-y-[1.5px]",
-                "md:hover:scale-[1.02]",
-                selected
-                    ? "md:border-brand md:bg-transparent"
-                    : "",
-            ].join(" ")}
+                "hover:-translate-y-px hover:border-brand/40 hover:text-brand",
+                selected && "border-brand/50 bg-brand/5 text-brand",
+                "md:rounded-none md:border-0 md:border-b md:border-border-subtle",
+                "md:bg-transparent md:px-0 md:py-0.5",
+                "md:text-base md:leading-normal",
+                "md:hover:-translate-y-[1.5px] md:hover:scale-[1.02]",
+                selected && "md:border-brand md:bg-transparent"
+            )}
         >
             {skill.icon && (
                 <SkillIcon
                     name={skill.icon}
-                    className={[
+                    className={cn(
                         "h-[0.9em] w-[0.9em] shrink-0",
                         "transition-[color,transform] duration-200",
                         selected
                             ? "text-brand"
-                            : "text-text-secondary group-hover/item:text-brand group-focus-visible/item:text-brand",
-                    ].join(" ")}
+                            : "text-text-secondary group-hover/item:text-brand group-focus-visible/item:text-brand"
+                    )}
                 />
             )}
 
@@ -149,13 +131,13 @@ function SkillItem({
 
             <span
                 aria-hidden="true"
-                className={[
+                className={cn(
                     "font-mono text-[0.7em]",
                     "transition-[transform,opacity] duration-200",
                     selected
                         ? "translate-x-0.5 opacity-100"
-                        : "opacity-50 group-hover/item:translate-x-0.5 group-hover/item:opacity-100 group-focus-visible/item:translate-x-0.5 group-focus-visible/item:opacity-100",
-                ].join(" ")}
+                        : "opacity-50 group-hover/item:translate-x-0.5 group-hover/item:opacity-100 group-focus-visible/item:translate-x-0.5 group-focus-visible/item:opacity-100"
+                )}
             >
                 {selected ? "×" : "↗"}
             </span>

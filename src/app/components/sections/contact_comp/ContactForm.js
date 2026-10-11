@@ -9,14 +9,7 @@ import ContactFormFields from "./ContactFormFields";
 import { cn } from "@/app/lib/utils";
 import { EASE_STANDARD } from "./contact.motion";
 import { submitContactForm } from "./contactForm.api";
-import {
-    INITIAL_FORM_ERRORS,
-    INITIAL_FORM_VALUES,
-    isFormValid,
-    validateField,
-    validateForm,
-    hasValidationErrors,
-} from "./contactForm.validation";
+import { INITIAL_FORM_ERRORS, INITIAL_FORM_VALUES, isFormValid, validateField, validateForm, hasValidationErrors } from "./contactForm.validation"
 
 export default function ContactForm({ className = "" }) {
     const reduced = useReducedMotion();

@@ -1,13 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import {
-    motion,
-    useInView,
-    useMotionValueEvent,
-    useScroll,
-    useTransform,
-} from "motion/react";
+import { motion, useInView, useMotionValueEvent, useScroll, useTransform } from "motion/react"
 
 import useReducedMotion from "@/app/hooks/useReducedMotion";
 import useBreakpoint from "@/app/hooks/useBreakpoint";
@@ -18,11 +12,7 @@ import EducationStatic from "./education_comp/EducationStatic";
 import EducationHandoff from "./education_comp/EducationHandoff";
 
 import { educationData } from "./education_comp/education.data";
-import {
-    DEPTH_PROFILES,
-    PIN_SCROLL_FACTOR,
-    focalIndex,
-} from "./education_comp/education.motion";
+import { DEPTH_PROFILES, PIN_SCROLL_FACTOR, focalIndex } from "./education_comp/education.motion"
 
 export default function Education() {
     const reducedMotion = useReducedMotion();
@@ -118,7 +108,12 @@ function DynamicEducation() {
                                 delay: 0.1,
                                 ease: [0.22, 1, 0.36, 1],
                             }}
-                            className="grid min-h-0 flex-1 grid-cols-1 gap-8 md:grid-cols-[minmax(0,9fr)_minmax(0,17fr)] md:items-stretch md:gap-10 lg:gap-14"
+                            className="grid 
+                            min-h-0 flex-1 
+                            grid-cols-1 gap-8 
+                            md:grid-cols-[minmax(0,9fr)_minmax(0,17fr)] 
+                            md:items-stretch
+                             md:gap-10 lg:gap-14"
                         >
                             <div className="hidden md:flex md:flex-col md:justify-center">
                                 <EducationIntro

@@ -17,6 +17,6 @@ function EditorialNumber({ number, isActive, }) {
             {number}
         </motion.span>
     );
-} 
+}
 
 export default EditorialNumber

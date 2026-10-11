@@ -6,10 +6,7 @@ import { AnimatePresence, motion } from "motion/react";
 
 import useReducedMotion from "@/app/hooks/useReducedMotion";
 import SuccessModalContent from "./success_modal_comp/SuccessModalContent";
-import {
-    SUCCESS_MODAL_EASE,
-    SUCCESS_MODAL_MOTION,
-} from "./success_modal_comp/successModal.motion";
+import { SUCCESS_MODAL_EASE, SUCCESS_MODAL_MOTION } from "./success_modal_comp/successModal.motion"
 
 export default function SuccessModal({
     open,

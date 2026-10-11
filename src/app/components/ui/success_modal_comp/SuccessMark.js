@@ -3,10 +3,7 @@
 import { motion } from "motion/react";
 import { Check } from "lucide-react";
 
-import {
-    SUCCESS_MODAL_EASE,
-    SUCCESS_MODAL_MOTION,
-} from "./successModal.motion";
+import { SUCCESS_MODAL_EASE, SUCCESS_MODAL_MOTION } from "./successModal.motion"
 
 const MotionCheck = motion.create(Check);
 

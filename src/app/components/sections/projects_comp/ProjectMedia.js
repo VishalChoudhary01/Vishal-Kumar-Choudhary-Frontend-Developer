@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useRef, useState, useEffect } from "react";
-import { motion } from "motion/react";
+import { motion, useScroll, useTransform } from "motion/react";
 
 import {
     resolvePreset,
     toTransition,
     HOVER_PRESETS,
+    SCROLL_PRESETS,
 } from "@/app/lib/motion/projectPresets";
 
 import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";
@@ -14,6 +15,7 @@ import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";
 import useReducedMotion from "@/app/hooks/useReducedMotion";
 
 import Skeleton from "@/app/components/ui/Skeleton";
+import { cn } from "@/app/lib/utils";
 
 const EASE = [0.22, 1, 0.36, 1];
 
@@ -21,6 +23,7 @@ export default function ProjectMedia({
     media,
     liveHref,
     hoverPreset = "mediaScale",
+    scrollPreset = "softDepth",
     aspect = "16/9",
     radiusClass = "rounded-2xl",
     isFlagship = false,
@@ -39,10 +42,6 @@ export default function ProjectMedia({
     });
 
     const reduced = useReducedMotion();
-
-    if (!media?.src) {
-        return null;
-    }
 
     const config = resolvePreset(
         HOVER_PRESETS,
@@ -134,6 +133,34 @@ export default function ProjectMedia({
         onHoverChange?.(false);
     };
 
+    /* ---- scroll-linked grow-in ----
+     * As the card scrolls up from the bottom of the viewport, the media
+     * starts visibly smaller (scale preset drives the value pair, default
+     * 0.82 → 1) and grows continuously to natural size, finishing when the
+     * media's top reaches the viewport's vertical center. Motion values
+     * only — no per-frame React state, no scroll listeners; fully
+     * reversible on scroll-up. Rendered on its own wrapper so the hover
+     * scale, entrance, and 3D-depth animations keep their own graphs.
+     * Reduced motion renders the wrapper at identity (scale 1).
+     */
+    const scrollConfig =
+        reduced || !scrollPreset
+            ? null
+            : SCROLL_PRESETS[scrollPreset] || SCROLL_PRESETS.softDepth;
+
+    const scrollWrapRef = useRef(null);
+
+    const { scrollYProgress: mediaScrollProgress } = useScroll({
+        target: scrollWrapRef,
+        offset: ["start end", "center center"],
+    });
+
+    const scrollScale = useTransform(
+        mediaScrollProgress,
+        [0, 1],
+        scrollConfig?.scale || [1, 1]
+    );
+
     /* ---- lazy load observer ---- */
     const [mediaLoaded, setMediaLoaded] = useState(false);
     const [mediaInView, setMediaInView] = useState(false);
@@ -144,8 +171,11 @@ export default function ProjectMedia({
         if (!el) return;
 
         if (typeof IntersectionObserver === "undefined") {
-            setMediaInView(true);
-            return;
+            /* No IntersectionObserver support: satisfy the lazy-render
+               contract via a task callback (not synchronous setState,
+               which the lint rules flag as a cascading render). */
+            const id = requestAnimationFrame(() => setMediaInView(true));
+            return () => cancelAnimationFrame(id);
         }
 
         const observer = new IntersectionObserver(
@@ -161,6 +191,12 @@ export default function ProjectMedia({
         observer.observe(el);
         return () => observer.disconnect();
     }, []);
+
+    /* Render bail-out stays AFTER every hook so hook order is stable
+       across renders regardless of the media prop. */
+    if (!media?.src) {
+        return null;
+    }
 
     return (
         <motion.div
@@ -185,16 +221,28 @@ export default function ProjectMedia({
                 entranceConfig
             )}
         >
+            {/*
+              * Scroll-linked grow-in wrapper.
+              *
+              * The media starts slightly smaller and softly desaturated,
+              * then grows to natural size as the card travels from the
+              * bottom of the viewport to mid-screen. This lives on its own
+              * wrapper — separate from the hover scale on the <img> — so
+              * the two motion graphs never fight for the same transform.
+              * Reduced motion renders the wrapper at identity.
+              */}
+            <motion.div
+                ref={scrollWrapRef}
+                style={scrollConfig ? { scale: scrollScale } : undefined}
+            >
             <div
                 ref={containerRef}
-                className={[
+                className={cn(
                     "relative w-full overflow-hidden",
                     "bg-surface-2",
                     radiusClass,
-                    isFlagship
-                        ? "aspect-[16/9]"
-                        : "",
-                ].join(" ")}
+                    isFlagship ? "aspect-[16/9]" : ""
+                )}
                 style={
                     isFlagship
                         ? undefined
@@ -255,7 +303,7 @@ export default function ProjectMedia({
                             decoding="async"
                             draggable="false"
                             onLoad={() => setMediaLoaded(true)}
-                            className="absolute inset-0 h-full w-full select-none object-cover"
+                            className="absolute inset-0 h-full w-full select-none object-cover object-top-left "
                             animate={{
                                 scale: targetScale,
                                 x: tx,
@@ -304,15 +352,7 @@ export default function ProjectMedia({
                 */}
                 {liveHref && (
                     <motion.div
-                        className="
-                            pointer-events-none
-                            absolute
-                            bottom-4 right-4
-                            z-20
-                            hidden
-                            lg:block
-                            sm:bottom-5 sm:right-5
-                        "
+                        className="pointer-events-none absolute bottom-4 right-4 z-20 hidden lg:block sm:bottom-5 sm:right-5"
                         initial={false}
                         animate={{
                             opacity: hovered ? 1 : 0,
@@ -335,6 +375,7 @@ export default function ProjectMedia({
                     </motion.div>
                 )}
             </div>
+            </motion.div>
         </motion.div>
     );
 }

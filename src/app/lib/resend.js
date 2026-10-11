@@ -21,4 +21,4 @@ export function getFromEmail() {
     process.env.RESEND_FROM_EMAIL ||
     "onboarding@resend.dev"
   );
-} 
+}

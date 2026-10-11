@@ -59,7 +59,7 @@ export function ReducedMotionHero() {
           aria-label="Vishal working at a laptop"
         >
           <Image
-            src="/images/png/laptop-me.png"
+            src="/images/vishal-kumar-choudhary-work.webp"
             alt="Vishal working at a laptop — frontend developer focused on interactive interfaces"
             width={500}
             height={625}

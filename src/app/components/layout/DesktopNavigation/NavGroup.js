@@ -1,11 +1,12 @@
 import ActiveDot from "./ActiveDot";
 import Link from "next/link";
 
-function NavGroup({ link, active, className }) {
+function NavGroup({ link, active, className, onNavigate }) {
     return (
         <div className="group/nav relative flex items-center">
             <Link
                 href={link.href}
+                onClick={(event) => onNavigate?.(event, link.href)}
                 aria-current={active ? "page" : undefined}
                 className={className}
             >
@@ -44,6 +45,9 @@ function NavGroup({ link, active, className }) {
                             <Link
                                 key={child.href}
                                 href={child.href}
+                                onClick={(event) =>
+                                    onNavigate?.(event, child.href)
+                                }
                                 className=" group/item flex items-center gap-2.5 px-3 py-2.5 text-left text-[13px] font-medium text-text-secondary rounded-[8px] transition-[color,background-color] duration-150 hover:bg-surface-2/70 hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background "
                                 style={
                                     i > 0

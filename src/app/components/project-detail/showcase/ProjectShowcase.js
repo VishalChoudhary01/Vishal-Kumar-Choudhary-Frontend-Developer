@@ -1,16 +1,27 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useSyncExternalStore } from "react";
 import { motion, useInView } from "motion/react";
 import SectionHeading from "@/app/components/common/SectionHeading";
 import Container from "@/app/components/common/Container";
-import useReducedMotion from "@/app/hooks/useReducedMotion";
 import ProjectShowcaseGrid from "./ProjectShowcaseGrid";
 
 const EASE_EDITORIAL = [0.16, 1, 0.3, 1];
 
 export default function ProjectShowcase({ project }) {
-    const reduced = useReducedMotion();
+    /* Hydration-safe reduced-motion signal: server pass and first client
+       render both false; the real preference resolves after hydration so
+       the `initial` prop never flips mid-hydration. */
+    const subscribeMedia = (callback) => {
+        const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+        mq.addEventListener("change", callback);
+        return () => mq.removeEventListener("change", callback);
+    };
+    const reduced = useSyncExternalStore(
+        subscribeMedia,
+        () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+        () => false
+    );
     const sectionRef = useRef(null);
 
     const isInView = useInView(sectionRef, {

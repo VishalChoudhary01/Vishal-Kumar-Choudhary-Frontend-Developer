@@ -1,7 +1,6 @@
 import NavLink from "./DesktopNavigation/NavLink";
 import NavGroup from "./DesktopNavigation/NavGroup";
 
-
 const LINK_CLASSES = `
   group
   relative
@@ -26,7 +25,7 @@ const LINK_CLASSES = `
   focus-visible:ring-offset-background
 `;
 
-function DesktopNavigation({ navLinks, activeHref }) {
+function DesktopNavigation({ navLinks, activeHref, onNavigate }) {
   return (
     <nav className="flex items-center" aria-label="Section navigation">
       <div className="flex items-center gap-1">
@@ -36,6 +35,7 @@ function DesktopNavigation({ navLinks, activeHref }) {
               key={link.href}
               link={link}
               active={activeHref === link.href}
+              onNavigate={onNavigate}
               className={LINK_CLASSES}
             />
           ) : (
@@ -43,7 +43,8 @@ function DesktopNavigation({ navLinks, activeHref }) {
               key={link.href}
               link={link}
               active={activeHref === link.href}
-                className={LINK_CLASSES}
+              onNavigate={onNavigate}
+              className={LINK_CLASSES}
             />
           ),
         )}
@@ -51,6 +52,5 @@ function DesktopNavigation({ navLinks, activeHref }) {
     </nav>
   );
 }
-
 
 export default DesktopNavigation;

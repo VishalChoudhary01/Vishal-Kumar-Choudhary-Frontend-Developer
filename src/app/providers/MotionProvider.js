@@ -1,32 +1,33 @@
 "use client";
 
-import { createContext, useEffect, useState } from "react";
+import { createContext, useSyncExternalStore } from "react";
 import { motion } from "motion/react";
 
 export const MotionContext = createContext({
     prefersReducedMotion: false,
 });
 
+const subscribeReducedMotion = (onStoreChange) => {
+    const mediaQuery = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+    );
+    mediaQuery.addEventListener("change", onStoreChange);
+    return () => {
+        mediaQuery.removeEventListener("change", onStoreChange);
+    };
+};
+
 export default function MotionProvider({ children }) {
-    const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
-    useEffect(() => {
-        const mediaQuery = window.matchMedia(
-            "(prefers-reduced-motion: reduce)"
-        );
-
-        setPrefersReducedMotion(mediaQuery.matches);
-
-        const handleChange = (event) => {
-            setPrefersReducedMotion(event.matches);
-        };
-
-        mediaQuery.addEventListener("change", handleChange);
-
-        return () => {
-            mediaQuery.removeEventListener("change", handleChange);
-        };
-    }, []);
+    /* Hydration-safe: the server snapshot is false, matching the first
+       client render, so the browser's actual preference is applied only
+       after hydration (an update, not a mismatch). This used to be a
+       useState + effect that flipped during hydration and caused React
+       hydration-mismatch warnings on every masked-motion child. */
+    const prefersReducedMotion = useSyncExternalStore(
+        subscribeReducedMotion,
+        () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+        () => false
+    );
 
     return (
         <MotionContext.Provider value={{ prefersReducedMotion }}>

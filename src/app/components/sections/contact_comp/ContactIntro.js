@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { motion, useInView } from "motion/react";
 
 import useReducedMotion from "@/app/hooks/useReducedMotion";
+import { cn } from "@/app/lib/utils";
 import { CONTACT_MOTION } from "./contact.motion";
 
 export default function ContactIntro({
@@ -24,12 +25,10 @@ export default function ContactIntro({
     return (
         <motion.p
             ref={ref}
-            className={[
-                "max-w-[54ch]",
-                "font-body text-[15px] leading-relaxed",
-                "text-text-secondary",
-                className,
-            ].join(" ")}
+            className={cn(
+                "max-w-[54ch] font-body text-[15px] leading-relaxed text-text-secondary",
+                className
+            )}
             initial={false}
             animate={
                 visible

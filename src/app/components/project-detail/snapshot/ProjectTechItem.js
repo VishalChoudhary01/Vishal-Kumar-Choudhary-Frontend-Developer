@@ -1,15 +1,7 @@
 "use client";
 
-import {
-    animate,
-    motion,
-    useMotionValue,
-    useTransform,
-} from "motion/react";
-import {
-    useEffect,
-    useRef,
-} from "react";
+import { animate, motion, useMotionValue, useTransform } from "motion/react"
+import { useEffect, useRef } from "react"
 
 const EASE_EDITORIAL = [0.16, 1, 0.3, 1];
 
@@ -317,61 +309,23 @@ export default function ProjectTechItem({
                     ? 0
                     : y,
             }}
-            className="
-                group
-                relative
-                flex
-                shrink-0
-                items-center
-                font-body
-                text-[clamp(1rem,2.3vw,1.35rem)]
-                leading-none
-                tracking-[-0.015em]
-                text-text-primary
-                will-change-transform
-            "
+            className="group relative flex shrink-0 items-center font-body text-[clamp(1rem,2.3vw,1.35rem)] leading-none tracking-[-0.015em] text-text-primary will-change-transform"
         >
             <span
-                className="
-                    relative
-                    whitespace-nowrap
-                    transition-colors
-                    duration-200
-                    ease-out
-                    group-hover:text-brand
-                "
+                className="relative whitespace-nowrap transition-colors duration-200 ease-out group-hover:text-brand"
             >
                 {technology}
 
                 <span
                     aria-hidden="true"
-                    className="
-                        absolute
-                        -bottom-1
-                        left-0
-                        h-px
-                        w-full
-                        origin-left
-                        scale-x-0
-                        bg-brand
-                        transition-transform
-                        duration-250
-                        ease-out
-                        group-hover:scale-x-100
-                    "
+                    className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 bg-brand transition-transform duration-250 ease-out group-hover:scale-x-100"
                 />
             </span>
 
             {index < total - 1 && (
                 <span
                     aria-hidden="true"
-                    className="
-                        mx-3
-                        select-none
-                        text-text-muted
-                        sm:mx-5
-                        md:mx-6
-                    "
+                    className="mx-3 select-none text-text-muted sm:mx-5 md:mx-6"
                 >
                     ·
                 </span>

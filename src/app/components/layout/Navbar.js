@@ -171,10 +171,20 @@ export default function Navbar({ context = "site" }) {
 
     window.history.replaceState(null, "", href);
 
-    window.scrollTo({
-      top: normalizedTop,
-      behavior: "smooth",
-    });
+    /*
+     * One intentional scroll system (Phase 8): programmatic section jumps
+     * go through Lenis — the same glide wheel scrolling uses — with a native
+     * fallback when Lenis is not running (same pattern as
+     * PageLoaderProvider.resetScrollLocks).
+     */
+    if (window.lenis && typeof window.lenis.scrollTo === "function") {
+      window.lenis.scrollTo(normalizedTop, { force: true });
+    } else {
+      window.scrollTo({
+        top: normalizedTop,
+        behavior: "smooth",
+      });
+    }
   };
 
   // ---------------------------------------------------------------------------

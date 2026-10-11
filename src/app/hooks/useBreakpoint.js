@@ -1,7 +1,5 @@
 import { useState,useEffect } from "react";
 
-
-
 function useBreakpoint() {
   const [bp, setBp] = useState("desktop");
 

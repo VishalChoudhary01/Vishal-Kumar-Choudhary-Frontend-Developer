@@ -4,10 +4,7 @@ import { motion } from "motion/react";
 import { ArrowUpRight, X } from "lucide-react";
 
 import SuccessMark from "./SuccessMark";
-import {
-    SUCCESS_MODAL_EASE,
-    SUCCESS_MODAL_MOTION,
-} from "./successModal.motion";
+import { SUCCESS_MODAL_EASE, SUCCESS_MODAL_MOTION } from "./successModal.motion"
 
 export default function SuccessModalContent({
     title,

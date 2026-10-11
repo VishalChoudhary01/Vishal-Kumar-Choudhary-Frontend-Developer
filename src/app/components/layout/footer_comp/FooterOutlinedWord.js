@@ -40,7 +40,7 @@ export default function FooterOutlinedWord({
             {!reduced && (
                 <motion.span
                     aria-hidden="true"
-                    className="pointer-events-none absolute left-0 bottom-[16%]  h-[0.8em]  w-1 -translate-x-1/2 bg-brand " 
+                    className="pointer-events-none absolute left-0 bottom-[16%]  h-[0.8em]  w-1 -translate-x-1/2 bg-brand "
                     initial={false}
                     animate={{
                         left: hovered ? "100%" : "0%",
@@ -52,5 +52,5 @@ export default function FooterOutlinedWord({
                 />
             )}
         </span>
-    ); 
+    );
 }

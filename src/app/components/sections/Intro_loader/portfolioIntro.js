@@ -17,7 +17,7 @@ import IntroLetters from "./IntroLetters";
    ========================================================================== */
 
 const CRITICAL_ASSETS = [
-  "/images/png/laptop-me.png",
+  "/images/vishal-kumar-choudhary-work.webp",
 ];
 
 function preloadAssets(urls) {
@@ -522,7 +522,6 @@ export default function PortfolioIntro({ onComplete }) {
 
         <div className=" pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-90 from-transparent via-border-subtle to-transparent opacity-5 " />
 
-
         {/* INTRO CONTENT */}
 
         <div className=" relative z-10 flex w-full max-w-[900px] flex-col items-center px-6 sm:px-8 " >
@@ -543,7 +542,7 @@ export default function PortfolioIntro({ onComplete }) {
               ease: [0.16, 1, 0.3, 1],
             }}
             className=" mb-4 text-center text-[9px] font-medium uppercase tracking-[0.18em] sm:mb-5 sm:text-[10px] sm:tracking-[0.2em] lg:text-[13px] text-text-tertiary "
-    
+
           >
             Good to have you here
           </motion.p>
@@ -564,7 +563,7 @@ export default function PortfolioIntro({ onComplete }) {
         {phase === "pre-peel" || phase === "peeling" ? (
           <div
             className={`pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-linear-to-t from-[rgba(0,0,0,0.055)] to-transparent ${phase === "pre-peel" ? "opacity-[0.45]" :"opacity-[0.8]"}`}
-              
+
             aria-hidden="true"
           />
         ) : null}

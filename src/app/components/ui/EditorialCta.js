@@ -53,7 +53,7 @@ export default function EditorialCta({
                     <span className=" absolute inset-0 flex items-center justify-center " >
                         <RiArrowRightLine
                             className="size-[18px]"
-                        
+
                         />
                     </span>
                 </span>
@@ -81,29 +81,11 @@ export default function EditorialCta({
             ====================================================== */}
             <span
                 aria-hidden="true"
-                className="
-                    relative
-                    flex
-                    size-8
-                    shrink-0
-                    items-center
-                    justify-center
-                    overflow-hidden
-                    rounded-full
-                    border
-                    border-brand/60
-                    text-brand
-                "
+                className="relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-brand/60 text-brand"
             >
                 {/* CURRENT ARROW */}
                 <motion.span
-                    className="
-                        absolute
-                        inset-0
-                        flex
-                        items-center
-                        justify-center
-                    "
+                    className="absolute inset-0 flex items-center justify-center"
                     animate={{
                         x: engaged ? "calc(100% + 32px)" : 0,
                     }}
@@ -117,13 +99,7 @@ export default function EditorialCta({
 
                 {/* INCOMING ARROW */}
                 <motion.span
-                    className="
-                        absolute
-                        inset-0
-                        flex
-                        items-center
-                        justify-center
-                    "
+                    className="absolute inset-0 flex items-center justify-center"
                     initial={{
                         x: "calc(-100% - 32px)",
                     }}

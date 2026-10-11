@@ -1,6 +1,10 @@
 "use client";
 
+import { useState } from "react";
+
+import useReducedMotion from "@/app/hooks/useReducedMotion";
 import ProjectShowcaseMedia from "./ProjectShowcaseMedia";
+import ProjectShowcaseLightbox from "./ProjectShowcaseLightbox";
 
 /**
  * Conditional mosaic grid:
@@ -63,22 +67,58 @@ function getGridClass(count) {
 
 export default function ProjectShowcaseGrid({ items }) {
     const validItems = items?.filter((item) => item?.src);
+    const [activeIndex, setActiveIndex] = useState(null);
+    const reduced = useReducedMotion();
 
     if (!validItems?.length) return null;
 
     const count = validItems.length;
+    // Only image items participate in the lightbox; videos keep native playback.
+    const imageItems = validItems.filter(
+        (item) => item?.type !== "video"
+    );
+
+    // Position of each tile within the lightbox image list (null for videos).
+    const lightboxIndexByTile = new Map();
+    let cursor = 0;
+    for (const item of validItems) {
+        if (item?.type !== "video") {
+            lightboxIndexByTile.set(item, cursor);
+            cursor += 1;
+        }
+    }
 
     return (
-        <div className={getGridClass(count)}>
-            {validItems.map((item, index) => (
-                <ProjectShowcaseMedia
-                    key={`${item.src}-${index}`}
-                    item={item}
-                    index={index}
-                    count={count}
-                    spanClass={getSpanClass(index, count)}
-                />
-            ))}
-        </div>
+        <>
+            <div className={getGridClass(count)}>
+                {validItems.map((item, index) => {
+                    const isImage = item?.type !== "video";
+
+                    return (
+                        <ProjectShowcaseMedia
+                            key={`${item.src}-${index}`}
+                            item={item}
+                            index={index}
+                            count={count}
+                            spanClass={getSpanClass(index, count)}
+                            lightboxIndex={isImage ? lightboxIndexByTile.get(item) : null}
+                            onActivate={
+                                isImage && imageItems.length > 0
+                                    ? setActiveIndex
+                                    : null
+                            }
+                        />
+                    );
+                })}
+            </div>
+
+            <ProjectShowcaseLightbox
+                items={imageItems}
+                index={activeIndex}
+                reduced={reduced}
+                onClose={() => setActiveIndex(null)}
+                onIndexChange={setActiveIndex}
+            />
+        </>
     );
 }

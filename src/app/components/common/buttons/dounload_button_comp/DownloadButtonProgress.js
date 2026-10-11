@@ -1,9 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import {
-    DEFAULT_PROGRESS_ANIMATION,
-} from "./downloadButton.constants";
+import { DEFAULT_PROGRESS_ANIMATION } from "./downloadButton.constants"
 
 export default function DownloadButtonProgress({
     visible = false,

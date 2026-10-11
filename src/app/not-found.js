@@ -2,7 +2,6 @@
 
 import ErrorPage from '@/app/components/errors/ErrorPage'
 
-
 export default function NotFound() {
   const error = new Error('The page you requested could not be found.')
 

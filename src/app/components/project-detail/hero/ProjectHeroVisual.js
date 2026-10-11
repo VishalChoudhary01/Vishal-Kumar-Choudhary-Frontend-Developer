@@ -56,14 +56,7 @@ export default function ProjectHeroVisual({
                 delay: 0,
                 ease: EASE,
             }}
-            className="
-                absolute
-                inset-x-0
-                -top-8
-                bottom-[-40px]
-                z-0
-                overflow-hidden
-            "
+            className="absolute inset-x-0 -top-8 bottom-[-40px] z-0 overflow-hidden"
         >
             <Image
                 src={image}
@@ -72,41 +65,7 @@ export default function ProjectHeroVisual({
                 priority
                 quality={90}
                 sizes="100vw"
-                className="
-                    object-cover
-
-                    /*
-                     * =================================================
-                     * MOBILE
-                     * =================================================
-                     *
-                     * Keep the product interface toward the right.
-                     *
-                     * The background component now handles all
-                     * readability gradients, so we don't stack
-                     * additional white gradients here.
-                     */
-                    max-md:object-[84%_center]
-                    max-md:opacity-[0.70]
-
-                    /*
-                     * =================================================
-                     * TABLET
-                     * =================================================
-                     */
-                    md:object-[64%_center]
-                    md:opacity-[0.82]
-
-                    /*
-                     * =================================================
-                     * DESKTOP
-                     * =================================================
-                     */
-                    lg:object-[62%_center]
-                    lg:opacity-[0.90]
-
-                    xl:object-[60%_center]
-                "
+                className="object-cover /* * ================================================= * MOBILE * ================================================= * * Keep the product interface toward the right. * * The background component now handles all * readability gradients, so we don't stack * additional white gradients here. */ max-md:object-[84%_center] max-md:opacity-[0.70] /* * ================================================= * TABLET * ================================================= */ md:object-[64%_center] md:opacity-[0.82] /* * ================================================= * DESKTOP * ================================================= */ lg:object-[62%_center] lg:opacity-[0.90] xl:object-[60%_center]"
             />
         </motion.div>
     );

@@ -4,10 +4,7 @@ import { motion, useTransform } from "motion/react";
 
 import EducationCard from "./EducationCard";
 import { educationData } from "./education.data";
-import {
-    depthOf,
-    focalFraction,
-} from "./education.motion";
+import { depthOf, focalFraction } from "./education.motion"
 
 export default function EducationStack({
     profile,

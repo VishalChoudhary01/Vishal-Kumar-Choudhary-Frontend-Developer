@@ -584,11 +584,12 @@ function CinematicHero() {
                     }}
                   >
                     <motion.img
-                      src="/images/png/laptop-me.png"
+                      src="/images/vishal-kumar-choudhary-work.webp"
                       alt="Vishal working at a laptop — frontend developer focused on interactive interfaces"
                       width={500}
                       height={625}
                       loading="eager"
+                      fetchPriority="high"
                       decoding="async"
                       className="absolute inset-0 h-full w-full select-none object-cover object-[45%_center]"
                       draggable="false"
@@ -782,13 +783,14 @@ function CinematicHero() {
                     }}
                   >
                     <motion.img
-                      src="/images/png/laptop-me.png"
+                      src="/images/vishal-kumar-choudhary-work.webp"
                       alt="Vishal working at a laptop — frontend developer focused on interactive interfaces"
                       width={500}
                       height={625}
-                      loading="eager"
-                      decoding="async"
-                      className="absolute inset-0 h-full w-full select-none object-cover object-center"
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
+                  className="absolute inset-0 h-full w-full select-none object-cover object-center"
                       draggable="false"
                       style={{
                         x: imgInnerX,

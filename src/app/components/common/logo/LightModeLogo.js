@@ -1,12 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-    animate,
-    motion,
-    useMotionValue,
-    useTransform,
-} from "motion/react";
+import { animate, motion, useMotionValue, useTransform } from "motion/react"
 
 export default function LightModeLogo() {
     const logoProgress = useMotionValue(0);
@@ -49,21 +44,7 @@ export default function LightModeLogo() {
 
     return (
         <motion.div
-            className="
-        relative
-        top-2
-        flex
-        size-[6rem]
-        items-center
-        justify-center
-        [perspective:600px]
-
-        max-md:size-[5rem]
-        max-md:my-1.5
-
-        max-sm:size-[4.25rem]
-        max-sm:my-1
-      "
+            className="relative top-2 flex size-[6rem] items-center justify-center [perspective:600px] max-md:size-[5rem] max-md:my-1.5 max-sm:size-[4.25rem] max-sm:my-1"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
@@ -71,17 +52,7 @@ export default function LightModeLogo() {
           RING
           --------------------------------------------- */}
             <motion.div
-                className="
-          pointer-events-none
-          absolute
-          inset-0
-          flex
-          items-center
-          justify-center
-          will-change-transform
-          [transform-style:preserve-3d]
-          text-[#161616]
-        "
+                className="pointer-events-none absolute inset-0 flex items-center justify-center will-change-transform [transform-style:preserve-3d] text-[#161616]"
                 animate={
                     isHovered
                         ? {

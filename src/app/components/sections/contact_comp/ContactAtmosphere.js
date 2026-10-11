@@ -1,20 +1,31 @@
 "use client";
 
-import { motion } from "motion/react";
+import { useRef } from "react";
+import { motion, useInView } from "motion/react";
 import useReducedMotion from "@/app/hooks/useReducedMotion";
 import { CONTACT_MOTION } from "./contact.motion";
 
 export default function ContactAtmosphere() {
     const reduced = useReducedMotion();
 
+    /*
+     * The background blobs breathe in an infinite loop on 120–140px-blurred
+     * layers. The contact section is last on the page, so without this gate
+     * the loop ran for the whole session while off-screen (Phase 7: off-screen
+     * work). Mount it only while the section is in view.
+     */
+    const rootRef = useRef(null);
+    const inView = useInView(rootRef);
+
     return (
         <div
+            ref={rootRef}
             className="pointer-events-none absolute inset-0"
             aria-hidden="true"
         >
             <div className="absolute inset-0 bg-background" />
 
-            {reduced ? null : (
+            {reduced || !inView ? null : (
                 <motion.div
                     className="absolute inset-0 overflow-hidden"
                     initial={false}

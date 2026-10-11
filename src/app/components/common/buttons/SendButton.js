@@ -2,9 +2,8 @@
 
 import { createElement, isValidElement, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import {
-    useReducedMotion as useAppReducedMotion,
-} from "@/app/components/motion/MotionProvider";
+import { cn } from "@/app/lib/utils";
+import { useReducedMotion as useAppReducedMotion } from "@/app/components/motion/MotionProvider"
 
 const EASE = [0.22, 1, 0.36, 1];
 
@@ -330,39 +329,27 @@ export default function SendButton({
                             scale: 0.985,
                         }
                 }
-                className={[
+                className={cn(
                     "group",
-                    "relative",
-                    "inline-flex",
+                    "relative inline-flex",
                     height,
                     width,
-                    "cursor-pointer",
-                    "appearance-none",
-                    "items-center",
-                    "justify-center",
+                    "cursor-pointer appearance-none",
+                    "items-center justify-center",
                     "overflow-hidden",
-                    "rounded-full",
-                    "border",
-                    "border-transparent",
-                    "bg-brand",
-                    "p-0",
+                    "rounded-full border border-transparent",
+                    "bg-brand p-0",
                     "font-body",
                     "text-brand-contrast",
-                    "isolate",
-                    "select-none",
-                    "transition-[background-color,border-color]",
-                    "duration-300",
-                    "hover:bg-brand-hover",
-                    "hover:border-brand-hover",
-                    "focus-visible:outline",
-                    "focus-visible:outline-2",
+                    "isolate select-none",
+                    "transition-[background-color,border-color] duration-300",
+                    "hover:bg-brand-hover hover:border-brand-hover",
+                    "focus-visible:outline focus-visible:outline-2",
                     "focus-visible:outline-offset-[5px]",
                     "focus-visible:outline-brand",
-                    buttonDisabled
-                        ? "cursor-not-allowed opacity-60"
-                        : "",
-                    className,
-                ].join(" ")}
+                    buttonDisabled && "cursor-not-allowed opacity-60",
+                    className
+                )}
             >
                 {/* =============================================================
                     POINTER-ORIGIN COVER
@@ -371,13 +358,10 @@ export default function SendButton({
                 {cover && (
                     <motion.span
                         aria-hidden="true"
-                        className={[
-                            "pointer-events-none",
-                            "absolute",
-                            "z-10",
-                            "rounded-full",
-                            coverClassName,
-                        ].join(" ")}
+                        className={cn(
+                            "pointer-events-none absolute z-10 rounded-full",
+                            coverClassName
+                        )}
                         style={{
                             left: origin.x,
                             top: origin.y,
@@ -431,27 +415,14 @@ export default function SendButton({
                 ============================================================= */}
 
                 <span
-                    className="
-                        relative
-                        z-20
-                        flex
-                        w-full
-                        items-center
-                        justify-center
-                    "
+                    className="relative z-20 flex w-full items-center justify-center"
                 >
                     {/* =========================================================
                         LABEL
                     ========================================================= */}
 
                     <span
-                        className="
-                            whitespace-nowrap
-                            text-[16px]
-                            font-normal
-                            leading-none
-                            tracking-[-.4px]
-                        "
+                        className="whitespace-nowrap text-[16px] font-normal leading-none tracking-[-.4px]"
                     >
                         {currentLabel}
                     </span>
@@ -466,16 +437,12 @@ export default function SendButton({
                         iconPosition !== "none" && (
                             <motion.span
                                 aria-hidden="true"
-                                className={[
-                                    "pointer-events-none",
-                                    "absolute",
-                                    "z-30",
+                                className={cn(
+                                    "pointer-events-none absolute z-30",
                                     iconPositionClass,
-                                    "grid",
-                                    "size-5",
-                                    "place-items-center",
-                                    iconClassName,
-                                ].join(" ")}
+                                    "grid size-5 place-items-center",
+                                    iconClassName
+                                )}
                                 initial={iconFrom}
                                 animate={iconTo}
                                 transition={{
@@ -498,22 +465,11 @@ export default function SendButton({
 
                     {isSubmitting && (
                         <span
-                            className="
-                                absolute
-                                z-30
-                                inline-flex
-                                items-center
-                                gap-[3px]
-                            "
+                            className="absolute z-30 inline-flex items-center gap-[3px]"
                             aria-hidden="true"
                         >
                             <span
-                                className="
-                                    h-[3px]
-                                    w-[3px]
-                                    rounded-full
-                                    bg-current
-                                "
+                                className="h-[3px] w-[3px] rounded-full bg-current"
                                 style={{
                                     animation:
                                         reduced
@@ -523,12 +479,7 @@ export default function SendButton({
                             />
 
                             <span
-                                className="
-                                    h-[3px]
-                                    w-[3px]
-                                    rounded-full
-                                    bg-current
-                                "
+                                className="h-[3px] w-[3px] rounded-full bg-current"
                                 style={{
                                     animation:
                                         reduced
@@ -538,12 +489,7 @@ export default function SendButton({
                             />
 
                             <span
-                                className="
-                                    h-[3px]
-                                    w-[3px]
-                                    rounded-full
-                                    bg-current
-                                "
+                                className="h-[3px] w-[3px] rounded-full bg-current"
                                 style={{
                                     animation:
                                         reduced
@@ -579,14 +525,7 @@ export default function SendButton({
                                 duration: 0.3,
                                 ease: EASE,
                             }}
-                            className="
-                                absolute
-                                z-30
-                                grid
-                                size-5
-                                place-items-center
-                                text-[var(--success)]
-                            "
+                            className="absolute z-30 grid size-5 place-items-center text-[var(--success)]"
                         >
                             {renderIcon(
                                 successIcon,

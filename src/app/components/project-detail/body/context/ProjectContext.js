@@ -31,7 +31,7 @@ export default function ProjectContext({ project }) {
                         <SectionHeading label="CONTEXT" align="left" />
                     </div>
 
-                    <div> 
+                    <div>
                         <SectionHeading
                             supporting={statement || "Why this project existed and what it needed to solve."}
                             supportingId="project-context-title"

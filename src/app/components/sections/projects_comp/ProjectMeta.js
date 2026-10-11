@@ -2,6 +2,7 @@
 
 import { motion } from "motion/react";
 import { toTransition } from "@/app/lib/motion/projectPresets";
+import { cn } from "@/app/lib/utils";
 
 export default function ProjectMeta({
     technologies,
@@ -82,10 +83,10 @@ export default function ProjectMeta({
 function TechnologyList({ technologies, className = "" }) {
     return (
         <ul
-            className={[
+            className={cn(
                 "flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[0.68rem] leading-relaxed text-text-muted",
-                className,
-            ].join(" ")}
+                className
+            )}
         >
             {technologies.map(
                 (technology, index) => (

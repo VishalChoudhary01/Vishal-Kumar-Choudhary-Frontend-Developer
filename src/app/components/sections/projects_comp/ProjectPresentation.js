@@ -8,22 +8,10 @@ import ProjectMeta from "./ProjectMeta";
 import ProjectActions from "@/app/components/common/ProjectActions";
 import useReducedMotion from "@/app/hooks/useReducedMotion";
 
-import {
-    resolvePreset,
-    toTransition,
-    ENTRANCE_PRESETS,
-} from "@/app/lib/motion/projectPresets";
-
-import {
-    getProjectCardMeta,
-    getProjectCardTechnologies,
-} from "@/app/lib/projectHelpers";
-
-import {
-    PROJECT_VARIANTS,
-    PRESENTATION_DEFAULTS,
-    EASE_EDITORIAL,
-} from "./project.constants";
+import { resolvePreset, toTransition, ENTRANCE_PRESETS } from "@/app/lib/motion/projectPresets";
+import { getProjectCardMeta, getProjectCardTechnologies } from "@/app/lib/projectHelpers";
+import { cn } from "@/app/lib/utils";
+import { PROJECT_VARIANTS, PRESENTATION_DEFAULTS, EASE_EDITORIAL } from "./project.constants"
 
 /* Discovery card technology limits — desktop shows more, mobile fewer.
    `technologies` in the project data stays the canonical complete list. */
@@ -211,14 +199,14 @@ function ProjectTitle({
             onMouseLeave={() => onHoverChange(false)}
         >
             <h3
-                className={[
+                className={cn(
                     "cursor-default font-display font-normal",
                     "text-[clamp(1.625rem,2.8vw,2.625rem)]",
                     "leading-[1.06] tracking-[-0.025em]",
                     "text-text-primary",
                     "transition-[transform,color] duration-300 ease-out",
-                    isActive ? "text-text-primary" : "",
-                ].join(" ")}
+                    isActive ? "text-text-primary" : ""
+                )}
             >
                 {name}
             </h3>

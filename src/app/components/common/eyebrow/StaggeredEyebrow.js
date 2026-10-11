@@ -1,10 +1,6 @@
 "use client";
 
-import {
-    motion,
-    useInView,
-    useReducedMotion,
-} from "motion/react";
+import { motion, useInView, useReducedMotion } from "motion/react"
 
 import { useEffect, useRef, useState } from "react";
 
@@ -258,11 +254,7 @@ export default function StaggeredEyebrow({
                             ================================================== */}
 
                             <motion.span
-                                className="
-                                    col-start-1
-                                    row-start-1
-                                    whitespace-pre
-                                "
+                                className="col-start-1 row-start-1 whitespace-pre"
                                 initial={{
                                     y: "0%",
                                 }}
@@ -285,11 +277,7 @@ export default function StaggeredEyebrow({
                             ================================================== */}
 
                             <motion.span
-                                className="
-                                    col-start-1
-                                    row-start-1
-                                    whitespace-pre
-                                "
+                                className="col-start-1 row-start-1 whitespace-pre"
                                 initial={{
                                     y: "125%",
                                 }}

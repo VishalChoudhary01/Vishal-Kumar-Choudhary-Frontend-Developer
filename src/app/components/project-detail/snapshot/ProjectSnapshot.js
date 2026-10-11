@@ -75,33 +75,11 @@ export default function ProjectSnapshot({ project }) {
             ref={sectionRef}
             id="project-snapshot"
             aria-label="Project technology stack"
-            className="
-                relative
-                isolate
-                overflow-hidden
-                bg-background
-            "
+            className="relative isolate overflow-hidden bg-background"
         >
             <Container>
                 <div
-                    className="
-                        grid
-                        gap-8
-                        px-5
-                        py-12
-
-                        sm:gap-10
-                        sm:px-8
-                        sm:py-14
-
-                        md:px-10
-                        md:py-16
-
-                        lg:grid-cols-[180px_minmax(0,1fr)]
-                        lg:gap-16
-                        lg:px-12
-                        lg:py-20
-                    "
+                    className="grid gap-8 px-5 py-12 sm:gap-10 sm:px-8 sm:py-14 md:px-10 md:py-16 lg:grid-cols-[180px_minmax(0,1fr)] lg:gap-16 lg:px-12 lg:py-20"
                 >
                     {/* Section eyebrow */}
                     <div>

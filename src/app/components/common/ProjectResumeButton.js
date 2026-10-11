@@ -3,11 +3,7 @@
 import Link from "next/link";
 import { motion } from "motion/react";
 import { ArrowUpRight } from "lucide-react";
-import {
-    useLayoutEffect,
-    useRef,
-    useState,
-} from "react";
+import { useLayoutEffect, useRef, useState } from "react"
 
 import useReducedMotion from "@/app/hooks/useReducedMotion";
 import { cn } from "@/app/lib/utils";
@@ -140,7 +136,9 @@ const SIZES = {
     },
 };
 
-const MotionLink = motion(Link);
+/* motion.create() — supported API for the installed Motion version.
+   motion(Component) emits the "motion() is deprecated" console warning. */
+const MotionLink = motion.create(Link);
 
 export default function ProjectResumeButton({
     href,
@@ -522,18 +520,7 @@ export default function ProjectResumeButton({
 
             <span
                 aria-hidden="true"
-                className="
-                    pointer-events-none
-                    absolute
-                    inset-0
-                    bg-white/20
-                    opacity-0
-                    transition-opacity
-                    duration-300
-                    group-hover/action:opacity-100
-
-                    dark:bg-white/8
-                "
+                className="pointer-events-none absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover/action:opacity-100 dark:bg-white/8"
             />
 
             {/* =================================================
@@ -542,23 +529,13 @@ export default function ProjectResumeButton({
 
             <span
                 aria-hidden="true"
-                className="
-                    pointer-events-none
-                    absolute
-                    inset-x-5
-                    top-0
-                    h-px
-                    bg-white/75
-                    opacity-70
-
-                    dark:bg-white/40
-                "
+                className="pointer-events-none absolute inset-x-5 top-0 h-px bg-white/75 opacity-70 dark:bg-white/40"
             />
 
             {/* =================================================
                 LABEL
             =================================================
-            
+
             The horizontal padding reserves space for the
             circular action so the moving circle never covers
             the text.
@@ -580,7 +557,7 @@ export default function ProjectResumeButton({
             {/* =================================================
                 CIRCULAR ACTION
             =================================================
-            
+
             Initial:
                 4px from left edge (3px + 1px border).
 

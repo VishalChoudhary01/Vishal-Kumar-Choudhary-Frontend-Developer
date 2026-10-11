@@ -29,10 +29,15 @@ export default function ProjectCategoryNav({
 
     if (!list || !button) return;
 
-    setIndicator({
-      left: button.offsetLeft,
-      width: button.offsetWidth,
-    });
+    const left = button.offsetLeft;
+    const width = button.offsetWidth;
+
+    /* Same object when unchanged → React bails instead of re-rendering. */
+    setIndicator((prev) =>
+      prev.left === left && prev.width === width
+        ? prev
+        : { left, width }
+    );
   }, [activeCategory, categories]);
 
   const updateScrollState = useCallback(() => {
@@ -44,11 +49,18 @@ export default function ProjectCategoryNav({
     const maxScrollLeft =
       element.scrollWidth - element.clientWidth;
 
-    setScrollState({
-      canScrollLeft: element.scrollLeft > threshold,
-      canScrollRight:
-        element.scrollLeft < maxScrollLeft - threshold,
-    });
+    const canScrollLeft = element.scrollLeft > threshold;
+    const canScrollRight =
+      element.scrollLeft < maxScrollLeft - threshold;
+
+    /* Same object when unchanged → React bails instead of re-rendering
+       on every raw scroll event. */
+    setScrollState((prev) =>
+      prev.canScrollLeft === canScrollLeft &&
+      prev.canScrollRight === canScrollRight
+        ? prev
+        : { canScrollLeft, canScrollRight }
+    );
   }, []);
 
   const ensureActiveTabVisible = useCallback(() => {
@@ -121,8 +133,21 @@ export default function ProjectCategoryNav({
       resizeObserver.observe(container);
     }
 
+    /* rAF-batched: raw scroll events can outpace paint — avoid a
+       scrollWidth/clientWidth layout read on every event. */
+    let scrollTicking = false;
+    let scrollRafId = 0;
+
     const handleScroll = () => {
-      updateScrollState();
+      if (scrollTicking) return;
+
+      scrollTicking = true;
+
+      scrollRafId = requestAnimationFrame(() => {
+        scrollTicking = false;
+        scrollRafId = 0;
+        updateScrollState();
+      });
     };
 
     container?.addEventListener(
@@ -137,6 +162,10 @@ export default function ProjectCategoryNav({
     );
 
     return () => {
+      if (scrollRafId) {
+        cancelAnimationFrame(scrollRafId);
+      }
+
       resizeObserver?.disconnect();
 
       container?.removeEventListener(
@@ -159,29 +188,12 @@ export default function ProjectCategoryNav({
 
     ensureActiveTabVisible();
 
-    const container = listRef.current;
-
-    if (!container) return;
-
-    let ticking = false;
-
-    const handleScroll = () => {
-      if (ticking) return;
-
-      ticking = true;
-
-      requestAnimationFrame(() => {
-        measure();
-        updateScrollState();
-        ticking = false;
-      });
-    };
-
-    container.addEventListener(
-      "scroll",
-      handleScroll,
-      { passive: true }
-    );
+    /*
+     * The container scroll subscription lives once, in the primary effect
+     * above (rAF-batched). A second listener here duplicated that work
+     * (double measure + double setState per scroll frame); this effect now
+     * only re-measures after a category change settles.
+     */
 
     const timer = setTimeout(() => {
       measure();
@@ -189,11 +201,6 @@ export default function ProjectCategoryNav({
     }, 400);
 
     return () => {
-      container.removeEventListener(
-        "scroll",
-        handleScroll
-      );
-
       clearTimeout(timer);
     };
   }, [

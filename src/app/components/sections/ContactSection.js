@@ -1,6 +1,7 @@
 "use client";
 
 import SectionHeading from "@/app/components/common/SectionHeading";
+import { cn } from "@/app/lib/utils";
 import ContactIntro from "./contact_comp/ContactIntro";
 import ContactForm from "./contact_comp/ContactForm";
 import ContactDirectEmail from "./contact_comp/ContactDirectEmail";
@@ -14,13 +15,13 @@ export default function ContactSection({
         <section
             id="contact"
             aria-labelledby="contact-heading"
-            className={[
+            className={cn(
                 "relative overflow-hidden",
                 "bg-background",
                 "px-[clamp(24px,5vw,80px)]",
                 "py-[clamp(90px,11vw,170px)]",
-                className,
-            ].join(" ")}
+                className
+            )}
         >
             <ContactAtmosphere />
 

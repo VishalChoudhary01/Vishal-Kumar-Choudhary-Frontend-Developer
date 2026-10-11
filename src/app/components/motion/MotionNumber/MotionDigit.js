@@ -2,10 +2,7 @@
 
 import { motion } from "motion/react";
 
-import {
-    MOTION_NUMBER_EASE,
-    MOTION_NUMBER_DEFAULTS,
-} from "./motionNumber.constants";
+import { MOTION_NUMBER_EASE, MOTION_NUMBER_DEFAULTS } from "./motionNumber.constants"
 
 const digitVariants = {
     enter: (direction) => ({

@@ -1,450 +1,494 @@
 export const projects = [
-    {
-        id: "class-fuse",
-        number: "01",
-        name: "ClassFuse",
-        slug: "class-fuse",
-        category: "tool",
-        categoryLabel: "Developer Tool",
 
-        description:
-            "A Tailwind CSS utility for cleaning and organizing class lists by removing duplicate and conflicting utilities and producing cleaner, more readable class strings.",
+{
+    id: "class-fuse",
+    number: "01",
+    name: "ClassFuse",
+    slug: "class-fuse",
+    category: "tool",
+    categoryLabel: "Developer Tool",
 
-        role: "Frontend Developer",
+    description:
+        "A focused Tailwind CSS utility that transforms messy class strings into cleaner, more readable, and consistently organized code.",
 
-        year: "2026",
+    role: "Frontend Developer",
 
-        technologies: [
-            "Next.js",
-            "React",
-            "JavaScript",
-            "Tailwind CSS",
-            "Redux Toolkit",
-            "Motion",
-            "Lenis",
-            "next-themes",
-            "React Icons",
-        ],
+    year: "2026",
 
-        contribution:
-            "Designed and developed the frontend interface for a Tailwind CSS utility focused on cleaning, organizing, and formatting utility class strings.",
+    technologies: [
+        "Next.js",
+        "React",
+        "JavaScript",
+        "Tailwind CSS",
+        "Redux Toolkit",
+        "Motion",
+        "Lenis",
+        "next-themes",
+        "React Icons",
+    ],
 
-        features: [
-            "Clean and format multiline Tailwind class lists",
-            "Remove duplicate utility classes",
-            "Handle conflicting Tailwind utilities",
-            "Organize utilities into a cleaner Tailwind class order",
-            "Present cleaned class output in a developer-focused interface",
-            "Support light and dark interface themes",
-        ],
+    contribution:
+        "Designed and developed a polished developer tool focused on simplifying Tailwind CSS cleanup through an intuitive workspace, responsive interface, and thoughtful interaction design.",
 
-        media: {
-            type: "image",
-            src: "/projects/classfuse/classfuse_hero.webp",
-            alt: "ClassFuse Tailwind CSS utility formatter interface",
-        },
+    features: [
+        "Clean and format multiline Tailwind class lists",
+        "Improve readability of utility class strings",
+        "Organize classes into a consistent format",
+        "Present input and results in a focused workspace",
+        "Provide a simple paste, format, review, and reuse workflow",
+        "Support light and dark interface themes",
+        "Deliver responsive layouts across desktop, tablet, and mobile",
+        "Use purposeful motion to improve interaction feedback",
+    ],
 
-        links: {
-            live: "https://class-fuse.vercel.app/",
-            github: null,
-            figma: null,
-        },
-
-        presentation: {
-            mode: "product",
-            variant: "interface",
-            emphasis: "interface",
-            density: "comfortable",
-        },
-
-        motion: {
-            entrance: "productReveal",
-            media: "mediaReveal",
-            hover: "mediaScale",
-            scroll: "softDepth",
-        },
-
-        status: "published",
-        order: 1,
-        featured: true,
-
-        content: {
-            context: true,
-            approach: true,
-            design: true,
-            engineering: true,
-            motion: true,
-            responsive: true,
-            showcase: true,
-            reflection: true,
-        },
-
-        story: {
-            context: {
-                statement:
-                    "A developer utility for cleaning up messy Tailwind class strings.",
-
-                body: [
-                    "Long utility class strings become difficult to read and maintain as classes accumulate, so ClassFuse provides a focused workflow for entering Tailwind classes, cleaning duplicate and conflicting utilities, and producing a more organized result.",
-                ],
-            },
-
-            approach: [
-                {
-                    title: "Focused developer workflow",
-                    body:
-                        "The interface keeps the primary task centered around entering Tailwind classes and reviewing the resulting cleaned output instead of introducing unnecessary application flows.",
-                },
-
-                {
-                    title: "Utility cleanup",
-                    body:
-                        "ClassFuse processes Tailwind utility strings with a focus on removing unnecessary duplicate and conflicting classes.",
-                },
-
-                {
-                    title: "Readable output",
-                    body:
-                        "The cleaned result is presented in a format that makes long Tailwind class strings easier to inspect and reuse.",
-                },
-
-                {
-                    title: "Tailwind-aware organization",
-                    body:
-                        "The formatter can organize utilities into a cleaner Tailwind class order, making the resulting string easier to scan.",
-                },
-            ],
-
-            design: {
-                statement:
-                    "A focused interface where the formatting workflow stays primary.",
-
-                body:
-                    "The interface is structured around the relationship between Tailwind class input and the resulting cleaned output. The design keeps supporting controls secondary so the main formatting task remains easy to understand.",
-            },
-
-            engineering: [
-                {
-                    title: "Next.js and React",
-                    body:
-                        "ClassFuse is built with Next.js and React, providing the application structure and component-based interface used by the developer tool.",
-                },
-
-                {
-                    title: "Tailwind CSS",
-                    body:
-                        "Tailwind CSS is used as the styling system for the application and is also central to the problem the product is designed to solve.",
-                },
-
-                {
-                    title: "Redux Toolkit",
-                    body:
-                        "Redux Toolkit and React Redux are included in the application stack for managing shared application state.",
-                },
-
-                {
-                    title: "Utility composition",
-                    body:
-                        "clsx and tailwind-merge are included in the project stack for composing and resolving Tailwind-related class names within the interface.",
-                },
-
-                {
-                    title: "Developer experience",
-                    body:
-                        "Prettier with the Tailwind CSS plugin and Biome are included in the development workflow to keep the project's source formatting and code quality consistent.",
-                },
-            ],
-
-            motion: {
-                statement:
-                    "Motion and Lenis provide the interaction layer around an otherwise focused developer utility.",
-
-                body:
-                    "Motion is included for interface animation and transitions, while Lenis provides smooth scrolling behavior. The animation layer supports the presentation of the tool without becoming the primary purpose of the interface.",
-            },
-
-            responsive: {
-                desktop:
-                    "The desktop layout provides sufficient space for the Tailwind input and resulting output while keeping supporting controls visible.",
-
-                tablet:
-                    "The workspace adapts to reduced horizontal space while preserving the primary input-to-output relationship.",
-
-                mobile:
-                    "The interface reorganizes around the narrower viewport so the core Tailwind formatting workflow remains usable without relying on a desktop-sized layout.",
-            },
-
-            showcase: [
-                {
-                    type: "image",
-                    src: "/projects/classfuse/classfuse_hero.webp",
-                    alt: "ClassFuse main Tailwind CSS formatter interface",
-                    caption:
-                        "ClassFuse — Tailwind CSS class formatting workspace.",
-                },
-
-                {
-                    type: "image",
-                    src: "/projects/classfuse/classfuse_input.webp",
-                    alt: "ClassFuse Tailwind CSS class input interface",
-                    caption:
-                        "Tailwind utility classes prepared for formatting.",
-                },
-
-                {
-                    type: "image",
-                    src: "/projects/classfuse/classfuse_result.webp",
-                    alt: "ClassFuse cleaned Tailwind CSS output",
-                    caption:
-                        "Cleaned and organized Tailwind utility output.",
-                },
-            ],
-
-            reflection: {
-                statement:
-                    "Immediate input, processing, and output in one focused interface.",
-
-                worked: [
-                    "Keeping the product centered around one developer workflow makes the interface easy to understand.",
-
-                    "Using Tailwind CSS as both the product domain and the application's styling system keeps the project closely aligned with its purpose.",
-
-                    "Motion and smooth scrolling add interaction without replacing the utility's primary function.",
-                ],
-
-                improve:
-                    "Further improvements would depend on the next product requirements, particularly around expanding formatting capabilities and refining the developer workflow.",
-            },
-        },
+    media: {
+        type: "image",
+        src: "/projects/classfuse/classfuse_hero.webp",
+        alt: "ClassFuse Tailwind CSS utility formatter interface",
     },
 
-    {
-        id: "spendwise",
-        number: "02",
-        name: "Spendwise",
-        slug: "spendwise",
-        category: "product",
-        categoryLabel: "Web App",
+    links: {
+        live: "https://class-fuse.vercel.app/",
+        github: null,
+        figma: null,
+    },
 
-        description:
-            "A shopping planning and price comparison web app that helps users organize what they need, compare supported product prices, calculate list totals, and keep track of their spending.",
+    presentation: {
+        mode: "product",
+        variant: "interface",
+        emphasis: "interface",
+        density: "comfortable",
+    },
 
-        role: "Frontend Developer",
+    motion: {
+        entrance: "productReveal",
+        media: "mediaReveal",
+        hover: "mediaScale",
+        scroll: "softDepth",
+    },
 
-        year: "2026",
+    status: "published",
+    order: 1,
+    featured: true,
 
-        technologies: [
-            "Next.js",
-            "React",
-            "JavaScript",
-            "Tailwind CSS",
-            "Redux Toolkit",
-            "Motion",
-            "Lenis",
-            "Cheerio",
-            "ApexCharts",
-            "Lucide React",
-            "React Icons",
+    content: {
+        context: true,
+        approach: true,
+        design: true,
+        engineering: true,
+        motion: true,
+        responsive: true,
+        showcase: true,
+        reflection: true,
+    },
+
+    story: {
+        context: {
+            statement:
+                "Making Tailwind CSS class cleanup simpler and more intuitive.",
+
+            body: [
+                "Working with long utility class strings can become tedious when code contains inconsistent formatting, unnecessary repetition, or difficult-to-scan class lists. These small issues can interrupt an otherwise smooth development workflow.",
+
+                "ClassFuse brings the cleanup experience into one focused workspace, helping developers turn cluttered class strings into cleaner, more readable output without unnecessary complexity.",
+
+                "The product focuses on a simple idea: make everyday code cleanup feel effortless while keeping the interface clear, responsive, and comfortable to use.",
+            ],
+        },
+
+        approach: [
+            {
+                title: "A focused workflow",
+                body:
+                    "The experience centers on entering class strings, processing them, and reviewing the result. Essential actions remain easy to discover so developers can concentrate on their code.",
+            },
+
+            {
+                title: "Clarity over complexity",
+                body:
+                    "The interface avoids unnecessary steps and visual distractions. The relationship between the original input and the resulting output remains at the heart of the experience.",
+            },
+
+            {
+                title: "Readable results",
+                body:
+                    "The formatting experience emphasizes consistency and readability, helping developers inspect and reuse utility class strings with greater confidence.",
+            },
+
+            {
+                title: "Thoughtful interaction",
+                body:
+                    "Small interaction details provide feedback at the right moments, making the workflow feel responsive without adding friction to the core task.",
+            },
         ],
 
-        contribution:
-            "Designed and developed the frontend experience, including shopping lists, product workflows, price comparison, product information extraction, spending views, responsive interfaces, and interactive motion.",
+        design: {
+            statement:
+                "A refined developer workspace built around clarity and focus.",
 
-        features: [
-            "Shopping list creation and management",
-            "Product addition through product information and URLs",
-            "Product name and product information extraction",
-            "Current price comparison across supported sources",
-            "List total calculation and spending overview",
-            "Purchase and spending tracking",
-            "Responsive dashboard and list-detail experiences",
-            "Interactive charts and spending visualizations",
-            "Light and dark theme support",
+            body:
+                "The visual direction balances a premium developer-tool aesthetic with practical usability. Clear typography, considered spacing, restrained surfaces, and strong contrast keep the code prominent. Supporting controls remain secondary, creating an interface that feels organized without becoming visually heavy.",
+        },
+
+        engineering: [
+            {
+                title: "Modern React architecture",
+                body:
+                    "Built with Next.js and React, ClassFuse uses a component-based approach to create a maintainable and responsive application experience.",
+            },
+
+            {
+                title: "Utility-first styling",
+                body:
+                    "Tailwind CSS provides the styling foundation, supporting consistent interface patterns and a cohesive visual language throughout the application.",
+            },
+
+            {
+                title: "Reliable application experience",
+                body:
+                    "The application stack includes tools for managing interface state and keeping interactions predictable as users work with their input and results.",
+            },
+
+            {
+                title: "Developer-focused tooling",
+                body:
+                    "The development workflow incorporates modern tools that support consistent code quality and a maintainable codebase.",
+            },
+
+            {
+                title: "Theme-aware interface",
+                body:
+                    "Light and dark themes allow the workspace to adapt to different preferences while preserving a consistent visual hierarchy and comfortable readability.",
+            },
         ],
-
-        media: {
-            type: "image",
-            src: "/projects/spendwise/spendwise.webp",
-            alt: "Spendwise shopping planning and price comparison interface",
-        },
-
-        links: {
-            live: "https://spendwise-shop.vercel.app/",
-            github: "https://github.com/VishalChoudhary01/spendwise",
-            figma: null,
-        },
-
-        presentation: {
-            mode: "product",
-            variant: "split",
-            emphasis: "interface",
-            density: "comfortable",
-        },
 
         motion: {
-            entrance: "productReveal",
-            media: "mediaReveal",
-            hover: "mediaScale",
-            scroll: "softDepth",
+            statement:
+                "A cinematic product story that brings the code-cleanup experience to life.",
+
+            body:
+                "Motion helps communicate the transformation from cluttered input to cleaner output. The project presentation can combine editor-style typing, subtle processing highlights, disappearing text effects, and connected scroll-driven scenes to make the product experience more tangible.",
+
+            principles: [
+                {
+                    title: "Editor-style typing",
+                    body:
+                        "Progressively reveal code inside a developer-inspired editor, using a subtle cursor and clear typography to establish the problem and draw attention to the content.",
+                },
+
+                {
+                    title: "Processing feedback",
+                    body:
+                        "Use a restrained shimmer or highlight to suggest activity before transitioning to the completed result. Keep the effect brief and visually consistent with the interface.",
+                },
+
+                {
+                    title: "Text transformation",
+                    body:
+                        "Use a subtle dissolve or smoke-inspired effect to illustrate code cleanup, allowing the visual transition to communicate change without overwhelming the code itself.",
+                },
+
+                {
+                    title: "Scroll-driven storytelling",
+                    body:
+                        "Connect the introduction, workspace demonstration, transformation, and final result through progressive reveals, subtle parallax, and carefully paced scroll transitions.",
+                },
+
+                {
+                    title: "Purposeful animation",
+                    body:
+                        "Use Motion for coordinated transitions and scroll-linked effects, with lightweight visual treatments where appropriate. Preserve readability, responsive behavior, and a reduced-motion experience.",
+                },
+            ],
         },
 
-        status: "published",
-        order: 2,
-        featured: false,
+        responsive: {
+            desktop:
+                "A spacious workspace gives the main input and output areas room to breathe, while the project presentation can use cinematic layouts and connected visual storytelling.",
 
-        content: {
-            context: true,
-            approach: true,
-            design: true,
-            engineering: true,
-            motion: true,
-            responsive: true,
-            showcase: true,
-            reflection: true,
+            tablet:
+                "The layout adapts to narrower screens while maintaining a clear hierarchy and an intuitive relationship between the main workspace elements.",
+
+            mobile:
+                "A compact, vertically organized experience prioritizes the main task and essential controls. Visual effects and scroll transitions remain restrained to preserve usability and performance.",
         },
 
-        story: {
-            context: {
-                statement:
-                    "A shopping workspace built to plan first, compare prices, and track spending.",
+        showcase: [
 
-                body: [
-                    "Spendwise organizes products inside shopping lists instead of treating a purchase as a single product lookup, so users can plan what they need, compare available prices, calculate totals, choose an option, and track the resulting spending.",
-                ],
+            {
+                type: "image",
+                src: "/projects/classfuse/gallery/feature.webp",
+                alt: "ClassFuse landing page demonstrating how Tailwind CSS utilities are deduplicated and reordered into a clean, consistent class string.",
+                caption:
+                    "How ClassFuse cleans up and organizes Tailwind CSS utility classes.",
             },
+            {
+                type: "image",
+                src: "/projects/classfuse/gallery/classfuse_tool.webp",
+                alt: "ClassFuse Tailwind CSS cleanup tool showing a multiline input editor and a one-line output panel.",
+                caption:
+                    "The ClassFuse workspace for cleaning and formatting Tailwind CSS classes.",
+            },
+            {
+                type: "image",
+                src: "/projects/classfuse/gallery/duplication indication and easy to clean double click.webp",
+                alt: "ClassFuse code editor displaying Tailwind CSS utilities with duplicate removal, consistent class ordering, and a duplicate count indicator.",
+                caption:
+                    "Remove duplicate utilities, restore Tailwind class order, and see how many duplicates were removed.",
+            },
+        ],
 
-            approach: [
-                {
-                    title: "List-first shopping workflow",
-                    body:
-                        "The product organizes shopping around lists rather than isolated product searches. Users can create a list and add the products they need to that workspace.",
-                },
+        reflection: {
+            statement:
+                "Making a small developer task feel clearer, faster, and more enjoyable.",
 
-                {
-                    title: "Product information extraction",
-                    body:
-                        "Product URLs can be processed to extract useful product information, reducing the amount of information users need to enter manually when adding an item.",
-                },
+            worked: [
+                "Keeping the experience focused on a single developer task makes the product straightforward to understand.",
 
-                {
-                    title: "Current price comparison",
-                    body:
-                        "The comparison workflow works with currently available prices from supported sources, allowing users to compare the available options before making a purchase decision.",
-                },
+                "A restrained visual system helps maintain readability while giving the interface a distinctive identity.",
 
-                {
-                    title: "Spending visibility",
-                    body:
-                        "The interface connects shopping activity with spending information so users can understand list totals and keep track of what they have spent.",
-                },
+                "Thoughtful interaction feedback and motion make the workflow feel more polished without distracting from the code.",
+
+                "A connected product narrative communicates the value of the experience more effectively than a feature list alone.",
             ],
 
-            design: {
-                statement:
-                    "Planning, comparison, and spending kept connected in one workspace.",
-
-                body:
-                    "The interface separates the planning workflow from supporting information without losing the relationship between them. Lists provide the main workspace, product details provide context for individual items, and spending views summarize the financial side of the shopping activity.",
-            },
-
-            engineering: [
-                {
-                    title: "Next.js and React application",
-                    body:
-                        "The application is built with Next.js 16 and React 19 using JavaScript, with the interface organized around reusable React components and application-specific workflows.",
-                },
-
-                {
-                    title: "Redux Toolkit state management",
-                    body:
-                        "Redux Toolkit and React Redux are used for application state, allowing shopping-list and interface state to be managed centrally across the product experience.",
-                },
-
-                {
-                    title: "Product extraction pipeline",
-                    body:
-                        "Cheerio is included for product-page parsing, supporting the product information extraction workflow when processing supported product URLs.",
-                },
-
-                {
-                    title: "Data visualization",
-                    body:
-                        "ApexCharts is included for the application's spending and analytics visualizations, turning shopping data into readable summaries rather than leaving users with raw totals alone.",
-                },
-
-                {
-                    title: "Responsive utility architecture",
-                    body:
-                        "Tailwind CSS is used for the interface styling and responsive layout system, allowing the same product workflows to adapt across different viewport sizes.",
-                },
-            ],
-
-            motion: {
-                statement:
-                    "Motion is used to make the shopping workspace feel responsive without competing with the underlying task.",
-
-                body:
-                    "The project includes Motion and Lenis for interface and scrolling interactions. Motion handles UI transitions and component-level feedback, while Lenis provides the smooth-scrolling layer used throughout the experience.",
-            },
-
-            responsive: {
-                desktop:
-                    "The desktop experience uses the available horizontal space to present list information, product details, actions, and supporting spending information with clear separation.",
-
-                tablet:
-                    "Content compresses and reorganizes as the viewport becomes narrower while preserving the primary list and product-management workflow.",
-
-                mobile:
-                    "The interface prioritizes the list and product workflow on smaller screens, with compact headers, stacked content, touch-friendly actions, and mobile-specific spacing and typography.",
-            },
-
-            showcase: [
-                {
-                    type: "image",
-                    src: "/projects/spendwise/spendwise_dashboard.webp",
-                    alt: "Spendwise shopping and spending dashboard",
-                    caption: "Shopping overview and spending information in the Spendwise dashboard.",
-                },
-
-                {
-                    type: "image",
-                    src: "/projects/spendwise/spendwise_list.webp",
-                    alt: "Spendwise shopping list interface",
-                    caption: "Shopping lists provide the main workspace for organizing products.",
-                },
-
-                {
-                    type: "image",
-                    src: "/projects/spendwise/spendwise_product.webp",
-                    alt: "Spendwise product comparison interface",
-                    caption: "Product information and supported price comparison within a shopping list.",
-                },
-
-                {
-                    type: "image",
-                    src: "/projects/spendwise/spendwise_mobile.webp",
-                    alt: "Spendwise responsive mobile interface",
-                    caption: "Responsive shopping workflow adapted for smaller screens.",
-                },
-            ],
-
-            reflection: {
-                statement:
-                    "Connecting state, extraction, comparison, responsive UI, and spending views.",
-
-                worked: [
-                    "The list-first model gives the product a clear relationship between shopping planning, products, prices, and spending.",
-
-                    "Centralized state management helps coordinate interactions across the dashboard, lists, and product workflows.",
-
-                    "Building responsive list-detail interfaces reinforced that mobile is a deliberate layout, not a shrunken desktop.",
-                ],
-
-                improve:
-                    "The next stage would be to move beyond the current client-side architecture toward persistent user accounts, multi-user data, multiple synchronized lists, and a server-backed data layer.",
-            },
+            improve:
+                "There is room to refine the overall developer experience, improve the clarity of transformation feedback, and explore additional ways to integrate code cleanup into everyday development workflows.",
         },
     },
+},
+
+{
+    id: "spendwise",
+    number: "02",
+    name: "Spendwise",
+    slug: "spendwise",
+    category: "product",
+    categoryLabel: "Web App",
+
+    description:
+        "A shopping planning and price comparison web app that helps people organize shopping lists, compare available prices, estimate costs, and make more informed purchasing decisions.",
+
+    role: "Frontend Developer",
+
+    year: "2026",
+
+    technologies: [
+        "Next.js",
+        "React",
+        "JavaScript",
+        "Tailwind CSS",
+        "Redux Toolkit",
+        "Motion",
+        "Lenis",
+        "Cheerio",
+        "ApexCharts",
+        "Lucide React",
+        "React Icons",
+    ],
+
+    contribution:
+        "Designed and developed the frontend experience for a shopping platform centered on list management, product information extraction, supported price comparison, and spending visibility. Focused on responsive interfaces, reusable components, state management, and interactive user experiences.",
+
+    features: [
+        "Shopping list creation and management",
+        "Product addition through product information and URLs",
+        "Product information extraction from supported product pages",
+        "Current price comparison across supported sources",
+        "Shopping list totals and budget planning",
+        "Purchase tracking and spending visibility",
+        "Duplicate protection across shopping workflows",
+        "Responsive dashboard and list-detail interfaces",
+        "Spending visualizations",
+        "Light and dark theme support",
+    ],
+
+    media: {
+        type: "image",
+        src: "/projects/spendwise/spendwise.webp",
+        alt: "Spendwise shopping planning and price comparison interface",
+    },
+
+    links: {
+        live: "https://spendwise-shop.vercel.app/",
+        github: "https://github.com/VishalChoudhary01/spendwise",
+        figma: null,
+    },
+
+    presentation: {
+        mode: "product",
+        variant: "split",
+        emphasis: "interface",
+        density: "comfortable",
+    },
+
+    motion: {
+        entrance: "productReveal",
+        media: "mediaReveal",
+        hover: "mediaScale",
+        scroll: "softDepth",
+    },
+
+    status: "published",
+    order: 2,
+    featured: false,
+
+    content: {
+        context: true,
+        approach: true,
+        design: true,
+        engineering: true,
+        motion: true,
+        responsive: true,
+        showcase: true,
+        reflection: true,
+    },
+
+    story: {
+        context: {
+            statement:
+                "Plan your shopping. Compare your options. Spend with more confidence.",
+
+            body: [
+                "Shopping across local stores and online marketplaces can make it difficult to compare prices, organize purchases, and stay within a budget. Without a clear plan, people may overlook better-value options or lose track of what they still need to buy.",
+
+                "Spendwise brings shopping lists, product information, price comparison, and spending visibility into one workspace. The experience is designed to help users organize their needs, evaluate available options, and understand expected costs before making purchasing decisions.",
+            ],
+        },
+
+        approach: [
+            {
+                title: "Start with a shopping list",
+                body:
+                    "A list-first workflow gives users a central place to organize intended purchases. Instead of managing product decisions separately, they can keep related items together and review their shopping plans in one place.",
+            },
+
+            {
+                title: "Make product information useful",
+                body:
+                    "Users can add product information through supported URLs. The extraction workflow helps turn available product-page information into structured data that can be used within the shopping experience.",
+            },
+
+            {
+                title: "Compare available prices",
+                body:
+                    "Supported price information helps users evaluate purchasing options before choosing a product. Comparisons are based on available data rather than a promise of universal retailer coverage or continuous price monitoring.",
+            },
+
+            {
+                title: "Keep shopping organized",
+                body:
+                    "List totals, item management, and spending-related views connect individual products with the wider shopping plan. The interface helps users review their intended purchases and available information without making everyday shopping unnecessarily complicated.",
+            },
+        ],
+
+        design: {
+            statement:
+                "Make shopping information easier to understand and act on.",
+
+            body:
+                "The interface centers on shopping lists and their products. Clear visual hierarchy helps users distinguish product details, prices, totals, and primary actions. Dashboard and list-detail views organize related information into a consistent experience, with responsive layouts that remain practical on smaller screens.",
+        },
+
+        engineering: [
+            {
+                title: "Next.js and React",
+                body:
+                    "Built with Next.js 16, React 19, and JavaScript. The application uses reusable components and structured UI workflows to organize shopping-related screens and interactions.",
+            },
+
+            {
+                title: "Centralized state management",
+                body:
+                    "Redux Toolkit and React Redux coordinate application state across shopping lists, product workflows, and interface interactions, helping keep related UI behavior consistent.",
+            },
+
+            {
+                title: "Product information extraction",
+                body:
+                    "Cheerio supports parsing supported product pages to extract useful information from URLs. The extraction process accounts for differences between supported page structures instead of assuming every retailer provides identical data.",
+            },
+
+            {
+                title: "Price and spending visualization",
+                body:
+                    "The application brings available product prices and shopping totals into the decision-making workflow. ApexCharts supports data visualization where applicable, helping present shopping-related information in a more readable format.",
+            },
+
+            {
+                title: "Responsive interface architecture",
+                body:
+                    "Tailwind CSS provides the styling and responsive layout system. The interface adapts across desktop, tablet, and mobile screens while keeping essential shopping information and actions accessible.",
+            },
+        ],
+
+        motion: {
+            statement:
+                "Motion should improve feedback, not compete with the task.",
+
+            body:
+                "Motion supports interface transitions and component-level feedback, while Lenis provides the smooth-scrolling layer used in the experience. The intention is to make interactions feel connected and responsive without distracting users from shopping lists, product information, or price comparisons.",
+        },
+
+        responsive: {
+            desktop:
+                "A structured layout uses available screen space to present shopping lists, product information, and supporting summaries with clear visual separation.",
+
+            tablet:
+                "Content reorganizes as the viewport narrows, preserving the primary shopping workflows and a clear hierarchy of information.",
+
+            mobile:
+                "Compact headers, carefully structured content, accessible actions, and responsive spacing help users work with their shopping lists while on the move.",
+        },
+
+        showcase: [
+            
+
+            {
+                type: "image",
+                src: "/projects/spendwise/gallery/price-checker.webp",
+                alt: "Spendwise product overview showing shopping organization, price comparison, purchase progress, and duplicate-item protection.",
+                caption:
+                    "An overview of Spendwise's shopping workflow, combining list planning, supported price comparisons, and purchase tracking.",
+            },
+            {
+                type: "image",
+                src: "/projects/spendwise/gallery/dashboard.webp",
+                alt: "Spendwise shopping lists dashboard displaying shopping statistics, product counts, pending items, and saved lists.",
+                caption:
+                    "A centralized dashboard for reviewing shopping lists, monitoring item counts, and accessing planned purchases.",
+            },
+            {
+                type: "image",
+                src: "/projects/spendwise/gallery/dewali-list.webp",
+                alt: "Spendwise shopping list detail page showing individual products, estimated total cost, purchase status, and item filters.",
+                caption:
+                    "A detailed shopping list view for reviewing products, comparing available prices, and managing pending and purchased items.",
+            },
+
+
+        ],
+
+        reflection: {
+            statement:
+                "Building a connected shopping experience around planning, product information, and informed decisions.",
+
+            worked: [
+                "A list-first workflow connects shopping plans and product information within one interface.",
+
+                "Centralized state management helps coordinate interactions across shopping lists and product workflows.",
+
+                "Product extraction introduces practical data-handling challenges because supported retailers expose information in different ways.",
+
+                "Responsive design keeps the core shopping experience usable across different screen sizes.",
+            ],
+
+            improve:
+                "The next stage is to strengthen data reliability, improve the consistency of product extraction, and continue refining the shopping workflow based on real usage. I would also evaluate the architecture as the application's data and user requirements grow, while keeping performance, maintainability, and usability central to future improvements.",
+        },
+    },
+}
+,
 
     {
         id: "system-canvas",
@@ -455,7 +499,7 @@ export const projects = [
         categoryLabel: "Web App",
 
         description:
-            "A frontend workspace for exploring and working with a structured color and theme system through an interactive React interface.",
+            "A frontend workspace for exploring a structured design-token system, with a visual reference for light and dark themes, interface surfaces, typography, borders, shadows, form controls, and semantic states.",
 
         role: "Frontend Developer",
 
@@ -474,13 +518,20 @@ export const projects = [
         ],
 
         contribution:
-            "Designed and developed the frontend application, including the interactive interface, theme-system workflows, state management, routing, responsive styling, and motion layer.",
+            "Designed and developed the frontend application, including the interactive color and theme workspace, design-token presentation, shared application state, responsive interface, routing, and motion layer.",
 
         features: [
-            "Interactive color and theme-system workspace",
-            "Structured theme and design-token interface",
-            "Light and dark theme support",
-            "Client-side application state management",
+            "Interactive color and design-token workspace",
+            "Light and dark theme color references",
+            "Semantic color-token organization",
+            "Background, foreground, and layered surface colors",
+            "Primary, secondary, and muted text color references",
+            "Border, divider, and focus-ring color references",
+            "Shadow and elevation references",
+            "Form input, placeholder, and validation-state references",
+            "Success, warning, error, and informational color references",
+            "Button and interactive-state references",
+            "Component-level theme previews",
             "Responsive interface",
             "Animated interface interactions",
             "Smooth scrolling experience",
@@ -489,7 +540,7 @@ export const projects = [
         media: {
             type: "image",
             src: "/projects/systemcanvas/Systemcanvas.webp",
-            alt: "System Canvas color and theme system interface",
+            alt: "System Canvas design-token workspace showing color and theme-system interfaces",
         },
 
         links: {
@@ -530,10 +581,12 @@ export const projects = [
         story: {
             context: {
                 statement:
-                    "A structured color and theme system turned into an interactive frontend workspace.",
+                    "A visual workspace for understanding how a design-token system shapes an entire interface.",
 
                 body: [
-                    "System Canvas is a React application built to work with a structured color and theme system through an interactive interface rather than leaving it as a static collection of design tokens.",
+                    "System Canvas is a React application built to make a structured color and theme system easier to explore through an interactive frontend workspace.",
+                    "The project brings foundational design tokens and interface-level styling into one visual environment, helping designers and frontend engineers inspect how colors and semantic roles are organized across a product.",
+                    "Its scope includes light and dark theme references alongside interface foundations such as surfaces, typography, borders, shadows, form controls, focus states, and semantic feedback colors, where supported by the application.",
                 ],
             },
 
@@ -541,127 +594,153 @@ export const projects = [
                 {
                     title: "System-first interface",
                     body:
-                        "The interface is organized around the theme and color system itself, giving the underlying visual tokens a dedicated workspace rather than treating them as isolated values.",
+                        "The workspace organizes visual tokens by their role in an interface, making it easier to understand the relationship between foundational colors, semantic tokens, and component-level styling.",
                 },
 
                 {
-                    title: "Centralized state",
+                    title: "Light and dark theme comparison",
                     body:
-                        "Redux Toolkit and React Redux provide the application's state-management layer, allowing shared interface and system state to be handled centrally.",
+                        "The theme workspace presents light and dark color references so designers and engineers can inspect how the visual system adapts between different appearance modes.",
                 },
 
                 {
-                    title: "Component-driven frontend",
+                    title: "Semantic token organization",
                     body:
-                        "React provides the component architecture while Vite handles the application development and build workflow.",
+                        "Color references are organized around interface responsibilities, including foregrounds, surfaces, text, borders, interactive elements, and semantic feedback states, rather than treating every color as an unrelated value.",
+                },
+
+                {
+                    title: "Component-oriented exploration",
+                    body:
+                        "The workspace connects design-system concepts with practical interface examples, helping users understand how tokens can be applied to controls, forms, and other UI elements.",
                 },
 
                 {
                     title: "Interactive presentation",
                     body:
-                        "Motion and Lenis are used to add movement and smooth scrolling to the experience, giving the system a more interactive presentation.",
+                        "Motion and Lenis provide the animation and scrolling layer for the application, supporting a more engaging way to explore the workspace.",
                 },
             ],
 
             design: {
                 statement:
-                    "A workspace where the color system is treated as an interface, not static values.",
+                    "A design-token workspace that connects color foundations with real interface decisions.",
 
                 body:
-                    "The design focuses on presenting color and theme information through a structured application interface where the theme system itself becomes part of the visual experience.",
+                    "The design centers on presenting theme information in a structured, readable interface. Instead of showing colors as isolated swatches, the workspace helps users relate color roles to the surfaces, text, borders, controls, and states that make up a complete UI. Light and dark themes are treated as coordinated visual systems, with attention to hierarchy, consistency, and readability.",
             },
 
             engineering: [
                 {
                     title: "React and Vite",
                     body:
-                        "System Canvas is built with React and Vite, using a modern component-based frontend architecture and Vite's development and production build pipeline.",
+                        "React provides the component-based application architecture, while Vite supports the development server and production build workflow.",
                 },
 
                 {
                     title: "Tailwind CSS",
                     body:
-                        "Tailwind CSS 4 provides the styling foundation, with the official Vite integration used as part of the project setup.",
+                        "Tailwind CSS provides the utility-first styling foundation for responsive layouts and interface components, with theme tokens supporting consistent styling across the application.",
+                },
+
+                {
+                    title: "Design-token architecture",
+                    body:
+                        "The workspace is structured around reusable color and theme references. The intent is to make visual decisions easier to inspect and maintain rather than scattering unrelated color values throughout interface components.",
+                },
+
+                {
+                    title: "Light and dark theme foundations",
+                    body:
+                        "The theme presentation covers the relationship between background and foreground colors, layered surfaces, text hierarchy, borders, and interactive states across light and dark appearances.",
+                },
+
+                {
+                    title: "Interface states and form controls",
+                    body:
+                        "The system explores how design tokens can be applied to form fields, placeholders, focus indicators, validation feedback, and semantic states such as success, warning, error, and information.",
                 },
 
                 {
                     title: "Redux Toolkit",
                     body:
-                        "Redux Toolkit and React Redux provide centralized state management for application-level state and shared interface behavior.",
+                        "Redux Toolkit and React Redux provide centralized state management for shared application state and interface behavior.",
                 },
 
                 {
                     title: "Client-side routing",
                     body:
-                        "React Router is included for application navigation and client-side route management.",
+                        "React Router supports client-side navigation between application views.",
                 },
 
                 {
                     title: "Testing and quality tooling",
                     body:
-                        "Vitest is included for automated testing, while Oxlint is used as the project's linting tool. Puppeteer Core is also included in the development toolchain for browser-related automation.",
+                        "Vitest is included for automated testing, Oxlint for linting, and Puppeteer Core in the development toolchain for browser-related automation.",
                 },
             ],
 
             motion: {
                 statement:
-                    "Motion and smooth scrolling are part of the System Canvas presentation layer.",
+                    "Motion supports exploration without distracting from the design system itself.",
 
                 body:
-                    "The project uses Motion for interface animation and Lenis for smooth scrolling. These technologies provide the interaction layer around the color and theme workspace without changing the underlying system structure.",
+                    "Motion is used for interface transitions and animated presentation, while Lenis provides smooth scrolling. The motion layer supports the workspace experience without making animation the focus of the color and theme information.",
             },
 
             responsive: {
                 desktop:
-                    "The desktop experience provides the space required for the color and theme workspace while keeping the system information visually organized.",
+                    "The desktop workspace provides room to inspect theme references, semantic color groups, and component examples together, making broader comparisons easier.",
 
                 tablet:
-                    "The interface adapts its layout and spacing as available horizontal space decreases while retaining the primary system workflow.",
+                    "The layout adapts to reduced horizontal space while preserving the hierarchy of theme information and the primary workspace controls.",
 
                 mobile:
-                    "The responsive interface reorganizes the workspace for narrower screens while preserving access to the core color and theme information.",
+                    "The workspace reorganizes for narrow screens, prioritizing readable token references, accessible controls, and the core theme-exploration workflow.",
             },
 
             showcase: [
                 {
                     type: "image",
-                    src: "/projects/systemcanvas/systemcanvas_overview.webp",
-                    alt: "System Canvas overview interface",
+                    src: "/projects/systemcanvas/gallery/feature.webp",
+                    alt: "System Canvas theme comparison interface displaying Light and Dark semantic previews with matching component roles and theme-specific values.",
                     caption:
-                        "System Canvas — interactive color and theme-system workspace.",
+                        "Compare Light and Dark themes side by side while keeping semantic roles and component structure consistent.",
                 },
 
                 {
                     type: "image",
-                    src: "/projects/systemcanvas/systemcanvas_colors.webp",
-                    alt: "System Canvas color system interface",
+                    src: "/projects/systemcanvas/gallery/export conditioal css tailwind css conditial dark.webp",
+                    alt: "System Canvas export panel showing Tailwind CSS v4 options and generated design tokens alongside the theme workspace.",
                     caption:
-                        "Structured color system presented through the application interface.",
+                        "Configure export options and generate theme-aware CSS variables and design tokens for your project.",
                 },
 
                 {
                     type: "image",
-                    src: "/projects/systemcanvas/systemcanvas_theme.webp",
-                    alt: "System Canvas theme interface",
+                    src: "/projects/systemcanvas/gallery/dark-workspace.webp",
+                    alt: "System Canvas design-token workspace showing editable color tokens and synchronized Light and Dark interface previews.",
                     caption:
-                        "Theme and interface styling within System Canvas.",
+                        "Edit semantic color tokens and compare how interface components appear across Light and Dark themes.",
                 },
             ],
 
             reflection: {
                 statement:
-                    "Design-system thinking and frontend engineering in one workspace.",
+                    "Bringing design-token thinking and frontend implementation into one workspace.",
 
                 worked: [
-                    "The project combines a structured visual system with a component-driven React interface.",
+                    "The project connects a structured visual system with a component-driven React interface.",
 
-                    "Centralized state management provides a foundation for handling shared application behavior.",
+                    "Presenting theme references in a dedicated workspace creates a clearer way to inspect design decisions.",
 
-                    "Motion and smooth scrolling add an interactive presentation layer to the system.",
+                    "Reusable tokens provide a foundation for keeping interface styling consistent across components and appearance modes.",
+
+                    "Motion and smooth scrolling enhance the experience while keeping the workspace content central.",
                 ],
 
                 improve:
-                    "Further improvements would depend on the final product scope, particularly around expanding the system-management workflows and making the underlying design tokens more reusable across projects.",
+                    "Further development could expand the workspace into a more comprehensive design-system reference, with clearer token documentation, side-by-side light and dark comparisons, reusable component previews, and more detailed demonstrations of focus, hover, disabled, validation, and semantic states. Any additional capabilities should be described only once they are implemented and verified in the application.",
             },
         },
     },
@@ -852,27 +931,13 @@ export const projects = [
             showcase: [
                 {
                     type: "image",
-                    src: "/projects/nextjs-master/nextjsmaster_overview.webp",
+                    src: "/projects/nextjs-master/gallery/feature.webp",
                     alt: "Next.js Master application overview",
                     caption:
                         "Next.js Master — application overview.",
                 },
 
-                {
-                    type: "image",
-                    src: "/projects/nextjs-master/nextjsmaster_interface.webp",
-                    alt: "Next.js Master responsive interface",
-                    caption:
-                        "Reusable React interface patterns across the application.",
-                },
-
-                {
-                    type: "image",
-                    src: "/projects/nextjs-master/nextjsmaster_mobile.webp",
-                    alt: "Next.js Master mobile interface",
-                    caption:
-                        "Responsive interface adapted for smaller screens.",
-                },
+                
             ],
 
             reflection: {

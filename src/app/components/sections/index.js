@@ -5,5 +5,3 @@ export { default as EducationSection } from "./EducationSection"
 export { default as SkillsSection } from "./SkillsSection"
 export { default as ProjectsSection } from "./ProjectsSection"
 export { default as ContactSection } from "./ContactSection"
-
-export { SomeComponent } from "./SomeComponent";

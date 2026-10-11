@@ -18,7 +18,7 @@ export default function ProjectResponsiveItem({
             <div className="relative max-w-3xl">
                 <span
                     aria-hidden="true"
-                    className="pointer-events-none absolute -left-3 md:-top-[8%]  z-0 -translate-x-[8%] font-display text-[clamp(2.25rem,4vw,4rem)] font-normal leading-none tracking-[-0.06em] text-brand opacity-[0.07] transition-opacity duration-500 ease-out group-hover:opacity-[0.12]"
+                    className="pointer-events-none absolute -left-1 top-[12.5px] z-0 -translate-y-1/2 font-display text-[clamp(2.25rem,4vw,4rem)] font-normal leading-none tracking-[-0.06em] text-brand opacity-[0.07] transition-opacity duration-500 ease-out group-hover:opacity-[0.12] md:top-[15px] lg:left-auto lg:right-full lg:mr-3"
                 >
                     {number}
                 </span>

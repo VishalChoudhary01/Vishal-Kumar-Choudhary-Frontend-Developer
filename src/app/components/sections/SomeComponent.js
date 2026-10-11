@@ -5,7 +5,6 @@ import { ArrowDownToLineIcon } from "@/app/components/ui/Icons";
 import DownloadButton from "../common/buttons/DownloadButton";
 import ActionButton from "../common/buttons/ActionButton";
 
-
 export function SomeComponent() {
 
     return (
@@ -48,7 +47,7 @@ export function SomeComponent() {
                     ease: [0.22, 1, 0.36, 1],
                 }}
             />
-            
+
         </div>
     );
 }

@@ -3,6 +3,8 @@
 import { forwardRef } from "react";
 import { motion } from "motion/react";
 
+import { cn } from "@/app/lib/utils";
+
 const HamburgerSVGButton = forwardRef(
     function HamburgerSVGButton(
         {
@@ -34,25 +36,20 @@ const HamburgerSVGButton = forwardRef(
                     width: size,
                     height: size,
                 }}
-                className={[
-                    "relative",
-                    "flex",
-                    "shrink-0",
-                    "items-center",
-                    "justify-center",
+                className={cn(
+                    "relative flex shrink-0",
+                    "items-center justify-center",
                     "rounded-full",
                     "text-text-primary",
-                    "transition-colors",
-                    "duration-200",
+                    "transition-colors duration-200",
                     "hover:bg-surface-2",
                     "hover:text-brand",
                     "focus-visible:outline-none",
-                    "focus-visible:ring-2",
-                    "focus-visible:ring-brand",
+                    "focus-visible:ring-2 focus-visible:ring-brand",
                     "focus-visible:ring-offset-2",
                     "focus-visible:ring-offset-background",
-                    className,
-                ].join(" ")}
+                    className
+                )}
             >
                 <motion.svg
                     width={iconSize}

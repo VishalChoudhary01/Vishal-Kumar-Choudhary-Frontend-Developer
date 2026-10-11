@@ -1,4 +1,4 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# See https://help.github.com/articles/ignoring-files/ for more information.
 
 # dependencies
 /node_modules
@@ -15,6 +15,7 @@
 
 # next.js
 .next/
+.next-*/
 out/
 
 # production
@@ -32,6 +33,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -39,3 +41,48 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# ---------------------------------------------------------------
+# Local-only documentation
+# Internal notes, audits, specs and lab docs stay on disk but are
+# never published. The main README remains tracked.
+# ---------------------------------------------------------------
+*.md
+*.markdown
+!README.md
+!README.markdown
+
+# Local-only development documentation folders (exact folder names)
+/performance doc/
+/implemention Doc/
+/dyanmic portfolio lab/
+
+# Local-only agent / tooling state
+/.freebuff/
+/.claude/
+/.agents/
+
+# ---------------------------------------------------------------
+# Local debugging, probing and profiling artifacts
+# (kept on disk for local work; not published)
+# ---------------------------------------------------------------
+*.zip
+/verify-*.cjs
+/src/verify-button.cjs
+/probe-hover*.cjs
+/debug-arrow.cjs
+/debug-arrow.css
+verify-out.txt
+hydration-log.txt
+/.baseline-*.json
+scripts/error-*.cjs
+scripts/hydration-check.cjs
+scripts/nav-scroll-check.cjs
+scripts/reversal-hover-check.cjs
+scripts/showcase-lightbox-check.cjs
+scripts/showcase-scale-check.cjs
+scripts/baseline-measure.cjs
+scripts/orphan-scan.cjs
+scripts/section-scan.cjs
+scripts/format-cleanup.cjs
+scripts/optimize-favicons.cjs

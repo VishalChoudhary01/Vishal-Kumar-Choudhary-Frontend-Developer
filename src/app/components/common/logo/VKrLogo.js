@@ -1,12 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  animate,
-  motion,
-  useMotionValue,
-  useTransform,
-} from "motion/react";
+import { animate, motion, useMotionValue, useTransform } from "motion/react"
 
 import { usePageLoader } from "@/app/providers/PageLoaderProvider";
 
@@ -81,22 +76,7 @@ export default function VKrLogo() {
 
   return (
     <motion.div
-      className="
-                relative
-                flex
-                items-center
-                justify-center
-                cursor-pointer
-
-                size-[6rem]
-
-                [perspective:800px]
-
-                sm:size-[6.5rem]
-                md:size-[7rem]
-                lg:size-[7.5rem]
-                xl:size-[6.5rem]
-            "
+      className="relative flex items-center justify-center cursor-pointer size-[6rem] [perspective:800px] sm:size-[6.5rem] md:size-[7rem] lg:size-[7.5rem] xl:size-[6.5rem]"
       onMouseEnter={() => {
         if (heroReady) {
           setIsHovered(true);
@@ -110,23 +90,7 @@ export default function VKrLogo() {
                 SVG RING
             ================================================= */}
       <motion.div
-        className="
-                    pointer-events-none
-                    absolute
-                    inset-0
-                    flex
-                    items-center
-                    justify-center
-
-                    origin-center
-                    [transform-origin:center]
-                    [transform-style:preserve-3d]
-
-                    will-change-transform
-
-                    text-[#222222]
-                    dark:text-[#F1EFE8]
-                "
+        className="pointer-events-none absolute inset-0 flex items-center justify-center origin-center [transform-origin:center] [transform-style:preserve-3d] will-change-transform text-[#222222] dark:text-[#F1EFE8]"
         animate={
           heroReady && isHovered
             ? {
@@ -151,14 +115,7 @@ export default function VKrLogo() {
       >
         <svg
           viewBox="0 0 100 100"
-          className="
-                        h-full
-                        w-full
-                        overflow-visible
-                        text-foreground
-                        dark:text-foreground
-                        dark:opacity-80
-                    "
+          className="h-full w-full overflow-visible text-foreground dark:text-foreground dark:opacity-80"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           aria-hidden="true"

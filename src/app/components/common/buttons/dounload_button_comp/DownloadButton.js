@@ -11,11 +11,7 @@ import DownloadButtonProgress from "./DownloadButtonProgress";
 import DownloadButtonContent from "./DownloadButtonContent";
 import DownloadButtonPercentage from "./DownloadButtonPercentage";
 
-import {
-    DEFAULT_ICON_ANIMATION,
-    DEFAULT_COVER_ANIMATION,
-    DEFAULT_PROGRESS_ANIMATION,
-} from "./downloadButton.constants";
+import { DEFAULT_ICON_ANIMATION, DEFAULT_COVER_ANIMATION, DEFAULT_PROGRESS_ANIMATION } from "./downloadButton.constants"
 
 export default function DownloadButton({
     label = "Download Resume",

@@ -24,8 +24,18 @@ const DARK = [
     "var(--atmosphere-dark-a)",
 ];
 
-export default function FooterAtmosphere({ reduced = false }) {
-    if (reduced) {
+export default function FooterAtmosphere({
+    reduced = false,
+
+    /*
+     * Passed by Footer as heroReady && isInView. Before it flips, the
+     * footer is either behind the loader or below the fold, so the
+     * infinite color cycle is invisible anyway — render the static
+     * equivalent instead and start the loop only when it can be seen.
+     */
+    active = true,
+}) {
+    if (reduced || !active) {
         return (
             <div
                 aria-hidden="true"

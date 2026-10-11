@@ -11,20 +11,7 @@ export default function ProjectHeroScrollCue({ reduced = false }) {
 
     return (
         <div
-            className="
-                relative
-                z-20
-                flex
-                w-full
-                justify-center
-
-                px-5
-                pb-6
-
-                sm:pb-8
-
-                lg:pb-10
-            "
+            className="relative z-20 flex w-full justify-center px-5 pb-6 sm:pb-8 lg:pb-10"
         >
             <motion.div
                 initial={
@@ -48,30 +35,10 @@ export default function ProjectHeroScrollCue({ reduced = false }) {
                     delay: reduced ? 0 : DELAY.cue,
                     ease: EASE,
                 }}
-                className="
-                    flex
-                    items-center
-                    justify-center
-                    gap-3
-
-                    /*
-                     * MOBILE
-                     *
-                     * Slightly quieter because the transition itself
-                     * is now doing more visual work.
-                     */
-                    max-md:opacity-80
-                "
+                className="flex items-center justify-center gap-3 /* * MOBILE * * Slightly quieter because the transition itself * is now doing more visual work. */ max-md:opacity-80"
             >
                 <span
-                    className="
-                        font-mono
-                        text-[0.62rem]
-                        uppercase
-                        tracking-[0.2em]
-                        text-text-secondary
-                        dark:text-text-tertiary
-                    "
+                    className="font-mono text-[0.62rem] uppercase tracking-[0.2em] text-text-secondary dark:text-text-tertiary"
                 >
                     Scroll to explore
                 </span>

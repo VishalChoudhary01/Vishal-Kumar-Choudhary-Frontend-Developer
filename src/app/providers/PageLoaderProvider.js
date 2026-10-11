@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 /* ==========================================================================
    PAGE LOADER CONTEXT
    ==========================================================================
-   
+
    Manages a global page loader that:
    - Shows on initial page load
    - Shows on client-side navigation (e.g. to project detail pages)

@@ -1,17 +1,10 @@
 "use client";
 
-import {
-    useCallback,
-    useLayoutEffect,
-    useRef,
-    useState,
-} from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react"
 import { cn } from "@/app/lib/utils";
 
 import ExperienceCompanyEyebrow from "./ExperienceCompanyEyebrow";
-import {
-    MOBILE_EDGE_BUFFER,
-} from "./experience.constants";
+import { MOBILE_EDGE_BUFFER } from "./experience.constants"
 
 export default function ExperienceCompanySelector({
     experiences,

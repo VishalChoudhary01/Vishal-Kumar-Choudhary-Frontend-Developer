@@ -10,6 +10,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Nested Trebopack build output inside src (do not lint):
+    "src/.next/**",
+    // Alternate verification builds (NEXT_DIST_DIR=.next-p9 etc.):
+    ".next-*/**",
   ]),
 ]);
 

@@ -28,7 +28,6 @@ html[data-theme-transition]::view-transition-new(root) {
     mix-blend-mode: normal;
 }
 
-
 /* =========================================================
    RECTANGLE
    ========================================================= */
@@ -58,7 +57,6 @@ html[data-theme-transition="rect"][data-theme-transition-direction="to-dark"]::v
         both;
 }
 
-
 /*
  * DARK -> LIGHT
  *
@@ -84,7 +82,6 @@ html[data-theme-transition="rect"][data-theme-transition-direction="to-light"]::
         both;
 }
 
-
 @keyframes theme-rect-reveal {
     from {
         clip-path:
@@ -100,7 +97,6 @@ html[data-theme-transition="rect"][data-theme-transition-direction="to-light"]::
     }
 }
 
-
 @keyframes theme-rect-reverse {
     from {
         clip-path:
@@ -115,7 +111,6 @@ html[data-theme-transition="rect"][data-theme-transition-direction="to-light"]::
             );
     }
 }
-
 
 /* =========================================================
    CIRCLE
@@ -136,7 +131,6 @@ html[data-theme-transition="circle"][data-theme-transition-direction="to-dark"]:
         both;
 }
 
-
 html[data-theme-transition="circle"][data-theme-transition-direction="to-light"]::view-transition-new(root) {
     z-index: 0;
     animation: none;
@@ -151,7 +145,6 @@ html[data-theme-transition="circle"][data-theme-transition-direction="to-light"]
         cubic-bezier(0.4, 0, 0.2, 1)
         both;
 }
-
 
 @keyframes theme-circle-reveal {
     from {
@@ -179,7 +172,6 @@ html[data-theme-transition="circle"][data-theme-transition-direction="to-light"]
     }
 }
 
-
 @keyframes theme-circle-reverse {
     from {
         clip-path:
@@ -206,7 +198,6 @@ html[data-theme-transition="circle"][data-theme-transition-direction="to-light"]
     }
 }
 
-
 /* =========================================================
    CIRCLE BLUR
    ========================================================= */
@@ -226,7 +217,6 @@ html[data-theme-transition="circle-blur"][data-theme-transition-direction="to-da
         both;
 }
 
-
 html[data-theme-transition="circle-blur"][data-theme-transition-direction="to-light"]::view-transition-new(root) {
     z-index: 0;
     animation: none;
@@ -241,7 +231,6 @@ html[data-theme-transition="circle-blur"][data-theme-transition-direction="to-li
         cubic-bezier(0.4, 0, 0.2, 1)
         both;
 }
-
 
 @keyframes theme-circle-blur-reveal {
     from {
@@ -273,7 +262,6 @@ html[data-theme-transition="circle-blur"][data-theme-transition-direction="to-li
     }
 }
 
-
 @keyframes theme-circle-blur-reverse {
     from {
         clip-path:
@@ -304,7 +292,6 @@ html[data-theme-transition="circle-blur"][data-theme-transition-direction="to-li
     }
 }
 
-
 /* =========================================================
    BLINDS
    ========================================================= */
@@ -314,7 +301,6 @@ html[data-theme-transition="circle-blur"][data-theme-transition-direction="to-li
     inherits: false;
     initial-value: 72px;
 }
-
 
 /*
  * LIGHT -> DARK
@@ -349,7 +335,6 @@ html[data-theme-transition="blinds"][data-theme-transition-direction="to-dark"]:
         both;
 }
 
-
 /*
  * DARK -> LIGHT
  */
@@ -383,7 +368,6 @@ html[data-theme-transition="blinds"][data-theme-transition-direction="to-light"]
         both;
 }
 
-
 @keyframes theme-blinds-reveal {
     from {
         --theme-transition-slat: -20px;
@@ -394,7 +378,6 @@ html[data-theme-transition="blinds"][data-theme-transition-direction="to-light"]
     }
 }
 
-
 @keyframes theme-blinds-reverse {
     from {
         --theme-transition-slat: 72px;
@@ -404,7 +387,6 @@ html[data-theme-transition="blinds"][data-theme-transition-direction="to-light"]
         --theme-transition-slat: -20px;
     }
 }
-
 
 /* =========================================================
    REDUCED MOTION
@@ -418,7 +400,6 @@ html[data-theme-transition="blinds"][data-theme-transition-direction="to-light"]
     }
 }
 `;
-
 
 const RECT_FROM = {
     "top-left":
@@ -440,7 +421,6 @@ const RECT_FROM = {
         "inset(100% 0 0 0)",
 };
 
-
 const CIRCLE_ORIGIN = {
     "top-left":
         "0% 0%",
@@ -461,7 +441,6 @@ const CIRCLE_ORIGIN = {
         "50% 100%",
 };
 
-
 function cleanupTransitionState(root) {
     delete root.dataset.themeTransition;
     delete root.dataset.themeTransitionDirection;
@@ -478,7 +457,6 @@ function cleanupTransitionState(root) {
         "--theme-transition-slat",
     );
 }
-
 
 export function useThemeToggle({
     variant = "rectangle",
@@ -497,11 +475,9 @@ export function useThemeToggle({
         setMounted,
     ] = useState(false);
 
-
     useEffect(() => {
         setMounted(true);
     }, []);
-
 
     useEffect(() => {
         if (
@@ -526,11 +502,9 @@ export function useThemeToggle({
         );
     }, []);
 
-
     const isDark =
         mounted &&
         resolvedTheme === "dark";
-
 
     const toggle = () => {
         const next =
@@ -540,7 +514,6 @@ export function useThemeToggle({
 
         const goingToDark =
             next === "dark";
-
 
         /*
          * Reduced-motion and unsupported
@@ -557,19 +530,16 @@ export function useThemeToggle({
             return;
         }
 
-
         const root =
             document.documentElement;
 
-
         /*
          * Direction for CSS.
-         */ 
+         */
         root.dataset.themeTransitionDirection =
             goingToDark
                 ? "to-dark"
                 : "to-light";
-
 
         /*
          * Configure transition variant.
@@ -605,9 +575,7 @@ export function useThemeToggle({
                 variant;
         }
 
-
         let transition;
-
 
         try {
             transition =
@@ -630,7 +598,6 @@ export function useThemeToggle({
             return;
         }
 
-
         transition.finished
             .catch(() => { })
             .finally(() => {
@@ -639,7 +606,6 @@ export function useThemeToggle({
                 );
             });
     };
-
 
     return {
         isDark,

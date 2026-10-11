@@ -1,11 +1,6 @@
 "use client";
 
-import {
-    motion,
-    useMotionValue,
-    useSpring,
-    useTransform,
-} from "motion/react";
+import { motion, useMotionValue, useSpring, useTransform } from "motion/react"
 import { useEffect, useRef, useState } from "react";
 
 import ProjectTechItem from "./ProjectTechItem";
@@ -361,12 +356,7 @@ export default function ProjectTechRail({
     return (
         <div
             ref={sectionRef}
-            className="
-                relative
-                mt-8
-                sm:mt-10
-                md:mt-12
-            "
+            className="relative mt-8 sm:mt-10 md:mt-12"
         >
             <motion.div
                 initial={
@@ -402,47 +392,18 @@ export default function ProjectTechRail({
             >
                 <div
                     ref={viewportRef}
-                    className="
-                        relative
-                        overflow-hidden
-                        border-b
-                        border-border
-                    "
+                    className="relative overflow-hidden border-b border-border"
                 >
                     {/* CENTER AXIS */}
                     <div
                         aria-hidden="true"
-                        className="
-                            pointer-events-none
-                            absolute
-                            inset-y-0
-                            left-1/2
-                            z-20
-                            w-px
-                            -translate-x-1/2
-                            bg-brand/20
-                        "
+                        className="pointer-events-none absolute inset-y-0 left-1/2 z-20 w-px -translate-x-1/2 bg-brand/20"
                     />
 
                     {/* CENTER OPTICAL FIELD */}
                     <div
                         aria-hidden="true"
-                        className="
-                            pointer-events-none
-                            absolute
-                            inset-y-0
-                            left-1/2
-                            z-10
-                            w-28
-                            -translate-x-1/2
-                            bg-gradient-to-r
-                            from-transparent
-                            via-background/20
-                            to-transparent
-
-                            sm:w-24
-                            sm:via-background/10
-                        "
+                        className="pointer-events-none absolute inset-y-0 left-1/2 z-10 w-28 -translate-x-1/2 bg-gradient-to-r from-transparent via-background/20 to-transparent sm:w-24 sm:via-background/10"
                     />
 
                     <motion.div
@@ -452,16 +413,7 @@ export default function ProjectTechRail({
                                 ? 0
                                 : railX,
                         }}
-                        className="
-                            flex
-                            w-max
-                            items-center
-                            gap-0
-                            px-[50vw]
-                            py-8
-                            sm:py-9
-                            md:py-10
-                        "
+                        className="flex w-max items-center gap-0 px-[50vw] py-8 sm:py-9 md:py-10"
                     >
                         {technologies.map(
                             (technology, index) => (

@@ -1,12 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  animate,
-  motion,
-  useMotionValue,
-  useTransform,
-} from "motion/react";
+import { animate, motion, useMotionValue, useTransform } from "motion/react"
 
 export default function VKrLogo() {
   const logoProgress = useMotionValue(0);
@@ -56,23 +51,7 @@ export default function VKrLogo() {
 
   return (
     <motion.div
-      className="
-        relative
-        top-1
-        flex
-        items-center
-        justify-center
-
-        size-[6rem]
-
-        [perspective:800px]
-        [transform-style:preserve-3d]
-
-        sm:size-[6.5rem]
-        md:size-[7rem]
-        lg:size-[7.5rem]
-        xl:size-[8rem]
-      "
+      className="relative top-1 flex items-center justify-center size-[6rem] [perspective:800px] [transform-style:preserve-3d] sm:size-[6.5rem] md:size-[7rem] lg:size-[7.5rem] xl:size-[8rem]"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -82,30 +61,14 @@ export default function VKrLogo() {
           ================================================= */}
 
       <div
-        className="
-          pointer-events-none
-          absolute
-          inset-0
-          [transform-style:preserve-3d]
-        "
+        className="pointer-events-none absolute inset-0 [transform-style:preserve-3d]"
       >
         {/* =============================================
             RING 1
             LEFT ↔ RIGHT
             ============================================= */}
         <motion.div
-          className="
-            absolute
-            inset-0
-            flex
-            items-center
-            justify-center
-            will-change-transform
-            [transform-style:preserve-3d]
-
-            text-[#222222]
-            dark:text-[#F1EFE8]
-          "
+          className="absolute inset-0 flex items-center justify-center will-change-transform [transform-style:preserve-3d] text-[#222222] dark:text-[#F1EFE8]"
           animate={
             isHovered
               ? {
@@ -147,18 +110,7 @@ export default function VKrLogo() {
             TOP ↕ BOTTOM
             ============================================= */}
         <motion.div
-          className="
-            absolute
-            inset-0
-            flex
-            items-center
-            justify-center
-            will-change-transform
-            [transform-style:preserve-3d]
-
-            text-[#222222]
-            dark:text-[#F1EFE8]
-          "
+          className="absolute inset-0 flex items-center justify-center will-change-transform [transform-style:preserve-3d] text-[#222222] dark:text-[#F1EFE8]"
           animate={
             isHovered
               ? {
@@ -202,18 +154,7 @@ export default function VKrLogo() {
             X + Y
             ============================================= */}
         <motion.div
-          className="
-            absolute
-            inset-0
-            flex
-            items-center
-            justify-center
-            will-change-transform
-            [transform-style:preserve-3d]
-
-            text-[#222222]
-            dark:text-[#F1EFE8]
-          "
+          className="absolute inset-0 flex items-center justify-center will-change-transform [transform-style:preserve-3d] text-[#222222] dark:text-[#F1EFE8]"
           animate={
             isHovered
               ? {
@@ -261,18 +202,7 @@ export default function VKrLogo() {
             X - Y
             ============================================= */}
         <motion.div
-          className="
-            absolute
-            inset-0
-            flex
-            items-center
-            justify-center
-            will-change-transform
-            [transform-style:preserve-3d]
-
-            text-[#222222]
-            dark:text-[#F1EFE8]
-          "
+          className="absolute inset-0 flex items-center justify-center will-change-transform [transform-style:preserve-3d] text-[#222222] dark:text-[#F1EFE8]"
           animate={
             isHovered
               ? {

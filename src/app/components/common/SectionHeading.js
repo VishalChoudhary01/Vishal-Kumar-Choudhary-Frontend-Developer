@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { useInView } from "motion/react";
 
-import useReducedMotion from "@/app/hooks/useReducedMotion";
+import { cn } from "@/app/lib/utils";
 
 import SectionHeadingWords from "./section_heading_comp/SectionHeadingWords";
 import SectionHeadingDatum from "./section_heading_comp/SectionHeadingDatum";
@@ -25,7 +25,23 @@ export default function SectionHeading({
 }) {
     const ref = useRef(null);
 
-    const reducedMotion = useReducedMotion();
+    /* Hydration-safe reduced-motion signal: the server pass and the first
+       client render MUST agree (both assume animated-enabled), otherwise
+       React reports a hydration mismatch on the masked word spans. The
+       actual preference is subscribed afterwards via useSyncExternalStore,
+       which re-renders without touching the server-rendered markup. */
+    const subscribeMedia = (callback) => {
+        const mediaQuery = window.matchMedia(
+            "(prefers-reduced-motion: reduce)"
+        );
+        mediaQuery.addEventListener("change", callback);
+        return () => mediaQuery.removeEventListener("change", callback);
+    };
+    const reducedMotion = useSyncExternalStore(
+        subscribeMedia,
+        () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+        () => false
+    );
 
     const isInView = useInView(ref, {
         once: true,
@@ -60,20 +76,18 @@ export default function SectionHeading({
             {supporting && (
                 <h2
                     id={supportingId}
-                    className={[
+                    className={cn(
                         "mt-4",
                         "md:mt-6",
                         "font-display",
                         "font-normal",
                         "text-text-primary",
                         "opacity-85",
-
                         "text-[clamp(1.75rem,3.2vw,3.25rem)]",
                         "leading-[1.02]",
                         "tracking-[-0.03em]",
-
-                        TEXT_ALIGN[align],
-                    ].join(" ")}
+                        TEXT_ALIGN[align]
+                    )}
                 >
                     <SectionHeadingWords
                         text={supporting}

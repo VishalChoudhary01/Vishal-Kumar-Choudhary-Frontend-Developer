@@ -174,7 +174,6 @@ export default function MobileMenu({ navLinks = [], socialLinks = [], activeHref
 
   const bottomDelay = 0.08 + navLinks.length * staggerBase + 0.08;
 
-
   return (
     <motion.div ref={panelRef} id="mobile-menu" className=" fixed inset-0 z-[100] flex flex-col overflow-hidden bg-background lg:hidden "
       initial={{
@@ -197,7 +196,6 @@ export default function MobileMenu({ navLinks = [], socialLinks = [], activeHref
       aria-modal="true"
       aria-label="Navigation menu"
     >
-
 
       <motion.header className=" flex h-[72px] shrink-0 items-center justify-between px-4 pt-[env(safe-area-inset-top)] sm:px-6 "
         initial={{
@@ -232,7 +230,6 @@ export default function MobileMenu({ navLinks = [], socialLinks = [], activeHref
           aria-label="Go to home">
           <VKrLogo size="sm" />
         </Link>
-
 
         {/* CLOSE  */}
 
@@ -568,6 +565,4 @@ export default function MobileMenu({ navLinks = [], socialLinks = [], activeHref
     </motion.div>
   );
 }
-
-
 

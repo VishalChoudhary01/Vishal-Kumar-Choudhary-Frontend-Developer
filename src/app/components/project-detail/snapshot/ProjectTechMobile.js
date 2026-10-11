@@ -1,10 +1,6 @@
 "use client";
 
-import {
-    motion,
-    useMotionValue,
-    useTransform,
-} from "motion/react";
+import { motion, useMotionValue, useTransform } from "motion/react"
 import { useEffect, useRef } from "react";
 
 /*
@@ -120,18 +116,7 @@ function ProjectTechMobileItem({
                 scale: reducedMotion ? 1 : scale,
                 opacity: reducedMotion ? 1 : opacity,
             }}
-            className="
-                whitespace-nowrap
-                py-4
-                font-body
-                text-[1rem]
-                leading-none
-                tracking-[-0.015em]
-                text-text-primary
-                will-change-transform
-                sm:py-5
-                sm:text-[1.05rem]
-            "
+            className="whitespace-nowrap py-4 font-body text-[1rem] leading-none tracking-[-0.015em] text-text-primary will-change-transform sm:py-5 sm:text-[1.05rem]"
         >
             {technology}
         </motion.li>
@@ -207,14 +192,7 @@ export default function ProjectTechMobile({
 
     return (
         <ul
-            className="
-                flex
-                flex-col
-                items-center
-                pt-2
-                pb-4
-                text-center
-            "
+            className="flex flex-col items-center pt-2 pb-4 text-center"
         >
             {technologies.map((technology, index) => (
                 <ProjectTechMobileItem

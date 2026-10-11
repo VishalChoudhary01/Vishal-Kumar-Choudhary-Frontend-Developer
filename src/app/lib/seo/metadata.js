@@ -8,11 +8,7 @@
  *   - JSON-LD graph: WebSite → ProfilePage → Person (sameAs = real profiles only).
  */
 
-import {
-  buildPersonJsonLd,
-  buildWebsiteJsonLd,
-  buildProfilePageJsonLd,
-} from "./jsonld";
+import { buildPersonJsonLd, buildWebsiteJsonLd, buildProfilePageJsonLd } from "./jsonld"
 import { buildSiteUrl, buildAbsoluteAssetUrl } from "./urls";
 
 export const SITE_TITLE = "Vishal Kumar Choudhary — Frontend Developer";

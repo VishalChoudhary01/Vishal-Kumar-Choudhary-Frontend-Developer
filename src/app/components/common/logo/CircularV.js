@@ -1,12 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-    animate,
-    motion,
-    useMotionValue,
-    useTransform,
-} from "motion/react";
+import { animate, motion, useMotionValue, useTransform } from "motion/react"
 
 export default function CircularV() {
     const krProgress = useMotionValue(0);
@@ -62,15 +57,7 @@ export default function CircularV() {
 
     return (
         <motion.div
-            className="
-                relative
-                flex
-                items-center
-
-                cursor-pointer
-
-                [perspective:800px]
-            "
+            className="relative flex items-center cursor-pointer [perspective:800px]"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             aria-label="V Kr logo"
@@ -80,13 +67,7 @@ export default function CircularV() {
                 ===================================================== */}
 
             <div
-                className="
-                    relative
-                    z-10
-
-                    flex
-                    items-center
-                "
+                className="relative z-10 flex items-center"
             >
                 {/* =================================================
                     V BADGE
@@ -105,28 +86,7 @@ export default function CircularV() {
                 ================================================= */}
 
                 <div
-                    className="
-                        relative
-
-                        flex
-                        shrink-0
-                        items-center
-                        justify-center
-
-                        size-[3rem]
-
-                        sm:size-[3.15rem]
-                        md:size-[3.3rem]
-                        lg:size-[3.45rem]
-                        xl:size-[3.35rem]
-
-                        rounded-full
-
-                        bg-[#222222]
-                        dark:bg-[#F1EFE8]
-
-                        [transform-style:preserve-3d]
-                    "
+                    className="relative flex shrink-0 items-center justify-center size-[3rem] sm:size-[3.15rem] md:size-[3.3rem] lg:size-[3.45rem] xl:size-[3.35rem] rounded-full bg-[#222222] dark:bg-[#F1EFE8] [transform-style:preserve-3d]"
                 >
                     {/* =============================================
                         3D RING
@@ -135,18 +95,7 @@ export default function CircularV() {
                         ============================================= */}
 
                     <motion.div
-                        className="
-                            pointer-events-none
-
-                            absolute
-                            inset-[-0.16rem]
-
-                            origin-center
-
-                            [transform-style:preserve-3d]
-
-                            will-change-transform
-                        "
+                        className="pointer-events-none absolute inset-[-0.16rem] origin-center [transform-style:preserve-3d] will-change-transform"
                         animate={
                             isHovered
                                 ? {
@@ -171,14 +120,7 @@ export default function CircularV() {
                     >
                         <svg
                             viewBox="0 0 100 100"
-                            className="
-                                h-full
-                                w-full
-                                overflow-visible
-
-                                text-[#222222]
-                                dark:text-[#F1EFE8]
-                            "
+                            className="h-full w-full overflow-visible text-[#222222] dark:text-[#F1EFE8]"
                             fill="none"
                             xmlns="http://www.w3.org/2000/svg"
                             aria-hidden="true"
@@ -270,15 +212,7 @@ export default function CircularV() {
                 ================================================= */}
 
                 <div
-                    className="
-                        relative
-
-                        ml-[0.2rem]
-
-                        sm:ml-[0.25rem]
-                        md:ml-[0.3rem]
-                        lg:ml-[0.35rem]
-                    "
+                    className="relative ml-[0.2rem] sm:ml-[0.25rem] md:ml-[0.3rem] lg:ml-[0.35rem]"
                 >
                     {/* =============================================
                         KR OUTLINE
