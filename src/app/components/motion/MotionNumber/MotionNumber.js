@@ -48,6 +48,14 @@ export default function MotionNumber({
                 "pointer-events-none inline-flex items-center font-mono tabular-nums",
                 className,
             )}
+            /*
+             * The animated digits below are all aria-hidden, so this
+             * counter exposes its value solely through aria-label. A bare
+             * <span> may not carry aria-label (axe: aria-prohibited-attr),
+             * so an explicit role is what makes the label legal and puts
+             * the live value into the accessibility tree.
+             */
+            role="img"
             aria-label={ariaLabel || `${prefix}${numericValue}${suffix}`}
         >
             {prefix && (

@@ -226,8 +226,10 @@ export default function MobileMenu({ navLinks = [], socialLinks = [], activeHref
               event,
               "#hero"
             )
-          }
-          aria-label="Go to home">
+          }              /* Visible text is the logo's "V Kr." — the accessible name
+                 must contain it (axe: label-content-name-mismatch). */
+              aria-label="V Kr. home">
+
           <VKrLogo size="sm" />
         </Link>
 
@@ -244,7 +246,8 @@ export default function MobileMenu({ navLinks = [], socialLinks = [], activeHref
 
       {/* MAIN NAVIGATION */}
 
-      <main className=" flex min-h-0 flex-1 items-center px-5 sm:px-8 md:px-10 " >
+      <div
+        className=" flex min-h-0 flex-1 items-center px-5 sm:px-8 md:px-10 " >
         <nav className="w-full" aria-label="Mobile navigation" >
           <ul className="flex flex-col">
             {navLinks.map(
@@ -473,9 +476,16 @@ export default function MobileMenu({ navLinks = [], socialLinks = [], activeHref
             )}
           </ul>
         </nav>
-      </main>
+      </div>
 
-      <footer className=" shrink-0 border-t border-border-subtle px-5 pb-[calc(1.75rem+env(safe-area-inset-bottom))] pt-6 sm:px-8 " >
+      {/*
+       * A plain div, not <footer>: this menu renders inside the page's own
+       * <main>, so a <footer> here would nest a second footer landmark in
+       * the same document. The controls below (resume link, social links)
+       * already carry their own labels, so no wrapper role is needed.
+       */}
+      <div
+        className=" shrink-0 border-t border-border-subtle px-5 pb-[calc(1.75rem+env(safe-area-inset-bottom))] pt-6 sm:px-8 " >
         {/* RESUME */}
 
         <motion.div
@@ -561,7 +571,7 @@ export default function MobileMenu({ navLinks = [], socialLinks = [], activeHref
             );
           })}
         </motion.div>
-      </footer>
+      </div>
     </motion.div>
   );
 }

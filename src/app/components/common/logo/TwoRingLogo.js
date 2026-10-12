@@ -251,7 +251,12 @@ export default function VKrLogo() {
           ================================================= */}
       <div className="relative z-10 w-fit">
         {/* OUTLINE */}
-        <h2
+        {/*
+          <p>, not <h2>: this brand mark sits inside the mobile-menu
+          <header>. As an <h2> it preceded the page <h1> in the heading
+          outline on every route (Phase 12: SEO).
+        */}
+        <p
           className={`
             ${textClasses}
             text-transparent
@@ -260,27 +265,28 @@ export default function VKrLogo() {
           `}
         >
           V Kr.
-        </h2>
+        </p>
 
-        {/* SOLID */}
-        <motion.h2
+        {/*
+          SOLID — pseudo-element overlay, same treatment as VKrLogo.
+
+          This used to be a second <p>V Kr.</p>, which doubled the link's
+          visible text and tripped axe's label-content-name-mismatch (visible
+          "V Kr. V Kr." not contained in the accessible name "V Kr."). The
+          ::before (see .logo-solid in globals.css) paints the solid fill
+          with no real text node, so visible text == accessible name.
+
+          textClasses rides on the wrapper so the ::before inherits the font
+          metrics and stays pixel-aligned with the outline <p>.
+        */}
+        <motion.div
           aria-hidden="true"
-          initial={{
-            clipPath: "inset(0% 100% 0% 0%)",
-          }}
+          className={`logo-solid pointer-events-none absolute inset-0 ${textClasses}`}
+          initial={{ "--logo-clip": "inset(0% 100% 0% 0%)" }}
           style={{
-            clipPath: logoClip,
+            "--logo-clip": logoClip,
           }}
-          className={`
-            ${textClasses}
-            absolute
-            inset-0
-            text-[#222222]
-            dark:text-[#F1EFE8]
-          `}
-        >
-          V Kr.
-        </motion.h2>
+        />
       </div>
     </motion.div>
   );

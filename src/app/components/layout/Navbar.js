@@ -327,7 +327,13 @@ export default function Navbar({ context = "site" }) {
 
                 handleDesktopNavigation(event, "#hero");
               }}
-              aria-label="Home"
+              /*
+               * The visible text here is the logo's "V Kr.". axe's
+               * label-content-name-mismatch rule requires that a link's
+               * accessible name contain its visible text, so "Home" alone
+               * fails — the name has to lead with the brand mark.
+               */
+              aria-label="V Kr. home"
             >
               <VKrLogo
                 className={cn(

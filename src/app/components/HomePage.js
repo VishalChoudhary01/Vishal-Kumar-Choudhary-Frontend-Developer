@@ -4,7 +4,13 @@ import { lazy, Suspense } from "react";
 import PortfolioIntro from "./sections/Intro_loader/portfolioIntro";
 import { usePageLoader } from "../providers/PageLoaderProvider";
 import Navbar from "./layout/Navbar";
-import { HeroSection } from "./sections";
+/*
+ * Direct import (not via the ./sections barrel): the barrel re-exports the
+ * six lazy-loaded below-fold sections, so a static barrel import used to
+ * pull all of them into the initial bundle and defeat React.lazy (they
+ * lived in the shared 152 KB chunk on every route). Phase 10.
+ */
+import HeroSection from "./sections/HeroSection";
 
 const AboutSection = lazy(() =>
   import("./sections").then((m) => ({ default: m.AboutSection }))

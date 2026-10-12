@@ -98,7 +98,8 @@ export default function LightModeLogo() {
           --------------------------------------------- */}
             <div className="relative z-10 w-fit">
                 {/* OUTLINE */}
-                <h2
+                {/* <p>, not <h2>: brand mark, not a content heading (Phase 12: SEO). */}
+                <p
                     className={`
             ${textClasses}
             text-[#161616]
@@ -109,10 +110,10 @@ export default function LightModeLogo() {
                     }}
                 >
                     V Kr.
-                </h2>
+                </p>
 
                 {/* SOLID */}
-                <motion.h2
+                <motion.p
                     aria-hidden="true"
                     style={{
                         clipPath: logoClip,
@@ -125,7 +126,7 @@ export default function LightModeLogo() {
           `}
                 >
                     V Kr.
-                </motion.h2>
+                </motion.p>
             </div>
         </motion.div>
     );

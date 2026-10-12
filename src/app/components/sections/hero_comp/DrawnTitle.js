@@ -36,16 +36,29 @@ export function DrawnTitle() {
   const { heroReady } = usePageLoader();
 
   return (
-    <span
-      className="relative block w-full overflow-visible"
-      aria-label="FRONTEND DEVELOPER"
-    >
+    <span className="relative block w-full overflow-visible">
+      {/*
+        ACCESSIBILITY / SEO (Phase 12)
+
+        This title is painted twice, on purpose:
+          1. the solid gradient text that ends up visible
+          2. a per-character outline that draws left-to-right as an
+             entrance animation, then hands off to the solid layer
+
+        Both layers spell the same phrase, so exactly one of them has to be
+        the accessible instance. Layer 1 (solid) is that instance; Layer 2
+        (outline) is purely decorative and carries aria-hidden="true".
+
+        Verified against Chrome's accessibility tree (not innerText, which
+        is a visual-text API and ignores aria-hidden): the <h1> accessible
+        name is the single string "FRONTEND DEVELOPER".
+      */}
+
       {/* ==============================================================
-                LAYER 1 — FINAL SOLID TEXT
+                LAYER 1 — FINAL SOLID TEXT (the accessible instance)
                 ============================================================== */}
 
       <span
-        aria-hidden="true"
         className="relative z-[1] block overflow-visible"
       >
         <motion.span
@@ -82,6 +95,10 @@ export function DrawnTitle() {
                 LAYER 2 — OUTLINE DRAWING
                 ============================================================== */}
 
+      {/*
+        Purely decorative drawing layer: it spells the same phrase a second
+        time, character by character, purely as an entrance animation.
+      */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-[2] overflow-visible"

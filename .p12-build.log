@@ -1,0 +1,50 @@
+
+> final@0.1.0 build
+> node scripts/validate-seo.cjs && next build
+
+SEO validation warnings:
+Project "ClassFuse" has an empty github link.
+Project "ClassFuse" has an empty figma link.
+Project "Spendwise" has an empty figma link.
+Project "System Canvas" has an empty github link.
+Project "System Canvas" has an empty figma link.
+Project "Next.js Master" has an empty github link.
+Project "Next.js Master" has an empty figma link.
+SEO validation passed. 7 warning(s).
+▲ Next.js 16.3.4 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.mjs took 65ms
+- Experiments (use with caution):
+  · optimizePackageImports
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 60s
+  Running TypeScript ...
+  Finished TypeScript in 95ms ...
+  Collecting page data using 3 workers ...
+  Generating static pages using 3 workers (0/13) ...
+  Generating static pages using 3 workers (3/13) 
+  Generating static pages using 3 workers (6/13) 
+  Generating static pages using 3 workers (9/13) 
+✓ Generating static pages using 3 workers (13/13) in 2.4s
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/contact
+├ ƒ /api/source-snapshot
+├ ○ /error
+├   /projects/[slug]
+│ ├ ● /projects/class-fuse
+│ ├ ● /projects/spendwise
+│ ├ ● /projects/system-canvas
+│ └ ● /projects/nextjs-master
+├ ○ /robots.txt
+└ ○ /sitemap.xml
+
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+

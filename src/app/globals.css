@@ -39,7 +39,7 @@ html{
   --text-primary: #111413;
   --text-secondary: #625e57;
   --text-tertiary: #817d75;
-  --text-muted: #938d83;
+  --text-muted: #726c61;
   --text-disabled: #bdb7ae;
   --text-inverse: #f1f0eb;
 
@@ -190,7 +190,7 @@ html.dark {
   --text-primary: #f3f4ee;
   --text-secondary: #b9bdb3;
   --text-tertiary: #8e9489;
-  --text-muted: #747b70;
+  --text-muted: #7d8479;
   --text-disabled: #4a5148;
   --text-inverse: #171a16;
 
@@ -455,3 +455,41 @@ body {
   --color-atmosphere-dark-d: var(--atmosphere-dark-d);
 }
 
+/* ---------------------------------------------------------
+   LOGO SOLID REVEAL — pseudo-element overlay (VKrLogo)
+
+   The logo's outline-to-solid reveal used to be a SECOND <p>V Kr.</p>
+   stacked over the outline <p>. Two real text nodes doubled the link's
+   visible text to "V Kr. V Kr.", which axe flags as
+   label-content-name-mismatch (visible text not contained in the accessible
+   name "V Kr."). Painting the solid layer as a ::before means there is only
+   ONE real text node (the outline <p>), so visible text == accessible name.
+
+   The ::before replicates the exact font metrics of the outline so the solid
+   fill lands precisely over the stroke as it sweeps in, and the reveal is
+   driven by the --logo-clip custom property animated on the wrapper by Framer
+   Motion (inset 100% clipped -> inset 0 fully shown).
+--------------------------------------------------------- */
+/* Solid logo overlay — fills the outline's exact dimensions.
+
+   Font metrics (family, weight, leading, tracking, responsive size ramp)
+   come from the wrapper's textClasses via inheritance, so the ::before
+   stays pixel-aligned with the outline <p> for BOTH logos — VKrLogo and
+   TwoRingLogo — without duplicating each ramp here. */
+.logo-solid::before {
+  content: "V Kr.";
+
+  position: absolute;
+  inset: 0;
+  display: block;
+
+  color: #222222;
+
+  /* Animated by Motion through the inherited CSS variable */
+  clip-path: var(--logo-clip, inset(0% 100% 0% 0%));
+  pointer-events: none;
+}
+
+.dark .logo-solid::before {
+  color: #f1efe8;
+}

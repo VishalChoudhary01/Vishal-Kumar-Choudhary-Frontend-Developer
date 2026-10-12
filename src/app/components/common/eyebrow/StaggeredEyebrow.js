@@ -91,6 +91,7 @@ export default function StaggeredEyebrow({
     return (
         <span
             ref={containerRef}
+            role="img"
             aria-label={label}
             className={cn(
                 `

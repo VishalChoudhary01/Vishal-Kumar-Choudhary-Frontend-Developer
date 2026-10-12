@@ -148,7 +148,7 @@ export default function ContactProjectType({
             id={id}
             disabled={disabled}
             className={cn("mt-1 w-full", className)}
-            aria-required={required}
+
             aria-describedby={errorId || hintId}
         >
             <legend className={LABEL_CLASSES}>

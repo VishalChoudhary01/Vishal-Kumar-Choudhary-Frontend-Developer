@@ -166,7 +166,25 @@ export default function VKrLogo() {
             ================================================= */}
       <div className="relative z-10 w-fit">
         {/* OUTLINE */}
-        <h2
+        {/*
+          Rendered as <p>, not <h2>: this is the brand mark inside the
+          site <header>, not a content section. As an <h2> it landed above
+          the page <h1> in the outline on every route, so crawlers read
+          "V Kr." as the second-most-important heading (Phase 12: SEO).
+        */}
+        {/*
+          This outline <p> is the ONE real text node for the logo, so it is
+          what the link's accessible name is derived from ("V Kr.").
+
+          The solid reveal below is a CSS ::before overlay (see the .logo-solid
+          rule in globals.css), not a second <p>. axe computes visible text
+          only from real text nodes and ignores pseudo-element content, so a
+          duplicate <p> here would double the visible text to "V Kr. V Kr."
+          and trip label-content-name-mismatch (visible text not contained in
+          the accessible name). Keeping the overlay as a pseudo-element keeps
+          visible text == accessible name.
+        */}
+        <p
           className={`
                         ${textClasses}
 
@@ -177,30 +195,40 @@ export default function VKrLogo() {
                     `}
         >
           V Kr.
-        </h2>
+        </p>
 
-        {/* SOLID REVEAL */}
-        <motion.h2
+        {/*
+          SOLID REVEAL — pseudo-element overlay.
+
+          This used to be a second <p>V Kr.</p>, which doubled the link's
+          visible text and tripped axe's label-content-name-mismatch (the
+          visible "V Kr. V Kr." was not contained in the accessible name
+          "V Kr."). Rendering the solid layer as a ::before (see .logo-solid
+          in globals.css) keeps a single real text node — the outline <p>
+          above — so visible text == accessible name.
+
+          Framer Motion can't animate a pseudo-element, so the reveal is
+          driven by the --logo-clip custom property (initially a fully clipped
+          inset, animating to fully visible) that the ::before consumes.
+        */}
+        {/*
+          Empty element: the solid "V Kr." is painted entirely by the
+          .logo-solid ::before (see globals.css). It carries NO real text
+          node, so axe's visible-text count stays at a single "V Kr." (from
+          the outline <p>) and the link's accessible name matches it.
+
+          textClasses rides on this wrapper so the ::before — which inherits
+          font metrics from its originating element — lands pixel-aligned
+          with the outline <p> at every breakpoint.
+        */}
+        <motion.div
           aria-hidden="true"
-          initial={{
-            clipPath:
-              "inset(0% 100% 0% 0%)",
-          }}
+          className={`logo-solid pointer-events-none absolute inset-0 ${textClasses}`}
+          initial={{ "--logo-clip": "inset(0% 100% 0% 0%)" }}
           style={{
-            clipPath: logoClip,
+            "--logo-clip": logoClip,
           }}
-          className={`
-                        ${textClasses}
-
-                        absolute
-                        inset-0
-
-                        text-[#222222]
-                        dark:text-[#F1EFE8]
-                    `}
-        >
-          V Kr.
-        </motion.h2>
+        />
       </div>
     </motion.div>
   );
