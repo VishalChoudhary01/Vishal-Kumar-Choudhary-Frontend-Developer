@@ -24,7 +24,13 @@ export function MobileIntro() {
       <MobileIntroItem
         {...MOTION.mobileIntroEntrance.description}
       >
-        <p className="type-body mt-6 max-w-[320px] text-center text-text-tertiary">
+        {/*
+          mx-auto — the section is wider than the 320px measure, so
+          without it the text box hangs off the left padding and the
+          (already centered) lines sit left of the viewport center,
+          while the eyebrow and CTA center on full width.
+        */}
+        <p className="type-body mx-auto mt-6 max-w-[320px] text-center text-text-tertiary">
           {DESCRIPTION}
         </p>
       </MobileIntroItem>
