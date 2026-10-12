@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 /**
  * AnimatedOutlineText
@@ -30,17 +30,21 @@ export default function AnimatedOutlineText({
     reducedMotion = false,
     onComplete,
 }) {
-    const [drawComplete, setDrawComplete] = useState(false);
+    const [completedContent, setCompletedContent] =
+        useState(null);
 
     /**
-     * Reset completion when the content changes.
+     * Derive completion during render instead of resetting it in an
+     * effect.
      *
-     * Useful for project pages where the same component
-     * may receive a different project title.
+     * The draw animation must restart from scratch whenever the content
+     * (e.g. a project title) changes. Storing the content that produced
+     * the completion — rather than a bare boolean reset by an effect —
+     * makes `drawComplete` a pure function of the current children: the
+     * moment `children` changes, it reads as false again with no
+     * cascading re-render (react-hooks/set-state-in-effect).
      */
-    useEffect(() => {
-        setDrawComplete(false);
-    }, [children]);
+    const drawComplete = completedContent === children;
 
     /**
      * Convert children into lines.
@@ -81,7 +85,7 @@ export default function AnimatedOutlineText({
     }
 
     const handleComplete = () => {
-        setDrawComplete(true);
+        setCompletedContent(children);
         onComplete?.();
     };
 

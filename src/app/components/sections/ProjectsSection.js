@@ -48,7 +48,10 @@ export default function Projects() {
     const [showAllProjects, setShowAllProjects] =
         useState(false);
 
-    const projects = portfolio.projects || [];
+    const projects = useMemo(
+        () => portfolio.projects || [],
+        [],
+    );
 
     /* --------------------------------------------------------------------------
        AVAILABLE CATEGORIES

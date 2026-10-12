@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useState } from "react";
 import { AnimatePresence } from "motion/react";
 
 import useReducedMotion from "@/app/hooks/useReducedMotion";
@@ -29,16 +29,23 @@ export default function MotionNumber({
     ariaLabel,
 }) {
     const reduced = useReducedMotion();
-    const previousValueRef = useRef(normalizeNumber(value));
 
     const numericValue = normalizeNumber(value);
-    const previousValue = previousValueRef.current;
 
-    const direction = numericValue >= previousValue ? 1 : -1;
+    const [valueHistory, setValueHistory] = useState({
+        current: numericValue,
+        previous: numericValue,
+    });
 
-    useEffect(() => {
-        previousValueRef.current = numericValue;
-    }, [numericValue]);
+    if (valueHistory.current !== numericValue) {
+        setValueHistory({
+            current: numericValue,
+            previous: valueHistory.current,
+        });
+    }
+
+    const direction =
+        numericValue >= valueHistory.previous ? 1 : -1;
 
     const formattedValue = formatNumber(numericValue, minDigits);
 

@@ -20,10 +20,15 @@ export default function VKrLogo() {
     /*
      * Loader is still running.
      * Keep logo at initial state.
+     *
+     * No need to force `isHovered` back to false here: every hover-driven
+     * animation below is already gated on `heroReady`, so an unready logo
+     * renders its initial state no matter what the hover flag says. That
+     * keeps this effect free of a synchronous setState
+     * (react-hooks/set-state-in-effect).
      */
     if (!heroReady) {
       logoProgress.set(0);
-      setIsHovered(false);
 
       return;
     }

@@ -44,17 +44,12 @@ next-env.d.ts
 
 # ---------------------------------------------------------------
 # Local-only documentation
-# Internal notes, audits, specs and lab docs stay on disk but are
-# never published. The main README remains tracked.
+# Keep documentation exclusions limited to the known local-only paths.
 # ---------------------------------------------------------------
-*.md
-*.markdown
-!README.md
-!README.markdown
-
-# Local-only development documentation folders (exact folder names)
+/implementation Doc/
 /performance doc/
 /implemention Doc/
+/PERFORMANCE-OPTIMIZATION-REPORT.md
 /dyanmic portfolio lab/
 
 # Local-only agent / tooling state
@@ -75,6 +70,27 @@ next-env.d.ts
 verify-out.txt
 hydration-log.txt
 /.baseline-*.json
+/.p12-build.log
+/.p12-home.html
+/.p12-served.html
+/.p14-shell-baseline.json
+/scripts/.p13-contrast.mjs
+/scripts/.p13-names.mjs
+/scripts/p10-js-attribution.cjs
+/scripts/p11-ambient-isolate.cjs
+/scripts/p11-ambient-profile.cjs
+/scripts/p11-fps-trust.cjs
+/scripts/p11-gpu-layers.cjs
+/scripts/p11-layer-count.cjs
+/scripts/p11-render-probe.cjs
+/scripts/p11-visual-diff.cjs
+/scripts/p11-wc-release.cjs
+/scripts/p11-wc-release2.cjs
+/scripts/p11-wc-words.cjs
+/scripts/p11-zcheck.cjs
+/scripts/p12-heading-check.cjs
+/scripts/p12-seo-audit.cjs
+/scripts/p13-a11y-audit.cjs
 scripts/error-*.cjs
 scripts/hydration-check.cjs
 scripts/nav-scroll-check.cjs

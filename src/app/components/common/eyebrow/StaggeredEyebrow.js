@@ -2,7 +2,7 @@
 
 import { motion, useInView, useReducedMotion } from "motion/react"
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { usePageLoader } from "@/app/providers/PageLoaderProvider";
 import { cn } from "@/app/lib/utils";
@@ -39,30 +39,23 @@ export default function StaggeredEyebrow({
     });
 
     const [isHovered, setIsHovered] = useState(false);
-    const [revealStarted, setRevealStarted] = useState(false);
-    const [revealCompleted, setRevealCompleted] = useState(false);
+    const [revealCompleted, setRevealCompleted] =
+        useState(false);
 
     /*
      * ---------------------------------------------------------------
      * START VIEW ANIMATION
      * ---------------------------------------------------------------
+     *
+     * The reveal starts the moment the section is both ready (loader
+     * finished) and scrolled into view. Both are read directly here —
+     * there is no effect that copies them into a separate
+     * `revealStarted` boolean, which would only re-render the component
+     * (react-hooks/set-state-in-effect).
      */
 
-    useEffect(() => {
-        if (
-            heroReady &&
-            isInView &&
-            !shouldReduceMotion &&
-            !revealStarted
-        ) {
-            setRevealStarted(true);
-        }
-    }, [
-        heroReady,
-        isInView,
-        shouldReduceMotion,
-        revealStarted,
-    ]);
+    const revealStarted =
+        heroReady && isInView && !shouldReduceMotion;
 
     /*
      * ---------------------------------------------------------------
