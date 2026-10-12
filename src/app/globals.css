@@ -3,24 +3,27 @@
    Next build outputs (.next/, .next-p9/) whose minified chunks contain
    mangled class-name strings — it then emits corrupted utilities and the
    CSS parser fails, 500-ing every route in dev. */
+
 @import "tailwindcss" source(none);
+
 @source "../../src/app";
 
 @custom-variant dark (&:where(.dark, .dark *));
-html{
-   /* Lenis owns smooth scrolling (lib/lenis/SmoothScroll.js). CSS
-      scroll-behavior would re-animate every programmatic scroll a second
-      time — a second scroll system (Phase 8). scroll-padding-top keeps raw
-      #hash fallback jumps clear of the fixed header. */
-   scroll-padding-top: 94px;
+
+html {
+  /* Lenis owns smooth scrolling (lib/lenis/SmoothScroll.js). CSS
+     scroll-behavior would re-animate every programmatic scroll a second
+     time — a second scroll system (Phase 8). scroll-padding-top keeps raw
+     #hash fallback jumps clear of the fixed header. */
+  scroll-padding-top: 94px;
 }
 
 :root {
-    color-scheme: light dark;
+  color-scheme: light dark;
+
   /* ---------------------------------------------------------
      SURFACES
   --------------------------------------------------------- */
-
   --background: #f7f4ee;
   --foreground: #1c1b19;
 
@@ -29,13 +32,11 @@ html{
   --surface-3: #e8e1d7;
   --surface-elevated: #fffcf7;
   --surface-inset: #ece7de;
-
   --surface-overlay: rgb(28 27 25 / 55%);
 
   /* ---------------------------------------------------------
      TEXT
   --------------------------------------------------------- */
-
   --text-primary: #111413;
   --text-secondary: #625e57;
   --text-tertiary: #817d75;
@@ -46,7 +47,6 @@ html{
   /* ---------------------------------------------------------
      BORDERS
   --------------------------------------------------------- */
-
   --border-subtle: #eeeae3;
   --border: #ded8cf;
   --border-strong: #d3ccc1;
@@ -54,20 +54,17 @@ html{
   /* ---------------------------------------------------------
      BRAND — DEEP PETROL
   --------------------------------------------------------- */
-
   --brand: #176b68;
   --brand-hover: #0f5b58;
   --brand-pressed: #124f4d;
 
   --brand-soft: #dceceb;
   --brand-muted: #c4dfdd;
-
   --brand-contrast: #ffffff;
 
   /* ---------------------------------------------------------
      SUCCESS
   --------------------------------------------------------- */
-
   --success: #177452;
   --success-hover: #125c41;
   --success-soft: #eaf7f1;
@@ -76,7 +73,6 @@ html{
   /* ---------------------------------------------------------
      WARNING
   --------------------------------------------------------- */
-
   --warning: #8a6115;
   --warning-hover: #6f4e10;
   --warning-soft: #fbf3e1;
@@ -85,7 +81,6 @@ html{
   /* ---------------------------------------------------------
      ERROR
   --------------------------------------------------------- */
-
   --error: #a33e38;
   --error-hover: #87332e;
   --error-soft: #fbecea;
@@ -94,7 +89,6 @@ html{
   /* ---------------------------------------------------------
      INFO
   --------------------------------------------------------- */
-
   --info: #35627f;
   --info-hover: #2b5068;
   --info-soft: #ebf3fa;
@@ -103,13 +97,11 @@ html{
   /* ---------------------------------------------------------
      FOCUS
   --------------------------------------------------------- */
-
   --focus-ring: var(--brand);
 
   /* ---------------------------------------------------------
      SHAPE
   --------------------------------------------------------- */
-
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -119,7 +111,6 @@ html{
   /* ---------------------------------------------------------
      LIGHT SHADOWS
   --------------------------------------------------------- */
-
   --shadow-sm: 0 1px 2px rgb(28 27 25 / 4%);
   --shadow-md: 0 8px 24px rgb(28 27 25 / 8%);
   --shadow-lg: 0 16px 48px rgb(28 27 25 / 12%);
@@ -127,14 +118,13 @@ html{
   /* ---------------------------------------------------------
      TYPOGRAPHY
   --------------------------------------------------------- */
- --font-display:  var(--font-newsreader);
+  --font-display: var(--font-newsreader);
   --font-body: var(--font-manrope);
   --font-mono: var(--font-azeret-mono);
 
   /* ---------------------------------------------------------
      THEME TRANSITION
   --------------------------------------------------------- */
-
   --theme-transition-duration: 520ms;
   --theme-transition-easing: cubic-bezier(0.22, 1, 0.36, 1);
   --theme-reveal-radius: 0%;
@@ -144,34 +134,32 @@ html{
   /* ---------------------------------------------------------
      EDUCATION — ACADEMIC ARCHIVE SURFACES
   --------------------------------------------------------- */
-
   --education-card-bg: #fdfaf2;
   --education-card-border: #e5dccb;
   --education-card-hairline: #eee7da;
   --education-shadow:
     0 1px 2px rgb(64 55 40 / 5%),
     0 24px 48px -28px rgb(64 55 40 / 30%);
-/* ---------------------------------------------------------
+
+  /* ---------------------------------------------------------
      FOOTER ATMOSPHERE — LIGHT
   --------------------------------------------------------- */
 
   /* --atmosphere-light-a: #F3EDE3;
---atmosphere-light-b: #EDE4D7;
---atmosphere-light-c: #E7E3EC;
---atmosphere-light-d: #E1E9E2; */
+     --atmosphere-light-b: #EDE4D7;
+     --atmosphere-light-c: #E7E3EC;
+     --atmosphere-light-d: #E1E9E2; */
 
---atmosphere-light-a: #F1E9DC;
---atmosphere-light-b: #E8DED0;
---atmosphere-light-c: #E5E0EC;
---atmosphere-light-d: #DDE8DF;
-    
+  --atmosphere-light-a: #F1E9DC;
+  --atmosphere-light-b: #E8DED0;
+  --atmosphere-light-c: #E5E0EC;
+  --atmosphere-light-d: #DDE8DF;
 }
 
 html.dark {
-    /* ---------------------------------------------------------
+  /* ---------------------------------------------------------
      SURFACES
   --------------------------------------------------------- */
-
   --background: #0b0f0c;
   --foreground: #f3f4ee;
 
@@ -180,13 +168,11 @@ html.dark {
   --surface-3: #1d1f1d;
   --surface-elevated: #222421;
   --surface-inset: #0e100f;
-
   --surface-overlay: rgb(0 0 0 / 62%);
 
   /* ---------------------------------------------------------
      TEXT
   --------------------------------------------------------- */
-
   --text-primary: #f3f4ee;
   --text-secondary: #b9bdb3;
   --text-tertiary: #8e9489;
@@ -197,7 +183,6 @@ html.dark {
   /* ---------------------------------------------------------
      BORDERS
   --------------------------------------------------------- */
-
   --border-subtle: #202320;
   --border: #2b2e2b;
   --border-strong: #383b38;
@@ -205,20 +190,17 @@ html.dark {
   /* ---------------------------------------------------------
      BRAND — DEEP PETROL
   --------------------------------------------------------- */
-
   --brand: #69bdb9;
   --brand-hover: #7ad0cc;
   --brand-pressed: #55b3af;
 
   --brand-soft: #173332;
   --brand-muted: #2a4b49;
-
   --brand-contrast: #0b0f0c;
 
   /* ---------------------------------------------------------
      SUCCESS
   --------------------------------------------------------- */
-
   --success: #63d3a5;
   --success-hover: #83dfb8;
   --success-soft: #142820;
@@ -227,7 +209,6 @@ html.dark {
   /* ---------------------------------------------------------
      WARNING
   --------------------------------------------------------- */
-
   --warning: #ebc66a;
   --warning-hover: #f2d487;
   --warning-soft: #2a2112;
@@ -236,7 +217,6 @@ html.dark {
   /* ---------------------------------------------------------
      ERROR
   --------------------------------------------------------- */
-
   --error: #f08a83;
   --error-hover: #f5a39d;
   --error-soft: #2d1817;
@@ -245,7 +225,6 @@ html.dark {
   /* ---------------------------------------------------------
      INFO
   --------------------------------------------------------- */
-
   --info: #81bee0;
   --info-hover: #9dcae4;
   --info-soft: #17242d;
@@ -254,13 +233,11 @@ html.dark {
   /* ---------------------------------------------------------
      FOCUS
   --------------------------------------------------------- */
-
   --focus-ring: var(--brand);
 
   /* ---------------------------------------------------------
      DARK SHADOWS
   --------------------------------------------------------- */
-
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 20%);
   --shadow-md: 0 8px 24px rgb(0 0 0 / 28%);
   --shadow-lg: 0 16px 48px rgb(0 0 0 / 38%);
@@ -268,7 +245,6 @@ html.dark {
   /* ---------------------------------------------------------
      EDUCATION — ACADEMIC ARCHIVE SURFACES
   --------------------------------------------------------- */
-
   --education-card-bg: #161a15;
   --education-card-border: #33382f;
   --education-card-hairline: #262b24;
@@ -276,50 +252,48 @@ html.dark {
     0 1px 2px rgb(0 0 0 / 22%),
     0 28px 60px -30px rgb(0 0 0 / 65%);
 
-
-     /* ---------------------------------------------------------
+  /* ---------------------------------------------------------
      FOOTER ATMOSPHERE — DARK
-     --------------------------------------------------------- */
+  --------------------------------------------------------- */
 
-   /* --atmosphere-dark-a: #111513;
-    --atmosphere-dark-b: #121923;
-    --atmosphere-dark-c: #181A15;
-    --atmosphere-dark-d: #1B161C;  */
-    --atmosphere-dark-a: #101412;
-    --atmosphere-dark-b: #111A25;
-    --atmosphere-dark-c: #191B15;
-    --atmosphere-dark-d: #1D171E;
+  /* --atmosphere-dark-a: #111513;
+     --atmosphere-dark-b: #121923;
+     --atmosphere-dark-c: #181A15;
+     --atmosphere-dark-d: #1B161C; */
+
+  --atmosphere-dark-a: #101412;
+  --atmosphere-dark-b: #111A25;
+  --atmosphere-dark-c: #191B15;
+  --atmosphere-dark-d: #1D171E;
 }
 
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 html,
 body {
-    min-height: 100%;
+  min-height: 100%;
 }
 
 body {
-    margin: 0;
-    background: var(--background);
-    color: var(--foreground);
-    font-family:
-        var(--font-body),
-        Arial, 
-        Helvetica,
-        sans-serif;
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family:
+    var(--font-body),
+    Arial,
+    Helvetica,
+    sans-serif;
 }
-
 
 @theme inline {
   /* ---------------------------------------------------------
      STABLE PRIMITIVE PALETTE — DEEP PETROL
-     ---------------------------------------------------------
+
      These values do NOT change between themes.
      Use petrol-* when a specific shade is intentionally needed.
   --------------------------------------------------------- */
-
   --color-petrol-50: #edf8f7;
   --color-petrol-100: #dceceb;
   --color-petrol-200: #c4dfdd;
@@ -335,7 +309,6 @@ body {
   /* ---------------------------------------------------------
      STABLE PRIMITIVE PALETTE — WARM STONE
   --------------------------------------------------------- */
-
   --color-stone-50: #fbf9f5;
   --color-stone-100: #f7f4ee;
   --color-stone-200: #f1ece4;
@@ -351,7 +324,6 @@ body {
   /* ---------------------------------------------------------
      SEMANTIC SURFACES
   --------------------------------------------------------- */
-
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
@@ -365,7 +337,6 @@ body {
   /* ---------------------------------------------------------
      SEMANTIC TEXT
   --------------------------------------------------------- */
-
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-tertiary: var(--text-tertiary);
@@ -376,14 +347,13 @@ body {
   /* ---------------------------------------------------------
      SEMANTIC BORDERS
   --------------------------------------------------------- */
-
   --color-border-subtle: var(--border-subtle);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
 
   /* ---------------------------------------------------------
      SEMANTIC BRAND
-     ---------------------------------------------------------
+
      Use:
        bg-brand
        text-brand
@@ -395,7 +365,6 @@ body {
      Do NOT use dark:bg-darkbrand.
      The .dark class changes the underlying value.
   --------------------------------------------------------- */
-
   --color-brand: var(--brand);
   --color-brand-hover: var(--brand-hover);
   --color-brand-pressed: var(--brand-pressed);
@@ -406,7 +375,6 @@ body {
   /* ---------------------------------------------------------
      SEMANTIC STATUS
   --------------------------------------------------------- */
-
   --color-success: var(--success);
   --color-success-hover: var(--success-hover);
   --color-success-soft: var(--success-soft);
@@ -430,20 +398,16 @@ body {
   /* ---------------------------------------------------------
      FOCUS
   --------------------------------------------------------- */
-
   --color-focus-ring: var(--focus-ring);
-
 
   /*! FONTS */
   --font-display: var(--font-display);
   --font-body: var(--font-body);
   --font-mono: var(--font-mono);
 
-
-    /* ---------------------------------------------------------
+  /* ---------------------------------------------------------
      FOOTER ATMOSPHERE
   --------------------------------------------------------- */
-
   --color-atmosphere-light-a: var(--atmosphere-light-a);
   --color-atmosphere-light-b: var(--atmosphere-light-b);
   --color-atmosphere-light-c: var(--atmosphere-light-c);
@@ -470,12 +434,14 @@ body {
    driven by the --logo-clip custom property animated on the wrapper by Framer
    Motion (inset 100% clipped -> inset 0 fully shown).
 --------------------------------------------------------- */
+
 /* Solid logo overlay — fills the outline's exact dimensions.
 
    Font metrics (family, weight, leading, tracking, responsive size ramp)
    come from the wrapper's textClasses via inheritance, so the ::before
    stays pixel-aligned with the outline <p> for BOTH logos — VKrLogo and
    TwoRingLogo — without duplicating each ramp here. */
+
 .logo-solid::before {
   content: "V Kr.";
 
@@ -506,8 +472,58 @@ body {
    This rule hides the overlay for them from the very first painted frame,
    so a revisit never flashes the peeled background, even before React
    hydrates. New visitors have no flag and get the full intro.
+
    The id is removed from the DOM at hydration when the loader unmounts.
-   --------------------------------------------------------- */
+--------------------------------------------------------- */
+
 html[data-intro-seen] #intro-overlay {
   display: none !important;
+}
+
+/* =========================================================
+   PORTFOLIO SCROLLBAR
+   Minimal · Rounded · Theme-aware
+========================================================= */
+
+/* Firefox */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--brand) transparent;
+}
+
+/* Chrome, Edge and Safari */
+html::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb {
+  background-color: var(--border-strong);
+  border: 2px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+  min-height: 48px;
+  transition: background-color 180ms ease;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background-color: var(--brand);
+}
+
+html::-webkit-scrollbar-thumb:active {
+  background-color: var(--brand-pressed);
+}
+
+html::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html::-webkit-scrollbar-thumb {
+    transition: none;
+  }
 }
