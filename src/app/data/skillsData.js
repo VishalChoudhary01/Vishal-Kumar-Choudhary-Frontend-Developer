@@ -23,8 +23,6 @@ export const skillsCategories = [
             },
         ],
         supporting: [
-            "TypeScript",
-            "Vue.js",
             "Astro",
         ],
     },

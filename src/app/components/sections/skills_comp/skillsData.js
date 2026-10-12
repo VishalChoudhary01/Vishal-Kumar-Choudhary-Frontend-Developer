@@ -39,7 +39,7 @@ export const skillsCategories = [
         note: "Core language · Interactivity",
       },
     ],
-    supporting: ["TypeScript", "Vue.js", "Astro"],
+    supporting: ["Astro"],
   },
   {
     id: "ui-styling",
