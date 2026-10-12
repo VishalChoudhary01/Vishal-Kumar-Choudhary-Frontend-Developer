@@ -83,7 +83,7 @@ const SIZES = {
     default: {
         shell: `
         min-h-12
-        min-w-[180px]
+        min-w-[140px]
         pl-14
         pr-14
 
@@ -230,11 +230,21 @@ export default function ProjectResumeButton({
         }
 
         const updateTravel = () => {
-            const buttonWidth =
-                link.getBoundingClientRect().width;
+            /*
+             * offsetWidth, NOT getBoundingClientRect().width.
+             *
+             * The button can sit inside scaled ancestors (the
+             * project card's 0.94 entrance and the media's
+             * scroll-linked 0.82 → 1 grow-in), and a rect width
+             * includes those transforms. Measuring it made the
+             * travel short — the circle stopped on top of the
+             * label instead of at the right edge. offsetWidth is
+             * the untransformed layout size, so the travel is
+             * correct regardless of where the card is on screen.
+             */
+            const buttonWidth = link.offsetWidth;
 
-            const circleWidth =
-                circle.getBoundingClientRect().width;
+            const circleWidth = circle.offsetWidth;
 
             const nextTravel =
                 buttonWidth -
