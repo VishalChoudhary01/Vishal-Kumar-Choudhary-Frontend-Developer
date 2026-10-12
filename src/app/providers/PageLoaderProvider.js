@@ -13,17 +13,21 @@ import { usePathname } from "next/navigation";
    First visit  → the intro plays in full. Content stays hidden
                   (`isLoading=true`, `heroReady=false`) until the peel
                   finishes, then `completeLoading()` reveals it.
-   Revisit      → the intro is skipped entirely. `heroReady` is true from
-                  the first frame, so real content paints immediately and
-                  the peel surface is never left stranded on an empty page.
+   Revisit      → the intro is skipped before first paint, so the peel
+                  surface is never painted or left stranded on an empty
+                  page.
 
-   The revisit decision runs in a layout effect, which commits BEFORE the
-   browser paints — so on a revisit the loader never becomes visible, and
-   there is no flash of the overlay and no stranded peel background.
+   TWO-PART reveal, on BOTH paths: `isLoading` (the overlay) is cleared
+   first, and `heroReady` is flipped one frame LATER via requestAnimationFrame.
+   The hero entrance animations — the FRONTEND/DEVELOPER outline draw +
+   solid reveal, the VKr logo ring, the hero image fade — are all driven by
+   the heroReady false→true transition. Flipping heroReady in the SAME
+   commit lets Motion coalesce it into the mount state, so those animations
+   never run (outline sticks, solid never appears).
 
-   `heroReady` (rather than the overlay alone) is what hides content, and
-   it is flipped in the SAME commit that unmounts the overlay — so the
-   peeled surface always reveals real content behind it, never a blank page.
+   The revisit decision itself runs in a layout effect, which commits BEFORE
+   the browser paints — so on a revisit the overlay is unmounted before paint
+   (no flash, no stranded peel).
 
    This provider also resets leftover scroll locks on route changes.
    ========================================================================== */

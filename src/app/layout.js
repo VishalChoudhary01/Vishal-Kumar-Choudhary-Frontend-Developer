@@ -98,7 +98,10 @@ export default function RootLayout({ children }) {
           dangerouslySetInnerHTML={{
             __html: `
               try {
-                if (sessionStorage.getItem("vkr-intro-seen") === "1") {
+                if (
+                  sessionStorage.getItem("vkr-intro-seen") === "1" ||
+                  sessionStorage.getItem("vkr-intro-visited") === "1"
+                ) {
                   document.documentElement.setAttribute("data-intro-seen", "1");
                 }
               } catch (e) { /* storage blocked — intro plays */ }
