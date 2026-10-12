@@ -77,6 +77,34 @@ export default function RootLayout({ children }) {
             `,
           }}
         />
+
+        {/*
+          PRE-PAINT REVISIT MARKER (intro loader skip).
+
+          The server always renders the intro overlay into the HTML (it
+          cannot know the visitor's session state), and the browser paints
+          that HTML *before* the JS bundle loads and hydrates — so on a
+          revisit the peeled background would flash for the whole
+          load/hydration gap (seconds on a cold dev server).
+
+          This inline script runs during HTML parsing, BEFORE first paint,
+          so returning visitors get the marker immediately. globals.css
+          (html[data-intro-seen] #intro-overlay) hides the overlay for them
+          from the very first painted frame — no flash, no hydration
+          dependency. New visitors have no flag, so the intro plays as
+          designed.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if (sessionStorage.getItem("vkr-intro-seen") === "1") {
+                  document.documentElement.setAttribute("data-intro-seen", "1");
+                }
+              } catch (e) { /* storage blocked — intro plays */ }
+            `,
+          }}
+        />
       </head>
 
       <body className="flex min-h-full flex-col bg-background">

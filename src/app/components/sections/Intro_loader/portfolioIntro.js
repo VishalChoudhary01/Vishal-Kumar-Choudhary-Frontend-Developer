@@ -508,7 +508,11 @@ export default function PortfolioIntro({ onComplete }) {
         };
 
   return (
-    <div className=" fixed inset-0 z-[9999] h-[100dvh] w-screen overflow-hidden bg-background dark:bg-background " aria-hidden="true" >
+    <div
+      id="intro-overlay"
+      className=" fixed inset-0 z-[9999] h-[100dvh] w-screen overflow-hidden bg-background dark:bg-background "
+      aria-hidden="true"
+    >
       {/* ================================================================
           PHYSICAL SURFACE
           ================================================================ */}

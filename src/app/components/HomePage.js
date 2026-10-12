@@ -52,15 +52,16 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-background text-background">
       {isLoading && (
-        <PortfolioIntro
-          onComplete={() => {
-            completeLoading();
-          }}
-        />
+        <PortfolioIntro onComplete={completeLoading} />
       )}
 
       <div
         style={{
+          /*
+           * Content is gated on heroReady, which flips in the SAME commit
+           * that unmounts the intro overlay above — so the peel always
+           * reveals real content, never a blank page.
+           */
           visibility: heroReady ? "visible" : "hidden",
         }}
       >

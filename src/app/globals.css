@@ -493,3 +493,21 @@ body {
 .dark .logo-solid::before {
   color: #f1efe8;
 }
+
+/* ---------------------------------------------------------
+   INTRO OVERLAY — PRE-PAINT REVISIT HIDE
+
+   The server always renders the intro overlay into the HTML (it cannot
+   know the visitor's session state), and the browser paints that HTML
+   before the JS bundle hydrates. An inline script in the document <head>
+   (see layout.js) sets data-intro-seen on <html> during parsing — before
+   first paint — for visitors who already played the intro this session.
+
+   This rule hides the overlay for them from the very first painted frame,
+   so a revisit never flashes the peeled background, even before React
+   hydrates. New visitors have no flag and get the full intro.
+   The id is removed from the DOM at hydration when the loader unmounts.
+   --------------------------------------------------------- */
+html[data-intro-seen] #intro-overlay {
+  display: none !important;
+}

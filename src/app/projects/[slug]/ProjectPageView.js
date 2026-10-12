@@ -22,11 +22,15 @@ export default function ProjectPageView({
 
   return (
     <>
-      {isLoading && <PortfolioIntro onComplete={completeLoading} />}
+      {isLoading && (
+        <PortfolioIntro onComplete={completeLoading} />
+      )}
 
       <div
         className="min-h-screen bg-background text-text-primary"
         style={{
+          /* Gated on heroReady, which flips in the SAME commit that
+             unmounts the intro above — the peel reveals real content. */
           visibility: heroReady ? "visible" : "hidden",
         }}
       >
