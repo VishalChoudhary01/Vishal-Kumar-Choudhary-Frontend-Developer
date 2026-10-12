@@ -1,4 +1,4 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# See https://help.github.com/articles/ignoring-files/ for more information.
 
 # dependencies
 /node_modules
@@ -14,8 +14,9 @@
 /coverage
 
 # next.js
-/.next/
-/out/
+.next/
+.next-*/
+out/
 
 # production
 /build
@@ -32,6 +33,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -39,3 +41,64 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# ---------------------------------------------------------------
+# Local-only documentation
+# Keep documentation exclusions limited to the known local-only paths.
+# ---------------------------------------------------------------
+/implementation Doc/
+/performance doc/
+/implemention Doc/
+/PERFORMANCE-OPTIMIZATION-REPORT.md
+/dyanmic portfolio lab/
+
+# Local-only agent / tooling state
+/.freebuff/
+/.claude/
+/.agents/
+
+# ---------------------------------------------------------------
+# Local debugging, probing and profiling artifacts
+# (kept on disk for local work; not published)
+# ---------------------------------------------------------------
+*.zip
+/verify-*.cjs
+/src/verify-button.cjs
+/probe-hover*.cjs
+/debug-arrow.cjs
+/debug-arrow.css
+verify-out.txt
+hydration-log.txt
+/.baseline-*.json
+/.p12-build.log
+/.p12-home.html
+/.p12-served.html
+/.p14-shell-baseline.json
+/scripts/.p13-contrast.mjs
+/scripts/.p13-names.mjs
+/scripts/p10-js-attribution.cjs
+/scripts/p11-ambient-isolate.cjs
+/scripts/p11-ambient-profile.cjs
+/scripts/p11-fps-trust.cjs
+/scripts/p11-gpu-layers.cjs
+/scripts/p11-layer-count.cjs
+/scripts/p11-render-probe.cjs
+/scripts/p11-visual-diff.cjs
+/scripts/p11-wc-release.cjs
+/scripts/p11-wc-release2.cjs
+/scripts/p11-wc-words.cjs
+/scripts/p11-zcheck.cjs
+/scripts/p12-heading-check.cjs
+/scripts/p12-seo-audit.cjs
+/scripts/p13-a11y-audit.cjs
+scripts/error-*.cjs
+scripts/hydration-check.cjs
+scripts/nav-scroll-check.cjs
+scripts/reversal-hover-check.cjs
+scripts/showcase-lightbox-check.cjs
+scripts/showcase-scale-check.cjs
+scripts/baseline-measure.cjs
+scripts/orphan-scan.cjs
+scripts/section-scan.cjs
+scripts/format-cleanup.cjs
+scripts/optimize-favicons.cjs

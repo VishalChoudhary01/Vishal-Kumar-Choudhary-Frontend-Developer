@@ -1,962 +1,529 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300..700;1,300..700&family=Lora:ital,wght@0,400..700;1,400..700&family=Manrope:wght@200..800&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Michroma&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Outfit:wght@100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+/* source(none) + explicit @source: restrict Tailwind's automatic content
+   detection to the app source. Without this the scanner also reads stale
+   Next build outputs (.next/, .next-p9/) whose minified chunks contain
+   mangled class-name strings — it then emits corrupted utilities and the
+   CSS parser fails, 500-ing every route in dev. */
 
-@import "tailwindcss";
+@import "tailwindcss" source(none);
 
-html {
-  scroll-behavior: smooth;
-}
+@source "../../src/app";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+html {
+  /* Lenis owns smooth scrolling (lib/lenis/SmoothScroll.js). CSS
+     scroll-behavior would re-animate every programmatic scroll a second
+     time — a second scroll system (Phase 8). scroll-padding-top keeps raw
+     #hash fallback jumps clear of the fixed header. */
+  scroll-padding-top: 94px;
+}
+
 :root {
-  /* Typography */
-  --h1: #181818cf;
-  --Head1dark: #f5f5f5;
-  --h2: #171717;
-  --Head2dark: #dcd9d9db;
-  --h3: #262626;
-  --Head3dark: #e2ddddc6;
-  --h4: #404040;
-  --Head4dark: #b1b1b1;
-  --h5: #525252;
-  --Head5dark: #9a9a9a;
-  
-  --para1: #403f3f;
-  --para2: #747272;
-  --para3: #323131;
-  --darkPara1: #e2e5e5;
-  --darkPara2: #c7caca;
-  --darkPara3: #aec0c0;
-
-  /* Project Headings */
-  --deskProjectHead:4.2rem;
-  --tabProjectHead:4rem;
-  --mobProjectHead:1.7rem;
-
-  /* name font size */
-  --deskName:5rem; 
-  --tabName:4rem;
-  --mobName:2.5rem;
-
-  /* heading 1 */
-  --deskHead1:1.4rem;
-  --tabHead1:1.2rem;
-  --mobHead1:1rem;
-
-  /* heading 2 */
-  --deskHead2:1.2rem;
-  --tabHead2:1.1rem;
-  --mobHead2:0.95rem;
-
-  /* heading 3 */
-  --deskHead3:1rem;
-  --tabHead3:0.9rem;
-  --mobHead3:0.85rem;
-
-  /* heading 4 */
-  --deskHead4:0.9rem;
-  --tabHead4:0.8rem;
-  --mobHead4:0.75rem;
-
-  /* heading 5 */
-  --deskHead5:0.8rem;
-  --tabHead5:0.7rem;
-  --mobHead5:0.7rem;
-
-  /* paragraph 1 */
-  --deskPara1:0.98rem;
-  --tabPara1:0.94rem;
-  --mobPara1:0.89rem;
-
-  /* paragraph 2 */
-  --deskPara2:0.95rem;
-  --tabPara2:0.9rem;
-  --mobPara2:0.85rem;
-  
-  /* paragraph 3 */
-  --deskPara3:0.72rem;
-  --tabPara3:0.85rem;
-  --mobPara3:0.8rem;
-
-
-
-  /* Gradient Colors */
-
-  /* LIGHT MODE */
-
-
-  --grad-primary: #dd5a03;
-  --grad-secondary: #c48e04;
-  --grad-tertiary: #d4b801;
-  --grad-quaternary: #f689b1;
-  
- 
-
-  /* --grad-primary: #d88c9a;
-  --grad-secondary: #c97a86;
-  --grad-tertiary: #c4a35a;
-  --grad-quaternary: #b8913e; */
-
-  /* Deep Teal → Midnight Blue */
-/* --grad-primary: #0f4c5c;
---grad-secondary: #0b3a47;
---grad-tertiary: #102a43;
---grad-quaternary: #081c2e; */
-
-/* Burgundy → Burnt Gold */
-/* --grad-primary: #6d1a36;
---grad-secondary: #8a1c3a;
---grad-tertiary: #b07d2b;
---grad-quaternary: #d1a144; */
-
-/* --grad-primary: #2b2e34;
---grad-secondary: #1f2230;
---grad-tertiary: #23264d;
---grad-quaternary: #14162b; */
-
-/* Obsidian → Petrol Blue (ultra-premium) */
---grad-primary: #0b0f14;
---grad-secondary: #101820;
---grad-tertiary: #0e2a33;
---grad-quaternary: #123844;
-
-/* Ink Purple → Blue Steel */
-/* --grad-primary: #1e0f2f;
---grad-secondary: #2b1642;
---grad-tertiary: #22365c;
---grad-quaternary: #1a4a63; */
-
-/* Volcanic Red → Blackened Copper */
---grad-primary: #2a0f12;
---grad-secondary: #4a1418;
---grad-tertiary: #7a3b1c;
---grad-quaternary: #a45a2a;
-
-/* Cosmic Blue → Cold Violet */
---grad-primary: #0a1a2f;
---grad-secondary: #0f2747;
---grad-tertiary: #1a2f6c;
---grad-quaternary: #2d3c8f;
-
-/* Smoked Olive → Dark Brass */
---grad-primary: #1a241c;
---grad-secondary: #2b3a2a;
---grad-tertiary: #5a4f2a;
---grad-quaternary: #7a6a32;
-
-/* Blood Plum → Ash Violet */
---grad-primary: #2a0d1f;
---grad-secondary: #3f1330;
---grad-tertiary: #5b2a4d;
---grad-quaternary: #6f3f6d;
-
-/* Smoked Plum → Dusty Rose */
---grad-primary: #4a1f3d;
---grad-secondary: #6a2e55;
---grad-tertiary: #8a4a6a;
---grad-quaternary: #a36a82;
-
-/* Oxide Red → Clay Brown */
---grad-primary: #5a1f1b;
---grad-secondary: #7a2d26;
---grad-tertiary: #9a4a3a;
---grad-quaternary: #b86a52;
-
-/* Dark Olive → Moss Khaki */
-/* --grad-primary: #2a2f1a;
---grad-secondary: #3f4a22;
---grad-tertiary: #5f6a32;
---grad-quaternary: #7a8642; */
-
-/* Deep Peach → Muted Coral */
---grad-primary: #5a2a1f;
---grad-secondary: #7a3a2a;
---grad-tertiary: #9a5a42;
---grad-quaternary: #b87a62;
-
-/* Aubergine → Soft Mauve */
---grad-primary: #2f1a24;
---grad-secondary: #4a2638;
---grad-tertiary: #6a3f5a;
---grad-quaternary: #8a5f7a;
-
-/* Slate Brown → Warm Stone */
---grad-primary: #2e2723;
---grad-secondary: #463c35;
---grad-tertiary: #6a5b52;
---grad-quaternary: #8a7a6f;
-
-
-/* Plum × Brass × Slate */
---grad-primary: #3b1d3f;   /* plum */
---grad-secondary: #7a5c2e; /* brass */
---grad-tertiary: #3a3f45;  /* slate */
---grad-quaternary: #b08a3c;/* warm highlight */
-
-/* Oxide Red × Charcoal × Amber */
---grad-primary: #5a1f1b;   /* oxide red */
---grad-secondary: #2b2b2b; /* charcoal */
---grad-tertiary: #a35a2a;  /* amber */
---grad-quaternary: #7a3a26;/* clay */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /* DARK MODE */
-
-
-  /* Neon Fusion */
-  --darkgrad-primary: #ff6b6b;
-  --darkgrad-secondary: #ffa726;
-  --darkgrad-tertiary: #ffd93d;
-  --darkgrad-quaternary: #6bcf7f;
-
-
-/* Alien Landscape */
-/* --darkgrad-primary: #ffbe0b;
---darkgrad-secondary: #fb5607;
---darkgrad-tertiary: #ff006e;
---darkgrad-quaternary: #8338ec; */
-
-
-/*  Plasma Core */
-/* --darkgrad-primary: #ff0050;
---darkgrad-secondary: #ff5400;
---darkgrad-tertiary: #ffbd00;
---darkgrad-quaternary: #00ff88; */
-
-
-/* Acid Wave */
-/* --darkgrad-primary: #ff3838;
---darkgrad-secondary: #ff9f1a;
---darkgrad-tertiary: #fff200;
---darkgrad-quaternary: #32ff7e; */
-
-
-/* Cyber Blue Aurora */
-/* --darkgrad-primary: #00f5d4;
---darkgrad-secondary: #00bbf9;
---darkgrad-tertiary: #0077b6;
---darkgrad-quaternary: #023e8a; */
-
-
-/*  Electric Sunset */
-  /* --darkgrad-primary: #ff6f91;
-  --darkgrad-secondary: #ff9671;
-  --darkgrad-tertiary: #ffc75f;
-  --darkgrad-quaternary: #f9f871;
-   */
-
-   
-/*  Neon Dreams */
-  --darkgrad-primary: #ff4d6d;
-  --darkgrad-secondary: #ff6f91;
-  --darkgrad-tertiary: #ff9671;
-  --darkgrad-quaternary: #ffc75f;
-
-  /* Cosmic Lava */
-  /* --darkgrad-primary: #ff6f91;
---darkgrad-secondary: #ff9671;
---darkgrad-tertiary: #ffc75f;
---darkgrad-quaternary: #f9f871; */
-
-
-
-
-
-
-
-
-
-
-   /* Shimmer Effect Colors - Light Mode */
-  --shimmer-primary: #918f8f;
-  --shimmer-secondary: #999999;
-  --shimmer-tertiary: #000000;
-  --shimmer-quaternary: #918f8f;
-
-  /* Shimmer Effect Colors - Dark Mode */
-  --dark-shimmer-primary: #4e4e4e;
-  --dark-shimmer-secondary: #707070;
-  --dark-shimmer-tertiary: #a7a5a5;
-  --dark-shimmer-quaternary: #ffffff;
-
-  /* Hovers */
-  --bgHover: #88918f1f;
-  --darkbgHover: #b6b7b748;
-  --HoverTXT: #111;
-  
-
-  /* ACCENT Colors */
-  --accent: #d44c02;
-  --darkAccent: #91e3f3;
-
-  /* Borders */
-  --lightBorder: #64686939;
-  --darkBorder:#aca6a65c;
-  --border-hover: #06b6d4;
-
-  /* Shadows */
-  --shadow-soft: rgba(0, 0, 0, 0.03);
-  --shadow-medium: rgba(0, 0, 0, 0.05);
-
-  /* Button - Primary */
-  --btnBG: #0a0a0a;
-  --darkbtnBG: #e5e5e5;
-  --btnTXT: #ffffff;
-  --darkbtnTXT: #131313;
-  --btnHOVER: #0891b2;
-
-  /* Button - Outline */
-  --btn-outlineDarkTXT: #06b6d4;
-  --btn-outlineTXT: #06b6d4;
-  --btnOutlineBord: #932102;
-  --btn-outlineDarkBorder: #06b6d4;
-
-  /* Icons */
-  --icon-text: #404040;
-  --DrkIcon-text: #eafbfed8;
-  --iconScrolled: #1f1f1f;
-  --DrkIconScrolled: #46dbf2;
-  --icon-bg: #ffffff91;
-  --icon-darkBg: #1e1e1e1b;
-  --icon-text-hover: #06b6d4;
-  --icon-bg-hover: rgba(6, 182, 212, 0.1);
-
-  /* SECTION colors */
-  --navbarBG: #dde4e4;
-  --scrolledNavbarBG: #f4f8f86e;
-  --navbarDarkBG: #111111;
-  --scrolledNavbarDarkBG: #6867677b;
-  --contextBG: #ebf2f2;
-  --contextDarkBG: #050505;
-  --darkSectionGradToBG: #000000b3;
-  --darkSectionGradViaBG: #000000b3;
-  --darkSectionGradFromBG: #101828c6;
-  --darkSectionBorder: #1e2939;
-  --sectionBorder: #e7894e93;
-  --sectionGradToBG: #faab8729;
-  --sectionGradFromBG: #f9935c38;
-
-  --highlightText: #5f1e02;
-  --darkHighlightText: #d3dcdfb7;
-  --highlightBG: #fdb86926;
-  --darkHighlightBG: #c8f4eb1f;
-  --highlightBorder: #fda43f5e;
-  --darkHighlightBorder: #c7e6f119;
-
-  
-  
-  /* Modern Button Gradients - Light Mode */
-  --btn-modern-from: #9333ea;
-  --btn-modern-via: #c026d3;
-  --btn-modern-to: #ec4899;
-  --btn-modern-hover-from: #7c3aed;
-  --btn-modern-hover-via: #a855f7;
-  --btn-modern-hover-to: #f472b6;
-  --btn-modern-border: rgba(236, 72, 153, 0.3);
-  --btn-modern-border-hover: rgba(236, 72, 153, 0.5);
-  --btn-modern-shadow: rgba(147, 51, 234, 0.4);
-  --btn-modern-shadow-hover: rgba(147, 51, 234, 0.5);
-
-  /* Modern Button Gradients - Dark Mode */
-  --dark-btn-modern-from: #0e7490;
-  --dark-btn-modern-via: #0891b2;
-  --dark-btn-modern-to: #06b6d4;
-  --dark-btn-modern-hover-from: #0284c7;
-  --dark-btn-modern-hover-via: #0ea5e9;
-  --dark-btn-modern-hover-to: #22d3ee;
-  --dark-btn-modern-border: rgba(6, 182, 212, 0.3);
-  --dark-btn-modern-border-hover: rgba(6, 182, 212, 0.5);
-  --dark-btn-modern-shadow: rgba(14, 165, 233, 0.4);
-  --dark-btn-modern-shadow-hover: rgba(14, 165, 233, 0.5);
-
-
-   /* GitHub Repo Count Colors */
-  --github-repo-count: #059669; /* Light mode green */
-  --github-repo-count-dark: #10b981; /* Dark mode green */
-  --github-repo-bg: rgba(5, 150, 105, 0.1); /* Light mode background */
-  --github-repo-bg-dark: rgba(16, 185, 129, 0.1); /* Dark mode background */
-
-
-
-
-  /* Work Experience Card Colors - Light Mode */
-  --work-card-1-color: #dd5a03;
-  --work-card-2-color: #c48e04;
-  --work-card-3-color: #d4b801;
-  --work-card-4-color: #f689b1;
-
-  /* Work Experience Card Colors - Dark Mode */
-  --dark-work-card-1-color: #ff6b6b;
-  --dark-work-card-2-color: #ffa726;
-  --dark-work-card-3-color: #ffd93d;
-  --dark-work-card-4-color: #6bcf7f;
-
-  /* Work Experience Tech Stack Colors */
-  --work-tech-bg: rgba(221, 90, 3, 0.1);
-  --work-tech-border: rgba(221, 90, 3, 0.2);
-  --work-tech-text: #7c2d0d;
-  
-  --dark-work-tech-bg: rgba(255, 107, 107, 0.1);
-  --dark-work-tech-border: rgba(255, 107, 107, 0.2);
-  --dark-work-tech-text: #ffb4b4;
-
-  --color-work-logo-bg: #aeb4b352;
-  --color-lightBorder: #e5e7eb;
-  
-  /* Dark mode logo background */
-  --color-dark-work-logo-bg: #1f29372a;
-  --color-darkBorder: #374151;
-  
-  
-  /* Existing colors you're using */
-  --color-work-tech-bg: #f3f4f6;
-  --color-dark-work-tech-bg: #374151;
-  --color-work-tech-text: #374151;
-  --color-dark-work-tech-text: #d1d5db;
-  --color-work-tech-border: #d1d5db;
-  --color-dark-work-tech-border: #4b5563;
-
-
-
-  
-  
+  color-scheme: light dark;
+
+  /* ---------------------------------------------------------
+     SURFACES
+  --------------------------------------------------------- */
+  --background: #f7f4ee;
+  --foreground: #1c1b19;
+
+  --surface-1: #fbf9f5;
+  --surface-2: #f1ece4;
+  --surface-3: #e8e1d7;
+  --surface-elevated: #fffcf7;
+  --surface-inset: #ece7de;
+  --surface-overlay: rgb(28 27 25 / 55%);
+
+  /* ---------------------------------------------------------
+     TEXT
+  --------------------------------------------------------- */
+  --text-primary: #111413;
+  --text-secondary: #625e57;
+  --text-tertiary: #817d75;
+  --text-muted: #726c61;
+  --text-disabled: #bdb7ae;
+  --text-inverse: #f1f0eb;
+
+  /* ---------------------------------------------------------
+     BORDERS
+  --------------------------------------------------------- */
+  --border-subtle: #eeeae3;
+  --border: #ded8cf;
+  --border-strong: #d3ccc1;
+
+  /* ---------------------------------------------------------
+     BRAND — DEEP PETROL
+  --------------------------------------------------------- */
+  --brand: #176b68;
+  --brand-hover: #0f5b58;
+  --brand-pressed: #124f4d;
+
+  --brand-soft: #dceceb;
+  --brand-muted: #c4dfdd;
+  --brand-contrast: #ffffff;
+
+  /* ---------------------------------------------------------
+     SUCCESS
+  --------------------------------------------------------- */
+  --success: #177452;
+  --success-hover: #125c41;
+  --success-soft: #eaf7f1;
+  --success-contrast: #ffffff;
+
+  /* ---------------------------------------------------------
+     WARNING
+  --------------------------------------------------------- */
+  --warning: #8a6115;
+  --warning-hover: #6f4e10;
+  --warning-soft: #fbf3e1;
+  --warning-contrast: #ffffff;
+
+  /* ---------------------------------------------------------
+     ERROR
+  --------------------------------------------------------- */
+  --error: #a33e38;
+  --error-hover: #87332e;
+  --error-soft: #fbecea;
+  --error-contrast: #ffffff;
+
+  /* ---------------------------------------------------------
+     INFO
+  --------------------------------------------------------- */
+  --info: #35627f;
+  --info-hover: #2b5068;
+  --info-soft: #ebf3fa;
+  --info-contrast: #ffffff;
+
+  /* ---------------------------------------------------------
+     FOCUS
+  --------------------------------------------------------- */
+  --focus-ring: var(--brand);
+
+  /* ---------------------------------------------------------
+     SHAPE
+  --------------------------------------------------------- */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+
+  /* ---------------------------------------------------------
+     LIGHT SHADOWS
+  --------------------------------------------------------- */
+  --shadow-sm: 0 1px 2px rgb(28 27 25 / 4%);
+  --shadow-md: 0 8px 24px rgb(28 27 25 / 8%);
+  --shadow-lg: 0 16px 48px rgb(28 27 25 / 12%);
+
+  /* ---------------------------------------------------------
+     TYPOGRAPHY
+  --------------------------------------------------------- */
+  --font-display: var(--font-newsreader);
+  --font-body: var(--font-manrope);
+  --font-mono: var(--font-azeret-mono);
+
+  /* ---------------------------------------------------------
+     THEME TRANSITION
+  --------------------------------------------------------- */
+  --theme-transition-duration: 520ms;
+  --theme-transition-easing: cubic-bezier(0.22, 1, 0.36, 1);
+  --theme-reveal-radius: 0%;
+  --theme-origin-x: 50%;
+  --theme-origin-y: 50%;
+
+  /* ---------------------------------------------------------
+     EDUCATION — ACADEMIC ARCHIVE SURFACES
+  --------------------------------------------------------- */
+  --education-card-bg: #fdfaf2;
+  --education-card-border: #e5dccb;
+  --education-card-hairline: #eee7da;
+  --education-shadow:
+    0 1px 2px rgb(64 55 40 / 5%),
+    0 24px 48px -28px rgb(64 55 40 / 30%);
+
+  /* ---------------------------------------------------------
+     FOOTER ATMOSPHERE — LIGHT
+  --------------------------------------------------------- */
+
+  /* --atmosphere-light-a: #F3EDE3;
+     --atmosphere-light-b: #EDE4D7;
+     --atmosphere-light-c: #E7E3EC;
+     --atmosphere-light-d: #E1E9E2; */
+
+  --atmosphere-light-a: #F1E9DC;
+  --atmosphere-light-b: #E8DED0;
+  --atmosphere-light-c: #E5E0EC;
+  --atmosphere-light-d: #DDE8DF;
+}
+
+html.dark {
+  /* ---------------------------------------------------------
+     SURFACES
+  --------------------------------------------------------- */
+  --background: #0b0f0c;
+  --foreground: #f3f4ee;
+
+  --surface-1: #111311;
+  --surface-2: #171917;
+  --surface-3: #1d1f1d;
+  --surface-elevated: #222421;
+  --surface-inset: #0e100f;
+  --surface-overlay: rgb(0 0 0 / 62%);
+
+  /* ---------------------------------------------------------
+     TEXT
+  --------------------------------------------------------- */
+  --text-primary: #f3f4ee;
+  --text-secondary: #b9bdb3;
+  --text-tertiary: #8e9489;
+  --text-muted: #7d8479;
+  --text-disabled: #4a5148;
+  --text-inverse: #171a16;
+
+  /* ---------------------------------------------------------
+     BORDERS
+  --------------------------------------------------------- */
+  --border-subtle: #202320;
+  --border: #2b2e2b;
+  --border-strong: #383b38;
+
+  /* ---------------------------------------------------------
+     BRAND — DEEP PETROL
+  --------------------------------------------------------- */
+  --brand: #69bdb9;
+  --brand-hover: #7ad0cc;
+  --brand-pressed: #55b3af;
+
+  --brand-soft: #173332;
+  --brand-muted: #2a4b49;
+  --brand-contrast: #0b0f0c;
+
+  /* ---------------------------------------------------------
+     SUCCESS
+  --------------------------------------------------------- */
+  --success: #63d3a5;
+  --success-hover: #83dfb8;
+  --success-soft: #142820;
+  --success-contrast: #08130f;
+
+  /* ---------------------------------------------------------
+     WARNING
+  --------------------------------------------------------- */
+  --warning: #ebc66a;
+  --warning-hover: #f2d487;
+  --warning-soft: #2a2112;
+  --warning-contrast: #171107;
+
+  /* ---------------------------------------------------------
+     ERROR
+  --------------------------------------------------------- */
+  --error: #f08a83;
+  --error-hover: #f5a39d;
+  --error-soft: #2d1817;
+  --error-contrast: #190908;
+
+  /* ---------------------------------------------------------
+     INFO
+  --------------------------------------------------------- */
+  --info: #81bee0;
+  --info-hover: #9dcae4;
+  --info-soft: #17242d;
+  --info-contrast: #071117;
+
+  /* ---------------------------------------------------------
+     FOCUS
+  --------------------------------------------------------- */
+  --focus-ring: var(--brand);
+
+  /* ---------------------------------------------------------
+     DARK SHADOWS
+  --------------------------------------------------------- */
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 20%);
+  --shadow-md: 0 8px 24px rgb(0 0 0 / 28%);
+  --shadow-lg: 0 16px 48px rgb(0 0 0 / 38%);
+
+  /* ---------------------------------------------------------
+     EDUCATION — ACADEMIC ARCHIVE SURFACES
+  --------------------------------------------------------- */
+  --education-card-bg: #161a15;
+  --education-card-border: #33382f;
+  --education-card-hairline: #262b24;
+  --education-shadow:
+    0 1px 2px rgb(0 0 0 / 22%),
+    0 28px 60px -30px rgb(0 0 0 / 65%);
+
+  /* ---------------------------------------------------------
+     FOOTER ATMOSPHERE — DARK
+  --------------------------------------------------------- */
+
+  /* --atmosphere-dark-a: #111513;
+     --atmosphere-dark-b: #121923;
+     --atmosphere-dark-c: #181A15;
+     --atmosphere-dark-d: #1B161C; */
+
+  --atmosphere-dark-a: #101412;
+  --atmosphere-dark-b: #111A25;
+  --atmosphere-dark-c: #191B15;
+  --atmosphere-dark-d: #1D171E;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family:
+    var(--font-body),
+    Arial,
+    Helvetica,
+    sans-serif;
 }
 
 @theme inline {
+  /* ---------------------------------------------------------
+     STABLE PRIMITIVE PALETTE — DEEP PETROL
 
-  /* fonts */
-  --font-poppins: var(--font-poppins);
-  --font-roboto: var(--font-roboto);
-  --font-michroma: var(--font-michroma);
-  --font-open-sans: var(--font-open-sans);
-  --font-lora: var(--font-lora);
+     These values do NOT change between themes.
+     Use petrol-* when a specific shade is intentionally needed.
+  --------------------------------------------------------- */
+  --color-petrol-50: #edf8f7;
+  --color-petrol-100: #dceceb;
+  --color-petrol-200: #c4dfdd;
+  --color-petrol-300: #9fcac7;
+  --color-petrol-400: #69bdb9;
+  --color-petrol-500: #3f9e9a;
+  --color-petrol-600: #176b68;
+  --color-petrol-700: #0f5b58;
+  --color-petrol-800: #124f4d;
+  --color-petrol-900: #173332;
+  --color-petrol-950: #102523;
 
+  /* ---------------------------------------------------------
+     STABLE PRIMITIVE PALETTE — WARM STONE
+  --------------------------------------------------------- */
+  --color-stone-50: #fbf9f5;
+  --color-stone-100: #f7f4ee;
+  --color-stone-200: #f1ece4;
+  --color-stone-300: #e8e1d7;
+  --color-stone-400: #ded8cf;
+  --color-stone-500: #d3ccc1;
+  --color-stone-600: #b6afa5;
+  --color-stone-700: #938d83;
+  --color-stone-800: #817d75;
+  --color-stone-900: #625e57;
+  --color-stone-950: #1c1b19;
 
-  /* Typography */
-  --color-h1: var(--h1);
-  --color-Head1dark: var(--Head1dark);
-  --color-h2: var(--h2);
-  --color-Head2dark: var(--Head2dark);
-  --color-h3: var(--h3);
-  --color-Head3dark: var(--Head3dark);
-  --color-h4: var(--h4);
-  --color-Head4dark: var(--Head4dark);
-  --color-h5: var(--h5);
-  --color-Head5dark: var(--Head5dark);
+  /* ---------------------------------------------------------
+     SEMANTIC SURFACES
+  --------------------------------------------------------- */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
 
-  --color-para1: var(--para1);
-  --color-para2: var(--para2);
-  --color-para3: var(--para3);
-  --color-darkPara1: var(--darkPara1);
-  --color-darkPara2: var(--darkPara2);
-  --color-darkPara3: var(--darkPara3);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-inset: var(--surface-inset);
+  --color-surface-overlay: var(--surface-overlay);
 
-  /* font sizes */
-  --text-deskProjectHead: var(--deskProjectHead);
-  --text-tabProjectHead:var(--tabProjectHead);
-  --text-mobProjectHead:var(--mobProjectHead);
-  --text-deskName:var(--deskName);
-  --text-tabName:var(--tabName);
-  --text-mobName:var(--mobName);
+  /* ---------------------------------------------------------
+     SEMANTIC TEXT
+  --------------------------------------------------------- */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-muted: var(--text-muted);
+  --color-text-disabled: var(--text-disabled);
+  --color-text-inverse: var(--text-inverse);
 
-  --text-deskHead1:var(--deskHead1);
-  --text-tabHead1:var(--tabHead1);
-  --text-mobHead1:var(--mobHead1);
-  --text-deskHead2:var(--deskHead2);
-  --text-tabHead2:var(--tabHead2);
-  --text-mobHead2:var(--mobHead2);
-  --text-deskHead3:var(--deskHead3);
-  --text-tabHead3:var(--tabHead3);
-  --text-mobHead3:var(--mobHead3);
-  --text-deskHead4:var(--deskHead4);
-  --text-tabHead4:var(--tabHead4);
-  --text-mobHead4:var(--mobHead4);
-  --text-deskHead5:var(--deskHead5);
-  --text-tabHead5:var(--tabHead5);
-  --text-mobHead5:var(--mobHead5);
-  --text-deskPara1:var(--deskPara1);
-  --text-tabPara1:var(--tabPara1);
-  --text-mobPara1:var(--mobPara1);
-  --text-deskPara2:var(--deskPara2);
-  --text-tabPara2:var(--tabPara2);
-  --text-mobPara2:var(--mobPara2);
-  --text-deskPara3:var(--deskPara3);
-  --text-tabPara3:var(--tabPara3);
-  --text-mobPara3:var(--mobPara3);  
+  /* ---------------------------------------------------------
+     SEMANTIC BORDERS
+  --------------------------------------------------------- */
+  --color-border-subtle: var(--border-subtle);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
 
-  /* Gradient Colors */
-  --color-grad-primary: var(--grad-primary);
-  --color-grad-secondary: var(--grad-secondary);
-  --color-grad-tertiary: var(--grad-tertiary);
-  --color-grad-quaternary: var(--grad-quaternary);
+  /* ---------------------------------------------------------
+     SEMANTIC BRAND
 
-  --color-darkgrad-primary: var(--darkgrad-primary);
-  --color-darkgrad-secondary: var(--darkgrad-secondary);
-  --color-darkgrad-tertiary: var(--darkgrad-tertiary);
-  --color-darkgrad-quaternary: var(--darkgrad-quaternary);
+     Use:
+       bg-brand
+       text-brand
+       border-brand
+       bg-brand-soft
+       text-brand-contrast
+       ring-brand
 
-  /* Shimmer Colors */
-    /* Shimmer Effect Colors - Light Mode */
-  --color-shimmer-primary: var(--shimmer-primary);
-  --color-shimmer-secondary: var(--shimmer-secondary);
-  --color-shimmer-tertiary: var(--shimmer-tertiary);
-  --color-shimmer-quaternary: var(--shimmer-quaternary);
+     Do NOT use dark:bg-darkbrand.
+     The .dark class changes the underlying value.
+  --------------------------------------------------------- */
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-pressed: var(--brand-pressed);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-muted: var(--brand-muted);
+  --color-brand-contrast: var(--brand-contrast);
 
-  --color-dark-shimmer-primary: var(--dark-shimmer-primary);
-  --color-dark-shimmer-secondary: var(--dark-shimmer-secondary);
-  --color-dark-shimmer-tertiary: var(--dark-shimmer-tertiary);
-  --color-dark-shimmer-quaternary: var(--dark-shimmer-quaternary);
+  /* ---------------------------------------------------------
+     SEMANTIC STATUS
+  --------------------------------------------------------- */
+  --color-success: var(--success);
+  --color-success-hover: var(--success-hover);
+  --color-success-soft: var(--success-soft);
+  --color-success-contrast: var(--success-contrast);
 
-  /* Hovers */
-  --color-bgHover: var(--bgHover);
-  --color-darkbgHover: var(--darkbgHover);
-  --color-HoverTXT: var(--HoverTXT);
+  --color-warning: var(--warning);
+  --color-warning-hover: var(--warning-hover);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-contrast: var(--warning-contrast);
 
-  /* ACCENT Colors */
-  --color-accent: var(--accent);
-  --color-darkAccent: var(--darkAccent);
+  --color-error: var(--error);
+  --color-error-hover: var(--error-hover);
+  --color-error-soft: var(--error-soft);
+  --color-error-contrast: var(--error-contrast);
 
-  /* Borders */
-  --color-lightBorder: var(--lightBorder);
-  --color-darkBorder:var(--darkBorder);
+  --color-info: var(--info);
+  --color-info-hover: var(--info-hover);
+  --color-info-soft: var(--info-soft);
+  --color-info-contrast: var(--info-contrast);
 
-  --color-border-hover: var(--border-hover);
+  /* ---------------------------------------------------------
+     FOCUS
+  --------------------------------------------------------- */
+  --color-focus-ring: var(--focus-ring);
 
-  /* Shadows */
-  --color-shadow-soft: var(--shadow-soft);
-  --color-shadow-medium: var(--shadow-medium);
+  /*! FONTS */
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
 
-  /* Button - Primary */
-  --color-btnBG: var(--btnBG);
-  --color-darkbtnBG: var(--darkbtnBG);
-  --color-btnTXT: var(--btnTXT);
-  --color-darkbtnTXT: var(--darkbtnTXT);
-  --color-btnHOVER: var(--btnHOVER);
+  /* ---------------------------------------------------------
+     FOOTER ATMOSPHERE
+  --------------------------------------------------------- */
+  --color-atmosphere-light-a: var(--atmosphere-light-a);
+  --color-atmosphere-light-b: var(--atmosphere-light-b);
+  --color-atmosphere-light-c: var(--atmosphere-light-c);
+  --color-atmosphere-light-d: var(--atmosphere-light-d);
 
-  /* Button - Outline */
-  --color-btn-outlineDarkTXT: var(--btn-outlineDarkTXT);
-  --color-btn-outlineTXT: var(--btn-outlineTXT);
-  --color-btnOutlineBord: var(--btnOutlineBord);
-  --color-btn-outlineDarkBorder: var(--btn-outlineDarkBorder);
-
-  /* Icons */
-  --color-icon-text: var(--icon-text);
-  --color-DrkIcon-text: var(--DrkIcon-text);
-  --color-iconScrolled: var(--iconScrolled);
-  --color-DrkIconScrolled: var(--DrkIconScrolled);
-  --color-icon-bg: var(--icon-bg);
-  --color-icon-darkBg: var(--icon-darkBg);
-  --color-icon-text-hover: var(--icon-text-hover);
-  --color-icon-bg-hover: var(--icon-bg-hover);
-
-  /* SECTION colors */
-  --color-navbarBG: var(--navbarBG);
-  --color-scrolledNavbarBG: var(--scrolledNavbarBG);
-  --color-navbarDarkBG: var(--navbarDarkBG);
-  --color-scrolledNavbarDarkBG: var(--scrolledNavbarDarkBG);
-  --color-contextBG: var(--contextBG);
-  --color-contextDarkBG: var(--contextDarkBG);
-  --color-darkSectionGradToBG: var(--darkSectionGradToBG);
-  --color-darkSectionGradViaBG: var(--darkSectionGradViaBG);
-  --color-darkSectionGradFromBG: var(--darkSectionGradFromBG);
-  --color-darkSectionBorder: var(--darkSectionBorder);
-  --color-sectionBorder: var(--sectionBorder);
-  --color-sectionGradToBG: var(--sectionGradToBG);
-  --color-sectionGradFromBG: var(--sectionGradFromBG);
-
-  --color-highlightText: var(--highlightText);
-  --color-darkHighlightText: var(--darkHighlightText);
-  --color-highlightBG: var(--highlightBG);
-  --color-darkHighlightBG: var(--darkHighlightBG);
-  --color-highlightBorder: var(--highlightBorder);
-  --color-darkHighlightBorder: var(--darkHighlightBorder);
-
-  /* Modern Button Colors */
-  --color-btn-modern-from: var(--btn-modern-from);
-  --color-btn-modern-via: var(--btn-modern-via);
-  --color-btn-modern-to: var(--btn-modern-to);
-  --color-btn-modern-hover-from: var(--btn-modern-hover-from);
-  --color-btn-modern-hover-via: var(--btn-modern-hover-via);
-  --color-btn-modern-hover-to: var(--btn-modern-hover-to);
-  --color-btn-modern-border: var(--btn-modern-border);
-  --color-btn-modern-border-hover: var(--btn-modern-border-hover);
-  --color-btn-modern-shadow: var(--btn-modern-shadow);
-  --color-btn-modern-shadow-hover: var(--btn-modern-shadow-hover);
-
-  --color-dark-btn-modern-from: var(--dark-btn-modern-from);
-  --color-dark-btn-modern-via: var(--dark-btn-modern-via);
-  --color-dark-btn-modern-to: var(--dark-btn-modern-to);
-  --color-dark-btn-modern-hover-from: var(--dark-btn-modern-hover-from);
-  --color-dark-btn-modern-hover-via: var(--dark-btn-modern-hover-via);
-  --color-dark-btn-modern-hover-to: var(--dark-btn-modern-hover-to);
-  --color-dark-btn-modern-border: var(--dark-btn-modern-border);
-  --color-dark-btn-modern-border-hover: var(--dark-btn-modern-border-hover);
-  --color-dark-btn-modern-shadow: var(--dark-btn-modern-shadow);
-  --color-dark-btn-modern-shadow-hover: var(--dark-btn-modern-shadow-hover);
-
-   --color-github-repo-count: var(--github-repo-count);
-  --color-github-repo-count-dark: var(--github-repo-count-dark);
-  --color-github-repo-bg: var(--github-repo-bg);
-  --color-github-repo-bg-dark: var(--github-repo-bg-dark);
-
-   
-  
-
-   --color-work-card-1: var(--work-card-1-color);
-  --color-work-card-2: var(--work-card-2-color);
-  --color-work-card-3: var(--work-card-3-color);
-  --color-work-card-4: var(--work-card-4-color);
-
-  --color-dark-work-card-1: var(--dark-work-card-1-color);
-  --color-dark-work-card-2: var(--dark-work-card-2-color);
-  --color-dark-work-card-3: var(--dark-work-card-3-color);
-  --color-dark-work-card-4: var(--dark-work-card-4-color);
-
-  --color-work-tech-bg: var(--work-tech-bg);
-  --color-work-tech-border: var(--work-tech-border);
-  --color-work-tech-text: var(--work-tech-text);
-  
-  --color-dark-work-tech-bg: var(--dark-work-tech-bg);
-  --color-dark-work-tech-border: var(--dark-work-tech-border);
-  --color-dark-work-tech-text: var(--dark-work-tech-text);
-
-
-  /* Animation */
-  --animate-rotate-shine: rotate-shine 3s linear infinite;
-  --animate-rotate-shine-fast: rotate-shine 2s linear infinite;
-  --animate-rotate-shine-medium: rotate-shine 3s linear infinite;
-  --animate-rotate-shine-slow: rotate-shine 4s linear infinite;
-  --animate-rotate-shine-slower: rotate-shine 6s linear infinite;
-  --animate-rotate-shine-slowest: rotate-shine 8s linear infinite;
-   --animate-fade-in-outLight: fadeInOutLight 6s ease-in infinite;   
-   --animate-fade-in-outDark: fadeInOutDark 6s ease-in infinite;   
-  /* downloading flow */
-  --animate-downloadingFlow: downloadingFlow 2.2s cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
-
-  /* Keyframes   */
-  /* engraved Vishal Kumar Choudhary animation */
-@keyframes fadeInOutLight {
-  0% {
-    opacity: 0;
-    text-shadow: 
-      4px 4px 8px rgba(120, 130, 130, 0),
-      -4px -4px 8px rgba(255, 255, 255, 0),
-      2px 2px 1px rgba(150, 160, 160, 0),
-      -2px -2px 1px rgba(255, 255, 255, 0),
-      0 0 20px rgba(180, 180, 180, 0);
-  }
-  15% {
-    opacity: 0.4;
-    text-shadow: 
-      4px 4px 8px rgba(120, 130, 130, 0.15),
-      -4px -4px 8px rgba(255, 255, 255, 0.15),
-      2px 2px 1px rgba(150, 160, 160, 0.3),
-      -2px -2px 1px rgba(255, 255, 255, 0.15),
-      0 0 20px rgba(180, 180, 180, 0.2);
-  }
-  30% {
-    opacity: 0.7;
-    text-shadow: 
-      4px 4px 8px rgba(120, 130, 130, 0.3),
-      -4px -4px 8px rgba(255, 255, 255, 0.3),
-      2px 2px 1px rgba(150, 160, 160, 0.5),
-      -2px -2px 1px rgba(255, 255, 255, 0.25),
-      0 0 20px rgba(180, 180, 180, 0.4);
-  }
-  50% {
-    opacity: 1;
-    text-shadow: 
-      6px 6px 12px rgba(100, 110, 110, 0.7),
-      -6px -6px 12px rgba(255, 255, 255, 1),
-      3px 3px 2px rgba(140, 150, 150, 0.9),
-      -3px -3px 2px rgba(255, 255, 255, 0.6),
-      0 0 30px rgba(160, 170, 170, 0.8),
-      /* Inner engraved effect */
-      inset 1px 1px 0 rgba(255, 255, 255, 0.3),
-      inset -1px -1px 0 rgba(100, 110, 110, 0.3);
-  }
-  70% {
-    opacity: 0.7;
-    text-shadow: 
-      4px 4px 8px rgba(120, 130, 130, 0.3),
-      -4px -4px 8px rgba(255, 255, 255, 0.3),
-      2px 2px 1px rgba(150, 160, 160, 0.5),
-      -2px -2px 1px rgba(255, 255, 255, 0.25),
-      0 0 20px rgba(180, 180, 180, 0.4);
-  }
-  85% {
-    opacity: 0.4;
-    text-shadow: 
-      4px 4px 8px rgba(120, 130, 130, 0.15),
-      -4px -4px 8px rgba(255, 255, 255, 0.15),
-      2px 2px 1px rgba(150, 160, 160, 0.3),
-      -2px -2px 1px rgba(255, 255, 255, 0.15),
-      0 0 20px rgba(180, 180, 180, 0.2);
-  }
-  100% {
-    opacity: 0;
-    text-shadow: 
-      4px 4px 8px rgba(120, 130, 130, 0),
-      -4px -4px 8px rgba(255, 255, 255, 0),
-      2px 2px 1px rgba(150, 160, 160, 0),
-      -2px -2px 1px rgba(255, 255, 255, 0),
-      0 0 20px rgba(180, 180, 180, 0);
-  }
+  --color-atmosphere-dark-a: var(--atmosphere-dark-a);
+  --color-atmosphere-dark-b: var(--atmosphere-dark-b);
+  --color-atmosphere-dark-c: var(--atmosphere-dark-c);
+  --color-atmosphere-dark-d: var(--atmosphere-dark-d);
 }
 
+/* ---------------------------------------------------------
+   LOGO SOLID REVEAL — pseudo-element overlay (VKrLogo)
 
+   The logo's outline-to-solid reveal used to be a SECOND <p>V Kr.</p>
+   stacked over the outline <p>. Two real text nodes doubled the link's
+   visible text to "V Kr. V Kr.", which axe flags as
+   label-content-name-mismatch (visible text not contained in the accessible
+   name "V Kr."). Painting the solid layer as a ::before means there is only
+   ONE real text node (the outline <p>), so visible text == accessible name.
 
+   The ::before replicates the exact font metrics of the outline so the solid
+   fill lands precisely over the stroke as it sweeps in, and the reveal is
+   driven by the --logo-clip custom property animated on the wrapper by Framer
+   Motion (inset 100% clipped -> inset 0 fully shown).
+--------------------------------------------------------- */
 
+/* Solid logo overlay — fills the outline's exact dimensions.
 
-@keyframes fadeInOutDark {
-  0% {
-    opacity: 0;
-    text-shadow: 
-      0 0 1px rgba(0, 0, 0, 0),
-      2px 2px 4px rgba(0, 0, 0, 0),
-      -2px -2px 4px rgba(80, 80, 80, 0),
-      1px 1px 0 rgba(0, 0, 0, 0),
-      -1px -1px 0 rgba(70, 70, 70, 0);
-  }
-  25% {
-    opacity: 0.5;
-    text-shadow: 
-      0 0 1px rgba(0, 0, 0, 0.25),
-      2px 2px 4px rgba(0, 0, 0, 0.475),
-      -2px -2px 4px rgba(80, 80, 80, 0.15),
-      1px 1px 0 rgba(0, 0, 0, 0.4),
-      -1px -1px 0 rgba(70, 70, 70, 0.1);
-  }
-  50% {
-    opacity: 1;
-    text-shadow: 
-      0 0 1px rgba(0, 0, 0, 0.5),
-      2px 2px 4px rgba(0, 0, 0, 0.95),
-      -2px -2px 4px rgba(80, 80, 80, 0.3),
-      1px 1px 0 rgba(0, 0, 0, 0.8),
-      -1px -1px 0 rgba(70, 70, 70, 0.2);
-  }
-  75% {
-    opacity: 0.5;
-    text-shadow: 
-      0 0 1px rgba(0, 0, 0, 0.25),
-      2px 2px 4px rgba(0, 0, 0, 0.475),
-      -2px -2px 4px rgba(80, 80, 80, 0.15),
-      1px 1px 0 rgba(0, 0, 0, 0.4),
-      -1px -1px 0 rgba(70, 70, 70, 0.1);
-  }
-  100% {
-    opacity: 0;
-    text-shadow: 
-      0 0 1px rgba(0, 0, 0, 0),
-      2px 2px 4px rgba(0, 0, 0, 0),
-      -2px -2px 4px rgba(80, 80, 80, 0),
-      1px 1px 0 rgba(0, 0, 0, 0),
-      -1px -1px 0 rgba(70, 70, 70, 0);
-  }
-}
-@keyframes downloadingFlow {
-  0% {
-    transform: translate3d(0, -160%, 0) scale(0.2);
-    opacity: 0;
-  }
+   Font metrics (family, weight, leading, tracking, responsive size ramp)
+   come from the wrapper's textClasses via inheritance, so the ::before
+   stays pixel-aligned with the outline <p> for BOTH logos — VKrLogo and
+   TwoRingLogo — without duplicating each ramp here. */
 
-  20% {
-    transform: translate3d(0, -105%, 0) scale(0.4);
-    opacity: 0.4;
-  }
+.logo-solid::before {
+  content: "V Kr.";
 
-  38% {
-    transform: translate3d(0, -45%, 0) scale(0.75);
-    opacity: 0.8;
-  }
+  position: absolute;
+  inset: 0;
+  display: block;
 
-  50% {
-    transform: translate3d(0, -4%, 0) scale(0.98);
-    opacity: 0.98;
-  }
+  color: #222222;
 
-  /* 👇 perceptual pause */
-  58% {
-    transform: translate3d(0, 1%, 0) scale(1);
-    opacity: 1;
-  }
-
-  66% {
-    transform: translate3d(0, 6%, 0) scale(0.95);
-    opacity: 0.92;
-  }
-
-  82% {
-    transform: translate3d(0, 95%, 0) scale(0.5);
-    opacity: 0.5;
-  }
-
-  100% {
-    transform: translate3d(0, 160%, 0) scale(0.2);
-    opacity: 0;
-  }
+  /* Animated by Motion through the inherited CSS variable */
+  clip-path: var(--logo-clip, inset(0% 100% 0% 0%));
+  pointer-events: none;
 }
 
+.dark .logo-solid::before {
+  color: #f1efe8;
+}
 
+/* ---------------------------------------------------------
+   INTRO OVERLAY — PRE-PAINT REVISIT HIDE
 
+   The server always renders the intro overlay into the HTML (it cannot
+   know the visitor's session state), and the browser paints that HTML
+   before the JS bundle hydrates. An inline script in the document <head>
+   (see layout.js) sets data-intro-seen on <html> during parsing — before
+   first paint — for visitors who already played the intro this session.
 
+   This rule hides the overlay for them from the very first painted frame,
+   so a revisit never flashes the peeled background, even before React
+   hydrates. New visitors have no flag and get the full intro.
 
+   The id is removed from the DOM at hydration when the loader unmounts.
+--------------------------------------------------------- */
 
+html[data-intro-seen] #intro-overlay {
+  display: none !important;
+}
 
+/* =========================================================
+   PORTFOLIO SCROLLBAR
+   Minimal · Rounded · Theme-aware
+========================================================= */
 
-  @keyframes rotate-shine {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
+/* Firefox */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--brand) transparent;
+}
+
+/* Chrome, Edge and Safari */
+html::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb {
+  background-color: var(--border-strong);
+  border: 2px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+  min-height: 48px;
+  transition: background-color 180ms ease;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background-color: var(--brand);
+}
+
+html::-webkit-scrollbar-thumb:active {
+  background-color: var(--brand-pressed);
+}
+
+html::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html::-webkit-scrollbar-thumb {
+    transition: none;
   }
-
 }
-
-@utility shine-ring {
-  background: conic-gradient(
-    from 0deg at 60% 50%,
-    transparent 0deg,
-    #ffffff 90deg,
-    transparent 180deg
-  );
-}
-
-@utility shine-conic {
-  background: conic-gradient(
-    from 0deg at 50% 50%,
-    transparent 0deg,
-    #ffffff 80deg,
-    transparent 160deg
-  );
-}
-
-
-@utility shine-continuous {
-  background: conic-gradient(
-    from 0deg at 50% 50%,
-    transparent 0deg,
-    #60a5fa 60deg,
-    #3b82f6 90deg,
-    #60a5fa 120deg,
-    transparent 180deg
-  );
-}
-
-
-
-@utility shine-sparkle {
-  background: conic-gradient(
-    from 0deg at 50% 50%,
-    transparent 0deg,
-    transparent 30deg,
-    #fbbf24 35deg,
-    #f59e0b 40deg,
-    #fbbf24 45deg,
-    transparent 50deg,
-    transparent 150deg,
-    #fbbf24 155deg,
-    #f59e0b 160deg,
-    #fbbf24 165deg,
-    transparent 170deg,
-    transparent 270deg,
-    #fbbf24 275deg,
-    #f59e0b 280deg,
-    #fbbf24 285deg,
-,
-    transparent 290deg
-  );
-}
-
-
-
-
-
-@utility shine-double-dark {
-  background: conic-gradient(
-    from 0deg at 50% 50%,
-    transparent 0deg,
-    #ffffff 30deg,
-    var(--darkgrad-primary) 45deg,
-    #ffffff 60deg,
-    transparent 90deg,
-    transparent 180deg,
-    #ffffff 210deg,
-    var(--darkgrad-primary) 225deg,
-    #ffffff 240deg,
-    transparent 270deg
-  );
-}
-
-
-/* @utility shine-double-light {
-  background: conic-gradient(
-    from 0deg at 50% 50%,
-    rgba(221, 90, 3, 0.1) 0deg,
-    var(--grad-primary) 30deg,
-    var(--grad-secondary) 60deg,
-    var(--grad-tertiary) 90deg,
-    var(--grad-quaternary) 120deg,
-    rgba(246, 137, 177, 0.1) 150deg,
-    rgba(246, 137, 177, 0.1) 180deg,
-    var(--grad-primary) 210deg,
-    var(--grad-secondary) 240deg,
-    var(--grad-tertiary) 270deg,
-    var(--grad-quaternary) 300deg,
-    rgba(221, 90, 3, 0.1) 330deg,
-    rgba(221, 90, 3, 0.1) 360deg
-  );
-} */
-
-@utility shine-double-light {
-  background: conic-gradient(
-    from 0deg at 50% 50%,
-    rgba(255, 107, 107, 0.1) 0deg,
-    var(--darkgrad-primary) 30deg,
-    var(--darkgrad-secondary) 60deg,
-    var(--darkgrad-tertiary) 90deg,
-    var(--darkgrad-quaternary) 120deg,
-    rgba(107, 207, 127, 0.1) 150deg,
-    rgba(107, 207, 127, 0.1) 180deg,
-    var(--darkgrad-primary) 210deg,
-    var(--darkgrad-secondary) 240deg,
-    var(--darkgrad-tertiary) 270deg,
-    var(--darkgrad-quaternary) 300deg,
-    rgba(255, 107, 107, 0.1) 330deg,
-    rgba(255, 107, 107, 0.1) 360deg
-  );
-}
-
-
-
-
-
-
-
-

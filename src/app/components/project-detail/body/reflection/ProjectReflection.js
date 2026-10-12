@@ -1,0 +1,43 @@
+"use client";
+
+import SectionHeading from "@/app/components/common/SectionHeading";
+import Container from "@/app/components/common/Container";
+import useReducedMotion from "@/app/hooks/useReducedMotion";
+import ProjectReflectionWorked from "./ProjectReflectionWorked";
+import ProjectReflectionImprove from "./ProjectReflectionImprove";
+
+export default function ProjectReflection({ project }) {
+    const reduced = useReducedMotion();
+
+    const reflection = project?.story?.reflection;
+
+    if (!reflection) return null;
+
+    const statement = reflection.statement;
+    const worked = Array.isArray(reflection.worked) ? reflection.worked : [];
+    const improve = reflection.improve;
+
+    if (!statement && !worked.length && !improve) return null;
+
+    return (
+        <section id="project-reflection" aria-labelledby="project-reflection-title" className="relative overflow-x-clip bg-background">
+            <Container>
+                <div className="grid gap-8 px-5 py-12 sm:gap-10 sm:px-8 sm:py-14 md:px-10 lg:grid-cols-[180px_1fr] lg:gap-16 lg:px-12">
+                    <div>
+                        <SectionHeading label="REFLECTION" align="left" />
+                    </div>
+
+                    <div>
+                        <SectionHeading supporting={statement || "What held up, what could be better, and what I would carry forward."} supportingId="project-reflection-title" align="left" size="compact" />
+
+                        <div className="mt-8 sm:mt-10">
+                            {worked.length > 0 && <ProjectReflectionWorked items={worked} reduced={reduced} />}
+
+                            {improve && <ProjectReflectionImprove improve={improve} reduced={reduced} />}
+                        </div>
+                    </div>
+                </div>
+            </Container>
+        </section>
+    );
+}
