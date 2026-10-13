@@ -4,7 +4,10 @@ import { motion } from "motion/react";
 import { ArrowUpRight, X } from "lucide-react";
 
 import SuccessMark from "./SuccessMark";
-import { SUCCESS_MODAL_EASE, SUCCESS_MODAL_MOTION } from "./successModal.motion"
+import {
+    SUCCESS_MODAL_EASE,
+    SUCCESS_MODAL_MOTION,
+} from "./successModal.motion";
 
 export default function SuccessModalContent({
     title,
@@ -14,7 +17,7 @@ export default function SuccessModalContent({
     reduced,
 }) {
     return (
-        <motion.div
+        <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="success-modal-title"
@@ -22,15 +25,9 @@ export default function SuccessModalContent({
             data-success-modal
             tabIndex={-1}
             className="relative w-full max-w-[430px] overflow-hidden rounded-[20px] border border-border bg-surface-elevated px-5 py-8 text-center shadow-[0_24px_80px_-18px_rgb(0_0_0/0.28)] outline-none sm:px-10 sm:py-10"
-            initial={reduced ? false : { opacity: 0, y: 16, scale: 0.975 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={reduced ? undefined : { opacity: 0, y: 8, scale: 0.985 }}
-            transition={{
-                duration: SUCCESS_MODAL_MOTION.modal.duration,
-                ease: SUCCESS_MODAL_EASE,
-            }}
             onClick={(event) => event.stopPropagation()}
         >
+            {/* Top progress line */}
             <motion.span
                 className="pointer-events-none absolute inset-x-0 top-0 h-px origin-left bg-brand"
                 initial={reduced ? false : { scaleX: 0 }}
@@ -43,6 +40,7 @@ export default function SuccessModalContent({
                 aria-hidden="true"
             />
 
+            {/* Close button */}
             <button
                 type="button"
                 onClick={onClose}
@@ -52,10 +50,12 @@ export default function SuccessModalContent({
                 <X size={16} strokeWidth={1.8} />
             </button>
 
+            {/* Success icon */}
             <div className="flex justify-center">
                 <SuccessMark reduced={reduced} />
             </div>
 
+            {/* Title */}
             <motion.h2
                 id="success-modal-title"
                 className="mt-5 font-display text-[clamp(1.7rem,5vw,2.2rem)] font-normal leading-[1.05] tracking-[-0.03em] text-text-primary"
@@ -70,6 +70,7 @@ export default function SuccessModalContent({
                 {title}
             </motion.h2>
 
+            {/* Message */}
             <motion.p
                 id="success-modal-message"
                 className="mx-auto mt-3 max-w-[34ch] font-body text-sm leading-relaxed text-text-secondary sm:text-[15px]"
@@ -84,6 +85,7 @@ export default function SuccessModalContent({
                 {message}
             </motion.p>
 
+            {/* CTA */}
             <motion.div
                 className="mt-7"
                 initial={reduced ? false : { opacity: 0, y: 7 }}
@@ -109,6 +111,6 @@ export default function SuccessModalContent({
                     />
                 </button>
             </motion.div>
-        </motion.div>
+        </div>
     );
 }
