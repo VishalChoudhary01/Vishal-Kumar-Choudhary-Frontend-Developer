@@ -7,7 +7,6 @@ import ContactForm from "./contact_comp/ContactForm";
 import ContactAtmosphere from "./contact_comp/ContactAtmosphere";
 
 export default function ContactSection({
-    email = "",
     className = "",
 }) {
     return (
