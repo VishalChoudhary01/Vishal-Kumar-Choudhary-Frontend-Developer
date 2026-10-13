@@ -9,7 +9,7 @@ import EducationHeader from "./education_comp/EducationHeader";
 import EducationIntro from "./education_comp/EducationIntro";
 import EducationStack from "./education_comp/EducationStack";
 import EducationStatic from "./education_comp/EducationStatic";
-import EducationHandoff from "./education_comp/EducationHandoff";
+import EducationHandoff from "./education_comp/EducationHandoff"; 
 
 import { educationData } from "./education_comp/education.data";
 import { DEPTH_PROFILES, PIN_SCROLL_FACTOR, focalIndex } from "./education_comp/education.motion"
