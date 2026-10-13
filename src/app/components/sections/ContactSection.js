@@ -4,11 +4,9 @@ import SectionHeading from "@/app/components/common/SectionHeading";
 import { cn } from "@/app/lib/utils";
 import ContactIntro from "./contact_comp/ContactIntro";
 import ContactForm from "./contact_comp/ContactForm";
-import ContactDirectEmail from "./contact_comp/ContactDirectEmail";
 import ContactAtmosphere from "./contact_comp/ContactAtmosphere";
 
 export default function ContactSection({
-    email = "",
     className = "",
 }) {
     return (
@@ -48,11 +46,6 @@ export default function ContactSection({
 
                         <ContactForm className="mt-12 sm:mt-14" />
 
-                        {email && (
-                            <div className="mt-12 sm:mt-14">
-                                <ContactDirectEmail email={email} />
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>
