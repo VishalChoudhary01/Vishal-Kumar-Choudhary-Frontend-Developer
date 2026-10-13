@@ -97,7 +97,7 @@ export default function ContactFormFields({
                 />
             </ContactRevealRow>
 
-            <ContactRevealRow active={active} delay={CONTACT_STAGGER.submit} className="mt-10 sm:mt-12">
+            <ContactRevealRow active={active} delay={CONTACT_STAGGER.submit} className="mt-10 sm:mt-12 "> 
                 <ActionButton
                     type="submit"
                     label="Send Message"
@@ -110,7 +110,7 @@ export default function ContactFormFields({
                     iconSize={16}
                     ripple
                     rippleClassName="bg-foreground"
-                    width="w-[170px]"
+                    width="sm:w-[180px]"
                     height="h-[50px]"
                 />
             </ContactRevealRow>

@@ -3,12 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, } from "motion/react";
 import { easeStandard } from "@/app/lib/motion/easings";
-import VKrLogo from "../common/logo/TwoRingLogo";
 import HamburgerSVGButton from "../ui/HamburgerSVGButton";
 import { cn } from "@/app/lib/utils";
 import EditorialNumber from "../ui/EditorialNumber";
 import ProjectResumeButton from "../common/ProjectResumeButton";
 import Link from "next/link";
+import VKrLogo from "../common/logo/VKrLogo";
 
 const RESUME_PDF = "/resume/vishal_kumar_choudhary_frontend_developer.pdf";
 
