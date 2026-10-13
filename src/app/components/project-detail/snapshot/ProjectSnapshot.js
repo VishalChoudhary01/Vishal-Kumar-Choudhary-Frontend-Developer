@@ -84,7 +84,7 @@ export default function ProjectSnapshot({ project }) {
                     {/* Section eyebrow */}
                     <div>
                         <SectionHeading
-                            label="TECHNOLOGY"
+                            label="STACKS"
                             align="left"
                         />
                     </div>
