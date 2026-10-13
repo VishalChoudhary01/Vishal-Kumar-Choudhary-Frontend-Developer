@@ -33,21 +33,21 @@ function DynamicSkills({ skills }) {
         >
             <div className="mx-auto max-w-7xl">
                 <div className="grid gap-10 md:gap-14 lg:grid-cols-[180px_1fr] lg:gap-16">
-                    <div>
-                        <SectionHeading
-                            label="SKILLS"
-                            align="left"
-                            number={"04"}
-                        />
-                    </div>
+                   <div className="min-w-0">
+                                           <SectionHeading
+                                               label="SKILL"
+                                               align="left"
+                                               number={"04"}
+                                           />
+                                       </div>
 
-                    <div>
+                    <div className="min-w-0">
+                        
+
                         <SectionHeading
                             supporting="What I build with."
                             align="left"
                             supportingId="skills-heading"
-                            size="compact"
-                            datum={false}
                         />
 
                         <ol

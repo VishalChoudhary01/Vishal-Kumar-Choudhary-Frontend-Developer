@@ -14,7 +14,7 @@ import { EASE_EDITORIAL } from "./projects_comp/project.constants";
 
 const INITIAL_PROJECT_COUNT = 3;
 
-const PROJECT_CATEGORY_LABELS = {
+const PROJECT_CATEGORY_LABELS = { 
     all: "All",
     "web-experience": "Web Experiences",
     "production-platform": "Production Platforms",
