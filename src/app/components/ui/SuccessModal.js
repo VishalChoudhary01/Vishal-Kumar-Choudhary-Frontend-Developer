@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -5,8 +6,13 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 
 import useReducedMotion from "@/app/hooks/useReducedMotion";
+import useUiSound from "@/app/hooks/useUiSound";
+
 import SuccessModalContent from "./success_modal_comp/SuccessModalContent";
-import { SUCCESS_MODAL_EASE, SUCCESS_MODAL_MOTION } from "./success_modal_comp/successModal.motion"
+import {
+    SUCCESS_MODAL_EASE,
+    SUCCESS_MODAL_MOTION,
+} from "./success_modal_comp/successModal.motion";
 
 export default function SuccessModal({
     open,
@@ -19,10 +25,38 @@ export default function SuccessModal({
     const [mounted, setMounted] = useState(false);
     const previousFocusRef = useRef(null);
 
+    // Confirmation sound for successful form submission.
+    const { play: playConfirmationSound, stop: stopConfirmationSound, } = useUiSound("/mp3/confirmation-002.mp3", { volume: 0.35, interrupt: true, });
+    
+    
     useEffect(() => {
         setMounted(true);
     }, []);
 
+    // Play once when the mounted modal opens.
+    useEffect(() => {
+        if (!mounted) {
+            return;
+        }
+
+        if (!open) {
+            stopConfirmationSound();
+            return;
+        }
+
+        playConfirmationSound();
+
+        return () => {
+            stopConfirmationSound();
+        };
+    }, [
+        mounted,
+        open,
+        playConfirmationSound,
+        stopConfirmationSound,
+    ]);
+
+    // Save focus and move focus into the dialog when it opens.
     useEffect(() => {
         if (!open) {
             return;
@@ -39,6 +73,7 @@ export default function SuccessModal({
         };
     }, [open]);
 
+    // Restore focus when the dialog closes.
     useEffect(() => {
         if (open) {
             return;
@@ -46,12 +81,16 @@ export default function SuccessModal({
 
         const previousElement = previousFocusRef.current;
 
-        if (previousElement && typeof previousElement.focus === "function") {
+        if (
+            previousElement &&
+            typeof previousElement.focus === "function"
+        ) {
             previousElement.focus();
             previousFocusRef.current = null;
         }
     }, [open]);
 
+    // Close the dialog with Escape.
     const handleKeyDown = useCallback(
         (event) => {
             if (event.key === "Escape" && open) {
@@ -73,6 +112,7 @@ export default function SuccessModal({
         };
     }, [open, handleKeyDown]);
 
+    // Prevent background scrolling while the dialog is open.
     useEffect(() => {
         if (!open) {
             return;
@@ -93,6 +133,7 @@ export default function SuccessModal({
         <AnimatePresence>
             {open && (
                 <>
+                    {/* Backdrop */}
                     <motion.div
                         className="fixed inset-0 z-[200] bg-surface-overlay/60 backdrop-blur-[4px]"
                         initial={reduced ? false : { opacity: 0 }}
@@ -106,17 +147,70 @@ export default function SuccessModal({
                         aria-hidden="true"
                     />
 
+                    {/* Modal position and 3D perspective */}
                     <div
                         className="fixed inset-0 z-[201] flex items-center justify-center overflow-y-auto p-4 sm:p-6"
+                        style={{
+                            perspective: 750,
+                            perspectiveOrigin: "50% 45%",
+                        }}
                         onClick={onClose}
                     >
-                        <SuccessModalContent
-                            title={title}
-                            message={message}
-                            ctaLabel={ctaLabel}
-                            onClose={onClose}
-                            reduced={reduced}
-                        />
+                        <motion.div
+                            initial={
+                                reduced
+                                    ? false
+                                    : {
+                                        opacity: 0,
+                                        scale: 0.72,
+                                        y: 48,
+                                        z: -180,
+                                        rotateX: 16,
+                                        rotateY: -9,
+                                    }
+                            }
+                            animate={{
+                                opacity: 1,
+                                scale: 1,
+                                y: 0,
+                                z: 0,
+                                rotateX: 0,
+                                rotateY: 0,
+                            }}
+                            exit={
+                                reduced
+                                    ? undefined
+                                    : {
+                                        opacity: 0,
+                                        scale: 0.9,
+                                        y: 24,
+                                        z: -100,
+                                        rotateX: -8,
+                                        rotateY: 5,
+                                    }
+                            }
+                            transition={{
+                                type: "spring",
+                                stiffness: 220,
+                                damping: 23,
+                                mass: 0.9,
+                            }}
+                            style={{
+                                transformStyle: "preserve-3d",
+                                transformOrigin: "center center",
+                                willChange: reduced
+                                    ? "auto"
+                                    : "transform, opacity",
+                            }}
+                        >
+                            <SuccessModalContent
+                                title={title}
+                                message={message}
+                                ctaLabel={ctaLabel}
+                                onClose={onClose}
+                                reduced={reduced}
+                            />
+                        </motion.div>
                     </div>
                 </>
             )}
