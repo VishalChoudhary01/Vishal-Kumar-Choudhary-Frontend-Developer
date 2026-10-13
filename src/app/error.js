@@ -72,7 +72,6 @@ export default function Error({ error, reset }) {
         }
     }, [error, willAutoReload])
 
-    /* While the reload is pending, avoid flashing the dead-end error screen. */
     if (willAutoReload) {
         return null
     }
