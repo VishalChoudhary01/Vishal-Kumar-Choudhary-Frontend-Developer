@@ -34,6 +34,9 @@ export const metadata = {
   title: SITE_TITLE,
   description: SITE_DESCRIPTION,
   manifest: "/manifest.json",
+   verification: {
+    google: "Ad53BK0h0bH3DSVCoi_azowlxfgmr1GFRJKuIo_LK4MQ",
+  },
 };
 
 export default function RootLayout({ children }) {
