@@ -60,7 +60,7 @@ export default function ContactFormFields({
                 </div>
             </ContactRevealRow>
 
-            <ContactRevealRow active={active} delay={CONTACT_STAGGER.projectType} className="mt-10 sm:mt-12">
+            <ContactRevealRow active={active} delay={CONTACT_STAGGER.projectType} className="mt-10 sm:mt-12 ">
                 <ContactProjectType
                     name="projectType"
                     id="projectType"
