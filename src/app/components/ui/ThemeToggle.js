@@ -23,7 +23,7 @@ export function ThemeToggle({
     });
 
     const { play: playThemeToggleSound } = useUiSound(
-        "/mp3/belt-handle-2.mp3",
+        "/mp3/chop.mp3", 
         {
             volume: 0.25,
             interrupt: true,

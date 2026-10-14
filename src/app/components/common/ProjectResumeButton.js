@@ -90,7 +90,7 @@ export default function ProjectResumeButton({
 
     // Shared hover-tick sound.
     const { play: playHoverSound } = useUiSound(
-        "/mp3/hover-tick.mp3",
+        "/mp3/draw-knife-2.mp3",
         {
             volume: 0.2,
             interrupt: false,
