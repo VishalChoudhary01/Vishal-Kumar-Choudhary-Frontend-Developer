@@ -522,27 +522,6 @@ export default function PortfolioMascot() {
         <Grip size={10} />
         Drag to move
       </span>
-      {hasSectionMessage && <AnimatePresence mode="wait" initial={false}>
-        <motion.button
-          key={section.id}
-          type="button"
-          onClick={() => setMessageOpen((open) => !open)}
-          aria-expanded={messageOpen}
-          initial={reducedMotion ? false : { opacity: 0, y: 8, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.97 }}
-          transition={{ duration: reducedMotion ? 0.01 : 0.22, ease: "easeOut" }}
-          className={`pointer-events-auto ${isMobile ? "hidden" : "mt-[-12px] w-[154px] px-2.5 py-2"} rounded-md border border-border/80 bg-background/95 text-left text-foreground shadow-lg backdrop-blur-md transition-colors hover:border-brand/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand`}
-        >
-          <span className="flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-brand">
-            <Sparkles size={11} aria-hidden="true" />
-            {section.label}
-          </span>
-          <span className={`mt-1 block leading-snug ${isMobile ? "text-[9px]" : "text-[10px]"}`}>{section.note}</span>
-          <span className="mt-1 block text-[9px] font-semibold text-brand/90">{messageOpen ? "Close message −" : "Tap to chat +"}</span>
-        </motion.button>
-      </AnimatePresence>}
-
       {messageOpen && hasSectionMessage && typeof document !== "undefined" && createPortal(
         <div
           key={section.id + "-message"}
