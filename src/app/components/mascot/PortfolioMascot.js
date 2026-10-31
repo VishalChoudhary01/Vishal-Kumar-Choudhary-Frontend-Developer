@@ -656,7 +656,7 @@ export default function PortfolioMascot() {
           key={section.id + "-message"}
           className="pointer-events-auto fixed z-[99999] overflow-hidden rounded-lg border border-black/10 bg-white/45 p-3 text-[#17211e] shadow-[0_18px_60px_-24px_rgba(0,0,0,0.24)] backdrop-blur-xl before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(ellipse_at_top_left,rgba(7,162,144,0.13),transparent_58%),linear-gradient(135deg,rgba(255,255,255,0.34),transparent_48%,rgba(7,162,144,0.06))] before:content-[''] [&>*]:relative dark:border-white/15 dark:bg-[#0b100e]/65 dark:text-foreground dark:shadow-[0_18px_60px_-24px_rgba(0,0,0,0.8)] dark:before:bg-[radial-gradient(ellipse_at_top_left,rgba(95,224,213,0.14),transparent_58%),linear-gradient(135deg,rgba(255,255,255,0.07),transparent_48%,rgba(95,224,213,0.04))]"
           style={isMobile
-            ? { top: "calc(env(safe-area-inset-top, 0px) + 84px)", left: "12px", right: "12px", width: "auto", maxHeight: "calc(100dvh - env(safe-area-inset-top, 0px) - 104px)", overflowY: "auto" }
+            ? { top: "calc(env(safe-area-inset-top, 0px) + 72px)", left: "12px", right: "12px", width: "auto", maxHeight: "calc(100dvh - env(safe-area-inset-top, 0px) - 88px)", overflowY: "auto", padding: "10px" }
             : { left: Math.max(12, Math.min(window.innerWidth - 232, mascotPosition.x > window.innerWidth / 2 ? mascotPosition.x - 244 : mascotPosition.x + 104)), top: Math.max(80, Math.min(window.innerHeight - 260, mascotPosition.y - 12)), width: "220px", maxHeight: "min(70vh, 480px)", overflowY: "auto" }}
           role="dialog"
           aria-label={section.label}
@@ -665,10 +665,10 @@ export default function PortfolioMascot() {
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand">VEE</p>
             <button type="button" onClick={() => setMessageOpen(false)} className="shrink-0 rounded-sm px-1 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-brand" aria-label="Close message">×</button>
           </div>
-          <p className="mt-2 text-sm leading-snug">{section.note}</p>
+          <p className="mt-1.5 text-[13px] leading-snug sm:mt-2 sm:text-sm">{section.note}</p>
           <button
             type="button"
-            className="mt-2 text-xs font-semibold text-brand underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="mt-1.5 text-xs font-semibold text-brand underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             onClick={(event) => {
               event.stopPropagation();
               setMessageOpen(false);
