@@ -162,11 +162,11 @@ export default function SuccessModal({
                                     ? false
                                     : {
                                         opacity: 0,
-                                        scale: 0.88,
-                                        y: 20,
-                                        z: -80,
-                                        rotateX: -10,
-                                        rotateY: 88,
+                                        scale: 0.92,
+                                        y: 14,
+                                        z: -48,
+                                        rotateX: -5,
+                                        rotateY: -72,
                                     }
                             }
                             animate={{
@@ -182,18 +182,18 @@ export default function SuccessModal({
                                     ? undefined
                                     : {
                                         opacity: 0,
-                                        scale: 0.94,
-                                        y: 12,
-                                        z: -40,
-                                        rotateX: 8,
-                                        rotateY: -22,
+                                        scale: 0.96,
+                                        y: 10,
+                                        z: -24,
+                                        rotateX: 4,
+                                        rotateY: 28,
                                     }
                             }
                             transition={{
                                 type: "spring",
-                                stiffness: 180,
-                                damping: 22,
-                                mass: 0.85,
+                                stiffness: 200,
+                                damping: 24,
+                                mass: 0.8,
                             }}
                             style={{
                                 transformStyle: "preserve-3d",
