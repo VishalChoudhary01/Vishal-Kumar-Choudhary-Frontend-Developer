@@ -652,8 +652,12 @@ export default function PortfolioMascot() {
       </button>
 
       {messageOpen && hasSectionMessage && typeof document !== "undefined" && createPortal(
-        <div
+        <motion.div
           key={section.id + "-message"}
+          initial={reducedMotion ? false : { opacity: 0, y: 8, scale: 0.96, filter: "blur(4px)" }}
+          animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+          exit={reducedMotion ? undefined : { opacity: 0, y: 5, scale: 0.97, filter: "blur(3px)" }}
+          transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 360, damping: 30, mass: 0.7 }}
           className="pointer-events-auto fixed z-[99999] overflow-hidden rounded-lg border border-black/10 bg-white/45 p-3 text-[#17211e] shadow-[0_18px_60px_-24px_rgba(0,0,0,0.24)] backdrop-blur-xl before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(ellipse_at_top_left,rgba(7,162,144,0.13),transparent_58%),linear-gradient(135deg,rgba(255,255,255,0.34),transparent_48%,rgba(7,162,144,0.06))] before:content-[''] [&>*]:relative dark:border-white/15 dark:bg-[#0b100e]/65 dark:text-foreground dark:shadow-[0_18px_60px_-24px_rgba(0,0,0,0.8)] dark:before:bg-[radial-gradient(ellipse_at_top_left,rgba(95,224,213,0.14),transparent_58%),linear-gradient(135deg,rgba(255,255,255,0.07),transparent_48%,rgba(95,224,213,0.04))]"
           style={isMobile
             ? { left: Math.max(12, Math.min(window.innerWidth - 272, mascotPosition.x > window.innerWidth / 2 ? mascotPosition.x - 268 : mascotPosition.x + 56)), top: Math.max(12, Math.min(window.innerHeight - 180, mascotPosition.y - 8)), width: "min(260px, calc(100vw - 72px))", maxWidth: "calc(100vw - 72px)", maxHeight: "calc(100dvh - env(safe-area-inset-top, 0px) - 24px)", overflowY: "auto", padding: "10px" }
@@ -681,7 +685,7 @@ export default function PortfolioMascot() {
           >
             {section.action}<ArrowDown size={11} className="ml-1 inline-block" aria-hidden="true" />
           </button>
-        </div>,
+        </motion.div>,
         document.body
       )}
       {reacting && <span className="sr-only" aria-live="polite">Mascot reacted to your interaction.</span>}
