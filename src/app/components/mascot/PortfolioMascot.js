@@ -162,8 +162,10 @@ export default function PortfolioMascot() {
       let nearestDistance = Infinity;
       const marker = window.innerHeight * 0.42;
       const footer = document.querySelector("footer, #footer, [data-footer], .site-footer");
-      const atPageEnd = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 48;
-      const footerReached = atPageEnd || Boolean(footer && footer.getBoundingClientRect().top < window.innerHeight * 0.82 && footer.getBoundingClientRect().bottom > 80);
+      const atPageEnd = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 24;
+      const footerTop = footer?.getBoundingClientRect().top ?? Infinity;
+      // Don't switch to the sitting pose as soon as the footer merely enters view.
+      const footerReached = atPageEnd || Boolean(footer && footerTop < window.innerHeight * 0.22 && footer.getBoundingClientRect().bottom > 80);
       footerActiveRef.current = footerReached;
       SECTIONS.forEach((section, index) => {
         const node = document.getElementById(section.id);
@@ -204,7 +206,8 @@ export default function PortfolioMascot() {
         // Settle on the footer instead of continuing to float over its content.
         // Park low in the visible footer area so the companion feels settled there.
         x = clamp(viewportWidth * (isMobile ? 0.5 : 0.72) - mascotWidth / 2, 8, viewportWidth - mascotWidth - 8);
-        y = clamp(Math.min(targetRect.top + 24, viewportHeight - mascotHeight - (isMobile ? 18 : 12)), 72, viewportHeight - mascotHeight - 8);
+        // Anchor the mascot to the actual bottom edge, not the footer's top edge.
+        y = viewportHeight - mascotHeight - (isMobile ? 4 : 2);
       } else if (!isMobile && targetRect && targetRect.width > 0 && targetRect.height > 0) {
         const preferRight = nearest % 2 === 0;
         x = preferRight ? targetRect.right + 10 : targetRect.left - mascotWidth - 10;
@@ -213,7 +216,9 @@ export default function PortfolioMascot() {
         y = targetRect.top + Math.min(targetRect.height * 0.1, 22);
       }
       x = clamp(x, 8, Math.max(8, viewportWidth - mascotWidth - 8));
-      y = clamp(y, 72, Math.max(72, viewportHeight - mascotHeight - 42));
+      y = footerReached
+        ? clamp(y, 8, Math.max(8, viewportHeight - mascotHeight - 2))
+        : clamp(y, 72, Math.max(72, viewportHeight - mascotHeight - 42));
 
       if (targetRect) {
         const mascotCenterX = x + mascotWidth / 2;
