@@ -132,6 +132,7 @@ export default function PortfolioMascot() {
     let targetPointerX = 0;
     let targetPointerY = 0;
     let activeIndex = 0;
+    let previousSectionIndex = null;
     let progress = 0;
     let reactionUntil = 0;
     let startTime = 0;
@@ -194,6 +195,13 @@ export default function PortfolioMascot() {
           nearest = index;
         }
       });
+      // React once when the active portfolio section changes: Vee gives a small
+      // bounce, a brief wave, and a fresh expression while adopting the new section pose.
+      if (previousSectionIndex !== null && nearest !== previousSectionIndex) {
+        reactionUntil = performance.now() + 900;
+        chooseExpression();
+      }
+      previousSectionIndex = nearest;
       activeIndex = nearest;
       setActive(nearest);
 
