@@ -4,6 +4,7 @@ import { lazy, Suspense } from "react";
 import PortfolioIntro from "./sections/Intro_loader/portfolioIntro";
 import { usePageLoader } from "../providers/PageLoaderProvider";
 import Navbar from "./layout/Navbar";
+import PortfolioMascot from "./mascot/PortfolioMascot";
 /*
  * Direct import (not via the ./sections barrel): the barrel re-exports the
  * six lazy-loaded below-fold sections, so a static barrel import used to
@@ -77,6 +78,8 @@ export default function HomePage() {
           <ContactSection />
         </Suspense>
       </div>
+
+      {heroReady && <PortfolioMascot />}
     </main>
   );
 }
