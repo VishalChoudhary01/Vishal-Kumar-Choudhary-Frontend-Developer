@@ -79,6 +79,7 @@ export default function PortfolioMascot() {
   const [messageOpen, setMessageOpen] = useState(false);
   const [webglReady, setWebglReady] = useState(false);
   const [mascotPosition, setMascotPosition] = useState({ x: 0, y: 0 });
+  const footerActiveRef = useRef(false);
   const [reacting, setReacting] = useState(false);
 
   useEffect(() => {
@@ -98,7 +99,7 @@ export default function PortfolioMascot() {
   }, []);
 
   useEffect(() => {
-    if (!isDesktop) return undefined;
+    // Keep the companion active on mobile too; the responsive host is smaller there.
 
     let frame = 0;
     let disposed = false;
@@ -156,7 +157,8 @@ export default function PortfolioMascot() {
       let nearestDistance = Infinity;
       const marker = window.innerHeight * 0.42;
       const footer = document.querySelector("footer");
-      const footerReached = Boolean(footer && footer.getBoundingClientRect().top < window.innerHeight * 0.78);
+      const footerReached = Boolean(footer && footer.getBoundingClientRect().top < window.innerHeight * 0.72 && footer.getBoundingClientRect().bottom > 80);
+      footerActiveRef.current = footerReached;
       SECTIONS.forEach((section, index) => {
         const node = document.getElementById(section.id);
         if (!node) return;
@@ -176,19 +178,27 @@ export default function PortfolioMascot() {
       const sectionId = SECTIONS[nearest]?.id;
       const sectionNode = sectionId ? document.getElementById(sectionId) : null;
       const target = footerReached ? footer : sectionNode?.querySelector(
-        "h1, h2, h3, form, [data-mascot-target], a[href^='#'], button"
+        "[data-mascot-target], form, h1, h2, h3, button, a[href^='#']"
       ) || sectionNode;
       const targetRect = target?.getBoundingClientRect();
       const mascotWidth = isMobile ? 68 : 94;
       const mascotHeight = isMobile ? 100 : 142;
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-      let x = viewportWidth * (nearest % 2 === 0 ? 0.78 : 0.22);
-      let y = viewportHeight * (0.25 + progress * 0.42);
+      // Vary the companion's default position around the page, rather than tracking one side.
+      const orbit = [
+        { x: 0.76, y: 0.24 }, { x: 0.18, y: 0.34 },
+        { x: 0.78, y: 0.54 }, { x: 0.16, y: 0.22 },
+        { x: 0.74, y: 0.42 }, { x: 0.20, y: 0.58 },
+        { x: 0.72, y: 0.30 },
+      ][nearest] || { x: 0.75, y: 0.3 };
+      let x = viewportWidth * orbit.x;
+      let y = viewportHeight * orbit.y;
       if (footerReached && targetRect) {
         // Settle on the footer instead of continuing to float over its content.
-        x = clamp(viewportWidth - mascotWidth - 18, 8, viewportWidth - mascotWidth - 8);
-        y = clamp(targetRect.top + 8, viewportHeight * 0.35, viewportHeight - mascotHeight - 8);
+        // Park low in the visible footer area so the companion feels settled there.
+        x = clamp(viewportWidth - mascotWidth - 24, 8, viewportWidth - mascotWidth - 8);
+        y = clamp(Math.max(targetRect.top + 12, viewportHeight - mascotHeight - 54), 72, viewportHeight - mascotHeight - 8);
       } else if (targetRect && targetRect.width > 0 && targetRect.height > 0) {
         const preferRight = nearest % 2 === 0;
         x = preferRight ? targetRect.right + 10 : targetRect.left - mascotWidth - 10;
@@ -210,7 +220,8 @@ export default function PortfolioMascot() {
         targetFacingX = 0;
         targetFacingY = 0;
       }
-      setMascotPosition(manualPosition || { x, y });
+      // Footer parking takes priority over a prior drag position. Otherwise preserve a user-dragged position.
+      setMascotPosition(footerReached ? { x, y } : (manualPosition || { x, y }));
     };
     updateScroll();
     window.addEventListener("scroll", updateScroll, { passive: true });
@@ -378,12 +389,16 @@ export default function PortfolioMascot() {
           frame = requestAnimationFrame(render);
           const seconds = time * 0.001;
           if (!startTime) startTime = seconds;
-          const pose = poses[SECTIONS[activeIndex]?.pose] || poses.wave;
+          const footerSettled = footerActiveRef.current;
+          const pose = footerSettled
+            ? { left: -0.15, right: -0.15, lean: 0.02, head: 0.02, legs: 0.02 }
+            : (poses[SECTIONS[activeIndex]?.pose] || poses.wave);
           pointerX = smooth(pointerX, targetPointerX, reducedMotion ? 0.035 : 0.075);
           pointerY = smooth(pointerY, targetPointerY, reducedMotion ? 0.035 : 0.075);
           const idle = reducedMotion ? 0 : Math.sin(seconds * 2.1) * 0.045;
           const reactingNow = time < reactionUntil;
-          root.position.y = idle + (reactingNow ? Math.sin(seconds * 13) * 0.08 : 0);
+          root.position.y = footerSettled ? -0.18 + idle * 0.25 : idle + (reactingNow ? Math.sin(seconds * 13) * 0.08 : 0);
+          root.rotation.x = smooth(root.rotation.x, footerSettled ? -0.12 : 0, 0.06);
           root.rotation.y = smooth(root.rotation.y, pointerX * 0.55 + (activeIndex === 5 ? -0.13 : 0), 0.055);
           root.rotation.z = smooth(root.rotation.z, pose.lean + pointerY * 0.1, 0.055);
           // The face looks toward the active heading/form/card, not only toward the cursor.
@@ -397,8 +412,8 @@ export default function PortfolioMascot() {
             ? (pointingRight ? -1.65 : 1.65)
             : pose.right;
           rightArm.rotation.z = smooth(rightArm.rotation.z, rightArmTarget + (reactingNow ? Math.sin(seconds * 18) * 0.65 : 0), 0.07);
-          leftLeg.rotation.z = smooth(leftLeg.rotation.z, -pose.legs + (reactingNow ? -0.14 : 0), 0.05);
-          rightLeg.rotation.z = smooth(rightLeg.rotation.z, pose.legs + (reactingNow ? 0.14 : 0), 0.05);
+          leftLeg.rotation.z = smooth(leftLeg.rotation.z, footerSettled ? -0.42 : -pose.legs + (reactingNow ? -0.14 : 0), 0.05);
+          rightLeg.rotation.z = smooth(rightLeg.rotation.z, footerSettled ? 0.42 : pose.legs + (reactingNow ? 0.14 : 0), 0.05);
           antenna.rotation.z = Math.sin(seconds * 2.7) * (reducedMotion ? 0.015 : 0.09);
           glow.rotation.z += reducedMotion ? 0.0008 : 0.006;
           eyeLeft.scale.y = eyeRight.scale.y = 0.12 * (Math.sin(seconds * 0.8) > 0.997 ? 0.15 : 1);
@@ -432,7 +447,7 @@ export default function PortfolioMascot() {
       }
       renderer?.dispose();
     };
-  }, [reducedMotion, isDesktop, isMobile, manualPosition]);
+  }, [reducedMotion, isDesktop, isMobile]);
 
   const section = SECTIONS[active] || SECTIONS[0];
 
