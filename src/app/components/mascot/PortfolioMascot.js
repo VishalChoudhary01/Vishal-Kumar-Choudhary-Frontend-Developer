@@ -546,22 +546,21 @@ export default function PortfolioMascot() {
       {messageOpen && hasSectionMessage && typeof document !== "undefined" && createPortal(
         <div
           key={section.id + "-message"}
-          className="pointer-events-auto fixed z-[99999] rounded-lg border border-border/70 bg-background p-4 text-foreground shadow-2xl"
+          className="pointer-events-auto fixed z-[99999] rounded-lg border border-border/70 bg-background p-3 text-foreground shadow-xl"
           style={isMobile
             ? { top: "calc(env(safe-area-inset-top, 0px) + 84px)", left: "12px", right: "12px", width: "auto", maxHeight: "calc(100dvh - env(safe-area-inset-top, 0px) - 104px)", overflowY: "auto" }
             : { left: Math.max(12, Math.min(window.innerWidth - 232, mascotPosition.x > window.innerWidth / 2 ? mascotPosition.x - 244 : mascotPosition.x + 104)), top: Math.max(80, Math.min(window.innerHeight - 260, mascotPosition.y - 12)), width: "220px", maxHeight: "min(70vh, 480px)", overflowY: "auto" }}
           role="dialog"
           aria-label={section.label}
         >
-          <div className="flex items-start justify-between gap-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-brand">Vee's guide · {section.id === "hero" ? "Welcome" : section.label}</p>
-            <button type="button" onClick={() => setMessageOpen(false)} className="shrink-0 rounded-sm px-2 py-1 text-xs font-semibold text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-brand" aria-label="Close section message">Close ×</button>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand">VEE</p>
+            <button type="button" onClick={() => setMessageOpen(false)} className="shrink-0 rounded-sm px-1 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-brand" aria-label="Close message">×</button>
           </div>
-          <p className="mt-2 text-sm font-semibold">{section.note}</p>
-          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{section.detail}</p>
+          <p className="mt-2 text-sm leading-snug">{section.note}</p>
           <button
             type="button"
-            className="mt-3 text-xs font-semibold text-brand underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="mt-2 text-xs font-semibold text-brand underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             onClick={(event) => {
               event.stopPropagation();
               setMessageOpen(false);
