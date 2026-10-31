@@ -128,6 +128,7 @@ export default function PortfolioMascot() {
     let resizeObserver;
     let targetFacingX = 0;
     let targetFacingY = 0;
+    let lastScrollTime = performance.now();
 
     const canvas = canvasRef.current;
     const host = hostRef.current;
@@ -152,6 +153,7 @@ export default function PortfolioMascot() {
     host.addEventListener("click", onClick);
 
     const updateScroll = () => {
+      lastScrollTime = performance.now();
       const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
       progress = clamp(window.scrollY / maxScroll, 0, 1);
       let nearest = 0;
@@ -398,21 +400,26 @@ export default function PortfolioMascot() {
           pointerY = smooth(pointerY, targetPointerY, reducedMotion ? 0.035 : 0.075);
           const idle = reducedMotion ? 0 : Math.sin(seconds * 2.1) * 0.045;
           const reactingNow = time < reactionUntil;
+          // When the page is idle, Vee stays lively with gentle face-scanning and a small alternating hand wave.
+          const idlePlay = !reducedMotion && !footerSettled && time - lastScrollTime > 1600 && !reactingNow;
+          const idleLook = idlePlay ? Math.sin(seconds * 1.25) * 0.34 : 0;
+          const idleWave = idlePlay ? Math.max(0, Math.sin(seconds * 2.2)) * 0.24 : 0;
           root.position.y = footerSettled ? -0.18 + idle * 0.25 : idle + (reactingNow ? Math.sin(seconds * 13) * 0.08 : 0);
           root.rotation.x = smooth(root.rotation.x, footerSettled ? -0.12 : 0, 0.06);
           root.rotation.y = smooth(root.rotation.y, pointerX * 0.55 + (activeIndex === 5 ? -0.13 : 0), 0.055);
           root.rotation.z = smooth(root.rotation.z, pose.lean + pointerY * 0.1, 0.055);
           // The face looks toward the active heading/form/card, not only toward the cursor.
-          const faceYaw = targetFacingX * 0.48 + pointerX * 0.22 + pose.head;
-          const facePitch = -targetFacingY * 0.2 - pointerY * 0.16;
+          const faceYaw = idlePlay ? idleLook + pointerX * 0.12 : targetFacingX * 0.48 + pointerX * 0.22 + pose.head;
+          const facePitch = idlePlay ? Math.sin(seconds * 1.7) * 0.08 - pointerY * 0.08 : -targetFacingY * 0.2 - pointerY * 0.16;
           head.rotation.y = smooth(head.rotation.y, faceYaw, 0.075);
           head.rotation.x = smooth(head.rotation.x, facePitch, 0.075);
-          leftArm.rotation.z = smooth(leftArm.rotation.z, pose.left + (reactingNow ? Math.sin(seconds * 18) * 0.65 : 0), 0.07);
+          leftArm.rotation.z = smooth(leftArm.rotation.z, pose.left + (reactingNow ? Math.sin(seconds * 18) * 0.65 : idleWave), 0.07);
           const pointingRight = targetFacingX >= 0;
           const rightArmTarget = SECTIONS[activeIndex]?.pose === "point"
             ? (pointingRight ? -1.65 : 1.65)
             : pose.right;
-          rightArm.rotation.z = smooth(rightArm.rotation.z, rightArmTarget + (reactingNow ? Math.sin(seconds * 18) * 0.65 : 0), 0.07);
+          const playfulArm = idlePlay ? Math.sin(seconds * 2.2 + Math.PI) * 0.22 : 0;
+          rightArm.rotation.z = smooth(rightArm.rotation.z, rightArmTarget + (reactingNow ? Math.sin(seconds * 18) * 0.65 : playfulArm), 0.07);
           leftLeg.rotation.z = smooth(leftLeg.rotation.z, footerSettled ? -0.42 : -pose.legs + (reactingNow ? -0.14 : 0), 0.05);
           rightLeg.rotation.z = smooth(rightLeg.rotation.z, footerSettled ? 0.42 : pose.legs + (reactingNow ? 0.14 : 0), 0.05);
           antenna.rotation.z = Math.sin(seconds * 2.7) * (reducedMotion ? 0.015 : 0.09);
