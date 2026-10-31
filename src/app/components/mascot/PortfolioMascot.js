@@ -333,10 +333,6 @@ export default function PortfolioMascot() {
 
         // Articulated arms: overlapping shoulder, upper arm, elbow, forearm, wrist and glove.
         // The extra overlap keeps the silhouette connected when Vee waves or points.
-        let leftElbow;
-        let rightElbow;
-        let leftWrist;
-        let rightWrist;
         const makeArm = (side) => {
           const arm = new THREE.Group();
           arm.position.set(side * 0.68, -0.14, 0);
