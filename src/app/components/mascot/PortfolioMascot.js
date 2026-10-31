@@ -81,6 +81,8 @@ export default function PortfolioMascot() {
   const [webglReady, setWebglReady] = useState(false);
   const [mascotPosition, setMascotPosition] = useState({ x: 0, y: 0 });
   const footerActiveRef = useRef(false);
+  const dragStartRef = useRef(null);
+  const dragMovedRef = useRef(false);
   const [reacting, setReacting] = useState(false);
 
   useEffect(() => {
@@ -369,13 +371,6 @@ export default function PortfolioMascot() {
         makeMesh(new THREE.CylinderGeometry(0.035, 0.055, 0.32, 12), orange, antenna, [0, 0.12, 0]);
         sphere(teal, antenna, [0, 0.31, 0], [0.09, 0.09, 0.09], 18);
 
-        glow = new THREE.Mesh(
-          new THREE.TorusGeometry(0.53, 0.018, 8, 48),
-          new THREE.MeshBasicMaterial({ color: 0x58cfc4, transparent: true, opacity: 0.72 }),
-        );
-        glow.position.set(0, -1.65, -0.18);
-        glow.rotation.x = Math.PI / 2;
-        root.add(glow);
 
         const resize = () => {
           if (!renderer || !canvas.parentElement) return;
@@ -436,8 +431,10 @@ export default function PortfolioMascot() {
           leftLeg.rotation.z = smooth(leftLeg.rotation.z, footerSettled ? -0.42 : -pose.legs + (reactingNow ? -0.14 : 0), 0.05);
           rightLeg.rotation.z = smooth(rightLeg.rotation.z, footerSettled ? 0.42 : pose.legs + (reactingNow ? 0.14 : 0), 0.05);
           antenna.rotation.z = Math.sin(seconds * 2.7) * (reducedMotion ? 0.015 : 0.09);
-          glow.rotation.z += reducedMotion ? 0.0008 : 0.006;
           eyeLeft.scale.y = eyeRight.scale.y = 0.12 * (Math.sin(seconds * 0.8) > 0.997 ? 0.15 : 1);
+          // Give Vee a living expression: the smile gently widens and relaxes instead of staying static.
+          smile.scale.y = reducedMotion ? 1 : 0.88 + (Math.sin(seconds * 2.4) + 1) * 0.13;
+          smile.rotation.z = reducedMotion ? 0 : Math.sin(seconds * 1.35) * 0.035;
           renderer.render(scene, camera);
         };
         setWebglReady(true);
@@ -490,21 +487,36 @@ export default function PortfolioMascot() {
           if (event.button !== 0) return;
           event.currentTarget.setPointerCapture(event.pointerId);
           setIsDragging(true);
+          dragMovedRef.current = false;
+          dragStartRef.current = { x: event.clientX, y: event.clientY };
           const rect = hostRef.current?.getBoundingClientRect();
           if (rect) hostRef.current.dataset.dragOffset = JSON.stringify({ x: event.clientX - rect.left, y: event.clientY - rect.top });
         }}
         onPointerMove={(event) => {
           if (!isDragging) return;
+          const start = dragStartRef.current;
+          if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > 5) dragMovedRef.current = true;
           const offset = JSON.parse(hostRef.current?.dataset.dragOffset || '{"x":0,"y":0}');
           setManualPosition({
             x: clamp(event.clientX - offset.x, 8, window.innerWidth - (isMobile ? 48 : 94) - 8),
             y: clamp(event.clientY - offset.y, 8, window.innerHeight - (isMobile ? 94 : 164)),
           });
         }}
-        onPointerUp={() => setIsDragging(false)}
-        onPointerCancel={() => setIsDragging(false)}
-        className={`pointer-events-auto relative block w-full cursor-pointer touch-manipulation rounded-full outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4 focus-visible:ring-offset-background ${isMobile ? "h-[66px]" : "h-[132px]"}`}
+        onPointerUp={(event) => {
+          if (event.currentTarget.hasPointerCapture?.(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+          setIsDragging(false);
+          dragStartRef.current = null;
+        }}
+        onPointerCancel={() => {
+          setIsDragging(false);
+          dragStartRef.current = null;
+        }}
+        className={`pointer-events-auto relative block w-full ${isDragging ? "cursor-grabbing" : "cursor-grab"} touch-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4 focus-visible:ring-offset-background ${isMobile ? "h-[66px]" : "h-[132px]"}`}
         onClick={() => {
+          if (dragMovedRef.current) {
+            dragMovedRef.current = false;
+            return;
+          }
           if (hasSectionMessage) setMessageOpen((open) => !open);
           setReacting(true);
           window.setTimeout(() => setReacting(false), 1100);
