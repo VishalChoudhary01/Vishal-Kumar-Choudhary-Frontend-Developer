@@ -181,8 +181,8 @@ export default function PortfolioMascot() {
         "[data-mascot-target], form, h1, h2, h3, button, a[href^='#']"
       ) || sectionNode;
       const targetRect = target?.getBoundingClientRect();
-      const mascotWidth = isMobile ? 68 : 94;
-      const mascotHeight = isMobile ? 100 : 142;
+      const mascotWidth = isMobile ? 48 : 94;
+      const mascotHeight = isMobile ? 76 : 142;
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       // Vary the companion's default position around the page, rather than tracking one side.
@@ -454,7 +454,7 @@ export default function PortfolioMascot() {
   return (
     <div
       ref={hostRef}
-      className={`pointer-events-none fixed z-40 flex flex-col items-center ${isMobile ? "w-[68px]" : "hidden w-[94px] md:flex"}`}
+      className={`pointer-events-none fixed z-40 flex flex-col items-center ${isMobile ? "w-[48px]" : "hidden w-[94px] md:flex"}`}
       style={{
         left: mascotPosition.x,
         top: mascotPosition.y,
@@ -475,13 +475,13 @@ export default function PortfolioMascot() {
           if (!isDragging) return;
           const offset = JSON.parse(hostRef.current?.dataset.dragOffset || '{"x":0,"y":0}');
           setManualPosition({
-            x: clamp(event.clientX - offset.x, 8, window.innerWidth - (isMobile ? 68 : 94) - 8),
-            y: clamp(event.clientY - offset.y, 8, window.innerHeight - (isMobile ? 120 : 164)),
+            x: clamp(event.clientX - offset.x, 8, window.innerWidth - (isMobile ? 48 : 94) - 8),
+            y: clamp(event.clientY - offset.y, 8, window.innerHeight - (isMobile ? 94 : 164)),
           });
         }}
         onPointerUp={() => setIsDragging(false)}
         onPointerCancel={() => setIsDragging(false)}
-        className={`pointer-events-auto relative block w-full cursor-pointer touch-manipulation rounded-full outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4 focus-visible:ring-offset-background ${isMobile ? "h-[92px]" : "h-[132px]"}`}
+        className={`pointer-events-auto relative block w-full cursor-pointer touch-manipulation rounded-full outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4 focus-visible:ring-offset-background ${isMobile ? "h-[66px]" : "h-[132px]"}`}
         onClick={() => {
           setMessageOpen((open) => !open);
           setReacting(true);
@@ -523,13 +523,13 @@ export default function PortfolioMascot() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.97 }}
           transition={{ duration: reducedMotion ? 0.01 : 0.22, ease: "easeOut" }}
-          className={`pointer-events-auto mt-[-12px] ${isMobile ? "w-[116px]" : "w-[154px]"} rounded-md border border-border/80 bg-background/95 px-2.5 py-2 text-left text-foreground shadow-lg backdrop-blur-md transition-colors hover:border-brand/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand`}
+          className={`pointer-events-auto mt-[-12px] ${isMobile ? "w-[96px]" : "w-[154px]"} rounded-md border border-border/80 bg-background/95 px-2.5 py-2 text-left text-foreground shadow-lg backdrop-blur-md transition-colors hover:border-brand/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand`}
         >
           <span className="flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-brand">
             <Sparkles size={11} aria-hidden="true" />
             {section.label}
           </span>
-          <span className={`mt-1 block leading-snug ${isMobile ? "text-[9px]" : "text-[10px]"}`}>{section.note}</span>
+          <span className={`mt-1 block leading-snug ${isMobile ? "text-[8px]" : "text-[10px]"}`}>{section.note}</span>
           <span className="mt-1 block text-[9px] font-semibold text-brand/90">{messageOpen ? "Close message −" : "Tap to chat +"}</span>
         </motion.button>
       </AnimatePresence>
@@ -542,7 +542,7 @@ export default function PortfolioMascot() {
             animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
             exit={reducedMotion ? { opacity: 0 } : { opacity: 0, x: -8, y: 3, scale: 0.98 }}
             transition={{ duration: reducedMotion ? 0.01 : 0.2, ease: "easeOut" }}
-            className={`pointer-events-auto absolute right-[calc(100%-4px)] top-1/2 ${isMobile ? "w-44" : "w-52"} -translate-y-1/2 rounded-lg border border-border/70 bg-background/95 p-3 text-foreground shadow-2xl backdrop-blur-xl`}
+            className={`pointer-events-auto absolute right-[calc(100%-4px)] top-1/2 ${isMobile ? "w-40" : "w-52"} -translate-y-1/2 rounded-lg border border-border/70 bg-background/95 p-3 text-foreground shadow-2xl backdrop-blur-xl`}
             role="dialog"
             aria-label={section.label}
           >
