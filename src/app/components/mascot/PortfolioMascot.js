@@ -214,8 +214,8 @@ export default function PortfolioMascot() {
         "[data-mascot-target], form, h1, h2, h3, button, a[href^='#']"
       ) || sectionNode;
       const targetRect = target?.getBoundingClientRect();
-      const mascotWidth = isMobile ? 48 : 94;
-      const mascotHeight = isMobile ? 76 : 142;
+      const mascotWidth = isMobile ? 56 : 94;
+      const mascotHeight = isMobile ? 88 : 142;
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       // Vary the companion's default position around the page, rather than tracking one side.
@@ -590,7 +590,7 @@ export default function PortfolioMascot() {
   return (
     <div
       ref={hostRef}
-      className={`pointer-events-none fixed z-40 flex flex-col items-center ${isMobile ? "w-[48px]" : "hidden w-[94px] md:flex"}`}
+      className={`pointer-events-none fixed z-40 flex flex-col items-center ${isMobile ? "w-[56px]" : "hidden w-[94px] md:flex"}`}
       style={{
         left: mascotPosition.x,
         top: mascotPosition.y,
@@ -615,8 +615,8 @@ export default function PortfolioMascot() {
           if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > 5) dragMovedRef.current = true;
           const offset = JSON.parse(hostRef.current?.dataset.dragOffset || '{"x":0,"y":0}');
           const nextPosition = {
-            x: clamp(event.clientX - offset.x, 8, window.innerWidth - (isMobile ? 48 : 94) - 8),
-            y: clamp(event.clientY - offset.y, 8, window.innerHeight - (isMobile ? 94 : 164)),
+            x: clamp(event.clientX - offset.x, 8, window.innerWidth - (isMobile ? 56 : 94) - 8),
+            y: clamp(event.clientY - offset.y, 8, window.innerHeight - (isMobile ? 106 : 164)),
           };
           // Update the rendered position immediately as well as persisting the user's drag.
           setManualPosition(nextPosition);
@@ -631,7 +631,7 @@ export default function PortfolioMascot() {
           setIsDragging(false);
           dragStartRef.current = null;
         }}
-        className={`pointer-events-auto relative block w-full ${isDragging ? "cursor-grabbing" : "cursor-grab"} touch-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4 focus-visible:ring-offset-background ${isMobile ? "h-[66px]" : "h-[132px]"}`}
+        className={`pointer-events-auto relative block w-full ${isDragging ? "cursor-grabbing" : "cursor-grab"} touch-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4 focus-visible:ring-offset-background ${isMobile ? "h-[76px]" : "h-[132px]"}`}
         onClick={() => {
           if (dragMovedRef.current) {
             dragMovedRef.current = false;
