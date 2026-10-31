@@ -457,6 +457,17 @@ export default function PortfolioMascot() {
           point: { left: 1.0, right: -2.15, lean: -0.08, head: -0.12, legs: 0.05 },
           welcome: { left: 1.5, right: -1.5, lean: 0, head: 0.02, legs: 0 },
         };
+        // Hand choreography for each portfolio section. Values are local joint rotations,
+        // so the hands visibly change gesture as the active section changes.
+        const handGestures = {
+          wave:     { leftElbow: -0.02, rightElbow: -0.24, leftWrist: 0.18, rightWrist: 0.22, leftPalm: -0.24, rightPalm: 0.22 },
+          curious:  { leftElbow: -0.34, rightElbow: -0.08, leftWrist: -0.12, rightWrist: 0.04, leftPalm: -0.32, rightPalm: 0.08 },
+          inspect:  { leftElbow: -0.42, rightElbow: -0.14, leftWrist: 0.08, rightWrist: -0.04, leftPalm: -0.12, rightPalm: 0.04 },
+          excited:  { leftElbow: 0.08, rightElbow: -0.08, leftWrist: 0.16, rightWrist: -0.16, leftPalm: -0.2, rightPalm: 0.2 },
+          work:     { leftElbow: -0.18, rightElbow: -0.36, leftWrist: 0.02, rightWrist: -0.12, leftPalm: -0.08, rightPalm: 0.14 },
+          point:    { leftElbow: -0.12, rightElbow: -0.28, leftWrist: 0.02, rightWrist: -0.2, leftPalm: -0.06, rightPalm: 0.28 },
+          welcome:  { leftElbow: -0.04, rightElbow: -0.04, leftWrist: 0.12, rightWrist: -0.12, leftPalm: -0.26, rightPalm: 0.26 },
+        };
         const smooth = (current, target, amount) => current + (target - current) * amount;
         const render = (time) => {
           if (disposed) return;
@@ -497,15 +508,16 @@ export default function PortfolioMascot() {
           const playfulArm = idlePlay ? Math.sin(seconds * 2.2 + Math.PI) * 0.22 : 0;
           const rightWave = reactingNow ? Math.sin(seconds * 18) * 0.65 : playfulArm + (greeting ? -0.22 : 0);
           rightArm.rotation.z = smooth(rightArm.rotation.z, rightArmTarget + rightWave, 0.07);
-          // Secondary joints lag slightly behind the shoulders for a connected, soft gesture.
-          leftElbow.rotation.z = smooth(leftElbow.rotation.z, -0.22 + Math.max(0, leftWave) * 0.28, 0.08);
-          rightElbow.rotation.z = smooth(rightElbow.rotation.z, (SECTIONS[activeIndex]?.pose === "point" ? -0.28 : -0.24) + Math.max(0, rightWave) * 0.22, 0.08);
-          leftWrist.rotation.z = smooth(leftWrist.rotation.z, greeting || reactingNow ? Math.sin(seconds * 18) * 0.18 : 0, 0.1);
-          const rightWristTarget = SECTIONS[activeIndex]?.pose === "point" ? -0.12 : (SECTIONS[activeIndex]?.pose === "wave" || greeting || reactingNow ? Math.sin(seconds * 13) * 0.24 : 0);
-          rightWrist.rotation.z = smooth(rightWrist.rotation.z, rightWristTarget, 0.12);
-          // Turn the glove's palm slightly toward the viewer during greetings and reactions.
-          leftHand.rotation.y = smooth(leftHand.rotation.y, greeting || reactingNow ? -0.22 : 0, 0.1);
-          rightHand.rotation.y = smooth(rightHand.rotation.y, SECTIONS[activeIndex]?.pose === "wave" || greeting || reactingNow ? 0.22 : 0, 0.1);
+          // Secondary joints and palms follow a section-specific gesture with eased transitions.
+          const gesture = handGestures[SECTIONS[activeIndex]?.pose] || handGestures.wave;
+          const waveMotion = greeting || reactingNow ? Math.sin(seconds * 18) : 0;
+          leftElbow.rotation.z = smooth(leftElbow.rotation.z, gesture.leftElbow + Math.max(0, leftWave) * 0.2, 0.09);
+          rightElbow.rotation.z = smooth(rightElbow.rotation.z, gesture.rightElbow + Math.max(0, rightWave) * 0.18, 0.09);
+          leftWrist.rotation.z = smooth(leftWrist.rotation.z, gesture.leftWrist + waveMotion * 0.18, 0.11);
+          rightWrist.rotation.z = smooth(rightWrist.rotation.z, gesture.rightWrist + waveMotion * 0.18, 0.11);
+          // Rotate palms to communicate each section's gesture, not just move the whole arm.
+          leftHand.rotation.y = smooth(leftHand.rotation.y, gesture.leftPalm + (greeting || reactingNow ? -0.12 : 0), 0.1);
+          rightHand.rotation.y = smooth(rightHand.rotation.y, gesture.rightPalm + (greeting || reactingNow ? 0.12 : 0), 0.1);
           // Randomized facial acting: eye shape/spacing, brow angle, smile stretch, and a tiny head tilt.
           const faceExpression = expressionActive ? activeExpression : (idlePlay ? "curious" : "happy");
           const surprised = faceExpression === "surprised";
