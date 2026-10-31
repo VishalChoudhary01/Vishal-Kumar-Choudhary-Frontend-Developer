@@ -346,7 +346,8 @@ export default function PortfolioMascot() {
         // The extra overlap keeps the silhouette connected when Vee waves or points.
         const makeArm = (side) => {
           const arm = new THREE.Group();
-          arm.position.set(side * 0.68, -0.14, 0.24);
+          // Anchor each arm at the upper edge of the torso instead of mid-body.
+          arm.position.set(side * 0.68, 0.18, 0.24);
           torso.add(arm);
           sphere(shellShade, arm, [0, 0, 0], [0.225, 0.225, 0.22]);
           capsule(shell, arm, [0, -0.29, 0], [0.195, 0.49, 0.19]);
@@ -367,6 +368,8 @@ export default function PortfolioMascot() {
           const hand = new THREE.Group();
           hand.position.set(0, -0.105, 0.12);
           wrist.add(hand);
+          // Keep the glove compact while preserving its detailed fingers.
+          hand.scale.setScalar(0.78);
           sphere(shell, hand, [0, -0.025, 0.045], [0.145, 0.125, 0.095]);
           capsule(shellShade, hand, [0, 0.075, 0.02], [0.112, 0.04, 0.085]);
           // Four separate slim fingers with slightly staggered lengths and rounded ends.
