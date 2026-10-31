@@ -353,21 +353,23 @@ export default function PortfolioMascot() {
           elbow.add(wrist);
           sphere(shell, wrist, [0, 0, 0], [0.145, 0.13, 0.145]);
 
-          // A compact palm with short, rounded digits; all parts belong to the wrist,
-          // so the glove follows the forearm instead of floating beside it.
+          // Slim, finished robot glove: a flatter palm and distinct tapered-looking fingers,
+          // avoiding the oversized round mitten silhouette. The whole hand follows the wrist.
           const hand = new THREE.Group();
           hand.position.set(0, -0.105, 0.12);
           wrist.add(hand);
-          // Warm ivory glove: keep the hand consistent with Vee's shell instead of using teal/orange on the palm.
-          sphere(shell, hand, [0, -0.035, 0.055], [0.19, 0.165, 0.145]);
-          capsule(shellShade, hand, [0, 0.105, 0.025], [0.145, 0.065, 0.13]);
-          capsule(shell, hand, [-0.075, -0.145, 0.105], [0.05, 0.095, 0.05]);
-          capsule(shell, hand, [0, -0.16, 0.12], [0.052, 0.1, 0.05]);
-          capsule(shell, hand, [0.075, -0.145, 0.105], [0.05, 0.095, 0.05]);
-          sphere(shell, hand, [side * -0.145, -0.045, 0.13], [0.07, 0.095, 0.06]);
+          sphere(shell, hand, [0, -0.025, 0.045], [0.145, 0.125, 0.095]);
+          capsule(shellShade, hand, [0, 0.075, 0.02], [0.112, 0.04, 0.085]);
+          // Four separate slim fingers with slightly staggered lengths and rounded ends.
+          capsule(shell, hand, [-0.078, -0.125, 0.075], [0.027, 0.105, 0.027]);
+          capsule(shell, hand, [-0.026, -0.145, 0.085], [0.028, 0.12, 0.028]);
+          capsule(shell, hand, [0.029, -0.14, 0.085], [0.028, 0.115, 0.028]);
+          capsule(shell, hand, [0.08, -0.115, 0.07], [0.026, 0.095, 0.026]);
+          // A short thumb sits close to the palm rather than sticking out as a round knob.
+          capsule(shell, hand, [side * -0.12, -0.045, 0.095], [0.03, 0.075, 0.03]);
           if (side > 0) {
-            // The right glove has a readable index digit for pointing poses.
-            capsule(shell, hand, [0.15, 0.015, 0.13], [0.05, 0.14, 0.05]);
+            // Keep the pointing index longer and narrow enough to read as a finger.
+            capsule(shell, hand, [0.13, 0.005, 0.09], [0.028, 0.13, 0.028]);
           }
           return { arm, elbow, wrist, hand };
         };
