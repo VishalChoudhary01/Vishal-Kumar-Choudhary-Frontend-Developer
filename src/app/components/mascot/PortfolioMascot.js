@@ -161,8 +161,9 @@ export default function PortfolioMascot() {
       let nearest = 0;
       let nearestDistance = Infinity;
       const marker = window.innerHeight * 0.42;
-      const footer = document.querySelector("footer");
-      const footerReached = Boolean(footer && footer.getBoundingClientRect().top < window.innerHeight * 0.72 && footer.getBoundingClientRect().bottom > 80);
+      const footer = document.querySelector("footer, #footer, [data-footer], .site-footer");
+      const atPageEnd = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 48;
+      const footerReached = atPageEnd || Boolean(footer && footer.getBoundingClientRect().top < window.innerHeight * 0.82 && footer.getBoundingClientRect().bottom > 80);
       footerActiveRef.current = footerReached;
       SECTIONS.forEach((section, index) => {
         const node = document.getElementById(section.id);
@@ -202,9 +203,9 @@ export default function PortfolioMascot() {
       if (footerReached && targetRect) {
         // Settle on the footer instead of continuing to float over its content.
         // Park low in the visible footer area so the companion feels settled there.
-        x = clamp(viewportWidth - mascotWidth - 24, 8, viewportWidth - mascotWidth - 8);
-        y = clamp(Math.max(targetRect.top + 12, viewportHeight - mascotHeight - 54), 72, viewportHeight - mascotHeight - 8);
-      } else if (targetRect && targetRect.width > 0 && targetRect.height > 0) {
+        x = clamp(viewportWidth * (isMobile ? 0.5 : 0.72) - mascotWidth / 2, 8, viewportWidth - mascotWidth - 8);
+        y = clamp(Math.min(targetRect.top + 24, viewportHeight - mascotHeight - (isMobile ? 18 : 12)), 72, viewportHeight - mascotHeight - 8);
+      } else if (!isMobile && targetRect && targetRect.width > 0 && targetRect.height > 0) {
         const preferRight = nearest % 2 === 0;
         x = preferRight ? targetRect.right + 10 : targetRect.left - mascotWidth - 10;
         if (x + mascotWidth > viewportWidth - 8) x = targetRect.left - mascotWidth - 10;
