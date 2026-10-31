@@ -813,6 +813,7 @@ export default function PortfolioMascot() {
             transition={{ duration: 0.45, repeat: 2, ease: "easeInOut" }}
           />
         )}
+      </AnimatePresence>
       <motion.button
         type="button"
         onClick={(event) => {
