@@ -25,7 +25,7 @@ export default function PortfolioMascot() {
   const [active, setActive] = useState(0);
   const [messageOpen, setMessageOpen] = useState(false);
   const [webglReady, setWebglReady] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
+  const [mascotPosition, setMascotPosition] = useState({ x: 0, y: 0 });
   const [reacting, setReacting] = useState(false);
 
   useEffect(() => {
@@ -79,7 +79,6 @@ export default function PortfolioMascot() {
     const updateScroll = () => {
       const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
       progress = clamp(window.scrollY / maxScroll, 0, 1);
-      setScrollProgress(progress);
       let nearest = 0;
       let nearestDistance = Infinity;
       const marker = window.innerHeight * 0.42;
@@ -95,6 +94,32 @@ export default function PortfolioMascot() {
       });
       activeIndex = nearest;
       setActive(nearest);
+
+      // Follow the active section's content instead of staying pinned to one side.
+      // Place the companion beside a heading or primary interactive element, keeping
+      // it inside the viewport and away from the center of the target where possible.
+      const sectionId = SECTIONS[nearest]?.id;
+      const sectionNode = sectionId ? document.getElementById(sectionId) : null;
+      const target = sectionNode?.querySelector(
+        "h1, h2, h3, form, [data-mascot-target], a[href^='#'], button"
+      ) || sectionNode;
+      const targetRect = target?.getBoundingClientRect();
+      const mascotWidth = 94;
+      const mascotHeight = 142;
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      let x = viewportWidth * (nearest % 2 === 0 ? 0.78 : 0.22);
+      let y = viewportHeight * (0.25 + progress * 0.42);
+      if (targetRect && targetRect.width > 0 && targetRect.height > 0) {
+        const preferRight = nearest % 2 === 0;
+        x = preferRight ? targetRect.right + 10 : targetRect.left - mascotWidth - 10;
+        if (x + mascotWidth > viewportWidth - 8) x = targetRect.left - mascotWidth - 10;
+        if (x < 8) x = targetRect.right + 10;
+        y = targetRect.top + Math.min(targetRect.height * 0.1, 22);
+      }
+      x = clamp(x, 8, Math.max(8, viewportWidth - mascotWidth - 8));
+      y = clamp(y, 72, Math.max(72, viewportHeight - mascotHeight - 42));
+      setMascotPosition({ x, y });
     };
     updateScroll();
     window.addEventListener("scroll", updateScroll, { passive: true });
@@ -298,18 +323,21 @@ export default function PortfolioMascot() {
   }, [reducedMotion]);
 
   const section = SECTIONS[active] || SECTIONS[0];
-  const top = reducedMotion ? "42vh" : (14 + scrollProgress * 50) + "vh";
 
   return (
     <div
       ref={hostRef}
-      className="pointer-events-auto fixed right-2 z-40 flex w-[124px] flex-col items-center sm:right-5 sm:w-[160px]"
-      style={{ top, transition: reducedMotion ? "none" : "top 420ms cubic-bezier(.2,.75,.25,1)" }}
+      className="pointer-events-none fixed z-40 hidden w-[94px] flex-col items-center md:flex"
+      style={{
+        left: mascotPosition.x,
+        top: mascotPosition.y,
+        transition: reducedMotion ? "none" : "left 650ms cubic-bezier(.2,.75,.25,1), top 650ms cubic-bezier(.2,.75,.25,1)",
+      }}
       aria-label="Interactive 3D portfolio companion"
     >
       <button
         type="button"
-        className="relative block h-[174px] w-full cursor-pointer touch-manipulation rounded-full outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4 focus-visible:ring-offset-background sm:h-[218px]"
+        className="pointer-events-auto relative block h-[132px] w-full cursor-pointer touch-manipulation rounded-full outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4 focus-visible:ring-offset-background"
         onClick={() => {
           setMessageOpen((open) => !open);
           setReacting(true);
@@ -337,14 +365,14 @@ export default function PortfolioMascot() {
         <span className="sr-only">Currently exploring: {section.label}</span>
       </button>
 
-      <div className="mt-[-20px] flex items-center gap-1 rounded-full border border-border/70 bg-background/90 px-2.5 py-1.5 text-[10px] font-medium text-foreground shadow-lg backdrop-blur-md sm:text-xs">
+      <div className="pointer-events-none mt-[-14px] flex items-center gap-1 rounded-full border border-border/70 bg-background/90 px-2 py-1 text-[9px] font-medium text-foreground shadow-lg backdrop-blur-md">
         <Sparkles size={12} className="text-brand" aria-hidden="true" />
         <span>{section.label}</span>
         <ArrowDown size={11} className="opacity-60" aria-hidden="true" />
       </div>
 
       {messageOpen && (
-        <div className="absolute right-[calc(100%-8px)] top-1/2 w-[min(230px,calc(100vw-150px))] -translate-y-1/2 rounded-xl border border-border/70 bg-background/95 p-3 text-foreground shadow-2xl backdrop-blur-xl sm:right-[calc(100%-18px)] sm:w-56">
+        <div className="pointer-events-auto absolute right-[calc(100%-4px)] top-1/2 w-52 -translate-y-1/2 rounded-lg border border-border/70 bg-background/95 p-3 text-foreground shadow-2xl backdrop-blur-xl">
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-brand">{section.label} section</p>
           <p className="mt-1 text-sm font-semibold">{section.note}</p>
           <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">Keep scrolling and I’ll explore the portfolio with you.</p>
