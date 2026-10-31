@@ -64,6 +64,8 @@ export default function PortfolioMascot() {
     let reactionUntil = 0;
     let startTime = 0;
     let resizeObserver;
+    let targetFacingX = 0;
+    let targetFacingY = 0;
 
     const canvas = canvasRef.current;
     const host = hostRef.current;
@@ -130,6 +132,18 @@ export default function PortfolioMascot() {
       }
       x = clamp(x, 8, Math.max(8, viewportWidth - mascotWidth - 8));
       y = clamp(y, 72, Math.max(72, viewportHeight - mascotHeight - 42));
+
+      if (targetRect) {
+        const mascotCenterX = x + mascotWidth / 2;
+        const mascotCenterY = y + mascotHeight / 2;
+        const targetCenterX = targetRect.left + targetRect.width / 2;
+        const targetCenterY = targetRect.top + targetRect.height / 2;
+        targetFacingX = clamp((targetCenterX - mascotCenterX) / Math.max(1, viewportWidth * 0.3), -1, 1);
+        targetFacingY = clamp((targetCenterY - mascotCenterY) / Math.max(1, viewportHeight * 0.3), -1, 1);
+      } else {
+        targetFacingX = 0;
+        targetFacingY = 0;
+      }
       setMascotPosition({ x, y });
     };
     updateScroll();
@@ -221,12 +235,26 @@ export default function PortfolioMascot() {
         sphere(shellShade, leftArm, [0, 0, 0], [0.22, 0.22, 0.22]);
         capsule(shell, leftArm, [0, -0.34, 0], [0.2, 0.56, 0.2]);
         sphere(shell, leftArm, [0, -0.68, 0.05], [0.22, 0.2, 0.22]);
+        // Soft articulated hand: palm, fingers and thumb make gestures readable at small size.
+        sphere(shell, leftArm, [0, -0.82, 0.12], [0.17, 0.16, 0.14]);
+        capsule(shellShade, leftArm, [-0.095, -0.91, 0.15], [0.045, 0.13, 0.045]);
+        capsule(shellShade, leftArm, [-0.025, -0.95, 0.17], [0.04, 0.12, 0.04]);
+        capsule(shellShade, leftArm, [0.045, -0.94, 0.17], [0.04, 0.11, 0.04]);
+        capsule(shellShade, leftArm, [0.105, -0.9, 0.14], [0.04, 0.09, 0.04]);
+        sphere(shellShade, leftArm, [0.13, -0.79, 0.18], [0.06, 0.09, 0.06]);
         rightArm = new THREE.Group();
         rightArm.position.set(0.7, -0.16, 0);
         torso.add(rightArm);
         sphere(shellShade, rightArm, [0, 0, 0], [0.22, 0.22, 0.22]);
         capsule(shell, rightArm, [0, -0.34, 0], [0.2, 0.56, 0.2]);
         sphere(shell, rightArm, [0, -0.68, 0.05], [0.22, 0.2, 0.22]);
+        sphere(shell, rightArm, [0, -0.82, 0.12], [0.17, 0.16, 0.14]);
+        // Index finger is longer, so pointing reads clearly toward the page content.
+        capsule(shellShade, rightArm, [0.15, -0.79, 0.18], [0.045, 0.19, 0.045]);
+        capsule(shellShade, rightArm, [-0.095, -0.91, 0.15], [0.045, 0.13, 0.045]);
+        capsule(shellShade, rightArm, [-0.025, -0.95, 0.17], [0.04, 0.12, 0.04]);
+        capsule(shellShade, rightArm, [0.045, -0.94, 0.17], [0.04, 0.11, 0.04]);
+        sphere(shellShade, rightArm, [-0.13, -0.79, 0.18], [0.06, 0.09, 0.06]);
 
         // Oversized helmet, inset visor, bright eyes and antenna.
         head = new THREE.Group();
@@ -292,10 +320,17 @@ export default function PortfolioMascot() {
           root.position.y = idle + (reactingNow ? Math.sin(seconds * 13) * 0.08 : 0);
           root.rotation.y = smooth(root.rotation.y, pointerX * 0.55 + (activeIndex === 5 ? -0.13 : 0), 0.055);
           root.rotation.z = smooth(root.rotation.z, pose.lean + pointerY * 0.1, 0.055);
-          head.rotation.y = smooth(head.rotation.y, pointerX * 0.7 + pose.head, 0.07);
-          head.rotation.x = smooth(head.rotation.x, -pointerY * 0.4, 0.07);
+          // The face looks toward the active heading/form/card, not only toward the cursor.
+          const faceYaw = targetFacingX * 0.48 + pointerX * 0.22 + pose.head;
+          const facePitch = -targetFacingY * 0.2 - pointerY * 0.16;
+          head.rotation.y = smooth(head.rotation.y, faceYaw, 0.075);
+          head.rotation.x = smooth(head.rotation.x, facePitch, 0.075);
           leftArm.rotation.z = smooth(leftArm.rotation.z, pose.left + (reactingNow ? Math.sin(seconds * 18) * 0.65 : 0), 0.07);
-          rightArm.rotation.z = smooth(rightArm.rotation.z, pose.right + (reactingNow ? Math.sin(seconds * 18) * 0.65 : 0), 0.07);
+          const pointingRight = targetFacingX >= 0;
+          const rightArmTarget = SECTIONS[activeIndex]?.pose === "point"
+            ? (pointingRight ? -1.65 : 1.65)
+            : pose.right;
+          rightArm.rotation.z = smooth(rightArm.rotation.z, rightArmTarget + (reactingNow ? Math.sin(seconds * 18) * 0.65 : 0), 0.07);
           leftLeg.rotation.z = smooth(leftLeg.rotation.z, -pose.legs + (reactingNow ? -0.14 : 0), 0.05);
           rightLeg.rotation.z = smooth(rightLeg.rotation.z, pose.legs + (reactingNow ? 0.14 : 0), 0.05);
           antenna.rotation.z = Math.sin(seconds * 2.7) * (reducedMotion ? 0.015 : 0.09);
@@ -376,17 +411,24 @@ export default function PortfolioMascot() {
         <span className="sr-only">Currently exploring: {section.label}</span>
       </button>
 
-      <div className="pointer-events-none mt-[-14px] flex items-center gap-1 rounded-full border border-border/70 bg-background/90 px-2 py-1 text-[9px] font-medium text-foreground shadow-lg backdrop-blur-md">
-        <Sparkles size={12} className="text-brand" aria-hidden="true" />
-        <span>{section.label}</span>
-        <ArrowDown size={11} className="opacity-60" aria-hidden="true" />
-      </div>
+      <button
+        type="button"
+        onClick={() => setMessageOpen((open) => !open)}
+        aria-expanded={messageOpen}
+        className="pointer-events-auto mt-[-12px] w-[154px] rounded-md border border-border/80 bg-background/95 px-2.5 py-2 text-left text-foreground shadow-lg backdrop-blur-md transition-colors hover:border-brand/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      >
+        <span className="flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-brand">
+          <Sparkles size={11} aria-hidden="true" />
+          {section.label}
+        </span>
+        <span className="mt-1 block text-[10px] leading-snug">{section.note}</span>
+      </button>
 
       {messageOpen && (
         <div className="pointer-events-auto absolute right-[calc(100%-4px)] top-1/2 w-52 -translate-y-1/2 rounded-lg border border-border/70 bg-background/95 p-3 text-foreground shadow-2xl backdrop-blur-xl">
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-brand">{section.label} section</p>
           <p className="mt-1 text-sm font-semibold">{section.note}</p>
-          <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">Keep scrolling and I’ll explore the portfolio with you.</p>
+          <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">I’m following the page with you. Click “Explore next section” or keep scrolling to see what I find.</p>
           <button
             type="button"
             className="mt-2 text-xs font-semibold text-brand underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
