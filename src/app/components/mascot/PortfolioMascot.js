@@ -358,9 +358,9 @@ export default function PortfolioMascot() {
           const hand = new THREE.Group();
           hand.position.set(0, -0.105, 0.12);
           wrist.add(hand);
-          sphere(teal, hand, [0, -0.035, 0.055], [0.19, 0.165, 0.145]);
-          // A contrasting glove cuff makes the palm readable against the pale forearm.
-          capsule(orange, hand, [0, 0.105, 0.025], [0.145, 0.065, 0.13]);
+          // Warm ivory glove: keep the hand consistent with Vee's shell instead of using teal/orange on the palm.
+          sphere(shell, hand, [0, -0.035, 0.055], [0.19, 0.165, 0.145]);
+          capsule(shellShade, hand, [0, 0.105, 0.025], [0.145, 0.065, 0.13]);
           capsule(shell, hand, [-0.075, -0.145, 0.105], [0.05, 0.095, 0.05]);
           capsule(shell, hand, [0, -0.16, 0.12], [0.052, 0.1, 0.05]);
           capsule(shell, hand, [0.075, -0.145, 0.105], [0.05, 0.095, 0.05]);
