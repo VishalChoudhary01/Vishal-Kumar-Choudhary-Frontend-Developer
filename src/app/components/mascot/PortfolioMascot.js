@@ -543,46 +543,40 @@ export default function PortfolioMascot() {
         </motion.button>
       </AnimatePresence>}
 
-      <AnimatePresence>
-        {messageOpen && hasSectionMessage && typeof document !== "undefined" && createPortal(
-          <motion.div
-            key={section.id + "-message"}
-            initial={reducedMotion ? { opacity: 0 } : { opacity: 0, x: -10, y: 5, scale: 0.97 }}
-            animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-            exit={reducedMotion ? { opacity: 0 } : { opacity: 0, x: -8, y: 3, scale: 0.98 }}
-            transition={{ duration: reducedMotion ? 0.01 : 0.2, ease: "easeOut" }}
-            className={`pointer-events-auto fixed z-[9999] rounded-lg border border-border/70 bg-background/95 p-3 text-foreground shadow-2xl backdrop-blur-xl ${isMobile ? "left-3 right-3 w-auto" : "w-52"}`}
-            style={isMobile ? { top: "calc(env(safe-area-inset-top, 0px) + 76px)", left: "12px", right: "12px", maxHeight: "calc(100dvh - env(safe-area-inset-top, 0px) - 92px)", overflowY: "auto" } : { left: Math.max(8, mascotPosition.x - 170), top: Math.max(76, mascotPosition.y + 24), maxHeight: "min(70vh, 480px)", overflowY: "auto" }}
-            role="dialog"
-            aria-label={section.label}
-          >
+      {messageOpen && hasSectionMessage && typeof document !== "undefined" && createPortal(
+        <div
+          key={section.id + "-message"}
+          className="pointer-events-auto fixed z-[99999] rounded-lg border border-border/70 bg-background p-4 text-foreground shadow-2xl"
+          style={isMobile
+            ? { top: "calc(env(safe-area-inset-top, 0px) + 84px)", left: "12px", right: "12px", width: "auto", maxHeight: "calc(100dvh - env(safe-area-inset-top, 0px) - 104px)", overflowY: "auto" }
+            : { left: Math.max(12, Math.min(window.innerWidth - 236, mascotPosition.x + 100)), top: Math.max(160, Math.min(window.innerHeight - 250, mascotPosition.y + 24)), width: "220px", maxHeight: "min(70vh, 480px)", overflowY: "auto" }}
+          role="dialog"
+          aria-label={section.label}
+        >
+          <div className="flex items-start justify-between gap-3">
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-brand">Vee's guide · {section.id === "hero" ? "Welcome" : section.label}</p>
-            <p className="mt-1 text-sm font-semibold">{section.note}</p>
-            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{section.detail}</p>
-            <button
-              type="button"
-              className="mt-2 text-xs font-semibold text-brand underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-              onClick={(event) => {
-                event.stopPropagation();
-                setMessageOpen(false);
-                const nextId = section.id === "contact" ? "contact" : SECTIONS[Math.min(active + 1, SECTIONS.length - 1)].id;
-                const targetSection = document.getElementById(nextId);
-                const target = section.id === "contact"
-                  ? targetSection?.querySelector("form, [data-contact-form], button[type='submit'], input, textarea")
-                  : targetSection;
-                target?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: section.id === "contact" ? "center" : "start" });
-                if (section.id === "contact") {
-                  window.setTimeout(() => target?.querySelector?.("input, textarea, button")?.focus?.({ preventScroll: true }), reducedMotion ? 0 : 450);
-                }
-              }}
-            >
-              {section.action}
-              <ArrowDown size={11} className="ml-1 inline-block" aria-hidden="true" />
-            </button>
-          </motion.div>,
-          document.body
-        )}
-      </AnimatePresence>
+            <button type="button" onClick={() => setMessageOpen(false)} className="shrink-0 rounded-sm px-2 py-1 text-xs font-semibold text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-brand" aria-label="Close section message">Close ×</button>
+          </div>
+          <p className="mt-2 text-sm font-semibold">{section.note}</p>
+          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{section.detail}</p>
+          <button
+            type="button"
+            className="mt-3 text-xs font-semibold text-brand underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            onClick={(event) => {
+              event.stopPropagation();
+              setMessageOpen(false);
+              const nextId = section.id === "contact" ? "contact" : SECTIONS[Math.min(active + 1, SECTIONS.length - 1)].id;
+              const targetSection = document.getElementById(nextId);
+              const target = section.id === "contact" ? targetSection?.querySelector("form, [data-contact-form], button[type='submit'], input, textarea") : targetSection;
+              target?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: section.id === "contact" ? "center" : "start" });
+              if (section.id === "contact") window.setTimeout(() => target?.querySelector?.("input, textarea, button")?.focus?.({ preventScroll: true }), reducedMotion ? 0 : 450);
+            }}
+          >
+            {section.action}<ArrowDown size={11} className="ml-1 inline-block" aria-hidden="true" />
+          </button>
+        </div>,
+        document.body
+      )}
       {reacting && <span className="sr-only" aria-live="polite">Mascot reacted to your interaction.</span>}
     </div>
   );
