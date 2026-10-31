@@ -315,26 +315,25 @@ export default function PortfolioMascot() {
         sphere(shellShade, leftArm, [0, 0, 0], [0.22, 0.22, 0.22]);
         capsule(shell, leftArm, [0, -0.34, 0], [0.2, 0.56, 0.2]);
         sphere(shell, leftArm, [0, -0.68, 0.05], [0.22, 0.2, 0.22]);
-        // Soft articulated hand: palm, fingers and thumb make gestures readable at small size.
-        sphere(shell, leftArm, [0, -0.82, 0.12], [0.17, 0.16, 0.14]);
-        capsule(shellShade, leftArm, [-0.095, -0.91, 0.15], [0.045, 0.13, 0.045]);
-        capsule(shellShade, leftArm, [-0.025, -0.95, 0.17], [0.04, 0.12, 0.04]);
-        capsule(shellShade, leftArm, [0.045, -0.94, 0.17], [0.04, 0.11, 0.04]);
-        capsule(shellShade, leftArm, [0.105, -0.9, 0.14], [0.04, 0.09, 0.04]);
-        sphere(shellShade, leftArm, [0.13, -0.79, 0.18], [0.06, 0.09, 0.06]);
+        // Rounded glove-like hand with three short, softly fanned fingers and a thumb.
+        sphere(shell, leftArm, [0, -0.82, 0.12], [0.19, 0.17, 0.15]);
+        capsule(shellShade, leftArm, [-0.085, -0.94, 0.17], [0.052, 0.105, 0.05]);
+        capsule(shellShade, leftArm, [0, -0.97, 0.19], [0.052, 0.11, 0.05]);
+        capsule(shellShade, leftArm, [0.085, -0.94, 0.17], [0.052, 0.105, 0.05]);
+        sphere(shellShade, leftArm, [0.16, -0.82, 0.19], [0.075, 0.105, 0.065]);
         rightArm = new THREE.Group();
         rightArm.position.set(0.7, -0.16, 0);
         torso.add(rightArm);
         sphere(shellShade, rightArm, [0, 0, 0], [0.22, 0.22, 0.22]);
         capsule(shell, rightArm, [0, -0.34, 0], [0.2, 0.56, 0.2]);
         sphere(shell, rightArm, [0, -0.68, 0.05], [0.22, 0.2, 0.22]);
-        sphere(shell, rightArm, [0, -0.82, 0.12], [0.17, 0.16, 0.14]);
-        // Index finger is longer, so pointing reads clearly toward the page content.
-        capsule(shellShade, rightArm, [0.15, -0.79, 0.18], [0.045, 0.19, 0.045]);
-        capsule(shellShade, rightArm, [-0.095, -0.91, 0.15], [0.045, 0.13, 0.045]);
-        capsule(shellShade, rightArm, [-0.025, -0.95, 0.17], [0.04, 0.12, 0.04]);
-        capsule(shellShade, rightArm, [0.045, -0.94, 0.17], [0.04, 0.11, 0.04]);
-        sphere(shellShade, rightArm, [-0.13, -0.79, 0.18], [0.06, 0.09, 0.06]);
+        sphere(shell, rightArm, [0, -0.82, 0.12], [0.19, 0.17, 0.15]);
+        // A distinct index finger keeps pointing gestures readable; the remaining fingers stay compact.
+        capsule(shellShade, rightArm, [0.16, -0.78, 0.19], [0.052, 0.17, 0.05]);
+        capsule(shellShade, rightArm, [-0.075, -0.94, 0.17], [0.052, 0.105, 0.05]);
+        capsule(shellShade, rightArm, [0.015, -0.97, 0.19], [0.052, 0.11, 0.05]);
+        capsule(shellShade, rightArm, [0.095, -0.94, 0.17], [0.052, 0.105, 0.05]);
+        sphere(shellShade, rightArm, [-0.15, -0.82, 0.19], [0.075, 0.105, 0.065]);
 
         // Oversized helmet, inset visor, bright eyes and antenna.
         head = new THREE.Group();
@@ -344,7 +343,21 @@ export default function PortfolioMascot() {
         sphere(dark, head, [0, -0.02, 0.53], [0.67, 0.43, 0.2], 32);
         eyeLeft = sphere(teal, head, [-0.25, 0.03, 0.7], [0.09, 0.12, 0.045], 20);
         eyeRight = sphere(teal, head, [0.25, 0.03, 0.7], [0.09, 0.12, 0.045], 20);
-        sphere(orange, head, [0, -0.28, 0.69], [0.08, 0.025, 0.025], 16);
+        // A curved, softly glowing smile reads more clearly than a tiny flat mouth.
+        const smileCurve = new THREE.CatmullRomCurve3([
+          new THREE.Vector3(-0.19, -0.205, 0.69),
+          new THREE.Vector3(-0.11, -0.265, 0.72),
+          new THREE.Vector3(0, -0.285, 0.735),
+          new THREE.Vector3(0.11, -0.265, 0.72),
+          new THREE.Vector3(0.19, -0.205, 0.69),
+        ]);
+        const smile = new THREE.Mesh(
+          new THREE.TubeGeometry(smileCurve, 20, 0.022, 8, false),
+          new THREE.MeshStandardMaterial({ color: 0xffbd78, emissive: 0xb75a26, emissiveIntensity: 0.65, roughness: 0.3 }),
+        );
+        head.add(smile);
+        sphere(teal, head, [-0.34, -0.18, 0.57], [0.07, 0.035, 0.018], 16);
+        sphere(teal, head, [0.34, -0.18, 0.57], [0.07, 0.035, 0.018], 16);
         // Side ear modules and metallic rings give the character depth.
         sphere(shellShade, head, [-0.82, 0.03, 0], [0.18, 0.29, 0.25]);
         sphere(orange, head, [-0.91, 0.03, 0.13], [0.045, 0.12, 0.12]);
