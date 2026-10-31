@@ -1,233 +1,368 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { ArrowUpRight, MessageCircle, Sparkles, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useReducedMotion } from "motion/react";
+import { ArrowDown, Sparkles } from "lucide-react";
 
-const SECTION_MESSAGES = {
-  hero: {
-    eyebrow: "YOUR PORTFOLIO COMPANION",
-    title: "Hey, welcome!",
-    message: "I'm your little guide. Want to explore what Vishal builds?",
-    action: "Explore projects",
-    href: "#projects",
-  },
-  about: {
-    eyebrow: "A LITTLE ABOUT VISHAL",
-    title: "Curious by nature.",
-    message: "Vishal enjoys turning thoughtful ideas into polished, interactive interfaces.",
-    action: "See the projects",
-    href: "#projects",
-  },
-  education: {
-    eyebrow: "THE FOUNDATIONS",
-    title: "Always learning.",
-    message: "Good products come from strong fundamentals and a willingness to keep growing.",
-    action: "Explore his skills",
-    href: "#skills",
-  },
-  skills: {
-    eyebrow: "TOOLS OF THE TRADE",
-    title: "Built with intent.",
-    message: "React, Next.js, JavaScript, Tailwind CSS, and motion—chosen to solve real UI problems.",
-    action: "See the experience",
-    href: "#experience",
-  },
-  experience: {
-    eyebrow: "REAL-WORLD WORK",
-    title: "Ideas in action.",
-    message: "Take a look at the teams, products, and interface work that shaped his journey.",
-    action: "View projects",
-    href: "#projects",
-  },
-  projects: {
-    eyebrow: "MADE TO BE EXPLORED",
-    title: "The fun part!",
-    message: "Explore the projects, interactions, and details. Each one has a story behind it.",
-    action: "Let's connect",
-    href: "#contact",
-  },
-  contact: {
-    eyebrow: "YOUR TURN",
-    title: "Have an idea?",
-    message: "If you have a project or opportunity in mind, Vishal would love to hear from you.",
-    action: "Go to contact",
-    href: "#contact",
-  },
-};
+const SECTIONS = [
+  { id: "hero", label: "Intro", note: "Hey! Scroll with me.", pose: "wave" },
+  { id: "about", label: "About", note: "A little about Vishal.", pose: "curious" },
+  { id: "education", label: "Education", note: "Strong foundations matter.", pose: "inspect" },
+  { id: "skills", label: "Skills", note: "The tools behind the craft.", pose: "excited" },
+  { id: "experience", label: "Experience", note: "Learning by building.", pose: "work" },
+  { id: "projects", label: "Projects", note: "Let's explore what he made.", pose: "point" },
+  { id: "contact", label: "Contact", note: "Your turn. Let's connect.", pose: "welcome" },
+];
 
-const SECTION_IDS = Object.keys(SECTION_MESSAGES).filter((id) => id !== "hero");
-
-function MascotAvatar({ reducedMotion, isOpen }) {
-  return (
-    <motion.span
-      className="relative flex h-[58px] w-[58px] shrink-0 items-center justify-center"
-      animate={reducedMotion || isOpen ? undefined : { y: [0, -3, 0] }}
-      transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }}
-      aria-hidden="true"
-    >
-      <svg viewBox="0 0 72 72" className="h-full w-full" fill="none">
-        <defs>
-          <linearGradient id="mascot-shell" x1="12" y1="8" x2="59" y2="66" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#FFFCF5" />
-            <stop offset="1" stopColor="#D7D2C8" />
-          </linearGradient>
-          <linearGradient id="mascot-visor" x1="18" y1="18" x2="56" y2="53" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#172521" />
-            <stop offset="1" stopColor="#080D0C" />
-          </linearGradient>
-        </defs>
-        <path d="M34 7 44 3 47 17 37 19Z" fill="#176B68" stroke="#E6A45D" strokeWidth="2" strokeLinejoin="round" />
-        <path d="M22 15C22 10 27 7 32 8L45 11C56 13 63 22 63 33V45C63 56 54 64 43 64H28C17 64 9 56 9 45V34C9 25 14 18 22 15Z" fill="url(#mascot-shell)" stroke="#A8A79E" strokeWidth="1.4" />
-        <path d="M18 26C18 20 23 16 30 16H43C52 16 57 22 57 31V43C57 50 51 55 43 55H30C22 55 17 50 17 43V31Z" fill="url(#mascot-visor)" stroke="#2A4843" strokeWidth="1.5" />
-        <path d="M24 34C26 29 32 29 34 34" stroke="#72D9D0" strokeWidth="3.4" strokeLinecap="round" />
-        <path d="M41 34C43 29 49 29 51 34" stroke="#72D9D0" strokeWidth="3.4" strokeLinecap="round" />
-        <path d="M33 43C36 46 40 46 43 43" stroke="#E6A45D" strokeWidth="2.5" strokeLinecap="round" />
-        <path d="M10 30C4 30 4 40 10 41" stroke="#176B68" strokeWidth="4" strokeLinecap="round" />
-        <path d="M62 30C68 30 68 40 62 41" stroke="#176B68" strokeWidth="4" strokeLinecap="round" />
-        <path d="M24 59 21 65M47 59 50 65" stroke="#176B68" strokeWidth="4" strokeLinecap="round" />
-        <circle cx="13" cy="46" r="2" fill="#E6A45D" />
-        <circle cx="59" cy="46" r="2" fill="#E6A45D" />
-      </svg>
-      {!reducedMotion && (
-        <motion.span
-          className="absolute -right-0.5 top-1 h-3 w-3 rounded-full border-2 border-[var(--surface-elevated)] bg-[var(--brand)]"
-          animate={{ scale: [1, 1.18, 1] }}
-          transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-        />
-      )}
-    </motion.span>
-  );
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
 }
 
 export default function PortfolioMascot() {
+  const hostRef = useRef(null);
+  const canvasRef = useRef(null);
   const reducedMotion = useReducedMotion();
-  const [activeSection, setActiveSection] = useState("hero");
-  const [isOpen, setIsOpen] = useState(false);
-  const [hasInteracted, setHasInteracted] = useState(false);
+  const [active, setActive] = useState(0);
+  const [messageOpen, setMessageOpen] = useState(false);
+  const [webglReady, setWebglReady] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [reacting, setReacting] = useState(false);
 
   useEffect(() => {
-    if (typeof IntersectionObserver === "undefined") return undefined;
+    let frame = 0;
+    let disposed = false;
+    let renderer;
+    let scene;
+    let camera;
+    let root;
+    let head;
+    let leftArm;
+    let rightArm;
+    let leftLeg;
+    let rightLeg;
+    let antenna;
+    let eyeLeft;
+    let eyeRight;
+    let glow;
+    let pointerX = 0;
+    let pointerY = 0;
+    let targetPointerX = 0;
+    let targetPointerY = 0;
+    let activeIndex = 0;
+    let progress = 0;
+    let reactionUntil = 0;
+    let startTime = 0;
+    let resizeObserver;
 
-    const sections = SECTION_IDS
-      .map((id) => document.getElementById(id))
-      .filter(Boolean);
+    const canvas = canvasRef.current;
+    const host = hostRef.current;
+    if (!canvas || !host) return undefined;
 
-    if (!sections.length) return undefined;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-
-        if (visible) setActiveSection(visible.target.id);
-      },
-      {
-        root: null,
-        rootMargin: "-24% 0px -52% 0px",
-        threshold: [0, 0.1, 0.25, 0.5],
-      }
-    );
-
-    sections.forEach((section) => observer.observe(section));
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!isOpen) return undefined;
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") setIsOpen(false);
+    const onPointerMove = (event) => {
+      const rect = host.getBoundingClientRect();
+      targetPointerX = clamp(((event.clientX - rect.left) / rect.width - 0.5) * 1.2, -0.6, 0.6);
+      targetPointerY = clamp(((event.clientY - rect.top) / rect.height - 0.5) * 0.8, -0.4, 0.4);
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
+    const onPointerLeave = () => {
+      targetPointerX = 0;
+      targetPointerY = 0;
+    };
+    const onClick = () => {
+      reactionUntil = performance.now() + 1100;
+      setReacting(true);
+      window.setTimeout(() => setReacting(false), 1150);
+    };
+    host.addEventListener("pointermove", onPointerMove);
+    host.addEventListener("pointerleave", onPointerLeave);
+    host.addEventListener("click", onClick);
 
-  const content = SECTION_MESSAGES[activeSection] ?? SECTION_MESSAGES.hero;
-  const motionProps = reducedMotion
-    ? { initial: false, animate: { opacity: 1 }, exit: { opacity: 1 }, transition: { duration: 0 } }
-    : { initial: { opacity: 0, y: 10, scale: 0.98 }, animate: { opacity: 1, y: 0, scale: 1 }, exit: { opacity: 0, y: 6, scale: 0.98 }, transition: { duration: 0.18, ease: "easeOut" } };
+    const updateScroll = () => {
+      const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      progress = clamp(window.scrollY / maxScroll, 0, 1);
+      setScrollProgress(progress);
+      let nearest = 0;
+      let nearestDistance = Infinity;
+      const marker = window.innerHeight * 0.42;
+      SECTIONS.forEach((section, index) => {
+        const node = document.getElementById(section.id);
+        if (!node) return;
+        const rect = node.getBoundingClientRect();
+        const distance = Math.abs(rect.top + Math.min(rect.height * 0.35, window.innerHeight * 0.35) - marker);
+        if (rect.bottom > marker && rect.top < window.innerHeight && distance < nearestDistance) {
+          nearestDistance = distance;
+          nearest = index;
+        }
+      });
+      activeIndex = nearest;
+      setActive(nearest);
+    };
+    updateScroll();
+    window.addEventListener("scroll", updateScroll, { passive: true });
+    window.addEventListener("resize", updateScroll, { passive: true });
 
-  const handleToggle = () => {
-    setHasInteracted(true);
-    setIsOpen((open) => !open);
-  };
+    const build = async () => {
+      try {
+        const THREE = await import("three");
+        if (disposed) return;
+
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+        camera.position.set(0, 0.2, 8.5);
+        renderer = new THREE.WebGLRenderer({
+          canvas,
+          alpha: true,
+          antialias: true,
+          powerPreference: "low-power",
+          stencil: false,
+          depth: true,
+        });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.15;
+
+        scene.add(new THREE.HemisphereLight(0xf8f5e9, 0x1b302b, 2.2));
+        const keyLight = new THREE.DirectionalLight(0xfff0d6, 3.2);
+        keyLight.position.set(3, 5, 6);
+        scene.add(keyLight);
+        const rimLight = new THREE.PointLight(0x55cfc5, 18, 12);
+        rimLight.position.set(-3, 1, -2);
+        scene.add(rimLight);
+        const accentLight = new THREE.PointLight(0xffa45c, 8, 8);
+        accentLight.position.set(2, -2, 4);
+        scene.add(accentLight);
+
+        const shell = new THREE.MeshStandardMaterial({ color: 0xf4f0e6, roughness: 0.31, metalness: 0.22 });
+        const shellShade = new THREE.MeshStandardMaterial({ color: 0xcacfc5, roughness: 0.38, metalness: 0.28 });
+        const dark = new THREE.MeshStandardMaterial({ color: 0x101b18, roughness: 0.22, metalness: 0.32 });
+        const teal = new THREE.MeshStandardMaterial({ color: 0x5fe0d5, emissive: 0x168f83, emissiveIntensity: 2.3, roughness: 0.2 });
+        const orange = new THREE.MeshStandardMaterial({ color: 0xf3a45f, emissive: 0x7a3511, emissiveIntensity: 0.45, metalness: 0.38, roughness: 0.28 });
+
+        const makeMesh = (geometry, material, parent, position, scale) => {
+          const mesh = new THREE.Mesh(geometry, material);
+          if (position) mesh.position.set(position[0], position[1], position[2]);
+          if (scale) mesh.scale.set(scale[0], scale[1], scale[2]);
+          parent.add(mesh);
+          return mesh;
+        };
+        const sphere = (material, parent, position, scale, segments = 24) =>
+          makeMesh(new THREE.SphereGeometry(1, segments, Math.max(12, segments - 4)), material, parent, position, scale);
+        const capsule = (material, parent, position, scale) =>
+          makeMesh(new THREE.CapsuleGeometry(0.5, 0.55, 5, 10), material, parent, position, scale);
+
+        root = new THREE.Group();
+        scene.add(root);
+
+        // Legs and magnetic boot soles.
+        leftLeg = new THREE.Group();
+        leftLeg.position.set(-0.39, -1.03, 0);
+        root.add(leftLeg);
+        capsule(shellShade, leftLeg, [0, -0.22, 0], [0.27, 0.72, 0.27]);
+        makeMesh(new THREE.CapsuleGeometry(0.5, 0.1, 4, 10), dark, leftLeg, [0, -0.62, 0.09], [0.34, 0.34, 0.34]);
+        leftLeg.rotation.z = -0.04;
+        rightLeg = new THREE.Group();
+        rightLeg.position.set(0.39, -1.03, 0);
+        root.add(rightLeg);
+        capsule(shellShade, rightLeg, [0, -0.22, 0], [0.27, 0.72, 0.27]);
+        makeMesh(new THREE.CapsuleGeometry(0.5, 0.1, 4, 10), dark, rightLeg, [0, -0.62, 0.09], [0.34, 0.34, 0.34]);
+        rightLeg.rotation.z = 0.04;
+
+        // Compact torso with a luminous status core.
+        const torso = new THREE.Group();
+        torso.position.y = -0.37;
+        root.add(torso);
+        capsule(shell, torso, [0, 0, 0], [0.72, 0.82, 0.48]);
+        sphere(shellShade, torso, [0, -0.47, 0.02], [0.52, 0.2, 0.43]);
+        sphere(dark, torso, [0, 0.08, 0.438], [0.25, 0.22, 0.075]);
+        sphere(teal, torso, [0, 0.08, 0.51], [0.105, 0.105, 0.045]);
+        sphere(orange, torso, [-0.39, -0.3, 0.38], [0.055, 0.055, 0.035], 16);
+        sphere(orange, torso, [0.39, -0.3, 0.38], [0.055, 0.055, 0.035], 16);
+
+        // Shoulder pivots let each section use a recognisable pose.
+        leftArm = new THREE.Group();
+        leftArm.position.set(-0.7, -0.16, 0);
+        torso.add(leftArm);
+        sphere(shellShade, leftArm, [0, 0, 0], [0.22, 0.22, 0.22]);
+        capsule(shell, leftArm, [0, -0.34, 0], [0.2, 0.56, 0.2]);
+        sphere(shell, leftArm, [0, -0.68, 0.05], [0.22, 0.2, 0.22]);
+        rightArm = new THREE.Group();
+        rightArm.position.set(0.7, -0.16, 0);
+        torso.add(rightArm);
+        sphere(shellShade, rightArm, [0, 0, 0], [0.22, 0.22, 0.22]);
+        capsule(shell, rightArm, [0, -0.34, 0], [0.2, 0.56, 0.2]);
+        sphere(shell, rightArm, [0, -0.68, 0.05], [0.22, 0.2, 0.22]);
+
+        // Oversized helmet, inset visor, bright eyes and antenna.
+        head = new THREE.Group();
+        head.position.set(0, 0.78, 0.02);
+        root.add(head);
+        sphere(shell, head, [0, 0.03, 0], [0.83, 0.76, 0.65], 32);
+        sphere(dark, head, [0, -0.02, 0.53], [0.67, 0.43, 0.2], 32);
+        eyeLeft = sphere(teal, head, [-0.25, 0.03, 0.7], [0.09, 0.12, 0.045], 20);
+        eyeRight = sphere(teal, head, [0.25, 0.03, 0.7], [0.09, 0.12, 0.045], 20);
+        sphere(orange, head, [0, -0.28, 0.69], [0.08, 0.025, 0.025], 16);
+        // Side ear modules and metallic rings give the character depth.
+        sphere(shellShade, head, [-0.82, 0.03, 0], [0.18, 0.29, 0.25]);
+        sphere(orange, head, [-0.91, 0.03, 0.13], [0.045, 0.12, 0.12]);
+        sphere(shellShade, head, [0.82, 0.03, 0], [0.18, 0.29, 0.25]);
+        sphere(teal, head, [0.91, 0.03, 0.13], [0.045, 0.12, 0.12]);
+        antenna = new THREE.Group();
+        antenna.position.set(0.2, 0.68, 0);
+        head.add(antenna);
+        makeMesh(new THREE.CylinderGeometry(0.035, 0.055, 0.32, 12), orange, antenna, [0, 0.12, 0]);
+        sphere(teal, antenna, [0, 0.31, 0], [0.09, 0.09, 0.09], 18);
+
+        glow = new THREE.Mesh(
+          new THREE.TorusGeometry(0.53, 0.018, 8, 48),
+          new THREE.MeshBasicMaterial({ color: 0x58cfc4, transparent: true, opacity: 0.72 }),
+        );
+        glow.position.set(0, -1.65, -0.18);
+        glow.rotation.x = Math.PI / 2;
+        root.add(glow);
+
+        const resize = () => {
+          if (!renderer || !canvas.parentElement) return;
+          const rect = canvas.parentElement.getBoundingClientRect();
+          const width = Math.max(1, rect.width);
+          const height = Math.max(1, rect.height);
+          renderer.setSize(width, height, false);
+          camera.aspect = width / height;
+          camera.updateProjectionMatrix();
+        };
+        resizeObserver = new ResizeObserver(resize);
+        resizeObserver.observe(canvas.parentElement);
+        resize();
+
+        const poses = {
+          wave: { left: 0.12, right: -2.25, lean: -0.04, head: 0.03, legs: 0.04 },
+          curious: { left: -0.15, right: -0.18, lean: 0.04, head: -0.17, legs: 0.02 },
+          inspect: { left: -0.9, right: -0.22, lean: 0.08, head: 0.16, legs: -0.04 },
+          excited: { left: -1.2, right: -1.2, lean: -0.02, head: 0, legs: 0.1 },
+          work: { left: -0.25, right: -0.7, lean: 0.02, head: -0.04, legs: 0 },
+          point: { left: -0.2, right: -1.65, lean: -0.08, head: -0.12, legs: 0.05 },
+          welcome: { left: -1.05, right: -1.05, lean: 0, head: 0.02, legs: 0 },
+        };
+        const smooth = (current, target, amount) => current + (target - current) * amount;
+        const render = (time) => {
+          if (disposed) return;
+          frame = requestAnimationFrame(render);
+          const seconds = time * 0.001;
+          if (!startTime) startTime = seconds;
+          const pose = poses[SECTIONS[activeIndex]?.pose] || poses.wave;
+          pointerX = smooth(pointerX, targetPointerX, reducedMotion ? 0.035 : 0.075);
+          pointerY = smooth(pointerY, targetPointerY, reducedMotion ? 0.035 : 0.075);
+          const idle = reducedMotion ? 0 : Math.sin(seconds * 2.1) * 0.045;
+          const reactingNow = time < reactionUntil;
+          root.position.y = idle + (reactingNow ? Math.sin(seconds * 13) * 0.08 : 0);
+          root.rotation.y = smooth(root.rotation.y, pointerX * 0.55 + (activeIndex === 5 ? -0.13 : 0), 0.055);
+          root.rotation.z = smooth(root.rotation.z, pose.lean + pointerY * 0.1, 0.055);
+          head.rotation.y = smooth(head.rotation.y, pointerX * 0.7 + pose.head, 0.07);
+          head.rotation.x = smooth(head.rotation.x, -pointerY * 0.4, 0.07);
+          leftArm.rotation.z = smooth(leftArm.rotation.z, pose.left + (reactingNow ? Math.sin(seconds * 18) * 0.65 : 0), 0.07);
+          rightArm.rotation.z = smooth(rightArm.rotation.z, pose.right + (reactingNow ? Math.sin(seconds * 18) * 0.65 : 0), 0.07);
+          leftLeg.rotation.z = smooth(leftLeg.rotation.z, -pose.legs + (reactingNow ? -0.14 : 0), 0.05);
+          rightLeg.rotation.z = smooth(rightLeg.rotation.z, pose.legs + (reactingNow ? 0.14 : 0), 0.05);
+          antenna.rotation.z = Math.sin(seconds * 2.7) * (reducedMotion ? 0.015 : 0.09);
+          glow.rotation.z += reducedMotion ? 0.0008 : 0.006;
+          eyeLeft.scale.y = eyeRight.scale.y = 0.12 * (Math.sin(seconds * 0.8) > 0.997 ? 0.15 : 1);
+          renderer.render(scene, camera);
+        };
+        setWebglReady(true);
+        frame = requestAnimationFrame(render);
+      } catch (error) {
+        console.warn("Portfolio mascot WebGL unavailable; showing lightweight fallback.", error);
+      }
+    };
+    build();
+
+    return () => {
+      disposed = true;
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", updateScroll);
+      window.removeEventListener("resize", updateScroll);
+      host.removeEventListener("pointermove", onPointerMove);
+      host.removeEventListener("pointerleave", onPointerLeave);
+      host.removeEventListener("click", onClick);
+      resizeObserver?.disconnect();
+      if (scene) {
+        scene.traverse((object) => {
+          if (object.geometry) object.geometry.dispose();
+          if (object.material) {
+            const materials = Array.isArray(object.material) ? object.material : [object.material];
+            materials.forEach((material) => material.dispose());
+          }
+        });
+      }
+      renderer?.dispose();
+    };
+  }, [reducedMotion]);
+
+  const section = SECTIONS[active] || SECTIONS[0];
+  const top = reducedMotion ? "42vh" : (14 + scrollProgress * 60) + "vh";
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[70] flex justify-end px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
-      <div className="pointer-events-auto flex max-w-[calc(100vw-2rem)] flex-col items-end gap-3 sm:max-w-[360px]">
-        <AnimatePresence initial={false}>
-          {isOpen && (
-            <motion.section
-              key="mascot-panel"
-              {...motionProps}
-              id="portfolio-mascot-panel"
-              aria-label="Portfolio companion"
-              className="w-[min(340px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--foreground)] shadow-[var(--shadow-lg)]"
-            >
-              <div className="flex items-start gap-3 p-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-2)]">
-                  <MascotAvatar reducedMotion={reducedMotion} isOpen={isOpen} />
-                </div>
-                <div className="min-w-0 flex-1 pt-0.5">
-                  <p className="font-mono text-[9px] tracking-[0.16em] text-[var(--brand)]">{content.eyebrow}</p>
-                  <h2 className="mt-1 text-base font-semibold tracking-tight">{content.title}</h2>
-                  <p className="mt-1.5 text-xs leading-5 text-[var(--text-secondary)]">{content.message}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsOpen(false)}
-                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
-                  aria-label="Close portfolio companion"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-              <div className="flex items-center justify-between gap-3 border-t border-[var(--border-subtle)] px-4 py-3">
-                <span className="flex items-center gap-1.5 text-[10px] text-[var(--text-tertiary)]">
-                  <Sparkles size={12} aria-hidden="true" />
-                  Changes as you explore
-                </span>
-                <a
-                  href={content.href}
-                  onClick={() => setIsOpen(false)}
-                  className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-[var(--brand)] px-3 py-2 text-xs font-semibold text-[var(--brand-contrast)] transition-colors hover:bg-[var(--brand-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
-                >
-                  {content.action}
-                  <ArrowUpRight size={14} aria-hidden="true" />
-                </a>
-              </div>
-            </motion.section>
-          )}
-        </AnimatePresence>
-
-        <div className="flex items-center gap-2">
-          {!isOpen && !hasInteracted && (
-            <motion.span
-              initial={false}
-              animate={{ opacity: 1, x: 0 }}
-              className="hidden rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-2 text-xs text-[var(--text-secondary)] shadow-[var(--shadow-md)] sm:block"
-            >
-              Need a guide?
-            </motion.span>
-          )}
-          <button
-            type="button"
-            onClick={handleToggle}
-            aria-expanded={isOpen}
-            aria-controls="portfolio-mascot-panel"
-            aria-label={isOpen ? "Close portfolio companion" : "Open portfolio companion"}
-            className="group flex h-[68px] w-[68px] items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] shadow-[var(--shadow-lg)] transition-[transform,border-color] duration-200 hover:-translate-y-1 hover:border-[var(--brand)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--focus-ring)] active:translate-y-0 sm:h-[76px] sm:w-[76px]"
-          >
-            <span className="relative flex h-full w-full items-center justify-center">
-              <MascotAvatar reducedMotion={reducedMotion} isOpen={isOpen} />
-              <span className="absolute -bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center rounded-lg border border-[var(--surface-elevated)] bg-[var(--brand)] text-[var(--brand-contrast)]">
-                {isOpen ? <X size={12} aria-hidden="true" /> : <MessageCircle size={12} aria-hidden="true" />}
+    <div
+      ref={hostRef}
+      className="pointer-events-auto fixed right-2 z-40 flex w-[124px] flex-col items-center sm:right-5 sm:w-[160px]"
+      style={{ top, transition: reducedMotion ? "none" : "top 420ms cubic-bezier(.2,.75,.25,1)" }}
+      aria-label="Interactive 3D portfolio companion"
+    >
+      <button
+        type="button"
+        className="relative block h-[174px] w-full cursor-pointer touch-manipulation rounded-full outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4 focus-visible:ring-offset-background sm:h-[218px]"
+        onClick={() => {
+          setMessageOpen((open) => !open);
+          setReacting(true);
+          window.setTimeout(() => setReacting(false), 1100);
+        }}
+        aria-label={messageOpen ? "Close mascot message" : "Interact with the 3D portfolio mascot"}
+        aria-expanded={messageOpen}
+      >
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 h-full w-full"
+          aria-hidden="true"
+        />
+        {!webglReady && (
+          <span className="absolute inset-x-0 top-6 flex justify-center" aria-hidden="true">
+            <span className="relative flex h-[82px] w-[68px] items-center justify-center rounded-[2rem] border border-[#b8c9c0] bg-[#f4f0e6] shadow-[0_14px_40px_-20px_rgba(12,38,32,.65)]">
+              <span className="absolute inset-x-2 top-5 h-8 rounded-2xl bg-[#101b18]" />
+              <span className="relative z-10 mt-1 flex gap-3">
+                <span className="h-2 w-2 rounded-full bg-[#5fe0d5] shadow-[0_0_8px_#5fe0d5]" />
+                <span className="h-2 w-2 rounded-full bg-[#5fe0d5] shadow-[0_0_8px_#5fe0d5]" />
               </span>
             </span>
+          </span>
+        )}
+        <span className="sr-only">Currently exploring: {section.label}</span>
+      </button>
+
+      <div className="mt-[-20px] flex items-center gap-1 rounded-full border border-border/70 bg-background/90 px-2.5 py-1.5 text-[10px] font-medium text-foreground shadow-lg backdrop-blur-md sm:text-xs">
+        <Sparkles size={12} className="text-brand" aria-hidden="true" />
+        <span>{section.label}</span>
+        <ArrowDown size={11} className="opacity-60" aria-hidden="true" />
+      </div>
+
+      {messageOpen && (
+        <div className="absolute right-[calc(100%-8px)] top-1/2 w-[min(230px,calc(100vw-150px))] -translate-y-1/2 rounded-xl border border-border/70 bg-background/95 p-3 text-foreground shadow-2xl backdrop-blur-xl sm:right-[calc(100%-18px)] sm:w-56">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-brand">{section.label} section</p>
+          <p className="mt-1 text-sm font-semibold">{section.note}</p>
+          <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">Keep scrolling and I’ll explore the portfolio with you.</p>
+          <button
+            type="button"
+            className="mt-2 text-xs font-semibold text-brand underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            onClick={(event) => {
+              event.stopPropagation();
+              setMessageOpen(false);
+              const next = document.getElementById(SECTIONS[Math.min(active + 1, SECTIONS.length - 1)].id);
+              next?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+            }}
+          >
+            Explore next section
           </button>
         </div>
-      </div>
+      )}
+      {reacting && <span className="sr-only" aria-live="polite">Mascot reacted to your interaction.</span>}
     </div>
   );
 }
