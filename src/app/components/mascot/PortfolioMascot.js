@@ -1,17 +1,66 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowDown, Sparkles } from "lucide-react";
 
 const SECTIONS = [
-  { id: "hero", label: "Intro", note: "Hey! Scroll with me.", pose: "wave" },
-  { id: "about", label: "About", note: "A little about Vishal.", pose: "curious" },
-  { id: "education", label: "Education", note: "Strong foundations matter.", pose: "inspect" },
-  { id: "skills", label: "Skills", note: "The tools behind the craft.", pose: "excited" },
-  { id: "experience", label: "Experience", note: "Learning by building.", pose: "work" },
-  { id: "projects", label: "Projects", note: "Let's explore what he made.", pose: "point" },
-  { id: "contact", label: "Contact", note: "Your turn. Let's connect.", pose: "welcome" },
+  {
+    id: "hero",
+    label: "Hey, I'm Vee!",
+    note: "I'll show you around Vishal's portfolio. Scroll down and let's explore.",
+    detail: "I'm Vee, your little portfolio guide. I'll point out the highlights while you explore Vishal's work.",
+    action: "Explore About",
+    pose: "wave",
+  },
+  {
+    id: "about",
+    label: "Meet Vishal",
+    note: "Here's a quick look at the developer behind the work.",
+    detail: "Get to know Vishal, his approach to frontend development, and what he enjoys building.",
+    action: "Next: Education",
+    pose: "curious",
+  },
+  {
+    id: "education",
+    label: "Learning journey",
+    note: "Take a look at the education and foundations behind his skills.",
+    detail: "This section covers Vishal's academic background and the learning that supports his work.",
+    action: "Next: Skills",
+    pose: "inspect",
+  },
+  {
+    id: "skills",
+    label: "Toolbox unlocked",
+    note: "Explore the technologies Vishal uses to build polished web experiences.",
+    detail: "Browse the stack, libraries, and tools Vishal uses to create responsive interfaces and interactions.",
+    action: "Next: Experience",
+    pose: "excited",
+  },
+  {
+    id: "experience",
+    label: "Work in action",
+    note: "See the roles and real-world work that helped shape his experience.",
+    detail: "Explore Vishal's professional journey and the practical experience he's gained along the way.",
+    action: "Next: Projects",
+    pose: "work",
+  },
+  {
+    id: "projects",
+    label: "Let's see what's built",
+    note: "Pick a project card to explore the work up close.",
+    detail: "These projects show how Vishal brings interfaces, functionality, and motion together. Choose a card to learn more.",
+    action: "Next: Contact",
+    pose: "point",
+  },
+  {
+    id: "contact",
+    label: "Let's make something",
+    note: "Fill out the contact form here to discuss a role, project, or collaboration.",
+    detail: "Have an opportunity or an idea? Fill out the contact form in this section and send Vishal a message. I'll be cheering you on!",
+    action: "Find the contact form",
+    pose: "welcome",
+  },
 ];
 
 function clamp(value, min, max) {
@@ -411,38 +460,65 @@ export default function PortfolioMascot() {
         <span className="sr-only">Currently exploring: {section.label}</span>
       </button>
 
-      <button
-        type="button"
-        onClick={() => setMessageOpen((open) => !open)}
-        aria-expanded={messageOpen}
-        className="pointer-events-auto mt-[-12px] w-[154px] rounded-md border border-border/80 bg-background/95 px-2.5 py-2 text-left text-foreground shadow-lg backdrop-blur-md transition-colors hover:border-brand/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-      >
-        <span className="flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-brand">
-          <Sparkles size={11} aria-hidden="true" />
-          {section.label}
-        </span>
-        <span className="mt-1 block text-[10px] leading-snug">{section.note}</span>
-      </button>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.button
+          key={section.id}
+          type="button"
+          onClick={() => setMessageOpen((open) => !open)}
+          aria-expanded={messageOpen}
+          initial={reducedMotion ? false : { opacity: 0, y: 8, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.97 }}
+          transition={{ duration: reducedMotion ? 0.01 : 0.22, ease: "easeOut" }}
+          className="pointer-events-auto mt-[-12px] w-[154px] rounded-md border border-border/80 bg-background/95 px-2.5 py-2 text-left text-foreground shadow-lg backdrop-blur-md transition-colors hover:border-brand/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        >
+          <span className="flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-brand">
+            <Sparkles size={11} aria-hidden="true" />
+            {section.label}
+          </span>
+          <span className="mt-1 block text-[10px] leading-snug">{section.note}</span>
+          <span className="mt-1 block text-[9px] font-semibold text-brand/90">{messageOpen ? "Close message −" : "Tap to chat +"}</span>
+        </motion.button>
+      </AnimatePresence>
 
-      {messageOpen && (
-        <div className="pointer-events-auto absolute right-[calc(100%-4px)] top-1/2 w-52 -translate-y-1/2 rounded-lg border border-border/70 bg-background/95 p-3 text-foreground shadow-2xl backdrop-blur-xl">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-brand">{section.label} section</p>
-          <p className="mt-1 text-sm font-semibold">{section.note}</p>
-          <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">I’m following the page with you. Click “Explore next section” or keep scrolling to see what I find.</p>
-          <button
-            type="button"
-            className="mt-2 text-xs font-semibold text-brand underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-            onClick={(event) => {
-              event.stopPropagation();
-              setMessageOpen(false);
-              const next = document.getElementById(SECTIONS[Math.min(active + 1, SECTIONS.length - 1)].id);
-              next?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
-            }}
+      <AnimatePresence>
+        {messageOpen && (
+          <motion.div
+            key={section.id + "-message"}
+            initial={reducedMotion ? { opacity: 0 } : { opacity: 0, x: -10, y: 5, scale: 0.97 }}
+            animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+            exit={reducedMotion ? { opacity: 0 } : { opacity: 0, x: -8, y: 3, scale: 0.98 }}
+            transition={{ duration: reducedMotion ? 0.01 : 0.2, ease: "easeOut" }}
+            className="pointer-events-auto absolute right-[calc(100%-4px)] top-1/2 w-52 -translate-y-1/2 rounded-lg border border-border/70 bg-background/95 p-3 text-foreground shadow-2xl backdrop-blur-xl"
+            role="dialog"
+            aria-label={section.label}
           >
-            Explore next section
-          </button>
-        </div>
-      )}
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-brand">Vee's guide · {section.id === "hero" ? "Welcome" : section.label}</p>
+            <p className="mt-1 text-sm font-semibold">{section.note}</p>
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{section.detail}</p>
+            <button
+              type="button"
+              className="mt-2 text-xs font-semibold text-brand underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              onClick={(event) => {
+                event.stopPropagation();
+                setMessageOpen(false);
+                const nextId = section.id === "contact" ? "contact" : SECTIONS[Math.min(active + 1, SECTIONS.length - 1)].id;
+                const targetSection = document.getElementById(nextId);
+                const target = section.id === "contact"
+                  ? targetSection?.querySelector("form, [data-contact-form], button[type='submit'], input, textarea")
+                  : targetSection;
+                target?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: section.id === "contact" ? "center" : "start" });
+                if (section.id === "contact") {
+                  window.setTimeout(() => target?.querySelector?.("input, textarea, button")?.focus?.({ preventScroll: true }), reducedMotion ? 0 : 450);
+                }
+              }}
+            >
+              {section.action}
+              <ArrowDown size={11} className="ml-1 inline-block" aria-hidden="true" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {reacting && <span className="sr-only" aria-live="polite">Mascot reacted to your interaction.</span>}
     </div>
   );
