@@ -113,17 +113,26 @@ export default function PortfolioMascot() {
     let head;
     let leftArm;
     let rightArm;
+    let leftElbow;
+    let rightElbow;
+    let leftWrist;
+    let rightWrist;
+    let leftHand;
+    let rightHand;
     let leftLeg;
     let rightLeg;
     let antenna;
     let eyeLeft;
     let eyeRight;
+    let browLeft;
+    let browRight;
     let glow;
     let pointerX = 0;
     let pointerY = 0;
     let targetPointerX = 0;
     let targetPointerY = 0;
     let activeIndex = 0;
+    let previousSectionIndex = null;
     let progress = 0;
     let reactionUntil = 0;
     let startTime = 0;
@@ -131,6 +140,14 @@ export default function PortfolioMascot() {
     let targetFacingX = 0;
     let targetFacingY = 0;
     let lastScrollTime = performance.now();
+    let expressionUntil = 0;
+    let activeExpression = "happy";
+    const expressions = ["happy", "surprised", "curious", "sleepy", "cheeky", "excited", "wink"];
+    const chooseExpression = () => {
+      const choices = expressions.filter((expression) => expression !== activeExpression);
+      activeExpression = choices[Math.floor(Math.random() * choices.length)] || "happy";
+      expressionUntil = performance.now() + 1550;
+    };
 
     const canvas = canvasRef.current;
     const host = hostRef.current;
@@ -146,9 +163,10 @@ export default function PortfolioMascot() {
       targetPointerY = 0;
     };
     const onClick = () => {
-      reactionUntil = performance.now() + 1100;
+      reactionUntil = performance.now() + 1550;
+      chooseExpression();
       setReacting(true);
-      window.setTimeout(() => setReacting(false), 1150);
+      window.setTimeout(() => setReacting(false), 1600);
     };
     host.addEventListener("pointermove", onPointerMove);
     host.addEventListener("pointerleave", onPointerLeave);
@@ -177,6 +195,13 @@ export default function PortfolioMascot() {
           nearest = index;
         }
       });
+      // React once when the active portfolio section changes: Vee gives a small
+      // bounce, a brief wave, and a fresh expression while adopting the new section pose.
+      if (previousSectionIndex !== null && nearest !== previousSectionIndex) {
+        reactionUntil = performance.now() + 900;
+        chooseExpression();
+      }
+      previousSectionIndex = nearest;
       activeIndex = nearest;
       setActive(nearest);
 
@@ -275,6 +300,7 @@ export default function PortfolioMascot() {
         const dark = new THREE.MeshStandardMaterial({ color: 0x101b18, roughness: 0.22, metalness: 0.32 });
         const teal = new THREE.MeshStandardMaterial({ color: 0x5fe0d5, emissive: 0x168f83, emissiveIntensity: 2.3, roughness: 0.2 });
         const orange = new THREE.MeshStandardMaterial({ color: 0xf3a45f, emissive: 0x7a3511, emissiveIntensity: 0.45, metalness: 0.38, roughness: 0.28 });
+        const antennaTipMaterial = new THREE.MeshStandardMaterial({ color: 0xff3b30, emissive: 0xff1b12, emissiveIntensity: 1.8, roughness: 0.2, metalness: 0.08 });
 
         const makeMesh = (geometry, material, parent, position, scale) => {
           const mesh = new THREE.Mesh(geometry, material);
@@ -316,32 +342,59 @@ export default function PortfolioMascot() {
         sphere(orange, torso, [-0.39, -0.3, 0.38], [0.055, 0.055, 0.035], 16);
         sphere(orange, torso, [0.39, -0.3, 0.38], [0.055, 0.055, 0.035], 16);
 
-        // Shoulder pivots let each section use a recognisable pose.
-        leftArm = new THREE.Group();
-        leftArm.position.set(-0.7, -0.16, 0);
-        torso.add(leftArm);
-        sphere(shellShade, leftArm, [0, 0, 0], [0.22, 0.22, 0.22]);
-        capsule(shell, leftArm, [0, -0.34, 0], [0.2, 0.56, 0.2]);
-        sphere(shell, leftArm, [0, -0.68, 0.05], [0.22, 0.2, 0.22]);
-        // Rounded glove-like hand with three short, softly fanned fingers and a thumb.
-        sphere(shell, leftArm, [0, -0.82, 0.12], [0.19, 0.17, 0.15]);
-        capsule(shellShade, leftArm, [-0.085, -0.94, 0.17], [0.052, 0.105, 0.05]);
-        capsule(shellShade, leftArm, [0, -0.97, 0.19], [0.052, 0.11, 0.05]);
-        capsule(shellShade, leftArm, [0.085, -0.94, 0.17], [0.052, 0.105, 0.05]);
-        sphere(shellShade, leftArm, [0.16, -0.82, 0.19], [0.075, 0.105, 0.065]);
-        rightArm = new THREE.Group();
-        rightArm.position.set(0.7, -0.16, 0);
-        torso.add(rightArm);
-        sphere(shellShade, rightArm, [0, 0, 0], [0.22, 0.22, 0.22]);
-        capsule(shell, rightArm, [0, -0.34, 0], [0.2, 0.56, 0.2]);
-        sphere(shell, rightArm, [0, -0.68, 0.05], [0.22, 0.2, 0.22]);
-        sphere(shell, rightArm, [0, -0.82, 0.12], [0.19, 0.17, 0.15]);
-        // A distinct index finger keeps pointing gestures readable; the remaining fingers stay compact.
-        capsule(shellShade, rightArm, [0.16, -0.78, 0.19], [0.052, 0.17, 0.05]);
-        capsule(shellShade, rightArm, [-0.075, -0.94, 0.17], [0.052, 0.105, 0.05]);
-        capsule(shellShade, rightArm, [0.015, -0.97, 0.19], [0.052, 0.11, 0.05]);
-        capsule(shellShade, rightArm, [0.095, -0.94, 0.17], [0.052, 0.105, 0.05]);
-        sphere(shellShade, rightArm, [-0.15, -0.82, 0.19], [0.075, 0.105, 0.065]);
+        // Articulated arms: overlapping shoulder, upper arm, elbow, forearm, wrist and glove.
+        // The extra overlap keeps the silhouette connected when Vee waves or points.
+        const makeArm = (side) => {
+          const arm = new THREE.Group();
+          arm.position.set(side * 0.68, -0.14, 0.24);
+          torso.add(arm);
+          sphere(shellShade, arm, [0, 0, 0], [0.225, 0.225, 0.22]);
+          capsule(shell, arm, [0, -0.29, 0], [0.195, 0.49, 0.19]);
+
+          const elbow = new THREE.Group();
+          elbow.position.set(0, -0.52, 0.015);
+          arm.add(elbow);
+          sphere(shellShade, elbow, [0, 0, 0], [0.17, 0.17, 0.17]);
+          capsule(shell, elbow, [0, -0.19, 0.015], [0.17, 0.36, 0.17]);
+
+          const wrist = new THREE.Group();
+          wrist.position.set(0, -0.39, 0.07);
+          elbow.add(wrist);
+          sphere(shell, wrist, [0, 0, 0], [0.145, 0.13, 0.145]);
+
+          // Slim, finished robot glove: a flatter palm and distinct tapered-looking fingers,
+          // avoiding the oversized round mitten silhouette. The whole hand follows the wrist.
+          const hand = new THREE.Group();
+          hand.position.set(0, -0.105, 0.12);
+          wrist.add(hand);
+          sphere(shell, hand, [0, -0.025, 0.045], [0.145, 0.125, 0.095]);
+          capsule(shellShade, hand, [0, 0.075, 0.02], [0.112, 0.04, 0.085]);
+          // Four separate slim fingers with slightly staggered lengths and rounded ends.
+          capsule(shell, hand, [-0.078, -0.125, 0.075], [0.027, 0.105, 0.027]);
+          capsule(shell, hand, [-0.026, -0.145, 0.085], [0.028, 0.12, 0.028]);
+          capsule(shell, hand, [0.029, -0.14, 0.085], [0.028, 0.115, 0.028]);
+          capsule(shell, hand, [0.08, -0.115, 0.07], [0.026, 0.095, 0.026]);
+          // A short thumb sits close to the palm rather than sticking out as a round knob.
+          capsule(shell, hand, [side * -0.12, -0.045, 0.095], [0.03, 0.075, 0.03]);
+          if (side > 0) {
+            // Keep the pointing index longer and narrow enough to read as a finger.
+            capsule(shell, hand, [0.13, 0.005, 0.09], [0.028, 0.13, 0.028]);
+          }
+          return { arm, elbow, wrist, hand };
+        };
+        const leftParts = makeArm(-1);
+        leftArm = leftParts.arm;
+        leftElbow = leftParts.elbow;
+        leftWrist = leftParts.wrist;
+        leftHand = leftParts.hand;
+        const rightParts = makeArm(1);
+        rightArm = rightParts.arm;
+        // Keep the raised right hand outside the helmet silhouette during high waves.
+        // A small lateral offset plus a slightly more open elbow prevents head intersection.
+        rightArm.position.x = 0.82;
+        rightElbow = rightParts.elbow;
+        rightWrist = rightParts.wrist;
+        rightHand = rightParts.hand;
 
         // Oversized helmet, inset visor, bright eyes and antenna.
         head = new THREE.Group();
@@ -351,6 +404,9 @@ export default function PortfolioMascot() {
         sphere(dark, head, [0, -0.02, 0.53], [0.67, 0.43, 0.2], 32);
         eyeLeft = sphere(teal, head, [-0.25, 0.03, 0.7], [0.09, 0.12, 0.045], 20);
         eyeRight = sphere(teal, head, [0.25, 0.03, 0.7], [0.09, 0.12, 0.045], 20);
+        // Expressive brow plates make curiosity, surprise, and cheekiness readable at a glance.
+        browLeft = makeMesh(new THREE.CapsuleGeometry(0.5, 0.12, 4, 10), orange, head, [-0.25, 0.235, 0.675], [0.055, 0.16, 0.035]);
+        browRight = makeMesh(new THREE.CapsuleGeometry(0.5, 0.12, 4, 10), orange, head, [0.25, 0.235, 0.675], [0.055, 0.16, 0.035]);
         // A curved, softly glowing smile reads more clearly than a tiny flat mouth.
         const smileCurve = new THREE.CatmullRomCurve3([
           new THREE.Vector3(-0.19, -0.205, 0.69),
@@ -372,10 +428,11 @@ export default function PortfolioMascot() {
         sphere(shellShade, head, [0.82, 0.03, 0], [0.18, 0.29, 0.25]);
         sphere(teal, head, [0.91, 0.03, 0.13], [0.045, 0.12, 0.12]);
         antenna = new THREE.Group();
-        antenna.position.set(0.2, 0.68, 0);
+        // Center the antenna on the helmet and extend it upward with a clearly visible tip.
+        antenna.position.set(0, 0.68, 0);
         head.add(antenna);
-        makeMesh(new THREE.CylinderGeometry(0.035, 0.055, 0.32, 12), orange, antenna, [0, 0.12, 0]);
-        sphere(teal, antenna, [0, 0.31, 0], [0.09, 0.09, 0.09], 18);
+        makeMesh(new THREE.CylinderGeometry(0.027, 0.042, 0.48, 12), orange, antenna, [0, 0.22, 0]);
+        sphere(antennaTipMaterial, antenna, [0, 0.47, 0], [0.075, 0.075, 0.075], 18);
 
 
         const resize = () => {
@@ -392,13 +449,24 @@ export default function PortfolioMascot() {
         resize();
 
         const poses = {
-          wave: { left: 0.12, right: -2.25, lean: -0.04, head: 0.03, legs: 0.04 },
-          curious: { left: -0.15, right: -0.18, lean: 0.04, head: -0.17, legs: 0.02 },
-          inspect: { left: -0.9, right: -0.22, lean: 0.08, head: 0.16, legs: -0.04 },
-          excited: { left: -1.2, right: -1.2, lean: -0.02, head: 0, legs: 0.1 },
-          work: { left: -0.25, right: -0.7, lean: 0.02, head: -0.04, legs: 0 },
-          point: { left: -0.2, right: -1.65, lean: -0.08, head: -0.12, legs: 0.05 },
-          welcome: { left: -1.05, right: -1.05, lean: 0, head: 0.02, legs: 0 },
+          wave: { left: 2.05, right: -2.95, lean: -0.04, head: 0.03, legs: 0.04 },
+          curious: { left: 1.25, right: -0.95, lean: 0.04, head: -0.17, legs: 0.02 },
+          inspect: { left: 1.4, right: -0.9, lean: 0.08, head: 0.16, legs: -0.04 },
+          excited: { left: 1.55, right: -1.55, lean: -0.02, head: 0, legs: 0.1 },
+          work: { left: 1.05, right: -1.25, lean: 0.02, head: -0.04, legs: 0 },
+          point: { left: 1.0, right: -2.15, lean: -0.08, head: -0.12, legs: 0.05 },
+          welcome: { left: 1.5, right: -1.5, lean: 0, head: 0.02, legs: 0 },
+        };
+        // Hand choreography for each portfolio section. Values are local joint rotations,
+        // so the hands visibly change gesture as the active section changes.
+        const handGestures = {
+          wave:     { leftElbow: -0.02, rightElbow: -0.24, leftWrist: 0.18, rightWrist: 0.22, leftPalm: -0.24, rightPalm: 0.22 },
+          curious:  { leftElbow: -0.34, rightElbow: -0.08, leftWrist: -0.12, rightWrist: 0.04, leftPalm: -0.32, rightPalm: 0.08 },
+          inspect:  { leftElbow: -0.42, rightElbow: -0.14, leftWrist: 0.08, rightWrist: -0.04, leftPalm: -0.12, rightPalm: 0.04 },
+          excited:  { leftElbow: 0.08, rightElbow: -0.08, leftWrist: 0.16, rightWrist: -0.16, leftPalm: -0.2, rightPalm: 0.2 },
+          work:     { leftElbow: -0.18, rightElbow: -0.36, leftWrist: 0.02, rightWrist: -0.12, leftPalm: -0.08, rightPalm: 0.14 },
+          point:    { leftElbow: -0.12, rightElbow: -0.28, leftWrist: 0.02, rightWrist: -0.2, leftPalm: -0.06, rightPalm: 0.28 },
+          welcome:  { leftElbow: -0.04, rightElbow: -0.04, leftWrist: 0.12, rightWrist: -0.12, leftPalm: -0.26, rightPalm: 0.26 },
         };
         const smooth = (current, target, amount) => current + (target - current) * amount;
         const render = (time) => {
@@ -414,6 +482,9 @@ export default function PortfolioMascot() {
           pointerY = smooth(pointerY, targetPointerY, reducedMotion ? 0.035 : 0.075);
           const idle = reducedMotion ? 0 : Math.sin(seconds * 2.1) * 0.045;
           const reactingNow = time < reactionUntil;
+          const expressionActive = time < expressionUntil;
+          // Give Vee a short welcoming wave on arrival, then return to its section-specific pose.
+          const greeting = !reducedMotion && seconds - startTime < 2.8;
           // When the page is idle, Vee stays lively with gentle face-scanning and a small alternating hand wave.
           const idlePlay = !reducedMotion && !footerSettled && time - lastScrollTime > 1600 && !reactingNow;
           const idleLook = idlePlay ? Math.sin(seconds * 1.25) * 0.34 : 0;
@@ -427,20 +498,57 @@ export default function PortfolioMascot() {
           const facePitch = idlePlay ? Math.sin(seconds * 1.7) * 0.08 - pointerY * 0.08 : -targetFacingY * 0.2 - pointerY * 0.16;
           head.rotation.y = smooth(head.rotation.y, faceYaw, 0.075);
           head.rotation.x = smooth(head.rotation.x, facePitch, 0.075);
-          leftArm.rotation.z = smooth(leftArm.rotation.z, pose.left + (reactingNow ? Math.sin(seconds * 18) * 0.65 : idleWave), 0.07);
+          const greetingWave = greeting ? Math.sin(seconds * 13) * 0.48 : 0;
+          const leftWave = reactingNow ? Math.sin(seconds * 18) * 0.65 : idleWave + greetingWave;
+          leftArm.rotation.z = smooth(leftArm.rotation.z, pose.left + leftWave, 0.07);
           const pointingRight = targetFacingX >= 0;
           const rightArmTarget = SECTIONS[activeIndex]?.pose === "point"
             ? (pointingRight ? -1.65 : 1.65)
             : pose.right;
           const playfulArm = idlePlay ? Math.sin(seconds * 2.2 + Math.PI) * 0.22 : 0;
-          rightArm.rotation.z = smooth(rightArm.rotation.z, rightArmTarget + (reactingNow ? Math.sin(seconds * 18) * 0.65 : playfulArm), 0.07);
+          const rightWave = reactingNow ? Math.sin(seconds * 18) * 0.65 : playfulArm + (greeting ? -0.22 : 0);
+          rightArm.rotation.z = smooth(rightArm.rotation.z, rightArmTarget + rightWave, 0.07);
+          // Secondary joints and palms follow a section-specific gesture with eased transitions.
+          const gesture = handGestures[SECTIONS[activeIndex]?.pose] || handGestures.wave;
+          const waveMotion = greeting || reactingNow ? Math.sin(seconds * 18) : 0;
+          leftElbow.rotation.z = smooth(leftElbow.rotation.z, gesture.leftElbow + Math.max(0, leftWave) * 0.2, 0.09);
+          rightElbow.rotation.z = smooth(rightElbow.rotation.z, gesture.rightElbow + Math.max(0, rightWave) * 0.18, 0.09);
+          leftWrist.rotation.z = smooth(leftWrist.rotation.z, gesture.leftWrist + waveMotion * 0.18, 0.11);
+          rightWrist.rotation.z = smooth(rightWrist.rotation.z, gesture.rightWrist + waveMotion * 0.18, 0.11);
+          // Rotate palms to communicate each section's gesture, not just move the whole arm.
+          leftHand.rotation.y = smooth(leftHand.rotation.y, gesture.leftPalm + (greeting || reactingNow ? -0.12 : 0), 0.1);
+          rightHand.rotation.y = smooth(rightHand.rotation.y, gesture.rightPalm + (greeting || reactingNow ? 0.12 : 0), 0.1);
+          // Randomized facial acting: eye shape/spacing, brow angle, smile stretch, and a tiny head tilt.
+          const faceExpression = expressionActive ? activeExpression : (idlePlay ? "curious" : "happy");
+          const surprised = faceExpression === "surprised";
+          const curious = faceExpression === "curious";
+          const sleepy = faceExpression === "sleepy";
+          const cheeky = faceExpression === "cheeky";
+          const excited = faceExpression === "excited";
+          const wink = faceExpression === "wink";
+          const blink = !reducedMotion && Math.sin(seconds * 0.8) > 0.997;
+          const eyeOpenLeft = blink || sleepy ? 0.035 : (surprised || excited ? 0.16 : 0.12);
+          const eyeOpenRight = wink ? 0.025 : eyeOpenLeft;
+          eyeLeft.scale.y = smooth(eyeLeft.scale.y, eyeOpenLeft, 0.22);
+          eyeRight.scale.y = smooth(eyeRight.scale.y, eyeOpenRight, 0.22);
+          eyeLeft.position.x = smooth(eyeLeft.position.x, curious ? -0.28 : -0.25, 0.12);
+          eyeRight.position.x = smooth(eyeRight.position.x, curious ? 0.22 : 0.25, 0.12);
+          browLeft.rotation.z = smooth(browLeft.rotation.z, surprised ? 0.18 : curious ? 0.32 : sleepy ? -0.18 : 0.02, 0.1);
+          browRight.rotation.z = smooth(browRight.rotation.z, surprised ? -0.18 : curious ? 0.02 : cheeky ? -0.32 : sleepy ? 0.18 : -0.02, 0.1);
+          browLeft.position.y = smooth(browLeft.position.y, surprised || excited ? 0.29 : 0.235, 0.1);
+          browRight.position.y = smooth(browRight.position.y, surprised || excited ? 0.29 : 0.235, 0.1);
+          smile.scale.x = smooth(smile.scale.x, surprised ? 0.48 : cheeky ? 0.72 : excited ? 1.22 : 1, 0.1);
+          smile.scale.y = smooth(smile.scale.y, surprised ? 0.55 : sleepy ? 0.55 : excited ? 1.35 : 0.88 + (Math.sin(seconds * 2.4) + 1) * 0.13, 0.1);
+          smile.rotation.z = smooth(smile.rotation.z, cheeky ? -0.18 : curious ? 0.08 : 0, 0.1);
+          head.rotation.z = smooth(head.rotation.z, (curious ? -0.12 : cheeky ? 0.1 : 0) + (reducedMotion ? 0 : Math.sin(seconds * 1.1) * 0.012), 0.08);
           leftLeg.rotation.z = smooth(leftLeg.rotation.z, footerSettled ? -0.42 : -pose.legs + (reactingNow ? -0.14 : 0), 0.05);
           rightLeg.rotation.z = smooth(rightLeg.rotation.z, footerSettled ? 0.42 : pose.legs + (reactingNow ? 0.14 : 0), 0.05);
           antenna.rotation.z = Math.sin(seconds * 2.7) * (reducedMotion ? 0.015 : 0.09);
-          eyeLeft.scale.y = eyeRight.scale.y = 0.12 * (Math.sin(seconds * 0.8) > 0.997 ? 0.15 : 1);
-          // Give Vee a living expression: the smile gently widens and relaxes instead of staying static.
-          smile.scale.y = reducedMotion ? 1 : 0.88 + (Math.sin(seconds * 2.4) + 1) * 0.13;
-          smile.rotation.z = reducedMotion ? 0 : Math.sin(seconds * 1.35) * 0.035;
+          // Pulse the antenna tip between signal red and warm orange.
+          const signalPulse = (Math.sin(seconds * (reducedMotion ? 1.4 : 4.2)) + 1) * 0.5;
+          antennaTipMaterial.color.setRGB(1, 0.16 + signalPulse * 0.38, 0.12 + signalPulse * 0.015);
+          antennaTipMaterial.emissive.setRGB(0.9, 0.035 + signalPulse * 0.22, 0.01);
+          antennaTipMaterial.emissiveIntensity = 1.25 + signalPulse * 1.15;
           renderer.render(scene, camera);
         };
         setWebglReady(true);
@@ -527,8 +635,7 @@ export default function PortfolioMascot() {
             return;
           }
           if (hasSectionMessage) setMessageOpen((open) => !open);
-          setReacting(true);
-          window.setTimeout(() => setReacting(false), 1100);
+          // The host click listener owns the reaction timer and randomized expression.
         }}
         aria-label={messageOpen ? "Close mascot message" : "Interact with the 3D portfolio mascot"}
         aria-expanded={messageOpen}
