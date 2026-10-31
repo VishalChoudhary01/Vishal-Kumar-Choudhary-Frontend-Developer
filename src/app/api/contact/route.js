@@ -15,7 +15,7 @@ import { buildContactEmail } from "@/app/lib/contactEmail";
  *   CONTACT_TO_EMAIL   Inbox that receives portfolio messages
  */
 
-const EMAIL_REGEX = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const NAME_MIN_LENGTH = 2;
 const MESSAGE_MIN_LENGTH = 10;
