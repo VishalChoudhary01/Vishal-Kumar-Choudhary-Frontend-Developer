@@ -645,17 +645,6 @@ export default function PortfolioMascot() {
           className="absolute inset-0 h-full w-full"
           aria-hidden="true"
         />
-        {!webglReady && (
-          <span className="absolute inset-x-0 top-6 flex justify-center" aria-hidden="true">
-            <span className="relative flex h-[82px] w-[68px] items-center justify-center rounded-[2rem] border border-[#b8c9c0] bg-[#f4f0e6] shadow-[0_14px_40px_-20px_rgba(12,38,32,.65)]">
-              <span className="absolute inset-x-2 top-5 h-8 rounded-2xl bg-[#101b18]" />
-              <span className="relative z-10 mt-1 flex gap-3">
-                <span className="h-2 w-2 rounded-full bg-[#5fe0d5] shadow-[0_0_8px_#5fe0d5]" />
-                <span className="h-2 w-2 rounded-full bg-[#5fe0d5] shadow-[0_0_8px_#5fe0d5]" />
-              </span>
-            </span>
-          </span>
-        )}
         <span className="sr-only">Currently exploring: {section.label}</span>
       </button>
 
