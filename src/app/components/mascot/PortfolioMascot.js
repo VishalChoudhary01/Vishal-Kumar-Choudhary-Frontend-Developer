@@ -617,6 +617,66 @@ export default function PortfolioMascot() {
   const section = SECTIONS[active] || SECTIONS[0];
   const hasSectionMessage = Boolean(section?.label?.trim() && section?.note?.trim() && section?.detail?.trim() && section?.action?.trim());
 
+  // Let the nearest eligible card react to Vee without driving per-frame React renders.
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return undefined;
+    const sectionNode = document.getElementById(section?.id);
+    const candidates = sectionNode
+      ? [...sectionNode.querySelectorAll("[data-mascot-interactive], article, [data-project-card], [data-skill-card]")]
+      : [];
+    const eligible = candidates.filter((node) => !host.contains(node));
+    const originals = new Map();
+    eligible.forEach((node) => {
+      originals.set(node, {
+        boxShadow: node.style.boxShadow,
+        outline: node.style.outline,
+        outlineOffset: node.style.outlineOffset,
+        transition: node.style.transition,
+      });
+      node.style.transition = "box-shadow 320ms ease, outline-color 320ms ease";
+    });
+
+    const hostRect = host.getBoundingClientRect();
+    const mascotX = hostRect.left + hostRect.width / 2;
+    const mascotY = hostRect.top + hostRect.height / 2;
+    let nearestNode = null;
+    let nearestDistance = Infinity;
+    eligible.forEach((node) => {
+      const rect = node.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0 || rect.bottom < 0 || rect.top > window.innerHeight) return;
+      const dx = mascotX - (rect.left + rect.width / 2);
+      const dy = mascotY - (rect.top + rect.height / 2);
+      const distance = Math.hypot(dx, dy);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestNode = node;
+      }
+    });
+
+    eligible.forEach((node) => {
+      if (node === nearestNode && nearestDistance < (isMobile ? 145 : 210)) {
+        node.style.boxShadow = "0 0 0 1px rgba(7,162,144,0.24), 0 8px 28px rgba(7,162,144,0.12)";
+        node.style.outline = "1px solid rgba(7,162,144,0.16)";
+        node.style.outlineOffset = "2px";
+      } else {
+        const original = originals.get(node);
+        node.style.boxShadow = original.boxShadow;
+        node.style.outline = original.outline;
+        node.style.outlineOffset = original.outlineOffset;
+      }
+    });
+
+    return () => {
+      originals.forEach((original, node) => {
+        node.style.boxShadow = original.boxShadow;
+        node.style.outline = original.outline;
+        node.style.outlineOffset = original.outlineOffset;
+        node.style.transition = original.transition;
+      });
+    };
+  }, [active, mascotPosition.x, mascotPosition.y, isMobile, section?.id]);
+
   return (
     <div
       ref={hostRef}
@@ -628,6 +688,13 @@ export default function PortfolioMascot() {
       }}
       aria-label="Interactive 3D portfolio companion"
     >
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-[12%] right-[12%] -bottom-2 h-3 rounded-[50%] bg-black/25 blur-md dark:bg-black/45"
+        animate={reducedMotion ? { opacity: 0.18, scaleX: 1 } : { opacity: isDragging ? 0.12 : [0.16, 0.24, 0.16], scaleX: isDragging ? 1.22 : [0.92, 1.04, 0.92] }}
+        transition={reducedMotion ? { duration: 0 } : { duration: isDragging ? 0.18 : 2.4, repeat: isDragging ? 0 : Infinity, ease: "easeInOut" }}
+        style={{ pointerEvents: "none" }}
+      />
       <motion.div
         aria-hidden="true"
         className="absolute -inset-5 -z-10 rounded-full blur-2xl"
