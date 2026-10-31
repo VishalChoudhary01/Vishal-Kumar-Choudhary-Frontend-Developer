@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { ArrowDown, Sparkles } from "lucide-react";
+import { ArrowDown, Grip, Sparkles } from "lucide-react";
 
 const SECTIONS = [
   {
@@ -73,6 +73,9 @@ export default function PortfolioMascot() {
   const reducedMotion = useReducedMotion();
   const [active, setActive] = useState(0);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [manualPosition, setManualPosition] = useState(null);
   const [messageOpen, setMessageOpen] = useState(false);
   const [webglReady, setWebglReady] = useState(false);
   const [mascotPosition, setMascotPosition] = useState({ x: 0, y: 0 });
@@ -80,10 +83,18 @@ export default function PortfolioMascot() {
 
   useEffect(() => {
     const desktopQuery = window.matchMedia("(min-width: 768px)");
-    const syncDesktop = () => setIsDesktop(desktopQuery.matches);
-    syncDesktop();
-    desktopQuery.addEventListener("change", syncDesktop);
-    return () => desktopQuery.removeEventListener("change", syncDesktop);
+    const mobileQuery = window.matchMedia("(max-width: 767px)");
+    const syncViewport = () => {
+      setIsDesktop(desktopQuery.matches);
+      setIsMobile(mobileQuery.matches);
+    };
+    syncViewport();
+    desktopQuery.addEventListener("change", syncViewport);
+    mobileQuery.addEventListener("change", syncViewport);
+    return () => {
+      desktopQuery.removeEventListener("change", syncViewport);
+      mobileQuery.removeEventListener("change", syncViewport);
+    };
   }, []);
 
   useEffect(() => {
@@ -144,6 +155,8 @@ export default function PortfolioMascot() {
       let nearest = 0;
       let nearestDistance = Infinity;
       const marker = window.innerHeight * 0.42;
+      const footer = document.querySelector("footer");
+      footerReached = Boolean(footer && footer.getBoundingClientRect().top < window.innerHeight * 0.78);
       SECTIONS.forEach((section, index) => {
         const node = document.getElementById(section.id);
         if (!node) return;
@@ -162,17 +175,21 @@ export default function PortfolioMascot() {
       // it inside the viewport and away from the center of the target where possible.
       const sectionId = SECTIONS[nearest]?.id;
       const sectionNode = sectionId ? document.getElementById(sectionId) : null;
-      const target = sectionNode?.querySelector(
+      const target = footerReached ? footer : sectionNode?.querySelector(
         "h1, h2, h3, form, [data-mascot-target], a[href^='#'], button"
       ) || sectionNode;
       const targetRect = target?.getBoundingClientRect();
-      const mascotWidth = 94;
-      const mascotHeight = 142;
+      const mascotWidth = isMobile ? 68 : 94;
+      const mascotHeight = isMobile ? 100 : 142;
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       let x = viewportWidth * (nearest % 2 === 0 ? 0.78 : 0.22);
       let y = viewportHeight * (0.25 + progress * 0.42);
-      if (targetRect && targetRect.width > 0 && targetRect.height > 0) {
+      if (footerReached && targetRect) {
+        // Settle on the footer instead of continuing to float over its content.
+        x = clamp(viewportWidth - mascotWidth - 18, 8, viewportWidth - mascotWidth - 8);
+        y = clamp(targetRect.top + 8, viewportHeight * 0.35, viewportHeight - mascotHeight - 8);
+      } else if (targetRect && targetRect.width > 0 && targetRect.height > 0) {
         const preferRight = nearest % 2 === 0;
         x = preferRight ? targetRect.right + 10 : targetRect.left - mascotWidth - 10;
         if (x + mascotWidth > viewportWidth - 8) x = targetRect.left - mascotWidth - 10;
@@ -193,7 +210,7 @@ export default function PortfolioMascot() {
         targetFacingX = 0;
         targetFacingY = 0;
       }
-      setMascotPosition({ x, y });
+      setMascotPosition(manualPosition || { x, y });
     };
     updateScroll();
     window.addEventListener("scroll", updateScroll, { passive: true });
@@ -415,24 +432,41 @@ export default function PortfolioMascot() {
       }
       renderer?.dispose();
     };
-  }, [reducedMotion, isDesktop]);
+  }, [reducedMotion, isDesktop, isMobile, manualPosition]);
 
   const section = SECTIONS[active] || SECTIONS[0];
 
   return (
     <div
       ref={hostRef}
-      className="pointer-events-none fixed z-40 hidden w-[94px] flex-col items-center md:flex"
+      className={`pointer-events-none fixed z-40 flex flex-col items-center ${isMobile ? "w-[68px]" : "hidden w-[94px] md:flex"}`}
       style={{
         left: mascotPosition.x,
         top: mascotPosition.y,
-        transition: reducedMotion ? "none" : "left 650ms cubic-bezier(.2,.75,.25,1), top 650ms cubic-bezier(.2,.75,.25,1)",
+        transition: reducedMotion || isDragging ? "none" : "left 650ms cubic-bezier(.2,.75,.25,1), top 650ms cubic-bezier(.2,.75,.25,1)",
       }}
       aria-label="Interactive 3D portfolio companion"
     >
       <button
         type="button"
-        className="pointer-events-auto relative block h-[132px] w-full cursor-pointer touch-manipulation rounded-full outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4 focus-visible:ring-offset-background"
+        onPointerDown={(event) => {
+          if (event.button !== 0) return;
+          event.currentTarget.setPointerCapture(event.pointerId);
+          setIsDragging(true);
+          const rect = hostRef.current?.getBoundingClientRect();
+          if (rect) hostRef.current.dataset.dragOffset = JSON.stringify({ x: event.clientX - rect.left, y: event.clientY - rect.top });
+        }}
+        onPointerMove={(event) => {
+          if (!isDragging) return;
+          const offset = JSON.parse(hostRef.current?.dataset.dragOffset || '{"x":0,"y":0}');
+          setManualPosition({
+            x: clamp(event.clientX - offset.x, 8, window.innerWidth - (isMobile ? 68 : 94) - 8),
+            y: clamp(event.clientY - offset.y, 8, window.innerHeight - (isMobile ? 120 : 164)),
+          });
+        }}
+        onPointerUp={() => setIsDragging(false)}
+        onPointerCancel={() => setIsDragging(false)}
+        className={`pointer-events-auto relative block w-full cursor-pointer touch-manipulation rounded-full outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4 focus-visible:ring-offset-background ${isMobile ? "h-[92px]" : "h-[132px]"}`}
         onClick={() => {
           setMessageOpen((open) => !open);
           setReacting(true);
@@ -460,6 +494,10 @@ export default function PortfolioMascot() {
         <span className="sr-only">Currently exploring: {section.label}</span>
       </button>
 
+      <span className="pointer-events-auto mt-1 inline-flex items-center gap-1 rounded-full bg-background/85 px-2 py-1 text-[9px] text-muted-foreground shadow-sm" aria-hidden="true">
+        <Grip size={10} />
+        Drag to move
+      </span>
       <AnimatePresence mode="wait" initial={false}>
         <motion.button
           key={section.id}
@@ -470,13 +508,13 @@ export default function PortfolioMascot() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.97 }}
           transition={{ duration: reducedMotion ? 0.01 : 0.22, ease: "easeOut" }}
-          className="pointer-events-auto mt-[-12px] w-[154px] rounded-md border border-border/80 bg-background/95 px-2.5 py-2 text-left text-foreground shadow-lg backdrop-blur-md transition-colors hover:border-brand/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          className={`pointer-events-auto mt-[-12px] ${isMobile ? "w-[116px]" : "w-[154px]"} rounded-md border border-border/80 bg-background/95 px-2.5 py-2 text-left text-foreground shadow-lg backdrop-blur-md transition-colors hover:border-brand/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand`}
         >
           <span className="flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-brand">
             <Sparkles size={11} aria-hidden="true" />
             {section.label}
           </span>
-          <span className="mt-1 block text-[10px] leading-snug">{section.note}</span>
+          <span className={`mt-1 block leading-snug ${isMobile ? "text-[9px]" : "text-[10px]"}`}>{section.note}</span>
           <span className="mt-1 block text-[9px] font-semibold text-brand/90">{messageOpen ? "Close message −" : "Tap to chat +"}</span>
         </motion.button>
       </AnimatePresence>
@@ -489,7 +527,7 @@ export default function PortfolioMascot() {
             animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
             exit={reducedMotion ? { opacity: 0 } : { opacity: 0, x: -8, y: 3, scale: 0.98 }}
             transition={{ duration: reducedMotion ? 0.01 : 0.2, ease: "easeOut" }}
-            className="pointer-events-auto absolute right-[calc(100%-4px)] top-1/2 w-52 -translate-y-1/2 rounded-lg border border-border/70 bg-background/95 p-3 text-foreground shadow-2xl backdrop-blur-xl"
+            className={`pointer-events-auto absolute right-[calc(100%-4px)] top-1/2 ${isMobile ? "w-44" : "w-52"} -translate-y-1/2 rounded-lg border border-border/70 bg-background/95 p-3 text-foreground shadow-2xl backdrop-blur-xl`}
             role="dialog"
             aria-label={section.label}
           >
