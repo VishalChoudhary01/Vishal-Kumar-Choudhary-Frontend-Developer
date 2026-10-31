@@ -394,7 +394,7 @@ export default function PortfolioMascot() {
         rightArm = rightParts.arm;
         // Keep the raised right hand outside the helmet silhouette during high waves.
         // A small lateral offset plus a slightly more open elbow prevents head intersection.
-        rightArm.position.x = 0.82;
+        rightArm.position.x = 0.68;
         rightElbow = rightParts.elbow;
         rightWrist = rightParts.wrist;
         rightHand = rightParts.hand;
@@ -654,7 +654,7 @@ export default function PortfolioMascot() {
       {messageOpen && hasSectionMessage && typeof document !== "undefined" && createPortal(
         <div
           key={section.id + "-message"}
-          className="pointer-events-auto fixed z-[99999] rounded-lg border border-border/70 bg-background p-3 text-foreground shadow-xl"
+          className="pointer-events-auto fixed z-[99999] overflow-hidden rounded-lg border border-white/15 bg-[#0b100e]/65 p-3 text-foreground shadow-[0_18px_60px_-24px_rgba(0,0,0,0.8)] backdrop-blur-xl before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(ellipse_at_top_left,rgba(95,224,213,0.14),transparent_58%),linear-gradient(135deg,rgba(255,255,255,0.07),transparent_48%,rgba(95,224,213,0.04))] before:content-[''] [&>*]:relative"
           style={isMobile
             ? { top: "calc(env(safe-area-inset-top, 0px) + 84px)", left: "12px", right: "12px", width: "auto", maxHeight: "calc(100dvh - env(safe-area-inset-top, 0px) - 104px)", overflowY: "auto" }
             : { left: Math.max(12, Math.min(window.innerWidth - 232, mascotPosition.x > window.innerWidth / 2 ? mascotPosition.x - 244 : mascotPosition.x + 104)), top: Math.max(80, Math.min(window.innerHeight - 260, mascotPosition.y - 12)), width: "220px", maxHeight: "min(70vh, 480px)", overflowY: "auto" }}
