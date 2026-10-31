@@ -436,13 +436,13 @@ export default function PortfolioMascot() {
         resize();
 
         const poses = {
-          wave: { left: 1.55, right: -2.65, lean: -0.04, head: 0.03, legs: 0.04 },
-          curious: { left: 0.75, right: -0.55, lean: 0.04, head: -0.17, legs: 0.02 },
-          inspect: { left: 0.95, right: -0.5, lean: 0.08, head: 0.16, legs: -0.04 },
-          excited: { left: 1.15, right: -1.15, lean: -0.02, head: 0, legs: 0.1 },
-          work: { left: 0.65, right: -0.95, lean: 0.02, head: -0.04, legs: 0 },
-          point: { left: 0.7, right: -1.9, lean: -0.08, head: -0.12, legs: 0.05 },
-          welcome: { left: 1.1, right: -1.1, lean: 0, head: 0.02, legs: 0 },
+          wave: { left: 2.05, right: -2.95, lean: -0.04, head: 0.03, legs: 0.04 },
+          curious: { left: 1.25, right: -0.95, lean: 0.04, head: -0.17, legs: 0.02 },
+          inspect: { left: 1.4, right: -0.9, lean: 0.08, head: 0.16, legs: -0.04 },
+          excited: { left: 1.55, right: -1.55, lean: -0.02, head: 0, legs: 0.1 },
+          work: { left: 1.05, right: -1.25, lean: 0.02, head: -0.04, legs: 0 },
+          point: { left: 1.0, right: -2.15, lean: -0.08, head: -0.12, legs: 0.05 },
+          welcome: { left: 1.5, right: -1.5, lean: 0, head: 0.02, legs: 0 },
         };
         const smooth = (current, target, amount) => current + (target - current) * amount;
         const render = (time) => {
@@ -485,8 +485,8 @@ export default function PortfolioMascot() {
           const rightWave = reactingNow ? Math.sin(seconds * 18) * 0.65 : playfulArm + (greeting ? -0.22 : 0);
           rightArm.rotation.z = smooth(rightArm.rotation.z, rightArmTarget + rightWave, 0.07);
           // Secondary joints lag slightly behind the shoulders for a connected, soft gesture.
-          leftElbow.rotation.z = smooth(leftElbow.rotation.z, -0.12 + Math.max(0, leftWave) * 0.22, 0.08);
-          rightElbow.rotation.z = smooth(rightElbow.rotation.z, (SECTIONS[activeIndex]?.pose === "point" ? -0.18 : -0.08) + Math.max(0, rightWave) * 0.18, 0.08);
+          leftElbow.rotation.z = smooth(leftElbow.rotation.z, -0.22 + Math.max(0, leftWave) * 0.28, 0.08);
+          rightElbow.rotation.z = smooth(rightElbow.rotation.z, (SECTIONS[activeIndex]?.pose === "point" ? -0.28 : -0.16) + Math.max(0, rightWave) * 0.22, 0.08);
           leftWrist.rotation.z = smooth(leftWrist.rotation.z, greeting || reactingNow ? Math.sin(seconds * 18) * 0.18 : 0, 0.1);
           const rightWristTarget = SECTIONS[activeIndex]?.pose === "point" ? -0.12 : (SECTIONS[activeIndex]?.pose === "wave" || greeting || reactingNow ? Math.sin(seconds * 13) * 0.24 : 0);
           rightWrist.rotation.z = smooth(rightWrist.rotation.z, rightWristTarget, 0.12);
