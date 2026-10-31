@@ -118,6 +118,8 @@ export default function PortfolioMascot() {
     let antenna;
     let eyeLeft;
     let eyeRight;
+    let browLeft;
+    let browRight;
     let glow;
     let pointerX = 0;
     let pointerY = 0;
@@ -131,6 +133,14 @@ export default function PortfolioMascot() {
     let targetFacingX = 0;
     let targetFacingY = 0;
     let lastScrollTime = performance.now();
+    let expressionUntil = 0;
+    let activeExpression = "happy";
+    const expressions = ["happy", "surprised", "curious", "sleepy", "cheeky", "excited", "wink"];
+    const chooseExpression = () => {
+      const choices = expressions.filter((expression) => expression !== activeExpression);
+      activeExpression = choices[Math.floor(Math.random() * choices.length)] || "happy";
+      expressionUntil = performance.now() + 1550;
+    };
 
     const canvas = canvasRef.current;
     const host = hostRef.current;
@@ -146,9 +156,10 @@ export default function PortfolioMascot() {
       targetPointerY = 0;
     };
     const onClick = () => {
-      reactionUntil = performance.now() + 1100;
+      reactionUntil = performance.now() + 1550;
+      chooseExpression();
       setReacting(true);
-      window.setTimeout(() => setReacting(false), 1150);
+      window.setTimeout(() => setReacting(false), 1600);
     };
     host.addEventListener("pointermove", onPointerMove);
     host.addEventListener("pointerleave", onPointerLeave);
@@ -351,6 +362,9 @@ export default function PortfolioMascot() {
         sphere(dark, head, [0, -0.02, 0.53], [0.67, 0.43, 0.2], 32);
         eyeLeft = sphere(teal, head, [-0.25, 0.03, 0.7], [0.09, 0.12, 0.045], 20);
         eyeRight = sphere(teal, head, [0.25, 0.03, 0.7], [0.09, 0.12, 0.045], 20);
+        // Expressive brow plates make curiosity, surprise, and cheekiness readable at a glance.
+        browLeft = makeMesh(new THREE.CapsuleGeometry(0.5, 0.12, 4, 10), orange, head, [-0.25, 0.235, 0.675], [0.055, 0.16, 0.035]);
+        browRight = makeMesh(new THREE.CapsuleGeometry(0.5, 0.12, 4, 10), orange, head, [0.25, 0.235, 0.675], [0.055, 0.16, 0.035]);
         // A curved, softly glowing smile reads more clearly than a tiny flat mouth.
         const smileCurve = new THREE.CatmullRomCurve3([
           new THREE.Vector3(-0.19, -0.205, 0.69),
@@ -414,6 +428,9 @@ export default function PortfolioMascot() {
           pointerY = smooth(pointerY, targetPointerY, reducedMotion ? 0.035 : 0.075);
           const idle = reducedMotion ? 0 : Math.sin(seconds * 2.1) * 0.045;
           const reactingNow = time < reactionUntil;
+          const expressionActive = time < expressionUntil;
+          // Give Vee a short welcoming wave on arrival, then return to its section-specific pose.
+          const greeting = !reducedMotion && seconds - startTime < 2.8;
           // When the page is idle, Vee stays lively with gentle face-scanning and a small alternating hand wave.
           const idlePlay = !reducedMotion && !footerSettled && time - lastScrollTime > 1600 && !reactingNow;
           const idleLook = idlePlay ? Math.sin(seconds * 1.25) * 0.34 : 0;
@@ -427,20 +444,40 @@ export default function PortfolioMascot() {
           const facePitch = idlePlay ? Math.sin(seconds * 1.7) * 0.08 - pointerY * 0.08 : -targetFacingY * 0.2 - pointerY * 0.16;
           head.rotation.y = smooth(head.rotation.y, faceYaw, 0.075);
           head.rotation.x = smooth(head.rotation.x, facePitch, 0.075);
-          leftArm.rotation.z = smooth(leftArm.rotation.z, pose.left + (reactingNow ? Math.sin(seconds * 18) * 0.65 : idleWave), 0.07);
+          const greetingWave = greeting ? Math.sin(seconds * 13) * 0.48 : 0;
+          leftArm.rotation.z = smooth(leftArm.rotation.z, pose.left + (reactingNow ? Math.sin(seconds * 18) * 0.65 : idleWave + greetingWave), 0.07);
           const pointingRight = targetFacingX >= 0;
           const rightArmTarget = SECTIONS[activeIndex]?.pose === "point"
             ? (pointingRight ? -1.65 : 1.65)
             : pose.right;
           const playfulArm = idlePlay ? Math.sin(seconds * 2.2 + Math.PI) * 0.22 : 0;
-          rightArm.rotation.z = smooth(rightArm.rotation.z, rightArmTarget + (reactingNow ? Math.sin(seconds * 18) * 0.65 : playfulArm), 0.07);
+          rightArm.rotation.z = smooth(rightArm.rotation.z, rightArmTarget + (reactingNow ? Math.sin(seconds * 18) * 0.65 : playfulArm + (greeting ? -0.22 : 0)), 0.07);
+          // Randomized facial acting: eye shape/spacing, brow angle, smile stretch, and a tiny head tilt.
+          const faceExpression = expressionActive ? activeExpression : (idlePlay ? "curious" : "happy");
+          const surprised = faceExpression === "surprised";
+          const curious = faceExpression === "curious";
+          const sleepy = faceExpression === "sleepy";
+          const cheeky = faceExpression === "cheeky";
+          const excited = faceExpression === "excited";
+          const wink = faceExpression === "wink";
+          const blink = !reducedMotion && Math.sin(seconds * 0.8) > 0.997;
+          const eyeOpenLeft = blink || sleepy ? 0.035 : (surprised || excited ? 0.16 : 0.12);
+          const eyeOpenRight = wink ? 0.025 : eyeOpenLeft;
+          eyeLeft.scale.y = smooth(eyeLeft.scale.y, eyeOpenLeft, 0.22);
+          eyeRight.scale.y = smooth(eyeRight.scale.y, eyeOpenRight, 0.22);
+          eyeLeft.position.x = smooth(eyeLeft.position.x, curious ? -0.28 : -0.25, 0.12);
+          eyeRight.position.x = smooth(eyeRight.position.x, curious ? 0.22 : 0.25, 0.12);
+          browLeft.rotation.z = smooth(browLeft.rotation.z, surprised ? 0.18 : curious ? 0.32 : sleepy ? -0.18 : 0.02, 0.1);
+          browRight.rotation.z = smooth(browRight.rotation.z, surprised ? -0.18 : curious ? 0.02 : cheeky ? -0.32 : sleepy ? 0.18 : -0.02, 0.1);
+          browLeft.position.y = smooth(browLeft.position.y, surprised || excited ? 0.29 : 0.235, 0.1);
+          browRight.position.y = smooth(browRight.position.y, surprised || excited ? 0.29 : 0.235, 0.1);
+          smile.scale.x = smooth(smile.scale.x, surprised ? 0.48 : cheeky ? 0.72 : excited ? 1.22 : 1, 0.1);
+          smile.scale.y = smooth(smile.scale.y, surprised ? 0.55 : sleepy ? 0.55 : excited ? 1.35 : 0.88 + (Math.sin(seconds * 2.4) + 1) * 0.13, 0.1);
+          smile.rotation.z = smooth(smile.rotation.z, cheeky ? -0.18 : curious ? 0.08 : 0, 0.1);
+          head.rotation.z = smooth(head.rotation.z, (curious ? -0.12 : cheeky ? 0.1 : 0) + (reducedMotion ? 0 : Math.sin(seconds * 1.1) * 0.012), 0.08);
           leftLeg.rotation.z = smooth(leftLeg.rotation.z, footerSettled ? -0.42 : -pose.legs + (reactingNow ? -0.14 : 0), 0.05);
           rightLeg.rotation.z = smooth(rightLeg.rotation.z, footerSettled ? 0.42 : pose.legs + (reactingNow ? 0.14 : 0), 0.05);
           antenna.rotation.z = Math.sin(seconds * 2.7) * (reducedMotion ? 0.015 : 0.09);
-          eyeLeft.scale.y = eyeRight.scale.y = 0.12 * (Math.sin(seconds * 0.8) > 0.997 ? 0.15 : 1);
-          // Give Vee a living expression: the smile gently widens and relaxes instead of staying static.
-          smile.scale.y = reducedMotion ? 1 : 0.88 + (Math.sin(seconds * 2.4) + 1) * 0.13;
-          smile.rotation.z = reducedMotion ? 0 : Math.sin(seconds * 1.35) * 0.035;
           renderer.render(scene, camera);
         };
         setWebglReady(true);
