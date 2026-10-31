@@ -547,11 +547,13 @@ export default function PortfolioMascot() {
           leftLeg.rotation.z = smooth(leftLeg.rotation.z, footerSettled ? -0.42 : -pose.legs + (reactingNow ? -0.14 : 0), 0.05);
           rightLeg.rotation.z = smooth(rightLeg.rotation.z, footerSettled ? 0.42 : pose.legs + (reactingNow ? 0.14 : 0), 0.05);
           antenna.rotation.z = Math.sin(seconds * 2.7) * (reducedMotion ? 0.015 : 0.09);
-          // Pulse the antenna tip between signal red and warm orange.
-          const signalPulse = (Math.sin(seconds * (reducedMotion ? 1.4 : 4.2)) + 1) * 0.5;
-          antennaTipMaterial.color.setRGB(1, 0.16 + signalPulse * 0.38, 0.12 + signalPulse * 0.015);
-          antennaTipMaterial.emissive.setRGB(0.9, 0.035 + signalPulse * 0.22, 0.01);
-          antennaTipMaterial.emissiveIntensity = 1.25 + signalPulse * 1.15;
+          // Cycle the antenna tip through vivid blood red, orange, and yellow,
+          // while pulsing its glow so the signal visibly blinks.
+          const signalPulse = (Math.sin(seconds * (reducedMotion ? 1.4 : 5.2)) + 1) * 0.5;
+          const signalHue = 0.005 + signalPulse * 0.145; // red → orange → golden yellow
+          antennaTipMaterial.color.setHSL(signalHue, 1, 0.52);
+          antennaTipMaterial.emissive.setHSL(signalHue, 1, 0.34);
+          antennaTipMaterial.emissiveIntensity = 0.45 + signalPulse * 2.6;
           renderer.render(scene, camera);
         };
         setWebglReady(true);
