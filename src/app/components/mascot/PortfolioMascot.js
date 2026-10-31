@@ -298,7 +298,7 @@ export default function PortfolioMascot() {
   }, [reducedMotion]);
 
   const section = SECTIONS[active] || SECTIONS[0];
-  const top = reducedMotion ? "42vh" : (14 + scrollProgress * 60) + "vh";
+  const top = reducedMotion ? "42vh" : (14 + scrollProgress * 50) + "vh";
 
   return (
     <div
