@@ -542,7 +542,8 @@ export default function PortfolioMascot() {
             animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
             exit={reducedMotion ? { opacity: 0 } : { opacity: 0, x: -8, y: 3, scale: 0.98 }}
             transition={{ duration: reducedMotion ? 0.01 : 0.2, ease: "easeOut" }}
-            className={`pointer-events-auto absolute rounded-lg border border-border/70 bg-background/95 p-3 text-foreground shadow-2xl backdrop-blur-xl ${isMobile ? "left-1/2 right-auto top-auto bottom-[calc(100%+8px)] w-[min(240px,calc(100vw-24px))] -translate-x-1/2 translate-y-0" : "right-[calc(100%-4px)] top-1/2 w-52 -translate-y-1/2"}`}
+            className={`pointer-events-auto rounded-lg border border-border/70 bg-background/95 p-3 text-foreground shadow-2xl backdrop-blur-xl ${isMobile ? "fixed left-3 right-3 z-[60] w-auto" : "absolute right-[calc(100%-4px)] top-1/2 w-52 -translate-y-1/2"}`}
+            style={isMobile ? { bottom: `max(12px, calc(100vh - ${mascotPosition.y}px + 8px))`, maxHeight: "min(55vh, 360px)", overflowY: "auto" } : undefined}
             role="dialog"
             aria-label={section.label}
           >
