@@ -786,24 +786,6 @@ export default function PortfolioMascot() {
         style={{ pointerEvents: "none" }}
       />
       <AnimatePresence>
-      {scanWave && typeof document !== "undefined" && createPortal(
-        <motion.div
-          key={scanWave.id}
-          aria-hidden="true"
-          className="pointer-events-none fixed z-[99997] h-[2px] origin-left rounded-full bg-cyan-100 shadow-[0_0_5px_2px_rgba(95,224,213,0.9),0_0_14px_4px_rgba(95,224,213,0.45)]"
-          style={{
-            left: scanWave.x,
-            top: scanWave.y,
-            width: scanWave.length,
-            rotate: scanWave.angle,
-            transformOrigin: "left center",
-          }}
-          initial={{ scaleX: 0, opacity: 0 }}
-          animate={{ scaleX: [0, 1, 1], opacity: [0, 1, 1] }}
-          transition={{ duration: reducedMotion ? 0 : 0.62, ease: "easeOut" }}
-        />,
-        document.body,
-      )}
         {energyActive && !reducedMotion && (
           <motion.span
             key="vee-core-charge"
