@@ -85,6 +85,8 @@ export default function PortfolioMascot() {
   const dragMovedRef = useRef(false);
   const [reacting, setReacting] = useState(false);
   const [energyActive, setEnergyActive] = useState(false);
+  const [scanWave, setScanWave] = useState(null);
+  const scanTimersRef = useRef([]);
   const energyTimerRef = useRef(null);
   const energyActiveRef = useRef(false);
   const activeSectionRef = useRef("hero");
@@ -619,7 +621,48 @@ export default function PortfolioMascot() {
   }, [reducedMotion, isDesktop, isMobile]);
 
   const activateEnergyMode = () => {
+    if (typeof window === "undefined") return;
     if (energyTimerRef.current) window.clearTimeout(energyTimerRef.current);
+    scanTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+    scanTimersRef.current = [];
+
+    const host = hostRef.current;
+    const sectionNode = document.getElementById(section?.id);
+    if (host) {
+      const rect = host.getBoundingClientRect();
+      const origin = { x: rect.left + rect.width * 0.5, y: rect.top + rect.height * 0.51 };
+      const selectors = "img, svg, h1, h2, h3, [data-skill-icon], [data-mascot-interactive]";
+      const targets = (sectionNode ? [...sectionNode.querySelectorAll(selectors)] : [])
+        .filter((node) => {
+          if (host.contains(node) || node.closest("[aria-hidden='true']")) return false;
+          const box = node.getBoundingClientRect();
+          return box.width > 0 && box.height > 0 && box.bottom >= 0 && box.top <= window.innerHeight && box.right >= 0 && box.left <= window.innerWidth;
+        })
+        .map((node) => {
+          const box = node.getBoundingClientRect();
+          return { node, distance: Math.hypot(box.left + box.width / 2 - origin.x, box.top + box.height / 2 - origin.y) };
+        })
+        .sort((a, b) => a.distance - b.distance);
+      const maxDistance = targets.reduce((max, target) => Math.max(max, target.distance), 0);
+      setScanWave({ ...origin, radius: Math.max(120, maxDistance + 80), id: Date.now() });
+
+      targets.forEach(({ node, distance }) => {
+        const delay = reducedMotion ? 0 : Math.min(900, distance / Math.max(maxDistance, 1) * 900);
+        scanTimersRef.current.push(window.setTimeout(() => {
+          if (!node.isConnected) return;
+          node.animate(reducedMotion
+            ? [{ opacity: 0.92 }, { opacity: 1 }]
+            : [
+                { filter: "brightness(1) drop-shadow(0 0 0px rgba(95,224,213,0))" },
+                { filter: "brightness(1.35) drop-shadow(0 0 10px rgba(95,224,213,0.9))" },
+                { filter: "brightness(1.08) drop-shadow(0 0 3px rgba(95,224,213,0.35))" },
+                { filter: "brightness(1) drop-shadow(0 0 0px rgba(95,224,213,0))" },
+              ], { duration: reducedMotion ? 120 : 760, easing: "ease-out" });
+        }, delay));
+      });
+      scanTimersRef.current.push(window.setTimeout(() => setScanWave(null), reducedMotion ? 100 : 1250));
+    }
+
     energyActiveRef.current = true;
     setEnergyActive(true);
     setReacting(true);
@@ -633,6 +676,7 @@ export default function PortfolioMascot() {
 
   useEffect(() => () => {
     if (energyTimerRef.current) window.clearTimeout(energyTimerRef.current);
+    scanTimersRef.current.forEach((timer) => window.clearTimeout(timer));
   }, []);
 
   const section = SECTIONS[active] || SECTIONS[0];
@@ -732,6 +776,26 @@ export default function PortfolioMascot() {
         style={{ pointerEvents: "none" }}
       />
       <AnimatePresence>
+      {scanWave && typeof document !== "undefined" && createPortal(
+        <motion.div
+          key={scanWave.id}
+          aria-hidden="true"
+          className="pointer-events-none fixed z-[99997] rounded-full border border-cyan-200/75 shadow-[0_0_18px_2px_rgba(95,224,213,0.25)]"
+          style={{
+            left: scanWave.x,
+            top: scanWave.y,
+            width: scanWave.radius * 2,
+            height: scanWave.radius * 2,
+            marginLeft: -scanWave.radius,
+            marginTop: -scanWave.radius,
+            background: "radial-gradient(circle, rgba(95,224,213,0.10) 0%, rgba(95,224,213,0.045) 42%, transparent 70%)",
+          }}
+          initial={{ scale: 0.02, opacity: reducedMotion ? 0 : 0.9 }}
+          animate={{ scale: 1, opacity: 0 }}
+          transition={{ duration: reducedMotion ? 0 : 1.1, ease: "easeOut" }}
+        />,
+        document.body,
+      )}
         {energyActive && (
           <motion.div
             key="vee-energy-scan"
