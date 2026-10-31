@@ -543,10 +543,6 @@ export default function PortfolioMascot() {
         <span className="sr-only">Currently exploring: {section.label}</span>
       </button>
 
-      <span className={`pointer-events-auto mt-0.5 items-center gap-1 rounded-full bg-background/85 px-2 py-1 text-[9px] text-muted-foreground shadow-sm ${isMobile ? "hidden" : "inline-flex"}`} aria-hidden="true">
-        <Grip size={10} />
-        Drag to move
-      </span>
       {messageOpen && hasSectionMessage && typeof document !== "undefined" && createPortal(
         <div
           key={section.id + "-message"}
