@@ -23,12 +23,23 @@ export default function PortfolioMascot() {
   const canvasRef = useRef(null);
   const reducedMotion = useReducedMotion();
   const [active, setActive] = useState(0);
+  const [isDesktop, setIsDesktop] = useState(false);
   const [messageOpen, setMessageOpen] = useState(false);
   const [webglReady, setWebglReady] = useState(false);
   const [mascotPosition, setMascotPosition] = useState({ x: 0, y: 0 });
   const [reacting, setReacting] = useState(false);
 
   useEffect(() => {
+    const desktopQuery = window.matchMedia("(min-width: 768px)");
+    const syncDesktop = () => setIsDesktop(desktopQuery.matches);
+    syncDesktop();
+    desktopQuery.addEventListener("change", syncDesktop);
+    return () => desktopQuery.removeEventListener("change", syncDesktop);
+  }, []);
+
+  useEffect(() => {
+    if (!isDesktop) return undefined;
+
     let frame = 0;
     let disposed = false;
     let renderer;
@@ -320,7 +331,7 @@ export default function PortfolioMascot() {
       }
       renderer?.dispose();
     };
-  }, [reducedMotion]);
+  }, [reducedMotion, isDesktop]);
 
   const section = SECTIONS[active] || SECTIONS[0];
 
