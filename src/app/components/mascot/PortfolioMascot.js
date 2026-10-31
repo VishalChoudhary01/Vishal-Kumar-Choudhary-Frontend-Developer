@@ -795,10 +795,11 @@ export default function PortfolioMascot() {
             left: scanWave.x,
             top: scanWave.y,
             width: scanWave.length,
-            transform: `rotate(${scanWave.angle}deg)`,
+            rotate: scanWave.angle,
+            transformOrigin: "left center",
           }}
           initial={{ scaleX: 0, opacity: 0 }}
-          animate={{ scaleX: [0, 1, 1], opacity: [0, 1, 0.85] }}
+          animate={{ scaleX: [0, 1, 1], opacity: [0, 1, 1] }}
           transition={{ duration: reducedMotion ? 0 : 0.62, ease: "easeOut" }}
         />,
         document.body,
