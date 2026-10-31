@@ -503,10 +503,13 @@ export default function PortfolioMascot() {
           const start = dragStartRef.current;
           if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > 5) dragMovedRef.current = true;
           const offset = JSON.parse(hostRef.current?.dataset.dragOffset || '{"x":0,"y":0}');
-          setManualPosition({
+          const nextPosition = {
             x: clamp(event.clientX - offset.x, 8, window.innerWidth - (isMobile ? 48 : 94) - 8),
             y: clamp(event.clientY - offset.y, 8, window.innerHeight - (isMobile ? 94 : 164)),
-          });
+          };
+          // Update the rendered position immediately as well as persisting the user's drag.
+          setManualPosition(nextPosition);
+          setMascotPosition(nextPosition);
         }}
         onPointerUp={(event) => {
           if (event.currentTarget.hasPointerCapture?.(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
