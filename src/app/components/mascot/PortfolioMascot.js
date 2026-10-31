@@ -117,6 +117,8 @@ export default function PortfolioMascot() {
     let rightElbow;
     let leftWrist;
     let rightWrist;
+    let leftHand;
+    let rightHand;
     let leftLeg;
     let rightLeg;
     let antenna;
