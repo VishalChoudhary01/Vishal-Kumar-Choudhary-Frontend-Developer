@@ -1,20 +1,21 @@
 import { NextResponse } from "next/server";
-import { resend, getFromEmail } from "@/app/lib/resend";
+import nodemailer from "nodemailer";
 import { buildContactEmail } from "@/app/lib/contactEmail";
 
 /**
  * POST /api/contact
  *
- * Server-side bridge between the Contact form and Resend.
- * The API key lives only here (server) — never in the browser.
+ * Sends portfolio contact messages through the owner's Gmail account using
+ * authenticated Gmail SMTP. Credentials must stay in server-side environment
+ * variables and must never be exposed to the browser.
  *
- * Env vars:
- *   RESEND_API_KEY     required to send
- *   CONTACT_TO_EMAIL   the inbox that receives portfolio messages
- *   RESEND_FROM_EMAIL  optional verified sender (default: onboarding@resend.dev)
+ * Required environment variables:
+ *   GMAIL_USER          Gmail address used to send messages
+ *   GMAIL_APP_PASSWORD  Google App Password (not the normal account password)
+ *   CONTACT_TO_EMAIL   Inbox that receives portfolio messages
  */
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_REGEX = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
 
 const NAME_MIN_LENGTH = 2;
 const MESSAGE_MIN_LENGTH = 10;
@@ -58,14 +59,16 @@ function validate(payload) {
 }
 
 export async function POST(request) {
-  if (!resend) {
+  const user = process.env.GMAIL_USER;
+  const appPassword = process.env.GMAIL_APP_PASSWORD;
+  const to = process.env.CONTACT_TO_EMAIL;
+
+  if (!user || !appPassword) {
     return NextResponse.json(
       { error: "Email service is not configured yet." },
       { status: 503 },
     );
   }
-
-  const to = process.env.CONTACT_TO_EMAIL;
 
   if (!to) {
     return NextResponse.json(
@@ -94,32 +97,40 @@ export async function POST(request) {
     name: values.name,
     email: values.email,
     projectType: values.projectType,
-    projectLabel:
-      PROJECT_TYPE_LABELS[values.projectType] || values.projectType,
+    projectLabel: PROJECT_TYPE_LABELS[values.projectType],
     message: values.message,
   });
 
   try {
-    const { error } = await resend.emails.send({
-      from: getFromEmail(),
-      to: [to],
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user,
+        pass: appPassword.replace(/\\s/g, ""),
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
+    });
+
+    await transporter.sendMail({
+      from: {
+        name: "Portfolio Contact",
+        address: user,
+      },
+      to,
       replyTo: values.email,
       subject,
       text,
       html,
     });
 
-    if (error) {
-      console.error("[contact] Resend send failed:", error);
-      return NextResponse.json(
-        { error: "Unable to send right now. Please try again." },
-        { status: 500 },
-      );
-    }
-
+    transporter.close();
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("[contact] Unexpected send error:", err);
+    console.error("[contact] Gmail SMTP send failed:", err?.message || err);
     return NextResponse.json(
       { error: "Unable to send right now. Please try again." },
       { status: 500 },
