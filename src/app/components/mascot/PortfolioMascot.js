@@ -300,6 +300,7 @@ export default function PortfolioMascot() {
         const dark = new THREE.MeshStandardMaterial({ color: 0x101b18, roughness: 0.22, metalness: 0.32 });
         const teal = new THREE.MeshStandardMaterial({ color: 0x5fe0d5, emissive: 0x168f83, emissiveIntensity: 2.3, roughness: 0.2 });
         const orange = new THREE.MeshStandardMaterial({ color: 0xf3a45f, emissive: 0x7a3511, emissiveIntensity: 0.45, metalness: 0.38, roughness: 0.28 });
+        const antennaTipMaterial = new THREE.MeshStandardMaterial({ color: 0xff3b30, emissive: 0xff1b12, emissiveIntensity: 1.8, roughness: 0.2, metalness: 0.08 });
 
         const makeMesh = (geometry, material, parent, position, scale) => {
           const mesh = new THREE.Mesh(geometry, material);
@@ -427,10 +428,11 @@ export default function PortfolioMascot() {
         sphere(shellShade, head, [0.82, 0.03, 0], [0.18, 0.29, 0.25]);
         sphere(teal, head, [0.91, 0.03, 0.13], [0.045, 0.12, 0.12]);
         antenna = new THREE.Group();
-        antenna.position.set(0.2, 0.68, 0);
+        // Center the antenna on the helmet and extend it upward with a clearly visible tip.
+        antenna.position.set(0, 0.68, 0);
         head.add(antenna);
-        makeMesh(new THREE.CylinderGeometry(0.035, 0.055, 0.32, 12), orange, antenna, [0, 0.12, 0]);
-        sphere(teal, antenna, [0, 0.31, 0], [0.09, 0.09, 0.09], 18);
+        makeMesh(new THREE.CylinderGeometry(0.027, 0.042, 0.48, 12), orange, antenna, [0, 0.22, 0]);
+        sphere(antennaTipMaterial, antenna, [0, 0.47, 0], [0.075, 0.075, 0.075], 18);
 
 
         const resize = () => {
@@ -530,6 +532,11 @@ export default function PortfolioMascot() {
           leftLeg.rotation.z = smooth(leftLeg.rotation.z, footerSettled ? -0.42 : -pose.legs + (reactingNow ? -0.14 : 0), 0.05);
           rightLeg.rotation.z = smooth(rightLeg.rotation.z, footerSettled ? 0.42 : pose.legs + (reactingNow ? 0.14 : 0), 0.05);
           antenna.rotation.z = Math.sin(seconds * 2.7) * (reducedMotion ? 0.015 : 0.09);
+          // Pulse the antenna tip between signal red and warm orange.
+          const signalPulse = (Math.sin(seconds * (reducedMotion ? 1.4 : 4.2)) + 1) * 0.5;
+          antennaTipMaterial.color.setRGB(1, 0.16 + signalPulse * 0.38, 0.12 + signalPulse * 0.015);
+          antennaTipMaterial.emissive.setRGB(0.9, 0.035 + signalPulse * 0.22, 0.01);
+          antennaTipMaterial.emissiveIntensity = 1.25 + signalPulse * 1.15;
           renderer.render(scene, camera);
         };
         setWebglReady(true);
