@@ -84,6 +84,8 @@ export default function PortfolioMascot() {
   const dragStartRef = useRef(null);
   const dragMovedRef = useRef(false);
   const [reacting, setReacting] = useState(false);
+  const [scanBeam, setScanBeam] = useState(null);
+  const scanTimerRef = useRef([]);
 
   const activeSectionRef = useRef("hero");
 
@@ -617,6 +619,89 @@ export default function PortfolioMascot() {
 
   const section = SECTIONS[active] || SECTIONS[0];
   const hasSectionMessage = Boolean(section?.label?.trim() && section?.note?.trim() && section?.detail?.trim() && section?.action?.trim());
+  const activateHolographicScan = () => {
+    const host = hostRef.current;
+    if (!host || isDragging) return;
+    scanTimerRef.current.forEach((timer) => window.clearTimeout(timer));
+    scanTimerRef.current = [];
+    const sectionId = activeSectionRef.current;
+    const sectionNode = document.getElementById(sectionId);
+    if (!sectionNode) return;
+
+    const selectorsBySection = {
+      hero: ["h1", "a[href]", "button"],
+      about: ["h2", "img", "picture", "p"],
+      education: ["img", "picture", "h3", "h2", "p"],
+      skills: ["[data-skill-icon]", "[data-skill-card] svg", "[data-skill-card] img", "[data-skill-card] h3", "[data-skill-card] h4"],
+      experience: ["img", "picture", "h3", "h2", "p"],
+      projects: ["[data-project-card] img", "article img", "[data-project-card] h3", "article h3", "a[href]", "button"],
+      contact: ["input", "textarea", "select", "button[type='submit']", "label", "h2"],
+    };
+    const preferred = selectorsBySection[sectionId] || ["img", "svg", "h2", "h3", "button", "a[href]", "input", "textarea"];
+    const rank = (node) => {
+      const tag = node.tagName.toLowerCase();
+      const sectionRanks = {
+        hero: { h1: 5, a: 4, button: 3 },
+        about: { h2: 5, img: 4, picture: 4, p: 2 },
+        education: { img: 5, picture: 5, h3: 4, h2: 3, p: 1 },
+        skills: { svg: 5, img: 5, h3: 4, h4: 3 },
+        experience: { img: 5, picture: 5, h3: 4, h2: 3, p: 1 },
+        projects: { img: 5, h3: 4, a: 3, button: 3 },
+        contact: { input: 5, textarea: 5, select: 5, button: 4, label: 3, h2: 2 },
+      };
+      return sectionRanks[sectionId]?.[tag] ?? 1;
+    };
+    const hostRect = host.getBoundingClientRect();
+    // The circular core sits below the vertical midpoint of Vee's rendered body.
+    const origin = { x: hostRect.left + hostRect.width / 2, y: hostRect.top + (isMobile ? 48 : 82) };
+    const seen = new Set();
+    const candidates = preferred.flatMap((selector) => [...sectionNode.querySelectorAll(selector)]).filter((node) => {
+      if (seen.has(node)) return false;
+      seen.add(node);
+      if (host.contains(node) || node.closest("[aria-hidden='true']") || node.closest("[inert]")) return false;
+      if (node.matches("input:disabled, button:disabled, [aria-hidden='true']")) return false;
+      const rect = node.getBoundingClientRect();
+      const style = window.getComputedStyle(node);
+      return rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.top < window.innerHeight &&
+        rect.right > 0 && rect.left < window.innerWidth && style.visibility !== "hidden" && style.display !== "none" &&
+        style.opacity !== "0";
+    }).map((node) => {
+      const rect = node.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      const distance = Math.hypot(x - origin.x, y - origin.y);
+      const priority = rank(node);
+      return { node, x, y, distance, priority, score: distance - priority * (isMobile ? 34 : 46) };
+    }).sort((a, b) => a.score - b.score);
+    const target = candidates[0];
+    if (!target) {
+      setReacting(true);
+      scanTimerRef.current.push(window.setTimeout(() => setReacting(false), 500));
+      return;
+    }
+    const dx = target.x - origin.x;
+    const dy = target.y - origin.y;
+    const id = Date.now();
+    setScanBeam({ x: origin.x, y: origin.y, length: Math.hypot(dx, dy), angle: Math.atan2(dy, dx) * 180 / Math.PI, id });
+    setReacting(true);
+    scanTimerRef.current.push(window.setTimeout(() => {
+      if (target.node.isConnected) {
+        target.node.animate(reducedMotion
+          ? [{ opacity: 0.94 }, { opacity: 1 }]
+          : [
+              { filter: "brightness(1) drop-shadow(0 0 0 rgba(95,224,213,0))" },
+              { filter: "brightness(1.45) drop-shadow(0 0 10px rgba(95,224,213,0.95))" },
+              { filter: "brightness(1.08) drop-shadow(0 0 3px rgba(95,224,213,0.3))" },
+              { filter: "brightness(1) drop-shadow(0 0 0 rgba(95,224,213,0))" },
+            ], { duration: reducedMotion ? 100 : 680, easing: "ease-out" });
+      }
+    }, reducedMotion ? 0 : 420));
+    scanTimerRef.current.push(window.setTimeout(() => setScanBeam(null), reducedMotion ? 100 : 620));
+    scanTimerRef.current.push(window.setTimeout(() => setReacting(false), 850));
+  };
+
+  useEffect(() => () => scanTimerRef.current.forEach((timer) => window.clearTimeout(timer)), []);
+
 
   // Let the nearest eligible card react to Vee without driving per-frame React renders.
   useEffect(() => {
@@ -696,6 +781,22 @@ export default function PortfolioMascot() {
         transition={reducedMotion ? { duration: 0 } : { duration: isDragging ? 0.18 : 2.4, repeat: isDragging ? 0 : Infinity, ease: "easeInOut" }}
         style={{ pointerEvents: "none" }}
       />
+      {scanBeam && typeof document !== "undefined" && createPortal(
+        <div
+          key={scanBeam.id}
+          aria-hidden="true"
+          className="pointer-events-none fixed z-[99997] h-[2px] rounded-full bg-cyan-100 shadow-[0_0_5px_2px_rgba(95,224,213,0.95),0_0_16px_4px_rgba(95,224,213,0.6)]"
+          style={{ left: scanBeam.x, top: scanBeam.y, width: scanBeam.length, rotate: `${scanBeam.angle}deg`, transformOrigin: "left center", opacity: 1 }}
+        >
+          <motion.span
+            className="absolute -right-1 -top-[3px] h-2 w-2 rounded-full bg-white shadow-[0_0_8px_4px_rgba(95,224,213,0.95)]"
+            initial={{ left: 0, x: 0, opacity: 0 }}
+            animate={{ left: scanBeam.length, x: -4, opacity: [0, 1, 1, 0] }}
+            transition={{ duration: reducedMotion ? 0 : 0.42, ease: "linear" }}
+          />
+        </div>,
+        document.body
+      )}
       <motion.div
         aria-hidden="true"
         className="absolute -inset-5 -z-10 rounded-full blur-2xl"
@@ -750,6 +851,7 @@ export default function PortfolioMascot() {
             dragMovedRef.current = false;
             return;
           }
+          activateHolographicScan();
           if (hasSectionMessage) setMessageOpen((open) => !open);
           // The host click listener owns the reaction timer and randomized expression.
         }}
