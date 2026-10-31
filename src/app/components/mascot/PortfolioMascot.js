@@ -156,7 +156,7 @@ export default function PortfolioMascot() {
       let nearestDistance = Infinity;
       const marker = window.innerHeight * 0.42;
       const footer = document.querySelector("footer");
-      footerReached = Boolean(footer && footer.getBoundingClientRect().top < window.innerHeight * 0.78);
+      const footerReached = Boolean(footer && footer.getBoundingClientRect().top < window.innerHeight * 0.78);
       SECTIONS.forEach((section, index) => {
         const node = document.getElementById(section.id);
         if (!node) return;
