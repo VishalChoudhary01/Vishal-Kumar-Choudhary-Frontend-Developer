@@ -631,7 +631,7 @@ export default function PortfolioMascot() {
     if (host) {
       const rect = host.getBoundingClientRect();
       const origin = { x: rect.left + rect.width * 0.5, y: rect.top + rect.height * 0.51 };
-      const selectors = "img, svg, h1, h2, h3, [data-skill-icon], [data-mascot-interactive]";
+      const selectors = "img, picture, svg, h1, h2, h3, h4, button, input, textarea, select, a, [role=\"button\"], [data-skill-icon], [data-mascot-interactive]";
       const targets = (sectionNode ? [...sectionNode.querySelectorAll(selectors)] : [])
         .filter((node) => {
           if (host.contains(node) || node.closest("[aria-hidden='true']")) return false;
@@ -640,27 +640,37 @@ export default function PortfolioMascot() {
         })
         .map((node) => {
           const box = node.getBoundingClientRect();
-          return { node, distance: Math.hypot(box.left + box.width / 2 - origin.x, box.top + box.height / 2 - origin.y) };
+          const targetX = box.left + box.width / 2;
+          const targetY = box.top + box.height / 2;
+          return { node, x: targetX, y: targetY, distance: Math.hypot(targetX - origin.x, targetY - origin.y) };
         })
         .sort((a, b) => a.distance - b.distance);
-      const maxDistance = targets.reduce((max, target) => Math.max(max, target.distance), 0);
-      setScanWave({ ...origin, radius: Math.max(120, maxDistance + 80), id: Date.now() });
 
-      targets.forEach(({ node, distance }) => {
-        const delay = reducedMotion ? 0 : Math.min(900, distance / Math.max(maxDistance, 1) * 900);
+      // Scan one nearest visual/control target per activation, with a beam anchored at the body core.
+      const nearest = targets[0];
+      if (nearest) {
+        const dx = nearest.x - origin.x;
+        const dy = nearest.y - origin.y;
+        setScanWave({
+          x: origin.x,
+          y: origin.y,
+          length: Math.hypot(dx, dy),
+          angle: Math.atan2(dy, dx) * (180 / Math.PI),
+          id: Date.now(),
+        });
         scanTimersRef.current.push(window.setTimeout(() => {
-          if (!node.isConnected) return;
-          node.animate(reducedMotion
+          if (!nearest.node.isConnected) return;
+          nearest.node.animate(reducedMotion
             ? [{ opacity: 0.92 }, { opacity: 1 }]
             : [
                 { filter: "brightness(1) drop-shadow(0 0 0px rgba(95,224,213,0))" },
-                { filter: "brightness(1.35) drop-shadow(0 0 10px rgba(95,224,213,0.9))" },
+                { filter: "brightness(1.4) drop-shadow(0 0 12px rgba(95,224,213,0.95))" },
                 { filter: "brightness(1.08) drop-shadow(0 0 3px rgba(95,224,213,0.35))" },
                 { filter: "brightness(1) drop-shadow(0 0 0px rgba(95,224,213,0))" },
               ], { duration: reducedMotion ? 120 : 760, easing: "ease-out" });
-        }, delay));
-      });
-      scanTimersRef.current.push(window.setTimeout(() => setScanWave(null), reducedMotion ? 100 : 1250));
+        }, reducedMotion ? 0 : 180));
+        scanTimersRef.current.push(window.setTimeout(() => setScanWave(null), reducedMotion ? 100 : 720));
+      }
     }
 
     energyActiveRef.current = true;
@@ -780,66 +790,29 @@ export default function PortfolioMascot() {
         <motion.div
           key={scanWave.id}
           aria-hidden="true"
-          className="pointer-events-none fixed z-[99997] rounded-full border border-cyan-200/75 shadow-[0_0_18px_2px_rgba(95,224,213,0.25)]"
+          className="pointer-events-none fixed z-[99997] h-[2px] origin-left rounded-full bg-cyan-100 shadow-[0_0_5px_2px_rgba(95,224,213,0.9),0_0_14px_4px_rgba(95,224,213,0.45)]"
           style={{
             left: scanWave.x,
             top: scanWave.y,
-            width: scanWave.radius * 2,
-            height: scanWave.radius * 2,
-            marginLeft: -scanWave.radius,
-            marginTop: -scanWave.radius,
-            background: "radial-gradient(circle, rgba(95,224,213,0.10) 0%, rgba(95,224,213,0.045) 42%, transparent 70%)",
+            width: scanWave.length,
+            transform: `rotate(${scanWave.angle}deg)`,
           }}
-          initial={{ scale: 0.02, opacity: reducedMotion ? 0 : 0.9 }}
-          animate={{ scale: 1, opacity: 0 }}
-          transition={{ duration: reducedMotion ? 0 : 1.1, ease: "easeOut" }}
+          initial={{ scaleX: 0, opacity: 0 }}
+          animate={{ scaleX: [0, 1, 1], opacity: [0, 1, 0.85] }}
+          transition={{ duration: reducedMotion ? 0 : 0.62, ease: "easeOut" }}
         />,
         document.body,
       )}
-        {energyActive && (
-          <motion.div
-            key="vee-energy-scan"
+        {energyActive && !reducedMotion && (
+          <motion.span
+            key="vee-core-charge"
             aria-hidden="true"
-            className="pointer-events-none absolute left-1/2 top-[49%] z-10 flex h-4 w-4 -translate-x-1/2 -translate-y-1/2 items-center justify-center"
-          >
-            <motion.span
-              className="absolute h-3 w-3 rounded-full border border-cyan-200/90 bg-cyan-200/20 shadow-[0_0_12px_3px_rgba(95,224,213,0.75)]"
-              initial={{ scale: 0.55, opacity: 0.95 }}
-              animate={{ scale: [0.7, 1.3, 0.8], opacity: [1, 0.65, 0.9] }}
-              exit={{ scale: 0.5, opacity: 0 }}
-              transition={{ duration: reducedMotion ? 0 : 0.7, repeat: reducedMotion ? 0 : 2, ease: "easeOut" }}
-            />
-            <motion.span
-              className="absolute rounded-full border border-cyan-200/80 shadow-[0_0_16px_2px_rgba(95,224,213,0.42)]"
-              initial={{ width: 10, height: 10, opacity: 0.9 }}
-              animate={{ width: [10, 68, 96], height: [10, 68, 96], opacity: [0.9, 0.5, 0] }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: reducedMotion ? 0 : 1.05, ease: "easeOut" }}
-            />
-            <motion.span
-              className="absolute h-px w-12 origin-center bg-cyan-100 shadow-[0_0_8px_2px_rgba(95,224,213,0.9)]"
-              initial={{ rotate: 0, opacity: 0 }}
-              animate={{ rotate: [0, 180, 360], opacity: [0, 1, 0.85] }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: reducedMotion ? 0 : 1.15, ease: "linear" }}
-            />
-            {!reducedMotion && [0, 1, 2, 3].map((particle) => (
-              <motion.span
-                key={particle}
-                className="absolute h-1 w-1 rounded-full bg-cyan-100 shadow-[0_0_7px_2px_rgba(95,224,213,0.8)]"
-                initial={{ x: 0, y: 0, opacity: 0 }}
-                animate={{
-                  x: [0, Math.cos((particle * Math.PI) / 2) * 24],
-                  y: [0, Math.sin((particle * Math.PI) / 2) * 24],
-                  opacity: [0, 1, 0],
-                  scale: [0.5, 1.2, 0.4],
-                }}
-                transition={{ duration: 0.8, delay: particle * 0.06, ease: "easeOut" }}
-              />
-            ))}
-          </motion.div>
+            className="pointer-events-none absolute left-1/2 top-[49%] z-10 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-100 shadow-[0_0_8px_3px_rgba(95,224,213,0.9)]"
+            initial={{ scale: 0.6, opacity: 0.7 }}
+            animate={{ scale: [0.7, 1.35, 0.9], opacity: [0.75, 1, 0.8] }}
+            transition={{ duration: 0.45, repeat: 2, ease: "easeInOut" }}
+          />
         )}
-      </AnimatePresence>
       <motion.button
         type="button"
         onClick={(event) => {
