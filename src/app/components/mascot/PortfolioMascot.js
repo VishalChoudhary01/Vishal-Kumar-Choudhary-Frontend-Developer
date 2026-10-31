@@ -625,10 +625,7 @@ export default function PortfolioMascot() {
     scanTimerRef.current.forEach((timer) => window.clearTimeout(timer));
     scanTimerRef.current = [];
     const sectionId = activeSectionRef.current;
-    const footerMode = footerActiveRef.current;
-    const sectionNode = footerMode
-      ? document.querySelector("footer, #footer, [data-footer], .site-footer")
-      : document.getElementById(sectionId);
+    const sectionNode = document.getElementById(sectionId);
     if (!sectionNode) return;
 
     const selectorsBySection = {
@@ -640,17 +637,9 @@ export default function PortfolioMascot() {
       projects: ["[data-project-card] img", "article img", "[data-project-card] h3", "article h3", "a[href]", "button"],
       contact: ["input", "textarea", "select", "button[type='submit']", "label", "h2"],
     };
-    const footerSelectors = ["h1", "h2", "h3", "[data-scan-target]", "a[href]", "button"];
-    const preferred = footerMode ? footerSelectors : (selectorsBySection[sectionId] || ["img", "svg", "h2", "h3", "button", "a[href]", "input", "textarea"]);
+    const preferred = selectorsBySection[sectionId] || ["img", "svg", "h2", "h3", "button", "a[href]", "input", "textarea"];
     const rank = (node) => {
       const tag = node.tagName.toLowerCase();
-      if (footerMode) {
-        if (node.matches("[data-scan-target]")) return 7;
-        if (node.matches("h1, h2, h3") && /building/i.test(node.textContent || "")) return 8;
-        if (node.matches("h1, h2, h3")) return 6;
-        if (tag === "a" || tag === "button") return 3;
-        return 1;
-      }
       const sectionRanks = {
         hero: { h1: 5, a: 4, button: 3 },
         about: { h2: 5, img: 4, picture: 4, p: 2 },
@@ -698,13 +687,11 @@ export default function PortfolioMascot() {
     scanTimerRef.current.push(window.setTimeout(() => {
       if (target.node.isConnected) {
         const targetStyle = window.getComputedStyle(target.node);
-        const isBuildingHeading = footerMode && /building/i.test(target.node.textContent || "") &&
-          target.node.matches("h1, h2, h3, [data-scan-target]");
         const hasOutlinedText = target.node.matches("h1, h2, h3, h4, p, span") &&
           Number.parseFloat(targetStyle.webkitTextStrokeWidth) > 0 &&
           (targetStyle.webkitTextFillColor === "rgba(0, 0, 0, 0)" || targetStyle.webkitTextFillColor === "transparent");
 
-        if (isBuildingHeading || hasOutlinedText) {
+        if (hasOutlinedText) {
           // Fill outlined display text briefly; replay its existing hover animation when available.
           const hoverAnimation = target.node.getAnimations().find((animation) => animation.playState === "running");
           if (hoverAnimation) hoverAnimation.cancel();
