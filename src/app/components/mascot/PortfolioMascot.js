@@ -785,13 +785,13 @@ export default function PortfolioMascot() {
         <div
           key={scanBeam.id}
           aria-hidden="true"
-          className="pointer-events-none fixed z-[99997] h-[2px] rounded-full bg-cyan-100 shadow-[0_0_5px_2px_rgba(95,224,213,0.95),0_0_16px_4px_rgba(95,224,213,0.6)]"
+          className="pointer-events-none fixed z-[99997] h-px rounded-full bg-cyan-200/75 shadow-[0_0_2px_0.5px_rgba(95,224,213,0.35),0_0_5px_1px_rgba(95,224,213,0.16)]"
           style={{ left: scanBeam.x, top: scanBeam.y, width: scanBeam.length, rotate: `${scanBeam.angle}deg`, transformOrigin: "left center", opacity: 1 }}
         >
           <motion.span
-            className="absolute -right-1 -top-[3px] h-2 w-2 rounded-full bg-white shadow-[0_0_8px_4px_rgba(95,224,213,0.95)]"
+            className="absolute -right-0.5 -top-[2px] h-1 w-1 rounded-full bg-cyan-100/90 shadow-[0_0_3px_1px_rgba(95,224,213,0.45)]"
             initial={{ left: 0, x: 0, opacity: 0 }}
-            animate={{ left: scanBeam.length, x: -4, opacity: [0, 1, 1, 0] }}
+            animate={{ left: scanBeam.length, x: -2, opacity: [0, 0.72, 0.72, 0] }}
             transition={{ duration: reducedMotion ? 0 : 0.42, ease: "linear" }}
           />
         </div>,
