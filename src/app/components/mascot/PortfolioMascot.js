@@ -380,6 +380,9 @@ export default function PortfolioMascot() {
         leftHand = leftParts.hand;
         const rightParts = makeArm(1);
         rightArm = rightParts.arm;
+        // Keep the raised right hand outside the helmet silhouette during high waves.
+        // A small lateral offset plus a slightly more open elbow prevents head intersection.
+        rightArm.position.x = 0.82;
         rightElbow = rightParts.elbow;
         rightWrist = rightParts.wrist;
         rightHand = rightParts.hand;
@@ -486,7 +489,7 @@ export default function PortfolioMascot() {
           rightArm.rotation.z = smooth(rightArm.rotation.z, rightArmTarget + rightWave, 0.07);
           // Secondary joints lag slightly behind the shoulders for a connected, soft gesture.
           leftElbow.rotation.z = smooth(leftElbow.rotation.z, -0.22 + Math.max(0, leftWave) * 0.28, 0.08);
-          rightElbow.rotation.z = smooth(rightElbow.rotation.z, (SECTIONS[activeIndex]?.pose === "point" ? -0.28 : -0.16) + Math.max(0, rightWave) * 0.22, 0.08);
+          rightElbow.rotation.z = smooth(rightElbow.rotation.z, (SECTIONS[activeIndex]?.pose === "point" ? -0.28 : -0.24) + Math.max(0, rightWave) * 0.22, 0.08);
           leftWrist.rotation.z = smooth(leftWrist.rotation.z, greeting || reactingNow ? Math.sin(seconds * 18) * 0.18 : 0, 0.1);
           const rightWristTarget = SECTIONS[activeIndex]?.pose === "point" ? -0.12 : (SECTIONS[activeIndex]?.pose === "wave" || greeting || reactingNow ? Math.sin(seconds * 13) * 0.24 : 0);
           rightWrist.rotation.z = smooth(rightWrist.rotation.z, rightWristTarget, 0.12);
