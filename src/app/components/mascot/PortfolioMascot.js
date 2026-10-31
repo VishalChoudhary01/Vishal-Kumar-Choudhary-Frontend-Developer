@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { ArrowDown, Grip, ScanLine, Sparkles } from "lucide-react";
+import { ArrowDown, Grip, Sparkles } from "lucide-react";
 import { createPortal } from "react-dom";
 
 const SECTIONS = [
@@ -84,11 +84,7 @@ export default function PortfolioMascot() {
   const dragStartRef = useRef(null);
   const dragMovedRef = useRef(false);
   const [reacting, setReacting] = useState(false);
-  const [energyActive, setEnergyActive] = useState(false);
-  const [scanWave, setScanWave] = useState(null);
-  const scanTimersRef = useRef([]);
-  const energyTimerRef = useRef(null);
-  const energyActiveRef = useRef(false);
+
   const activeSectionRef = useRef("hero");
 
   useEffect(() => {
@@ -568,8 +564,7 @@ export default function PortfolioMascot() {
           const signalHue = 0.005 + signalPulse * 0.145; // red → orange → golden yellow
           antennaTipMaterial.color.setHSL(signalHue, 1, 0.52);
           antennaTipMaterial.emissive.setHSL(signalHue, 1, 0.34);
-          const energyBoost = energyActiveRef.current ? 1.8 : 0;
-          antennaTipMaterial.emissiveIntensity = 0.45 + signalPulse * (energyActiveRef.current ? 4.1 : 2.6) + energyBoost;
+          antennaTipMaterial.emissiveIntensity = 0.45 + signalPulse * 2.6;
 
           // Environmental response changes gently with the active portfolio section.
           const sectionId = activeSectionRef.current;
@@ -583,8 +578,8 @@ export default function PortfolioMascot() {
           const targetGlow = sectionId === "hero" ? 1.35 : sectionId === "contact" ? 1.1 : 0.72;
           antennaGlowLight.color.setHex(sectionAccent);
           antennaGlowLight.intensity = reducedMotion
-            ? targetGlow * (energyActiveRef.current ? 1.8 : 0.65)
-            : targetGlow * (0.35 + signalPulse * (energyActiveRef.current ? 2.2 : 0.9));
+            ? targetGlow * 0.65
+            : targetGlow * (0.35 + signalPulse * 0.9);
           antennaGlowLight.distance = isMobile ? 2.1 : 3.2;
           rimLight.intensity = smooth(rimLight.intensity, sectionId === "skills" || sectionId === "projects" ? 12 : 18, 0.035);
           accentLight.intensity = smooth(accentLight.intensity, sectionId === "contact" ? 11 : sectionId === "experience" ? 6 : 8, 0.035);
@@ -619,75 +614,6 @@ export default function PortfolioMascot() {
       renderer?.dispose();
     };
   }, [reducedMotion, isDesktop, isMobile]);
-
-  const activateEnergyMode = () => {
-    if (typeof window === "undefined") return;
-    if (energyTimerRef.current) window.clearTimeout(energyTimerRef.current);
-    scanTimersRef.current.forEach((timer) => window.clearTimeout(timer));
-    scanTimersRef.current = [];
-
-    const host = hostRef.current;
-    const sectionNode = document.getElementById(section?.id);
-    if (host) {
-      const rect = host.getBoundingClientRect();
-      const origin = { x: rect.left + rect.width * 0.5, y: rect.top + rect.height * 0.51 };
-      const selectors = "img, picture, svg, h1, h2, h3, h4, button, input, textarea, select, a, [role=\"button\"], [data-skill-icon], [data-mascot-interactive]";
-      const targets = (sectionNode ? [...sectionNode.querySelectorAll(selectors)] : [])
-        .filter((node) => {
-          if (host.contains(node) || node.closest("[aria-hidden='true']")) return false;
-          const box = node.getBoundingClientRect();
-          return box.width > 0 && box.height > 0 && box.bottom >= 0 && box.top <= window.innerHeight && box.right >= 0 && box.left <= window.innerWidth;
-        })
-        .map((node) => {
-          const box = node.getBoundingClientRect();
-          const targetX = box.left + box.width / 2;
-          const targetY = box.top + box.height / 2;
-          return { node, x: targetX, y: targetY, distance: Math.hypot(targetX - origin.x, targetY - origin.y) };
-        })
-        .sort((a, b) => a.distance - b.distance);
-
-      // Scan one nearest visual/control target per activation, with a beam anchored at the body core.
-      const nearest = targets[0];
-      if (nearest) {
-        const dx = nearest.x - origin.x;
-        const dy = nearest.y - origin.y;
-        setScanWave({
-          x: origin.x,
-          y: origin.y,
-          length: Math.hypot(dx, dy),
-          angle: Math.atan2(dy, dx) * (180 / Math.PI),
-          id: Date.now(),
-        });
-        scanTimersRef.current.push(window.setTimeout(() => {
-          if (!nearest.node.isConnected) return;
-          nearest.node.animate(reducedMotion
-            ? [{ opacity: 0.92 }, { opacity: 1 }]
-            : [
-                { filter: "brightness(1) drop-shadow(0 0 0px rgba(95,224,213,0))" },
-                { filter: "brightness(1.4) drop-shadow(0 0 12px rgba(95,224,213,0.95))" },
-                { filter: "brightness(1.08) drop-shadow(0 0 3px rgba(95,224,213,0.35))" },
-                { filter: "brightness(1) drop-shadow(0 0 0px rgba(95,224,213,0))" },
-              ], { duration: reducedMotion ? 120 : 760, easing: "ease-out" });
-        }, reducedMotion ? 0 : 180));
-        scanTimersRef.current.push(window.setTimeout(() => setScanWave(null), reducedMotion ? 100 : 720));
-      }
-    }
-
-    energyActiveRef.current = true;
-    setEnergyActive(true);
-    setReacting(true);
-    energyTimerRef.current = window.setTimeout(() => {
-      energyActiveRef.current = false;
-      setEnergyActive(false);
-      setReacting(false);
-      energyTimerRef.current = null;
-    }, reducedMotion ? 1200 : 2200);
-  };
-
-  useEffect(() => () => {
-    if (energyTimerRef.current) window.clearTimeout(energyTimerRef.current);
-    scanTimersRef.current.forEach((timer) => window.clearTimeout(timer));
-  }, []);
 
   const section = SECTIONS[active] || SECTIONS[0];
   const hasSectionMessage = Boolean(section?.label?.trim() && section?.note?.trim() && section?.detail?.trim() && section?.action?.trim());
@@ -785,33 +711,6 @@ export default function PortfolioMascot() {
         transition={reducedMotion ? { duration: 0 } : { duration: active === 0 ? 2.8 : 3.6, repeat: Infinity, ease: "easeInOut" }}
         style={{ pointerEvents: "none" }}
       />
-      <AnimatePresence>
-        {energyActive && !reducedMotion && (
-          <motion.span
-            key="vee-core-charge"
-            aria-hidden="true"
-            className="pointer-events-none absolute left-1/2 top-[49%] z-10 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-100 shadow-[0_0_8px_3px_rgba(95,224,213,0.9)]"
-            initial={{ scale: 0.6, opacity: 0.7 }}
-            animate={{ scale: [0.7, 1.35, 0.9], opacity: [0.75, 1, 0.8] }}
-            transition={{ duration: 0.45, repeat: 2, ease: "easeInOut" }}
-          />
-        )}
-      </AnimatePresence>
-      <motion.button
-        type="button"
-        onClick={(event) => {
-          event.stopPropagation();
-          activateEnergyMode();
-        }}
-        whileHover={reducedMotion ? undefined : { scale: 1.08 }}
-        whileTap={reducedMotion ? undefined : { scale: 0.94 }}
-        className={`pointer-events-auto absolute -right-3 -top-2 z-20 flex h-7 w-7 items-center justify-center rounded-md border bg-[#171b19]/90 shadow transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200 ${energyActive ? "border-cyan-200 text-cyan-100 shadow-[0_0_18px_rgba(95,224,213,0.65)]" : "border-teal-300/60 text-teal-200 shadow-[0_0_12px_rgba(95,224,213,0.2)] hover:border-cyan-200 hover:text-cyan-100"}`}
-        aria-label={energyActive ? "Vee energy scanner active" : "Activate Vee energy scanner"}
-        aria-pressed={energyActive}
-        title={energyActive ? "Energy scanner active" : "Activate energy scanner"}
-      >
-        <ScanLine size={14} strokeWidth={2.2} aria-hidden="true" />
-      </motion.button>
       <button
         type="button"
         onPointerDown={(event) => {
