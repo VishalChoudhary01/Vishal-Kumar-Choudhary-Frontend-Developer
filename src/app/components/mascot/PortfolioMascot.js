@@ -528,7 +528,7 @@ export default function PortfolioMascot() {
           className="pointer-events-auto fixed z-[99999] rounded-lg border border-border/70 bg-background p-4 text-foreground shadow-2xl"
           style={isMobile
             ? { top: "calc(env(safe-area-inset-top, 0px) + 84px)", left: "12px", right: "12px", width: "auto", maxHeight: "calc(100dvh - env(safe-area-inset-top, 0px) - 104px)", overflowY: "auto" }
-            : { left: Math.max(12, Math.min(window.innerWidth - 232, mascotPosition.x + 104)), top: Math.max(80, Math.min(window.innerHeight - 260, mascotPosition.y - 12)), width: "220px", maxHeight: "min(70vh, 480px)", overflowY: "auto" }}
+            : { left: Math.max(12, Math.min(window.innerWidth - 232, mascotPosition.x > window.innerWidth / 2 ? mascotPosition.x - 244 : mascotPosition.x + 104)), top: Math.max(80, Math.min(window.innerHeight - 260, mascotPosition.y - 12)), width: "220px", maxHeight: "min(70vh, 480px)", overflowY: "auto" }}
           role="dialog"
           aria-label={section.label}
         >
