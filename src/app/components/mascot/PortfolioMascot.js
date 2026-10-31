@@ -686,14 +686,32 @@ export default function PortfolioMascot() {
     setReacting(true);
     scanTimerRef.current.push(window.setTimeout(() => {
       if (target.node.isConnected) {
-        target.node.animate(reducedMotion
-          ? [{ opacity: 0.94 }, { opacity: 1 }]
-          : [
-              { filter: "brightness(1) drop-shadow(0 0 0 rgba(95,224,213,0))" },
-              { filter: "brightness(1.45) drop-shadow(0 0 10px rgba(95,224,213,0.95))" },
-              { filter: "brightness(1.08) drop-shadow(0 0 3px rgba(95,224,213,0.3))" },
-              { filter: "brightness(1) drop-shadow(0 0 0 rgba(95,224,213,0))" },
-            ], { duration: reducedMotion ? 100 : 680, easing: "ease-out" });
+        const targetStyle = window.getComputedStyle(target.node);
+        const hasOutlinedText = target.node.matches("h1, h2, h3, h4, p, span") &&
+          Number.parseFloat(targetStyle.webkitTextStrokeWidth) > 0 &&
+          (targetStyle.webkitTextFillColor === "rgba(0, 0, 0, 0)" || targetStyle.webkitTextFillColor === "transparent");
+
+        if (hasOutlinedText) {
+          // Briefly reproduce the outlined display text's filled hover treatment when scanned.
+          target.node.animate(
+            [
+              { webkitTextFillColor: "transparent", filter: "brightness(1)" },
+              { webkitTextFillColor: targetStyle.color, filter: "brightness(1.08)" },
+              { webkitTextFillColor: targetStyle.color, filter: "brightness(1.08)" },
+              { webkitTextFillColor: "transparent", filter: "brightness(1)" },
+            ],
+            { duration: reducedMotion ? 120 : 780, easing: "ease-in-out" },
+          );
+        } else {
+          target.node.animate(reducedMotion
+            ? [{ opacity: 0.94 }, { opacity: 1 }]
+            : [
+                { filter: "brightness(1) drop-shadow(0 0 0 rgba(95,224,213,0))" },
+                { filter: "brightness(1.18) drop-shadow(0 0 4px rgba(95,224,213,0.38))" },
+                { filter: "brightness(1.06) drop-shadow(0 0 2px rgba(95,224,213,0.18))" },
+                { filter: "brightness(1) drop-shadow(0 0 0 rgba(95,224,213,0))" },
+              ], { duration: reducedMotion ? 100 : 680, easing: "ease-out" });
+        }
       }
     }, reducedMotion ? 0 : 420));
     scanTimerRef.current.push(window.setTimeout(() => setScanBeam(null), reducedMotion ? 100 : 620));
