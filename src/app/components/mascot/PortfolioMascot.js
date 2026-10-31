@@ -195,7 +195,7 @@ export default function PortfolioMascot() {
       const viewportHeight = window.innerHeight;
       // Vary the companion's default position around the page, rather than tracking one side.
       const orbit = [
-        { x: 0.76, y: 0.12 }, { x: 0.18, y: 0.34 },
+        { x: 0.76, y: 0.16 }, { x: 0.18, y: 0.34 },
         { x: 0.78, y: 0.54 }, { x: 0.16, y: 0.22 },
         { x: 0.74, y: 0.42 }, { x: 0.20, y: 0.58 },
         { x: 0.72, y: 0.30 },
