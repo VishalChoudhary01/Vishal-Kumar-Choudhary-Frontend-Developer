@@ -436,13 +436,13 @@ export default function PortfolioMascot() {
         resize();
 
         const poses = {
-          wave: { left: 0.12, right: -2.25, lean: -0.04, head: 0.03, legs: 0.04 },
-          curious: { left: -0.15, right: -0.18, lean: 0.04, head: -0.17, legs: 0.02 },
-          inspect: { left: -0.9, right: -0.22, lean: 0.08, head: 0.16, legs: -0.04 },
-          excited: { left: -1.2, right: -1.2, lean: -0.02, head: 0, legs: 0.1 },
-          work: { left: -0.25, right: -0.7, lean: 0.02, head: -0.04, legs: 0 },
-          point: { left: -0.2, right: -1.65, lean: -0.08, head: -0.12, legs: 0.05 },
-          welcome: { left: -1.05, right: -1.05, lean: 0, head: 0.02, legs: 0 },
+          wave: { left: 1.0, right: -2.25, lean: -0.04, head: 0.03, legs: 0.04 },
+          curious: { left: 0.28, right: -0.18, lean: 0.04, head: -0.17, legs: 0.02 },
+          inspect: { left: 0.45, right: -0.22, lean: 0.08, head: 0.16, legs: -0.04 },
+          excited: { left: 0.78, right: -0.78, lean: -0.02, head: 0, legs: 0.1 },
+          work: { left: 0.22, right: -0.7, lean: 0.02, head: -0.04, legs: 0 },
+          point: { left: 0.25, right: -1.65, lean: -0.08, head: -0.12, legs: 0.05 },
+          welcome: { left: 0.72, right: -0.72, lean: 0, head: 0.02, legs: 0 },
         };
         const smooth = (current, target, amount) => current + (target - current) * amount;
         const render = (time) => {
