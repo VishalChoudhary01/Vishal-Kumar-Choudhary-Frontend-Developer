@@ -524,7 +524,7 @@ export default function PortfolioMascot() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.97 }}
           transition={{ duration: reducedMotion ? 0.01 : 0.22, ease: "easeOut" }}
-          className={`pointer-events-auto ${isMobile ? "mt-[-2px] w-[112px] px-2 py-1.5" : "mt-[-12px] w-[154px] px-2.5 py-2"} rounded-md border border-border/80 bg-background/95 text-left text-foreground shadow-lg backdrop-blur-md transition-colors hover:border-brand/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand`}
+          className={`pointer-events-auto ${isMobile ? "hidden" : "mt-[-12px] w-[154px] px-2.5 py-2"} rounded-md border border-border/80 bg-background/95 text-left text-foreground shadow-lg backdrop-blur-md transition-colors hover:border-brand/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand`}
         >
           <span className="flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-brand">
             <Sparkles size={11} aria-hidden="true" />
@@ -536,7 +536,7 @@ export default function PortfolioMascot() {
       </AnimatePresence>
 
       <AnimatePresence>
-        {messageOpen && typeof document !== "undefined" && createPortal(
+        {messageOpen && !isMobile && typeof document !== "undefined" && createPortal(
           <motion.div
             key={section.id + "-message"}
             initial={reducedMotion ? { opacity: 0 } : { opacity: 0, x: -10, y: 5, scale: 0.97 }}
