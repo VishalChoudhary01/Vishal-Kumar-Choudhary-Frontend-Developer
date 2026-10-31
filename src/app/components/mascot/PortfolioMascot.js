@@ -335,7 +335,7 @@ export default function PortfolioMascot() {
         // The extra overlap keeps the silhouette connected when Vee waves or points.
         const makeArm = (side) => {
           const arm = new THREE.Group();
-          arm.position.set(side * 0.68, -0.14, 0);
+          arm.position.set(side * 0.68, -0.14, 0.24);
           torso.add(arm);
           sphere(shellShade, arm, [0, 0, 0], [0.225, 0.225, 0.22]);
           capsule(shell, arm, [0, -0.29, 0], [0.195, 0.49, 0.19]);
@@ -347,34 +347,38 @@ export default function PortfolioMascot() {
           capsule(shell, elbow, [0, -0.19, 0.015], [0.17, 0.36, 0.17]);
 
           const wrist = new THREE.Group();
-          wrist.position.set(0, -0.39, 0.025);
+          wrist.position.set(0, -0.39, 0.07);
           elbow.add(wrist);
           sphere(shell, wrist, [0, 0, 0], [0.145, 0.13, 0.145]);
 
           // A compact palm with short, rounded digits; all parts belong to the wrist,
           // so the glove follows the forearm instead of floating beside it.
           const hand = new THREE.Group();
-          hand.position.set(0, -0.105, 0.055);
+          hand.position.set(0, -0.105, 0.12);
           wrist.add(hand);
-          sphere(shell, hand, [0, -0.035, 0.035], [0.175, 0.16, 0.14]);
-          capsule(shellShade, hand, [-0.075, -0.145, 0.07], [0.047, 0.09, 0.045]);
-          capsule(shellShade, hand, [0, -0.16, 0.085], [0.048, 0.095, 0.045]);
-          capsule(shellShade, hand, [0.075, -0.145, 0.07], [0.047, 0.09, 0.045]);
-          sphere(shellShade, hand, [side * -0.145, -0.045, 0.095], [0.065, 0.09, 0.06]);
+          sphere(teal, hand, [0, -0.035, 0.055], [0.19, 0.165, 0.145]);
+          // A contrasting glove cuff makes the palm readable against the pale forearm.
+          capsule(orange, hand, [0, 0.105, 0.025], [0.145, 0.065, 0.13]);
+          capsule(shell, hand, [-0.075, -0.145, 0.105], [0.05, 0.095, 0.05]);
+          capsule(shell, hand, [0, -0.16, 0.12], [0.052, 0.1, 0.05]);
+          capsule(shell, hand, [0.075, -0.145, 0.105], [0.05, 0.095, 0.05]);
+          sphere(shell, hand, [side * -0.145, -0.045, 0.13], [0.07, 0.095, 0.06]);
           if (side > 0) {
             // The right glove has a readable index digit for pointing poses.
-            capsule(shellShade, hand, [0.15, 0.015, 0.09], [0.047, 0.13, 0.045]);
+            capsule(shell, hand, [0.15, 0.015, 0.13], [0.05, 0.14, 0.05]);
           }
-          return { arm, elbow, wrist };
+          return { arm, elbow, wrist, hand };
         };
         const leftParts = makeArm(-1);
         leftArm = leftParts.arm;
         leftElbow = leftParts.elbow;
         leftWrist = leftParts.wrist;
+        leftHand = leftParts.hand;
         const rightParts = makeArm(1);
         rightArm = rightParts.arm;
         rightElbow = rightParts.elbow;
         rightWrist = rightParts.wrist;
+        rightHand = rightParts.hand;
 
         // Oversized helmet, inset visor, bright eyes and antenna.
         head = new THREE.Group();
@@ -480,7 +484,11 @@ export default function PortfolioMascot() {
           leftElbow.rotation.z = smooth(leftElbow.rotation.z, -0.12 + Math.max(0, leftWave) * 0.22, 0.08);
           rightElbow.rotation.z = smooth(rightElbow.rotation.z, (SECTIONS[activeIndex]?.pose === "point" ? -0.18 : -0.08) + Math.max(0, rightWave) * 0.18, 0.08);
           leftWrist.rotation.z = smooth(leftWrist.rotation.z, greeting || reactingNow ? Math.sin(seconds * 18) * 0.18 : 0, 0.1);
-          rightWrist.rotation.z = smooth(rightWrist.rotation.z, SECTIONS[activeIndex]?.pose === "point" ? -0.12 : 0, 0.1);
+          const rightWristTarget = SECTIONS[activeIndex]?.pose === "point" ? -0.12 : (SECTIONS[activeIndex]?.pose === "wave" || greeting || reactingNow ? Math.sin(seconds * 13) * 0.24 : 0);
+          rightWrist.rotation.z = smooth(rightWrist.rotation.z, rightWristTarget, 0.12);
+          // Turn the glove's palm slightly toward the viewer during greetings and reactions.
+          leftHand.rotation.y = smooth(leftHand.rotation.y, greeting || reactingNow ? -0.22 : 0, 0.1);
+          rightHand.rotation.y = smooth(rightHand.rotation.y, SECTIONS[activeIndex]?.pose === "wave" || greeting || reactingNow ? 0.22 : 0, 0.1);
           // Randomized facial acting: eye shape/spacing, brow angle, smile stretch, and a tiny head tilt.
           const faceExpression = expressionActive ? activeExpression : (idlePlay ? "curious" : "happy");
           const surprised = faceExpression === "surprised";
