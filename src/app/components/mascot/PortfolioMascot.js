@@ -205,7 +205,9 @@ export default function PortfolioMascot() {
       if (footerReached && targetRect) {
         // Settle on the footer instead of continuing to float over its content.
         // Park low in the visible footer area so the companion feels settled there.
-        x = clamp(viewportWidth * (isMobile ? 0.5 : 0.72) - mascotWidth / 2, 8, viewportWidth - mascotWidth - 8);
+        x = isMobile
+          ? clamp((viewportWidth - mascotWidth) / 2, 8, viewportWidth - mascotWidth - 8)
+          : clamp(viewportWidth * 0.72 - mascotWidth / 2, 8, viewportWidth - mascotWidth - 8);
         // Anchor the mascot to the actual bottom edge, not the footer's top edge.
         y = viewportHeight - mascotHeight - (isMobile ? 4 : 2);
       } else if (!isMobile && targetRect && targetRect.width > 0 && targetRect.height > 0) {
