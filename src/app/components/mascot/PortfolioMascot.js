@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowDown, Grip, Sparkles } from "lucide-react";
+import { createPortal } from "react-dom";
 
 const SECTIONS = [
   {
@@ -535,15 +536,15 @@ export default function PortfolioMascot() {
       </AnimatePresence>
 
       <AnimatePresence>
-        {messageOpen && (
+        {messageOpen && typeof document !== "undefined" && createPortal(
           <motion.div
             key={section.id + "-message"}
             initial={reducedMotion ? { opacity: 0 } : { opacity: 0, x: -10, y: 5, scale: 0.97 }}
             animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
             exit={reducedMotion ? { opacity: 0 } : { opacity: 0, x: -8, y: 3, scale: 0.98 }}
             transition={{ duration: reducedMotion ? 0.01 : 0.2, ease: "easeOut" }}
-            className={`pointer-events-auto rounded-lg border border-border/70 bg-background/95 p-3 text-foreground shadow-2xl backdrop-blur-xl ${isMobile ? "fixed left-3 right-3 z-[60] w-auto" : "absolute right-[calc(100%-4px)] top-1/2 w-52 -translate-y-1/2"}`}
-            style={isMobile ? { bottom: `max(12px, calc(100vh - ${mascotPosition.y}px + 8px))`, maxHeight: "min(55vh, 360px)", overflowY: "auto" } : undefined}
+            className={`pointer-events-auto fixed z-[9999] rounded-lg border border-border/70 bg-background/95 p-3 text-foreground shadow-2xl backdrop-blur-xl ${isMobile ? "left-3 right-3 w-auto" : "w-52"}`}
+            style={isMobile ? { top: "calc(env(safe-area-inset-top, 0px) + 76px)", bottom: "12px", maxHeight: "calc(100dvh - env(safe-area-inset-top, 0px) - 100px)", overflowY: "auto" } : { left: Math.max(8, mascotPosition.x - 170), top: Math.max(76, mascotPosition.y + 24), maxHeight: "min(70vh, 480px)", overflowY: "auto" }}
             role="dialog"
             aria-label={section.label}
           >
@@ -570,7 +571,8 @@ export default function PortfolioMascot() {
               {section.action}
               <ArrowDown size={11} className="ml-1 inline-block" aria-hidden="true" />
             </button>
-          </motion.div>
+          </motion.div>,
+          document.body
         )}
       </AnimatePresence>
       {reacting && <span className="sr-only" aria-live="polite">Mascot reacted to your interaction.</span>}
