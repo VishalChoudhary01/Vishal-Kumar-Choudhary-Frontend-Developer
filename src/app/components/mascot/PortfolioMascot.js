@@ -84,6 +84,11 @@ export default function PortfolioMascot() {
   const dragStartRef = useRef(null);
   const dragMovedRef = useRef(false);
   const [reacting, setReacting] = useState(false);
+  const activeSectionRef = useRef("hero");
+
+  useEffect(() => {
+    activeSectionRef.current = SECTIONS[active]?.id || "hero";
+  }, [active]);
 
   useEffect(() => {
     const desktopQuery = window.matchMedia("(min-width: 768px)");
@@ -294,6 +299,11 @@ export default function PortfolioMascot() {
         const accentLight = new THREE.PointLight(0xffa45c, 8, 8);
         accentLight.position.set(2, -2, 4);
         scene.add(accentLight);
+
+        // Local antenna light: a restrained warm glow that pulses with the tip.
+        const antennaGlowLight = new THREE.PointLight(0xff321f, 0.5, 3.2, 2);
+        antennaGlowLight.position.set(0, 1.75, 0.45);
+        scene.add(antennaGlowLight);
 
         const shell = new THREE.MeshStandardMaterial({ color: 0xf4f0e6, roughness: 0.31, metalness: 0.22 });
         const shellShade = new THREE.MeshStandardMaterial({ color: 0xcacfc5, roughness: 0.38, metalness: 0.28 });
@@ -554,6 +564,24 @@ export default function PortfolioMascot() {
           antennaTipMaterial.color.setHSL(signalHue, 1, 0.52);
           antennaTipMaterial.emissive.setHSL(signalHue, 1, 0.34);
           antennaTipMaterial.emissiveIntensity = 0.45 + signalPulse * 2.6;
+
+          // Environmental response changes gently with the active portfolio section.
+          const sectionId = activeSectionRef.current;
+          const sectionAccent = sectionId === "skills" || sectionId === "projects"
+            ? 0x5fe0d5
+            : sectionId === "contact"
+              ? 0xffa45c
+              : sectionId === "experience"
+                ? 0x9ffcdf
+                : 0xff6b35;
+          const targetGlow = sectionId === "hero" ? 1.35 : sectionId === "contact" ? 1.1 : 0.72;
+          antennaGlowLight.color.setHex(sectionAccent);
+          antennaGlowLight.intensity = reducedMotion
+            ? targetGlow * 0.65
+            : targetGlow * (0.35 + signalPulse * 0.9);
+          antennaGlowLight.distance = isMobile ? 2.1 : 3.2;
+          rimLight.intensity = smooth(rimLight.intensity, sectionId === "skills" || sectionId === "projects" ? 12 : 18, 0.035);
+          accentLight.intensity = smooth(accentLight.intensity, sectionId === "contact" ? 11 : sectionId === "experience" ? 6 : 8, 0.035);
           renderer.render(scene, camera);
         };
         setWebglReady(true);
@@ -600,6 +628,21 @@ export default function PortfolioMascot() {
       }}
       aria-label="Interactive 3D portfolio companion"
     >
+      <motion.div
+        aria-hidden="true"
+        className="absolute -inset-5 -z-10 rounded-full blur-2xl"
+        animate={reducedMotion ? { opacity: 0.16, scale: 1 } : {
+          opacity: active === 0 ? [0.22, 0.34, 0.22] : active === 6 ? [0.18, 0.3, 0.18] : [0.12, 0.22, 0.12],
+          scale: active === 0 ? [0.92, 1.08, 0.92] : [0.96, 1.04, 0.96],
+          background: active === 3 || active === 5
+            ? "radial-gradient(circle, rgba(95,224,213,0.32) 0%, rgba(95,224,213,0.08) 42%, transparent 72%)"
+            : active === 6
+              ? "radial-gradient(circle, rgba(255,164,92,0.34) 0%, rgba(255,164,92,0.08) 42%, transparent 72%)"
+              : "radial-gradient(circle, rgba(255,92,48,0.3) 0%, rgba(255,164,92,0.08) 42%, transparent 72%)",
+        }}
+        transition={reducedMotion ? { duration: 0 } : { duration: active === 0 ? 2.8 : 3.6, repeat: Infinity, ease: "easeInOut" }}
+        style={{ pointerEvents: "none" }}
+      />
       <button
         type="button"
         onPointerDown={(event) => {
