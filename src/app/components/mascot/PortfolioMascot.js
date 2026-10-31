@@ -543,7 +543,7 @@ export default function PortfolioMascot() {
       </AnimatePresence>
 
       <AnimatePresence>
-        {messageOpen && !isMobile && typeof document !== "undefined" && createPortal(
+        {messageOpen && typeof document !== "undefined" && createPortal(
           <motion.div
             key={section.id + "-message"}
             initial={reducedMotion ? { opacity: 0 } : { opacity: 0, x: -10, y: 5, scale: 0.97 }}
@@ -551,7 +551,7 @@ export default function PortfolioMascot() {
             exit={reducedMotion ? { opacity: 0 } : { opacity: 0, x: -8, y: 3, scale: 0.98 }}
             transition={{ duration: reducedMotion ? 0.01 : 0.2, ease: "easeOut" }}
             className={`pointer-events-auto fixed z-[9999] rounded-lg border border-border/70 bg-background/95 p-3 text-foreground shadow-2xl backdrop-blur-xl ${isMobile ? "left-3 right-3 w-auto" : "w-52"}`}
-            style={isMobile ? { top: "calc(env(safe-area-inset-top, 0px) + 76px)", bottom: "12px", maxHeight: "calc(100dvh - env(safe-area-inset-top, 0px) - 100px)", overflowY: "auto" } : { left: Math.max(8, mascotPosition.x - 170), top: Math.max(76, mascotPosition.y + 24), maxHeight: "min(70vh, 480px)", overflowY: "auto" }}
+            style={isMobile ? { top: "calc(env(safe-area-inset-top, 0px) + 76px)", left: "12px", right: "12px", maxHeight: "calc(100dvh - env(safe-area-inset-top, 0px) - 92px)", overflowY: "auto" } : { left: Math.max(8, mascotPosition.x - 170), top: Math.max(76, mascotPosition.y + 24), maxHeight: "min(70vh, 480px)", overflowY: "auto" }}
             role="dialog"
             aria-label={section.label}
           >
