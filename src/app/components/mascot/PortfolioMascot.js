@@ -458,6 +458,7 @@ export default function PortfolioMascot() {
   }, [reducedMotion, isDesktop, isMobile]);
 
   const section = SECTIONS[active] || SECTIONS[0];
+  const hasSectionMessage = Boolean(section?.label?.trim() && section?.note?.trim() && section?.detail?.trim() && section?.action?.trim());
 
   return (
     <div
@@ -491,7 +492,7 @@ export default function PortfolioMascot() {
         onPointerCancel={() => setIsDragging(false)}
         className={`pointer-events-auto relative block w-full cursor-pointer touch-manipulation rounded-full outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4 focus-visible:ring-offset-background ${isMobile ? "h-[66px]" : "h-[132px]"}`}
         onClick={() => {
-          setMessageOpen((open) => !open);
+          if (hasSectionMessage) setMessageOpen((open) => !open);
           setReacting(true);
           window.setTimeout(() => setReacting(false), 1100);
         }}
@@ -521,7 +522,7 @@ export default function PortfolioMascot() {
         <Grip size={10} />
         Drag to move
       </span>
-      <AnimatePresence mode="wait" initial={false}>
+      {hasSectionMessage && <AnimatePresence mode="wait" initial={false}>
         <motion.button
           key={section.id}
           type="button"
@@ -540,10 +541,10 @@ export default function PortfolioMascot() {
           <span className={`mt-1 block leading-snug ${isMobile ? "text-[9px]" : "text-[10px]"}`}>{section.note}</span>
           <span className="mt-1 block text-[9px] font-semibold text-brand/90">{messageOpen ? "Close message −" : "Tap to chat +"}</span>
         </motion.button>
-      </AnimatePresence>
+      </AnimatePresence>}
 
       <AnimatePresence>
-        {messageOpen && typeof document !== "undefined" && createPortal(
+        {messageOpen && hasSectionMessage && typeof document !== "undefined" && createPortal(
           <motion.div
             key={section.id + "-message"}
             initial={reducedMotion ? { opacity: 0 } : { opacity: 0, x: -10, y: 5, scale: 0.97 }}
