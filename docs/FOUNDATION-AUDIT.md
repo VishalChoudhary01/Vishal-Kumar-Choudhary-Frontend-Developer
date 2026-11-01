@@ -1,12 +1,13 @@
 # Foundation Phase — Repository Audit and Baseline
 
-**Status:** Partial — source inspection completed; runtime/build/browser baseline still pending.  
+**Status:** Source/repository inspection completed; runtime/build/browser baseline pending.  
 **Branch:** `docs/portfolio-platform-spec`  
+**Audit refresh:** 2026-11-01, after the error-page branch was merged into `main`.  
 **Scope:** Read-only inspection. No application source, dependency manifest, lockfile, or deployment configuration was changed for this audit.
 
 ## 1. Executive summary
 
-The repository is an existing Next.js App Router portfolio, not a blank application. It has a working content architecture based on JavaScript data modules, a server-rendered homepage entry point, statically generated project detail routes, reusable project presentation components, a contact API route, SEO utilities, and a deliberately layered animation/loading experience.
+The repository is an existing Next.js App Router portfolio, not a blank application. This audit is scoped to the documented feature-platform branch and must be rechecked against `main` when a code implementation branch is created. It has a working content architecture based on JavaScript data modules, a server-rendered homepage entry point, statically generated project detail routes, reusable project presentation components, a contact API route, SEO utilities, and a deliberately layered animation/loading experience.
 
 The safe strategy is **incremental extension in the existing `src/app` structure**, not replacing it with the generic `app/`, `components/`, `features/`, and `lib/` tree shown as a conceptual proposal in `PROJECT-STRUCTURE.md`.
 
@@ -26,6 +27,7 @@ The current foundation phase is not complete yet: this audit used repository sou
   - `npm run lint`
   - `npm run validate:seo`
 - No `test`, `test:e2e`, or `typecheck` script is declared in the inspected `package.json`.
+- GitHub Actions workflow directory `.github/workflows/` was not found in the inspected branch; the GitHub Actions workflow query for this branch also returned no workflow runs. This is not a substitute for checking repository-level external CI settings.
 - The inspected manifest does **not** declare TanStack Query, Express, MongoDB driver/ODM, Cloudinary SDK, an authentication provider, or a charting library. This does not authorize adding them now; dependency selection follows the relevant architecture decision and phase gate.
 - `package-lock.json` exists. Preserve package manifest/lockfile consistency for any later approved dependency change.
 
@@ -133,6 +135,7 @@ This is a high-level map of inspected paths, not an exhaustive file inventory. C
 6. **Dependency gap:** React Query, Express, MongoDB and Cloudinary are not declared in the inspected manifest. Do not claim they are installed or implement integrations before decisions and environment requirements are reviewed.
 7. **Local-only docs:** root `.gitignore` excludes known local-only paths such as `/implementation Doc/`, `/implemention Doc/`, `/performance doc/`, and `/PERFORMANCE-OPTIMIZATION-REPORT.md`. The GitHub branch does not expose those ignored files at the inspected paths. Do not assume their contents or overwrite them; request/materialize local copies only if they are needed for a later reconciliation.
 8. **Environment mismatch documented by README:** README notes contact code requires `GMAIL_USER`, `GMAIL_APP_PASSWORD`, and `CONTACT_TO_EMAIL`, while `.env.example` has Resend-related values and does not list both Gmail variables. Verify local environment documentation during implementation, without exposing or changing secrets in this phase.
+9. **Local-only specification files are unavailable through this branch:** root README references `implemention Doc/`, `performance doc/`, and `PERFORMANCE-OPTIMIZATION-REPORT.md`, while `.gitignore` excludes these paths. Attempts to retrieve the ignored folders from GitHub return 404. The previous statement that the tracked audit had “reconciled” these local-only sources would therefore be unsupported. Obtain local files from the user before treating them as authoritative input.
 9. **Potential future server runtime boundary:** scheduled publishing and isolated source execution may not fit ordinary request/response functions. These require separate decisions; do not add Express merely to solve them without evaluating focused worker/scheduler options.
 
 ## 6. Stack comparison against the approved platform plan
@@ -187,6 +190,6 @@ Run from the repository root on `docs/portfolio-platform-spec`, after confirming
 
 ## 9. Phase decision
 
-**Current result: FOUNDATION AUDIT PARTIALLY COMPLETE — implementation is still blocked.**
+**Current result: REPOSITORY SOURCE AUDIT COMPLETE; EXECUTION/RENDERED BASELINE INCOMPLETE — implementation remains gated.**
 
-Source inspection is sufficient to reject a wholesale folder restructure and to define the safe migration direction. It is not sufficient to assert that the app currently builds, passes lint/SEO, meets any numeric performance target, or has no visual/accessibility regressions. Finish the unchecked baseline items before starting Phase 1 implementation work.
+Source inspection is sufficient to reject a wholesale folder restructure and define a safe incremental migration direction. The audit does not establish that the app builds, passes lint/SEO, meets a numeric performance target, or has no visual/accessibility regressions. The full execution baseline remains an explicit pending gate before platform implementation. The local-only specification folders are not available in GitHub and have not been read or reconciled.
