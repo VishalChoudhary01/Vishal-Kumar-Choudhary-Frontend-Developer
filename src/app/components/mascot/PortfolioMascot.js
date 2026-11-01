@@ -652,8 +652,8 @@ export default function PortfolioMascot() {
       return sectionRanks[sectionId]?.[tag] ?? 1;
     };
     const hostRect = host.getBoundingClientRect();
-    // The circular core sits below the vertical midpoint of Vee's rendered body.
-    const origin = { x: hostRect.left + hostRect.width / 2, y: hostRect.top + (isMobile ? 48 : 82) };
+    // Start the scan from the antenna tip near the top-center of Vee, then aim directly at the target.
+    const origin = { x: hostRect.left + hostRect.width / 2, y: hostRect.top + (isMobile ? 7 : 12) };
     const seen = new Set();
     const candidates = preferred.flatMap((selector) => [...sectionNode.querySelectorAll(selector)]).filter((node) => {
       if (seen.has(node)) return false;
