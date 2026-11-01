@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowDown, Grip, ScanLine, Sparkles } from "lucide-react";
 import { createPortal } from "react-dom";
+import useUiSound from "@/app/hooks/useUiSound";
 
 const SECTIONS = [
   {
@@ -87,6 +88,12 @@ export default function PortfolioMascot() {
   const [scanBeam, setScanBeam] = useState(null);
   const [scanImpact, setScanImpact] = useState(null);
   const scanTimerRef = useRef([]);
+  const laserOriginRef = useRef(null);
+  const laserSound = useUiSound("/mp3/laser-large-004.mp3", {
+    volume: 0.38,
+    interrupt: true,
+    preload: "auto",
+  });
 
   const activeSectionRef = useRef("hero");
 
@@ -421,6 +428,7 @@ export default function PortfolioMascot() {
         sphere(dark, head, [0, -0.02, 0.53], [0.67, 0.43, 0.2], 32);
         eyeLeft = sphere(teal, head, [-0.25, 0.03, 0.7], [0.09, 0.12, 0.045], 20);
         eyeRight = sphere(teal, head, [0.25, 0.03, 0.7], [0.09, 0.12, 0.045], 20);
+        const laserEyeWorldPosition = new THREE.Vector3();
         // Expressive brow plates make curiosity, surprise, and cheekiness readable at a glance.
         browLeft = makeMesh(new THREE.CapsuleGeometry(0.5, 0.12, 4, 10), orange, head, [-0.25, 0.235, 0.675], [0.055, 0.16, 0.035]);
         browRight = makeMesh(new THREE.CapsuleGeometry(0.5, 0.12, 4, 10), orange, head, [0.25, 0.235, 0.675], [0.055, 0.16, 0.035]);
@@ -587,6 +595,18 @@ export default function PortfolioMascot() {
           rimLight.intensity = smooth(rimLight.intensity, sectionId === "skills" || sectionId === "projects" ? 12 : 18, 0.035);
           accentLight.intensity = smooth(accentLight.intensity, sectionId === "contact" ? 11 : sectionId === "experience" ? 6 : 8, 0.035);
           renderer.render(scene, camera);
+          // Project the animated eye into viewport coordinates so the beam stays attached
+          // while Vee moves, turns its head, or the canvas changes size.
+          if (eyeRight && canvas && camera) {
+            eyeRight.getWorldPosition(laserEyeWorldPosition);
+            laserEyeWorldPosition.project(camera);
+            const canvasRect = canvas.getBoundingClientRect();
+            const eyeX = canvasRect.left + ((laserEyeWorldPosition.x + 1) * 0.5) * canvasRect.width;
+            const eyeY = canvasRect.top + ((1 - laserEyeWorldPosition.y) * 0.5) * canvasRect.height;
+            if (Number.isFinite(eyeX) && Number.isFinite(eyeY)) {
+              laserOriginRef.current = { x: eyeX, y: eyeY };
+            }
+          }
         };
         setWebglReady(true);
         frame = requestAnimationFrame(render);
@@ -653,8 +673,11 @@ export default function PortfolioMascot() {
       return sectionRanks[sectionId]?.[tag] ?? 1;
     };
     const hostRect = host.getBoundingClientRect();
-    // Start the scan from the antenna tip near the top-center of Vee, then aim directly at the target.
-    const origin = { x: hostRect.left + hostRect.width / 2, y: hostRect.top + (isMobile ? 7 : 12) };
+    // Prefer the live projected eye position; use an eye-aligned fallback if WebGL is unavailable.
+    const origin = laserOriginRef.current || {
+      x: hostRect.left + hostRect.width * 0.63,
+      y: hostRect.top + hostRect.height * 0.39,
+    };
     const seen = new Set();
     const candidates = preferred.flatMap((selector) => [...sectionNode.querySelectorAll(selector)]).filter((node) => {
       if (seen.has(node)) return false;
@@ -683,6 +706,7 @@ export default function PortfolioMascot() {
     const dx = target.x - origin.x;
     const dy = target.y - origin.y;
     const id = Date.now();
+    laserSound.play();
     setScanBeam({ x: origin.x, y: origin.y, length: Math.hypot(dx, dy), angle: Math.atan2(dy, dx) * 180 / Math.PI, id });
     setReacting(true);
     scanTimerRef.current.push(window.setTimeout(() => {
@@ -819,7 +843,7 @@ export default function PortfolioMascot() {
             return (
               <motion.span
                 key={index}
-                className="absolute left-0 top-0 block h-1 w-1 rounded-full bg-cyan-100/90 shadow-[0_0_4px_rgba(95,224,213,0.45)]"
+                className="absolute left-0 top-0 block h-1 w-1 rounded-full bg-yellow-100/95 shadow-[0_0_5px_rgba(255,190,45,0.8)]"
                 initial={{ x: -2, y: -2, opacity: 0.75, scale: 0.8 }}
                 animate={{
                   x: Math.cos(angle) * distance - 2,
@@ -832,7 +856,7 @@ export default function PortfolioMascot() {
             );
           })}
           <motion.span
-            className="absolute -left-1 -top-1 block h-2 w-2 rounded-full bg-cyan-100/70"
+            className="absolute -left-1 -top-1 block h-2 w-2 rounded-full bg-orange-300/90 shadow-[0_0_8px_rgba(255,146,35,0.75)]"
             initial={{ opacity: 0.5, scale: 0.4 }}
             animate={{ opacity: 0, scale: 1.5 }}
             transition={{ duration: reducedMotion ? 0 : 0.24, ease: "easeOut" }}
@@ -844,11 +868,11 @@ export default function PortfolioMascot() {
         <div
           key={scanBeam.id}
           aria-hidden="true"
-          className="pointer-events-none fixed z-[99997] h-px rounded-full bg-cyan-200/75 shadow-[0_0_2px_0.5px_rgba(95,224,213,0.35),0_0_5px_1px_rgba(95,224,213,0.16)]"
-          style={{ left: scanBeam.x, top: scanBeam.y, width: scanBeam.length, rotate: `${scanBeam.angle}deg`, transformOrigin: "left center", opacity: 1 }}
+          className="pointer-events-none fixed z-[99997] h-[3px] rounded-full"
+          style={{ left: scanBeam.x, top: scanBeam.y, width: scanBeam.length, rotate: `${scanBeam.angle}deg`, transformOrigin: "left center", opacity: 1, background: "linear-gradient(90deg, #ff7a18 0%, #ffb52e 36%, #fff2a0 52%, #ffd13d 68%, #ff8b1f 100%)", boxShadow: "0 0 3px 1px rgba(255, 202, 62, 0.95), 0 0 9px 2px rgba(255, 126, 24, 0.72), 0 0 18px 3px rgba(255, 126, 24, 0.32)" }}
         >
           <motion.span
-            className="absolute -right-0.5 -top-[2px] h-1 w-1 rounded-full bg-cyan-100/90 shadow-[0_0_3px_1px_rgba(95,224,213,0.45)]"
+            className="absolute -right-0.5 -top-[2px] h-1 w-1 rounded-full bg-yellow-50 shadow-[0_0_4px_2px_rgba(255,224,95,0.95)]"
             initial={{ left: 0, x: 0, opacity: 0 }}
             animate={{ left: scanBeam.length, x: -2, opacity: [0, 0.72, 0.72, 0] }}
             transition={{ duration: reducedMotion ? 0 : 0.42, ease: "linear" }}
