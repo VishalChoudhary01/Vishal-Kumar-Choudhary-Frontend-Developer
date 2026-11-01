@@ -232,3 +232,26 @@ The platform is acceptable only when:
 
 ## 11. Definition of product readiness
 Requirements are not complete merely because UI exists. Each capability must pass functional, permission, failure-state, responsive, accessibility, performance and regression checks; documentation must describe any limitations and unselected infrastructure decisions. No claim of complete production readiness until those checks have evidence.
+
+
+## 12. Detailed stack decisions and responsibility boundaries
+### Approved frontend stack
+- Next.js App Router and React for routing, server-rendered public content and UI composition.
+- JavaScript (ES modules); do not migrate to TypeScript without explicit approval.
+- Tailwind CSS v4 for styling, reusing existing tokens/utilities and avoiding unnecessary custom CSS.
+- Motion from motion/react for approved animation behavior.
+- TanStack Query (React Query) for client-side server state where client interactions benefit from query caching, background refetch, mutation state or cache invalidation.
+- React Query is not the source of authorization, not a replacement for database access boundaries, and not automatically required for every server-rendered page. Prefer server-side data loading for content that can be rendered safely on the server; introduce client queries only where there is a concrete interaction need.
+
+### Backend approach decision
+- **Initial decision: Next.js-native backend.** Keep business logic, authorization, data access and validation in server-only modules; expose HTTP Route Handlers for API consumers/webhooks and use Server Actions for appropriate same-app form mutations.
+- Do not create a separate Express application in the initial architecture merely for convention or familiarity. A second server would add deployment, authentication, CORS, observability and operational boundaries.
+- **Express status: OPEN / conditional.** Reconsider only if a documented requirement cannot be handled safely or reliably in the Vercel-hosted Next.js runtime, or a separately deployed service is justified (for example, a long-running isolated preview worker). Any such service requires a written decision record and explicit approval before implementation.
+- No frontend component may access MongoDB directly. No client bundle may import server-only repositories, credentials or privileged modules.
+- Never place authorization solely in middleware or UI visibility. Verify permissions at the protected data/action boundary as well.
+
+### Selected infrastructure
+- MongoDB: application persistence.
+- Cloudinary: media storage/delivery.
+- Vercel: existing Next.js application deployment.
+- Authentication provider/session implementation, MongoDB host, scheduler and isolated preview runtime remain open and must be validated during architecture phase.
