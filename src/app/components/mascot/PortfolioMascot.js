@@ -957,7 +957,7 @@ export default function PortfolioMascot() {
           event.stopPropagation();
           activateHolographicScan();
         }}
-        className="pointer-events-auto absolute -right-1 -top-3 z-10 grid h-7 w-7 place-items-center rounded-full border border-teal-200/30 bg-background/75 text-foreground/65 shadow-sm backdrop-blur-sm transition-colors duration-200 hover:border-teal-200/60 hover:bg-teal-200/10 hover:text-teal-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200"
+        className="pointer-events-auto absolute right-0 top-7 z-[60] grid h-7 w-7 translate-x-1/2 place-items-center rounded-full border border-orange-200/35 bg-background/90 text-foreground/75 shadow-[0_2px_12px_rgba(255,105,35,0.14)] backdrop-blur-sm transition-[color,background-color,border-color,box-shadow,transform] duration-200 hover:translate-x-1/2 hover:border-orange-200/65 hover:bg-orange-300/10 hover:text-orange-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-200"
         aria-label="Scan the nearest element with Vee"
         title="Scan nearby element"
       >
