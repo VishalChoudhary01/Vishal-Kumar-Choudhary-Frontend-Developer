@@ -97,7 +97,7 @@ export default function PortfolioMascot() {
   const laserAimRef = useRef(null);
   const scanCycleRef = useRef({});
   const laserSound = useUiSound("/mp3/laser-large-004.mp3", {
-    volume: 0.38,
+    volume: 0.16,
     interrupt: true,
     preload: "auto",
   });
