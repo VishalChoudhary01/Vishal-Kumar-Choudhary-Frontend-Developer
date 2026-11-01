@@ -80,6 +80,11 @@ export default function PortfolioMascot() {
   const [manualPosition, setManualPosition] = useState(null);
   const [messageOpen, setMessageOpen] = useState(false);
   const [webglReady, setWebglReady] = useState(false);
+  const [welcomeNeedsInteraction, setWelcomeNeedsInteraction] = useState(false);
+  const [welcomePromptVisible, setWelcomePromptVisible] = useState(false);
+  const welcomeAttentionStartedAtRef = useRef(null);
+  const welcomeAudioRef = useRef(null);
+  const welcomeAttemptedRef = useRef(false);
   const [mascotPosition, setMascotPosition] = useState({ x: 0, y: 0 });
   const footerActiveRef = useRef(false);
   const dragStartRef = useRef(null);
@@ -92,7 +97,7 @@ export default function PortfolioMascot() {
   const laserAimRef = useRef(null);
   const scanCycleRef = useRef({});
   const laserSound = useUiSound("/mp3/laser-large-004.mp3", {
-    volume: 0.38,
+    volume: 0.16,
     interrupt: true,
     preload: "auto",
   });
@@ -102,6 +107,46 @@ export default function PortfolioMascot() {
   useEffect(() => {
     activeSectionRef.current = SECTIONS[active]?.id || "hero";
   }, [active]);
+
+  // Play Vee's introduction once the 3D scene has finished building.
+  // Autoplay may be blocked until the visitor interacts with the page.
+  useEffect(() => {
+    if (!webglReady || welcomeAttemptedRef.current) return undefined;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      if (cancelled || welcomeAttemptedRef.current) return;
+      welcomeAttentionStartedAtRef.current = performance.now();
+      setWelcomePromptVisible(true);
+      welcomeAttemptedRef.current = true;
+      const audio = new Audio("/audio/hey-there-im-vee-your.wav");
+      audio.preload = "auto";
+      audio.volume = 0.85;
+      welcomeAudioRef.current = audio;
+      audio.play().then(() => {
+        if (!cancelled) { setWelcomeNeedsInteraction(false); setWelcomePromptVisible(false); }
+      }).catch(() => {
+        if (!cancelled) setWelcomeNeedsInteraction(true);
+      });
+    }, 800);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [webglReady]);
+
+  useEffect(() => () => {
+    const audio = welcomeAudioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+  }, []);
+
+  const playWelcomeAudio = () => {
+    const audio = welcomeAudioRef.current || new Audio("/audio/hey-there-im-vee-your.wav");
+    welcomeAudioRef.current = audio;
+    audio.play().then(() => { setWelcomeNeedsInteraction(false); setWelcomePromptVisible(false); }).catch(() => { setWelcomeNeedsInteraction(true); setWelcomePromptVisible(true); });
+  };
 
   useEffect(() => {
     const desktopQuery = window.matchMedia("(min-width: 768px)");
@@ -517,7 +562,10 @@ export default function PortfolioMascot() {
           const idlePlay = !reducedMotion && !footerSettled && time - lastScrollTime > 1600 && !reactingNow;
           const idleLook = idlePlay ? Math.sin(seconds * 1.25) * 0.34 : 0;
           const idleWave = idlePlay ? Math.max(0, Math.sin(seconds * 2.2)) * 0.24 : 0;
-          root.position.y = footerSettled ? -0.18 + idle * 0.25 : idle + (reactingNow ? Math.sin(seconds * 13) * 0.08 : 0);
+          const welcomeJump = welcomePromptVisible && !welcomeNeedsInteraction
+            ? Math.max(0, Math.sin((time - (welcomeAttentionStartedAtRef.current || time)) / 210)) * 0.18
+            : 0;
+          root.position.y = footerSettled ? -0.18 + idle * 0.25 : idle + welcomeJump + (reactingNow ? Math.sin(seconds * 13) * 0.08 : 0);
           root.rotation.x = smooth(root.rotation.x, footerSettled ? -0.12 : 0, 0.06);
           root.rotation.y = smooth(root.rotation.y, pointerX * 0.55 + (activeIndex === 5 ? -0.13 : 0), 0.055);
           root.rotation.z = smooth(root.rotation.z, pose.lean + pointerY * 0.1, 0.055);
@@ -990,6 +1038,17 @@ export default function PortfolioMascot() {
         transition={reducedMotion ? { duration: 0 } : { duration: active === 0 ? 2.8 : 3.6, repeat: Infinity, ease: "easeInOut" }}
         style={{ pointerEvents: "none" }}
       />
+      {(welcomeNeedsInteraction || welcomePromptVisible) && (
+        <button
+          type="button"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => { event.stopPropagation(); playWelcomeAudio(); }}
+          className="pointer-events-auto absolute -top-10 left-1/2 z-[61] -translate-x-1/2 whitespace-nowrap rounded-sm border border-brand/50 bg-background/95 px-3 py-2 text-xs font-semibold text-foreground shadow-[0_0_18px_rgba(255,150,60,0.2)] backdrop-blur-sm transition-transform hover:scale-[1.03] hover:bg-brand/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand animate-[pulse_2s_ease-in-out_infinite]"
+          aria-label="Play Vee's welcome greeting"
+        >
+          {welcomeNeedsInteraction ? "Tap to hear Vee" : "Meet Vee · Play welcome"}
+        </button>
+      )}
       <button
         type="button"
         onPointerDown={(event) => event.stopPropagation()}
