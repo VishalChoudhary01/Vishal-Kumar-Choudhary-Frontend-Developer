@@ -661,7 +661,7 @@ export default function PortfolioMascot() {
       hero: ["h1", "a[href]", "button"],
       about: ["h2", "img", "picture", "p"],
       education: ["img", "picture", "h3", "h2", "p"],
-      skills: ["[data-skill-icon]", "[data-skill-card] svg", "[data-skill-card] img", "[data-skill-card] h3", "[data-skill-card] h4"],
+      skills: ["[data-skill-card] img", "[data-skill-card] [data-skill-icon]", "[data-skill-card] svg", "[data-skill-card] h3", "[data-skill-card] h4", "[data-skill-icon]", "img", "svg"],
       experience: ["img", "picture", "h3", "h2", "p"],
       projects: ["[data-project-card] img", "article img", "[data-project-card] h3", "article h3", "a[href]", "button"],
       contact: ["input", "textarea", "select", "button[type='submit']", "label", "h2"],
@@ -673,7 +673,7 @@ export default function PortfolioMascot() {
         hero: { h1: 5, a: 4, button: 3 },
         about: { h2: 5, img: 4, picture: 4, p: 2 },
         education: { img: 5, picture: 5, h3: 4, h2: 3, p: 1 },
-        skills: { svg: 5, img: 5, h3: 4, h4: 3 },
+        skills: { img: 7, svg: 6, h3: 5, h4: 4 },
         experience: { img: 5, picture: 5, h3: 4, h2: 3, p: 1 },
         projects: { img: 5, h3: 4, a: 3, button: 3 },
         contact: { input: 5, textarea: 5, select: 5, button: 4, label: 3, h2: 2 },
@@ -747,17 +747,33 @@ export default function PortfolioMascot() {
           );
         } else {
           const isFormControl = target.node.matches("input, textarea, select, button");
-          // React directly on the hit element; never draw a selection outline around its container.
+          const isSkillTarget = sectionId === "skills";
+          // Keep the reaction on the struck visual itself—no card/container outline.
+          // For skill icons, brighten the actual icon/image and give it a tiny energy pulse.
+          const visualTarget = isSkillTarget
+            ? (target.node.matches("img, svg, [data-skill-icon]") ? target.node : target.node.querySelector("img, svg, [data-skill-icon]") || target.node)
+            : target.node;
           const originalCaretColor = target.node.style.caretColor;
           if (isFormControl) target.node.style.caretColor = "#ff9a32";
-          target.node.animate(reducedMotion
+          visualTarget.animate(reducedMotion
             ? [{ opacity: 0.94 }, { opacity: 1 }]
             : [
-                { filter: "brightness(1) drop-shadow(0 0 0 rgba(255,90,24,0))" },
-                { filter: "brightness(1.16) drop-shadow(0 0 4px rgba(255,80,24,0.42)) drop-shadow(0 0 7px rgba(255,190,45,0.18))" },
-                { filter: "brightness(1.06) drop-shadow(0 0 2px rgba(255,145,35,0.22))" },
-                { filter: "brightness(1) drop-shadow(0 0 0 rgba(255,90,24,0))" },
-              ], { duration: reducedMotion ? 100 : 680, easing: "ease-out" });
+                { filter: "brightness(1) saturate(1) drop-shadow(0 0 0 rgba(255,90,24,0))", transform: "scale(1)" },
+                { filter: "brightness(1.42) saturate(1.18) drop-shadow(0 0 5px rgba(255,72,24,0.58)) drop-shadow(0 0 10px rgba(255,190,45,0.3))", transform: "scale(1.055)" },
+                { filter: "brightness(1.2) saturate(1.08) drop-shadow(0 0 3px rgba(255,145,35,0.34))", transform: "scale(1.025)" },
+                { filter: "brightness(1) saturate(1) drop-shadow(0 0 0 rgba(255,90,24,0))", transform: "scale(1)" },
+              ], { duration: reducedMotion ? 100 : 760, easing: "ease-out" });
+          // Skill icons may be SVGs; also give their exact visual surface a warm beam-colored flash.
+          if (isSkillTarget && visualTarget !== target.node) {
+            target.node.animate(
+              [
+                { filter: "brightness(1)" },
+                { filter: "brightness(1.18) drop-shadow(0 0 5px rgba(255,110,30,0.24))" },
+                { filter: "brightness(1)" },
+              ],
+              { duration: reducedMotion ? 100 : 680, easing: "ease-out" },
+            );
+          }
           scanTimerRef.current.push(window.setTimeout(() => {
             if (isFormControl && target.node.isConnected) target.node.style.caretColor = originalCaretColor;
           }, reducedMotion ? 120 : 720));
