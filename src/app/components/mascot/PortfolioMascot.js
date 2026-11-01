@@ -747,33 +747,19 @@ export default function PortfolioMascot() {
           );
         } else {
           const isFormControl = target.node.matches("input, textarea, select, button");
-          const isLink = target.node.matches("a, a *");
-          const glowTarget = target.node.closest("[data-project-card], [data-skill-card], article, a, label") || target.node;
-          const originalTargetStyles = {
-            outline: glowTarget.style.outline,
-            outlineOffset: glowTarget.style.outlineOffset,
-            boxShadow: glowTarget.style.boxShadow,
-            caretColor: target.node.style.caretColor,
-          };
-          glowTarget.style.outline = "1px solid rgba(255, 126, 32, 0.42)";
-          glowTarget.style.outlineOffset = "2px";
-          glowTarget.style.boxShadow = "0 0 0 1px rgba(255, 80, 24, 0.12), 0 0 18px rgba(255, 125, 28, 0.16)";
+          // React directly on the hit element; never draw a selection outline around its container.
+          const originalCaretColor = target.node.style.caretColor;
           if (isFormControl) target.node.style.caretColor = "#ff9a32";
-          if (isLink) glowTarget.style.textDecorationColor = "#ff9a32";
           target.node.animate(reducedMotion
             ? [{ opacity: 0.94 }, { opacity: 1 }]
             : [
                 { filter: "brightness(1) drop-shadow(0 0 0 rgba(255,90,24,0))" },
-                { filter: "brightness(1.22) drop-shadow(0 0 6px rgba(255,80,24,0.5)) drop-shadow(0 0 10px rgba(255,190,45,0.22))" },
-                { filter: "brightness(1.08) drop-shadow(0 0 3px rgba(255,145,35,0.28))" },
+                { filter: "brightness(1.16) drop-shadow(0 0 4px rgba(255,80,24,0.42)) drop-shadow(0 0 7px rgba(255,190,45,0.18))" },
+                { filter: "brightness(1.06) drop-shadow(0 0 2px rgba(255,145,35,0.22))" },
                 { filter: "brightness(1) drop-shadow(0 0 0 rgba(255,90,24,0))" },
               ], { duration: reducedMotion ? 100 : 680, easing: "ease-out" });
           scanTimerRef.current.push(window.setTimeout(() => {
-            if (!glowTarget.isConnected) return;
-            glowTarget.style.outline = originalTargetStyles.outline;
-            glowTarget.style.outlineOffset = originalTargetStyles.outlineOffset;
-            glowTarget.style.boxShadow = originalTargetStyles.boxShadow;
-            if (isFormControl) target.node.style.caretColor = originalTargetStyles.caretColor;
+            if (isFormControl && target.node.isConnected) target.node.style.caretColor = originalCaretColor;
           }, reducedMotion ? 120 : 720));
         }
       }
