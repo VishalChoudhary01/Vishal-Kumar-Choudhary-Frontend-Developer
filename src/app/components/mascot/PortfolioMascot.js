@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowDown, Grip, ScanLine, Sparkles } from "lucide-react";
 import { createPortal } from "react-dom";
+import useUiSound from "@/app/hooks/useUiSound";
 
 const SECTIONS = [
   {
@@ -87,6 +88,14 @@ export default function PortfolioMascot() {
   const [scanBeam, setScanBeam] = useState(null);
   const [scanImpact, setScanImpact] = useState(null);
   const scanTimerRef = useRef([]);
+  const laserOriginRef = useRef(null);
+  const laserAimRef = useRef(null);
+  const scanCycleRef = useRef({});
+  const laserSound = useUiSound("/mp3/laser-large-004.mp3", {
+    volume: 0.38,
+    interrupt: true,
+    preload: "auto",
+  });
 
   const activeSectionRef = useRef("hero");
 
@@ -421,6 +430,8 @@ export default function PortfolioMascot() {
         sphere(dark, head, [0, -0.02, 0.53], [0.67, 0.43, 0.2], 32);
         eyeLeft = sphere(teal, head, [-0.25, 0.03, 0.7], [0.09, 0.12, 0.045], 20);
         eyeRight = sphere(teal, head, [0.25, 0.03, 0.7], [0.09, 0.12, 0.045], 20);
+        const laserHandWorldPosition = new THREE.Vector3();
+        const laserHandLocalPosition = new THREE.Vector3(0.08, 0.025, 0.16);
         // Expressive brow plates make curiosity, surprise, and cheekiness readable at a glance.
         browLeft = makeMesh(new THREE.CapsuleGeometry(0.5, 0.12, 4, 10), orange, head, [-0.25, 0.235, 0.675], [0.055, 0.16, 0.035]);
         browRight = makeMesh(new THREE.CapsuleGeometry(0.5, 0.12, 4, 10), orange, head, [0.25, 0.235, 0.675], [0.055, 0.16, 0.035]);
@@ -519,9 +530,14 @@ export default function PortfolioMascot() {
           const leftWave = reactingNow ? Math.sin(seconds * 18) * 0.65 : idleWave + greetingWave;
           leftArm.rotation.z = smooth(leftArm.rotation.z, pose.left + leftWave, 0.07);
           const pointingRight = targetFacingX >= 0;
-          const rightArmTarget = SECTIONS[activeIndex]?.pose === "point"
-            ? (pointingRight ? -1.65 : 1.65)
-            : pose.right;
+          // During a scan, smoothly aim the right arm toward the same screen-space
+          // target used by the beam. Outside the short scan window, keep the section pose.
+          const scanAim = laserAimRef.current;
+          const rightArmTarget = scanAim
+            ? clamp(scanAim.angle, -1.3, 1.3)
+            : SECTIONS[activeIndex]?.pose === "point"
+              ? (pointingRight ? -1.65 : 1.65)
+              : pose.right;
           const playfulArm = idlePlay ? Math.sin(seconds * 2.2 + Math.PI) * 0.22 : 0;
           const rightWave = reactingNow ? Math.sin(seconds * 18) * 0.65 : playfulArm + (greeting ? -0.22 : 0);
           rightArm.rotation.z = smooth(rightArm.rotation.z, rightArmTarget + rightWave, 0.07);
@@ -587,6 +603,19 @@ export default function PortfolioMascot() {
           rimLight.intensity = smooth(rimLight.intensity, sectionId === "skills" || sectionId === "projects" ? 12 : 18, 0.035);
           accentLight.intensity = smooth(accentLight.intensity, sectionId === "contact" ? 11 : sectionId === "experience" ? 6 : 8, 0.035);
           renderer.render(scene, camera);
+          // Project a point near the front of the animated right palm so the beam
+          // visibly starts at the hand and follows Vee through gestures and movement.
+          if (rightHand && canvas && camera) {
+            laserHandWorldPosition.copy(laserHandLocalPosition);
+            rightHand.localToWorld(laserHandWorldPosition);
+            laserHandWorldPosition.project(camera);
+            const canvasRect = canvas.getBoundingClientRect();
+            const handX = canvasRect.left + ((laserHandWorldPosition.x + 1) * 0.5) * canvasRect.width;
+            const handY = canvasRect.top + ((1 - laserHandWorldPosition.y) * 0.5) * canvasRect.height;
+            if (Number.isFinite(handX) && Number.isFinite(handY)) {
+              laserOriginRef.current = { x: handX, y: handY };
+            }
+          }
         };
         setWebglReady(true);
         frame = requestAnimationFrame(render);
@@ -625,27 +654,34 @@ export default function PortfolioMascot() {
     if (!host || isDragging) return;
     scanTimerRef.current.forEach((timer) => window.clearTimeout(timer));
     scanTimerRef.current = [];
-    const sectionId = activeSectionRef.current;
-    const sectionNode = document.getElementById(sectionId);
+    const rawSectionId = activeSectionRef.current;
+    const sectionNode = document.getElementById(rawSectionId);
     if (!sectionNode) return;
+    // Some portfolio sections use singular/custom IDs (for example "skill") while
+    // the mascot's section model uses "skills". Resolve the visual section from
+    // its ID and visible content so the scan does not silently fall back to generic targets.
+    const sectionText = (sectionNode.getAttribute("aria-label") || sectionNode.querySelector("h1, h2, h3, [data-section-label]")?.textContent || "").toLowerCase();
+    const sectionId = /skill/i.test(rawSectionId) || /skill/i.test(sectionText) || sectionNode.querySelector("[data-skill-card], [data-skill-icon]") ? "skills"
+      : /project/i.test(rawSectionId) || /project/i.test(sectionText) || sectionNode.querySelector("[data-project-card]") ? "projects"
+      : rawSectionId;
 
     const selectorsBySection = {
-      hero: ["h1", "a[href]", "button"],
+      hero: ["img", "picture", "[style*='background-image']", "h1"],
       about: ["h2", "img", "picture", "p"],
       education: ["img", "picture", "h3", "h2", "p"],
-      skills: ["[data-skill-icon]", "[data-skill-card] svg", "[data-skill-card] img", "[data-skill-card] h3", "[data-skill-card] h4"],
+      skills: ["[data-skill-card] img", "[data-skill-card] [data-skill-icon]", "[data-skill-card] svg", "[data-skill-icon]", "img", "svg", "[data-skill-card] h3", "[data-skill-card] h4"],
       experience: ["img", "picture", "h3", "h2", "p"],
-      projects: ["[data-project-card] img", "article img", "[data-project-card] h3", "article h3", "a[href]", "button"],
+      projects: ["[data-project-card] img", "article img", "[data-project-card] [style*='background-image']", "article [style*='background-image']", "img", "[data-project-card] h3", "article h3"],
       contact: ["input", "textarea", "select", "button[type='submit']", "label", "h2"],
     };
     const preferred = selectorsBySection[sectionId] || ["img", "svg", "h2", "h3", "button", "a[href]", "input", "textarea"];
     const rank = (node) => {
       const tag = node.tagName.toLowerCase();
       const sectionRanks = {
-        hero: { h1: 5, a: 4, button: 3 },
+        hero: { img: 9, picture: 8, h1: 5, a: 4, button: 3 },
         about: { h2: 5, img: 4, picture: 4, p: 2 },
         education: { img: 5, picture: 5, h3: 4, h2: 3, p: 1 },
-        skills: { svg: 5, img: 5, h3: 4, h4: 3 },
+        skills: { img: 7, svg: 6, h3: 5, h4: 4 },
         experience: { img: 5, picture: 5, h3: 4, h2: 3, p: 1 },
         projects: { img: 5, h3: 4, a: 3, button: 3 },
         contact: { input: 5, textarea: 5, select: 5, button: 4, label: 3, h2: 2 },
@@ -653,10 +689,13 @@ export default function PortfolioMascot() {
       return sectionRanks[sectionId]?.[tag] ?? 1;
     };
     const hostRect = host.getBoundingClientRect();
-    // Start the scan from the antenna tip near the top-center of Vee, then aim directly at the target.
-    const origin = { x: hostRect.left + hostRect.width / 2, y: hostRect.top + (isMobile ? 7 : 12) };
+    // Prefer the live projected hand position; fall back to the mascot hand area if WebGL is unavailable.
+    const origin = laserOriginRef.current || {
+      x: hostRect.left + hostRect.width * 0.76,
+      y: hostRect.top + hostRect.height * 0.68,
+    };
     const seen = new Set();
-    const candidates = preferred.flatMap((selector) => [...sectionNode.querySelectorAll(selector)]).filter((node) => {
+    let candidates = preferred.flatMap((selector) => [...sectionNode.querySelectorAll(selector)]).filter((node) => {
       if (seen.has(node)) return false;
       seen.add(node);
       if (host.contains(node) || node.closest("[aria-hidden='true']") || node.closest("[inert]")) return false;
@@ -672,9 +711,58 @@ export default function PortfolioMascot() {
       const y = rect.top + rect.height / 2;
       const distance = Math.hypot(x - origin.x, y - origin.y);
       const priority = rank(node);
-      return { node, x, y, distance, priority, score: distance - priority * (isMobile ? 34 : 46) };
+      const isVisual = node.matches("img, picture, svg, [data-skill-icon], [style*='background-image']");
+      const visualBoost = isVisual ? (sectionId === "projects" || sectionId === "skills" ? 260 : 110) : 0;
+      return { node, x, y, distance, priority, score: distance - priority * (isMobile ? 34 : 46) - visualBoost };
     }).sort((a, b) => a.score - b.score);
-    const target = candidates[0];
+    // Some skill layouts render icon components without data attributes or use
+    // CSS backgrounds. If preferred selectors miss, scan the nearest visible
+    // visual/text descendant so the beam and impact still happen in this section.
+    if (!candidates.length) {
+      candidates = [...sectionNode.querySelectorAll("img, svg, canvas, h1, h2, h3, h4, p, a, span, [role='img'], [style*='background-image']")]
+        .filter((node) => {
+          if (host.contains(node) || node.closest("[aria-hidden='true'], [inert]")) return false;
+          const rect = node.getBoundingClientRect();
+          const style = window.getComputedStyle(node);
+          return rect.width > 8 && rect.height > 8 && rect.bottom > 0 && rect.top < window.innerHeight &&
+            rect.right > 0 && rect.left < window.innerWidth && style.visibility !== "hidden" && style.display !== "none" &&
+            Number.parseFloat(style.opacity || "1") > 0.05;
+        })
+        .map((node) => {
+          const rect = node.getBoundingClientRect();
+          const x = rect.left + rect.width / 2;
+          const y = rect.top + rect.height / 2;
+          const visual = node.matches("img, svg, canvas, [role='img'], [style*='background-image']");
+          const distance = Math.hypot(x - origin.x, y - origin.y);
+          return { node, x, y, distance, score: distance - (visual ? 240 : 0) };
+        })
+        .sort((a, b) => a.score - b.score);
+    }
+    // Cycle hero targets between portrait and heading; projects/skills prioritize visuals.
+    // This prevents repeated scans from hitting the same text node every time.
+    const cycleKey = sectionId === "hero" ? "hero" : sectionId;
+    let orderedCandidates = candidates;
+    if (sectionId === "skills" && candidates.length) {
+      // Keep scans focused on the actual skill visuals, even when the markup
+      // nests icons inside wrappers rather than exposing data-skill attributes.
+      const skillVisuals = candidates.filter(({ node }) => node.matches("img, svg, canvas, [role='img'], [data-skill-icon], [style*='background-image']"));
+      if (skillVisuals.length) orderedCandidates = skillVisuals;
+    }
+    if (sectionId === "projects" && candidates.length) {
+      const projectVisuals = candidates.filter(({ node }) => node.matches("img, canvas, [role='img'], [style*='background-image']"));
+      if (projectVisuals.length) orderedCandidates = projectVisuals;
+    }
+    if (sectionId === "hero") {
+      const heroTargets = candidates.filter(({ node }) => node.matches("img, picture, [style*='background-image'], h1"));
+      if (heroTargets.length) orderedCandidates = heroTargets.sort((a, b) => {
+        const visualA = a.node.matches("img, picture, [style*='background-image']") ? 1 : 0;
+        const visualB = b.node.matches("img, picture, [style*='background-image']") ? 1 : 0;
+        return visualB - visualA || a.score - b.score;
+      });
+    }
+    const cycleIndex = scanCycleRef.current[cycleKey] || 0;
+    const target = orderedCandidates.length ? orderedCandidates[cycleIndex % orderedCandidates.length] : null;
+    if (orderedCandidates.length > 1) scanCycleRef.current[cycleKey] = cycleIndex + 1;
     if (!target) {
       setReacting(true);
       scanTimerRef.current.push(window.setTimeout(() => setReacting(false), 500));
@@ -683,6 +771,11 @@ export default function PortfolioMascot() {
     const dx = target.x - origin.x;
     const dy = target.y - origin.y;
     const id = Date.now();
+    // The right arm pivots from a downward resting direction. Match its temporary
+    // rotation to the target vector so the glove points toward the beam's impact.
+    // The sign is inverted to match Vee's authored right-arm pointing convention.
+    laserAimRef.current = { angle: clamp(-Math.atan2(dx, Math.max(1, -dy)), -1.3, 1.3) };
+    laserSound.play();
     setScanBeam({ x: origin.x, y: origin.y, length: Math.hypot(dx, dy), angle: Math.atan2(dy, dx) * 180 / Math.PI, id });
     setReacting(true);
     scanTimerRef.current.push(window.setTimeout(() => {
@@ -703,26 +796,52 @@ export default function PortfolioMascot() {
           target.node.animate(
             [
               { webkitTextFillColor: "transparent", filter: "brightness(1)" },
-              { webkitTextFillColor: targetStyle.color || "rgb(238, 238, 229)", filter: "brightness(1.08)" },
-              { webkitTextFillColor: targetStyle.color || "rgb(238, 238, 229)", filter: "brightness(1.08)" },
+              { webkitTextFillColor: "rgb(255, 157, 58)", filter: "brightness(1.12) drop-shadow(0 0 5px rgba(255, 93, 28, 0.5))" },
+              { webkitTextFillColor: "rgb(255, 157, 58)", filter: "brightness(1.12) drop-shadow(0 0 5px rgba(255, 93, 28, 0.5))" },
               { webkitTextFillColor: "transparent", filter: "brightness(1)" },
             ],
             { duration: reducedMotion ? 120 : 900, easing: "ease-in-out" },
           );
         } else {
-          target.node.animate(reducedMotion
+          const isFormControl = target.node.matches("input, textarea, select, button");
+          const isSkillTarget = sectionId === "skills" || /skills?/i.test(sectionNode.id || "") || Boolean(sectionNode.querySelector("[data-skill-card], [data-skill-icon]"));
+          // Keep the reaction on the struck visual itself—no card/container outline.
+          // For skill icons, brighten the actual icon/image and give it a tiny energy pulse.
+          const visualTarget = target.node.matches("img, svg, [data-skill-icon], [style*='background-image']")
+            ? target.node
+            : target.node.querySelector("img, svg, [data-skill-icon], [style*='background-image']") || target.node;
+          const originalCaretColor = target.node.style.caretColor;
+          if (isFormControl) target.node.style.caretColor = "#ff9a32";
+          visualTarget.animate(reducedMotion
             ? [{ opacity: 0.94 }, { opacity: 1 }]
             : [
-                { filter: "brightness(1) drop-shadow(0 0 0 rgba(95,224,213,0))" },
-                { filter: "brightness(1.18) drop-shadow(0 0 4px rgba(95,224,213,0.38))" },
-                { filter: "brightness(1.06) drop-shadow(0 0 2px rgba(95,224,213,0.18))" },
-                { filter: "brightness(1) drop-shadow(0 0 0 rgba(95,224,213,0))" },
-              ], { duration: reducedMotion ? 100 : 680, easing: "ease-out" });
+                { filter: "brightness(1) saturate(1) drop-shadow(0 0 0 rgba(255,90,24,0))", transform: "scale(1)" },
+                { filter: "brightness(1.32) saturate(1.12) contrast(1.025) drop-shadow(0 0 4px rgba(255,70,24,0.42)) drop-shadow(0 0 8px rgba(255,190,45,0.22))", transform: "scale(1.025)" },
+                { filter: "brightness(1.2) saturate(1.08) drop-shadow(0 0 3px rgba(255,145,35,0.34))", transform: "scale(1.025)" },
+                { filter: "brightness(1) saturate(1) drop-shadow(0 0 0 rgba(255,90,24,0))", transform: "scale(1)" },
+              ], { duration: reducedMotion ? 100 : 760, easing: "ease-out" });
+          // Skill icons may be SVGs; also give their exact visual surface a warm beam-colored flash.
+          if (isSkillTarget && visualTarget !== target.node) {
+            target.node.animate(
+              [
+                { filter: "brightness(1)" },
+                { filter: "brightness(1.18) drop-shadow(0 0 5px rgba(255,110,30,0.24))" },
+                { filter: "brightness(1)" },
+              ],
+              { duration: reducedMotion ? 100 : 680, easing: "ease-out" },
+            );
+          }
+          scanTimerRef.current.push(window.setTimeout(() => {
+            if (isFormControl && target.node.isConnected) target.node.style.caretColor = originalCaretColor;
+          }, reducedMotion ? 120 : 720));
         }
       }
     }, reducedMotion ? 0 : 420));
     scanTimerRef.current.push(window.setTimeout(() => setScanBeam(null), reducedMotion ? 100 : 620));
-    scanTimerRef.current.push(window.setTimeout(() => setReacting(false), 850));
+    scanTimerRef.current.push(window.setTimeout(() => {
+      laserAimRef.current = null;
+      setReacting(false);
+    }, 850));
   };
 
   useEffect(() => () => scanTimerRef.current.forEach((timer) => window.clearTimeout(timer)), []);
@@ -767,8 +886,8 @@ export default function PortfolioMascot() {
 
     eligible.forEach((node) => {
       if (node === nearestNode && nearestDistance < (isMobile ? 145 : 210)) {
-        node.style.boxShadow = "0 0 0 1px rgba(7,162,144,0.24), 0 8px 28px rgba(7,162,144,0.12)";
-        node.style.outline = "1px solid rgba(7,162,144,0.16)";
+        node.style.boxShadow = "0 0 0 1px rgba(255,112,28,0.3), 0 8px 28px rgba(255,90,24,0.14), 0 0 18px rgba(255,190,45,0.08)";
+        node.style.outline = "1px solid rgba(255,126,32,0.22)";
         node.style.outlineOffset = "2px";
       } else {
         const original = originals.get(node);
@@ -819,7 +938,7 @@ export default function PortfolioMascot() {
             return (
               <motion.span
                 key={index}
-                className="absolute left-0 top-0 block h-1 w-1 rounded-full bg-cyan-100/90 shadow-[0_0_4px_rgba(95,224,213,0.45)]"
+                className="absolute left-0 top-0 block h-1 w-1 rounded-full bg-orange-300/95 shadow-[0_0_5px_rgba(255,92,25,0.72)]"
                 initial={{ x: -2, y: -2, opacity: 0.75, scale: 0.8 }}
                 animate={{
                   x: Math.cos(angle) * distance - 2,
@@ -832,9 +951,9 @@ export default function PortfolioMascot() {
             );
           })}
           <motion.span
-            className="absolute -left-1 -top-1 block h-2 w-2 rounded-full bg-cyan-100/70"
-            initial={{ opacity: 0.5, scale: 0.4 }}
-            animate={{ opacity: 0, scale: 1.5 }}
+            className="absolute -left-[3px] -top-[3px] block h-[6px] w-[6px] rounded-full bg-red-400/90 shadow-[0_0_4px_rgba(255,92,25,0.58)]"
+            initial={{ opacity: 0.45, scale: 0.5 }}
+            animate={{ opacity: 0, scale: 1.25 }}
             transition={{ duration: reducedMotion ? 0 : 0.24, ease: "easeOut" }}
           />
         </div>,
@@ -844,11 +963,11 @@ export default function PortfolioMascot() {
         <div
           key={scanBeam.id}
           aria-hidden="true"
-          className="pointer-events-none fixed z-[99997] h-px rounded-full bg-cyan-200/75 shadow-[0_0_2px_0.5px_rgba(95,224,213,0.35),0_0_5px_1px_rgba(95,224,213,0.16)]"
-          style={{ left: scanBeam.x, top: scanBeam.y, width: scanBeam.length, rotate: `${scanBeam.angle}deg`, transformOrigin: "left center", opacity: 1 }}
+          className="pointer-events-none fixed z-[99997] h-px rounded-full"
+          style={{ left: scanBeam.x, top: scanBeam.y, width: scanBeam.length, rotate: `${scanBeam.angle}deg`, transformOrigin: "left center", opacity: 0.78, background: "linear-gradient(90deg, rgba(176,20,28,0.66) 0%, rgba(255,69,24,0.72) 20%, rgba(255,132,28,0.78) 42%, rgba(255,224,94,0.88) 54%, rgba(255,177,38,0.76) 72%, rgba(255,91,28,0.58) 88%, rgba(184,24,24,0.48) 100%)", boxShadow: "0 0 2px 0.5px rgba(255, 195, 62, 0.42), 0 0 5px 1px rgba(255, 82, 28, 0.22)" }}
         >
           <motion.span
-            className="absolute -right-0.5 -top-[2px] h-1 w-1 rounded-full bg-cyan-100/90 shadow-[0_0_3px_1px_rgba(95,224,213,0.45)]"
+            className="absolute -right-0.5 -top-[1px] h-[3px] w-[3px] rounded-full bg-yellow-100/80 shadow-[0_0_3px_1px_rgba(255,224,95,0.48)]"
             initial={{ left: 0, x: 0, opacity: 0 }}
             animate={{ left: scanBeam.length, x: -2, opacity: [0, 0.72, 0.72, 0] }}
             transition={{ duration: reducedMotion ? 0 : 0.42, ease: "linear" }}
@@ -878,7 +997,7 @@ export default function PortfolioMascot() {
           event.stopPropagation();
           activateHolographicScan();
         }}
-        className="pointer-events-auto absolute -right-1 -top-3 z-10 grid h-7 w-7 place-items-center rounded-full border border-teal-200/30 bg-background/75 text-foreground/65 shadow-sm backdrop-blur-sm transition-colors duration-200 hover:border-teal-200/60 hover:bg-teal-200/10 hover:text-teal-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200"
+        className="pointer-events-auto absolute right-0 top-7 z-[60] grid h-7 w-7 translate-x-1/2 place-items-center rounded-full border border-orange-200/35 bg-background/90 text-foreground/75 shadow-[0_2px_12px_rgba(255,105,35,0.14)] backdrop-blur-sm transition-[color,background-color,border-color,box-shadow,transform] duration-200 hover:translate-x-1/2 hover:border-orange-200/65 hover:bg-orange-300/10 hover:text-orange-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-200"
         aria-label="Scan the nearest element with Vee"
         title="Scan nearby element"
       >
