@@ -90,6 +90,7 @@ export default function PortfolioMascot() {
   const scanTimerRef = useRef([]);
   const laserOriginRef = useRef(null);
   const laserAimRef = useRef(null);
+  const scanCycleRef = useRef({});
   const laserSound = useUiSound("/mp3/laser-large-004.mp3", {
     volume: 0.38,
     interrupt: true,
@@ -658,12 +659,12 @@ export default function PortfolioMascot() {
     if (!sectionNode) return;
 
     const selectorsBySection = {
-      hero: ["img", "picture", "[style*='background-image']", "h1", "a[href]", "button"],
+      hero: ["img", "picture", "[style*='background-image']", "h1"],
       about: ["h2", "img", "picture", "p"],
       education: ["img", "picture", "h3", "h2", "p"],
-      skills: ["[data-skill-card] img", "[data-skill-card] [data-skill-icon]", "[data-skill-card] svg", "[data-skill-card] h3", "[data-skill-card] h4", "[data-skill-icon]", "img", "svg"],
+      skills: ["[data-skill-card] img", "[data-skill-card] [data-skill-icon]", "[data-skill-card] svg", "[data-skill-icon]", "img", "svg", "[data-skill-card] h3", "[data-skill-card] h4"],
       experience: ["img", "picture", "h3", "h2", "p"],
-      projects: ["[data-project-card] img", "article img", "[data-project-card] h3", "article h3", "a[href]", "button"],
+      projects: ["[data-project-card] img", "article img", "[data-project-card] [style*='background-image']", "article [style*='background-image']", "img", "[data-project-card] h3", "article h3"],
       contact: ["input", "textarea", "select", "button[type='submit']", "label", "h2"],
     };
     const preferred = selectorsBySection[sectionId] || ["img", "svg", "h2", "h3", "button", "a[href]", "input", "textarea"];
@@ -703,9 +704,25 @@ export default function PortfolioMascot() {
       const y = rect.top + rect.height / 2;
       const distance = Math.hypot(x - origin.x, y - origin.y);
       const priority = rank(node);
-      return { node, x, y, distance, priority, score: distance - priority * (isMobile ? 34 : 46) };
+      const isVisual = node.matches("img, picture, svg, [data-skill-icon], [style*='background-image']");
+      const visualBoost = isVisual ? (sectionId === "projects" || sectionId === "skills" ? 260 : 110) : 0;
+      return { node, x, y, distance, priority, score: distance - priority * (isMobile ? 34 : 46) - visualBoost };
     }).sort((a, b) => a.score - b.score);
-    const target = candidates[0];
+    // Cycle hero targets between portrait and heading; projects/skills prioritize visuals.
+    // This prevents repeated scans from hitting the same text node every time.
+    const cycleKey = sectionId === "hero" ? "hero" : sectionId;
+    let orderedCandidates = candidates;
+    if (sectionId === "hero") {
+      const heroTargets = candidates.filter(({ node }) => node.matches("img, picture, [style*='background-image'], h1"));
+      if (heroTargets.length) orderedCandidates = heroTargets.sort((a, b) => {
+        const visualA = a.node.matches("img, picture, [style*='background-image']") ? 1 : 0;
+        const visualB = b.node.matches("img, picture, [style*='background-image']") ? 1 : 0;
+        return visualB - visualA || a.score - b.score;
+      });
+    }
+    const cycleIndex = scanCycleRef.current[cycleKey] || 0;
+    const target = orderedCandidates.length ? orderedCandidates[cycleIndex % orderedCandidates.length] : null;
+    if (orderedCandidates.length > 1) scanCycleRef.current[cycleKey] = cycleIndex + 1;
     if (!target) {
       setReacting(true);
       scanTimerRef.current.push(window.setTimeout(() => setReacting(false), 500));
@@ -747,19 +764,19 @@ export default function PortfolioMascot() {
           );
         } else {
           const isFormControl = target.node.matches("input, textarea, select, button");
-          const isSkillTarget = sectionId === "skills" || Boolean(sectionNode.querySelector("[data-skill-card], [data-skill-icon]"));
+          const isSkillTarget = sectionId === "skills" || /skills?/i.test(sectionNode.id || "") || Boolean(sectionNode.querySelector("[data-skill-card], [data-skill-icon]"));
           // Keep the reaction on the struck visual itself—no card/container outline.
           // For skill icons, brighten the actual icon/image and give it a tiny energy pulse.
-          const visualTarget = target.node.matches("img, svg, [data-skill-icon]")
+          const visualTarget = target.node.matches("img, svg, [data-skill-icon], [style*='background-image']")
             ? target.node
-            : target.node.querySelector("img, svg, [data-skill-icon]") || target.node;
+            : target.node.querySelector("img, svg, [data-skill-icon], [style*='background-image']") || target.node;
           const originalCaretColor = target.node.style.caretColor;
           if (isFormControl) target.node.style.caretColor = "#ff9a32";
           visualTarget.animate(reducedMotion
             ? [{ opacity: 0.94 }, { opacity: 1 }]
             : [
                 { filter: "brightness(1) saturate(1) drop-shadow(0 0 0 rgba(255,90,24,0))", transform: "scale(1)" },
-                { filter: "brightness(1.58) saturate(1.2) contrast(1.04) drop-shadow(0 0 6px rgba(255,70,24,0.62)) drop-shadow(0 0 13px rgba(255,190,45,0.34))", transform: "scale(1.055)" },
+                { filter: "brightness(1.32) saturate(1.12) contrast(1.025) drop-shadow(0 0 4px rgba(255,70,24,0.42)) drop-shadow(0 0 8px rgba(255,190,45,0.22))", transform: "scale(1.025)" },
                 { filter: "brightness(1.2) saturate(1.08) drop-shadow(0 0 3px rgba(255,145,35,0.34))", transform: "scale(1.025)" },
                 { filter: "brightness(1) saturate(1) drop-shadow(0 0 0 rgba(255,90,24,0))", transform: "scale(1)" },
               ], { duration: reducedMotion ? 100 : 760, easing: "ease-out" });
