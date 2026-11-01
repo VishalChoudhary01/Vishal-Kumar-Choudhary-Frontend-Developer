@@ -205,3 +205,31 @@ Every task should track: ID, requirement reference, phase, owner, dependencies, 
 - Keep code changes out of this branch unless explicitly requested later.
 - Prefer one logical implementation phase per branch/PR; avoid mixing unrelated content, auth, execution-sandbox and analytics changes.
 - Do not merge or deploy automatically.
+
+
+## Required architecture deliverables before feature implementation
+Phase 0/1 must produce or reconcile these documents with the actual repository:
+- docs/ARCHITECTURE.md: runtime boundaries, trust boundaries, business logic, middleware, data access, authorization and request flow.
+- docs/PROJECT-STRUCTURE.md: actual repository map plus approved target folder structure; proposed folders must not be created blindly.
+- docs/API-CONTRACTS.md: endpoint/action inventory, schemas, authorization, errors, caching and idempotency.
+- Decision records for auth/session, MongoDB hosting, cache/revalidation, scheduling and interactive preview isolation.
+- Data model/index plan, migration plan, threat model and rollback plan.
+
+## Additional phase gates
+### Phase 0 addition — actual tree and dependency audit
+- Produce an actual tree from the checked-out repository; identify existing route groups, shared UI, server/client component boundaries, aliases, test conventions, current data fetching and styling conventions.
+- Compare actual tree with PROJECT-STRUCTURE.md and record differences. The proposed structure is not permission to reorganize unrelated files.
+- Audit current dependencies before adding TanStack Query, Express, charting, editor or validation libraries. Reuse existing dependencies when suitable; justify each new dependency.
+- **Done:** actual and proposed trees are distinguished; no source changes are made; dependency additions are evidence-based.
+
+### Phase 1 addition — API/domain contract gate
+- Map every capability to a domain service/use case, repository/data-access module, schema, protected route/action and tests.
+- Identify which reads use server rendering, which interactions need TanStack Query, and which mutations use Route Handlers or Server Actions.
+- Decide whether any requirement truly needs Express; default is no separate Express server.
+- **Done:** every endpoint/action has a permission rule, input/output schema, error contract, cache policy and relevant tests; no unresolved trust boundary is hidden.
+
+### Dependency policy
+- Do not add TanStack Query globally without a concrete client-side server-state use case.
+- Do not add Express unless a reviewed architecture decision justifies a separately deployed backend.
+- Avoid duplicate data-fetching/caching layers for the same use case; document cache ownership and invalidation.
+- Validate library versions and compatibility against the current package manifest during implementation; this planning branch does not claim current dependency installation.
