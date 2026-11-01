@@ -852,22 +852,40 @@ export default function PortfolioMascot() {
           );
         } else {
           const isFormControl = target.node.matches("input, textarea, select, button");
+          const isProfileImageTarget = sectionId === "hero" &&
+            target.node.matches("img, picture, [style*='background-image']");
           const isSkillTarget = sectionId === "skills" || /skills?/i.test(sectionNode.id || "") || Boolean(sectionNode.querySelector("[data-skill-card], [data-skill-icon]"));
           // Keep the reaction on the struck visual itself—no card/container outline.
-          // For skill icons, brighten the actual icon/image and give it a tiny energy pulse.
+          // The profile portrait gets a subtle brightness-only flash: no scale or jump.
+          // Project previews retain their existing beam animation unchanged.
           const visualTarget = target.node.matches("img, svg, [data-skill-icon], [style*='background-image']")
             ? target.node
             : target.node.querySelector("img, svg, [data-skill-icon], [style*='background-image']") || target.node;
           const originalCaretColor = target.node.style.caretColor;
           if (isFormControl) target.node.style.caretColor = "#ff9a32";
-          visualTarget.animate(reducedMotion
-            ? [{ opacity: 0.94 }, { opacity: 1 }]
-            : [
-                { filter: "brightness(1) saturate(1) drop-shadow(0 0 0 rgba(255,90,24,0))", transform: "scale(1)" },
-                { filter: "brightness(1.32) saturate(1.12) contrast(1.025) drop-shadow(0 0 4px rgba(255,70,24,0.42)) drop-shadow(0 0 8px rgba(255,190,45,0.22))", transform: "scale(1.025)" },
-                { filter: "brightness(1.2) saturate(1.08) drop-shadow(0 0 3px rgba(255,145,35,0.34))", transform: "scale(1.025)" },
-                { filter: "brightness(1) saturate(1) drop-shadow(0 0 0 rgba(255,90,24,0))", transform: "scale(1)" },
-              ], { duration: reducedMotion ? 100 : 760, easing: "ease-out" });
+          if (isProfileImageTarget) {
+            visualTarget.animate(reducedMotion
+              ? [
+                  { filter: "brightness(1)" },
+                  { filter: "brightness(1.04)" },
+                  { filter: "brightness(1)" },
+                ]
+              : [
+                  { filter: "brightness(1) saturate(1)" },
+                  { filter: "brightness(1.07) saturate(1.015)" },
+                  { filter: "brightness(1.09) saturate(1.02)" },
+                  { filter: "brightness(1) saturate(1)" },
+                ], { duration: reducedMotion ? 120 : 760, easing: "ease-out" });
+          } else {
+            visualTarget.animate(reducedMotion
+              ? [{ opacity: 0.94 }, { opacity: 1 }]
+              : [
+                  { filter: "brightness(1) saturate(1) drop-shadow(0 0 0 rgba(255,90,24,0))", transform: "scale(1)" },
+                  { filter: "brightness(1.32) saturate(1.12) contrast(1.025) drop-shadow(0 0 4px rgba(255,70,24,0.42)) drop-shadow(0 0 8px rgba(255,190,45,0.22))", transform: "scale(1.025)" },
+                  { filter: "brightness(1.2) saturate(1.08) drop-shadow(0 0 3px rgba(255,145,35,0.34))", transform: "scale(1.025)" },
+                  { filter: "brightness(1) saturate(1) drop-shadow(0 0 0 rgba(255,90,24,0))", transform: "scale(1)" },
+                ], { duration: reducedMotion ? 100 : 760, easing: "ease-out" });
+          }
           // Skill icons may be SVGs; also give their exact visual surface a warm beam-colored flash.
           if (isSkillTarget && visualTarget !== target.node) {
             target.node.animate(
