@@ -739,21 +739,42 @@ export default function PortfolioMascot() {
           target.node.animate(
             [
               { webkitTextFillColor: "transparent", filter: "brightness(1)" },
-              { webkitTextFillColor: targetStyle.color || "rgb(238, 238, 229)", filter: "brightness(1.08)" },
-              { webkitTextFillColor: targetStyle.color || "rgb(238, 238, 229)", filter: "brightness(1.08)" },
+              { webkitTextFillColor: "rgb(255, 157, 58)", filter: "brightness(1.12) drop-shadow(0 0 5px rgba(255, 93, 28, 0.5))" },
+              { webkitTextFillColor: "rgb(255, 157, 58)", filter: "brightness(1.12) drop-shadow(0 0 5px rgba(255, 93, 28, 0.5))" },
               { webkitTextFillColor: "transparent", filter: "brightness(1)" },
             ],
             { duration: reducedMotion ? 120 : 900, easing: "ease-in-out" },
           );
         } else {
+          const isFormControl = target.node.matches("input, textarea, select, button");
+          const isLink = target.node.matches("a, a *");
+          const glowTarget = target.node.closest("[data-project-card], [data-skill-card], article, a, label") || target.node;
+          const originalTargetStyles = {
+            outline: glowTarget.style.outline,
+            outlineOffset: glowTarget.style.outlineOffset,
+            boxShadow: glowTarget.style.boxShadow,
+            caretColor: target.node.style.caretColor,
+          };
+          glowTarget.style.outline = "1px solid rgba(255, 126, 32, 0.42)";
+          glowTarget.style.outlineOffset = "2px";
+          glowTarget.style.boxShadow = "0 0 0 1px rgba(255, 80, 24, 0.12), 0 0 18px rgba(255, 125, 28, 0.16)";
+          if (isFormControl) target.node.style.caretColor = "#ff9a32";
+          if (isLink) glowTarget.style.textDecorationColor = "#ff9a32";
           target.node.animate(reducedMotion
             ? [{ opacity: 0.94 }, { opacity: 1 }]
             : [
-                { filter: "brightness(1) drop-shadow(0 0 0 rgba(95,224,213,0))" },
-                { filter: "brightness(1.18) drop-shadow(0 0 4px rgba(95,224,213,0.38))" },
-                { filter: "brightness(1.06) drop-shadow(0 0 2px rgba(95,224,213,0.18))" },
-                { filter: "brightness(1) drop-shadow(0 0 0 rgba(95,224,213,0))" },
+                { filter: "brightness(1) drop-shadow(0 0 0 rgba(255,90,24,0))" },
+                { filter: "brightness(1.22) drop-shadow(0 0 6px rgba(255,80,24,0.5)) drop-shadow(0 0 10px rgba(255,190,45,0.22))" },
+                { filter: "brightness(1.08) drop-shadow(0 0 3px rgba(255,145,35,0.28))" },
+                { filter: "brightness(1) drop-shadow(0 0 0 rgba(255,90,24,0))" },
               ], { duration: reducedMotion ? 100 : 680, easing: "ease-out" });
+          scanTimerRef.current.push(window.setTimeout(() => {
+            if (!glowTarget.isConnected) return;
+            glowTarget.style.outline = originalTargetStyles.outline;
+            glowTarget.style.outlineOffset = originalTargetStyles.outlineOffset;
+            glowTarget.style.boxShadow = originalTargetStyles.boxShadow;
+            if (isFormControl) target.node.style.caretColor = originalTargetStyles.caretColor;
+          }, reducedMotion ? 120 : 720));
         }
       }
     }, reducedMotion ? 0 : 420));
@@ -806,8 +827,8 @@ export default function PortfolioMascot() {
 
     eligible.forEach((node) => {
       if (node === nearestNode && nearestDistance < (isMobile ? 145 : 210)) {
-        node.style.boxShadow = "0 0 0 1px rgba(7,162,144,0.24), 0 8px 28px rgba(7,162,144,0.12)";
-        node.style.outline = "1px solid rgba(7,162,144,0.16)";
+        node.style.boxShadow = "0 0 0 1px rgba(255,112,28,0.3), 0 8px 28px rgba(255,90,24,0.14), 0 0 18px rgba(255,190,45,0.08)";
+        node.style.outline = "1px solid rgba(255,126,32,0.22)";
         node.style.outlineOffset = "2px";
       } else {
         const original = originals.get(node);
@@ -858,7 +879,7 @@ export default function PortfolioMascot() {
             return (
               <motion.span
                 key={index}
-                className="absolute left-0 top-0 block h-1 w-1 rounded-full bg-yellow-100/95 shadow-[0_0_5px_rgba(255,190,45,0.8)]"
+                className="absolute left-0 top-0 block h-1 w-1 rounded-full bg-orange-300/95 shadow-[0_0_5px_rgba(255,92,25,0.72)]"
                 initial={{ x: -2, y: -2, opacity: 0.75, scale: 0.8 }}
                 animate={{
                   x: Math.cos(angle) * distance - 2,
@@ -871,7 +892,7 @@ export default function PortfolioMascot() {
             );
           })}
           <motion.span
-            className="absolute -left-[3px] -top-[3px] block h-[6px] w-[6px] rounded-full bg-yellow-100/90 shadow-[0_0_4px_rgba(255,190,45,0.6)]"
+            className="absolute -left-[3px] -top-[3px] block h-[6px] w-[6px] rounded-full bg-red-400/90 shadow-[0_0_4px_rgba(255,92,25,0.58)]"
             initial={{ opacity: 0.45, scale: 0.5 }}
             animate={{ opacity: 0, scale: 1.25 }}
             transition={{ duration: reducedMotion ? 0 : 0.24, ease: "easeOut" }}
@@ -887,7 +908,7 @@ export default function PortfolioMascot() {
           style={{ left: scanBeam.x, top: scanBeam.y, width: scanBeam.length, rotate: `${scanBeam.angle}deg`, transformOrigin: "left center", opacity: 0.78, background: "linear-gradient(90deg, rgba(176,20,28,0.66) 0%, rgba(255,69,24,0.72) 20%, rgba(255,132,28,0.78) 42%, rgba(255,224,94,0.88) 54%, rgba(255,177,38,0.76) 72%, rgba(255,91,28,0.58) 88%, rgba(184,24,24,0.48) 100%)", boxShadow: "0 0 2px 0.5px rgba(255, 195, 62, 0.42), 0 0 5px 1px rgba(255, 82, 28, 0.22)" }}
         >
           <motion.span
-            className="absolute -right-0.5 -top-[1px] h-[3px] w-[3px] rounded-full bg-yellow-100/80 shadow-[0_0_3px_1px_rgba(255,224,95,0.55)]"
+            className="absolute -right-0.5 -top-[1px] h-[3px] w-[3px] rounded-full bg-yellow-100/80 shadow-[0_0_3px_1px_rgba(255,224,95,0.48)]"
             initial={{ left: 0, x: 0, opacity: 0 }}
             animate={{ left: scanBeam.length, x: -2, opacity: [0, 0.72, 0.72, 0] }}
             transition={{ duration: reducedMotion ? 0 : 0.42, ease: "linear" }}
