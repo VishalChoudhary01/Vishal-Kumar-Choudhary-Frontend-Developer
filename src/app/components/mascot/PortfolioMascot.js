@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { ArrowDown, Grip, Sparkles } from "lucide-react";
+import { ArrowDown, Grip, ScanLine, Sparkles } from "lucide-react";
 import { createPortal } from "react-dom";
 
 const SECTIONS = [
@@ -835,6 +835,19 @@ export default function PortfolioMascot() {
       />
       <button
         type="button"
+        onPointerDown={(event) => event.stopPropagation()}
+        onClick={(event) => {
+          event.stopPropagation();
+          activateHolographicScan();
+        }}
+        className="pointer-events-auto absolute -right-1 -top-3 z-10 grid h-7 w-7 place-items-center rounded-full border border-teal-200/30 bg-background/75 text-foreground/65 shadow-sm backdrop-blur-sm transition-colors duration-200 hover:border-teal-200/60 hover:bg-teal-200/10 hover:text-teal-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-200"
+        aria-label="Scan the nearest element with Vee"
+        title="Scan nearby element"
+      >
+        <ScanLine size={14} strokeWidth={1.6} aria-hidden="true" />
+      </button>
+      <button
+        type="button"
         onPointerDown={(event) => {
           if (event.button !== 0) return;
           event.currentTarget.setPointerCapture(event.pointerId);
@@ -872,7 +885,6 @@ export default function PortfolioMascot() {
             dragMovedRef.current = false;
             return;
           }
-          activateHolographicScan();
           if (hasSectionMessage) setMessageOpen((open) => !open);
           // The host click listener owns the reaction timer and randomized expression.
         }}
