@@ -31,6 +31,7 @@ This documentation defines the proposed portfolio platform extension. It is not 
 - [Admin design](./DESIGN-ADMIN.md)
 - [Analytics design](./DESIGN-ANALYTICS.md)
 - [Lab design](./DESIGN-LAB.md)
+- [Database and media setup plan](./DATABASE-AND-MEDIA-SETUP-PLAN.md) — MongoDB Atlas, Mongoose, Cloudinary, environment variables, security, testing and deployment setup.
 
 ## Change control
 A new requirement must be added to the PRD, with affected design/implementation documents updated together. Explicitly mark unselected decisions as **OPEN**; do not silently invent choices. Any change that can affect existing public routes or rendering requires a documented impact assessment and regression evidence.
