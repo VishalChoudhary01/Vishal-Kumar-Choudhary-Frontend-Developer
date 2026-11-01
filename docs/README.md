@@ -34,3 +34,16 @@ This documentation defines the proposed portfolio platform extension. It is not 
 
 ## Change control
 A new requirement must be added to the PRD, with affected design/implementation documents updated together. Explicitly mark unselected decisions as **OPEN**; do not silently invent choices. Any change that can affect existing public routes or rendering requires a documented impact assessment and regression evidence.
+
+
+## Engineering architecture documents
+- [System architecture and frontend/backend boundaries](./ARCHITECTURE.md) — source-of-truth rules for route handlers, business logic, data access, schemas, middleware, security and API contracts.
+- [Proposed project structure](./PROJECT-STRUCTURE.md) — recommended folder/module boundaries to reconcile against the actual repository before implementation.
+- [API contracts and domain schemas](./API-CONTRACTS.md) — endpoint inventory, request/response conventions, validation and permission expectations.
+
+## Stack decisions and implementation boundaries
+- Frontend remains Next.js App Router + JavaScript + Tailwind CSS v4 + Motion (motion/react).
+- TanStack Query (React Query) is approved for client-side server state when interactive caching, mutation lifecycle, invalidation or polling is useful; it does not replace server components or server-side authorization.
+- Initial backend decision: use Next.js server-side modules, Route Handlers and Server Actions where appropriate; **do not add a separate Express server by default**. Express remains an open option only if a validated deployment/runtime boundary requires a separate API service or worker.
+- MongoDB is the application database; Cloudinary stores media assets. Exact provider/session, scheduling and isolated execution infrastructure remain open.
+- Architecture documents define intended boundaries, not verified facts about the current repository. Phase 0 must inspect and adapt the proposed tree to actual conventions.
