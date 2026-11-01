@@ -658,7 +658,7 @@ export default function PortfolioMascot() {
     if (!sectionNode) return;
 
     const selectorsBySection = {
-      hero: ["h1", "a[href]", "button"],
+      hero: ["img", "picture", "[style*='background-image']", "h1", "a[href]", "button"],
       about: ["h2", "img", "picture", "p"],
       education: ["img", "picture", "h3", "h2", "p"],
       skills: ["[data-skill-card] img", "[data-skill-card] [data-skill-icon]", "[data-skill-card] svg", "[data-skill-card] h3", "[data-skill-card] h4", "[data-skill-icon]", "img", "svg"],
@@ -670,7 +670,7 @@ export default function PortfolioMascot() {
     const rank = (node) => {
       const tag = node.tagName.toLowerCase();
       const sectionRanks = {
-        hero: { h1: 5, a: 4, button: 3 },
+        hero: { img: 9, picture: 8, h1: 5, a: 4, button: 3 },
         about: { h2: 5, img: 4, picture: 4, p: 2 },
         education: { img: 5, picture: 5, h3: 4, h2: 3, p: 1 },
         skills: { img: 7, svg: 6, h3: 5, h4: 4 },
@@ -747,19 +747,19 @@ export default function PortfolioMascot() {
           );
         } else {
           const isFormControl = target.node.matches("input, textarea, select, button");
-          const isSkillTarget = sectionId === "skills";
+          const isSkillTarget = sectionId === "skills" || Boolean(sectionNode.querySelector("[data-skill-card], [data-skill-icon]"));
           // Keep the reaction on the struck visual itself—no card/container outline.
           // For skill icons, brighten the actual icon/image and give it a tiny energy pulse.
-          const visualTarget = isSkillTarget
-            ? (target.node.matches("img, svg, [data-skill-icon]") ? target.node : target.node.querySelector("img, svg, [data-skill-icon]") || target.node)
-            : target.node;
+          const visualTarget = target.node.matches("img, svg, [data-skill-icon]")
+            ? target.node
+            : target.node.querySelector("img, svg, [data-skill-icon]") || target.node;
           const originalCaretColor = target.node.style.caretColor;
           if (isFormControl) target.node.style.caretColor = "#ff9a32";
           visualTarget.animate(reducedMotion
             ? [{ opacity: 0.94 }, { opacity: 1 }]
             : [
                 { filter: "brightness(1) saturate(1) drop-shadow(0 0 0 rgba(255,90,24,0))", transform: "scale(1)" },
-                { filter: "brightness(1.42) saturate(1.18) drop-shadow(0 0 5px rgba(255,72,24,0.58)) drop-shadow(0 0 10px rgba(255,190,45,0.3))", transform: "scale(1.055)" },
+                { filter: "brightness(1.58) saturate(1.2) contrast(1.04) drop-shadow(0 0 6px rgba(255,70,24,0.62)) drop-shadow(0 0 13px rgba(255,190,45,0.34))", transform: "scale(1.055)" },
                 { filter: "brightness(1.2) saturate(1.08) drop-shadow(0 0 3px rgba(255,145,35,0.34))", transform: "scale(1.025)" },
                 { filter: "brightness(1) saturate(1) drop-shadow(0 0 0 rgba(255,90,24,0))", transform: "scale(1)" },
               ], { duration: reducedMotion ? 100 : 760, easing: "ease-out" });
