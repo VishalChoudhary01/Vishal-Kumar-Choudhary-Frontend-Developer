@@ -168,7 +168,7 @@ export default function ContactProjectType({
                 ref={listRef}
                 role="radiogroup"
                 aria-label={label}
-                className="mt-4 grid grid-cols-1 gap-y-1 sm:grid-cols-2 sm:gap-x-10 lg:grid-cols-3"
+                className="mt-4 grid  gap-y-1 grid-cols-2 sm:gap-x-10 lg:grid-cols-3"
             >
                 {OPTIONS.map((option) => {
                     const selected = value === option.value;
@@ -187,7 +187,7 @@ export default function ContactProjectType({
                                 "group relative flex min-h-12 w-full items-center gap-3 px-0 text-left",
                                 "font-body text-[15px] leading-none",
                                 "transition-colors duration-200",
-                                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background ",
                                 disabled ? "pointer-events-none opacity-40" : "cursor-pointer",
                             )}
                         >

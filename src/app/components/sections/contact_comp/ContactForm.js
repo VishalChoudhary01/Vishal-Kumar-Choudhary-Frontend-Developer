@@ -142,7 +142,6 @@ export default function ContactForm({ className = "" }) {
                             active={active}
                             values={values}
                             errors={errors}
-                            status={status}
                             isValid={isValid}
                             isSubmitting={isSubmitting}
                             submitError={submitError}
@@ -157,9 +156,6 @@ export default function ContactForm({ className = "" }) {
             <SuccessModal
                 open={modalOpen}
                 onClose={handleReset}
-                title="Message received"
-                message="Thanks for reaching out. I'll get back to you soon."
-                ctaLabel="Send another message"
             />
         </form>
     );

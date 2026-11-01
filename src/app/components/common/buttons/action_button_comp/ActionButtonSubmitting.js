@@ -22,7 +22,7 @@ export default function ActionButtonSubmitting({
 }) {
     return (
         <span
-            className="absolute z-30 inline-flex items-center gap-[3px]"
+            className="inline-flex shrink-0 items-center gap-[3px]"
             aria-hidden="true"
         >
             {DOTS.map((dot) => (

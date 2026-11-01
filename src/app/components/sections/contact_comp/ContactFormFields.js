@@ -60,7 +60,7 @@ export default function ContactFormFields({
                 </div>
             </ContactRevealRow>
 
-            <ContactRevealRow active={active} delay={CONTACT_STAGGER.projectType} className="mt-10 sm:mt-12">
+            <ContactRevealRow active={active} delay={CONTACT_STAGGER.projectType} className="mt-10 sm:mt-12 ">
                 <ContactProjectType
                     name="projectType"
                     id="projectType"
@@ -97,26 +97,22 @@ export default function ContactFormFields({
                 />
             </ContactRevealRow>
 
-            <ContactRevealRow active={active} delay={CONTACT_STAGGER.submit} className="mt-10 sm:mt-12">
+            <ContactRevealRow active={active} delay={CONTACT_STAGGER.submit} className="mt-10 sm:mt-12 "> 
                 <ActionButton
                     type="submit"
                     label="Send Message"
                     submittingLabel="Sending…"
-                    successLabel="Message sent ✓"
                     status={isSubmitting ? "submitting" : "idle"}
                     disabled={!isValid}
                     icon={<Send size={18} strokeWidth={1.8} />}
                     iconPosition="right"
-                    iconSize={16}
-                    ripple
-                    rippleClassName="bg-foreground"
-                    width="w-[170px]"
+                    width="sm:w-[180px]"
                     height="h-[50px]"
                 />
             </ContactRevealRow>
 
             {submitError && (
-                <ContactRevealRow active={active} delay={0} className="mt-4">
+                <ContactRevealRow active={active} className="mt-4">
                     <p className="max-w-[36ch] font-body text-xs text-error" role="alert">
                         {submitError}
                     </p>

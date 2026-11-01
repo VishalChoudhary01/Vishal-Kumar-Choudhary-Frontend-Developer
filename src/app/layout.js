@@ -34,6 +34,9 @@ export const metadata = {
   title: SITE_TITLE,
   description: SITE_DESCRIPTION,
   manifest: "/manifest.json",
+   verification: {
+    google: "Ad53BK0h0bH3DSVCoi_azoWxfgmr1GFRJKuIo_LK4MQ",
+  },
 };
 
 export default function RootLayout({ children }) {
@@ -49,7 +52,7 @@ export default function RootLayout({ children }) {
           id="theme-favicon"
           rel="icon"
           type="image/svg+xml"
-          href="/icon0.svg"
+          href="/favicon.svg"
         />
 
         <script
@@ -66,8 +69,8 @@ export default function RootLayout({ children }) {
 
                 const updateFavicon = () => {
                   favicon.href = media.matches
-                    ? "/icon0.svg"
-                    : "/favicon.svg";
+                    ? "/favicon.svg"
+                    : "/icon0.svg";
                 };
 
                 updateFavicon();

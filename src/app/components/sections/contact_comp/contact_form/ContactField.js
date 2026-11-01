@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useState } from "react";
+import { useState } from "react";
 import { motion } from "motion/react";
 
 import useReducedMotion from "@/app/hooks/useReducedMotion";
@@ -128,7 +128,7 @@ function FieldRule({ isHovered, isFocused, isFilled, error, reduced }) {
     );
 }
 
-const ContactField = forwardRef(function ContactField(
+const ContactField = function ContactField(
     {
         id,
         name,
@@ -143,20 +143,13 @@ const ContactField = forwardRef(function ContactField(
         disabled = false,
         autoComplete,
         maxLength,
-        helper,
         description,
-        className = "",
         as: Tag = "input",
         rows,
         minHeight,
-        htmlFor,
     },
-    ref,
 ) {
     const reduced = useReducedMotion();
-
-    const resolvedHelper = helper ?? description;
-    const resolvedHtmlFor = htmlFor || id;
 
     const [isHovered, setIsHovered] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
@@ -165,7 +158,7 @@ const ContactField = forwardRef(function ContactField(
 
     const describedBy = error
         ? getErrorId(name)
-        : resolvedHelper
+        : description
             ? getHelperId(name)
             : undefined;
 
@@ -208,16 +201,13 @@ const ContactField = forwardRef(function ContactField(
 
     return (
         <div
-            className={cn(
-                "relative w-full",
-                className,
-            )}
+            className="relative w-full"
             aria-disabled={disabled}
         >
             <FieldLabel
                 label={label}
                 required={required}
-                htmlFor={resolvedHtmlFor}
+                htmlFor={id}
                 disabled={disabled}
             />
 
@@ -245,7 +235,6 @@ const ContactField = forwardRef(function ContactField(
                     )}
                 >
                     <Tag
-                        ref={ref}
                         {...sharedProps}
                     />
                 </div>
@@ -267,14 +256,12 @@ const ContactField = forwardRef(function ContactField(
                 />
             ) : (
                 <HelperText
-                    helper={resolvedHelper}
+                    helper={description}
                     name={name}
                 />
             )}
         </div>
     );
-});
-
-ContactField.displayName = "ContactField";
+};
 
 export default ContactField;

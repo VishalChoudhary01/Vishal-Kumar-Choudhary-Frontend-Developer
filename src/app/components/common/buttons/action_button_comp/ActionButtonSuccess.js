@@ -10,7 +10,7 @@ export default function ActionButtonSuccess({
     return (
         <motion.span
             aria-hidden="true"
-            className="absolute z-30 grid size-4 place-items-center text-success"
+            className="grid size-4 shrink-0 place-items-center text-success"
             initial={
                 reduced
                     ? false

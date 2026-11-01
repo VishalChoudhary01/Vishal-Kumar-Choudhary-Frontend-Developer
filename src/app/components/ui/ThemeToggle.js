@@ -1,24 +1,50 @@
+
 "use client";
 
-import { motion, AnimatePresence } from "motion/react";
-import { SunIcon, MoonIcon } from "./Icons";
+import { AnimatePresence, motion } from "motion/react";
 import { IoIosSunny } from "react-icons/io";
 import { IoMoon } from "react-icons/io5";
 
 import { cn } from "@/app/lib/utils";
 import { useThemeToggle } from "@/app/hooks/useThemeToggle";
+import useUiSound from "@/app/hooks/useUiSound";
 
 export function ThemeToggle({
     variant = "rectangle",
     start = "bottom-up",
     className,
     iconClassName,
+    onClick: onClickProp,
     ...rest
 }) {
     const { isDark, mounted, toggle } = useThemeToggle({
         variant,
         start,
     });
+
+    const { play: playThemeToggleSound } = useUiSound(
+        "/mp3/chop.mp3", 
+        {
+            volume: 0.25,
+            interrupt: true,
+        },
+    );
+
+    const handleToggle = (event) => {
+        if (onClickProp) {
+            onClickProp(event);
+        }
+
+        if (event.defaultPrevented) {
+            return;
+        }
+
+        // Play sound directly from the user's interaction.
+        playThemeToggleSound();
+
+        // Preserve the existing theme-switch behavior.
+        toggle();
+    };
 
     return (
         <motion.button
@@ -29,7 +55,7 @@ export function ThemeToggle({
                     : "Switch to dark mode"
             }
             aria-pressed={mounted ? isDark : undefined}
-            onClick={toggle}
+            onClick={handleToggle}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.92 }}
             transition={{
@@ -48,7 +74,7 @@ export function ThemeToggle({
                 "focus-visible:outline-none",
                 "focus-visible:ring-2 focus-visible:ring-zinc-400/50",
                 "dark:focus-visible:ring-white/30",
-                className
+                className,
             )}
             {...rest}
         >
@@ -58,10 +84,7 @@ export function ThemeToggle({
                     aria-hidden="true"
                 />
             ) : (
-                <AnimatePresence
-                    mode="wait"
-                    initial={false}
-                >
+                <AnimatePresence mode="wait" initial={false}>
                     <motion.span
                         key={isDark ? "dark" : "light"}
                         initial={{
@@ -88,17 +111,17 @@ export function ThemeToggle({
                         className="flex items-center justify-center"
                     >
                         {isDark ? (
-                                <IoIosSunny
+                            <IoIosSunny
                                 className={cn(
                                     "h-[17px] w-[17px]",
-                                    iconClassName
+                                    iconClassName,
                                 )}
                             />
                         ) : (
-                                    <IoMoon
+                            <IoMoon
                                 className={cn(
                                     "h-[15px] w-[15px]",
-                                    iconClassName
+                                    iconClassName,
                                 )}
                             />
                         )}
