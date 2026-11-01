@@ -85,6 +85,7 @@ export default function PortfolioMascot() {
   const dragMovedRef = useRef(false);
   const [reacting, setReacting] = useState(false);
   const [scanBeam, setScanBeam] = useState(null);
+  const [scanImpact, setScanImpact] = useState(null);
   const scanTimerRef = useRef([]);
 
   const activeSectionRef = useRef("hero");
@@ -686,6 +687,9 @@ export default function PortfolioMascot() {
     setReacting(true);
     scanTimerRef.current.push(window.setTimeout(() => {
       if (target.node.isConnected) {
+        // A restrained spark burst marks the exact point where the scan reaches its target.
+        setScanImpact({ x: target.x, y: target.y, id });
+        scanTimerRef.current.push(window.setTimeout(() => setScanImpact(null), reducedMotion ? 80 : 420));
         const targetStyle = window.getComputedStyle(target.node);
         const hasOutlinedText = target.node.matches("h1, h2, h3, h4, p, span") &&
           Number.parseFloat(targetStyle.webkitTextStrokeWidth) > 0 &&
@@ -802,6 +806,40 @@ export default function PortfolioMascot() {
         transition={reducedMotion ? { duration: 0 } : { duration: isDragging ? 0.18 : 2.4, repeat: isDragging ? 0 : Infinity, ease: "easeInOut" }}
         style={{ pointerEvents: "none" }}
       />
+      {scanImpact && typeof document !== "undefined" && createPortal(
+        <div
+          key={scanImpact.id}
+          aria-hidden="true"
+          className="pointer-events-none fixed z-[99998]"
+          style={{ left: scanImpact.x, top: scanImpact.y }}
+        >
+          {!reducedMotion && Array.from({ length: 7 }, (_, index) => {
+            const angle = (index / 7) * Math.PI * 2;
+            const distance = index % 2 === 0 ? 13 : 9;
+            return (
+              <motion.span
+                key={index}
+                className="absolute left-0 top-0 block h-1 w-1 rounded-full bg-cyan-100/90 shadow-[0_0_4px_rgba(95,224,213,0.45)]"
+                initial={{ x: -2, y: -2, opacity: 0.75, scale: 0.8 }}
+                animate={{
+                  x: Math.cos(angle) * distance - 2,
+                  y: Math.sin(angle) * distance - 2,
+                  opacity: 0,
+                  scale: 0.35,
+                }}
+                transition={{ duration: 0.34, ease: "easeOut" }}
+              />
+            );
+          })}
+          <motion.span
+            className="absolute -left-1 -top-1 block h-2 w-2 rounded-full bg-cyan-100/70"
+            initial={{ opacity: 0.5, scale: 0.4 }}
+            animate={{ opacity: 0, scale: 1.5 }}
+            transition={{ duration: reducedMotion ? 0 : 0.24, ease: "easeOut" }}
+          />
+        </div>,
+        document.body
+      )}
       {scanBeam && typeof document !== "undefined" && createPortal(
         <div
           key={scanBeam.id}
