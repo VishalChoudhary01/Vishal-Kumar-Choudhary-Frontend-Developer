@@ -80,6 +80,9 @@ export default function PortfolioMascot() {
   const [manualPosition, setManualPosition] = useState(null);
   const [messageOpen, setMessageOpen] = useState(false);
   const [webglReady, setWebglReady] = useState(false);
+  const [welcomeNeedsInteraction, setWelcomeNeedsInteraction] = useState(false);
+  const welcomeAudioRef = useRef(null);
+  const welcomeAttemptedRef = useRef(false);
   const [mascotPosition, setMascotPosition] = useState({ x: 0, y: 0 });
   const footerActiveRef = useRef(false);
   const dragStartRef = useRef(null);
@@ -102,6 +105,44 @@ export default function PortfolioMascot() {
   useEffect(() => {
     activeSectionRef.current = SECTIONS[active]?.id || "hero";
   }, [active]);
+
+  // Play Vee's introduction once the 3D scene has finished building.
+  // Autoplay may be blocked until the visitor interacts with the page.
+  useEffect(() => {
+    if (!webglReady || welcomeAttemptedRef.current) return undefined;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      if (cancelled || welcomeAttemptedRef.current) return;
+      welcomeAttemptedRef.current = true;
+      const audio = new Audio("/audio/hey-there-im-vee-your.wav");
+      audio.preload = "auto";
+      audio.volume = 0.85;
+      welcomeAudioRef.current = audio;
+      audio.play().then(() => {
+        if (!cancelled) setWelcomeNeedsInteraction(false);
+      }).catch(() => {
+        if (!cancelled) setWelcomeNeedsInteraction(true);
+      });
+    }, 4000);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [webglReady]);
+
+  useEffect(() => () => {
+    const audio = welcomeAudioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+  }, []);
+
+  const playWelcomeAudio = () => {
+    const audio = welcomeAudioRef.current || new Audio("/audio/hey-there-im-vee-your.wav");
+    welcomeAudioRef.current = audio;
+    audio.play().then(() => setWelcomeNeedsInteraction(false)).catch(() => setWelcomeNeedsInteraction(true));
+  };
 
   useEffect(() => {
     const desktopQuery = window.matchMedia("(min-width: 768px)");
@@ -990,6 +1031,17 @@ export default function PortfolioMascot() {
         transition={reducedMotion ? { duration: 0 } : { duration: active === 0 ? 2.8 : 3.6, repeat: Infinity, ease: "easeInOut" }}
         style={{ pointerEvents: "none" }}
       />
+      {welcomeNeedsInteraction && (
+        <button
+          type="button"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => { event.stopPropagation(); playWelcomeAudio(); }}
+          className="pointer-events-auto absolute -top-9 left-1/2 z-[61] -translate-x-1/2 whitespace-nowrap rounded-sm border border-brand/35 bg-background/95 px-2.5 py-1.5 text-[11px] font-medium text-foreground shadow-lg backdrop-blur-sm hover:bg-brand/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          aria-label="Play Vee's welcome greeting"
+        >
+          Hear Vee&apos;s welcome
+        </button>
+      )}
       <button
         type="button"
         onPointerDown={(event) => event.stopPropagation()}
