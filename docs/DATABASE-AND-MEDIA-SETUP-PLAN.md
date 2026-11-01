@@ -395,3 +395,66 @@ The setup is complete when:
 ---
 
 **Security reminder:** You do not need to give the assistant your MongoDB password, complete connection URI, Cloudinary API key, or Cloudinary API Secret. Keep them in `.env.local` and in your deployment provider's private environment-variable settings.
+
+
+---
+
+## 14. Phase 0 preflight findings — 1 November 2026
+
+**Status:** Remote-repository inspection completed; local and provider verification still pending.  
+**Scope:** Read-only inspection of `main` and `docs/portfolio-platform-spec`. No application source, dependency manifest, lockfile, environment file, or provider setting was changed.
+
+### 14.1 Verified repository conventions
+
+- The project uses **`src/app/`** as its App Router root.
+- Existing server-side helpers live under **`src/app/lib/`**. For this integration, prefer `src/app/lib/db/` and `src/app/lib/cloudinary/` unless the actual local checkout reveals a more suitable established convention.
+- Existing API routes live under **`src/app/api/`**:
+  - `contact/route.js`
+  - `source-snapshot/route.js`
+- The application already uses JavaScript/JSX, Next.js App Router, React 19, Tailwind CSS v4 and `next.config.mjs`.
+- `package-lock.json` is present and the repository scripts use npm. Preserve npm and keep `package.json` / `package-lock.json` synchronized.
+- Existing scripts are `npm run dev`, `npm run build`, `npm run start`, `npm run lint`, and `npm run validate:seo`. The build script runs SEO validation before `next build`.
+
+### 14.2 Dependency status in GitHub
+
+The inspected `package.json` and `package-lock.json` on both `main` and `docs/portfolio-platform-spec` do **not** currently contain:
+
+- `mongoose`
+- `mongodb` (MongoDB Node.js driver dependency)
+- `cloudinary`
+
+Therefore, the repository version currently available on GitHub does not prove that the earlier local Mongoose installation has been committed. Check the local checkout before installing again; do not duplicate an already installed dependency. Cloudinary SDK installation remains pending until its account/environment is ready and the integration phase begins.
+
+### 14.3 Environment and secret handling
+
+- Root `.gitignore` ignores `.env*` and explicitly allows `.env.example`. This already protects `.env.local` from normal Git tracking.
+- The committed `.env.example` currently lists `RESEND_API_KEY`, `CONTACT_TO_EMAIL`, optional `RESEND_FROM_EMAIL`, and `NEXT_PUBLIC_SITE_URL`; it does not yet list MongoDB or Cloudinary variables.
+- The inspected contact Route Handler reads `GMAIL_USER`, `GMAIL_APP_PASSWORD`, and `CONTACT_TO_EMAIL` and uses Nodemailer/Gmail SMTP. This does not match the committed Resend-oriented example file. Treat it as pre-existing environment documentation drift; resolve it in a separate, explicitly scoped contact-email cleanup rather than changing contact behavior during the database/media foundation.
+- `scripts/setup-env.cjs` creates `.env.local` with a `NEXT_PUBLIC_SITE_URL` template only when no file exists. When `.env.local` already exists, it intentionally does not overwrite it. Preserve this behavior; add new variables manually or through a carefully reviewed setup change.
+- No private local `.env.local` contents were accessed or requested.
+
+### 14.4 Integration-specific findings
+
+- There is no existing MongoDB connection helper, Mongoose model folder, Cloudinary utility, or Cloudinary upload route in the inspected application paths.
+- Portfolio/project content currently comes from JavaScript modules under `src/app/data/`. Do not migrate these records to MongoDB as part of connection setup; data migration requires a separate feature and compatibility plan.
+- `next.config.mjs` configures Next Image formats, sizes and quality values, but it does not currently declare Cloudinary remote image hosts. When the actual Cloudinary delivery hostname and media use case are confirmed, add the narrowest suitable `images.remotePatterns` entry. Do not add a broad wildcard pre-emptively.
+- Keep the connection and Cloudinary SDK utilities server-only. Database-dependent route handlers must use the Node.js runtime, not Edge-only runtime.
+
+### 14.5 Provider and local checks that remain unverified
+
+The remote repository cannot establish the state of local files or private provider settings. These items remain **OPEN**:
+
+- [ ] Confirm the local working tree is on the intended implementation branch and inspect `git status`.
+- [ ] Run `npm ls mongoose` locally to determine whether the earlier Mongoose install exists in the local checkout; compare `package.json` and `package-lock.json` before installing.
+- [ ] Confirm Atlas has finished any pending deployment/configuration operation, and verify the dedicated database user and development IP access entry in Atlas.
+- [ ] Confirm the exact Atlas-generated SRV URI is stored privately in local `.env.local`; do not share the value.
+- [ ] Create/select the Cloudinary product environment and obtain its Cloud Name, API Key and API Secret privately.
+- [ ] Add the intended Cloudinary credentials to local `.env.local`; do not share the values.
+- [ ] Run `npm ci`, `npm run lint`, `npm run validate:seo`, and `npm run build` in the local checkout. Capture pre-existing failures separately from any future integration failures.
+
+### 14.6 Phase 0 exit decision
+
+**Repository inspection:** Complete for the GitHub branch and the corresponding `main` files reviewed.  
+**Full Phase 0:** Not yet complete. The local working tree, Atlas private configuration, Cloudinary account configuration, and runtime baseline checks still require verification.
+
+No database connection utility, Cloudinary client, upload-signature endpoint, schema, model, or API route should be implemented until the remaining local/provider checks are complete. This avoids writing integration code against unknown local dependency state or unverified credentials/network access.
