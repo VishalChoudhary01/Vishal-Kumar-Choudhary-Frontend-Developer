@@ -89,6 +89,7 @@ export default function PortfolioMascot() {
   const [scanImpact, setScanImpact] = useState(null);
   const scanTimerRef = useRef([]);
   const laserOriginRef = useRef(null);
+  const laserAimRef = useRef(null);
   const laserSound = useUiSound("/mp3/laser-large-004.mp3", {
     volume: 0.38,
     interrupt: true,
@@ -528,9 +529,14 @@ export default function PortfolioMascot() {
           const leftWave = reactingNow ? Math.sin(seconds * 18) * 0.65 : idleWave + greetingWave;
           leftArm.rotation.z = smooth(leftArm.rotation.z, pose.left + leftWave, 0.07);
           const pointingRight = targetFacingX >= 0;
-          const rightArmTarget = SECTIONS[activeIndex]?.pose === "point"
-            ? (pointingRight ? -1.65 : 1.65)
-            : pose.right;
+          // During a scan, smoothly aim the right arm toward the same screen-space
+          // target used by the beam. Outside the short scan window, keep the section pose.
+          const scanAim = laserAimRef.current;
+          const rightArmTarget = scanAim
+            ? clamp(scanAim.angle, -1.3, 1.3)
+            : SECTIONS[activeIndex]?.pose === "point"
+              ? (pointingRight ? -1.65 : 1.65)
+              : pose.right;
           const playfulArm = idlePlay ? Math.sin(seconds * 2.2 + Math.PI) * 0.22 : 0;
           const rightWave = reactingNow ? Math.sin(seconds * 18) * 0.65 : playfulArm + (greeting ? -0.22 : 0);
           rightArm.rotation.z = smooth(rightArm.rotation.z, rightArmTarget + rightWave, 0.07);
@@ -708,6 +714,10 @@ export default function PortfolioMascot() {
     const dx = target.x - origin.x;
     const dy = target.y - origin.y;
     const id = Date.now();
+    // The right arm pivots from a downward resting direction. Match its temporary
+    // rotation to the target vector so the glove points toward the beam's impact.
+    // The sign is inverted to match Vee's authored right-arm pointing convention.
+    laserAimRef.current = { angle: clamp(-Math.atan2(dx, Math.max(1, -dy)), -1.3, 1.3) };
     laserSound.play();
     setScanBeam({ x: origin.x, y: origin.y, length: Math.hypot(dx, dy), angle: Math.atan2(dy, dx) * 180 / Math.PI, id });
     setReacting(true);
@@ -748,7 +758,10 @@ export default function PortfolioMascot() {
       }
     }, reducedMotion ? 0 : 420));
     scanTimerRef.current.push(window.setTimeout(() => setScanBeam(null), reducedMotion ? 100 : 620));
-    scanTimerRef.current.push(window.setTimeout(() => setReacting(false), 850));
+    scanTimerRef.current.push(window.setTimeout(() => {
+      laserAimRef.current = null;
+      setReacting(false);
+    }, 850));
   };
 
   useEffect(() => () => scanTimerRef.current.forEach((timer) => window.clearTimeout(timer)), []);
@@ -871,7 +884,7 @@ export default function PortfolioMascot() {
           key={scanBeam.id}
           aria-hidden="true"
           className="pointer-events-none fixed z-[99997] h-px rounded-full"
-          style={{ left: scanBeam.x, top: scanBeam.y, width: scanBeam.length, rotate: `${scanBeam.angle}deg`, transformOrigin: "left center", opacity: 0.78, background: "linear-gradient(90deg, rgba(255,122,24,0.72) 0%, rgba(255,181,46,0.82) 38%, rgba(255,242,160,0.94) 52%, rgba(255,209,61,0.78) 70%, rgba(255,139,31,0.62) 100%)", boxShadow: "0 0 2px 0.5px rgba(255, 202, 62, 0.52), 0 0 5px 1px rgba(255, 126, 24, 0.25)" }}
+          style={{ left: scanBeam.x, top: scanBeam.y, width: scanBeam.length, rotate: `${scanBeam.angle}deg`, transformOrigin: "left center", opacity: 0.78, background: "linear-gradient(90deg, rgba(176,20,28,0.66) 0%, rgba(255,69,24,0.72) 20%, rgba(255,132,28,0.78) 42%, rgba(255,224,94,0.88) 54%, rgba(255,177,38,0.76) 72%, rgba(255,91,28,0.58) 88%, rgba(184,24,24,0.48) 100%)", boxShadow: "0 0 2px 0.5px rgba(255, 195, 62, 0.42), 0 0 5px 1px rgba(255, 82, 28, 0.22)" }}
         >
           <motion.span
             className="absolute -right-0.5 -top-[1px] h-[3px] w-[3px] rounded-full bg-yellow-100/80 shadow-[0_0_3px_1px_rgba(255,224,95,0.55)]"
