@@ -708,7 +708,7 @@ export default function PortfolioMascot() {
     const footerRect = footerNode?.getBoundingClientRect();
     const footerTargetRect = footerTarget?.getBoundingClientRect();
     const footerIsActive = Boolean(
-      footerActiveRef.current &&
+      (footerActiveRef.current || (footerRect && footerRect.top < window.innerHeight * 0.22 && footerRect.bottom > 80)) &&
       footerTargetRect &&
       footerTargetRect.width > 0 &&
       footerTargetRect.height > 0 &&
@@ -835,7 +835,9 @@ export default function PortfolioMascot() {
           y: footerScanRect.top + footerScanRect.height / 2,
         }
       : sectionTarget;
-    if (orderedCandidates.length > 1) scanCycleRef.current[cycleKey] = cycleIndex + 1;
+    if (!footerIsActive && orderedCandidates.length > 1) {
+      scanCycleRef.current[cycleKey] = cycleIndex + 1;
+    }
     if (!target) {
       setReacting(true);
       scanTimerRef.current.push(window.setTimeout(() => setReacting(false), 500));
