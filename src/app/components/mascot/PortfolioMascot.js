@@ -704,13 +704,35 @@ export default function PortfolioMascot() {
     scanTimerRef.current = [];
     const rawSectionId = activeSectionRef.current;
     const sectionNode = document.getElementById(rawSectionId);
-    if (!sectionNode) return;
+    const footerNode = document.getElementById("footer");
+    const footerTarget = footerNode?.querySelector('[data-mascot-scan-target="footer-building"]');
+    const footerRect = footerNode?.getBoundingClientRect();
+    const footerTargetRect = footerTarget?.getBoundingClientRect();
+    const footerIsActive = Boolean(
+      footerActiveRef.current &&
+      footerTargetRect &&
+      footerTargetRect.width > 0 &&
+      footerTargetRect.height > 0 &&
+      footerTargetRect.bottom > 0 &&
+      footerTargetRect.top < window.innerHeight &&
+      footerTargetRect.right > 0 &&
+      footerTargetRect.left < window.innerWidth &&
+      footerRect &&
+      footerRect.bottom > 80
+    );
+
+    if (!sectionNode && !footerIsActive) return;
+
     // Some portfolio sections use singular/custom IDs (for example "skill") while
     // the mascot's section model uses "skills". Resolve the visual section from
     // its ID and visible content so the scan does not silently fall back to generic targets.
-    const sectionText = (sectionNode.getAttribute("aria-label") || sectionNode.querySelector("h1, h2, h3, [data-section-label]")?.textContent || "").toLowerCase();
-    const sectionId = /skill/i.test(rawSectionId) || /skill/i.test(sectionText) || sectionNode.querySelector("[data-skill-card], [data-skill-icon]") ? "skills"
-      : /project/i.test(rawSectionId) || /project/i.test(sectionText) || sectionNode.querySelector("[data-project-card]") ? "projects"
+    const sectionText = sectionNode
+      ? (sectionNode.getAttribute("aria-label") || sectionNode.querySelector("h1, h2, h3, [data-section-label]")?.textContent || "").toLowerCase()
+      : "";
+    const sectionId = sectionNode
+      ? (/skill/i.test(rawSectionId) || /skill/i.test(sectionText) || sectionNode.querySelector("[data-skill-card], [data-skill-icon]") ? "skills"
+        : /project/i.test(rawSectionId) || /project/i.test(sectionText) || sectionNode.querySelector("[data-project-card]") ? "projects"
+        : rawSectionId)
       : rawSectionId;
 
     const selectorsBySection = {
@@ -742,79 +764,91 @@ export default function PortfolioMascot() {
       x: hostRect.left + hostRect.width * 0.76,
       y: hostRect.top + hostRect.height * 0.68,
     };
-    const seen = new Set();
-    let candidates = preferred.flatMap((selector) => [...sectionNode.querySelectorAll(selector)]).filter((node) => {
-      if (seen.has(node)) return false;
-      seen.add(node);
-      if (host.contains(node) || node.closest("[aria-hidden='true']") || node.closest("[inert]")) return false;
-      if (node.matches("input:disabled, button:disabled, [aria-hidden='true']")) return false;
-      const rect = node.getBoundingClientRect();
-      const style = window.getComputedStyle(node);
-      return rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.top < window.innerHeight &&
-        rect.right > 0 && rect.left < window.innerWidth && style.visibility !== "hidden" && style.display !== "none" &&
-        style.opacity !== "0";
-    }).map((node) => {
-      const rect = node.getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.top + rect.height / 2;
-      const distance = Math.hypot(x - origin.x, y - origin.y);
-      const priority = rank(node);
-      const isVisual = node.matches("img, picture, svg, [data-skill-icon], [style*='background-image']");
-      const visualBoost = isVisual ? (sectionId === "projects" || sectionId === "skills" ? 260 : 110) : 0;
-      return { node, x, y, distance, priority, score: distance - priority * (isMobile ? 34 : 46) - visualBoost };
-    }).sort((a, b) => a.score - b.score);
-    // Some skill layouts render icon components without data attributes or use
-    // CSS backgrounds. If preferred selectors miss, scan the nearest visible
-    // visual/text descendant so the beam and impact still happen in this section.
-    if (!candidates.length) {
-      candidates = [...sectionNode.querySelectorAll("img, svg, canvas, h1, h2, h3, h4, p, a, span, [role='img'], [style*='background-image']")]
-        .filter((node) => {
-          if (host.contains(node) || node.closest("[aria-hidden='true'], [inert]")) return false;
-          const rect = node.getBoundingClientRect();
-          const style = window.getComputedStyle(node);
-          return rect.width > 8 && rect.height > 8 && rect.bottom > 0 && rect.top < window.innerHeight &&
-            rect.right > 0 && rect.left < window.innerWidth && style.visibility !== "hidden" && style.display !== "none" &&
-            Number.parseFloat(style.opacity || "1") > 0.05;
-        })
-        .map((node) => {
-          const rect = node.getBoundingClientRect();
-          const x = rect.left + rect.width / 2;
-          const y = rect.top + rect.height / 2;
-          const visual = node.matches("img, svg, canvas, [role='img'], [style*='background-image']");
-          const distance = Math.hypot(x - origin.x, y - origin.y);
-          return { node, x, y, distance, score: distance - (visual ? 240 : 0) };
-        })
-        .sort((a, b) => a.score - b.score);
-    }
-    // Cycle hero targets between portrait and heading; projects/skills prioritize visuals.
-    // This prevents repeated scans from hitting the same text node every time.
-    const cycleKey = sectionId === "hero" ? "hero" : sectionId;
-    let orderedCandidates = candidates;
-    if (sectionId === "skills" && candidates.length) {
-      // Keep scans focused on the actual skill visuals, even when the markup
-      // nests icons inside wrappers rather than exposing data-skill attributes.
-      const skillVisuals = candidates.filter(({ node }) => node.matches("img, svg, canvas, [role='img'], [data-skill-icon], [style*='background-image']"));
-      if (skillVisuals.length) orderedCandidates = skillVisuals;
-    }
-    if (sectionId === "projects" && candidates.length) {
-      const projectVisuals = candidates.filter(({ node }) => node.matches("img, canvas, [role='img'], [style*='background-image']"));
-      if (projectVisuals.length) orderedCandidates = projectVisuals;
-    }
-    if (sectionId === "hero") {
-      const heroTargets = candidates.filter(({ node }) => node.matches("img, picture, [style*='background-image'], h1"));
-      if (heroTargets.length) orderedCandidates = heroTargets.sort((a, b) => {
-        const visualA = a.node.matches("img, picture, [style*='background-image']") ? 1 : 0;
-        const visualB = b.node.matches("img, picture, [style*='background-image']") ? 1 : 0;
-        return visualB - visualA || a.score - b.score;
-      });
-    }
-    const cycleIndex = scanCycleRef.current[cycleKey] || 0;
-    const target = orderedCandidates.length ? orderedCandidates[cycleIndex % orderedCandidates.length] : null;
-    if (orderedCandidates.length > 1) scanCycleRef.current[cycleKey] = cycleIndex + 1;
-    if (!target) {
-      setReacting(true);
-      scanTimerRef.current.push(window.setTimeout(() => setReacting(false), 500));
-      return;
+    let target = null;
+
+    if (footerIsActive && footerTarget) {
+      const rect = footerTarget.getBoundingClientRect();
+      target = {
+        node: footerTarget,
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+      };
+    } else {
+      const seen = new Set();
+      let candidates = preferred.flatMap((selector) => [...sectionNode.querySelectorAll(selector)]).filter((node) => {
+        if (seen.has(node)) return false;
+        seen.add(node);
+        if (host.contains(node) || node.closest("[aria-hidden='true']") || node.closest("[inert]")) return false;
+        if (node.matches("input:disabled, button:disabled, [aria-hidden='true']")) return false;
+        const rect = node.getBoundingClientRect();
+        const style = window.getComputedStyle(node);
+        return rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.top < window.innerHeight &&
+          rect.right > 0 && rect.left < window.innerWidth && style.visibility !== "hidden" && style.display !== "none" &&
+          style.opacity !== "0";
+      }).map((node) => {
+        const rect = node.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
+        const distance = Math.hypot(x - origin.x, y - origin.y);
+        const priority = rank(node);
+        const isVisual = node.matches("img, picture, svg, [data-skill-icon], [style*='background-image']");
+        const visualBoost = isVisual ? (sectionId === "projects" || sectionId === "skills" ? 260 : 110) : 0;
+        return { node, x, y, distance, priority, score: distance - priority * (isMobile ? 34 : 46) - visualBoost };
+      }).sort((a, b) => a.score - b.score);
+      // Some skill layouts render icon components without data attributes or use
+      // CSS backgrounds. If preferred selectors miss, scan the nearest visible
+      // visual/text descendant so the beam and impact still happen in this section.
+      if (!candidates.length) {
+        candidates = [...sectionNode.querySelectorAll("img, svg, canvas, h1, h2, h3, h4, p, a, span, [role='img'], [style*='background-image']")]
+          .filter((node) => {
+            if (host.contains(node) || node.closest("[aria-hidden='true'], [inert]")) return false;
+            const rect = node.getBoundingClientRect();
+            const style = window.getComputedStyle(node);
+            return rect.width > 8 && rect.height > 8 && rect.bottom > 0 && rect.top < window.innerHeight &&
+              rect.right > 0 && rect.left < window.innerWidth && style.visibility !== "hidden" && style.display !== "none" &&
+              Number.parseFloat(style.opacity || "1") > 0.05;
+          })
+          .map((node) => {
+            const rect = node.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+            const visual = node.matches("img, svg, canvas, [role='img'], [style*='background-image']");
+            const distance = Math.hypot(x - origin.x, y - origin.y);
+            return { node, x, y, distance, score: distance - (visual ? 240 : 0) };
+          })
+          .sort((a, b) => a.score - b.score);
+      }
+      // Cycle hero targets between portrait and heading; projects/skills prioritize visuals.
+      // This prevents repeated scans from hitting the same text node every time.
+      const cycleKey = sectionId === "hero" ? "hero" : sectionId;
+      let orderedCandidates = candidates;
+      if (sectionId === "skills" && candidates.length) {
+        // Keep scans focused on the actual skill visuals, even when the markup
+        // nests icons inside wrappers rather than exposing data-skill attributes.
+        const skillVisuals = candidates.filter(({ node }) => node.matches("img, svg, canvas, [role='img'], [data-skill-icon], [style*='background-image']"));
+        if (skillVisuals.length) orderedCandidates = skillVisuals;
+      }
+      if (sectionId === "projects" && candidates.length) {
+        const projectVisuals = candidates.filter(({ node }) => node.matches("img, canvas, [role='img'], [style*='background-image']"));
+        if (projectVisuals.length) orderedCandidates = projectVisuals;
+      }
+      if (sectionId === "hero") {
+        const heroTargets = candidates.filter(({ node }) => node.matches("img, picture, [style*='background-image'], h1"));
+        if (heroTargets.length) orderedCandidates = heroTargets.sort((a, b) => {
+          const visualA = a.node.matches("img, picture, [style*='background-image']") ? 1 : 0;
+          const visualB = b.node.matches("img, picture, [style*='background-image']") ? 1 : 0;
+          return visualB - visualA || a.score - b.score;
+        });
+      }
+      const cycleIndex = scanCycleRef.current[cycleKey] || 0;
+      target = orderedCandidates.length ? orderedCandidates[cycleIndex % orderedCandidates.length] : null;
+      if (orderedCandidates.length > 1) scanCycleRef.current[cycleKey] = cycleIndex + 1;
+      if (!target) {
+        setReacting(true);
+        scanTimerRef.current.push(window.setTimeout(() => setReacting(false), 500));
+        return;
+      }
+  
     }
     const dx = target.x - origin.x;
     const dy = target.y - origin.y;
@@ -836,8 +870,12 @@ export default function PortfolioMascot() {
           Number.parseFloat(targetStyle.webkitTextStrokeWidth) > 0 &&
           (targetStyle.webkitTextFillColor === "rgba(0, 0, 0, 0)" || targetStyle.webkitTextFillColor === "transparent");
 
-        if (hasOutlinedText) {
-          // Fill outlined display text briefly; replay its existing hover animation when available.
+        if (target.node.matches('[data-mascot-scan-target="footer-building"]')) {
+          // The footer component owns its teal fill state so scan and hover
+          // share one animation without the generic orange text flash.
+          target.node.dispatchEvent(new Event("vee-footer-scan-hit"));
+        } else if (hasOutlinedText) {
+          // Fill other outlined display text using the existing scan reaction.
           const hoverAnimation = target.node.getAnimations().find((animation) => animation.playState === "running");
           if (hoverAnimation) hoverAnimation.cancel();
           target.node.dispatchEvent(new Event("vee-scan-start"));
