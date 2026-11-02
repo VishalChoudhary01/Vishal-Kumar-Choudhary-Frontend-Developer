@@ -582,6 +582,7 @@ export default function PortfolioMascot() {
           let scanLookX = 0;
           let scanLookY = 0;
           if (scanLook && head && canvas && camera) {
+            camera.updateMatrixWorld();
             head.getWorldPosition(headLookWorldPosition);
             headLookWorldPosition.project(camera);
             const canvasRect = canvas.getBoundingClientRect();
@@ -619,8 +620,9 @@ export default function PortfolioMascot() {
             : idlePlay
               ? Math.sin(seconds * 1.7) * 0.08 - pointerY * 0.08
               : -targetFacingY * 0.2 - pointerY * 0.16;
-          head.rotation.y = smooth(head.rotation.y, faceYaw, scanLook ? 0.095 : 0.075);
-          head.rotation.x = smooth(head.rotation.x, facePitch, scanLook ? 0.095 : 0.075);
+          const faceEase = reducedMotion ? 1 : scanLook ? 0.095 : 0.075;
+          head.rotation.y = smooth(head.rotation.y, faceYaw, faceEase);
+          head.rotation.x = smooth(head.rotation.x, facePitch, faceEase);
           const greetingWave = greeting ? Math.sin(seconds * 13) * 0.48 : 0;
           const leftWave = reactingNow ? Math.sin(seconds * 18) * 0.65 : idleWave + greetingWave;
           leftArm.rotation.z = smooth(leftArm.rotation.z, pose.left + leftWave, 0.07);
@@ -670,7 +672,7 @@ export default function PortfolioMascot() {
           smile.rotation.z = smooth(smile.rotation.z, cheeky ? -0.18 : curious ? 0.08 : 0, 0.1);
           const expressionTilt = (curious ? -0.12 : cheeky ? 0.1 : 0) + (reducedMotion ? 0 : Math.sin(seconds * 1.1) * 0.012);
           const scanTilt = scanLook ? -scanLookX * 0.075 : 0;
-          head.rotation.z = smooth(head.rotation.z, expressionTilt + scanTilt, 0.08);
+          head.rotation.z = smooth(head.rotation.z, expressionTilt + scanTilt, reducedMotion ? 1 : 0.08);
           leftLeg.rotation.z = smooth(leftLeg.rotation.z, footerSettled ? -0.42 : -pose.legs + (reactingNow ? -0.14 : 0), 0.05);
           rightLeg.rotation.z = smooth(rightLeg.rotation.z, footerSettled ? 0.42 : pose.legs + (reactingNow ? 0.14 : 0), 0.05);
           antenna.rotation.z = Math.sin(seconds * 2.7) * (reducedMotion ? 0.015 : 0.09);
