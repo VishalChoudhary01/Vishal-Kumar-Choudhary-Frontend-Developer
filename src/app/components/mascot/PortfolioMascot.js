@@ -94,6 +94,7 @@ export default function PortfolioMascot() {
   const [scanImpact, setScanImpact] = useState(null);
   const scanTimerRef = useRef([]);
   const laserOriginRef = useRef(null);
+  const laserShoulderRef = useRef(null);
   const laserAimRef = useRef(null);
   const laserLookRef = useRef(null);
   const scanCycleRef = useRef({});
@@ -477,6 +478,7 @@ export default function PortfolioMascot() {
         eyeLeft = sphere(teal, head, [-0.25, 0.03, 0.7], [0.09, 0.12, 0.045], 20);
         eyeRight = sphere(teal, head, [0.25, 0.03, 0.7], [0.09, 0.12, 0.045], 20);
         const laserHandWorldPosition = new THREE.Vector3();
+        const laserShoulderWorldPosition = new THREE.Vector3();
         const headLookWorldPosition = new THREE.Vector3();
         // Hand-local point at the extended right index fingertip. The fingertip
         // sits at +Y and its front surface faces +Z in the hand's local space.
@@ -639,7 +641,7 @@ export default function PortfolioMascot() {
           // target used by the beam. Outside the short scan window, keep the section pose.
           const scanAim = laserAimRef.current;
           const rightArmTarget = scanAim
-            ? clamp(scanAim.angle, -1.72, 1.72)
+            ? clamp(scanAim.angle, -2.35, 2.35)
             : SECTIONS[activeIndex]?.pose === "point"
               ? (pointingRight ? -1.65 : 1.65)
               : pose.right;
@@ -724,7 +726,8 @@ export default function PortfolioMascot() {
           renderer.render(scene, camera);
           // Project a point near the front of the animated right palm so the beam
           // visibly starts at the hand and follows Vee through gestures and movement.
-          if (rightHand && canvas && camera) {
+          if (rightHand && rightArm && canvas && camera) {
+            // Project the emitter from the actual index fingertip.
             laserHandWorldPosition.copy(laserHandLocalPosition);
             rightHand.localToWorld(laserHandWorldPosition);
             laserHandWorldPosition.project(camera);
@@ -732,6 +735,17 @@ export default function PortfolioMascot() {
             const handY = canvasRect.top + ((1 - laserHandWorldPosition.y) * 0.5) * canvasRect.height;
             if (Number.isFinite(handX) && Number.isFinite(handY)) {
               laserOriginRef.current = { x: handX, y: handY };
+            }
+
+            // The shoulder is the arm's rotation pivot. Keep it separate from
+            // the fingertip so the arm aims from its joint while the beam starts
+            // at the end of the finger.
+            rightArm.getWorldPosition(laserShoulderWorldPosition);
+            laserShoulderWorldPosition.project(camera);
+            const shoulderX = canvasRect.left + ((laserShoulderWorldPosition.x + 1) * 0.5) * canvasRect.width;
+            const shoulderY = canvasRect.top + ((1 - laserShoulderWorldPosition.y) * 0.5) * canvasRect.height;
+            if (Number.isFinite(shoulderX) && Number.isFinite(shoulderY)) {
+              laserShoulderRef.current = { x: shoulderX, y: shoulderY };
             }
           }
         };
@@ -916,12 +930,14 @@ export default function PortfolioMascot() {
     const dx = target.x - origin.x;
     const dy = target.y - origin.y;
     const id = Date.now();
-    // The upper arm rests downward (local -Y). Convert the screen-space target
-    // vector into the matching Z rotation, then keep the finger still while aiming.
-    const armAngle = Math.atan2(dx, Math.max(1, dy));
-    const aimDelay = reducedMotion ? 0 : 300;
+    // Aim from the shoulder pivot, not the fingertip. The arm's local rest
+    // direction is downward (-Y), while screen Y increases downward, so atan2(dx, dy)
+    // gives the required shoulder rotation for targets in every screen quadrant.
+    const shoulder = laserShoulderRef.current || origin;
+    const armAngle = Math.atan2(target.x - shoulder.x, target.y - shoulder.y);
+    const aimDelay = reducedMotion ? 0 : 340;
     laserAimRef.current = {
-      angle: clamp(armAngle, -1.72, 1.72),
+      angle: clamp(armAngle, -2.35, 2.35),
     };
     laserLookRef.current = {
       x: target.x,
