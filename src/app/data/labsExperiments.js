@@ -1,14 +1,10 @@
 /**
- * Public Labs data source.
+ * Public Labs content.
  *
- * This is a browser-safe presentation contract, not the final MongoDB
- * schema. Keep it separate from portfolio.projects. Populate only with
- * real, published experiments and public metadata; never put source code,
- * unpublished drafts, user records, or private access rules in this module.
- *
- * The demo object contains validated configuration only. It never contains
- * executable source or an import path. Runtime code is selected only by the
- * code-owned registry under components/labs/runtime/registry.js.
+ * Keep this presentation data separate from portfolio.projects. This module
+ * contains only public, code-owned display metadata and validated demo
+ * configuration. It must never contain source code, drafts, user data or
+ * private source-access policy.
  */
 
 export const LAB_CATEGORIES = [
@@ -23,7 +19,62 @@ const CONTROL_TYPES = new Set(["range", "number", "toggle", "select", "color"]);
 const CONTROL_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{0,39}$/i;
 const COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
 
-export const publishedLabExperiments = [];
+export const publishedLabExperiments = [
+  {
+    slug: "magnetic-interaction",
+    title: "Magnetic Interaction",
+    description:
+      "A pointer-aware button that follows your cursor inside a magnetic field, then smoothly returns to its resting position.",
+    explanation:
+      "The pointer position is measured from the center of the canvas. Inside the configured radius, that offset is softened and limited by the strength setting, then animated with a spring. The result is a small, responsive pull without moving the surrounding layout.",
+    category: "Interface Interactions",
+    technologies: ["React", "Motion", "Pointer Events"],
+    seo: {
+      title: "Magnetic Interaction — Labs",
+      description:
+        "Experiment with a magnetic button interaction, adjustable attraction strength and pointer radius.",
+    },
+    demo: {
+      runtimeKey: "magnetic-interaction",
+      aspectRatio: {
+        mobile: "4:3",
+        desktop: "16:9",
+      },
+      capabilities: {
+        restart: true,
+        fullscreen: true,
+      },
+      controls: [
+        {
+          id: "strength",
+          label: "Magnetic strength",
+          type: "range",
+          defaultValue: 28,
+          min: 0,
+          max: 42,
+          step: 1,
+        },
+        {
+          id: "radius",
+          label: "Field radius",
+          type: "range",
+          defaultValue: 180,
+          min: 80,
+          max: 300,
+          step: 10,
+        },
+        {
+          id: "showField",
+          label: "Show magnetic field",
+          type: "toggle",
+          defaultValue: true,
+        },
+      ],
+    },
+  },
+];
+
+const featuredSlug = "magnetic-interaction";
 
 function sanitizeAspectRatio(value) {
   if (!value || typeof value !== "object") return undefined;
@@ -48,13 +99,24 @@ function sanitizeControl(control) {
 
   if (control.type === "toggle") {
     return typeof control.defaultValue === "boolean"
-      ? { id: control.id, label: control.label, type: "toggle", defaultValue: control.defaultValue }
+      ? {
+          id: control.id,
+          label: control.label,
+          type: "toggle",
+          defaultValue: control.defaultValue,
+        }
       : null;
   }
 
   if (control.type === "color") {
-    return typeof control.defaultValue === "string" && COLOR_PATTERN.test(control.defaultValue)
-      ? { id: control.id, label: control.label, type: "color", defaultValue: control.defaultValue }
+    return typeof control.defaultValue === "string" &&
+      COLOR_PATTERN.test(control.defaultValue)
+      ? {
+          id: control.id,
+          label: control.label,
+          type: "color",
+          defaultValue: control.defaultValue,
+        }
       : null;
   }
 
@@ -114,18 +176,7 @@ function sanitizeControl(control) {
   };
 }
 
-/**
- * Map one approved published record into a deliberately small public DTO.
- * Replace this in-memory lookup with a server-only repository/service when
- * the approved MongoDB content flow is implemented.
- */
-export function getPublishedLabExperimentBySlug(slug) {
-  if (typeof slug !== "string" || !slug) return null;
-
-  const experiment = publishedLabExperiments.find(
-    (item) => item?.slug === slug
-  );
-
+function toPublicExperiment(experiment) {
   if (!experiment) return null;
 
   const category = LAB_CATEGORIES.some(
@@ -184,4 +235,29 @@ export function getPublishedLabExperimentBySlug(slug) {
   };
 }
 
-export const featuredLabExperiment = null;
+export function getPublishedLabExperimentBySlug(slug) {
+  if (typeof slug !== "string" || !slug) return null;
+
+  const experiment = publishedLabExperiments.find(
+    (item) => item?.slug === slug
+  );
+
+  return toPublicExperiment(experiment);
+}
+
+const featuredExperiment = publishedLabExperiments.find(
+  (experiment) => experiment.slug === featuredSlug
+);
+
+export const featuredLabExperiment = featuredExperiment
+  ? {
+      slug: featuredExperiment.slug,
+      title: featuredExperiment.title,
+      description: featuredExperiment.description,
+      category: featuredExperiment.category,
+      technologies: [...featuredExperiment.technologies],
+      thumbnail: featuredExperiment.thumbnail
+        ? { ...featuredExperiment.thumbnail }
+        : null,
+    }
+  : null;

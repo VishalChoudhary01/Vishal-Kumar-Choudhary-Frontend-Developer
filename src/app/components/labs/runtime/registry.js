@@ -1,16 +1,13 @@
 /**
  * Code-owned runtime registry.
  *
- * Add a slug here only when its runtime is reviewed and safe to run in the
- * public application. Imports must remain dynamic so the Labs listing and
- * unrelated routes do not download experiment code.
- *
- * Never build a dynamic import path from database content and never evaluate
- * sourceCode stored in MongoDB in the main application runtime.
+ * Keep runtime imports literal and lazy. Only reviewed, code-owned
+ * experiments belong here. Database records may choose a known runtime key,
+ * but may never provide an import path or executable source.
  */
 const LAB_RUNTIME_REGISTRY = Object.freeze({
-  // "approved-experiment-slug": () =>
-  //   import("./experiments/approved-experiment-slug"),
+  "magnetic-interaction": () =>
+    import("./experiments/magnetic-interaction"),
 });
 
 export function hasLabRuntime(runtimeKey) {

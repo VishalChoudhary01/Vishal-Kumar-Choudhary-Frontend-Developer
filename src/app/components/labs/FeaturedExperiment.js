@@ -3,8 +3,16 @@ import Link from "next/link";
 
 function PreviewFallback({ category }) {
   return (
-    <div className="flex h-full w-full items-center justify-center bg-surface-2">
-      <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-surface-2">
+      <div
+        aria-hidden="true"
+        className="absolute left-1/2 top-1/2 h-[min(72%,360px)] aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full border border-brand/20"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute left-1/2 top-1/2 h-[min(48%,240px)] aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-brand/30"
+      />
+      <span className="relative font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">
         {category || "Featured experiment"}
       </span>
     </div>
