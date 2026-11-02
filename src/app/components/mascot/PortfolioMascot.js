@@ -550,6 +550,7 @@ export default function PortfolioMascot() {
           if (disposed) return;
           frame = requestAnimationFrame(render);
           const seconds = time * 0.001;
+          const canvasRect = canvas.getBoundingClientRect();
           if (!startTime) startTime = seconds;
           const footerSettled = footerActiveRef.current;
           const pose = footerSettled
@@ -585,7 +586,6 @@ export default function PortfolioMascot() {
             camera.updateMatrixWorld();
             head.getWorldPosition(headLookWorldPosition);
             headLookWorldPosition.project(camera);
-            const canvasRect = canvas.getBoundingClientRect();
             const headScreenX = canvasRect.left + ((headLookWorldPosition.x + 1) * 0.5) * canvasRect.width;
             const headScreenY = canvasRect.top + ((1 - headLookWorldPosition.y) * 0.5) * canvasRect.height;
             scanLookX = clamp(
@@ -708,7 +708,6 @@ export default function PortfolioMascot() {
             laserHandWorldPosition.copy(laserHandLocalPosition);
             rightHand.localToWorld(laserHandWorldPosition);
             laserHandWorldPosition.project(camera);
-            const canvasRect = canvas.getBoundingClientRect();
             const handX = canvasRect.left + ((laserHandWorldPosition.x + 1) * 0.5) * canvasRect.width;
             const handY = canvasRect.top + ((1 - laserHandWorldPosition.y) * 0.5) * canvasRect.height;
             if (Number.isFinite(handX) && Number.isFinite(handY)) {
