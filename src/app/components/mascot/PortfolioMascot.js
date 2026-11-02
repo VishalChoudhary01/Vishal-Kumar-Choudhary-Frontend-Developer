@@ -913,66 +913,6 @@ export default function PortfolioMascot() {
   useEffect(() => () => scanTimerRef.current.forEach((timer) => window.clearTimeout(timer)), []);
 
 
-  // Let the nearest eligible card react to Vee without driving per-frame React renders.
-  useEffect(() => {
-    const host = hostRef.current;
-    if (!host) return undefined;
-    const sectionNode = document.getElementById(section?.id);
-    const candidates = sectionNode
-      ? [...sectionNode.querySelectorAll("[data-mascot-interactive], article, [data-project-card], [data-skill-card]")]
-      : [];
-    const eligible = candidates.filter((node) => !host.contains(node));
-    const originals = new Map();
-    eligible.forEach((node) => {
-      originals.set(node, {
-        boxShadow: node.style.boxShadow,
-        outline: node.style.outline,
-        outlineOffset: node.style.outlineOffset,
-        transition: node.style.transition,
-      });
-      node.style.transition = "box-shadow 320ms ease, outline-color 320ms ease";
-    });
-
-    const hostRect = host.getBoundingClientRect();
-    const mascotX = hostRect.left + hostRect.width / 2;
-    const mascotY = hostRect.top + hostRect.height / 2;
-    let nearestNode = null;
-    let nearestDistance = Infinity;
-    eligible.forEach((node) => {
-      const rect = node.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0 || rect.bottom < 0 || rect.top > window.innerHeight) return;
-      const dx = mascotX - (rect.left + rect.width / 2);
-      const dy = mascotY - (rect.top + rect.height / 2);
-      const distance = Math.hypot(dx, dy);
-      if (distance < nearestDistance) {
-        nearestDistance = distance;
-        nearestNode = node;
-      }
-    });
-
-    eligible.forEach((node) => {
-      if (node === nearestNode && nearestDistance < (isMobile ? 145 : 210)) {
-        node.style.boxShadow = "0 0 0 1px rgba(255,112,28,0.3), 0 8px 28px rgba(255,90,24,0.14), 0 0 18px rgba(255,190,45,0.08)";
-        node.style.outline = "1px solid rgba(255,126,32,0.22)";
-        node.style.outlineOffset = "2px";
-      } else {
-        const original = originals.get(node);
-        node.style.boxShadow = original.boxShadow;
-        node.style.outline = original.outline;
-        node.style.outlineOffset = original.outlineOffset;
-      }
-    });
-
-    return () => {
-      originals.forEach((original, node) => {
-        node.style.boxShadow = original.boxShadow;
-        node.style.outline = original.outline;
-        node.style.outlineOffset = original.outlineOffset;
-        node.style.transition = original.transition;
-      });
-    };
-  }, [active, mascotPosition.x, mascotPosition.y, isMobile, section?.id]);
-
   return (
     <div
       ref={hostRef}
