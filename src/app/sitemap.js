@@ -18,6 +18,12 @@ export default function sitemap() {
       changeFrequency: "monthly",
       priority: 1.0,
     },
+    {
+      url: `${base}/labs`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.75,
+    },
   ];
 
   for (const project of projects) {

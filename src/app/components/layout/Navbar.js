@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, useMotionValueEvent, useScroll } from "motion/react";
 import { useMobileMenu } from "@/app/providers/MobileMenuProvider";
 import MobileMenu from "./MobileMenu";
@@ -16,6 +17,7 @@ import { cn } from "@/app/lib/utils";
 import SocialIcon from "../ui/SocialIcon";
 
 export default function Navbar({ context = "site" }) {
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [activeHref, setActiveHref] = useState("");
   const [pendingNavigation, setPendingNavigation] = useState(null);
@@ -221,6 +223,11 @@ export default function Navbar({ context = "site" }) {
     const href = pendingNavigation;
 
     setPendingNavigation(null);
+
+    if (href.startsWith("/")) {
+      router.push(href);
+      return;
+    }
 
     window.requestAnimationFrame(() => {
       scrollToSection(href);

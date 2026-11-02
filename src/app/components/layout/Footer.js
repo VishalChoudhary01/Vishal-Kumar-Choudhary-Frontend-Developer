@@ -19,6 +19,7 @@ const NAV_ITEMS = [
     { label: "About", href: "#about" },
     { label: "Experience", href: "#experience" },
     { label: "Projects", href: "#projects" },
+    { label: "Labs", href: "/labs" },
     { label: "Contact", href: "#contact" },
 ];
 
