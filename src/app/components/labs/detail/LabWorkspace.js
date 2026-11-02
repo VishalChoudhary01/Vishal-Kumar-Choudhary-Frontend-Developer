@@ -39,15 +39,16 @@ export default function LabWorkspace({ experiment }) {
     demo.capabilities?.fullscreen === true &&
     fullscreenSupported;
 
-  const actions = (
-    <LabCanvasActions
-      canRestart={canRestart}
-      onRestart={() => setRestartKey((current) => current + 1)}
-      canFullscreen={canFullscreen}
-      isFullscreen={isFullscreen}
-      onToggleFullscreen={toggleFullscreen}
-    />
-  );
+  const actions =
+    canRestart || canFullscreen ? (
+      <LabCanvasActions
+        canRestart={canRestart}
+        onRestart={() => setRestartKey((current) => current + 1)}
+        canFullscreen={canFullscreen}
+        isFullscreen={isFullscreen}
+        onToggleFullscreen={toggleFullscreen}
+      />
+    ) : null;
 
   return (
     <section
