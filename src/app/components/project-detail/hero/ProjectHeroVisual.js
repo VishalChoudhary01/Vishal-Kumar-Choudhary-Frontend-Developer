@@ -35,7 +35,7 @@ export default function ProjectHeroVisual({
                     ? false
                     : {
                           opacity: 0,
-                          scale: 0.82,
+                          scale: 1.025,
                       }
             }
             animate={
@@ -46,7 +46,7 @@ export default function ProjectHeroVisual({
                       }
                     : {
                           opacity: 0,
-                          scale: 0.82,
+                          scale: 1.025,
                       }
             }
             transition={{
