@@ -85,36 +85,20 @@ function DiagRow({ label, value, mono = true, truncate = true }) {
 }
 
 /* ── Stack trace panel ─────────────────────────────────────────────────── */
-function StackTracePanel({ stack, reducedVar }) {
-  const handleKeyDown = (event) => {
-    const box = event.currentTarget
-    const delta = {
-      ArrowUp: -40,
-      ArrowDown: 40,
-      PageUp: -240,
-      PageDown: 240,
-      Home: -100000,
-      End: 100000,
-    }[event.key]
-    if (delta === undefined) return
-    event.preventDefault()
-    box.scrollTop = Math.max(0, Math.min(box.scrollHeight, box.scrollTop + delta))
-  }
-
+function StackTracePanel({ stack }) {
   return (
-    <section aria-label="Stack trace" className="flex min-w-0 flex-col">
+    <section aria-label="Stack trace" className="flex min-h-0 min-w-0 flex-1 flex-col">
       <div className="flex items-center justify-between gap-3 pb-2">
         <h3 className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-500 dark:text-neutral-400">
           Stack trace
         </h3>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl border border-black/10 bg-black/[0.02] dark:border-white/10 dark:bg-black/20 scrollbar-thin">
+      <div className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-black/10 bg-black/[0.02] dark:border-white/10 dark:bg-black/20 scrollbar-thin">
         <pre
           tabIndex={0}
           role="region"
           aria-label="Stack trace frames, scrollable"
-          onKeyDown={handleKeyDown}
           className="min-h-full w-full whitespace-pre-wrap break-words p-3 font-mono text-[10.5px] leading-[1.55] text-neutral-700 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-black/30 dark:text-neutral-300 dark:focus-visible:ring-white/30"
         >
           {stack || 'No stack trace was available for this error.'}
@@ -272,7 +256,7 @@ export default function ErrorDiagnostics({ info }) {
     <section
       aria-label="Developer diagnostics"
       data-testid="developer-diagnostics"
-      className="mt-4 rounded-2xl border border-black/10 bg-black/[0.02] p-4 dark:border-white/10 dark:bg-white/[0.03] sm:p-5"
+      className="mt-0 flex min-h-0 min-w-0 flex-col border-0 bg-transparent p-0 lg:h-full lg:overflow-hidden"
     >
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-500 dark:text-neutral-400">
@@ -296,9 +280,9 @@ export default function ErrorDiagnostics({ info }) {
               columns independently scrollable on short viewports. */}
           <motion.div
             {...motionSubtle(reduced, 0.04)}
-            className="mt-3 grid min-h-0 gap-4 lg:grid-cols-[minmax(240px,300px)_minmax(0,1fr)]"
+            className="mt-3 grid min-h-0 gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(220px,0.8fr)_minmax(0,1.4fr)] lg:overflow-hidden"
           >
-            <div className="min-w-0">
+            <div className="min-w-0 lg:min-h-0 lg:overflow-y-auto lg:pr-2">
               <dl className="min-w-0">
                 <DiagRow label="Error" value={info.name} />
                 <DiagRow label="Component" value={info.functionName} />
@@ -328,8 +312,8 @@ export default function ErrorDiagnostics({ info }) {
               )}
             </div>
 
-            <div className="flex min-h-0 min-w-0 flex-col">
-              <StackTracePanel stack={info.stack} reducedVar={reduced} />
+            <div className="flex min-h-0 min-w-0 flex-col lg:overflow-hidden">
+              <StackTracePanel stack={info.stack} />
               <div className="mt-2">
                 <button
                   type="button"
@@ -343,7 +327,7 @@ export default function ErrorDiagnostics({ info }) {
           </motion.div>
 
           {/* Full-width source context under both columns */}
-          <div className="mt-4 border-t border-black/5 pt-3 dark:border-white/10">
+          <div className="mt-3 shrink-0 border-t border-black/5 pt-3 dark:border-white/10 lg:max-h-40 lg:overflow-y-auto">
             <SourceCodeContext
               source={info.source}
               file={info.file}

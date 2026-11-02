@@ -703,8 +703,25 @@ export default function PortfolioMascot() {
     scanTimerRef.current.forEach((timer) => window.clearTimeout(timer));
     scanTimerRef.current = [];
     const rawSectionId = activeSectionRef.current;
-    const sectionNode = document.getElementById(rawSectionId);
+    const footerNode = document.getElementById("footer");
+    const footerTarget = footerNode?.querySelector('[data-mascot-scan-target="footer-building"]');
+    const footerRect = footerNode?.getBoundingClientRect();
+    const footerTargetRect = footerTarget?.getBoundingClientRect();
+    const footerIsActive = Boolean(
+      (footerActiveRef.current || (footerRect && footerRect.top < window.innerHeight * 0.22 && footerRect.bottom > 80)) &&
+      footerTargetRect &&
+      footerTargetRect.width > 0 &&
+      footerTargetRect.height > 0 &&
+      footerTargetRect.bottom > 0 &&
+      footerTargetRect.top < window.innerHeight &&
+      footerTargetRect.right > 0 &&
+      footerTargetRect.left < window.innerWidth &&
+      footerRect &&
+      footerRect.bottom > 80
+    );
+    const sectionNode = document.getElementById(rawSectionId) || (footerIsActive ? footerNode : null);
     if (!sectionNode) return;
+
     // Some portfolio sections use singular/custom IDs (for example "skill") while
     // the mascot's section model uses "skills". Resolve the visual section from
     // its ID and visible content so the scan does not silently fall back to generic targets.
@@ -809,8 +826,18 @@ export default function PortfolioMascot() {
       });
     }
     const cycleIndex = scanCycleRef.current[cycleKey] || 0;
-    const target = orderedCandidates.length ? orderedCandidates[cycleIndex % orderedCandidates.length] : null;
-    if (orderedCandidates.length > 1) scanCycleRef.current[cycleKey] = cycleIndex + 1;
+    const sectionTarget = orderedCandidates.length ? orderedCandidates[cycleIndex % orderedCandidates.length] : null;
+    const footerScanRect = footerTarget?.getBoundingClientRect();
+    const target = footerIsActive && footerTarget && footerScanRect
+      ? {
+          node: footerTarget,
+          x: footerScanRect.left + footerScanRect.width / 2,
+          y: footerScanRect.top + footerScanRect.height / 2,
+        }
+      : sectionTarget;
+    if (!footerIsActive && orderedCandidates.length > 1) {
+      scanCycleRef.current[cycleKey] = cycleIndex + 1;
+    }
     if (!target) {
       setReacting(true);
       scanTimerRef.current.push(window.setTimeout(() => setReacting(false), 500));
@@ -836,8 +863,12 @@ export default function PortfolioMascot() {
           Number.parseFloat(targetStyle.webkitTextStrokeWidth) > 0 &&
           (targetStyle.webkitTextFillColor === "rgba(0, 0, 0, 0)" || targetStyle.webkitTextFillColor === "transparent");
 
-        if (hasOutlinedText) {
-          // Fill outlined display text briefly; replay its existing hover animation when available.
+        if (target.node.matches('[data-mascot-scan-target="footer-building"]')) {
+          // The footer component owns its teal fill state so scan and hover
+          // share one animation without the generic orange text flash.
+          target.node.dispatchEvent(new Event("vee-footer-scan-hit"));
+        } else if (hasOutlinedText) {
+          // Fill other outlined display text using the existing scan reaction.
           const hoverAnimation = target.node.getAnimations().find((animation) => animation.playState === "running");
           if (hoverAnimation) hoverAnimation.cancel();
           target.node.dispatchEvent(new Event("vee-scan-start"));
@@ -913,65 +944,9 @@ export default function PortfolioMascot() {
   useEffect(() => () => scanTimerRef.current.forEach((timer) => window.clearTimeout(timer)), []);
 
 
-  // Let the nearest eligible card react to Vee without driving per-frame React renders.
-  useEffect(() => {
-    const host = hostRef.current;
-    if (!host) return undefined;
-    const sectionNode = document.getElementById(section?.id);
-    const candidates = sectionNode
-      ? [...sectionNode.querySelectorAll("[data-mascot-interactive], article, [data-project-card], [data-skill-card]")]
-      : [];
-    const eligible = candidates.filter((node) => !host.contains(node));
-    const originals = new Map();
-    eligible.forEach((node) => {
-      originals.set(node, {
-        boxShadow: node.style.boxShadow,
-        outline: node.style.outline,
-        outlineOffset: node.style.outlineOffset,
-        transition: node.style.transition,
-      });
-      node.style.transition = "box-shadow 320ms ease, outline-color 320ms ease";
-    });
+  // Vee's scan beam and visual reactions are handled by activateHolographicScan.
+  // Do not add proximity-based outlines or shadows to surrounding project/section cards.
 
-    const hostRect = host.getBoundingClientRect();
-    const mascotX = hostRect.left + hostRect.width / 2;
-    const mascotY = hostRect.top + hostRect.height / 2;
-    let nearestNode = null;
-    let nearestDistance = Infinity;
-    eligible.forEach((node) => {
-      const rect = node.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0 || rect.bottom < 0 || rect.top > window.innerHeight) return;
-      const dx = mascotX - (rect.left + rect.width / 2);
-      const dy = mascotY - (rect.top + rect.height / 2);
-      const distance = Math.hypot(dx, dy);
-      if (distance < nearestDistance) {
-        nearestDistance = distance;
-        nearestNode = node;
-      }
-    });
-
-    eligible.forEach((node) => {
-      if (node === nearestNode && nearestDistance < (isMobile ? 145 : 210)) {
-        node.style.boxShadow = "0 0 0 1px rgba(255,112,28,0.3), 0 8px 28px rgba(255,90,24,0.14), 0 0 18px rgba(255,190,45,0.08)";
-        node.style.outline = "1px solid rgba(255,126,32,0.22)";
-        node.style.outlineOffset = "2px";
-      } else {
-        const original = originals.get(node);
-        node.style.boxShadow = original.boxShadow;
-        node.style.outline = original.outline;
-        node.style.outlineOffset = original.outlineOffset;
-      }
-    });
-
-    return () => {
-      originals.forEach((original, node) => {
-        node.style.boxShadow = original.boxShadow;
-        node.style.outline = original.outline;
-        node.style.outlineOffset = original.outlineOffset;
-        node.style.transition = original.transition;
-      });
-    };
-  }, [active, mascotPosition.x, mascotPosition.y, isMobile, section?.id]);
 
   return (
     <div
