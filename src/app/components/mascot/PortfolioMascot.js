@@ -478,9 +478,9 @@ export default function PortfolioMascot() {
         eyeRight = sphere(teal, head, [0.25, 0.03, 0.7], [0.09, 0.12, 0.045], 20);
         const laserHandWorldPosition = new THREE.Vector3();
         const headLookWorldPosition = new THREE.Vector3();
-        // The right index finger extends along local +Y; place the emitter just
-        // beyond its fingertip and forward of the glove's front surface.
-        const laserHandLocalPosition = new THREE.Vector3(0.13, 0.115, 0.135);
+        // Hand-local point at the extended right index fingertip. The fingertip
+        // sits at +Y and its front surface faces +Z in the hand's local space.
+        const laserHandLocalPosition = new THREE.Vector3(0.13, 0.106, 0.112);
         // Expressive brow plates make curiosity, surprise, and cheekiness readable at a glance.
         browLeft = makeMesh(new THREE.CapsuleGeometry(0.5, 0.12, 4, 10), orange, head, [-0.25, 0.235, 0.675], [0.055, 0.16, 0.035]);
         browRight = makeMesh(new THREE.CapsuleGeometry(0.5, 0.12, 4, 10), orange, head, [0.25, 0.235, 0.675], [0.055, 0.16, 0.035]);
@@ -609,6 +609,14 @@ export default function PortfolioMascot() {
             0.055,
           );
 
+          // The torso and both arms lean together toward the beam destination.
+          // Keep the movement restrained so Vee looks engaged, not knocked off balance.
+          const torsoLeanZ = scanLook ? -scanLookX * 0.065 : 0;
+          const torsoBowX = scanLook ? scanLookY * 0.055 : 0;
+          const torsoEase = reducedMotion ? 1 : scanLook ? 0.11 : 0.07;
+          torso.rotation.z = smooth(torso.rotation.z, torsoLeanZ, torsoEase);
+          torso.rotation.x = smooth(torso.rotation.x, torsoBowX, torsoEase);
+
           // The scan target temporarily takes priority over the normal section/idle gaze.
           const faceYaw = scanLook
             ? clamp(scanLookX * 0.42 + pose.head * 0.15, -0.48, 0.48)
@@ -631,20 +639,32 @@ export default function PortfolioMascot() {
           // target used by the beam. Outside the short scan window, keep the section pose.
           const scanAim = laserAimRef.current;
           const rightArmTarget = scanAim
-            ? clamp(scanAim.angle, -1.3, 1.3)
+            ? clamp(scanAim.angle, -1.72, 1.72)
             : SECTIONS[activeIndex]?.pose === "point"
               ? (pointingRight ? -1.65 : 1.65)
               : pose.right;
           const playfulArm = idlePlay ? Math.sin(seconds * 2.2 + Math.PI) * 0.22 : 0;
-          const rightWave = reactingNow ? Math.sin(seconds * 18) * 0.65 : playfulArm + (greeting ? -0.22 : 0);
-          rightArm.rotation.z = smooth(rightArm.rotation.z, rightArmTarget + rightWave, 0.07);
+          const rightWave = scanAim
+            ? 0
+            : reactingNow
+              ? Math.sin(seconds * 18) * 0.65
+              : playfulArm + (greeting ? -0.22 : 0);
+          rightArm.rotation.z = smooth(rightArm.rotation.z, rightArmTarget + rightWave, scanAim ? 0.16 : 0.07);
           // Secondary joints and palms follow a section-specific gesture with eased transitions.
           const gesture = handGestures[SECTIONS[activeIndex]?.pose] || handGestures.wave;
           const waveMotion = greeting || reactingNow ? Math.sin(seconds * 18) : 0;
           leftElbow.rotation.z = smooth(leftElbow.rotation.z, gesture.leftElbow + Math.max(0, leftWave) * 0.2, 0.09);
-          rightElbow.rotation.z = smooth(rightElbow.rotation.z, gesture.rightElbow + Math.max(0, rightWave) * 0.18, 0.09);
+          rightElbow.rotation.z = smooth(
+            rightElbow.rotation.z,
+            scanAim ? 0 : gesture.rightElbow + Math.max(0, rightWave) * 0.18,
+            scanAim ? 0.14 : 0.09,
+          );
           leftWrist.rotation.z = smooth(leftWrist.rotation.z, gesture.leftWrist + waveMotion * 0.18, 0.11);
-          rightWrist.rotation.z = smooth(rightWrist.rotation.z, gesture.rightWrist + waveMotion * 0.18, 0.11);
+          rightWrist.rotation.z = smooth(
+            rightWrist.rotation.z,
+            scanAim ? 0 : gesture.rightWrist + waveMotion * 0.18,
+            scanAim ? 0.14 : 0.11,
+          );
           // Rotate palms to communicate each section's gesture, not just move the whole arm.
           leftHand.rotation.y = smooth(leftHand.rotation.y, gesture.leftPalm + (greeting || reactingNow ? -0.12 : 0), 0.1);
           rightHand.rotation.y = smooth(rightHand.rotation.y, gesture.rightPalm + (greeting || reactingNow ? 0.12 : 0), 0.1);
@@ -896,21 +916,38 @@ export default function PortfolioMascot() {
     const dx = target.x - origin.x;
     const dy = target.y - origin.y;
     const id = Date.now();
-    // The right arm pivots from a downward resting direction. Match its temporary
-    // rotation to the target vector so the glove points toward the beam's impact.
-    // The sign is inverted to match Vee's authored right-arm pointing convention.
-    laserAimRef.current = { angle: clamp(-Math.atan2(dx, Math.max(1, -dy)), -1.3, 1.3) };
+    // The upper arm rests downward (local -Y). Convert the screen-space target
+    // vector into the matching Z rotation, then keep the finger still while aiming.
+    const armAngle = Math.atan2(dx, Math.max(1, dy));
+    const aimDelay = reducedMotion ? 0 : 300;
+    laserAimRef.current = {
+      angle: clamp(armAngle, -1.72, 1.72),
+    };
     laserLookRef.current = {
       x: target.x,
       y: target.y,
-      // Hold the gaze through the beam impact, then ease back to the normal pose.
-      until: performance.now() + (reducedMotion ? 700 : 1700),
+      // Hold the gaze through the impact, then ease back to the normal pose.
+      until: performance.now() + (reducedMotion ? 700 : 1900),
     };
-    laserSound.play();
-    setScanBeam({ x: origin.x, y: origin.y, length: Math.hypot(dx, dy), angle: Math.atan2(dy, dx) * 180 / Math.PI, id });
     setReacting(true);
+
+    // Let the arm and torso settle first. The beam then starts at the latest
+    // projected fingertip position, not the hand position from before aiming.
     scanTimerRef.current.push(window.setTimeout(() => {
-      if (target.node.isConnected) {
+      if (!target.node.isConnected) return;
+      const fireOrigin = laserOriginRef.current || origin;
+      const beamDx = target.x - fireOrigin.x;
+      const beamDy = target.y - fireOrigin.y;
+      laserSound.play();
+      setScanBeam({
+        x: fireOrigin.x,
+        y: fireOrigin.y,
+        length: Math.hypot(beamDx, beamDy),
+        angle: Math.atan2(beamDy, beamDx) * 180 / Math.PI,
+        id,
+      });
+      scanTimerRef.current.push(window.setTimeout(() => {
+        if (target.node.isConnected) {
         // A restrained spark burst marks the exact point where the scan reaches its target.
         setScanImpact({ x: target.x, y: target.y, id });
         scanTimerRef.current.push(window.setTimeout(() => setScanImpact(null), reducedMotion ? 80 : 420));
@@ -989,12 +1026,14 @@ export default function PortfolioMascot() {
           }, reducedMotion ? 120 : 720));
         }
       }
-    }, reducedMotion ? 0 : 420));
-    scanTimerRef.current.push(window.setTimeout(() => setScanBeam(null), reducedMotion ? 100 : 620));
+      }, reducedMotion ? 0 : 420));
+      scanTimerRef.current.push(window.setTimeout(() => setScanBeam(null), reducedMotion ? 100 : 620));
+    }, aimDelay));
+
     scanTimerRef.current.push(window.setTimeout(() => {
       laserAimRef.current = null;
       setReacting(false);
-    }, 850));
+    }, aimDelay + 1050));
   };
 
   useEffect(() => () => scanTimerRef.current.forEach((timer) => window.clearTimeout(timer)), []);
