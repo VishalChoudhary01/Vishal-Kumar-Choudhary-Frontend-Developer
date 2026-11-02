@@ -240,8 +240,7 @@ export default function ProjectMedia({
                 className={cn(
                     "relative w-full overflow-hidden",
                     "bg-surface-2",
-                    "focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                    radiusClass,
+                                        radiusClass,
                     isFlagship ? "aspect-[16/9]" : ""
                 )}
                 style={
