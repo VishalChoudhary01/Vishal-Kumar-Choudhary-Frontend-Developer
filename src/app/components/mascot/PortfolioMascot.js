@@ -94,7 +94,9 @@ export default function PortfolioMascot() {
   const [scanImpact, setScanImpact] = useState(null);
   const scanTimerRef = useRef([]);
   const laserOriginRef = useRef(null);
+  const laserShoulderRef = useRef(null);
   const laserAimRef = useRef(null);
+  const laserLookRef = useRef(null);
   const scanCycleRef = useRef({});
   const laserSound = useUiSound("/mp3/laser-large-004.mp3", {
     volume: 0.16,
@@ -476,7 +478,11 @@ export default function PortfolioMascot() {
         eyeLeft = sphere(teal, head, [-0.25, 0.03, 0.7], [0.09, 0.12, 0.045], 20);
         eyeRight = sphere(teal, head, [0.25, 0.03, 0.7], [0.09, 0.12, 0.045], 20);
         const laserHandWorldPosition = new THREE.Vector3();
-        const laserHandLocalPosition = new THREE.Vector3(0.08, 0.025, 0.16);
+        const laserShoulderWorldPosition = new THREE.Vector3();
+        const headLookWorldPosition = new THREE.Vector3();
+        // Hand-local point at the extended right index fingertip. The fingertip
+        // sits at +Y and its front surface faces +Z in the hand's local space.
+        const laserHandLocalPosition = new THREE.Vector3(0.13, 0.106, 0.12);
         // Expressive brow plates make curiosity, surprise, and cheekiness readable at a glance.
         browLeft = makeMesh(new THREE.CapsuleGeometry(0.5, 0.12, 4, 10), orange, head, [-0.25, 0.235, 0.675], [0.055, 0.16, 0.035]);
         browRight = makeMesh(new THREE.CapsuleGeometry(0.5, 0.12, 4, 10), orange, head, [0.25, 0.235, 0.675], [0.055, 0.16, 0.035]);
@@ -546,6 +552,7 @@ export default function PortfolioMascot() {
           if (disposed) return;
           frame = requestAnimationFrame(render);
           const seconds = time * 0.001;
+          const canvasRect = canvas.getBoundingClientRect();
           if (!startTime) startTime = seconds;
           const footerSettled = footerActiveRef.current;
           const pose = footerSettled
@@ -566,14 +573,66 @@ export default function PortfolioMascot() {
             ? Math.max(0, Math.sin((time - (welcomeAttentionStartedAtRef.current || time)) / 210)) * 0.18
             : 0;
           root.position.y = footerSettled ? -0.18 + idle * 0.25 : idle + welcomeJump + (reactingNow ? Math.sin(seconds * 13) * 0.08 : 0);
+
+          // While a laser is active, let the head track the exact screen-space
+          // impact point. The target expires after the impact hold, so the normal
+          // section/idle gaze resumes through the same eased rotation path.
+          const scanLook = laserLookRef.current && time < laserLookRef.current.until
+            ? laserLookRef.current
+            : null;
+          if (!scanLook && laserLookRef.current) laserLookRef.current = null;
+
+          let scanLookX = 0;
+          let scanLookY = 0;
+          if (scanLook && head && canvas && camera) {
+            camera.updateMatrixWorld();
+            head.getWorldPosition(headLookWorldPosition);
+            headLookWorldPosition.project(camera);
+            const headScreenX = canvasRect.left + ((headLookWorldPosition.x + 1) * 0.5) * canvasRect.width;
+            const headScreenY = canvasRect.top + ((1 - headLookWorldPosition.y) * 0.5) * canvasRect.height;
+            scanLookX = clamp(
+              (scanLook.x - headScreenX) / Math.max(1, canvasRect.width * 0.42),
+              -1,
+              1,
+            );
+            scanLookY = clamp(
+              (scanLook.y - headScreenY) / Math.max(1, canvasRect.height * 0.4),
+              -1,
+              1,
+            );
+          }
+
           root.rotation.x = smooth(root.rotation.x, footerSettled ? -0.12 : 0, 0.06);
           root.rotation.y = smooth(root.rotation.y, pointerX * 0.55 + (activeIndex === 5 ? -0.13 : 0), 0.055);
-          root.rotation.z = smooth(root.rotation.z, pose.lean + pointerY * 0.1, 0.055);
-          // The face looks toward the active heading/form/card, not only toward the cursor.
-          const faceYaw = idlePlay ? idleLook + pointerX * 0.12 : targetFacingX * 0.48 + pointerX * 0.22 + pose.head;
-          const facePitch = idlePlay ? Math.sin(seconds * 1.7) * 0.08 - pointerY * 0.08 : -targetFacingY * 0.2 - pointerY * 0.16;
-          head.rotation.y = smooth(head.rotation.y, faceYaw, 0.075);
-          head.rotation.x = smooth(head.rotation.x, facePitch, 0.075);
+          // Add only a tiny body lean; the head carries most of the target-following motion.
+          root.rotation.z = smooth(
+            root.rotation.z,
+            pose.lean + pointerY * 0.1 + (scanLook ? -scanLookX * 0.018 : 0),
+            0.055,
+          );
+
+          // The torso and both arms lean together toward the beam destination.
+          // Keep the movement restrained so Vee looks engaged, not knocked off balance.
+          const torsoLeanZ = scanLook ? -scanLookX * 0.065 : 0;
+          const torsoBowX = scanLook ? scanLookY * 0.055 : 0;
+          const torsoEase = reducedMotion ? 1 : scanLook ? 0.11 : 0.07;
+          torso.rotation.z = smooth(torso.rotation.z, torsoLeanZ, torsoEase);
+          torso.rotation.x = smooth(torso.rotation.x, torsoBowX, torsoEase);
+
+          // The scan target temporarily takes priority over the normal section/idle gaze.
+          const faceYaw = scanLook
+            ? clamp(scanLookX * 0.42 + pose.head * 0.15, -0.48, 0.48)
+            : idlePlay
+              ? idleLook + pointerX * 0.12
+              : targetFacingX * 0.48 + pointerX * 0.22 + pose.head;
+          const facePitch = scanLook
+            ? clamp(scanLookY * 0.22, -0.25, 0.25)
+            : idlePlay
+              ? Math.sin(seconds * 1.7) * 0.08 - pointerY * 0.08
+              : -targetFacingY * 0.2 - pointerY * 0.16;
+          const faceEase = reducedMotion ? 1 : scanLook ? 0.095 : 0.075;
+          head.rotation.y = smooth(head.rotation.y, faceYaw, faceEase);
+          head.rotation.x = smooth(head.rotation.x, facePitch, faceEase);
           const greetingWave = greeting ? Math.sin(seconds * 13) * 0.48 : 0;
           const leftWave = reactingNow ? Math.sin(seconds * 18) * 0.65 : idleWave + greetingWave;
           leftArm.rotation.z = smooth(leftArm.rotation.z, pose.left + leftWave, 0.07);
@@ -582,23 +641,39 @@ export default function PortfolioMascot() {
           // target used by the beam. Outside the short scan window, keep the section pose.
           const scanAim = laserAimRef.current;
           const rightArmTarget = scanAim
-            ? clamp(scanAim.angle, -1.3, 1.3)
+            ? clamp(scanAim.angle, -2.35, 2.35)
             : SECTIONS[activeIndex]?.pose === "point"
               ? (pointingRight ? -1.65 : 1.65)
               : pose.right;
           const playfulArm = idlePlay ? Math.sin(seconds * 2.2 + Math.PI) * 0.22 : 0;
-          const rightWave = reactingNow ? Math.sin(seconds * 18) * 0.65 : playfulArm + (greeting ? -0.22 : 0);
-          rightArm.rotation.z = smooth(rightArm.rotation.z, rightArmTarget + rightWave, 0.07);
+          const rightWave = scanAim
+            ? 0
+            : reactingNow
+              ? Math.sin(seconds * 18) * 0.65
+              : playfulArm + (greeting ? -0.22 : 0);
+          rightArm.rotation.z = smooth(rightArm.rotation.z, rightArmTarget + rightWave, scanAim ? 0.16 : 0.07);
           // Secondary joints and palms follow a section-specific gesture with eased transitions.
           const gesture = handGestures[SECTIONS[activeIndex]?.pose] || handGestures.wave;
           const waveMotion = greeting || reactingNow ? Math.sin(seconds * 18) : 0;
           leftElbow.rotation.z = smooth(leftElbow.rotation.z, gesture.leftElbow + Math.max(0, leftWave) * 0.2, 0.09);
-          rightElbow.rotation.z = smooth(rightElbow.rotation.z, gesture.rightElbow + Math.max(0, rightWave) * 0.18, 0.09);
+          rightElbow.rotation.z = smooth(
+            rightElbow.rotation.z,
+            scanAim ? 0 : gesture.rightElbow + Math.max(0, rightWave) * 0.18,
+            scanAim ? 0.14 : 0.09,
+          );
           leftWrist.rotation.z = smooth(leftWrist.rotation.z, gesture.leftWrist + waveMotion * 0.18, 0.11);
-          rightWrist.rotation.z = smooth(rightWrist.rotation.z, gesture.rightWrist + waveMotion * 0.18, 0.11);
+          rightWrist.rotation.z = smooth(
+            rightWrist.rotation.z,
+            scanAim ? 0 : gesture.rightWrist + waveMotion * 0.18,
+            scanAim ? 0.14 : 0.11,
+          );
           // Rotate palms to communicate each section's gesture, not just move the whole arm.
           leftHand.rotation.y = smooth(leftHand.rotation.y, gesture.leftPalm + (greeting || reactingNow ? -0.12 : 0), 0.1);
-          rightHand.rotation.y = smooth(rightHand.rotation.y, gesture.rightPalm + (greeting || reactingNow ? 0.12 : 0), 0.1);
+          rightHand.rotation.y = smooth(
+            rightHand.rotation.y,
+            scanAim ? 0 : gesture.rightPalm + (greeting || reactingNow ? 0.12 : 0),
+            scanAim ? 0.14 : 0.1,
+          );
           // Randomized facial acting: eye shape/spacing, brow angle, smile stretch, and a tiny head tilt.
           const faceExpression = expressionActive ? activeExpression : (idlePlay ? "curious" : "happy");
           const surprised = faceExpression === "surprised";
@@ -621,7 +696,9 @@ export default function PortfolioMascot() {
           smile.scale.x = smooth(smile.scale.x, surprised ? 0.48 : cheeky ? 0.72 : excited ? 1.22 : 1, 0.1);
           smile.scale.y = smooth(smile.scale.y, surprised ? 0.55 : sleepy ? 0.55 : excited ? 1.35 : 0.88 + (Math.sin(seconds * 2.4) + 1) * 0.13, 0.1);
           smile.rotation.z = smooth(smile.rotation.z, cheeky ? -0.18 : curious ? 0.08 : 0, 0.1);
-          head.rotation.z = smooth(head.rotation.z, (curious ? -0.12 : cheeky ? 0.1 : 0) + (reducedMotion ? 0 : Math.sin(seconds * 1.1) * 0.012), 0.08);
+          const expressionTilt = (curious ? -0.12 : cheeky ? 0.1 : 0) + (reducedMotion ? 0 : Math.sin(seconds * 1.1) * 0.012);
+          const scanTilt = scanLook ? -scanLookX * 0.075 : 0;
+          head.rotation.z = smooth(head.rotation.z, expressionTilt + scanTilt, reducedMotion ? 1 : 0.08);
           leftLeg.rotation.z = smooth(leftLeg.rotation.z, footerSettled ? -0.42 : -pose.legs + (reactingNow ? -0.14 : 0), 0.05);
           rightLeg.rotation.z = smooth(rightLeg.rotation.z, footerSettled ? 0.42 : pose.legs + (reactingNow ? 0.14 : 0), 0.05);
           antenna.rotation.z = Math.sin(seconds * 2.7) * (reducedMotion ? 0.015 : 0.09);
@@ -653,15 +730,26 @@ export default function PortfolioMascot() {
           renderer.render(scene, camera);
           // Project a point near the front of the animated right palm so the beam
           // visibly starts at the hand and follows Vee through gestures and movement.
-          if (rightHand && canvas && camera) {
+          if (rightHand && rightArm && canvas && camera) {
+            // Project the emitter from the actual index fingertip.
             laserHandWorldPosition.copy(laserHandLocalPosition);
             rightHand.localToWorld(laserHandWorldPosition);
             laserHandWorldPosition.project(camera);
-            const canvasRect = canvas.getBoundingClientRect();
             const handX = canvasRect.left + ((laserHandWorldPosition.x + 1) * 0.5) * canvasRect.width;
             const handY = canvasRect.top + ((1 - laserHandWorldPosition.y) * 0.5) * canvasRect.height;
             if (Number.isFinite(handX) && Number.isFinite(handY)) {
               laserOriginRef.current = { x: handX, y: handY };
+            }
+
+            // The shoulder is the arm's rotation pivot. Keep it separate from
+            // the fingertip so the arm aims from its joint while the beam starts
+            // at the end of the finger.
+            rightArm.getWorldPosition(laserShoulderWorldPosition);
+            laserShoulderWorldPosition.project(camera);
+            const shoulderX = canvasRect.left + ((laserShoulderWorldPosition.x + 1) * 0.5) * canvasRect.width;
+            const shoulderY = canvasRect.top + ((1 - laserShoulderWorldPosition.y) * 0.5) * canvasRect.height;
+            if (Number.isFinite(shoulderX) && Number.isFinite(shoulderY)) {
+              laserShoulderRef.current = { x: shoulderX, y: shoulderY };
             }
           }
         };
@@ -703,8 +791,25 @@ export default function PortfolioMascot() {
     scanTimerRef.current.forEach((timer) => window.clearTimeout(timer));
     scanTimerRef.current = [];
     const rawSectionId = activeSectionRef.current;
-    const sectionNode = document.getElementById(rawSectionId);
+    const footerNode = document.getElementById("footer");
+    const footerTarget = footerNode?.querySelector('[data-mascot-scan-target="footer-building"]');
+    const footerRect = footerNode?.getBoundingClientRect();
+    const footerTargetRect = footerTarget?.getBoundingClientRect();
+    const footerIsActive = Boolean(
+      (footerActiveRef.current || (footerRect && footerRect.top < window.innerHeight * 0.22 && footerRect.bottom > 80)) &&
+      footerTargetRect &&
+      footerTargetRect.width > 0 &&
+      footerTargetRect.height > 0 &&
+      footerTargetRect.bottom > 0 &&
+      footerTargetRect.top < window.innerHeight &&
+      footerTargetRect.right > 0 &&
+      footerTargetRect.left < window.innerWidth &&
+      footerRect &&
+      footerRect.bottom > 80
+    );
+    const sectionNode = document.getElementById(rawSectionId) || (footerIsActive ? footerNode : null);
     if (!sectionNode) return;
+
     // Some portfolio sections use singular/custom IDs (for example "skill") while
     // the mascot's section model uses "skills". Resolve the visual section from
     // its ID and visible content so the scan does not silently fall back to generic targets.
@@ -809,8 +914,18 @@ export default function PortfolioMascot() {
       });
     }
     const cycleIndex = scanCycleRef.current[cycleKey] || 0;
-    const target = orderedCandidates.length ? orderedCandidates[cycleIndex % orderedCandidates.length] : null;
-    if (orderedCandidates.length > 1) scanCycleRef.current[cycleKey] = cycleIndex + 1;
+    const sectionTarget = orderedCandidates.length ? orderedCandidates[cycleIndex % orderedCandidates.length] : null;
+    const footerScanRect = footerTarget?.getBoundingClientRect();
+    const target = footerIsActive && footerTarget && footerScanRect
+      ? {
+          node: footerTarget,
+          x: footerScanRect.left + footerScanRect.width / 2,
+          y: footerScanRect.top + footerScanRect.height / 2,
+        }
+      : sectionTarget;
+    if (!footerIsActive && orderedCandidates.length > 1) {
+      scanCycleRef.current[cycleKey] = cycleIndex + 1;
+    }
     if (!target) {
       setReacting(true);
       scanTimerRef.current.push(window.setTimeout(() => setReacting(false), 500));
@@ -819,15 +934,40 @@ export default function PortfolioMascot() {
     const dx = target.x - origin.x;
     const dy = target.y - origin.y;
     const id = Date.now();
-    // The right arm pivots from a downward resting direction. Match its temporary
-    // rotation to the target vector so the glove points toward the beam's impact.
-    // The sign is inverted to match Vee's authored right-arm pointing convention.
-    laserAimRef.current = { angle: clamp(-Math.atan2(dx, Math.max(1, -dy)), -1.3, 1.3) };
-    laserSound.play();
-    setScanBeam({ x: origin.x, y: origin.y, length: Math.hypot(dx, dy), angle: Math.atan2(dy, dx) * 180 / Math.PI, id });
+    // Aim from the shoulder pivot, not the fingertip. The arm's local rest
+    // direction is downward (-Y), while screen Y increases downward, so atan2(dx, dy)
+    // gives the required shoulder rotation for targets in every screen quadrant.
+    const shoulder = laserShoulderRef.current || origin;
+    const armAngle = Math.atan2(target.x - shoulder.x, target.y - shoulder.y);
+    const aimDelay = reducedMotion ? 0 : 340;
+    laserAimRef.current = {
+      angle: clamp(armAngle, -2.35, 2.35),
+    };
+    laserLookRef.current = {
+      x: target.x,
+      y: target.y,
+      // Hold the gaze through the impact, then ease back to the normal pose.
+      until: performance.now() + (reducedMotion ? 700 : 1900),
+    };
     setReacting(true);
+
+    // Let the arm and torso settle first. The beam then starts at the latest
+    // projected fingertip position, not the hand position from before aiming.
     scanTimerRef.current.push(window.setTimeout(() => {
-      if (target.node.isConnected) {
+      if (!target.node.isConnected) return;
+      const fireOrigin = laserOriginRef.current || origin;
+      const beamDx = target.x - fireOrigin.x;
+      const beamDy = target.y - fireOrigin.y;
+      laserSound.play();
+      setScanBeam({
+        x: fireOrigin.x,
+        y: fireOrigin.y,
+        length: Math.hypot(beamDx, beamDy),
+        angle: Math.atan2(beamDy, beamDx) * 180 / Math.PI,
+        id,
+      });
+      scanTimerRef.current.push(window.setTimeout(() => {
+        if (target.node.isConnected) {
         // A restrained spark burst marks the exact point where the scan reaches its target.
         setScanImpact({ x: target.x, y: target.y, id });
         scanTimerRef.current.push(window.setTimeout(() => setScanImpact(null), reducedMotion ? 80 : 420));
@@ -836,8 +976,12 @@ export default function PortfolioMascot() {
           Number.parseFloat(targetStyle.webkitTextStrokeWidth) > 0 &&
           (targetStyle.webkitTextFillColor === "rgba(0, 0, 0, 0)" || targetStyle.webkitTextFillColor === "transparent");
 
-        if (hasOutlinedText) {
-          // Fill outlined display text briefly; replay its existing hover animation when available.
+        if (target.node.matches('[data-mascot-scan-target="footer-building"]')) {
+          // The footer component owns its teal fill state so scan and hover
+          // share one animation without the generic orange text flash.
+          target.node.dispatchEvent(new Event("vee-footer-scan-hit"));
+        } else if (hasOutlinedText) {
+          // Fill other outlined display text using the existing scan reaction.
           const hoverAnimation = target.node.getAnimations().find((animation) => animation.playState === "running");
           if (hoverAnimation) hoverAnimation.cancel();
           target.node.dispatchEvent(new Event("vee-scan-start"));
@@ -902,15 +1046,21 @@ export default function PortfolioMascot() {
           }, reducedMotion ? 120 : 720));
         }
       }
-    }, reducedMotion ? 0 : 420));
-    scanTimerRef.current.push(window.setTimeout(() => setScanBeam(null), reducedMotion ? 100 : 620));
+      }, reducedMotion ? 0 : 420));
+      scanTimerRef.current.push(window.setTimeout(() => setScanBeam(null), reducedMotion ? 100 : 620));
+    }, aimDelay));
+
     scanTimerRef.current.push(window.setTimeout(() => {
       laserAimRef.current = null;
       setReacting(false);
-    }, 850));
+    }, aimDelay + 1050));
   };
 
   useEffect(() => () => scanTimerRef.current.forEach((timer) => window.clearTimeout(timer)), []);
+
+
+  // Vee's scan beam and visual reactions are handled by activateHolographicScan.
+  // Do not add proximity-based outlines or shadows to surrounding project/section cards.
 
 
   return (
