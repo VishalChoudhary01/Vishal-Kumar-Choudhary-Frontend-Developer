@@ -95,6 +95,7 @@ export default function PortfolioMascot() {
   const scanTimerRef = useRef([]);
   const laserOriginRef = useRef(null);
   const laserAimRef = useRef(null);
+  const laserLookRef = useRef(null);
   const scanCycleRef = useRef({});
   const laserSound = useUiSound("/mp3/laser-large-004.mp3", {
     volume: 0.16,
@@ -476,7 +477,10 @@ export default function PortfolioMascot() {
         eyeLeft = sphere(teal, head, [-0.25, 0.03, 0.7], [0.09, 0.12, 0.045], 20);
         eyeRight = sphere(teal, head, [0.25, 0.03, 0.7], [0.09, 0.12, 0.045], 20);
         const laserHandWorldPosition = new THREE.Vector3();
-        const laserHandLocalPosition = new THREE.Vector3(0.08, 0.025, 0.16);
+        const headLookWorldPosition = new THREE.Vector3();
+        // The right index finger extends along local +Y; place the emitter just
+        // beyond its fingertip and forward of the glove's front surface.
+        const laserHandLocalPosition = new THREE.Vector3(0.13, 0.115, 0.135);
         // Expressive brow plates make curiosity, surprise, and cheekiness readable at a glance.
         browLeft = makeMesh(new THREE.CapsuleGeometry(0.5, 0.12, 4, 10), orange, head, [-0.25, 0.235, 0.675], [0.055, 0.16, 0.035]);
         browRight = makeMesh(new THREE.CapsuleGeometry(0.5, 0.12, 4, 10), orange, head, [0.25, 0.235, 0.675], [0.055, 0.16, 0.035]);
@@ -546,6 +550,7 @@ export default function PortfolioMascot() {
           if (disposed) return;
           frame = requestAnimationFrame(render);
           const seconds = time * 0.001;
+          const canvasRect = canvas.getBoundingClientRect();
           if (!startTime) startTime = seconds;
           const footerSettled = footerActiveRef.current;
           const pose = footerSettled
@@ -566,14 +571,58 @@ export default function PortfolioMascot() {
             ? Math.max(0, Math.sin((time - (welcomeAttentionStartedAtRef.current || time)) / 210)) * 0.18
             : 0;
           root.position.y = footerSettled ? -0.18 + idle * 0.25 : idle + welcomeJump + (reactingNow ? Math.sin(seconds * 13) * 0.08 : 0);
+
+          // While a laser is active, let the head track the exact screen-space
+          // impact point. The target expires after the impact hold, so the normal
+          // section/idle gaze resumes through the same eased rotation path.
+          const scanLook = laserLookRef.current && time < laserLookRef.current.until
+            ? laserLookRef.current
+            : null;
+          if (!scanLook && laserLookRef.current) laserLookRef.current = null;
+
+          let scanLookX = 0;
+          let scanLookY = 0;
+          if (scanLook && head && canvas && camera) {
+            camera.updateMatrixWorld();
+            head.getWorldPosition(headLookWorldPosition);
+            headLookWorldPosition.project(camera);
+            const headScreenX = canvasRect.left + ((headLookWorldPosition.x + 1) * 0.5) * canvasRect.width;
+            const headScreenY = canvasRect.top + ((1 - headLookWorldPosition.y) * 0.5) * canvasRect.height;
+            scanLookX = clamp(
+              (scanLook.x - headScreenX) / Math.max(1, canvasRect.width * 0.42),
+              -1,
+              1,
+            );
+            scanLookY = clamp(
+              (scanLook.y - headScreenY) / Math.max(1, canvasRect.height * 0.4),
+              -1,
+              1,
+            );
+          }
+
           root.rotation.x = smooth(root.rotation.x, footerSettled ? -0.12 : 0, 0.06);
           root.rotation.y = smooth(root.rotation.y, pointerX * 0.55 + (activeIndex === 5 ? -0.13 : 0), 0.055);
-          root.rotation.z = smooth(root.rotation.z, pose.lean + pointerY * 0.1, 0.055);
-          // The face looks toward the active heading/form/card, not only toward the cursor.
-          const faceYaw = idlePlay ? idleLook + pointerX * 0.12 : targetFacingX * 0.48 + pointerX * 0.22 + pose.head;
-          const facePitch = idlePlay ? Math.sin(seconds * 1.7) * 0.08 - pointerY * 0.08 : -targetFacingY * 0.2 - pointerY * 0.16;
-          head.rotation.y = smooth(head.rotation.y, faceYaw, 0.075);
-          head.rotation.x = smooth(head.rotation.x, facePitch, 0.075);
+          // Add only a tiny body lean; the head carries most of the target-following motion.
+          root.rotation.z = smooth(
+            root.rotation.z,
+            pose.lean + pointerY * 0.1 + (scanLook ? -scanLookX * 0.018 : 0),
+            0.055,
+          );
+
+          // The scan target temporarily takes priority over the normal section/idle gaze.
+          const faceYaw = scanLook
+            ? clamp(scanLookX * 0.42 + pose.head * 0.15, -0.48, 0.48)
+            : idlePlay
+              ? idleLook + pointerX * 0.12
+              : targetFacingX * 0.48 + pointerX * 0.22 + pose.head;
+          const facePitch = scanLook
+            ? clamp(-scanLookY * 0.22, -0.25, 0.25)
+            : idlePlay
+              ? Math.sin(seconds * 1.7) * 0.08 - pointerY * 0.08
+              : -targetFacingY * 0.2 - pointerY * 0.16;
+          const faceEase = reducedMotion ? 1 : scanLook ? 0.095 : 0.075;
+          head.rotation.y = smooth(head.rotation.y, faceYaw, faceEase);
+          head.rotation.x = smooth(head.rotation.x, facePitch, faceEase);
           const greetingWave = greeting ? Math.sin(seconds * 13) * 0.48 : 0;
           const leftWave = reactingNow ? Math.sin(seconds * 18) * 0.65 : idleWave + greetingWave;
           leftArm.rotation.z = smooth(leftArm.rotation.z, pose.left + leftWave, 0.07);
@@ -621,7 +670,9 @@ export default function PortfolioMascot() {
           smile.scale.x = smooth(smile.scale.x, surprised ? 0.48 : cheeky ? 0.72 : excited ? 1.22 : 1, 0.1);
           smile.scale.y = smooth(smile.scale.y, surprised ? 0.55 : sleepy ? 0.55 : excited ? 1.35 : 0.88 + (Math.sin(seconds * 2.4) + 1) * 0.13, 0.1);
           smile.rotation.z = smooth(smile.rotation.z, cheeky ? -0.18 : curious ? 0.08 : 0, 0.1);
-          head.rotation.z = smooth(head.rotation.z, (curious ? -0.12 : cheeky ? 0.1 : 0) + (reducedMotion ? 0 : Math.sin(seconds * 1.1) * 0.012), 0.08);
+          const expressionTilt = (curious ? -0.12 : cheeky ? 0.1 : 0) + (reducedMotion ? 0 : Math.sin(seconds * 1.1) * 0.012);
+          const scanTilt = scanLook ? -scanLookX * 0.075 : 0;
+          head.rotation.z = smooth(head.rotation.z, expressionTilt + scanTilt, reducedMotion ? 1 : 0.08);
           leftLeg.rotation.z = smooth(leftLeg.rotation.z, footerSettled ? -0.42 : -pose.legs + (reactingNow ? -0.14 : 0), 0.05);
           rightLeg.rotation.z = smooth(rightLeg.rotation.z, footerSettled ? 0.42 : pose.legs + (reactingNow ? 0.14 : 0), 0.05);
           antenna.rotation.z = Math.sin(seconds * 2.7) * (reducedMotion ? 0.015 : 0.09);
@@ -657,7 +708,6 @@ export default function PortfolioMascot() {
             laserHandWorldPosition.copy(laserHandLocalPosition);
             rightHand.localToWorld(laserHandWorldPosition);
             laserHandWorldPosition.project(camera);
-            const canvasRect = canvas.getBoundingClientRect();
             const handX = canvasRect.left + ((laserHandWorldPosition.x + 1) * 0.5) * canvasRect.width;
             const handY = canvasRect.top + ((1 - laserHandWorldPosition.y) * 0.5) * canvasRect.height;
             if (Number.isFinite(handX) && Number.isFinite(handY)) {
@@ -850,6 +900,12 @@ export default function PortfolioMascot() {
     // rotation to the target vector so the glove points toward the beam's impact.
     // The sign is inverted to match Vee's authored right-arm pointing convention.
     laserAimRef.current = { angle: clamp(-Math.atan2(dx, Math.max(1, -dy)), -1.3, 1.3) };
+    laserLookRef.current = {
+      x: target.x,
+      y: target.y,
+      // Hold the gaze through the beam impact, then ease back to the normal pose.
+      until: performance.now() + (reducedMotion ? 700 : 1700),
+    };
     laserSound.play();
     setScanBeam({ x: origin.x, y: origin.y, length: Math.hypot(dx, dy), angle: Math.atan2(dy, dx) * 180 / Math.PI, id });
     setReacting(true);
