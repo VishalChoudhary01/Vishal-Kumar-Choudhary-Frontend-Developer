@@ -1,11 +1,11 @@
 # Labs & Authentication — Product and UX Design Specification
 
-**Document:** `LABS-AND-AUTHENTICATION-DESIGN-SPEC.md`  
-**Version:** 1.0  
-**Status:** Consolidated design baseline  
-**Consolidated on:** 2026-11-02  
-**Scope:** Labs listing, experiment detail/workspace, protected source access, and Labs authentication UX  
-**Companion architecture reference:** `DYNAMIC PORTFOLIO + LABS — PRODUCTION ARCHITECTURE IMPLEMENTATION` (currently available in the project Library as `Pasted text(9).txt`)
+**Document:** `docs/LABS-AND-AUTHENTICATION-DESIGN-SPEC.md`  
+**Version:** 1.1  
+**Status:** Detailed UX and implementation-guidance baseline; feature implementation pending  
+**Updated on:** 2026-11-02  
+**Scope:** Labs listing, experiment detail/workspace, protected source access, Labs authentication UX, repository-aligned stack, module boundaries, hooks, components and state ownership  
+**Companion repository documents:** `docs/PRD.md`, `docs/ARCHITECTURE.md`, `docs/API-CONTRACTS.md`, `docs/PROJECT-STRUCTURE.md`, `docs/IMPLEMENTATION-PLAN.md`, and `docs/THREAT-MODEL.md`
 
 ---
 
@@ -43,8 +43,14 @@ This file records the product and UX decisions made for Labs and its authenticat
 
 ### 0.3 Decision hierarchy and known supersession
 
-- The existing portfolio architecture reference remains the source of truth for the established technical architecture and portfolio-preservation constraints.
-- This document is the source of truth for Labs presentation and authentication UX decisions recorded here.
+- docs/PRD.md owns product goals, functional requirements, user capabilities and acceptance criteria.
+- docs/ARCHITECTURE.md owns the approved runtime boundaries, server/client separation, backend approach, security responsibilities and request flows.
+- docs/API-CONTRACTS.md owns the HTTP endpoint families, request/response contracts, validation and error conventions.
+- docs/PROJECT-STRUCTURE.md is the generic proposed module structure. Sections 22–29 of this document adapt those responsibilities to the actual repository tree inspected on 2026-11-02; they do not authorize a broad restructure.
+- This document owns the detailed Labs page composition, interaction treatment, authentication UX and Labs-specific implementation guidance. It does not silently replace PRD capabilities or architecture/security contracts.
+- If older examples use the singular /lab route while this document specifies /labs, use /labs as the approved public UX route. Update related API/PRD references before implementation rather than creating both routes.
+- The public-demo decision in this document is specific: guests may use experiments explicitly published as public demos. This does not authorize arbitrary stored/admin-authored JavaScript to execute in the main application. Any untrusted or restricted preview still requires the separately reviewed isolation boundary in docs/ARCHITECTURE.md and docs/THREAT-MODEL.md.
+- The PRD requirement for email/password and Google sign-in remains in force. The OAuth/authentication provider implementation and the visual placement of the Google action remain OPEN. GitHub sign-in is not selected.
 - The user explicitly changed the work order: **complete Labs design/implementation before beginning CMS work**. Any older roadmap ordering that puts Admin/CMS ahead of Labs must not override this priority.
 - An earlier decision proposed navigating directly from account creation to the Email Verification screen. That navigation was **superseded** when the user approved privacy-safe generic registration handling and a dedicated generic registration confirmation. The current Sign-up result is the generic confirmation state, not a visibly different state that reveals whether the email was already registered.
 - The user instructed that remaining recommendations should be finalized. Accordingly, the previously recommended treatments listed as **LOCKED — RECOMMENDATION ADOPTED** below are now part of this baseline. Items with no recommendation or insufficient information remain OPEN.
@@ -101,36 +107,57 @@ Do not perform a wholesale rewrite or migrate all portfolio content as a side ef
 
 These are inherited from the companion architecture reference unless stated otherwise.
 
-### 2.1 Existing stack
+### 2.1 Existing and approved stack
 
-- Next.js App Router.
-- JavaScript (not TypeScript).
-- React 19.
-- Tailwind CSS v4.
-- Existing Motion integration (`motion/react`).
-- Existing Lenis integration where already used.
-- Existing portfolio UI components, tokens, and conventions.
-- Express API and MongoDB are the target backend architecture described in the companion architecture reference.
-- TanStack React Query is used where client-side server-state management provides value; it is not required for every server-rendered page.
-- Cloudinary is the configured media-provider direction in the project context; exact Labs media workflows and upload authorization remain subject to the existing architecture and any later decisions.
+The repository's committed package manifest and the architecture documents establish this baseline:
 
-Do not add replacement libraries or introduce extra dependencies without a demonstrated need and approval.
+- Next.js App Router and React 19, using JavaScript/JSX. TypeScript is not approved.
+- Tailwind CSS v4 for styling, reusing current design tokens and utility conventions.
+- Motion from motion/react for interactions and animation. Reuse existing motion helpers and reduced-motion behavior.
+- Lenis is already part of the application. Do not create a second smooth-scroll system or change global scroll behavior for Labs.
+- next-themes is the existing theme provider. Labs and authentication must reuse the current light/dark theme system.
+- MongoDB with Mongoose for application persistence. Database access remains server-only.
+- Cloudinary for media storage/delivery. The API secret remains server-only.
+- Vercel for the existing Next.js application deployment.
+- TanStack Query is approved for client-side server-state cases that benefit from query caching, mutation lifecycle, invalidation or polling. It is not installed as a direct dependency in the inspected package.json and must not be assumed to exist. Server Components remain the default for safe initial public page data.
+- The existing design system and UI packages are reused. Do not add a competing component library.
+
+The inspected package.json declares these relevant versions/ranges on this branch: Next.js ^16.4.3, React/React DOM 19.2.8, Tailwind CSS ^4, Motion ^13.2.0, Lenis ^1.3.26, next-themes ^0.4.6, Mongoose ^9.11.4, Cloudinary ^2.11.0, lucide-react ^1.41.0, react-icons ^5.7.0, clsx ^2.1.1, tailwind-merge ^3.6.0, and Three.js ^0.187.0. Treat package.json/package-lock.json as the exact dependency authority; this prose is a snapshot and must be rechecked before implementation.
+
+Additional dependency constraints:
+
+- Three.js is available but must be imported only by an experiment that actually needs 3D; it must not enter the Labs listing or homepage critical path.
+- Nodemailer exists for the current contact route. Do not assume it is the approved transactional email service for authentication or Labs account mail.
+- Monaco is not installed in the inspected package manifest. The source-viewer/editor package and version remain an explicit dependency decision; any editor must be dynamically imported only after server-side authorization.
+- React Hook Form and @tanstack/react-query are not direct dependencies in the inspected package manifest. Do not write code assuming either is installed.
+- The inspected package manifest does not declare @reduxjs/toolkit, even though current files under src/app/store import it. See the state-ownership notes in Section 27 before reusing that store.
+- No new library may be added simply because it is common in AI-generated examples. First state the requirement, compare the existing stack and request approval when a new dependency is needed.
+
+Styling rule: use Tailwind CSS v4 utilities and the existing theme tokens. Do not add a new custom CSS system or global selector layer for Labs. Any exception must be narrowly justified by a browser capability that cannot be expressed with the current utility/token system and must not change existing pages.
 
 ### 2.2 Architectural separation
 
-The companion architecture establishes the general flow:
+The approved default is a **Next.js-native backend**, not a separate Express application.
 
-`Next.js UI → API client / React Query where appropriate → Express API → controller → service → repository → MongoDB`
+Public page flow:
+
+Server Component / App Router page → server-only Labs query or use case → repository/data-access module → MongoDB → explicitly shaped public DTO → rendered page.
+
+Protected or mutation flow:
+
+Client interaction or form → Server Action or Route Handler (only where an HTTP API is needed) → resolve server actor/session → validate input → authorize the actor and resource → domain service/use case → repository → MongoDB → safe result.
 
 Rules:
 
-- React components must not connect directly to MongoDB.
-- Do not put database queries inside React Query hooks.
-- API functions call API endpoints; backend controllers call services; services call repositories.
-- Keep database access out of UI components.
-- Use Server Components where practical, particularly for SEO-oriented public content.
-- Use Client Components only where interactivity, forms, Motion, or client-side state requires them.
-- Do not turn the whole app into a Client Component.
+- React components never connect directly to MongoDB or call Cloudinary Admin APIs.
+- Server-only services/repositories must not be imported by Client Components.
+- Keep transport parsing/status mapping in Route Handlers or Server Actions; keep business invariants in service/use-case modules.
+- Repositories own database queries. Hooks do not contain MongoDB queries.
+- Prefer Server Components for SEO-oriented public Labs listing/detail data.
+- Use Client Components only where interaction, form state, demo controls, browser APIs, fullscreen or motion requires them.
+- TanStack Query hooks, if later required and installed, call approved API functions; they do not replace server authorization or database layers.
+- Do not create Express controllers, Express middleware or a second server by default. Express is conditional and requires a written architecture decision plus explicit approval.
+- Never put the whole route tree behind a Client Component just to simplify data fetching.
 
 ### 2.3 Labs data and public/private boundaries
 
@@ -479,12 +506,21 @@ A Related Experiments section belongs after source access in the proposed page o
 
 Anonymous visitors may:
 
-- Browse `/labs`.
-- View public experiment metadata.
-- Open an experiment detail page.
-- View and interact with the public demo.
+- Browse /labs.
+- View published public experiment metadata and public static media.
+- Open a published experiment detail page.
+- View and interact with a demo that the publisher has explicitly designated as public.
 
-Authentication and authorization apply to protected source functionality, not to public browsing or public demos.
+Important runtime distinction:
+
+- A public demo must be a reviewed, code-owned experiment runtime or another explicitly approved safe public preview.
+- Do not evaluate arbitrary source text retrieved from MongoDB inside the main portfolio React tree, Next.js server, or privileged application origin.
+- If an experiment requires user-authored/admin-managed source execution, a restricted preview, or capabilities beyond a code-owned public demo, it must use the separately approved isolated preview boundary. The hosting/provider, origin, CSP, dependency allowlist, network policy and resource limits remain OPEN until the threat-model gate is passed.
+- A restricted interactive preview may have its own authentication/authorization requirement. That is distinct from the public demo permission.
+- Full source remains protected and is never returned to guests.
+- The PRD and older DESIGN-LAB document mention permitted partial source snippets for guests. This consolidated UX did not approve a partial-source UI or content policy. Until the snippet scope and exposure are explicitly designed, do not expose source to guests.
+
+Authentication and authorization apply to protected source and any separately restricted preview functionality, not to ordinary public browsing or demos explicitly published as public.
 
 ### 5.2 Source access section appearance
 
@@ -822,11 +858,16 @@ There is **no Remember me checkbox**. Session persistence is managed by the auth
 
 Use simple text-link styling: `Don't have an account? Create an account`.
 
-### 8.6 Social sign-in
+### 8.6 Google sign-in and provider UI
 
-**OPEN — DO NOT ASSUME**
+**PRODUCT REQUIREMENT — REQUIRED:** docs/PRD.md and docs/README.md require both email/password and Google sign-in.
 
-The email/password Login form is defined, but the user did not choose whether social sign-in should be offered or which providers should be supported. Do not silently add or remove Google, GitHub, or any other provider. Provider layout, ordering, icons, callback behavior, and account-linking rules remain undecided.
+- The Labs Login experience must support email/password and Google sign-in.
+- The actual authentication provider/service/library, Google OAuth app configuration, callback implementation, account-linking behavior and session implementation remain OPEN.
+- The visual placement, divider copy, button label, icon treatment and ordering of the Google sign-in action are OPEN. Do not invent a final treatment.
+- Do not silently replace Google with GitHub. GitHub sign-in is not required or selected in the current product baseline.
+- Provider authentication must be verified on the server. A client callback or visible signed-in state is not proof of a valid session.
+- The approved Login field/error/loading behavior continues to apply to email/password. Google-provider-specific pending, cancellation, callback failure and account-linking states must be designed when the provider is selected.
 
 ---
 
@@ -1366,20 +1407,20 @@ The following items were not finalized by the discussion. They require an explic
 
 ### 16.1 Authentication product and provider decisions
 
-1. Whether social sign-in exists at all.
-2. If social sign-in is approved, which providers (Google, GitHub, or others) are supported.
-3. Authentication provider/service/library and account-linking behavior.
-4. Email delivery provider/service, sending domain, templates, retry and bounce handling.
-5. Verification token format, token lifetime, single-use storage, resend/replay semantics, and verification endpoint design.
-6. Password-reset token format, lifetime, single-use storage, and endpoint contract.
-7. Exact authentication route paths for Login, Sign-up, Forgot Password, Reset Password, and Email Verification.
-8. What happens when an unverified account attempts to log in (copy, resend path, and whether access is blocked until verified).
-9. Account deletion, email change, password change outside reset, and recovery/support flows.
-10. Session lifetime, idle/absolute timeout, refresh strategy, cookie settings, and concurrent session policy.
-11. The exact cross-tab transport and revalidation strategy.
-12. Exact masking algorithm for displayed email addresses.
-13. Exact maximum/minimum password requirements and breached-password policy.
-14. Exact rate limits/cooldowns for sign-up, Login, reset requests, verification resends, and failed attempts beyond the approved 30-second client resend cooldown.
+1. Authentication provider/service/library for the required email/password and Google sign-in methods, Google OAuth configuration and account-linking behavior.
+2. Email delivery provider/service, sending domain, templates, retry and bounce handling.
+3. Verification token format, token lifetime, single-use storage, resend/replay semantics and verification endpoint design.
+4. Password-reset token format, lifetime, single-use storage and endpoint contract.
+5. Exact authentication route paths for Login, Sign-up, Forgot Password, Reset Password and Email Verification.
+6. What happens when an unverified account attempts to log in (copy, resend path and whether access is blocked until verified).
+7. Account deletion, email change, password change outside reset, and recovery/support flows.
+8. Session lifetime, idle/absolute timeout, refresh strategy, cookie settings and concurrent session policy.
+9. Exact cross-tab transport and revalidation strategy.
+10. Exact masking algorithm for displayed email addresses.
+11. Exact maximum/minimum password requirements and breached-password policy.
+12. Exact rate limits/cooldowns for sign-up, Login, reset requests, verification resends and failed attempts beyond the approved 30-second client resend cooldown.
+13. Google sign-in button placement and interaction states.
+14. Whether any additional provider beyond Google is desired in the future; GitHub is not currently selected.
 
 ### 16.2 Authorization decisions
 
@@ -1580,6 +1621,499 @@ Never leave an approval only in chat while the source-of-truth file remains outd
 
 ---
 
-## 21. Final Instruction
+## 21. Design-baseline instruction
 
-**Treat this document as the authoritative Labs and Labs-authentication UX baseline.** Implement exactly what is LOCKED, preserve inherited architecture constraints, and do not guess any OPEN decision. CMS remains deferred until Labs is complete. Existing portfolio functionality and visual design must remain unaffected.
+Treat this document as the detailed Labs and Labs-authentication UX baseline. Implement exactly what is LOCKED, preserve inherited architecture constraints, and do not guess any OPEN decision. CMS remains deferred until Labs is complete. Existing portfolio functionality and visual design must remain unaffected. The repository-aligned implementation guidance and the inspected current tree are documented in Sections 22–30.
+
+
+---
+
+## 22. Repository Baseline — Actual vs Planned
+
+**Inspection snapshot:** 2026-11-02  \n**Repository:** VishalChoudhary01/Vishal-Kumar-Choudhary-Frontend-Developer  \n**Branch:** docs/portfolio-platform-spec  \n**Inspected head before this documentation update:** 02b54f4066ebbc99ca27b0234b2025183fb11045  \n**Purpose:** Distinguish existing files from proposed Labs files. This section is a remote GitHub repository inspection; it is not a claim that a local build, test suite or complete runtime audit was run.
+
+### 22.1 Existing repository conventions verified
+
+- App Router root: src/app/.
+- Existing home page: src/app/page.js (Server Component).
+- Existing project detail route: src/app/projects/[slug]/page.js (Server Component with server-side metadata and JSON-LD).
+- Existing project detail client composition: src/app/projects/[slug]/ProjectPageView.js.
+- Existing reusable UI: src/app/components/.
+- Existing shared hooks: src/app/hooks/.
+- Existing providers: src/app/providers/.
+- Existing application state files: src/app/store/.
+- Existing server utility area: src/app/lib/.
+- Existing API Route Handlers: src/app/api/.
+- Existing static portfolio data: src/app/data/.
+- Existing global layout: src/app/layout.js.
+- Existing import alias: @/* maps to ./src/* in jsconfig.json.
+- Existing build command: npm run build executes scripts/validate-seo.cjs before next build.
+- Existing package manager/lockfile: npm with package-lock.json.
+- No src/app/labs route, Labs-specific component folder, Labs-specific hooks, Labs API route, Labs model or Labs experiment registry was present in the inspected tree. Those paths below are proposals, not existing implementation.
+
+### 22.2 Current global layout and provider implications
+
+The current src/app/layout.js:
+
+- Loads the existing font families and global design system.
+- Mounts AppProviders and UIThemeProvider.
+- Renders the main page content and the existing Footer.
+
+AppProviders currently mounts MobileMenuProvider, MotionProvider, SmoothScroll/Lenis and PageLoaderProvider. The theme provider uses next-themes.
+
+Consequences for Labs/authentication implementation:
+
+- Reuse the existing theme, typography, design tokens and reduced-motion behavior; do not introduce a second theme provider.
+- Do not add another Lenis instance or another global animation/provider layer.
+- The current root layout renders the portfolio Footer for every route. A centered authentication experience has its own compact footer/context row. A nested route-group layout does not automatically remove a Footer rendered by the root layout. Before implementing auth routes, explicitly choose and test a narrow layout-boundary approach that preserves existing portfolio pages. Do not move all existing routes into new route groups as a convenience refactor.
+- The existing global PageLoader and Lenis behavior must be checked on Labs/auth routes. Avoid adding a second loader or changing public-route behavior. Route-specific provider scope is an implementation decision after this audit.
+
+### 22.3 Existing utilities and state files
+
+Existing shared hooks include:
+
+- src/app/hooks/useBreakpoint.js
+- src/app/hooks/useDownload.js
+- src/app/hooks/useReducedMotion.js
+- src/app/hooks/useThemeToggle.js
+- src/app/hooks/useUiSound.js
+
+Existing state files include:
+
+- src/app/store/index.js
+- src/app/store/slices/uiSlice.js
+
+The current slice contains mobile-menu UI state. However, the inspected package manifest and lockfile do not declare @reduxjs/toolkit, and AppProviders.js does not mount a Redux Provider. The store files therefore must be treated as **unverified/unintegrated existing code**, not as proof of a working global Redux store for Labs. Do not extend this store, install a missing package, or migrate Lab state into Redux without a separate repository/dependency decision.
+
+### 22.4 Existing backend utilities
+
+The inspected branch contains:
+
+- src/app/lib/db/mongoose.js — server-only Mongoose connection helper with cached connection/promise behavior.
+- src/app/lib/cloudinary/index.js — server-only Cloudinary SDK configuration.
+- src/app/api/health/database/route.js — development-only database diagnostic route; it returns 404 in production.
+- src/app/api/source-snapshot/route.js — development-only source-context helper; it returns 404 in production and restricts reads to the src/ tree.
+- src/app/api/contact/route.js — existing contact transport route.
+
+These are existing foundations, not a completed Labs data layer. Do not repurpose the source-snapshot diagnostic route as a Lab source endpoint. Do not create a public database-health endpoint. Do not expose Mongoose/Cloudinary helpers to Client Components.
+
+---
+
+## 23. Labs Technology Stack and Dependency Policy
+
+### 23.1 Required runtime stack
+
+| Concern | Selected baseline | Labs implementation rule |
+|---|---|---|
+| Routing/rendering | Next.js App Router | Use Server Components for public listing/detail composition where practical. |
+| UI | React 19, JavaScript | Use JSX/ES modules; no TypeScript substitution. |
+| Styling | Tailwind CSS v4 | Reuse existing tokens/utilities; no new CSS framework or custom CSS system. |
+| Motion | motion/react | Reuse existing Motion conventions; respect reduced motion. |
+| Smooth scroll | Existing Lenis integration | Do not add another smooth-scroll library or initialize a second instance. |
+| Theme | next-themes and existing UIThemeProvider | Reuse the current theme system and existing theme-aware tokens. |
+| Database | MongoDB through Mongoose | Server-only access through the existing connection helper and a Labs repository/service boundary. |
+| Media | Cloudinary Node SDK | Server-side operations only; no Cloudinary API secret in the browser. |
+| Hosting | Existing Vercel Next.js project | Validate Node.js runtime compatibility for database-dependent Route Handlers. |
+| Icons | Existing lucide-react and react-icons | Reuse existing icon packages; avoid a second icon dependency. |
+| Server state | Server Components first; TanStack Query only when needed | TanStack Query is approved conditionally but is not a direct dependency in the inspected package manifest. |
+| Source viewer | Not selected | Monaco/editor package is not installed; select and dynamically import only after source authorization. |
+| Interactive preview | Not selected for untrusted source | Public code-owned demos may load on demand; untrusted source needs an isolated runtime approved by the threat model. |
+
+### 23.2 Existing dependencies are not automatically all Labs dependencies
+
+- The package manifest contains Three.js. Load it only for an experiment that needs 3D and only in that experiment's runtime chunk.
+- The package manifest contains Nodemailer for the existing contact route. This does not select Nodemailer as the authentication/verification/reset email provider.
+- The package manifest does not list TanStack Query, React Hook Form, @reduxjs/toolkit or a Monaco editor as direct dependencies.
+- Do not add a dependency to support an illustrative folder or hook name. First establish an actual behavior that requires it, compare the existing stack, update package.json and package-lock.json together, and record the approval.
+- If TanStack Query is later adopted, use it only for client-side server-state interactions that benefit from cache/mutation semantics. Do not mirror every Server Component read into a client query cache.
+- Authentication provider, validation library, email provider and code-editor library remain open where not explicitly selected by the product/architecture documents.
+
+### 23.3 Environment variables and server-only configuration
+
+The existing code uses these server-side environment variable names:
+
+- MongoDB: MONGODB_URI, MONGODB_DB_NAME.
+- Cloudinary: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET.
+
+Only names may appear in documentation. Never include real secret values, a full MongoDB URI, Cloudinary secret, OAuth secret or session secret. Never add NEXT_PUBLIC_ prefixes to credentials.
+
+Authentication/email/session variable names are not finalized. Do not invent names such as AUTH_SECRET, GOOGLE_CLIENT_SECRET or SMTP credentials until the selected provider and integration require them.
+
+---
+
+## 24. Proposed Labs Folder Structure — Adapted to This Repository
+
+**Status:** Proposed target structure only. These folders/files do not all exist. Create only the paths needed by an approved implementation phase.
+
+The following proposal uses the current src/app convention and keeps public routes, feature UI, client hooks, server-only data access and experiment runtimes separated.
+
+    src/
+      app/
+        labs/
+          page.js                         # Public Labs listing Server Component
+          [slug]/
+            page.js                       # One published experiment detail Server Component
+            loading.js                    # Optional route loading UI if required
+            error.js                      # Optional route error boundary if required
+        api/
+          labs/
+            route.js                      # Only if a stable HTTP collection API is required
+            [slug]/
+              route.js                    # Only if a stable HTTP detail API is required
+              source/
+                route.js                  # Protected source endpoint; exact contract OPEN
+              events/
+                route.js                  # Only after event contract/abuse policy is approved
+        components/
+          labs/
+            landing/
+              LabsLandingContent.js
+              LabsIntroduction.js
+              FeaturedExperiment.js
+              LabCategoryNavigation.js
+              LabGallery.js
+              LabCard.js
+              LabGalleryStatus.js
+            detail/
+              LabDetailHeader.js
+              LabWorkspace.js
+              LabCanvas.js
+              LabControlsPanel.js
+              LabCanvasActions.js
+              LabExplanation.js
+              LabSourceAccess.js
+              LabAccessDenied.js
+              LabRelatedExperiments.js
+            source/
+              ProtectedSourceViewer.js
+              SourceViewerLoading.js
+            runtime/
+              LabRuntimeBoundary.js
+              registry.js
+              experiments/
+                <experiment-slug>/
+                  index.js
+                  settings.js
+          auth/
+            AuthPageShell.js
+            AuthPanel.js
+            AuthHeading.js
+            AuthField.js
+            PasswordField.js
+            AuthPrimaryButton.js
+            AuthInlineError.js
+            AuthAlert.js
+            AuthConfirmation.js
+            AccountMenu.js
+        hooks/
+          labs/
+            useLabCategoryFilter.js
+            useLabLoadMore.js
+            useLabDemoSettings.js
+            useLabFullscreen.js
+            useLabSessionSync.js
+        lib/
+          labs/
+            shared/
+              categories.js
+              constants.js
+              formatters.js
+            server/
+              models/
+              repositories/
+              services/
+              policies/
+              schemas/
+              dto/
+            runtime/
+              registry.js
+        providers/
+          # No new global provider by default.
+          # Add a route/feature-scoped provider only for an approved need.
+
+Authentication route paths are still OPEN. When they are finalized, use an App Router route group if it helps share the authentication layout, but remember that the current root layout renders the public Footer globally. Do not assume a nested layout removes it. Any proposed auth route tree is illustrative until route names and the layout boundary are approved.
+
+Folder rules:
+
+1. Keep app route files small. They resolve route params, load safe server data, generate metadata and compose page components.
+2. Keep Labs presentation in components/labs; do not place Lab UI inside portfolio project-detail components.
+3. Keep Labs-only hooks in hooks/labs. Reuse existing shared hooks only where their behavior is appropriate.
+4. Keep all MongoDB models/repositories/services/policies and Cloudinary administrative operations server-only.
+5. Put only browser-safe formatting/constants in labs/shared. Never import server-only modules through a shared barrel file.
+6. Keep experiment runtimes code-owned and selected through an explicit registry. The database may store validated configuration and media references, not arbitrary executable React/JavaScript source to evaluate in the main app.
+7. Load only the selected experiment's runtime. The listing must not import every runtime.
+8. The source viewer/editor is a separate lazy boundary and is loaded only after server-side authorization succeeds.
+9. Add Route Handlers only where an HTTP API is needed. Same-app mutations may use Server Actions if appropriate and documented; do not create duplicate endpoints.
+10. Do not create admin/CMS folders as part of Labs implementation. CMS remains deferred until Labs is complete.
+
+---
+
+## 25. Labs Component Architecture and Responsibilities
+
+Component names below are proposed names to clarify responsibilities. They are not a mandate to create one file for every bullet. Group or split components based on actual complexity while preserving the ownership boundaries.
+
+### 25.1 Listing route
+
+Server route composition:
+- Load published public Lab metadata only.
+- Select the featured experiment from approved public metadata.
+- Generate page metadata/canonical metadata from published records.
+- Pass only safe display DTOs to Client Components.
+- Do not query or serialize source code, private demo configuration, unpublished drafts or private access policy internals.
+
+Presentation components:
+- LabsLandingContent: page-level section composition.
+- LabsIntroduction: editorial intro; final heading/body copy remain open.
+- FeaturedExperiment: 40:60 desktop layout, approved content hierarchy and static preview.
+- LabCategoryNavigation: All plus the four approved categories; text tabs with persistent active underline.
+- LabGallery: uniform responsive grid and active-filter results.
+- LabCard: one semantic link per experiment, no nested interactive controls.
+- LabGalleryStatus: count, loading, empty, no-results, error and Load More feedback.
+
+The listing renders static optimized image/poster previews. It does not initialize live demo runtimes, Monaco or source code.
+
+### 25.2 Experiment detail route
+
+Server route composition:
+- Resolve the slug and published experiment record.
+- Return notFound for missing/unpublished public records according to the final publishing contract.
+- Generate metadata from public fields only.
+- Compose a client workspace boundary only where the selected experiment requires interaction.
+- Do not load source data into the initial public page payload.
+
+Presentation components:
+- LabDetailHeader: category, title, short description and inline technologies.
+- LabWorkspace: 70:30 demo/control arrangement where controls exist.
+- LabCanvas: contained experiment-specific canvas with the approved responsive ratio.
+- LabControlsPanel: settings controls only when the experiment has meaningful settings.
+- LabCanvasActions: Restart/Fullscreen only when supported; no duplicated Reset action.
+- LabExplanation: one short paragraph, not a long technical article.
+- LabSourceAccess: compact bordered sign-in/create-account prompt.
+- LabAccessDenied: dedicated permission-denied state without source data.
+- LabRelatedExperiments: only after related-experiment matching/layout is finalized.
+
+### 25.3 Runtime boundary
+
+- A code-owned experiment registry maps an approved slug to a lazy loader.
+- The registry must not eagerly import all experiments into the listing.
+- Only the selected experiment runtime is imported on its detail page.
+- The experiment receives only its validated public configuration and the controls defined for that experiment.
+- Settings state belongs to the selected experiment workspace, not a global Labs store.
+- Restart restarts the runtime/animation while preserving settings.
+- Reset restores the experiment's approved default settings; it is not the same as Restart.
+- A public code-owned demo can be available to guests.
+- Never eval database source or render untrusted source as a React component in the main portfolio runtime.
+- If an untrusted/admin-managed interactive preview is required, stop at the runtime boundary until the isolated execution provider, origin, CSP, network policy, dependency allowlist and resource limits are approved and tested.
+
+### 25.4 Protected source viewer
+
+- LabSourceAccess is a navigation prompt, not the security boundary.
+- A server Route Handler/Server Action/use case authenticates and separately authorizes the source request.
+- Only after authorization may the server return the source DTO.
+- ProtectedSourceViewer receives source only after authorization succeeds.
+- Dynamically import the selected editor package only when the authorized source viewer is opened.
+- Do not preload the editor, source or editor language bundles on the listing, homepage or public demo.
+- No unauthorized response may include source, code metadata that reconstructs it, or a reusable public asset URL.
+- Exact source-file navigation, copy/download controls and editor UI remain OPEN until designed.
+
+---
+
+## 26. Labs Hooks — Responsibilities and Limits
+
+Hooks are client-only orchestration helpers. They do not become the location for database access, authorization, API contracts or domain business rules.
+
+### 26.1 Existing hooks to reuse
+
+- useReducedMotion: reuse the existing MotionContext-backed reduced-motion preference.
+- useBreakpoint: reuse only where JavaScript behavior truly needs a breakpoint. Prefer Tailwind responsive utilities for visual layout and aspect-ratio changes.
+- useThemeToggle / existing theme utilities: reuse the current next-themes system. Do not create a separate Labs theme toggle implementation.
+- useDownload: do not use for source download unless a secure, authorized download flow is explicitly approved.
+- useUiSound: optional existing global utility; do not add sound effects to Labs without a product decision.
+
+### 26.2 Proposed Labs-specific hooks
+
+| Hook | Responsibility | State scope |
+|---|---|---|
+| useLabCategoryFilter | Track active category and reset the visible count when category changes. | Labs listing page only |
+| useLabLoadMore | Append the next six matching records and expose visible/total counts. | Labs listing page only |
+| useLabDemoSettings | Own one experiment's current settings and restore its explicit defaults. | One experiment runtime only |
+| useLabFullscreen | Manage supported Fullscreen API entry/exit and cleanup. | One experiment workspace only |
+| useLabSessionSync | Listen for cross-tab session-change notifications and revalidate with the server. | Authenticated shell only, after session architecture is selected |
+
+Do not create every proposed hook pre-emptively. A hook is warranted when it encapsulates reused or non-trivial client behavior; simple one-component state should remain close to that component.
+
+### 26.3 Query hooks, if TanStack Query is adopted later
+
+Potential query/mutation hooks include:
+- useLabsListQuery for client-interactive search/filter/pagination where server-rendered data alone is insufficient.
+- useLabDetailQuery only if the detail interaction requires client refetching.
+- useLabLikeMutation only after like behavior and API contracts are approved.
+- useLabSourceQuery only after auth/authorization, no-store behavior and cache isolation are designed. Source must never enter a public/shared cache.
+
+These are examples, not approved hook names or an instruction to install TanStack Query. Server Components remain the default for initial listing/detail reads.
+
+---
+
+## 27. State Ownership and Management Strategy
+
+Do not put all Labs state into one global store. State must be kept at the narrowest owner that can correctly control it.
+
+### 27.1 Server-authoritative state
+
+Owned by server services/repositories and MongoDB when the relevant schema/use case is approved:
+- Published Lab metadata and publication state.
+- Featured/category/tag/technology metadata.
+- Validated experiment configuration and media references.
+- User account and email-verification status.
+- Authentication session and server-derived actor.
+- Source-access authorization decisions.
+- Full source records or repository-backed source references.
+- Likes, analytics events and user activity only after their PRD schemas/policies are finalized.
+
+The browser cannot authoritatively change role, publication state, user identity, source permission or server counts.
+
+### 27.2 Server-rendered page data
+
+- Listing and detail pages should load safe public data on the server where practical.
+- Pass only public, render-required DTOs to client components.
+- Keep full source, draft records, private settings and access-control internals out of serialized props and RSC payloads.
+- Use explicit cache policies: public published metadata may be revalidated; user-specific/source responses must be private/no-store as required.
+- Cache invalidation and TanStack Query invalidation are separate responsibilities.
+
+### 27.3 Local client UI state
+
+Keep these states local to the page/component that owns them:
+
+- Active category.
+- Number of visible listing items.
+- Open/closed account dropdown.
+- Password visibility.
+- Form values, touched fields, validation errors and submission status.
+- One experiment's current settings.
+- Restart/playing/paused/interaction state for one experiment.
+- Fullscreen UI state.
+- Local copy-feedback and transient status messages.
+
+Do not persist transient state in MongoDB or a global store unless a later product requirement explicitly makes it durable.
+
+### 27.4 Authentication/session state
+
+- The server session/provider is authoritative.
+- Client components may receive a sanitized account/session view needed to render the account menu or protected UI.
+- Never store passwords, verification tokens, reset tokens, OAuth tokens or privileged session credentials in Redux, React Context, localStorage or sessionStorage.
+- Hiding a source button or source viewer on the client is not authorization.
+- Every protected request must re-check server session and resource authorization.
+- Cross-tab messages are notifications only. Other tabs must revalidate against the server before allowing protected actions.
+- Clear stale account-specific caches and protected content on logout, session expiry or password-reset revocation.
+
+### 27.5 Global application state
+
+The current branch's store files are not proven to be an active global state system: the package manifest/lockfile do not declare @reduxjs/toolkit, and AppProviders does not mount a Redux Provider. Do not treat Redux Toolkit as an approved Labs dependency or add a Labs slice without first resolving that repository inconsistency.
+
+Current Labs decisions do not require a new global store. Prefer local React state for the listing and experiment workspace. Revisit global state only when a verified cross-route requirement cannot be handled by server state, route state or local component state.
+
+### 27.6 URL state
+
+- The All/category filter and initial six-item view are locked.
+- Whether active category/search/sort/filter state must be represented in search parameters and restored by browser back/forward is OPEN.
+- Do not invent query parameter names or silently make filters shareable/bookmarkable.
+- If URL state is later approved, define normalization, defaults and cache keys together.
+
+---
+
+## 28. Route, Data and Implementation Flow
+
+### 28.1 Public listing
+
+1. Visitor requests /labs.
+2. Server page loads published public Lab metadata.
+3. Server selects only fields needed for the featured section, category navigation and first gallery page.
+4. The response excludes source, draft/private fields and privileged runtime details.
+5. Client listing controls manage category selection and visible-count progression.
+6. Static media loads responsively; no runtime/editor is initialized.
+
+### 28.2 Public experiment detail
+
+1. Visitor requests /labs/[slug].
+2. Server resolves the slug against published public content.
+3. Server renders public metadata and SEO.
+4. Only the selected code-owned public demo runtime is dynamically loaded when the workspace needs it.
+5. Per-experiment settings remain local to the workspace.
+6. Public demo functionality does not require a user account unless the specific preview is explicitly classified as restricted and its security/auth policy is approved.
+
+### 28.3 Protected source request
+
+1. Visitor selects Sign in to view source or Create an account.
+2. Preserve a validated local return path to the current experiment/source destination.
+3. Complete email/password or Google sign-in; registration follows the generic confirmation and verification UX already locked in this document.
+4. On successful Login, return to the preserved local destination.
+5. Server verifies the session.
+6. Server separately checks the experiment's source authorization policy.
+7. Only an authorized response returns full source with private/no-store semantics.
+8. Only then load the source viewer/editor package.
+9. Unauthorized users see Access not available and receive no source payload.
+
+### 28.4 Backend operation
+
+Use the Next.js-native request flow defined in docs/ARCHITECTURE.md:
+- Route Handler or Server Action as the transport boundary.
+- Server-derived actor/session.
+- Validation at the boundary.
+- Domain service/use case for behavior and authorization invariants.
+- Repository for Mongoose/MongoDB.
+- Safe DTO/result returned to the UI.
+
+Do not create Express controllers or a separate Express deployment unless an approved architecture decision changes the current default.
+
+### 28.5 Implementation sequence
+
+Recommended vertical slices after explicit implementation authorization:
+
+1. Repository/baseline recheck: branch head, package files, route tree, layout/footer, providers, tests and current deploy status.
+2. Resolve blockers: auth provider/session (including required Google sign-in), route names, source authorization policy, exact password policy, email delivery, public-vs-restricted preview classification, and API/cache contracts.
+3. Implement public Labs listing with safe published metadata and static thumbnails; verify the current portfolio does not load Labs-only code.
+4. Implement one experiment detail route and one code-owned demo runtime; verify mobile/desktop canvas, controls, restart/fullscreen/reset and reduced motion.
+5. Implement the validated Lab repository/service/DTO layer and any needed Next.js Route Handlers/Server Actions. Do not finalize schema fields from illustrative examples.
+6. Implement the authentication screens with the selected provider, including email/password and Google, using the approved layout and states.
+7. Implement protected source flow and authorization; add an editor only after a package is selected and the server boundary is verified.
+8. Add likes, analytics, user dashboard or other PRD capabilities only with their approved schemas, UI decisions, privacy policy and contracts.
+9. Run focused, security, responsive, accessibility, performance and portfolio-regression checks. Record evidence; do not claim unrun tests.
+10. Complete Labs before opening CMS/Admin implementation.
+
+---
+
+## 29. Cross-Document Alignment and Conflict Register
+
+The repository contains older broader platform requirements that remain relevant but are not all covered by this page-level UX design.
+
+1. **Public route naming:** PRD/DESIGN-LAB examples include singular /lab. This document locks /labs for the Labs listing and /labs/[slug] for detail. Update route references in dependent docs before implementation; do not ship duplicate route aliases by assumption.
+2. **Backend:** any older Express-oriented architecture wording is superseded by docs/ARCHITECTURE.md and docs/README.md. Next.js-native server modules, Route Handlers and Server Actions are the default. Express remains conditional and requires explicit approval.
+3. **Authentication:** Email/password and Google sign-in are required by PRD. This document defines the email/password UX in detail; Google button presentation and provider integration still need a decision. GitHub is not selected.
+4. **Guest demos vs restricted previews:** this document allows guests to use explicitly public demos. It does not authorize untrusted code execution in the main application. The threat model and isolation architecture still gate admin-authored/untrusted interactive previews.
+5. **Partial source:** PRD/DESIGN-LAB describe permitted guest partial-source snippets. No exact partial-source content/UI was approved in this design discussion. Until specified, expose no source snippet to guests; keep full source protected.
+6. **Search/sort/likes/analytics/dashboard:** PRD/DESIGN-LAB describe broader search fields, filtering/sort options, likes, user activity and analytics. The current landing-page UX locks the category navigation and six-item Load More interaction, but does not define every broader filter/sort control or engagement widget. These product requirements are not silently cancelled; their detailed UI, URL state, API and privacy contracts remain OPEN.
+7. **Related experiments:** the section is in the detail-page order, but exact matching, number, layout and empty-state behavior remain OPEN.
+8. **Authentication route layout:** current root layout renders the portfolio Footer globally. A separate auth footer/layout requires a deliberate route/layout boundary. Do not assume route groups alone remove the root Footer.
+9. **State tooling:** TanStack Query is conditionally approved but not a direct dependency in the inspected package manifest. The current Redux store files import a package absent from the manifest and are not mounted by AppProviders. Neither is an established Labs state layer today.
+10. **Source editor:** Monaco is not installed, and editor UI/package choices remain OPEN. Its loading boundary must remain after server authorization.
+11. **Documentation precedence:** PRD owns product capabilities; ARCHITECTURE owns server boundaries; API-CONTRACTS owns API contracts; PROJECT-STRUCTURE owns generic module conventions; this document owns detailed Labs/auth UX. Where page appearance or interaction details conflict with older DESIGN-LAB examples, this newer approved UX baseline controls. Where a feature requirement is not addressed here, PRD/DESIGN-LAB continue to apply.
+
+Before feature coding, update any dependent PRD/API/README wording that still uses obsolete route or preview assumptions. Do not silently leave conflicting paths in examples.
+
+---
+
+## 30. Final Agent Instructions
+
+- Treat Sections 0–21 as the approved Labs/authentication UX baseline, Sections 22–29 as repository-aligned technical guidance and explicit conflict resolution.
+- Treat every proposed file/folder/component/hook name in Sections 24–26 as a module-boundary proposal, not an existing file or an instruction to create empty scaffolding.
+- Inspect the current branch head before implementation. The repository tree may change after this snapshot.
+- Follow docs/ARCHITECTURE.md and docs/API-CONTRACTS.md for technical/security/API decisions.
+- Use Next.js App Router, JavaScript, Tailwind CSS v4, Motion, current theme/provider conventions, MongoDB/Mongoose and Cloudinary as already established.
+- Do not create a separate Express server by default.
+- Do not assume TanStack Query, Redux Toolkit, React Hook Form, Monaco or another package is installed because it is mentioned in a proposal.
+- Keep server state, local UI state, experiment runtime state and authentication state separate.
+- Do not execute untrusted source in the main application runtime.
+- Do not place secrets or source code in public bundles, local storage, global state or public caches.
+- Do not modify unrelated portfolio routes/components or move the current application tree just to match a proposed diagram.
+- CMS/Admin remains deferred until Labs is complete.
+- Do not begin implementation unless the user explicitly authorizes it.

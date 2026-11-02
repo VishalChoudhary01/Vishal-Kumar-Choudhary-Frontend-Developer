@@ -10,8 +10,9 @@ This documentation defines the proposed portfolio platform extension. It is not 
 2. `IMPLEMENTATION-PLAN.md` — phases, dependencies, verification gates, definition of done.
 3. `DESIGN-ADMIN.md` — admin and portfolio CMS experience.
 4. `DESIGN-ANALYTICS.md` — analytics dashboard, event definitions, interpretation.
-5. `DESIGN-LAB.md` — public Lab, experiment details, previews and source access.
-6. Existing project-level source-of-truth documents and current implementation — authoritative for current behavior and technical conventions. Inspect before changing code.
+5. LABS-AND-AUTHENTICATION-DESIGN-SPEC.md — detailed Labs page/auth UX and repository-aligned implementation guide. This is the detailed UX authority for the public Labs route and authentication screen decisions.
+6. DESIGN-LAB.md — broader Lab product capabilities (search, sorting, likes, source/preview policy, engagement and publishing). Apply unless a detailed page UX decision in LABS-AND-AUTHENTICATION-DESIGN-SPEC.md explicitly supersedes it.
+7. Existing project-level source-of-truth documents and current implementation — authoritative for current behavior and technical conventions. Inspect before changing code.
 
 ## Locked baseline
 - Preserve the current public portfolio home page, project detail pages, education section, design, responsive behavior, animation, SEO, accessibility, and functionality.
@@ -19,7 +20,7 @@ This documentation defines the proposed portfolio platform extension. It is not 
 - Education content remains static in code. Layout, design system, typography, animation and interactions remain code-controlled.
 - Next.js App Router, JavaScript, Tailwind CSS v4, Motion (`motion/react`), MongoDB, Cloudinary and Vercel are the chosen baseline technologies.
 - Email/password and Google sign-in are required. The authentication provider/session implementation remains unselected.
-- Guests can browse published Lab entries and static previews. Full source and interactive previews require authentication and server-side authorization.
+- Guests can browse published Lab entries and interact with demos explicitly designated public. Full source remains protected; restricted/untrusted interactive previews require the approved authentication/isolation policy.
 - Admin has portfolio CMS, Lab management, analytics, media library, drafts/publishing, scheduled publication, and immutable content-version history.
 - Cloudinary-backed advanced media library with usage tracking and reference-safe replacement/deletion.
 - Never execute untrusted experiment code inside the main application runtime. The secure isolation mechanism and hosting remain architecture decisions.
@@ -31,6 +32,8 @@ This documentation defines the proposed portfolio platform extension. It is not 
 - [Admin design](./DESIGN-ADMIN.md)
 - [Analytics design](./DESIGN-ANALYTICS.md)
 - [Lab design](./DESIGN-LAB.md)
+
+- [Labs and authentication UX + implementation guide](./LABS-AND-AUTHENTICATION-DESIGN-SPEC.md) — detailed Labs page design, auth flows, current stack/repository baseline, proposed components/hooks/state ownership and feature implementation guidance.
 - [Database and media setup plan](./DATABASE-AND-MEDIA-SETUP-PLAN.md) — MongoDB Atlas, Mongoose, Cloudinary, environment variables, security, testing and deployment setup.
 
 ## Change control
@@ -44,7 +47,7 @@ A new requirement must be added to the PRD, with affected design/implementation 
 
 ## Stack decisions and implementation boundaries
 - Frontend remains Next.js App Router + JavaScript + Tailwind CSS v4 + Motion (motion/react).
-- TanStack Query (React Query) is approved for client-side server state when interactive caching, mutation lifecycle, invalidation or polling is useful; it does not replace server components or server-side authorization.
+- TanStack Query (React Query) is approved conditionally for client-side server state when useful; it is not installed in the inspected package manifest and must not be assumed. It does not replace Server Components or server-side authorization.
 - Initial backend decision: use Next.js server-side modules, Route Handlers and Server Actions where appropriate; **do not add a separate Express server by default**. Express remains an open option only if a validated deployment/runtime boundary requires a separate API service or worker.
 - MongoDB is the application database; Cloudinary stores media assets. Exact provider/session, scheduling and isolated execution infrastructure remain open.
 - Architecture documents define intended boundaries, not verified facts about the current repository. Phase 0 must inspect and adapt the proposed tree to actual conventions.
