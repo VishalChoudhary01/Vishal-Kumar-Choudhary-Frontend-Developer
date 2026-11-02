@@ -482,7 +482,7 @@ export default function PortfolioMascot() {
         const headLookWorldPosition = new THREE.Vector3();
         // Hand-local point at the extended right index fingertip. The fingertip
         // sits at +Y and its front surface faces +Z in the hand's local space.
-        const laserHandLocalPosition = new THREE.Vector3(0.13, 0.106, 0.112);
+        const laserHandLocalPosition = new THREE.Vector3(0.13, 0.106, 0.12);
         // Expressive brow plates make curiosity, surprise, and cheekiness readable at a glance.
         browLeft = makeMesh(new THREE.CapsuleGeometry(0.5, 0.12, 4, 10), orange, head, [-0.25, 0.235, 0.675], [0.055, 0.16, 0.035]);
         browRight = makeMesh(new THREE.CapsuleGeometry(0.5, 0.12, 4, 10), orange, head, [0.25, 0.235, 0.675], [0.055, 0.16, 0.035]);
@@ -626,7 +626,7 @@ export default function PortfolioMascot() {
               ? idleLook + pointerX * 0.12
               : targetFacingX * 0.48 + pointerX * 0.22 + pose.head;
           const facePitch = scanLook
-            ? clamp(-scanLookY * 0.22, -0.25, 0.25)
+            ? clamp(scanLookY * 0.22, -0.25, 0.25)
             : idlePlay
               ? Math.sin(seconds * 1.7) * 0.08 - pointerY * 0.08
               : -targetFacingY * 0.2 - pointerY * 0.16;
@@ -669,7 +669,11 @@ export default function PortfolioMascot() {
           );
           // Rotate palms to communicate each section's gesture, not just move the whole arm.
           leftHand.rotation.y = smooth(leftHand.rotation.y, gesture.leftPalm + (greeting || reactingNow ? -0.12 : 0), 0.1);
-          rightHand.rotation.y = smooth(rightHand.rotation.y, gesture.rightPalm + (greeting || reactingNow ? 0.12 : 0), 0.1);
+          rightHand.rotation.y = smooth(
+            rightHand.rotation.y,
+            scanAim ? 0 : gesture.rightPalm + (greeting || reactingNow ? 0.12 : 0),
+            scanAim ? 0.14 : 0.1,
+          );
           // Randomized facial acting: eye shape/spacing, brow angle, smile stretch, and a tiny head tilt.
           const faceExpression = expressionActive ? activeExpression : (idlePlay ? "curious" : "happy");
           const surprised = faceExpression === "surprised";
