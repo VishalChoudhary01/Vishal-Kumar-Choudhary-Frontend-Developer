@@ -1,12 +1,12 @@
 import { projects } from "./data/projectsSeo";
+import { publishedLabExperiments } from "./data/labsExperiments";
 import { buildSiteUrl } from "./lib/seo/urls";
 
 /*
- * SITEMAP — generated from canonical project data (spec §21).
+ * SITEMAP — generated from canonical public portfolio and Labs data.
  *
- * Lives in src/app (this project's App Router root).
- * URLs come from the shared URL layer so no localhost or
- * example.com can ever leak into production output.
+ * Only published Labs records belong here. Private drafts, source URLs and
+ * preview/internal routes must never be added to the public sitemap.
  */
 export default function sitemap() {
   const base = buildSiteUrl();
@@ -28,7 +28,6 @@ export default function sitemap() {
 
   for (const project of projects) {
     const slug = project?.slug;
-
     if (!slug) continue;
 
     urls.push({
@@ -39,6 +38,21 @@ export default function sitemap() {
           : undefined,
       changeFrequency: "monthly",
       priority: 0.8,
+    });
+  }
+
+  for (const experiment of publishedLabExperiments) {
+    const slug = experiment?.slug;
+    if (!slug) continue;
+
+    urls.push({
+      url: `${base}/labs/${encodeURIComponent(slug)}`,
+      lastModified:
+        experiment.updatedAt && experiment.updatedAt !== ""
+          ? new Date(experiment.updatedAt)
+          : undefined,
+      changeFrequency: "monthly",
+      priority: 0.65,
     });
   }
 
