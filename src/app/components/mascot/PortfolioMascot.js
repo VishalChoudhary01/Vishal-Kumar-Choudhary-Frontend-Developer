@@ -703,8 +703,25 @@ export default function PortfolioMascot() {
     scanTimerRef.current.forEach((timer) => window.clearTimeout(timer));
     scanTimerRef.current = [];
     const rawSectionId = activeSectionRef.current;
-    const sectionNode = document.getElementById(rawSectionId);
+    const footerNode = document.getElementById("footer");
+    const footerTarget = footerNode?.querySelector('[data-mascot-scan-target="footer-building"]');
+    const footerRect = footerNode?.getBoundingClientRect();
+    const footerTargetRect = footerTarget?.getBoundingClientRect();
+    const footerIsActive = Boolean(
+      (footerActiveRef.current || (footerRect && footerRect.top < window.innerHeight * 0.22 && footerRect.bottom > 80)) &&
+      footerTargetRect &&
+      footerTargetRect.width > 0 &&
+      footerTargetRect.height > 0 &&
+      footerTargetRect.bottom > 0 &&
+      footerTargetRect.top < window.innerHeight &&
+      footerTargetRect.right > 0 &&
+      footerTargetRect.left < window.innerWidth &&
+      footerRect &&
+      footerRect.bottom > 80
+    );
+    const sectionNode = document.getElementById(rawSectionId) || (footerIsActive ? footerNode : null);
     if (!sectionNode) return;
+
     // Some portfolio sections use singular/custom IDs (for example "skill") while
     // the mascot's section model uses "skills". Resolve the visual section from
     // its ID and visible content so the scan does not silently fall back to generic targets.
@@ -809,8 +826,18 @@ export default function PortfolioMascot() {
       });
     }
     const cycleIndex = scanCycleRef.current[cycleKey] || 0;
-    const target = orderedCandidates.length ? orderedCandidates[cycleIndex % orderedCandidates.length] : null;
-    if (orderedCandidates.length > 1) scanCycleRef.current[cycleKey] = cycleIndex + 1;
+    const sectionTarget = orderedCandidates.length ? orderedCandidates[cycleIndex % orderedCandidates.length] : null;
+    const footerScanRect = footerTarget?.getBoundingClientRect();
+    const target = footerIsActive && footerTarget && footerScanRect
+      ? {
+          node: footerTarget,
+          x: footerScanRect.left + footerScanRect.width / 2,
+          y: footerScanRect.top + footerScanRect.height / 2,
+        }
+      : sectionTarget;
+    if (!footerIsActive && orderedCandidates.length > 1) {
+      scanCycleRef.current[cycleKey] = cycleIndex + 1;
+    }
     if (!target) {
       setReacting(true);
       scanTimerRef.current.push(window.setTimeout(() => setReacting(false), 500));
@@ -836,8 +863,12 @@ export default function PortfolioMascot() {
           Number.parseFloat(targetStyle.webkitTextStrokeWidth) > 0 &&
           (targetStyle.webkitTextFillColor === "rgba(0, 0, 0, 0)" || targetStyle.webkitTextFillColor === "transparent");
 
-        if (hasOutlinedText) {
-          // Fill outlined display text briefly; replay its existing hover animation when available.
+        if (target.node.matches('[data-mascot-scan-target="footer-building"]')) {
+          // The footer component owns its teal fill state so scan and hover
+          // share one animation without the generic orange text flash.
+          target.node.dispatchEvent(new Event("vee-footer-scan-hit"));
+        } else if (hasOutlinedText) {
+          // Fill other outlined display text using the existing scan reaction.
           const hoverAnimation = target.node.getAnimations().find((animation) => animation.playState === "running");
           if (hoverAnimation) hoverAnimation.cancel();
           target.node.dispatchEvent(new Event("vee-scan-start"));
