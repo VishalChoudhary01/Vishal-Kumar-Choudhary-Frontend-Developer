@@ -325,7 +325,7 @@ export const SCROLL_PRESETS = {
    * entrance, and 3D-depth animations keep their own graphs.
    */
   softDepth: {
-    scale: [0.82, 1],
+    scale: [0.72, 1],
   },
 
   /**
