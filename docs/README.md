@@ -1,7 +1,7 @@
 # Portfolio Platform — Documentation Index
 
-**Status:** Requirements baseline; implementation not started.  
-**Branch:** `docs/portfolio-platform-spec`
+**Status:** Requirements baseline; Labs/auth implementation in progress; CMS/Admin implementation deferred.  
+**Branch:** `feat/labs-public-page` (current Labs implementation branch)
 
 This documentation defines the proposed portfolio platform extension. It is not proof that any feature has been implemented or that infrastructure decisions have been validated against the current repository.
 
@@ -19,7 +19,7 @@ This documentation defines the proposed portfolio platform extension. It is not 
 - Dynamic CMS-managed content: hero/introduction, about, skills, experience, projects, project details, media/gallery metadata, project links, featured and publication state.
 - Education content remains static in code. Layout, design system, typography, animation and interactions remain code-controlled.
 - Next.js App Router, JavaScript, Tailwind CSS v4, Motion (`motion/react`), MongoDB, Cloudinary and Vercel are the chosen baseline technologies.
-- Email/password and Google sign-in are required. The authentication provider/session implementation remains unselected.
+- Email/password and Google sign-in are required. Better Auth with the MongoDB adapter is the selected Labs authentication foundation. Google OAuth credentials, SMTP delivery configuration, legal-document URLs/versions and the final session-lifetime policy remain deployment/release requirements.
 - Guests can browse published Lab entries and interact with demos explicitly designated public. Full source remains protected; restricted/untrusted interactive previews require the approved authentication/isolation policy.
 - Admin has portfolio CMS, Lab management, analytics, media library, drafts/publishing, scheduled publication, and immutable content-version history.
 - Cloudinary-backed advanced media library with usage tracking and reference-safe replacement/deletion.
@@ -49,5 +49,14 @@ A new requirement must be added to the PRD, with affected design/implementation 
 - Frontend remains Next.js App Router + JavaScript + Tailwind CSS v4 + Motion (motion/react).
 - TanStack Query (React Query) is approved conditionally for client-side server state when useful; it is not installed in the inspected package manifest and must not be assumed. It does not replace Server Components or server-side authorization.
 - Initial backend decision: use Next.js server-side modules, Route Handlers and Server Actions where appropriate; **do not add a separate Express server by default**. Express remains an open option only if a validated deployment/runtime boundary requires a separate API service or worker.
-- MongoDB is the application database; Cloudinary stores media assets. Exact provider/session, scheduling and isolated execution infrastructure remain open.
+- MongoDB is the application database; Cloudinary stores media assets. Better Auth with the MongoDB adapter is selected for Labs. Session-lifetime policy, SMTP vendor/operations, scheduling and isolated execution infrastructure remain open.
 - Architecture documents define intended boundaries, not verified facts about the current repository. Phase 0 must inspect and adapt the proposed tree to actual conventions.
+
+
+## Current Labs implementation status
+
+The `feat/labs-public-page` branch contains the Labs listing/detail implementation and the initial Better Auth + MongoDB adapter authentication and protected-source foundation. See:
+- [Labs and authentication UX/implementation baseline](./LABS-AND-AUTHENTICATION-DESIGN-SPEC.md), especially Section 36.
+- [Labs authentication and protected-source setup/provisioning runbook](./LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md).
+
+CMS/Admin remains deferred until Labs is complete. Existing public portfolio routes and demos must remain usable when authentication configuration is absent.

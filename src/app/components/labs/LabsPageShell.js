@@ -14,7 +14,7 @@ export default function LabsPageShell({ children }) {
         className="min-h-screen bg-background text-text-primary"
         style={{ visibility: heroReady ? "visible" : "hidden" }}
       >
-        <Navbar context="project" />
+        <Navbar context="project" showLabsAccount />
         {children}
       </div>
     </>

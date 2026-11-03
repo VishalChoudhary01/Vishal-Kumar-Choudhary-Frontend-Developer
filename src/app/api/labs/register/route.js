@@ -1,0 +1,140 @@
+import { NextResponse } from "next/server";
+
+import {
+  auth,
+  isAuthDeliveryConfigured,
+  isAuthRuntimeConfigured,
+  isLegalConsentConfigured,
+} from "@/app/lib/auth/auth";
+import { consumeRegistrationAttempt } from "@/app/lib/auth/registration-rate-limit";
+import { getSafeReturnTo } from "@/app/lib/auth/return-to";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+const GENERIC_RESPONSE = {
+  ok: true,
+  message:
+    "If an account can be created with this address, you'll receive an email with the next steps.",
+};
+
+function json(body, status, extraHeaders = {}) {
+  return NextResponse.json(body, {
+    status,
+    headers: {
+      "Cache-Control": "no-store, private",
+      Vary: "Cookie",
+      ...extraHeaders,
+    },
+  });
+}
+
+function isValidEmail(value) {
+  return typeof value === "string" && value.length <= 254 &&
+    /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value);
+}
+
+function isValidPassword(value) {
+  return typeof value === "string" && value.length >= 8 && value.length <= 128;
+}
+
+export async function POST(request) {
+  if (!isAuthRuntimeConfigured() || !isAuthDeliveryConfigured() || !isLegalConsentConfigured()) {
+    return json(
+      { error: { code: "AUTH_SETUP_REQUIRED", message: "Account registration is not available yet." } },
+      503,
+    );
+  }
+
+  const startedAt = Date.now();
+
+  try {
+    let payload;
+    try {
+      payload = await request.json();
+    } catch {
+      return json(
+        { error: { code: "INVALID_REQUEST", message: "Invalid request body." } },
+        400,
+      );
+    }
+
+    const email = typeof payload?.email === "string"
+      ? payload.email.trim().toLowerCase()
+      : "";
+    const password = payload?.password;
+    const acceptedTerms = payload?.acceptedTerms === true;
+
+    if (!isValidEmail(email) || !isValidPassword(password) || !acceptedTerms) {
+      return json(
+        { error: { code: "VALIDATION_ERROR", message: "Check the form fields and accept both legal documents." } },
+        422,
+      );
+    }
+
+    const termsVersion = process.env.TERMS_OF_SERVICE_VERSION;
+    const privacyVersion = process.env.PRIVACY_POLICY_VERSION;
+    const termsUrl = process.env.NEXT_PUBLIC_TERMS_OF_SERVICE_URL;
+    const privacyUrl = process.env.NEXT_PUBLIC_PRIVACY_POLICY_URL;
+
+    if (
+      !termsVersion || !privacyVersion || !termsUrl || !privacyUrl ||
+      new URL(termsUrl).protocol !== "https:" ||
+      new URL(privacyUrl).protocol !== "https:"
+    ) {
+      return json(
+        { error: { code: "AUTH_SETUP_REQUIRED", message: "Account registration is not available yet." } },
+        503,
+      );
+    }
+
+    const rate = await consumeRegistrationAttempt(request);
+    if (!rate.allowed) {
+      return json(
+        { error: { code: "RATE_LIMITED", message: "Too many attempts. Please try again shortly." } },
+        429,
+        { "Retry-After": String(rate.retryAfterSeconds) },
+      );
+    }
+
+    const siteUrl =
+      process.env.BETTER_AUTH_URL ||
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      new URL(request.url).origin;
+
+    const returnTo = getSafeReturnTo(payload?.returnTo);
+    const verificationCallback = new URL("/labs/verify-email", siteUrl);
+    verificationCallback.searchParams.set("verified", "1");
+    verificationCallback.searchParams.set("returnTo", returnTo);
+
+    try {
+      await auth.api.signUpEmail({
+        headers: request.headers,
+        body: {
+          name: "Labs member",
+          email,
+          password,
+          termsVersion,
+          privacyVersion,
+          consentAcceptedAt: new Date(),
+          callbackURL: verificationCallback.toString(),
+        },
+      });
+    } catch {
+      // Duplicate or other account-specific outcomes remain generic.
+    }
+
+    const remaining = 700 - (Date.now() - startedAt);
+    if (remaining > 0) {
+      await new Promise((resolve) => setTimeout(resolve, remaining));
+    }
+
+    return json(GENERIC_RESPONSE, 202);
+  } catch (error) {
+    console.error("[labs-register] registration request failed:", error?.code || "REGISTRATION_ERROR");
+    return json(
+      { error: { code: "SERVICE_UNAVAILABLE", message: "Unable to create your account right now. Please try again." } },
+      503,
+    );
+  }
+}

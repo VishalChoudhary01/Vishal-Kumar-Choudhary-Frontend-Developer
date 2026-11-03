@@ -43,6 +43,13 @@ export default function Footer() {
        pages, 404, …) while the rest of the footer stays intact. */
     const pathname = usePathname();
     const isHome = pathname === "/";
+    const isLabsAuthRoute = [
+        "/labs/login",
+        "/labs/signup",
+        "/labs/forgot-password",
+        "/labs/reset-password",
+        "/labs/verify-email",
+    ].includes(pathname);
 
     const isInView = useInView(sectionRef, {
         once: true,
@@ -59,6 +66,8 @@ export default function Footer() {
     const revealReady = heroReady && isInView;
 
     const show = reduced || revealReady;
+
+    if (isLabsAuthRoute) return null;
 
     return (
         <footer

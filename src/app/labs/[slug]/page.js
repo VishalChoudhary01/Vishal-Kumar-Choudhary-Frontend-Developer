@@ -4,6 +4,7 @@ import LabsPageShell from "@/app/components/labs/LabsPageShell";
 import LabDetailHeader from "@/app/components/labs/detail/LabDetailHeader";
 import LabWorkspace from "@/app/components/labs/detail/LabWorkspace";
 import LabExplanation from "@/app/components/labs/detail/LabExplanation";
+import LabSourceAccess from "@/app/components/labs/detail/LabSourceAccess";
 import {
   getPublishedLabExperimentBySlug,
   publishedLabExperiments,
@@ -68,6 +69,7 @@ export default async function LabExperimentPage({ params }) {
         <LabDetailHeader experiment={experiment} />
         <LabWorkspace key={experiment.slug} experiment={experiment} />
         <LabExplanation explanation={experiment.explanation} />
+        <LabSourceAccess slug={experiment.slug} />
       </main>
     </LabsPageShell>
   );

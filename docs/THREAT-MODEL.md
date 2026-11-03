@@ -146,7 +146,7 @@ This matrix is a planning contract. Exact distinctions for source/preview access
 ## 8. Open security decisions
 
 These are intentionally unresolved until evidence and explicit review:
-1. Authentication provider and session implementation.
+1. Better Auth is now selected for the Labs authentication provider with the MongoDB adapter; session lifetime/concurrency policy and production configuration validation remain open.
 2. MongoDB hosting/network access/backup/restore controls.
 3. Cloudinary upload constraints and asset deletion/retention rules.
 4. Interactive preview provider and sandbox architecture.
@@ -158,3 +158,17 @@ These are intentionally unresolved until evidence and explicit review:
 ## 9. Current conclusion
 
 The highest-risk feature is untrusted interactive source execution, followed by private-content authorization/cache isolation and admin authentication. These features require explicit security gates. The current document is a threat-model draft, not evidence that the application has implemented or passed these controls. Do not start production implementation of the sandbox, auth, or private CMS until the relevant decisions and tests are approved.
+
+
+## 10. Labs authentication and protected-source implementation status — 2026-11-03
+
+The Labs foundation now uses Better Auth with the MongoDB adapter. Email/password, email verification, password reset, optional Google sign-in, server-side sessions, privacy-safe registration handling, trusted-origin validation, rate limiting and explicit per-experiment source grants are implemented in the application branch.
+
+Remaining release/security gates:
+- Configure production secrets, the trusted proxy IP header, SMTP sender, actual HTTPS Terms/Privacy URLs and version identifiers. Registration remains disabled if required delivery/legal configuration is absent.
+- Configure Google OAuth and verify callback, trusted origin and verified-account linking behavior.
+- Verify session cookies, origin checks, session expiration, tab synchronization and password-reset revocation in the deployed environment.
+- Provision an Atlas source snapshot and a grant, then test the Guest / authenticated-ungranted / authenticated-granted / expired-grant / revoked-grant matrix.
+- Test direct requests, IDOR attempts, malformed source paths, oversized snapshots, no-store headers, and absence of source in anonymous HTML/RSC/public caches.
+- The current repository is public and existing demo runtimes ship client-side code. Protected source snapshots must be kept separate from public runtime code; a protected viewer does not make source code in a public repository or a browser bundle confidential.
+- No build/browser/security test evidence has been produced from this connected GitHub-only editing session. Do not describe the feature as production-certified or mark the security verification gate as passed.

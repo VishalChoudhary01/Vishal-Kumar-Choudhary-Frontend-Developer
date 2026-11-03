@@ -24,16 +24,15 @@ Use appropriate HTTP status semantics: 400 malformed request, 401 unauthenticate
 ## 3. Proposed endpoint inventory
 
 ### Authentication
-Provider-specific routes are OPEN until the auth provider is chosen. Prefer provider-supported handlers over inventing custom token/session endpoints. Required use cases:
-- Registration/email-password sign-in.
-- Google sign-in/callback.
-- Email verification.
-- Password reset request and reset completion.
-- Sign-out/session invalidation.
-- Current user/profile read and profile update.
-- Account deletion with reauthentication/confirmation where appropriate.
+The Labs authentication provider is Better Auth with the MongoDB adapter. Provider-owned handlers are mounted at `/api/auth/[...all]`; do not invent separate password/token/session endpoints. The raw `/sign-up/email` operation is blocked so registration must pass through the consent-aware route. Implemented Labs routes and use cases:
+- `POST /api/labs/register` — validates email/password/required legal consent, applies registration rate limiting, records server-controlled legal versions/timestamp and returns a generic confirmation.
+- Better Auth `POST /api/auth/sign-in/email` — email/password sign-in; email verification is required.
+- Better Auth `POST /api/auth/sign-in/social` — Google sign-in when OAuth credentials are configured.
+- Better Auth provider handlers manage email verification, password reset, sign-out, session and current-session reads.
+- `GET /api/auth/get-session` — current server-backed session used by the Labs account/source UI.
+- Public UI routes: `/labs/login`, `/labs/signup`, `/labs/forgot-password`, `/labs/reset-password`, `/labs/verify-email`.
 
-Do not implement a homemade password/session protocol without an approved security design.
+SMTP delivery, Google OAuth credentials, legal-document URLs/versions and session-lifetime policy remain deployment/release decisions. Do not implement a homemade password/session protocol.
 
 ### Public portfolio content
 Public pages may read published content through server-side page data access without exposing a public JSON endpoint by default.
@@ -71,7 +70,7 @@ These paths are candidate REST endpoints; the same use cases may be Server Actio
 - `GET /api/lab/:slug` — published experiment metadata and guest-safe partial source only.
 - `POST /api/lab/:id/like` — create/activate like under actor-specific policy.
 - `DELETE /api/lab/:id/like` — remove authenticated like; guest behavior must be explicitly defined.
-- `GET /api/lab/:id/source` — authenticated full-source access only; private cache policy.
+- `GET /api/v1/labs/:slug/source` — implemented authenticated full-source read; requires a verified Better Auth session and a separate active per-user/per-experiment grant; private/no-store response.
 - `POST /api/lab/:id/copy-event` — record supported copy action with abuse controls; never accept source content as a trusted event claim.
 - `POST /api/lab/:id/preview-session` — authorize preview launch; actual execution is delegated to approved isolated infrastructure.
 - `POST /api/lab/:id/preview-events` — accept only allowlisted, bounded, validated instrumented events.
@@ -211,3 +210,15 @@ For each endpoint/action, test:
 - Rate limit and dependency failure.
 - Cache headers/revalidation behavior.
 - No sensitive data in response/logs.
+
+
+## 8. Implemented Labs authentication and source contracts
+
+- Authentication persistence is owned by Better Auth and `@better-auth/mongo-adapter`. Mongoose remains the application model/repository layer.
+- Registration is consent-gated and routed through `POST /api/labs/register`; direct Better Auth email sign-up is blocked at the App Router adapter.
+- Consent records use the current `TERMS_OF_SERVICE_VERSION`, `PRIVACY_POLICY_VERSION` and server-generated `consentAcceptedAt`. The browser does not choose these values.
+- The source DTO returned from `GET /api/v1/labs/:slug/source` contains only `slug`, `version`, `updatedAt` and validated file objects (`path`, `language`, `content`). It is never included in public Labs listing/detail DTOs.
+- Source authorization is deny-by-default and requires an active grant matching the server-derived Better Auth user ID and experiment slug. Do not trust a client-supplied user ID, grant ID or role.
+- Atlas collections used by the feature are `lab_sources`, `lab_source_grants`, and Better Auth's provider-managed collections. Source/grant records are not created automatically by the public application.
+- Response headers are `Cache-Control: private, no-store, no-cache, max-age=0, must-revalidate`, `Pragma: no-cache`, and `Vary: Cookie, Authorization`.
+- See `docs/LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md` for environment setup, grant provisioning and the public-runtime source-confidentiality limitation.

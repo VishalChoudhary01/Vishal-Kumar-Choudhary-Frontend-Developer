@@ -97,7 +97,7 @@ Extend the existing developer portfolio into a maintainable platform where the o
 ### FR-04 Authentication and authorization
 - Email/password and Google sign-in.
 - Email verification, password reset, secure session handling, sign-out, profile management and account deletion.
-- Auth provider and session mechanism are open architecture decisions.
+- Better Auth with the MongoDB adapter is selected for the Labs authentication implementation. Production session-lifetime/concurrency policy remains an architecture decision.
 - Enforce authorization on the server for every protected read and mutation.
 - Validate post-authentication return destinations against allowed local paths; prevent open redirects.
 - Restore intended navigation/action where safe, but do not automatically repeat unsafe or unintended operations.

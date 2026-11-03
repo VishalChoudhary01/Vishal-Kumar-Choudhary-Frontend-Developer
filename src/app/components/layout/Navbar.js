@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, useMotionValueEvent, useScroll } from "motion/react";
 import { useMobileMenu } from "@/app/providers/MobileMenuProvider";
@@ -15,8 +16,12 @@ import { flattenNavLinks } from "@/app/helper/flattenNav.Links";
 import Link from "next/link";
 import { cn } from "@/app/lib/utils";
 import SocialIcon from "../ui/SocialIcon";
+const LabsAccountControl = dynamic(
+  () => import("@/app/components/labs/LabsAccountControl"),
+  { ssr: false, loading: () => null },
+);
 
-export default function Navbar({ context = "site" }) {
+export default function Navbar({ context = "site", showLabsAccount = false }) {
   const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [activeHref, setActiveHref] = useState("");
@@ -392,6 +397,8 @@ export default function Navbar({ context = "site" }) {
                 className="hidden h-[22px] w-px bg-border/15 lg:ml-2 lg:mr-[17px] lg:block"
               />
             )}
+
+            {showLabsAccount ? <LabsAccountControl /> : null}
 
             {/* THEME */}
 
