@@ -39,11 +39,15 @@ export default function LabWorkspace({ experiment }) {
     demo.capabilities?.fullscreen === true &&
     fullscreenSupported;
 
+  const restartExperiment = () => {
+    setRestartKey((current) => current + 1);
+  };
+
   const actions =
     canRestart || canFullscreen ? (
       <LabCanvasActions
         canRestart={canRestart}
-        onRestart={() => setRestartKey((current) => current + 1)}
+        onRestart={restartExperiment}
         canFullscreen={canFullscreen}
         isFullscreen={isFullscreen}
         onToggleFullscreen={toggleFullscreen}
@@ -73,6 +77,7 @@ export default function LabWorkspace({ experiment }) {
               runtimeKey={runtimeKey}
               settings={values}
               restartKey={restartKey}
+              isFullscreen={isFullscreen}
             />
           </LabCanvas>
         </div>

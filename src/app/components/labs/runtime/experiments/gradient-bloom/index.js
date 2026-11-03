@@ -1,5 +1,8 @@
 "use client";
 
+import { motion } from "motion/react";
+import useReducedMotion from "@/app/hooks/useReducedMotion";
+
 const DEFAULT_COLOR = "#07A290";
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
 
@@ -11,6 +14,7 @@ function clamp(value, min, max, fallback) {
 }
 
 export default function GradientBloom({ settings = {} }) {
+  const prefersReducedMotion = useReducedMotion();
   const color =
     typeof settings.color === "string" &&
     HEX_COLOR_PATTERN.test(settings.color)
@@ -41,10 +45,16 @@ export default function GradientBloom({ settings = {} }) {
         className="absolute inset-0 bg-[linear-gradient(135deg,transparent_0%,var(--surface-2)_100%)] opacity-45"
       />
 
-      <div
+      <motion.div
         aria-hidden="true"
         className="absolute inset-0"
         style={style}
+        initial={prefersReducedMotion ? false : { opacity: 0.25, scale: 0.94 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{
+          duration: prefersReducedMotion ? 0 : 0.85,
+          ease: [0.16, 1, 0.3, 1],
+        }}
       />
 
       <div

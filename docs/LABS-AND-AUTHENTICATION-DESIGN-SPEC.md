@@ -1,8 +1,8 @@
 # Labs & Authentication — Product and UX Design Specification
 
 **Document:** `docs/LABS-AND-AUTHENTICATION-DESIGN-SPEC.md`  
-**Version:** 1.3  
-**Status:** Detailed UX and implementation-guidance baseline; feature implementation pending  
+**Version:** 1.4  
+**Status:** Detailed UX and implementation-guidance baseline; feature implementation in progress  
 **Updated on:** 2026-11-03  
 **Scope:** Labs listing, experiment detail/workspace, protected source access, Labs authentication UX, repository-aligned stack, module boundaries, hooks, components and state ownership  
 **Companion repository documents:** `docs/PRD.md`, `docs/ARCHITECTURE.md`, `docs/API-CONTRACTS.md`, `docs/PROJECT-STRUCTURE.md`, `docs/IMPLEMENTATION-PLAN.md`, and `docs/THREAT-MODEL.md`
@@ -2144,3 +2144,22 @@ Before feature coding, update any dependent PRD/API/README wording that still us
 - Do not modify unrelated portfolio routes/components or move the current application tree just to match a proposed diagram.
 - CMS/Admin remains deferred until Labs is complete.
 - Do not begin implementation unless the user explicitly authorizes it.
+
+
+## 32. Runtime Action Parity — 2026-11-03
+
+The shared experiment workspace must display the approved compact action row beneath every runtime that declares both capabilities:
+
+- **Restart** reinitializes the current experiment runtime while preserving the current control settings.
+- **Fullscreen** expands the experiment canvas and retains the explicit **Exit fullscreen** control in the fullscreen layout.
+- The browser Fullscreen API must be feature-detected. The Fullscreen action is rendered only when the browser supports it.
+- Restart behavior is runtime-specific:
+  - Magnetic Interaction: reset pointer displacement and interaction state.
+  - Scroll-driven Text Reveal: return page scroll progress to the beginning; in fullscreen, reset the internal scroll container to the beginning.
+  - Gradient Bloom: replay the subtle gradient entrance transition.
+  - Generative Particle Field: recreate the particle positions and restart the animation loop.
+- Restart must not reset the settings panel. **Reset settings** remains a separate action and restores the approved default values.
+- Reduced-motion preferences disable smooth restart movement and non-essential entrance animation.
+
+The current four published experiment records declare both `restart` and `fullscreen` capability. Do not turn these actions off for the three newer experiments unless a later approved runtime decision establishes a concrete incompatibility.
+

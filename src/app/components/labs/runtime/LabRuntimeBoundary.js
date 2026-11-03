@@ -60,6 +60,7 @@ export default function LabRuntimeBoundary({
   runtimeKey,
   settings,
   restartKey,
+  isFullscreen,
 }) {
   const Runtime = useMemo(() => {
     const loader = loadLabRuntime(runtimeKey);
@@ -73,7 +74,11 @@ export default function LabRuntimeBoundary({
   return (
     <RuntimeErrorBoundary key={`${runtimeKey}-${restartKey}`}>
       <Suspense fallback={<RuntimeLoadingState />}>
-        <Runtime settings={settings} />
+        <Runtime
+          settings={settings}
+          restartKey={restartKey}
+          isFullscreen={isFullscreen}
+        />
       </Suspense>
     </RuntimeErrorBoundary>
   );

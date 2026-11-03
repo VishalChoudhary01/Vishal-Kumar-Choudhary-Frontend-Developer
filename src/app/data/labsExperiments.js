@@ -93,9 +93,8 @@ export const publishedLabExperiments = [
         desktop: "16:9",
       },
       capabilities: {
-        restart: false,
-        fullscreen: false,
-      },
+        restart: true,
+        fullscreen: true,      },
       controls: [
         {
           id: "pace",
@@ -136,9 +135,8 @@ export const publishedLabExperiments = [
         desktop: "16:9",
       },
       capabilities: {
-        restart: false,
-        fullscreen: false,
-      },
+        restart: true,
+        fullscreen: true,      },
       controls: [
         {
           id: "color",
@@ -188,9 +186,8 @@ export const publishedLabExperiments = [
         desktop: "16:9",
       },
       capabilities: {
-        restart: false,
-        fullscreen: false,
-      },
+        restart: true,
+        fullscreen: true,      },
       controls: [
         {
           id: "particleCount",

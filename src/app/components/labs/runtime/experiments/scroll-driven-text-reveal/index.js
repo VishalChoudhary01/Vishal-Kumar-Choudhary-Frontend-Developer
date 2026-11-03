@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
   motion,
   useScroll,
@@ -39,23 +39,13 @@ function RevealWord({
   );
 }
 
-export default function ScrollDrivenTextReveal({ settings = {} }) {
-  const sceneRef = useRef(null);
-  const prefersReducedMotion = useReducedMotion();
-
-  const revealSpan = Math.min(
-    100,
-    Math.max(55, Number(settings.pace) || 80)
-  );
-  const spanFactor = revealSpan / 100;
-  const showProgress = settings.showProgress !== false;
-
-  const { scrollYProgress } = useScroll({
-    target: sceneRef,
-    offset: ["start end", "end start"],
-  });
-
-  const progressScale = useTransform(scrollYProgress, [0, 1], [0, 1]);
+function RevealContent({
+  scrollYProgress,
+  progressScale,
+  revealSpan,
+  showProgress,
+  prefersReducedMotion,
+}) {
   const totalWords = LINES.reduce(
     (count, line) => count + line.length,
     0
@@ -64,11 +54,7 @@ export default function ScrollDrivenTextReveal({ settings = {} }) {
   let wordIndex = 0;
 
   return (
-    <section
-      ref={sceneRef}
-      aria-label="Scroll-driven typography experiment"
-      className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-background px-5 py-8 sm:px-10"
-    >
+    <>
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_42%,var(--brand-soft),transparent_66%)] opacity-60"
@@ -108,7 +94,7 @@ export default function ScrollDrivenTextReveal({ settings = {} }) {
                     index={index}
                     total={totalWords}
                     progress={scrollYProgress}
-                    spanFactor={spanFactor}
+                    spanFactor={revealSpan / 100}
                     prefersReducedMotion={prefersReducedMotion}
                   />
                 );
@@ -144,6 +130,98 @@ export default function ScrollDrivenTextReveal({ settings = {} }) {
         aria-hidden="true"
         className="pointer-events-none absolute bottom-0 left-1/2 h-24 w-px -translate-x-1/2 bg-gradient-to-t from-transparent to-brand/20"
       />
+    </>
+  );
+}
+
+export default function ScrollDrivenTextReveal({
+  settings = {},
+  restartKey = 0,
+  isFullscreen = false,
+}) {
+  const sceneRef = useRef(null);
+  const fullscreenScrollRef = useRef(null);
+  const prefersReducedMotion = useReducedMotion();
+
+  const revealSpan = Math.min(
+    100,
+    Math.max(55, Number(settings.pace) || 80)
+  );
+  const showProgress = settings.showProgress !== false;
+
+  const { scrollYProgress } = useScroll({
+    container: isFullscreen ? fullscreenScrollRef : undefined,
+    target: sceneRef,
+    offset: isFullscreen
+      ? ["start start", "end end"]
+      : ["start end", "end start"],
+  });
+
+  const progressScale = useTransform(scrollYProgress, [0, 1], [0, 1]);
+
+  useEffect(() => {
+    if (restartKey === 0) return;
+
+    if (isFullscreen) {
+      fullscreenScrollRef.current?.scrollTo({
+        top: 0,
+        behavior: prefersReducedMotion ? "auto" : "smooth",
+      });
+      return;
+    }
+
+    const scene = sceneRef.current;
+    if (!scene) return;
+
+    const sceneTop =
+      window.scrollY + scene.getBoundingClientRect().top;
+    const initialScrollTop = Math.max(
+      0,
+      sceneTop - window.innerHeight + 120
+    );
+
+    window.scrollTo({
+      top: initialScrollTop,
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+    });
+  }, [restartKey, isFullscreen, prefersReducedMotion]);
+
+  const content = (
+    <RevealContent
+      scrollYProgress={scrollYProgress}
+      progressScale={progressScale}
+      revealSpan={revealSpan}
+      showProgress={showProgress}
+      prefersReducedMotion={prefersReducedMotion}
+    />
+  );
+
+  if (isFullscreen) {
+    return (
+      <div
+        ref={fullscreenScrollRef}
+        className="absolute inset-0 overflow-x-hidden overflow-y-auto overscroll-contain bg-background"
+      >
+        <section
+          ref={sceneRef}
+          aria-label="Scroll-driven typography experiment"
+          className="relative min-h-[180%] w-full"
+        >
+          <div className="sticky top-0 flex h-[calc(100dvh-6rem)] min-h-[24rem] w-full flex-col items-center justify-center overflow-hidden bg-background px-5 py-8 sm:px-10">
+            {content}
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  return (
+    <section
+      ref={sceneRef}
+      aria-label="Scroll-driven typography experiment"
+      className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-background px-5 py-8 sm:px-10"
+    >
+      {content}
     </section>
   );
 }
