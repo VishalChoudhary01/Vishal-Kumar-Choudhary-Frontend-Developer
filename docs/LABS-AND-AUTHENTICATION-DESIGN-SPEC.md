@@ -1,7 +1,7 @@
 # Labs & Authentication — Product and UX Design Specification
 
 **Document:** `docs/LABS-AND-AUTHENTICATION-DESIGN-SPEC.md`  
-**Version:** 1.4  
+**Version:** 1.5  
 **Status:** Detailed UX and implementation-guidance baseline; feature implementation in progress  
 **Updated on:** 2026-11-03  
 **Scope:** Labs listing, experiment detail/workspace, protected source access, Labs authentication UX, repository-aligned stack, module boundaries, hooks, components and state ownership  
@@ -2162,4 +2162,16 @@ The shared experiment workspace must display the approved compact action row ben
 - Reduced-motion preferences disable smooth restart movement and non-essential entrance animation.
 
 The current four published experiment records declare both `restart` and `fullscreen` capability. Do not turn these actions off for the three newer experiments unless a later approved runtime decision establishes a concrete incompatibility.
+
+
+## 33. Labs Scroll Ownership — 2026-11-03
+
+- The public Labs listing (`/labs`) and every Labs detail route (`/labs/[slug]`) use native browser scrolling.
+- The global Lenis provider must not intercept or interpolate wheel, trackpad or touch scrolling while the active pathname is `/labs` or starts with `/labs/`.
+- On entry into Labs, destroy any active Lenis instance and clear the shared `window.lenis` reference. On leaving Labs for an existing portfolio route, initialize Lenis again using the existing global settings.
+- Existing portfolio routes retain the existing Lenis configuration and behavior. Do not remove Lenis globally or add a second scroll library.
+- Motion `useScroll` inside an experiment may observe native document or explicitly owned fullscreen-container scrolling. It must not call `preventDefault` on wheel/touch events or capture page scroll input.
+- A fullscreen experiment may use its own scroll container only when the experiment requires one. Its scroll area must be bounded to the fullscreen canvas, must retain an explicit exit-fullscreen action, and must not leave document scrolling locked after exit.
+- PageLoader route-change cleanup remains responsible for releasing overlay scroll locks. It must not re-enable Lenis on a Labs route.
+- Verify wheel, trackpad, touch, keyboard Page Down/Space, scrollbar dragging, back/forward navigation, fullscreen entry/exit, and reduced-motion behavior on Labs and existing portfolio routes.
 
