@@ -586,7 +586,7 @@ Behavior:
 - Back to experiment navigates to the public experiment detail page.
 - Do not add `Request access` until a real access-request workflow exists.
 
-**Implementation baseline:** Source access is deny-by-default and uses an explicit per-user/per-experiment grant in `lab_source_grants`. A verified session is necessary but not sufficient. No role automatically grants source access; broader entitlement rules remain open.
+**OPEN:** The actual policy that determines which account/role/entitlement is authorized for which source is not decided. Do not assume every authenticated user is allowed or that only a particular role is allowed.
 
 ---
 
@@ -864,12 +864,11 @@ Use simple text-link styling: `Don't have an account? Create an account`.
 **PRODUCT REQUIREMENT — REQUIRED:** docs/PRD.md and docs/README.md require both email/password and Google sign-in.
 
 - The Labs Login experience must support email/password and Google sign-in.
-- Better Auth with the MongoDB adapter is the selected authentication implementation. Google OAuth credentials and the production callback origin remain deployment configuration.
-- The Google action is implemented beneath the email/password form with an `OR` divider and the label `Continue with Google`. It is shown only when both Google credentials are configured; treat exact visual treatment as an initial implementation baseline, not a newly user-approved design lock.
-- Google sign-in requires the provider's verified email signal. Implicit Google sign-up is disabled so the action cannot bypass the consent-aware registration route. Matching verified Google identities may link through Better Auth's normal verified-email behavior; no force-trusted-provider override is configured.
-- Do not silently replace Google with GitHub. GitHub sign-in is not required or selected.
-- Provider authentication and all protected operations are verified on the server. A client callback or visible signed-in state is not proof of a valid session.
-- Google cancellation and callback failures remain on Login with a generic error. Email/password verification, loading and field-error behavior continues to apply.
+- The actual authentication provider/service/library, Google OAuth app configuration, callback implementation, account-linking behavior and session implementation remain OPEN.
+- The visual placement, divider copy, button label, icon treatment and ordering of the Google sign-in action are OPEN. Do not invent a final treatment.
+- Do not silently replace Google with GitHub. GitHub sign-in is not required or selected in the current product baseline.
+- Provider authentication must be verified on the server. A client callback or visible signed-in state is not proof of a valid session.
+- The approved Login field/error/loading behavior continues to apply to email/password. Google-provider-specific pending, cancellation, callback failure and account-linking states must be designed when the provider is selected.
 
 ---
 
@@ -906,7 +905,7 @@ Do not add a full name, username, confirm-password field, Remember me checkbox, 
 - Typography: small existing body text, secondary text token, no background.
 - If a validation error exists, the error message takes priority over helper text; show the helper again after the error resolves.
 
-**Implementation baseline:** The current server and UI enforce 8–128 characters, matching the helper text. Compromised-password screening and any future change to the length policy remain open.
+**OPEN:** The actual password security policy (minimum length, maximum length, allowed characters, compromised-password checks, and any other rules) is not finalized. The example `8 characters` must not be treated as the final security policy unless the backend/security design confirms it. Helper text must match actual server-side enforcement.
 
 ### 9.4 Required legal consent
 
@@ -1200,7 +1199,7 @@ Dedicated success state:
 
 - If the user opens the Login route: redirect to the validated internal return destination or `/labs`.
 - If the user opens the Sign-up route: same behavior.
-- The implemented Login and Sign-up routes are `/labs/login` and `/labs/signup`.
+- The literal route paths for Login and Sign-up are not finalized; `/login` and `/signup` are conceptual examples only.
 - Do not flash/render a redundant authentication form before redirecting.
 - Treat invalid/expired sessions as unauthenticated and show the requested form.
 - Do not create redirect loops; reject Login/Sign-up routes as return destinations.
@@ -1271,7 +1270,7 @@ Synchronize authentication/session changes across open Labs tabs.
 - When a tab is on a protected source view and the session becomes invalid, it must stop showing/using protected content and follow the session-expiry Login flow while preserving a validated return destination.
 - Server session state remains authoritative; cross-tab messages are a notification/synchronization aid, not proof of authentication.
 
-**Implementation baseline:** Labs uses BroadcastChannel with a localStorage event fallback, plus a 60-second server-session revalidation for an open protected-source panel and a recheck when the tab becomes visible. Race-condition behavior still requires deployed multi-tab testing.
+**OPEN:** Exact cross-tab transport (for example, BroadcastChannel, storage events, or another mechanism), polling/revalidation interval, and race-condition handling are implementation decisions. Do not choose one without examining the existing code and architecture.
 
 ### 13.7 Remember-me and session persistence
 
@@ -1410,27 +1409,27 @@ The following items were not finalized by the discussion. They require an explic
 ### 16.1 Authentication product and provider decisions
 
 1. **Resolved:** Better Auth with `@better-auth/mongo-adapter` is selected for email/password and Google sign-in. Google OAuth client credentials and production callback configuration remain deployment requirements. Google account linking uses Better Auth's verified same-email linking behavior; no force-trusted provider override is configured. Implicit Google sign-up remains disabled so Google cannot bypass the consent-aware registration route.
-2. **Transport implemented:** configurable SMTP through the existing Nodemailer dependency. The SMTP vendor, sending domain verification, templates, retry/bounce operations and delivery monitoring remain deployment/operations decisions.
-3. Verification token handling is delegated to Better Auth. The current provider-default lifetime/storage is used; any product-specific lifetime, resend/replay policy beyond the current rate limits and operational delivery behavior remain open.
+2. Email delivery provider/service, sending domain, templates, retry and bounce handling.
+3. Verification token format, token lifetime, single-use storage, resend/replay semantics and verification endpoint design.
 4. Password-reset token format, lifetime, single-use storage and endpoint contract.
 5. **Resolved in the implementation:** `/labs/login`, `/labs/signup`, `/labs/forgot-password`, `/labs/reset-password`, and `/labs/verify-email`.
-6. **Resolved in the implementation:** email/password sign-in is blocked until email verification; Login displays a generic verification-required message and links to the verification/resend screen.
+6. What happens when an unverified account attempts to log in (copy, resend path and whether access is blocked until verified).
 7. Account deletion, email change, password change outside reset, and recovery/support flows.
 8. Session lifetime, idle/absolute timeout, refresh strategy, cookie settings and concurrent session policy.
-9. **Implemented baseline:** BroadcastChannel + localStorage fallback; protected source is revalidated every 60 seconds and on tab visibility. Deployed concurrency/race QA remains required.
-10. **Implemented baseline:** verification resend confirmation masks the local part of the email address. Unusual/very short address cases still require UI/accessibility review.
+9. Exact cross-tab transport and revalidation strategy.
+10. Exact masking algorithm for displayed email addresses.
 11. The current implementation enforces 8–128 characters, matching the visible helper text and Better Auth policy. Any breached-password screening or policy change remains open.
-12. **Implemented baseline:** registration 5 attempts per trusted proxy IP per minute; Better Auth route limits are configured for email/social sign-in (8/min), reset request (3/min), reset completion (5/min) and verification resend (3/min); the UI resend cooldown remains 30 seconds. Tune only after abuse/operations review.
-13. Google button placement, label and pending/error interaction are implemented as an initial baseline; final visual sign-off remains open.
+12. Exact rate limits/cooldowns for sign-up, Login, reset requests, verification resends and failed attempts beyond the approved 30-second client resend cooldown.
+13. Google sign-in button placement and interaction states.
 14. Whether any additional provider beyond Google is desired in the future; GitHub is not currently selected.
 
 ### 16.2 Authorization decisions
 
 1. The current implementation denies by default and requires an active per-user/per-experiment grant record in `lab_source_grants`. This is the initial operational allowlist; any broader role/entitlement policy remains open.
-2. **Resolved for the current implementation:** authorization is per user/per experiment through an explicit allowlist grant. No role-only, global or implicit membership grants are used.
-3. **Resolved for the current implementation:** a verified email is required in addition to an active grant. Account age and admin role do not automatically grant access.
+2. Whether source authorization is global, per experiment, role-based, allowlist-based, or entitlement-based.
+3. Whether account age, verification status, admin role, or another condition changes source permission.
 4. Whether a user can request access in the future (no Request access action is included now).
-5. **Implemented baseline:** missing session returns 401, unverified/no-grant returns 403, unavailable source returns 404, and dependency/validation failures return a safe 503. Logs contain only safe error codes, not source, email, token or credential data; broader operational retention/redaction policy remains open.
+5. Exact unauthorized API response/status handling and security logging policy.
 
 Do not assume that authentication means authorization.
 
@@ -1441,22 +1440,22 @@ Do not assume that authentication means authorization.
 3. Experiment list, order, publish status, and category assignments.
 4. Related Experiments section layout, quantity, matching/order logic, and empty behavior.
 5. Per-experiment demo behavior, control configuration, canvas background, ratio override, supported actions, and runtime strategy.
-6. **Implemented initial viewer:** a lightweight text/code viewer with a file selector when a snapshot has multiple files and a copy-file action. Monaco is not installed; syntax highlighting, download controls, richer navigation and editor preferences remain open.
+6. Final source viewer layout, editor controls, copy/download features, and code-file navigation.
 7. Exact final aspect dimensions, spacing, and typography values where only guidance is recorded.
 8. Whether load-more uses client-side slicing or server/API pagination.
 9. Whether any individual experiment needs video, GIF, or autoplay (listing autoplay is not allowed; detail behavior must be decided per experiment).
 
 ### 16.4 Backend/data/operations decisions
 
-1. Initial source schemas/indexes are implemented for `lab_sources` and `lab_source_grants`; the complete Labs domain schema and final broader indexes remain open.
+1. Final Labs MongoDB schema and indexes.
 2. Final endpoint list, request/response contracts, validation rules, error codes, pagination model, and API versioning.
-3. Better Auth manages user, account, session and verification data in MongoDB. The implementation adds optional `termsVersion`, `privacyVersion` and `consentAcceptedAt` user fields; broader profile/account schema remains open.
+3. Authentication/user schema beyond the conceptual architecture model.
 4. Better Auth stores sessions and verification state in MongoDB and revokes sessions following password reset. Session lifetime/concurrency policy remains open and currently relies on Better Auth defaults.
 5. Cloudinary folder conventions, transformations, responsive media strategy, signed upload flow, and ownership metadata.
-6. Private source snapshots are stored in Atlas `lab_sources`, with a version label and separate per-user/per-experiment grants. Immutable history/version retention and private repository integration remain open.
+6. Lab source storage/versioning strategy (inline source snapshots vs repository integration, and any version model).
 7. Analytics event scope, consent/privacy policy, retention, and aggregation.
 8. Cache policy for Labs metadata, experiment detail data, demos, and source.
-9. Environment variable names and setup are documented in `.env.example` and `docs/LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md`; production values, trusted origins, secret rotation and deployment verification remain open.
+9. Deployment/environment configuration and secret rotation status.
 10. Actual implementation milestones, release order, and measurable performance budgets.
 
 ### 16.5 Legal and consent decisions
@@ -1577,7 +1576,7 @@ Use this checklist before considering Labs design/implementation complete. A che
 This is a recommended implementation order, not authorization to start coding:
 
 1. Audit the actual repository and confirm the current route/component/data structure against the companion architecture.
-2. Complete any remaining Labs UX decisions marked OPEN that block implementation (especially related experiments, final session policy, email-delivery operations, source confidentiality boundary, and public-vs-restricted preview classification). Better Auth and the initial per-experiment grant policy are implemented.
+2. Complete any remaining Labs UX decisions marked OPEN that block implementation (especially related experiments, auth providers, authorization policy, password policy, session architecture, route names, and email delivery).
 3. Finalize the Labs data contract and public/private API contracts without flattening existing portfolio content.
 4. Implement the Labs landing page using lightweight public metadata and static media previews.
 5. Implement the experiment detail shell and one selected runtime boundary.
@@ -1755,7 +1754,7 @@ These are existing foundations, not a completed Labs data layer. Do not repurpos
 - The package manifest does not list TanStack Query, React Hook Form, @reduxjs/toolkit or a Monaco editor as direct dependencies.
 - Do not add a dependency to support an illustrative folder or hook name. First establish an actual behavior that requires it, compare the existing stack, update package.json and package-lock.json together, and record the approval.
 - If TanStack Query is later adopted, use it only for client-side server-state interactions that benefit from cache/mutation semantics. Do not mirror every Server Component read into a client query cache.
-- Better Auth with the MongoDB adapter is selected for Labs. SMTP is the implemented email transport (vendor credentials remain deployment configuration); form validation is implemented locally without a validation library. A code-editor package such as Monaco remains unselected and is not bundled.
+- Authentication provider, validation library, email provider and code-editor library remain open where not explicitly selected by the product/architecture documents.
 
 ### 23.3 Environment variables and server-only configuration
 
@@ -1860,7 +1859,7 @@ The following proposal uses the current src/app convention and keeps public rout
           # No new global provider by default.
           # Add a route/feature-scoped provider only for an approved need.
 
-The implemented Labs auth routes are `/labs/login`, `/labs/signup`, `/labs/forgot-password`, `/labs/reset-password`, and `/labs/verify-email`, under an App Router route-group layout. The root layout still renders the portfolio Footer globally, so the Footer explicitly returns null on those five auth routes.
+Authentication route paths are still OPEN. When they are finalized, use an App Router route group if it helps share the authentication layout, but remember that the current root layout renders the public Footer globally. Do not assume a nested layout removes it. Any proposed auth route tree is illustrative until route names and the layout boundary are approved.
 
 Folder rules:
 
@@ -2099,7 +2098,7 @@ Do not create Express controllers or a separate Express deployment unless an app
 Recommended vertical slices after explicit implementation authorization:
 
 1. Repository/baseline recheck: branch head, package files, route tree, layout/footer, providers, tests and current deploy status.
-2. Resolve remaining blockers: session-lifetime policy, email-delivery operations, source confidentiality boundary, public-vs-restricted preview classification, and API/cache contracts. Better Auth, initial route names, 8–128 password policy and per-experiment grant checks are implemented.
+2. Resolve blockers: auth provider/session (including required Google sign-in), route names, source authorization policy, exact password policy, email delivery, public-vs-restricted preview classification, and API/cache contracts.
 3. Implement public Labs listing with safe published metadata and static thumbnails; verify the current portfolio does not load Labs-only code.
 4. Implement one experiment detail route and one code-owned demo runtime; verify mobile/desktop canvas, controls, restart/fullscreen/reset and reduced motion.
 5. Implement the validated Lab repository/service/DTO layer and any needed Next.js Route Handlers/Server Actions. Do not finalize schema fields from illustrative examples.
@@ -2117,12 +2116,12 @@ The repository contains older broader platform requirements that remain relevant
 
 1. **Public route naming:** PRD/DESIGN-LAB examples include singular /lab. This document locks /labs for the Labs listing and /labs/[slug] for detail. Update route references in dependent docs before implementation; do not ship duplicate route aliases by assumption.
 2. **Backend:** any older Express-oriented architecture wording is superseded by docs/ARCHITECTURE.md and docs/README.md. Next.js-native server modules, Route Handlers and Server Actions are the default. Express remains conditional and requires explicit approval.
-3. **Authentication:** Email/password and Google sign-in are required by PRD. Better Auth with the MongoDB adapter is selected and implemented. Google credentials remain deployment configuration; GitHub is not selected. See Section 36 for current flow and release gates.
+3. **Authentication:** Email/password and Google sign-in are required by PRD. This document defines the email/password UX in detail; Google button presentation and provider integration still need a decision. GitHub is not selected.
 4. **Guest demos vs restricted previews:** this document allows guests to use explicitly public demos. It does not authorize untrusted code execution in the main application. The threat model and isolation architecture still gate admin-authored/untrusted interactive previews.
 5. **Partial source:** PRD/DESIGN-LAB describe permitted guest partial-source snippets. No exact partial-source content/UI was approved in this design discussion. Until specified, expose no source snippet to guests; keep full source protected.
 6. **Search/sort/likes/analytics/dashboard:** PRD/DESIGN-LAB describe broader search fields, filtering/sort options, likes, user activity and analytics. The current landing-page UX locks the category navigation and six-item Load More interaction, but does not define every broader filter/sort control or engagement widget. These product requirements are not silently cancelled; their detailed UI, URL state, API and privacy contracts remain OPEN.
 7. **Related experiments:** the section is in the detail-page order, but exact matching, number, layout and empty-state behavior remain OPEN.
-8. **Authentication route layout:** the Labs authentication route group uses its own centered layout; the global portfolio Footer explicitly returns null for the five Labs auth paths. Public portfolio/Labs routes retain their existing footer behavior.
+8. **Authentication route layout:** current root layout renders the portfolio Footer globally. A separate auth footer/layout requires a deliberate route/layout boundary. Do not assume route groups alone remove the root Footer.
 9. **State tooling:** TanStack Query is conditionally approved but not a direct dependency in the inspected package manifest. The current Redux store files import a package absent from the manifest and are not mounted by AppProviders. Neither is an established Labs state layer today.
 10. **Source editor:** Monaco is not installed, and editor UI/package choices remain OPEN. Its loading boundary must remain after server authorization.
 11. **Documentation precedence:** PRD owns product capabilities; ARCHITECTURE owns server boundaries; API-CONTRACTS owns API contracts; PROJECT-STRUCTURE owns generic module conventions; this document owns detailed Labs/auth UX. Where page appearance or interaction details conflict with older DESIGN-LAB examples, this newer approved UX baseline controls. Where a feature requirement is not addressed here, PRD/DESIGN-LAB continue to apply.
@@ -2218,14 +2217,16 @@ This section records the implementation baseline on `feat/labs-public-page`. It 
 
 ### 36.2 Registration, email verification and privacy
 
-- Registration records `termsVersion`, `privacyVersion` and `consentAcceptedAt` as server-controlled Better Auth user fields.
+- Registration writes a server-managed receipt in the private `labs_registration_consents` collection. It stores the server-selected Terms/Privacy versions, server timestamp, a keyed email digest, linked Better Auth user ID and verified timestamp. Consent values are not editable from client profile input.
 - The Terms of Service and Privacy Policy links/versions are deployment configuration, not invented page content.
 - Registration stays disabled unless MongoDB/auth secrets, SMTP delivery, both HTTPS legal-document URLs and both legal-document versions are configured.
+- Consent receipts live in `labs_registration_consents`; verification-flow identifiers and status live separately in `labs_verification_flows`. Email values are stored only as keyed HMAC digests in these records, not in plaintext.
 - Duplicate and new-account submissions receive the same generic public response. Account-specific results are not returned to the browser.
 - A server-side HMAC rate limit allows at most five registration attempts per trusted proxy IP per minute. Configure `AUTH_TRUSTED_IP_HEADER` to the deployment's trusted proxy header; do not trust a browser-controlled forwarding header.
-- Better Auth rate limits additionally apply to sign-in, social sign-in, password-reset request/completion and verification resend routes.
+- Better Auth rate limits additionally apply to sign-in, social sign-in, password-reset request/completion and verification resend routes. Registration HMAC IP-bucket records expire automatically after 24 hours.
 - Email delivery uses the existing Nodemailer dependency through a configurable authenticated SMTP transport. No specific SMTP vendor is selected or assumed.
-- Verification-link lifetime currently uses the Better Auth provider default; a product-specific lifetime remains open. The resend UI uses the locked 30-second cooldown and remains subordinate to server-side rate limiting.
+- Verification-link lifetime uses the Better Auth default (one hour in the selected version); no product-specific expiry override is configured. The resend UI uses the locked 30-second cooldown and remains subordinate to server-side rate limiting.
+- Sign-up and resend callbacks carry a random, short-lived verification-flow ID. Better Auth's `afterEmailVerification` hook marks the server-side flow verified; the UI never trusts a query-string flag alone.
 - Password-reset requests use Better Auth's privacy-safe response and configured SMTP sender. Reset completion requires a valid token and returns the user to Login; it does not automatically sign the user in.
 
 ### 36.3 Routes and session behavior

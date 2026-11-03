@@ -83,9 +83,10 @@ export default function LabSourceAccess({ slug }) {
 
   useEffect(() => {
     const shouldOpen = new URLSearchParams(window.location.search).get("source") === "1";
-    const autoLoadTimer = shouldOpen
-      ? window.setTimeout(() => loadSource(), 0)
-      : null;
+
+    if (shouldOpen) {
+      loadSource();
+    }
 
     let checking = false;
 
@@ -148,7 +149,6 @@ export default function LabSourceAccess({ slug }) {
     });
 
     return () => {
-      if (autoLoadTimer) window.clearTimeout(autoLoadTimer);
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       unsubscribe();

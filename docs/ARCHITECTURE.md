@@ -133,7 +133,7 @@ Middleware may be used for lightweight request routing, canonical redirects, coa
 - Do not rely on middleware alone to protect MongoDB queries or source responses.
 - Avoid database-heavy middleware on every public request.
 - Never put secrets or privileged data into middleware-visible client state.
-- Better Auth with the MongoDB adapter is selected for Labs. Production cookie/session validation and the exact middleware strategy remain subject to deployment/security verification.
+- Auth/session mechanics and exact middleware strategy remain subject to provider/runtime validation.
 - Keep public routes working without unnecessary session/database lookups.
 
 ## 6. Authorization policy
@@ -175,3 +175,10 @@ Before touching a feature, identify its route, presentation components, domain u
 The Labs authentication foundation uses Better Auth with `@better-auth/mongo-adapter` and the existing MongoDB database. The Better Auth API is hosted by the Next.js App Router at `/api/auth/[...all]`; the direct email sign-up endpoint is blocked so registration must pass through the consent-aware Labs registration route. Server-side source access verifies the Better Auth session and a separate per-user/per-experiment grant before querying the private source collection. See `LABS-AND-AUTHENTICATION-DESIGN-SPEC.md` Section 36 and `LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md` for setup and provisioning.
 
 This implementation is a feature foundation, not proof of production readiness: SMTP/Google/legal configuration, source provisioning, session-policy approval, full security testing and the private-code migration boundary remain release gates.
+
+
+## 12. Consent and verification receipt storage
+
+Labs registration consent is persisted separately from editable Better Auth user profile fields. The server writes a receipt to `labs_registration_consents` before calling Better Auth registration; it uses an HMAC of the normalized email address, the current legal-document versions and a server timestamp. A Better Auth user-create hook links the receipt to the persisted user ID. The client cannot submit or modify the legal version/timestamp fields.
+
+Verification-flow IDs are stored separately in `labs_verification_flows`. Better Auth's post-email-verification hook marks current flows for that email digest. The verification page checks the opaque flow ID against this server-side status rather than trusting a query-string flag. These flow records expire through a MongoDB TTL index after seven days; legal consent receipts are not covered by this transient-flow TTL.

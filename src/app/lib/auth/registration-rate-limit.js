@@ -32,6 +32,11 @@ export async function consumeRegistrationAttempt(request) {
   const now = new Date();
   const cutoff = new Date(now.getTime() - WINDOW_MS);
   const collection = mongoose.connection.db.collection("auth_registration_limits");
+  globalThis.__labsRegistrationRateLimitIndexPromise ||= collection.createIndex(
+    { updatedAt: 1 },
+    { expireAfterSeconds: 24 * 60 * 60, name: "auth_registration_limits_ttl" },
+  );
+  await globalThis.__labsRegistrationRateLimitIndexPromise;
 
   const result = await collection.findOneAndUpdate(
     { _id: key },

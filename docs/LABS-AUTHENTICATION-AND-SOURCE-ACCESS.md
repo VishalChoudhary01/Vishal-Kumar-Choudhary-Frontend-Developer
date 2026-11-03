@@ -56,7 +56,9 @@ Before enabling account registration, send a verification message and a password
 | --- | --- | --- |
 | Login | `/labs/login` | Email/password; optional Google action; validated local return destination. |
 | Registration | `/labs/signup` → `POST /api/labs/register` | Requires consent; generic confirmation whether or not an account already exists. |
-| Verification | `/labs/verify-email` | Verify-link callback (provider default token lifetime) and 30-second resend UX cooldown. |
+| Verification | `/labs/verify-email` | Verify-link callback confirmed against server-side flow state (Better Auth default token lifetime) and 30-second resend UX cooldown. |
+| Resend verification | `POST /api/labs/verification/resend` | Generic response; creates an opaque flow ID and invokes Better Auth's privacy-safe resend handler. |
+| Verification status | `GET /api/labs/verification/status?flow=:id` | No-store read of a random flow ID marked verified by the Better Auth post-verification hook. |
 | Forgot password | `/labs/forgot-password` | Generic response for existing and unknown email addresses. |
 | Reset password | `/labs/reset-password` | Valid token only; confirmation returns to Login; sessions are revoked. |
 | Auth transport | `/api/auth/[...all]` | Better Auth-owned handlers; direct `/sign-up/email` is blocked to prevent consent bypass. |
@@ -90,28 +92,7 @@ One record per experiment slug:
 
 Validation limits: 1–40 files, file paths must be safe relative paths, each file is limited to 500 KB, and the full response is capped at 1 MB. Do not store executable preview configuration, secrets, credentials or unrestricted runtime instructions in this collection. The endpoint only returns source text after authorization; it never evaluates the stored source.
 
-## 5. Create the required indexes and grant an account access to one experiment
-
-Create or verify these indexes with a trusted Atlas administrative connection before provisioning source records:
-
-```javascript
-db.lab_sources.createIndex(
-  { slug: 1 },
-  { unique: true, name: "lab_source_slug_unique" }
-);
-db.lab_source_grants.createIndex(
-  { userId: 1, experimentSlug: 1 },
-  { unique: true, name: "lab_source_grant_user_experiment_unique" }
-);
-```
-
-Mongoose models:
-- `src/app/lib/labs/models/LabSource.js`
-- `src/app/lib/labs/models/LabSourceGrant.js`
-
-MongoDB collections: `lab_sources` and `lab_source_grants`.
-
-
+## 5. Grant an account access to one experiment
 
 Mongoose model: `src/app/lib/labs/models/LabSourceGrant.js`  
 MongoDB collection: `lab_source_grants`
@@ -194,3 +175,11 @@ The Atlas-backed source viewer protects separate source snapshots. Do not claim 
 - [ ] Production build and lint pass.
 
 No deployment secrets are committed to this repository. This runbook does not certify that any external provider, Atlas cluster or browser test has been configured or passed.
+
+
+## 9. Consent receipt and verification-flow records
+
+- Legal acceptance is stored in `labs_registration_consents`, not in client-editable user fields. Email identity is represented by an HMAC digest; the record contains the Terms version, Privacy version, server acceptance timestamp, linked Better Auth user ID and verification timestamp.
+- `labs_verification_flows` stores a separate random flow ID, email digest, created/expiry timestamps and verified timestamp. The flow expires automatically after seven days. It is not the legal consent audit record.
+- The registration callback URL carries the flow ID. The Better Auth `afterEmailVerification` hook marks active flows for that email digest. The server-rendered verification page checks the stored flow status; manually adding a query parameter cannot produce a verified state.
+- Resend goes through `POST /api/labs/verification/resend`. The client receives a generic response and does not learn whether the email exists. The client cooldown is 30 seconds; Better Auth's server-side rate limits are authoritative.

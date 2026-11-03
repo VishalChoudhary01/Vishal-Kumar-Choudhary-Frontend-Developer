@@ -8,6 +8,10 @@ import {
 } from "@/app/lib/auth/auth";
 import { consumeRegistrationAttempt } from "@/app/lib/auth/registration-rate-limit";
 import { getSafeReturnTo } from "@/app/lib/auth/return-to";
+import {
+  discardUnlinkedRegistrationConsent,
+  recordRegistrationConsent,
+} from "@/app/lib/auth/registration-consent";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,14 +22,10 @@ const GENERIC_RESPONSE = {
     "If an account can be created with this address, you'll receive an email with the next steps.",
 };
 
-function json(body, status, extraHeaders = {}) {
+function json(body, status) {
   return NextResponse.json(body, {
     status,
-    headers: {
-      "Cache-Control": "no-store, private",
-      Vary: "Cookie",
-      ...extraHeaders,
-    },
+    headers: { "Cache-Control": "no-store, private", Vary: "Cookie" },
   });
 }
 
@@ -49,16 +49,7 @@ export async function POST(request) {
   const startedAt = Date.now();
 
   try {
-    let payload;
-    try {
-      payload = await request.json();
-    } catch {
-      return json(
-        { error: { code: "INVALID_REQUEST", message: "Invalid request body." } },
-        400,
-      );
-    }
-
+    const payload = await request.json();
     const email = typeof payload?.email === "string"
       ? payload.email.trim().toLowerCase()
       : "";
@@ -93,7 +84,6 @@ export async function POST(request) {
       return json(
         { error: { code: "RATE_LIMITED", message: "Too many attempts. Please try again shortly." } },
         429,
-        { "Retry-After": String(rate.retryAfterSeconds) },
       );
     }
 
@@ -104,8 +94,14 @@ export async function POST(request) {
 
     const returnTo = getSafeReturnTo(payload?.returnTo);
     const verificationCallback = new URL("/labs/verify-email", siteUrl);
-    verificationCallback.searchParams.set("verified", "1");
     verificationCallback.searchParams.set("returnTo", returnTo);
+
+    const receiptId = await recordRegistrationConsent({
+      email,
+      termsVersion,
+      privacyVersion,
+    });
+    verificationCallback.searchParams.set("flow", receiptId);
 
     try {
       await auth.api.signUpEmail({
@@ -114,13 +110,12 @@ export async function POST(request) {
           name: "Labs member",
           email,
           password,
-          termsVersion,
-          privacyVersion,
-          consentAcceptedAt: new Date(),
           callbackURL: verificationCallback.toString(),
         },
       });
     } catch {
+      // A failed/duplicate registration must not leave an unused consent row.
+      await discardUnlinkedRegistrationConsent(receiptId).catch(() => {});
       // Duplicate or other account-specific outcomes remain generic.
     }
 

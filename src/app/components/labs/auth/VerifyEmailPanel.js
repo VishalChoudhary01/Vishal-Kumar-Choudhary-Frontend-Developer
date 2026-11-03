@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LoaderCircle } from "lucide-react";
 
-import { authClient } from "@/app/lib/auth/client";
 import AuthField from "./AuthField";
 import AuthSubmit from "./AuthSubmit";
 import AuthMessage from "./AuthMessage";
@@ -35,7 +34,7 @@ export default function VerifyEmailPanel({ verified, invalid, emailDeliveryEnabl
       setCountdown((current) => Math.max(0, current - 1));
     }, 1000);
     return () => window.clearInterval(timer);
-  }, [countdown]);
+  }, [countdown > 0]);
 
   const resend = async (event) => {
     event.preventDefault();
@@ -52,20 +51,19 @@ export default function VerifyEmailPanel({ verified, invalid, emailDeliveryEnabl
     setResent(false);
 
     try {
-      const callback = new URL("/labs/verify-email", window.location.origin);
-      callback.searchParams.set("verified", "1");
-      callback.searchParams.set("returnTo", returnTo);
-      const callbackURL = callback.toString();
-      const result = await authClient.sendVerificationEmail({
-        email: email.trim().toLowerCase(),
-        callbackURL,
+      const response = await fetch("/api/labs/verification/resend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        credentials: "same-origin",
+        body: JSON.stringify({ email: email.trim().toLowerCase(), returnTo }),
       });
+      const result = await response.json().catch(() => ({}));
 
-      if (result?.error) {
-        setError("Unable to resend the verification email. Please try again shortly.");
+      if (!response.ok || !result?.ok) {
+        setError(result?.error?.message || "Unable to process this request right now. Please try again shortly.");
         return;
       }
-
       setMaskedAddress(maskEmail(email.trim().toLowerCase()));
       setCountdown(30);
       setResent(true);
@@ -119,7 +117,7 @@ export default function VerifyEmailPanel({ verified, invalid, emailDeliveryEnabl
 
       {resent ? (
         <AuthMessage tone="success">
-          Verification instructions were sent to {maskedAddress || "your email address"}.
+          {maskedAddress ? "If an account can be verified with " + maskedAddress + ", a verification message will be sent." : "If an account can be verified with this address, a verification message will be sent."}
         </AuthMessage>
       ) : null}
       {error ? <AuthMessage>{error}</AuthMessage> : null}

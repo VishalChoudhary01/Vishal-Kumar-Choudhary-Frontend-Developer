@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, useMotionValueEvent, useScroll } from "motion/react";
 import { useMobileMenu } from "@/app/providers/MobileMenuProvider";
@@ -16,10 +15,7 @@ import { flattenNavLinks } from "@/app/helper/flattenNav.Links";
 import Link from "next/link";
 import { cn } from "@/app/lib/utils";
 import SocialIcon from "../ui/SocialIcon";
-const LabsAccountControl = dynamic(
-  () => import("@/app/components/labs/LabsAccountControl"),
-  { ssr: false, loading: () => null },
-);
+import LabsAccountControl from "@/app/components/labs/LabsAccountControl";
 
 export default function Navbar({ context = "site", showLabsAccount = false }) {
   const router = useRouter();

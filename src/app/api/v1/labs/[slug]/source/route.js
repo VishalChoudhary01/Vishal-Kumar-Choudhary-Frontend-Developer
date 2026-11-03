@@ -30,7 +30,16 @@ export async function GET(_request, { params }) {
     );
   }
 
-  const session = await getCurrentAuthSession();
+  let session;
+  try {
+    session = await getCurrentAuthSession();
+  } catch (error) {
+    console.error("[labs-source] session lookup failed:", error?.code || "SESSION_LOOKUP_ERROR");
+    return response(
+      { error: { code: "SOURCE_UNAVAILABLE", message: "Source is temporarily unavailable." } },
+      503,
+    );
+  }
 
   if (!session?.user?.id) {
     return response(

@@ -6,6 +6,10 @@ import { mongodbAdapter } from "@better-auth/mongo-adapter";
 import { betterAuth } from "better-auth";
 
 import { sendAuthEmail, isAuthEmailConfigured } from "./email";
+import {
+  linkLatestRegistrationConsent,
+  markRegistrationConsentVerified,
+} from "./registration-consent";
 
 const configuredMongoUri = process.env.MONGODB_URI;
 const configuredDatabaseName = process.env.MONGODB_DB_NAME;
@@ -13,18 +17,7 @@ const configuredSecret = process.env.BETTER_AUTH_SECRET;
 const isDatabaseConfigured = Boolean(
   configuredMongoUri && configuredDatabaseName && configuredSecret,
 );
-const configuredBaseURL = process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_SITE_URL;
-const baseURL = configuredBaseURL || "http://localhost:3000";
-const isBaseURLConfigured = (() => {
-  try {
-    const parsed = new URL(baseURL);
-    return process.env.NODE_ENV !== "production"
-      ? parsed.protocol === "http:" || parsed.protocol === "https:"
-      : Boolean(configuredBaseURL) && parsed.protocol === "https:";
-  } catch {
-    return false;
-  }
-})();
+const baseURL = process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 const trustedOrigins = [
   baseURL,
   ...(process.env.BETTER_AUTH_TRUSTED_ORIGINS || "").split(",").map((value) => value.trim()).filter(Boolean),
@@ -34,8 +27,8 @@ const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
 export const isGoogleAuthConfigured = Boolean(googleClientId && googleClientSecret);
-export const isAuthRuntimeConfigured = () => isDatabaseConfigured && isBaseURLConfigured;
-export const isAuthDeliveryConfigured = () => isAuthRuntimeConfigured() && isAuthEmailConfigured();
+export const isAuthRuntimeConfigured = () => isDatabaseConfigured;
+export const isAuthDeliveryConfigured = () => isDatabaseConfigured && isAuthEmailConfigured();
 function isHttpsDocumentUrl(value) {
   try {
     return new URL(value).protocol === "https:";
@@ -117,11 +110,25 @@ export const auth = betterAuth({
   secret: authSecret,
   trustedOrigins,
   database: mongodbAdapter(database, { client: mongoClient }),
-  user: {
-    additionalFields: {
-      termsVersion: { type: "string", required: false, input: true },
-      privacyVersion: { type: "string", required: false, input: true },
-      consentAcceptedAt: { type: "date", required: false, input: true },
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          try {
+            await linkLatestRegistrationConsent({
+              email: user.email,
+              userId: user.id,
+            });
+          } catch (error) {
+            // The account remains usable, but operations must reconcile any
+            // receipt that could not be linked after an infrastructure error.
+            console.error(
+              "[auth-consent] receipt linking failed:",
+              error?.code || "CONSENT_LINK_ERROR",
+            );
+          }
+        },
+      },
     },
   },
   account: {
@@ -160,8 +167,17 @@ export const auth = betterAuth({
   },
   emailVerification: {
     sendOnSignUp: true,
-    sendOnSignIn: true,
     autoSignInAfterVerification: false,
+    afterEmailVerification: async (user) => {
+      try {
+        await markRegistrationConsentVerified({ email: user.email });
+      } catch (error) {
+        console.error(
+          "[auth-consent] verification receipt update failed:",
+          error?.code || "CONSENT_VERIFY_ERROR",
+        );
+      }
+    },
     sendVerificationEmail: async ({ user, url }) => {
       scheduleEmail({
         to: user.email,
@@ -188,7 +204,7 @@ export const auth = betterAuth({
           clientId: googleClientId,
           clientSecret: googleClientSecret,
           requireEmailVerification: true,
-          disableImplicitSignUp: true,
+          disableSignUp: true,
           prompt: "select_account",
         },
       }

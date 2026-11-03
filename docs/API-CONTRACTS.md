@@ -25,7 +25,9 @@ Use appropriate HTTP status semantics: 400 malformed request, 401 unauthenticate
 
 ### Authentication
 The Labs authentication provider is Better Auth with the MongoDB adapter. Provider-owned handlers are mounted at `/api/auth/[...all]`; do not invent separate password/token/session endpoints. The raw `/sign-up/email` operation is blocked so registration must pass through the consent-aware route. Implemented Labs routes and use cases:
-- `POST /api/labs/register` — validates email/password/required legal consent, applies registration rate limiting, records server-controlled legal versions/timestamp and returns a generic confirmation.
+- `POST /api/labs/register` — validates email/password/required legal consent, applies registration rate limiting, writes a server-managed consent receipt and verification-flow record, then returns a generic confirmation.
+- `POST /api/labs/verification/resend` — creates a short-lived flow ID, invokes Better Auth's privacy-safe verification resend handler and returns a generic response for valid addresses.
+- `GET /api/labs/verification/status?flow=:id` — no-store lookup of the opaque flow state; only reports whether that flow was marked verified by the server-side Better Auth hook.
 - Better Auth `POST /api/auth/sign-in/email` — email/password sign-in; email verification is required.
 - Better Auth `POST /api/auth/sign-in/social` — Google sign-in when OAuth credentials are configured.
 - Better Auth provider handlers manage email verification, password reset, sign-out, session and current-session reads.
@@ -222,3 +224,9 @@ For each endpoint/action, test:
 - Atlas collections used by the feature are `lab_sources`, `lab_source_grants`, and Better Auth's provider-managed collections. Source/grant records are not created automatically by the public application.
 - Response headers are `Cache-Control: private, no-store, no-cache, max-age=0, must-revalidate`, `Pragma: no-cache`, and `Vary: Cookie, Authorization`.
 - See `docs/LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md` for environment setup, grant provisioning and the public-runtime source-confidentiality limitation.
+
+
+### Labs consent and verification collections
+
+- `labs_registration_consents`: opaque receipt ID, keyed email digest, Better Auth user ID when linked, Terms version, Privacy version, server acceptance timestamp, linkage timestamp and verification timestamp. Do not store raw email or accept legal version/timestamp values from the client.
+- `labs_verification_flows`: opaque flow ID, keyed email digest, created/expiry timestamps and verified timestamp. A TTL index removes expired flow records after seven days. This is transport state, not the legal audit record.

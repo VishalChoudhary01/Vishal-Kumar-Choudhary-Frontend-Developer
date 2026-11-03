@@ -172,3 +172,12 @@ Remaining release/security gates:
 - Test direct requests, IDOR attempts, malformed source paths, oversized snapshots, no-store headers, and absence of source in anonymous HTML/RSC/public caches.
 - The current repository is public and existing demo runtimes ship client-side code. Protected source snapshots must be kept separate from public runtime code; a protected viewer does not make source code in a public repository or a browser bundle confidential.
 - No build/browser/security test evidence has been produced from this connected GitHub-only editing session. Do not describe the feature as production-certified or mark the security verification gate as passed.
+
+
+## 11. Consent and verification data boundary
+
+- The browser cannot submit legal-version identifiers, acceptance timestamps, user IDs or verification-state flags as authoritative data.
+- Legal consent is persisted in a private receipt collection with a keyed email digest and server timestamp; the Better Auth user-create hook links the actual user ID.
+- Verification-flow IDs are random, short-lived references. The success screen checks server-side state written by Better Auth's post-verification hook. Query parameters alone never prove email ownership.
+- Verification-flow rows have a seven-day TTL. Legal consent receipts are not automatically expired by that transient-flow TTL.
+- Resend requests return generic results to avoid revealing whether an email maps to an account.
