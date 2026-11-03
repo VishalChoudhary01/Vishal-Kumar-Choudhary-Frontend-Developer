@@ -42,7 +42,7 @@ export default async function LabsLoginPage({ searchParams }) {
       ) : null}
       <LoginForm
         returnTo={returnTo}
-        googleEnabled={isGoogleAuthConfigured}
+        googleEnabled={isAuthRuntimeConfigured() && isGoogleAuthConfigured}
       />
     </>
   );
