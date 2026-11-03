@@ -115,6 +115,58 @@ export const publishedLabExperiments = [
       ],
     },
   },
+  {
+    slug: "gradient-bloom",
+    title: "Gradient Bloom",
+    description:
+      "A CSS-only color study that layers radial and conic gradients into a soft, configurable field of light.",
+    explanation:
+      "The composition is built from CSS radial gradients, a conic gradient and color-mix(). The controls update CSS custom properties, so intensity, spread and color change in place without a canvas renderer or animation library.",
+    category: "CSS Experiments",
+    technologies: ["CSS Gradients", "CSS Custom Properties", "color-mix()"],
+    seo: {
+      title: "Gradient Bloom — Labs",
+      description:
+        "Explore a CSS gradient composition with live controls for color, intensity and spread.",
+    },
+    demo: {
+      runtimeKey: "gradient-bloom",
+      aspectRatio: {
+        mobile: "4:3",
+        desktop: "16:9",
+      },
+      capabilities: {
+        restart: false,
+        fullscreen: false,
+      },
+      controls: [
+        {
+          id: "color",
+          label: "Bloom color",
+          type: "color",
+          defaultValue: "#07A290",
+        },
+        {
+          id: "intensity",
+          label: "Intensity",
+          type: "range",
+          defaultValue: 58,
+          min: 15,
+          max: 85,
+          step: 1,
+        },
+        {
+          id: "spread",
+          label: "Spread",
+          type: "range",
+          defaultValue: 74,
+          min: 35,
+          max: 90,
+          step: 1,
+        },
+      ],
+    },
+  },
 ];
 
 const featuredSlug = "magnetic-interaction";

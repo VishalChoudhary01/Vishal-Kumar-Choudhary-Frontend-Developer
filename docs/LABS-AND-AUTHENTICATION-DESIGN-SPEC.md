@@ -1,7 +1,7 @@
 # Labs & Authentication — Product and UX Design Specification
 
 **Document:** `docs/LABS-AND-AUTHENTICATION-DESIGN-SPEC.md`  
-**Version:** 1.1  
+**Version:** 1.2  
 **Status:** Detailed UX and implementation-guidance baseline; feature implementation pending  
 **Updated on:** 2026-11-02  
 **Scope:** Labs listing, experiment detail/workspace, protected source access, Labs authentication UX, repository-aligned stack, module boundaries, hooks, components and state ownership  
@@ -1606,6 +1606,20 @@ The user explicitly instructed that remaining recommendations should be locked. 
 - Synchronize session changes across open Labs tabs, with server state authoritative and public demos unaffected.
 
 Items for which no recommendation had been approved or no sufficient information was available remain OPEN and are listed in Section 16.
+
+### 2026-11-03 — Initial published experiment set
+
+The first three code-owned public experiments are now implemented on the feature branch:
+
+| Experiment | Slug | Primary category | Runtime approach | Public controls |
+|---|---|---|---|---|
+| Magnetic Interaction | `magnetic-interaction` | Interface Interactions | React + Motion spring values + Pointer Events | Magnetic strength, field radius, show field |
+| Scroll-driven Text Reveal | `scroll-driven-text-reveal` | Motion & Animation | React + Motion `useScroll` / `useTransform` | Reveal span, show scroll progress |
+| Gradient Bloom | `gradient-bloom` | CSS Experiments | CSS radial/conic gradients, `color-mix()`, CSS custom properties | Bloom color, intensity, spread |
+
+All three runtimes are code-owned and lazy-loaded through the literal runtime registry. Their public metadata remains separate from `portfolio.projects`. The Labs listing renders static code-authored artwork rather than importing live experiment runtimes. The experiments do not use database-authored executable source.
+
+This entry records the current implementation content, not a new global design-system decision. The fourth Creative Coding category remains without a published experiment.
 
 ### Change management
 

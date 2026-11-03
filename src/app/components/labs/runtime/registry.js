@@ -10,6 +10,8 @@ const LAB_RUNTIME_REGISTRY = Object.freeze({
     import("./experiments/magnetic-interaction"),
   "scroll-driven-text-reveal": () =>
     import("./experiments/scroll-driven-text-reveal"),
+  "gradient-bloom": () =>
+    import("./experiments/gradient-bloom"),
 });
 
 export function hasLabRuntime(runtimeKey) {

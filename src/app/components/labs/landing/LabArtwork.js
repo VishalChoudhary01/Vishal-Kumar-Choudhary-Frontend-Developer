@@ -38,12 +38,40 @@ function ScrollTextArtwork() {
   );
 }
 
+function GradientBloomArtwork() {
+  return (
+    <div
+      aria-hidden="true"
+      className="relative flex h-full w-full items-center justify-center overflow-hidden bg-background"
+      style={{
+        backgroundImage:
+          "radial-gradient(ellipse 56% 64% at 22% 28%, color-mix(in srgb, #07A290 58%, transparent), transparent 74%), radial-gradient(ellipse 58% 64% at 78% 72%, color-mix(in srgb, #07A290 36%, transparent), transparent 64%), conic-gradient(from 215deg at 52% 48%, transparent 0deg, color-mix(in srgb, #07A290 14%, transparent) 118deg, transparent 236deg, color-mix(in srgb, #07A290 20%, transparent) 310deg, transparent 360deg)",
+      }}
+    >
+      <div className="relative z-10 text-center">
+        <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-text-muted">
+          CSS study / 03
+        </p>
+        <p className="mt-3 font-display text-[clamp(2rem,5vw,4rem)] leading-none tracking-[-0.06em] text-text-primary">
+          Gradient
+          <span className="block text-brand">Bloom.</span>
+        </p>
+      </div>
+      <span className="absolute bottom-5 right-5 font-mono text-[8px] uppercase tracking-[0.16em] text-text-muted">
+        Live CSS
+      </span>
+    </div>
+  );
+}
+
 export default function LabArtwork({ experiment }) {
   switch (experiment?.slug) {
     case "magnetic-interaction":
       return <MagneticArtwork />;
     case "scroll-driven-text-reveal":
       return <ScrollTextArtwork />;
+    case "gradient-bloom":
+      return <GradientBloomArtwork />;
     default:
       return (
         <div aria-hidden="true" className="flex h-full w-full items-center justify-center bg-surface-2">
