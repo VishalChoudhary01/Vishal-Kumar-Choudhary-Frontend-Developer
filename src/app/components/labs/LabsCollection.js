@@ -12,7 +12,7 @@ function CategoryNavigation({ categories, activeCategory, onChange }) {
   return (
     <nav
       aria-label="Filter experiments by category"
-      className="-mx-6 flex max-w-[calc(100%+3rem)] items-center gap-6 overflow-x-auto overscroll-x-contain border-b border-border-subtle px-6 sm:mx-0 sm:max-w-full sm:gap-8 sm:px-0"
+      className="-mx-6 flex max-w-[calc(100%+3rem)] items-center gap-6 overflow-x-auto overflow-y-hidden overscroll-x-contain border-b border-border-subtle px-6 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:max-w-full sm:gap-8 sm:px-0"
     >
       {categories.map((category) => {
         const active = activeCategory === category.id;

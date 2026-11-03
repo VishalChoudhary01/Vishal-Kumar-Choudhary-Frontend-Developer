@@ -1,7 +1,7 @@
 # Labs & Authentication — Product and UX Design Specification
 
 **Document:** `docs/LABS-AND-AUTHENTICATION-DESIGN-SPEC.md`  
-**Version:** 1.6  
+**Version:** 1.7  
 **Status:** Detailed UX and implementation-guidance baseline; feature implementation in progress  
 **Updated on:** 2026-11-03  
 **Scope:** Labs listing, experiment detail/workspace, protected source access, Labs authentication UX, repository-aligned stack, module boundaries, hooks, components and state ownership  
@@ -2187,4 +2187,14 @@ The existing hybrid showcase, 40:60 featured layout, category treatment, 4:3 med
 - Cards include a quiet ordinal marker. This is presentation metadata only and does not introduce nested controls.
 - Category navigation remains horizontally scrollable only within its own region on mobile.
 - Existing copy is retained where not explicitly approved for change. No authentication, source access, CMS, new dependency or runtime behavior is included in this visual-refinement slice.
+
+
+
+## 35. Category Navigation Scrollbar — 2026-11-03
+
+- The Labs category navigation is horizontally scrollable within its own region on narrow viewports.
+- Native scrollbar chrome must be visually hidden, including browser-specific scrollbar arrow buttons. The horizontal scroll behavior itself must remain available through touch, trackpad, mouse/shift-wheel and keyboard where supported.
+- Do not add custom arrow buttons or visual scroll indicators to the category navigation.
+- The hidden-scrollbar treatment must not create page-level horizontal overflow, clip focus rings, or change the active underline.
+- Keep this rule scoped to the category-navigation element. Do not hide or restyle the global portfolio scrollbar.
 
