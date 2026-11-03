@@ -38,7 +38,12 @@ export default function LabsPage() {
   return (
     <LabsPageShell>
       <main className="min-h-screen bg-background text-text-primary">
-        <LabsIntroduction />
+        <LabsIntroduction
+          experimentCount={publishedLabExperiments.length}
+          categoryCount={
+            new Set(publishedLabExperiments.map((experiment) => experiment.category)).size
+          }
+        />
         {featuredLabExperiment ? (
           <FeaturedExperiment experiment={featuredLabExperiment} />
         ) : null}

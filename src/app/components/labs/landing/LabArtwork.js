@@ -1,15 +1,32 @@
 function MagneticArtwork() {
   return (
-    <div aria-hidden="true" className="relative flex h-full w-full items-center justify-center overflow-hidden bg-background">
-      <div className="absolute left-1/2 top-1/2 h-[78%] aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full border border-brand/15" />
-      <div className="absolute left-1/2 top-1/2 h-[56%] aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-brand/35" />
-      <div className="absolute left-1/2 top-1/2 h-[34%] aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-soft/70 blur-2xl" />
+    <div
+      aria-hidden="true"
+      className="relative flex h-full w-full items-center justify-center overflow-hidden bg-background"
+    >
+      <div
+        className="absolute inset-0 opacity-[0.2]"
+        style={{
+          backgroundImage:
+            "linear-gradient(var(--border-subtle) 1px, transparent 1px), linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px)",
+          backgroundSize: "32px 32px",
+        }}
+      />
+      <div className="absolute left-1/2 top-1/2 h-[76%] aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full border border-brand/15" />
+      <div className="absolute left-1/2 top-1/2 h-[58%] aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-brand/30" />
+      <div className="absolute left-1/2 top-1/2 h-[36%] aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full border border-brand/20" />
+      <div className="absolute left-1/2 top-1/2 h-[24%] aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-soft/70 blur-2xl" />
+
       <div className="relative z-10 flex items-center gap-3 rounded-[var(--radius-md)] border border-brand/30 bg-brand px-5 py-3 text-xs font-semibold text-brand-contrast shadow-[0_12px_36px_-18px_var(--brand)] sm:px-7 sm:py-4 sm:text-sm">
-        <span className="h-2 w-2 rounded-full bg-brand-contrast" />
+        <span className="flex h-6 w-6 items-center justify-center rounded-full border border-brand-contrast/30">
+          <span className="h-1.5 w-1.5 rounded-full bg-brand-contrast" />
+        </span>
         Magnetic button
         <span className="opacity-70">↗</span>
       </div>
-      <span className="absolute bottom-5 right-5 font-mono text-[8px] uppercase tracking-[0.18em] text-text-muted sm:bottom-7 sm:right-7">
+
+      <div className="absolute left-[22%] top-[28%] h-3 w-3 rotate-[-18deg] border-l-2 border-t-2 border-text-secondary/70" />
+      <span className="absolute left-5 top-5 font-mono text-[8px] uppercase tracking-[0.18em] text-text-muted sm:left-7 sm:top-7">
         Pointer field / 01
       </span>
     </div>
@@ -18,7 +35,10 @@ function MagneticArtwork() {
 
 function ScrollTextArtwork() {
   return (
-    <div aria-hidden="true" className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-background px-5 py-6 sm:px-10">
+    <div
+      aria-hidden="true"
+      className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-background px-5 py-6 sm:px-10"
+    >
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_42%,var(--brand-soft),transparent_66%)] opacity-60" />
       <div className="absolute left-6 top-6 font-mono text-[8px] uppercase tracking-[0.18em] text-text-muted sm:left-9 sm:top-9">
         Motion study / 02
@@ -64,7 +84,6 @@ function GradientBloomArtwork() {
   );
 }
 
-
 function GenerativeParticleArtwork() {
   const nodes = [
     [8, 25], [17, 15], [26, 30], [35, 12], [44, 26], [55, 17],
@@ -84,9 +103,16 @@ function GenerativeParticleArtwork() {
   ];
 
   return (
-    <div aria-hidden="true" className="relative h-full w-full overflow-hidden bg-background">
+    <div
+      aria-hidden="true"
+      className="relative h-full w-full overflow-hidden bg-background"
+    >
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,var(--brand-soft),transparent_72%)] opacity-60" />
-      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
+      <svg
+        viewBox="0 0 100 100"
+        preserveAspectRatio="xMidYMid meet"
+        className="absolute inset-0 h-full w-full"
+      >
         {links.map(([from, to], index) => (
           <line
             key={index}
@@ -138,7 +164,10 @@ export default function LabArtwork({ experiment }) {
       return <GenerativeParticleArtwork />;
     default:
       return (
-        <div aria-hidden="true" className="flex h-full w-full items-center justify-center bg-surface-2">
+        <div
+          aria-hidden="true"
+          className="flex h-full w-full items-center justify-center bg-surface-2"
+        >
           <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-text-muted">
             {experiment?.category || "Lab experiment"}
           </span>

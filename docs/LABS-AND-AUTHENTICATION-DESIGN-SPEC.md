@@ -1,7 +1,7 @@
 # Labs & Authentication — Product and UX Design Specification
 
 **Document:** `docs/LABS-AND-AUTHENTICATION-DESIGN-SPEC.md`  
-**Version:** 1.5  
+**Version:** 1.6  
 **Status:** Detailed UX and implementation-guidance baseline; feature implementation in progress  
 **Updated on:** 2026-11-03  
 **Scope:** Labs listing, experiment detail/workspace, protected source access, Labs authentication UX, repository-aligned stack, module boundaries, hooks, components and state ownership  
@@ -2174,4 +2174,17 @@ The current four published experiment records declare both `restart` and `fullsc
 - A fullscreen experiment may use its own scroll container only when the experiment requires one. Its scroll area must be bounded to the fullscreen canvas, must retain an explicit exit-fullscreen action, and must not leave document scrolling locked after exit.
 - PageLoader route-change cleanup remains responsible for releasing overlay scroll locks. It must not re-enable Lenis on a Labs route.
 - Verify wheel, trackpad, touch, keyboard Page Down/Space, scrollbar dragging, back/forward navigation, fullscreen entry/exit, and reduced-motion behavior on Labs and existing portfolio routes.
+
+
+
+## 34. Labs Landing Page Visual Refinement — 2026-11-03
+
+The existing hybrid showcase, 40:60 featured layout, category treatment, 4:3 media, and uniform 3/2/1 responsive gallery remain unchanged. The current implementation refines hierarchy without changing the approved interaction model:
+
+- The hero retains its existing headline and descriptive copy. A responsive collection-overview rail presents live counts for published experiments and categories represented by those experiments. The rail stacks alongside the hero on wider layouts and becomes a compact two-column metric row on narrow layouts.
+- The featured experiment remains Magnetic Interaction. Its content hierarchy and sole visible CTA are preserved; its visual preview remains static and 4:3. No experiment runtime is initialized on the listing page.
+- Gallery cards keep one semantic link, open editorial treatment, category/title/description/inline technologies and the existing 4:3 static artwork. Content uses a flex-column layout so varying title/description lengths do not misalign the technology row and arrow.
+- Cards include a quiet ordinal marker. This is presentation metadata only and does not introduce nested controls.
+- Category navigation remains horizontally scrollable only within its own region on mobile.
+- Existing copy is retained where not explicitly approved for change. No authentication, source access, CMS, new dependency or runtime behavior is included in this visual-refinement slice.
 
