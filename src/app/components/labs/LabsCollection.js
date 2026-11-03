@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import LabArtwork from "./landing/LabArtwork";
 import useLabCategoryFilter from "@/app/hooks/labs/useLabCategoryFilter";
 import useLabLoadMore from "@/app/hooks/labs/useLabLoadMore";
 
@@ -15,7 +16,6 @@ function CategoryNavigation({ categories, activeCategory, onChange }) {
     >
       {categories.map((category) => {
         const active = activeCategory === category.id;
-
         return (
           <button
             key={category.id}
@@ -44,16 +44,6 @@ function CategoryNavigation({ categories, activeCategory, onChange }) {
   );
 }
 
-function ThumbnailFallback({ category }) {
-  return (
-    <div className="flex h-full w-full items-center justify-center bg-surface-2">
-      <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-text-muted">
-        {category || "Lab experiment"}
-      </span>
-    </div>
-  );
-}
-
 function LabCard({ experiment }) {
   const technologies = Array.isArray(experiment.technologies)
     ? experiment.technologies.filter(Boolean).slice(0, 3)
@@ -79,7 +69,7 @@ function LabCard({ experiment }) {
             ].join(" ")}
           />
         ) : (
-          <ThumbnailFallback category={experiment.category} />
+          <LabArtwork experiment={experiment} />
         )}
       </div>
 
@@ -129,13 +119,7 @@ function EmptyLabsState() {
   );
 }
 
-function Gallery({
-  visibleExperiments,
-  visibleCount,
-  totalCount,
-  hasMore,
-  onLoadMore,
-}) {
+function Gallery({ visibleExperiments, visibleCount, totalCount, hasMore, onLoadMore }) {
   return (
     <div>
       <div className="mb-7 flex flex-wrap items-center justify-between gap-3" aria-live="polite">
@@ -210,11 +194,7 @@ export default function LabsCollection({ experiments = [] }) {
 
       {experiments.length ? (
         <>
-          <CategoryNavigation
-            categories={categories}
-            activeCategory={activeCategory}
-            onChange={setActiveCategory}
-          />
+          <CategoryNavigation categories={categories} activeCategory={activeCategory} onChange={setActiveCategory} />
           <div className="pt-8 sm:pt-10">
             {filteredExperiments.length ? (
               <Gallery

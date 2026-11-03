@@ -1,23 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-
-function PreviewFallback({ category }) {
-  return (
-    <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-surface-2">
-      <div
-        aria-hidden="true"
-        className="absolute left-1/2 top-1/2 h-[min(72%,360px)] aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full border border-brand/20"
-      />
-      <div
-        aria-hidden="true"
-        className="absolute left-1/2 top-1/2 h-[min(48%,240px)] aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-brand/30"
-      />
-      <span className="relative font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted">
-        {category || "Featured experiment"}
-      </span>
-    </div>
-  );
-}
+import LabArtwork from "./landing/LabArtwork";
 
 export default function FeaturedExperiment({ experiment }) {
   if (!experiment?.slug || !experiment?.title) return null;
@@ -90,7 +73,7 @@ export default function FeaturedExperiment({ experiment }) {
             ].join(" ")}
           />
         ) : (
-          <PreviewFallback category={experiment.category} />
+          <LabArtwork experiment={experiment} />
         )}
       </Link>
     </section>

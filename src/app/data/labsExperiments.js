@@ -72,6 +72,49 @@ export const publishedLabExperiments = [
       ],
     },
   },
+  {
+    slug: "scroll-driven-text-reveal",
+    title: "Scroll-driven Text Reveal",
+    description:
+      "A typography study where each word emerges as the canvas moves through the viewport.",
+    explanation:
+      "The canvas scroll progress is mapped to each word's opacity and vertical offset. Scrolling forward reveals the sentence, while scrolling back reverses it. Reduced-motion preferences show the complete sentence without scroll-linked movement.",
+    category: "Motion & Animation",
+    technologies: ["React", "Motion", "useScroll"],
+    seo: {
+      title: "Scroll-driven Text Reveal — Labs",
+      description:
+        "Explore a scroll-linked typography reveal with adjustable reveal span and progress feedback.",
+    },
+    demo: {
+      runtimeKey: "scroll-driven-text-reveal",
+      aspectRatio: {
+        mobile: "4:3",
+        desktop: "16:9",
+      },
+      capabilities: {
+        restart: false,
+        fullscreen: false,
+      },
+      controls: [
+        {
+          id: "pace",
+          label: "Reveal span",
+          type: "range",
+          defaultValue: 80,
+          min: 55,
+          max: 100,
+          step: 5,
+        },
+        {
+          id: "showProgress",
+          label: "Show scroll progress",
+          type: "toggle",
+          defaultValue: true,
+        },
+      ],
+    },
+  },
 ];
 
 const featuredSlug = "magnetic-interaction";
