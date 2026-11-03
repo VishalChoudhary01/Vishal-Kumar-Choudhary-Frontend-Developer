@@ -12,6 +12,8 @@ const LAB_RUNTIME_REGISTRY = Object.freeze({
     import("./experiments/scroll-driven-text-reveal"),
   "gradient-bloom": () =>
     import("./experiments/gradient-bloom"),
+  "generative-particle-field": () =>
+    import("./experiments/generative-particle-field"),
 });
 
 export function hasLabRuntime(runtimeKey) {

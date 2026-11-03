@@ -64,6 +64,68 @@ function GradientBloomArtwork() {
   );
 }
 
+
+function GenerativeParticleArtwork() {
+  const nodes = [
+    [8, 25], [17, 15], [26, 30], [35, 12], [44, 26], [55, 17],
+    [65, 31], [76, 15], [88, 28], [13, 55], [24, 68], [38, 52],
+    [49, 73], [61, 56], [73, 70], [85, 54], [94, 74], [6, 82],
+    [31, 88], [53, 43], [70, 43], [42, 39], [81, 87], [19, 39],
+  ];
+  const links = [
+    [0, 1], [0, 2], [1, 2], [1, 3], [2, 4], [3, 4], [3, 5],
+    [4, 5], [4, 6], [5, 6], [5, 7], [6, 7], [6, 8], [7, 8],
+    [0, 9], [2, 9], [2, 11], [4, 11], [4, 19], [5, 19],
+    [6, 13], [7, 15], [8, 15], [9, 10], [9, 11], [10, 11],
+    [10, 12], [11, 12], [11, 21], [12, 13], [12, 18], [13, 14],
+    [13, 19], [13, 20], [14, 15], [14, 16], [14, 22], [15, 16],
+    [17, 18], [18, 12], [19, 20], [20, 15], [21, 19], [22, 16],
+    [23, 2], [23, 9], [23, 11],
+  ];
+
+  return (
+    <div aria-hidden="true" className="relative h-full w-full overflow-hidden bg-background">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,var(--brand-soft),transparent_72%)] opacity-60" />
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
+        {links.map(([from, to], index) => (
+          <line
+            key={index}
+            x1={nodes[from][0]}
+            y1={nodes[from][1]}
+            x2={nodes[to][0]}
+            y2={nodes[to][1]}
+            stroke="var(--brand)"
+            strokeOpacity="0.28"
+            strokeWidth="0.18"
+            vectorEffect="non-scaling-stroke"
+          />
+        ))}
+        {nodes.map(([x, y], index) => (
+          <circle
+            key={index}
+            cx={x}
+            cy={y}
+            r={index % 4 === 0 ? "0.55" : "0.34"}
+            fill="var(--brand)"
+            fillOpacity={index % 3 === 0 ? "0.95" : "0.68"}
+          />
+        ))}
+      </svg>
+      <div className="absolute left-6 top-6 font-mono text-[8px] uppercase tracking-[0.18em] text-text-muted sm:left-9 sm:top-9">
+        Generative study / 04
+      </div>
+      <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between gap-3 sm:bottom-9 sm:left-9 sm:right-9">
+        <p className="font-display text-[clamp(1.8rem,4vw,3.5rem)] leading-none tracking-[-0.05em] text-text-primary">
+          Connected by chance.
+        </p>
+        <span className="font-mono text-[8px] uppercase tracking-[0.16em] text-text-muted">
+          Canvas 2D
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function LabArtwork({ experiment }) {
   switch (experiment?.slug) {
     case "magnetic-interaction":
@@ -72,6 +134,8 @@ export default function LabArtwork({ experiment }) {
       return <ScrollTextArtwork />;
     case "gradient-bloom":
       return <GradientBloomArtwork />;
+    case "generative-particle-field":
+      return <GenerativeParticleArtwork />;
     default:
       return (
         <div aria-hidden="true" className="flex h-full w-full items-center justify-center bg-surface-2">

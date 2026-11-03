@@ -1,9 +1,9 @@
 # Labs & Authentication — Product and UX Design Specification
 
 **Document:** `docs/LABS-AND-AUTHENTICATION-DESIGN-SPEC.md`  
-**Version:** 1.2  
+**Version:** 1.3  
 **Status:** Detailed UX and implementation-guidance baseline; feature implementation pending  
-**Updated on:** 2026-11-02  
+**Updated on:** 2026-11-03  
 **Scope:** Labs listing, experiment detail/workspace, protected source access, Labs authentication UX, repository-aligned stack, module boundaries, hooks, components and state ownership  
 **Companion repository documents:** `docs/PRD.md`, `docs/ARCHITECTURE.md`, `docs/API-CONTRACTS.md`, `docs/PROJECT-STRUCTURE.md`, `docs/IMPLEMENTATION-PLAN.md`, and `docs/THREAT-MODEL.md`
 
@@ -1616,10 +1616,23 @@ The first three code-owned public experiments are now implemented on the feature
 | Magnetic Interaction | `magnetic-interaction` | Interface Interactions | React + Motion spring values + Pointer Events | Magnetic strength, field radius, show field |
 | Scroll-driven Text Reveal | `scroll-driven-text-reveal` | Motion & Animation | React + Motion `useScroll` / `useTransform` | Reveal span, show scroll progress |
 | Gradient Bloom | `gradient-bloom` | CSS Experiments | CSS radial/conic gradients, `color-mix()`, CSS custom properties | Bloom color, intensity, spread |
+| Generative Particle Field | `generative-particle-field` | Creative Coding | Native Canvas 2D API | Particle count, movement speed, connection distance, network color |
 
 All three runtimes are code-owned and lazy-loaded through the literal runtime registry. Their public metadata remains separate from `portfolio.projects`. The Labs listing renders static code-authored artwork rather than importing live experiment runtimes. The experiments do not use database-authored executable source.
 
 This entry records the current implementation content, not a new global design-system decision. The fourth Creative Coding category remains without a published experiment.
+
+
+### 2026-11-03 — Fourth published experiment
+
+Added **Generative Particle Field** (`generative-particle-field`) in the approved **Creative Coding** category.
+
+- Runtime: native Canvas 2D with a code-owned lazy registry entry.
+- Controls: particle count (28–120), movement speed (0–2), connection distance (50–180px), and network color.
+- Performance safeguards: 30fps target, device-pixel ratio capped at 1.5, ResizeObserver cleanup, and no React state updates per animation frame.
+- Accessibility: reduced-motion mode renders a static particle network and the canvas has an accessible description.
+- Listing: a separate static SVG/CSS-style artwork preview is used; the Canvas runtime is not imported by the listing page.
+- No new dependency was added. Three.js is not used by this experiment.
 
 ### Change management
 

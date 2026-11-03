@@ -167,6 +167,67 @@ export const publishedLabExperiments = [
       ],
     },
   },
+  {
+    slug: "generative-particle-field",
+    title: "Generative Particle Field",
+    description:
+      "A living network of points where chance, distance and movement create a continuously changing composition.",
+    explanation:
+      "Each particle moves across a 2D canvas and reflects from its edges. Nearby particles are connected with lines whose opacity fades with distance. The controls change the particle population, movement speed, connection threshold and network color. Rendering is capped at 30 frames per second and a device-pixel ratio of 1.5 to keep the effect lightweight.",
+    category: "Creative Coding",
+    technologies: ["JavaScript", "Canvas 2D", "Generative Art"],
+    seo: {
+      title: "Generative Particle Field — Labs",
+      description:
+        "Explore a generative Canvas particle network with controls for node count, speed, connection distance and color.",
+    },
+    demo: {
+      runtimeKey: "generative-particle-field",
+      aspectRatio: {
+        mobile: "4:3",
+        desktop: "16:9",
+      },
+      capabilities: {
+        restart: false,
+        fullscreen: false,
+      },
+      controls: [
+        {
+          id: "particleCount",
+          label: "Particle count",
+          type: "range",
+          defaultValue: 72,
+          min: 28,
+          max: 120,
+          step: 4,
+        },
+        {
+          id: "speed",
+          label: "Movement speed",
+          type: "range",
+          defaultValue: 0.7,
+          min: 0,
+          max: 2,
+          step: 0.1,
+        },
+        {
+          id: "connectionDistance",
+          label: "Connection distance",
+          type: "range",
+          defaultValue: 125,
+          min: 50,
+          max: 180,
+          step: 5,
+        },
+        {
+          id: "color",
+          label: "Network color",
+          type: "color",
+          defaultValue: "#07A290",
+        },
+      ],
+    },
+  },
 ];
 
 const featuredSlug = "magnetic-interaction";
