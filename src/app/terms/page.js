@@ -162,7 +162,7 @@ export default function TermsPage() {
 
       <Section id="contact" title="11. Contact">
         <p>
-          Questions about these terms, permissions, account access, or a concern about the service can be sent through the website's <Link className="text-brand underline-offset-4 hover:underline" href="/#contact">Contact form</Link>. Do not include passwords, verification links, or other secrets in your message.
+          Questions about these terms, permissions, account access, or a concern about the service can be sent through the website&apos;s <Link className="text-brand underline-offset-4 hover:underline" href="/#contact">Contact form</Link>. Do not include passwords, verification links, or other secrets in your message.
         </p>
       </Section>
     </LegalDocumentPage>
