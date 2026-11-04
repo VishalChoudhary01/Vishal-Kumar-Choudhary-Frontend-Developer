@@ -34,6 +34,18 @@ export const isAuthRuntimeConfigured = () => isDatabaseConfigured;
 export const isAuthDeliveryConfigured = () => isDatabaseConfigured && isAuthEmailConfigured();
 export const isLegalConsentConfigured = areLegalDocumentsConfigured;
 
+/**
+ * Return non-sensitive readiness categories for the account-creation UI.
+ * Never expose the configured values of database, auth or SMTP credentials.
+ */
+export function getAuthRegistrationReadiness() {
+  return {
+    database: isDatabaseConfigured,
+    emailDelivery: isDatabaseConfigured && isAuthEmailConfigured(),
+    legalDocuments: isLegalConsentConfigured(),
+  };
+}
+
 /*
  * Better Auth uses the native MongoDB driver so its adapter can use Atlas
  * transactions. Mongoose remains the app's repository/model connection.
