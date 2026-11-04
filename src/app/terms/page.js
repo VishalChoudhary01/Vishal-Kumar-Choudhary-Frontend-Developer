@@ -96,7 +96,7 @@ export default function TermsPage() {
           Labs experiments are demonstrations. They may contain simplified models, incomplete features, simulated data, or implementation choices made for teaching and visualisation. They are not production software, security assessments, or professional advice.
         </p>
         <p>
-          Certain experiment source snapshots may be displayed only after you sign in with a verified email address and your account has an active access grant for that experiment. Access may be limited, expire, or be revoked. An account alone does not grant source access.
+          Certain experiment source snapshots are protected. Every signed-in account with a verified email address can read and copy any source snapshot that the owner has published. No individual access grant or approval is required. Visitors who are not signed in and signed-in accounts with unverified email addresses cannot view protected source. The owner may publish or unpublish source for an experiment, which controls whether it is available to verified accounts.
         </p>
         <p>
           Do not share protected-source content or account access with others unless a separate written permission or licence allows it. A public interactive demo may send its client-side code to your browser; a protected source viewer does not make code already present in a public repository or browser bundle confidential.
