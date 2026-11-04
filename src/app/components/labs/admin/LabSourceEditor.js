@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  ArrowDown,
   ArrowLeft,
+  ArrowUp,
   Eye,
   FilePlus2,
   FileUp,
@@ -89,6 +91,29 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
   const [previewVersion, setPreviewVersion] = useState(null);
   const [previewFileIndex, setPreviewFileIndex] = useState(0);
   const [previewLoading, setPreviewLoading] = useState(false);
+  function moveFile(fromIndex, toIndex) {
+    if (
+      busy ||
+      fromIndex === toIndex ||
+      fromIndex < 0 ||
+      toIndex < 0 ||
+      fromIndex >= files.length ||
+      toIndex >= files.length
+    ) {
+      return;
+    }
+
+    const selectedFileBeforeMove = files[selectedIndex];
+    const reorderedFiles = [...files];
+    const [movedFile] = reorderedFiles.splice(fromIndex, 1);
+    reorderedFiles.splice(toIndex, 0, movedFile);
+
+    setFiles(reorderedFiles);
+    setSelectedIndex(Math.max(0, reorderedFiles.indexOf(selectedFileBeforeMove)));
+    setError("");
+    setMessage("File order changed. Save the draft to preserve this order.");
+  }
+
 
   const selectedFile = files[selectedIndex] || null;
   const totalBytes = useMemo(
@@ -497,7 +522,10 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
         <section className="mt-6 grid gap-5 xl:grid-cols-[280px_minmax(0,1fr)]">
           <aside className="rounded-sm border border-border bg-surface-1 p-4">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-sm font-semibold">Files</h2>
+              <div>
+                <h2 className="text-sm font-semibold">Files</h2>
+                <p className="mt-1 text-[10px] text-text-tertiary">Drag to reorder or use the arrow controls.</p>
+              </div>
               <div className="flex items-center gap-1.5">
                 <label className="inline-flex h-8 cursor-pointer items-center gap-1 border border-border px-2 text-[11px] font-semibold hover:border-brand hover:text-brand">
                   <FileUp size={13} aria-hidden="true" />
@@ -532,23 +560,63 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                     : "";
 
                 return (
-                  <button
+                  <div
                     key={file.path + "-" + index}
-                    type="button"
-                    onClick={() => setSelectedIndex(index)}
-                    aria-pressed={selectedIndex === index}
+                    draggable={!busy && files.length > 1}
+                    onDragStart={(event) => {
+                      event.dataTransfer.effectAllowed = "move";
+                      event.dataTransfer.setData("text/plain", String(index));
+                    }}
+                    onDragOver={(event) => {
+                      event.preventDefault();
+                      event.dataTransfer.dropEffect = "move";
+                    }}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      const fromIndex = Number(event.dataTransfer.getData("text/plain"));
+                      moveFile(fromIndex, index);
+                    }}
                     className={[
-                      "flex min-h-9 w-full items-center justify-between gap-2 border-l-2 px-3 py-2 text-left text-xs transition-colors",
+                      "flex items-stretch gap-1 border-l-2 transition-colors",
                       selectedIndex === index
                         ? "border-brand bg-brand-soft text-text-primary"
                         : "border-transparent text-text-secondary hover:bg-surface-2",
                     ].join(" ")}
                   >
-                    <span className="min-w-0 truncate">{file.path}</span>
-                    {fileState ? (
-                      <span className="shrink-0 text-[9px] font-semibold uppercase tracking-[0.08em] text-warning">{fileState}</span>
-                    ) : null}
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedIndex(index)}
+                      aria-pressed={selectedIndex === index}
+                      className="flex min-h-10 min-w-0 flex-1 items-center justify-between gap-2 px-2 py-2 text-left text-xs"
+                    >
+                      <span className="min-w-0 truncate">{file.path}</span>
+                      {fileState ? (
+                        <span className="shrink-0 text-[9px] font-semibold uppercase tracking-[0.08em] text-warning">{fileState}</span>
+                      ) : null}
+                    </button>
+                    <div className="flex shrink-0 items-center gap-0.5 pr-1">
+                      <button
+                        type="button"
+                        onClick={() => moveFile(index, index - 1)}
+                        disabled={index === 0 || Boolean(busy)}
+                        aria-label={"Move " + file.path + " up"}
+                        title="Move up"
+                        className="grid h-7 w-7 place-items-center text-text-tertiary transition-colors hover:bg-background hover:text-text-primary focus-visible:outline-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-25"
+                      >
+                        <ArrowUp size={13} aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveFile(index, index + 1)}
+                        disabled={index === files.length - 1 || Boolean(busy)}
+                        aria-label={"Move " + file.path + " down"}
+                        title="Move down"
+                        className="grid h-7 w-7 place-items-center text-text-tertiary transition-colors hover:bg-background hover:text-text-primary focus-visible:outline-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-25"
+                      >
+                        <ArrowDown size={13} aria-hidden="true" />
+                      </button>
+                    </div>
+                  </div>
                 );
               })}
               {!files.length ? (
