@@ -3,6 +3,7 @@ import "server-only";
 import { connectToDatabase } from "@/app/lib/db/mongoose";
 
 import LabSource from "./models/LabSource";
+import LabSourceVersion from "./models/LabSourceVersion";
 
 const SAFE_SOURCE_PATH =
   /^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[A-Za-z0-9._/-]{1,180}$/;
@@ -16,15 +17,28 @@ export async function getAuthorizedLabSource({ user, slug }) {
 
   // Every verified account can read every published snapshot. Source access
   // is no longer dependent on a per-user grant record.
-  const source = await LabSource.findOne({
-    slug,
-    published: true,
-  })
-    .select("version files updatedAt")
+  const source = await LabSource.findOne({ slug })
+    .select("version files updatedAt published publishedVersionId")
     .lean();
 
-  if (!source || !Array.isArray(source.files)) {
+  if (!source || (source.published !== true && !source.publishedVersionId)) {
     return { status: "not-found" };
+  }
+
+  let snapshot = source;
+  if (source.publishedVersionId) {
+    snapshot = await LabSourceVersion.findOne({
+      versionId: source.publishedVersionId,
+      experimentSlug: slug,
+    })
+      .select("version files createdAt")
+      .lean();
+
+    if (!snapshot) return { status: "unavailable" };
+  }
+
+  if (!Array.isArray(snapshot.files)) {
+    return { status: "unavailable" };
   }
 
   const files = source.files
@@ -55,9 +69,9 @@ export async function getAuthorizedLabSource({ user, slug }) {
     status: "ok",
     data: {
       slug,
-      version: source.version,
-      updatedAt: source.updatedAt
-        ? new Date(source.updatedAt).toISOString()
+      version: snapshot.version,
+      updatedAt: snapshot.createdAt || source.updatedAt
+        ? new Date(snapshot.createdAt || source.updatedAt).toISOString()
         : null,
       files,
     },
