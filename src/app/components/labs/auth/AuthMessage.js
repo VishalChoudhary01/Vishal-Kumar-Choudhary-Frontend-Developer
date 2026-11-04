@@ -11,7 +11,7 @@ export default function AuthMessage({ title, children, tone = "error" }) {
       className={"mb-5 rounded-sm border px-3 py-3 " + styles}
     >
       {title ? <p className="mb-1 text-sm font-semibold">{title}</p> : null}
-      <p className="text-sm leading-6">{children}</p>
+      <div className="text-sm leading-6">{children}</div>
     </div>
   );
 }
