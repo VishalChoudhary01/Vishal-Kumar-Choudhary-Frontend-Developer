@@ -10,11 +10,11 @@
 
 ## 1. Purpose
 
-Provide a secure, owner-only way to create and maintain the separate source snapshots used by the Labs protected-source viewer. The portfolio owner must be able to create a source record for an existing experiment, add/edit/remove files, save drafts, publish a specific source version, inspect history, restore an earlier version, and grant or revoke an individual verified account's access.
+Provide a secure, owner-only way to create and maintain the separate source snapshots used by the Labs protected-source viewer. The owner can create source records for existing experiments, add/edit/remove files, save drafts, publish/unpublish specific source versions, inspect history and restore earlier versions. Every logged-in account with a verified email automatically receives read access to all published source; no per-user grant is issued or required.
 
-This is a **narrow Labs source-management and engagement capability**, not approval to build the full portfolio CMS/Admin area. It must not change the public Labs layout or execute arbitrary code inside the main portfolio application. Every registered account with a verified email can automatically read all published experiment source; the owner does not issue per-user source grants.
+This is a **narrow Labs source-management and engagement capability**, not approval to build the full portfolio CMS/Admin area. It must not change the public Labs layout or execute arbitrary code inside the main portfolio application. The automatic access rule is based only on a valid Better Auth session, `emailVerified === true`, and a published source snapshot.
 
-This document describes the target plan. It does not claim that the owner console, owner identity, source snapshots, grant UI, version history, or audit log already exist.
+This document describes the target plan. It does not claim that the owner console, source snapshots, version history, likes, event analytics or audit log already exist.
 
 ## 2. Repository and deployment audit — current baseline
 
@@ -26,8 +26,8 @@ The following is grounded in the inspected `feat/labs-public-page` implementatio
 | Source schema | `src/app/lib/labs/models/LabSource.js`; collection `lab_sources`; one document per slug with `version`, `published` and embedded `files` | No dedicated immutable source-version collection or draft/published version pointers |
 | Legacy grant schema | `src/app/lib/labs/models/LabSourceGrant.js`; collection `lab_source_grants`; per-user/per-experiment active/expiry/revocation fields and unique index | Must be removed from the source authorization path and retired after a safe data/dependency check; no grant-management UI/API will be built |
 | Source authorization | `src/app/lib/labs/source-access.js` currently checks verified user + active grant + published source | Target policy removes the active-grant lookup: verified Better Auth session + published source is sufficient for regular users; owner uses a separate draft/version management guard |
-| Source API | `GET /api/v1/labs/:slug/source` | No owner source CRUD, version, publish, grant, audit or import endpoints |
-| UI | `LabSourceAccess.js` displays the source panel and handles the authorized viewer/denied states | No owner-only source manager, file tree, code editing, version history or engagement analytics dashboard |
+| Source API | `GET /api/v1/labs/:slug/source` | No owner source CRUD, version, publish, analytics or audit endpoints |
+| UI | `LabSourceAccess.js` displays the source panel and handles the authorized viewer/denied states | No owner-only source manager, file tree, code editing, version history or source-engagement analytics dashboard |
 | Database setup | Better Auth and registration collections are created/used by their current flows | Source collections are not automatically provisioned; the current Atlas screenshot showed neither `lab_sources` nor `lab_source_grants` |
 | Preview execution | Existing public demos are code-owned browser runtimes | No approved sandbox for executing admin-authored source; arbitrary stored source must remain non-executable |
 
@@ -37,7 +37,7 @@ The following is grounded in the inspected `feat/labs-public-page` implementatio
 - The current protected source endpoint returns private/no-store responses. Preserve that behavior for all source reads and all owner drafts.
 - The repository is public. Code already committed to that repository, shipped in public client bundles, or exposed in source maps is not made confidential by copying it into Atlas. The private snapshot viewer protects only the separate snapshot stored in Atlas.
 - The current source schema is mutable and does not satisfy the PRD's immutable content-history requirement. Do not call the current `version` string immutable version history.
-- The source collections and initial snapshot data have not been provisioned in the shown Atlas database. Creating empty collections is not sufficient; a valid snapshot and grant must be written through the planned workflow.
+- The source collections and initial snapshot data have not been provisioned in the shown Atlas database. Creating empty collections is not sufficient; the owner workflow must publish a valid snapshot. No per-user grant data is needed.
 
 
 ### 2.1 Public demo versus protected source snapshot
@@ -54,9 +54,9 @@ The following is grounded in the inspected `feat/labs-public-page` implementatio
 1. A single trusted owner can securely manage Labs source snapshots.
 2. Source changes are saved as drafts and never become available merely because a file was edited.
 3. Published source versions are immutable and can be restored without overwriting history.
-4. Registered users receive source only when their email is verified and an explicit active grant exists for that exact experiment.
-5. The owner can find a registered account using an exact email address, grant access for one experiment, optionally set expiry, and revoke access.
-6. Every privileged source mutation and grant/revoke operation is auditable.
+4. Every registered user with a valid session and verified email can read every published experiment source automatically.
+5. The owner can see aggregate source opens, copy actions, likes/unlikes and active likes for each experiment in the owner/admin dashboard.
+6. Every privileged source mutation is auditable; verified-user source opens, copies and like/unlike transitions are recorded as separate analytics events.
 7. Source code stays server-side until the source endpoint independently authorizes the request.
 8. Editor-only code and dependencies stay out of the public homepage and ordinary Labs listing bundle.
 
@@ -79,9 +79,9 @@ The following is grounded in the inspected `feat/labs-public-page` implementatio
 
 ### 4.2 Registered user
 
-- Must have a valid Better Auth session and `emailVerified === true` before protected source access.
-- May read a published source snapshot only when an active grant matches the server-derived Better Auth user ID and experiment slug and is not expired or revoked.
-- Cannot create/edit/publish source, grant access, revoke access or modify their own privileges.
+- Must have a valid Better Auth session and `emailVerified === true` before protected source access, source copying or liking/unliking.
+- May read all published source snapshots automatically. Access does not depend on owner approval, a per-user grant, expiry or a user/experiment grant record.
+- Cannot create/edit/publish/unpublish source, access drafts, manage source versions, change owner settings or access owner analytics.
 - Cannot supply their own user ID, grant ID, role, publisher ID or permission result.
 
 ### 4.3 Owner
@@ -89,10 +89,10 @@ The following is grounded in the inspected `feat/labs-public-page` implementatio
 - The initial owner is the portfolio operator and has source-management permissions.
 - Owner identity must be provisioned through a trusted server-side mechanism. Public registration must never create or elevate an Owner.
 - The owner must use a verified Better Auth account and a server-validated session.
-- The owner can manage source and grants without first granting the owner account ordinary user-level access to each experiment. Owner management/read authority is a separate permission path; it must not weaken the regular-user grant rule.
+- The owner manages source records/files/drafts/versions/publication and can inspect aggregate engagement analytics. The owner does not manage per-user source grants because all verified accounts receive published-source access automatically.
 - Every owner page, Server Action, Route Handler, domain use case and repository operation must enforce owner authorization server-side. Hiding controls in React is not protection.
 
-**LOCKED — USER APPROVED (2026-11-04):** the initial owner is identified by the server-only `LABS_OWNER_USER_ID` environment variable, containing the stable Better Auth user ID of the already-created, verified owner account. This avoids email matching, first-user-wins behavior and a premature general role-management system. If absent or invalid, owner management is disabled/denied. Never fall back to the first registered user or to an email supplied by the browser. The owner is the sole privileged administrator for this first Labs source-management release and is authorized to create/manage source records, files, drafts, immutable versions, publish/unpublish/restore source, grant/revoke/expire per-experiment access, and inspect audit history. A later multi-admin model requires a separate decision.
+**LOCKED — USER APPROVED (2026-11-04):** the initial owner is identified by the server-only `LABS_OWNER_USER_ID` environment variable, containing the stable Better Auth user ID of the already-created, verified owner account. This avoids email matching, first-user-wins behavior and a premature general role-management system. If absent or invalid, owner management is disabled/denied. Never fall back to the first registered user or to an email supplied by the browser. The owner is the sole privileged administrator for this first Labs source-management release and is authorized to create/manage source records, files, drafts, immutable versions, publish/unpublish/restore source, and inspect source-engagement analytics and audit history. A later multi-admin model requires a separate decision.
 
 The product's existing Guest / Registered User / Admin taxonomy remains. For this first narrow slice, the singleton Owner is the only manually provisioned privileged Admin. Whether to introduce multiple Admins later is outside this plan.
 
@@ -115,8 +115,8 @@ Owner can see:
 - Last saved/published timestamps and actor.
 - File count and total UTF-8 size.
 - Source validation status.
-- Whether source is currently published/available to eligible grantees.
-- Grant count and latest grant activity (not raw source content).
+- Whether source is currently published and available to all verified accounts.
+- Source opens, unique verified accounts, code-copy actions, current likes, like/unlike actions and latest aggregate activity (not raw source content or user-level browsing history).
 
 The inventory must not change public Labs cards or expose private metadata to guests.
 
@@ -201,7 +201,7 @@ Analytics event records use the server-derived Better Auth user ID for abuse con
 
 ### 5.8 Owner entry point
 
-- The owner must have a discoverable, authenticated entry into source management. Candidate entry points are an owner-only Labs account-menu item and/or a `Manage source` action in the experiment's protected-source section.
+- The owner must have a discoverable, authenticated entry into source management and the source-engagement dashboard. Candidate entry points are owner-only Labs account-menu/dashboard items and/or a `Manage source` action in the experiment's source section.
 - The server determines whether the current actor is the owner and passes only the safe UI capability state. The client must never infer owner access from email text or browser state.
 - The final navigation placement and wording remain an owner UX review item. Direct navigation to the owner route must still run the owner guard and return 403 for non-owners.
 - The public experiment demo and ordinary user source-access panel remain unchanged for guests and regular users.
@@ -277,12 +277,10 @@ Candidate owner-only endpoints (final routes/verbs are owned by `API-CONTRACTS.m
 | Restore a version | `POST /api/v1/admin/labs/sources/:slug/restore/:versionId` | Creates a new draft from an old snapshot |
 | Publish exact version | `POST /api/v1/admin/labs/sources/:slug/publish` | Advances published pointer to a saved version |
 | Unpublish source | `POST /api/v1/admin/labs/sources/:slug/unpublish` | Clears published pointer / stops new reads |
-| List grants | `GET /api/v1/admin/labs/sources/:slug/grants` | Owner-only grant list |
-| Grant/re-grant by email | `POST /api/v1/admin/labs/sources/:slug/grants` | Server resolves verified user and writes grant |
-| Revoke grant | `DELETE /api/v1/admin/labs/sources/:slug/grants/:grantId` | Revokes one grant |
+| Source analytics | `GET /api/v1/admin/labs/sources/:slug/analytics` | Owner-only aggregate opens, unique verified accounts, copies, current likes and like/unlike trends |
 | Read audit | `GET /api/v1/admin/labs/sources/:slug/audit` | Paginated owner-only audit metadata |
 
-Keep the existing user-facing endpoint `GET /api/v1/labs/:slug/source` as the only regular-user source read. It continues to require verified session + active grant + published pointer and returns private/no-store data.
+Keep the existing user-facing endpoint `GET /api/v1/labs/:slug/source` as the only regular-user source read. Target policy requires a valid verified Better Auth session + published pointer; no grant lookup is performed. The response remains private/no-store.
 
 All mutations call server-only domain use cases and repositories. Never let UI components query MongoDB or make direct Mongoose calls.
 
@@ -384,7 +382,7 @@ All mutations call server-only domain use cases and repositories. Never let UI c
 
 1. **Owner bootstrap:** **RESOLVED / LOCKED.** Use the singleton server-only `LABS_OWNER_USER_ID` environment allowlist. The owner is the sole privileged administrator for the initial Labs source-management release. Do not add persisted multi-admin roles in this phase.
 2. **Source access policy:** **RESOLVED / LOCKED (2026-11-04).** Every logged-in account with `emailVerified === true` can read all published experiment source automatically. Guests and signed-in unverified accounts cannot read source. No per-user grant, expiry or revoke workflow exists in the target design; publish/unpublish controls availability per experiment.
-3. **Engagement policy:** **RESOLVED / LOCKED (2026-11-04).** Only verified accounts can like/unlike experiments and copy source. The owner/admin dashboard shows experiment-level aggregate source opens, copy actions, current likes and like/unlike trends; it does not expose individual users' browsing/action histories in the first release.
+3. **Engagement policy:** **RESOLVED / LOCKED (2026-11-04).** Only verified accounts can open source, copy code and like/unlike experiments. The owner dashboard shows per-experiment source-open counts, unique verified-account counts, copy-action counts, current active likes and like/unlike trends by date range; it does not expose individual users' browsing/action histories in the first release.
 4. **Editor:** lightweight accessible textarea/code editor for MVP or add Monaco/CodeMirror after dependency and bundle review. Neither editor is currently present as a direct dependency in the inspected package manifest.
 5. **Source import strategy:** manually create files in owner UI, import an allowlisted set of repository files, or support both. Initial `magnetic-interaction` canonical file inventory must be audited.
 6. **Version retention:** PRD currently says immutable versions are retained indefinitely. Confirm storage/backup/cost implications before production.
