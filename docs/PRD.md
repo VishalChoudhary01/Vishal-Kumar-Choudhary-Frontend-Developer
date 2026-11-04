@@ -270,7 +270,7 @@ Requirements are not complete merely because UI exists. Each capability must pas
 - MongoDB: application persistence.
 - Cloudinary: media storage/delivery.
 - Vercel: existing Next.js application deployment.
-- Authentication provider/session implementation, MongoDB host, scheduler and isolated preview runtime remain open and must be validated during architecture phase.
+- Better Auth with the MongoDB adapter is selected for Labs authentication; the final session-lifetime/concurrency policy remains open. MongoDB host controls, scheduler and isolated preview runtime still require validation/decisions.
 
 ### FR-11 Owner-managed protected source lifecycle
 - The manually provisioned singleton portfolio owner is the sole privileged administrator for the first source-management release and can create and maintain private source snapshots for existing Labs experiments through a protected owner-only workspace and inspect aggregate source-engagement analytics.
