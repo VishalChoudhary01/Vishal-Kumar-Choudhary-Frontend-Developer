@@ -40,3 +40,37 @@ export function getAbsoluteInternalUrl(path, origin) {
   const safePath = getSafeReturnTo(path);
   return new URL(safePath, origin).toString();
 }
+
+
+/**
+ * Owner auth may return only to the narrow Labs source-management route family.
+ * Keep this separate from getSafeReturnTo(), which intentionally accepts only
+ * ordinary /labs destinations.
+ */
+export function getSafeOwnerReturnTo(value) {
+  if (
+    typeof value !== "string" ||
+    !value.startsWith("/") ||
+    value.startsWith("//") ||
+    value.includes("\\") ||
+    /[\u0000-\u001f\u007f]/.test(value)
+  ) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(value, "https://portfolio.invalid");
+    const isOwnerRoute =
+      parsed.origin === "https://portfolio.invalid" &&
+      !parsed.search &&
+      !parsed.hash &&
+      (
+        parsed.pathname === "/admin/labs/sources" ||
+        /^\/admin\/labs\/sources\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(parsed.pathname)
+      );
+
+    return isOwnerRoute ? parsed.pathname : null;
+  } catch {
+    return null;
+  }
+}
