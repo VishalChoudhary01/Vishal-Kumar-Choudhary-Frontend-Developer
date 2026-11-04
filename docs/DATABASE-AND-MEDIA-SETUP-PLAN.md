@@ -474,8 +474,8 @@ This section updates the generic collection-planning guidance for the approved L
 - Mongoose remains the application model/repository layer and targets the same configured database.
 - The current Atlas database screenshot showed Better Auth `user` / `account` / `rateLimit`-related collections and Labs registration-consent/verification collections.
 - The current code defines `LabSource` in `src/app/lib/labs/models/LabSource.js` using `lab_sources`, with one mutable per-slug record embedding `version`, `published` and `files`.
-- The current code defines `LabSourceGrant` in `src/app/lib/labs/models/LabSourceGrant.js` using `lab_source_grants`, with a unique user/experiment index.
-- The protected source API currently reads the published source record after validating Better Auth session, verified email and a matching active grant.
+- The current code defines a legacy `LabSourceGrant` model in `src/app/lib/labs/models/LabSourceGrant.js` using `lab_source_grants`, with a unique user/experiment index. The approved target policy removes this collection from authorization and retires it after a safe migration/reference check.
+- The protected source API currently reads the published source record after validating Better Auth session, verified email and a matching active grant. This is transitional code; target access requires only verified session + published source.
 - Source collections/snapshots were not visible in the Atlas screenshot. Do not assume a source record exists because the Mongoose model or API exists.
 
 ### 15.2 Target source-management collections
@@ -486,28 +486,29 @@ Follow `docs/LABS-SOURCE-MANAGEMENT-SPEC.md` and `docs/API-CONTRACTS.md` before 
 |---|---|---|
 | `lab_sources` | One source aggregate per canonical experiment slug; draft/published version pointers and actor timestamps | Exists as a Mongoose model definition; live collection/records not yet verified; current document shape is mutable and requires migration |
 | `lab_source_versions` | Immutable source snapshots with files, server-computed hash, version number, parent version, actor and timestamp | Planned; not implemented/provisioned |
-| `lab_source_grants` | One current grant per Better Auth user ID + experiment slug, with active/expiry/revocation | Exists as a Mongoose model definition; live collection/records not yet verified |
-| `lab_source_audit_events` | Append-only owner source/grant lifecycle audit metadata | Planned; not implemented/provisioned |
+| `lab_source_grants` | Legacy per-user source authorization | Exists as a Mongoose model definition; retire after removing endpoint references and preserving any needed export/rollback data |
+| `lab_source_audit_events` | Append-only owner source lifecycle audit metadata | Planned; not implemented/provisioned |
+| `lab_likes` | Current like state, one verified user + experiment | Planned; not implemented/provisioned |
+| `lab_analytics_events` | Source-open, code-copy, like and unlike events with server-derived actor and idempotency key | Planned; not implemented/provisioned |
 
 Do not manually create empty collections to make the source viewer appear ready. The application bootstrap/migration must create required indexes idempotently and seed no source content unless a reviewed source snapshot is explicitly imported.
 
 ### 15.3 Bootstrap, index and migration requirements
 
 - Preserve Better Auth-managed collections and indexes; do not edit their schema manually unless the selected adapter explicitly requires a documented migration.
-- Create/verify the unique `lab_sources.slug` index and the existing unique `lab_source_grants.{ userId, experimentSlug }` index.
+- Create/verify the unique `lab_sources.slug` index. Add a unique `lab_likes.{ userId, experimentSlug }` index and analytics event/idempotency indexes based on reviewed query patterns. Do not create a source-grant index for the target design.
 - For immutable versions, add a unique `{ sourceId, versionNumber }` index and a supporting `{ experimentSlug, createdAt: -1 }` index.
 - For audit events, add a supporting `{ experimentSlug, createdAt: -1 }` index; audit records must not contain source text, passwords, tokens, SMTP/API keys or raw secret values.
 - Use a server-side migration that detects legacy mutable `lab_sources` documents, computes deterministic content hashes, creates a corresponding immutable version, and only then updates aggregate pointers. Preserve the original records until migration reconciliation and rollback are proven.
-- Bootstrap must be safe to execute more than once, must not duplicate versions/audit/grants, and must fail closed if uniqueness or pointer integrity cannot be established.
-- Source reads must confirm the published version belongs to the requested source slug. A dangling, mismatched or missing pointer returns a safe unavailable/not-found outcome.
+- Bootstrap must be safe to execute more than once, must not duplicate versions/audit/likes/events, and must fail closed if uniqueness or pointer integrity cannot be established.
+- Source reads must confirm the published version belongs to the requested source slug. A dangling, mismatched or missing pointer returns a safe unavailable/not-found outcome. Any valid verified Better Auth session can read the published version automatically; no `lab_source_grants` query may remain.
 - Protected Atlas snapshots are separate from the code-owned public demo runtime. Editing/publishing a snapshot changes only the protected source viewer; it does not hot-update the public demo. Live demo behavior changes follow the canonical repository/deployment workflow.
 - The current response size cap and Mongoose model limits must be reconciled with explicit UTF-8 byte limits before implementation. Never rely only on JavaScript character counts for storage or response bounds.
 
 ### 15.4 Owner identity and secrets
 
-- The recommended initial owner setting is server-only `LABS_OWNER_USER_ID`, containing the stable Better Auth user ID. It must not use a `NEXT_PUBLIC_` prefix or be exposed to browser DTOs.
-- This setting and its Preview/Production scoping require explicit approval before owner-management implementation.
-- Do not store owner identity, grants, source contents or audit records in Cloudinary. MongoDB is the structured source-of-truth store for this text-only source lifecycle.
+- **Locked — user approved 2026-11-04:** initial owner setting is server-only `LABS_OWNER_USER_ID`, containing the stable Better Auth user ID. It must not use a `NEXT_PUBLIC_` prefix or be exposed to browser DTOs. Configure Preview and Production separately at the appropriate rollout stage.
+- Do not store owner identity, source contents, likes, analytics events or audit records in Cloudinary. MongoDB is the structured source-of-truth store for this text-only source lifecycle and engagement events.
 - Source editing and versioning do not authorize source execution. Any live execution requires the separate isolated-preview threat-model gate.
 
 ### 15.5 Atlas network and production hygiene
@@ -516,3 +517,13 @@ Do not manually create empty collections to make the source viewer appear ready.
 - Confirm Atlas database credentials are a dedicated database user with only the required access to the selected application database.
 - Verify Preview and Production use the intended database and owner configuration; do not accidentally point a test migration at Production.
 - Take/verify a backup or export/rollback point before migrating any non-empty source collection.
+
+### 15.6 Verified-user source engagement analytics
+
+Target collections and behavior:
+- `lab_likes`: unique current like state per `{ userId, experimentSlug }`, where `userId` comes only from a verified Better Auth session. Duplicate like/unlike requests that do not change state must not create another action event.
+- `lab_analytics_events`: allowlisted `source_open`, `code_copy`, `like` and `unlike` events. Store experiment slug, source version when relevant, server timestamp, server-derived user ID and idempotency key. Never store email, raw IP, clipboard contents or source content.
+- Source-open events are recorded only after a successful authorized source response; public experiment detail views are a separate metric.
+- Code-copy events are accepted only after the client reports successful Clipboard API write and the server rechecks the verified session/source. This measures a copy action, not code usage.
+- Owner/Admin reporting aggregates by experiment and date range: source opens, unique verified accounts opening source, copies, current active likes, like/unlike actions, daily/monthly trends and rankings. The first release does not expose individual user histories.
+- Analytics retention, event deduplication window, account-deletion treatment and Privacy Policy disclosure must be approved before enabling production event writes.
