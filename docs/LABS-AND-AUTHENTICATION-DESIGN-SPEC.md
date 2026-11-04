@@ -2312,6 +2312,8 @@ This section resolves the gap between the public source-access panel and the own
 - Owner-only audit history.
 - Lazy-load the chosen editor only within the protected owner workspace. Monaco is not installed in the inspected package manifest; editor choice and exact layout remain OPEN until reviewed.
 - Owner-only routes/APIs are private/no-store and must not load editor dependencies on the homepage, Labs listing or normal experiment pages.
+- A discoverable owner-only entry point may appear in the account menu and/or the experiment source section, but owner capability must be server-derived; a client flag is not authorization.
+- Editing/publishing the protected Atlas snapshot does not modify the code-owned public demo. Live demo changes remain in the canonical source repository and normal deployment workflow; running stored source requires the separately approved isolated-preview boundary.
 
 ### 37.5 Security and execution boundary
 
