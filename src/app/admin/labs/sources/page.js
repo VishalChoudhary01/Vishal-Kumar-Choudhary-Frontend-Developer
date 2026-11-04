@@ -35,7 +35,7 @@ export default async function LabsSourceAdminPage() {
   const session = await getCurrentAuthSession();
 
   if (!session?.user?.id) {
-    redirect("/labs/login");
+    redirect("/labs/login?returnTo=" + encodeURIComponent("/admin/labs/sources"));
   }
 
   if (!isLabsOwner(session.user)) {
