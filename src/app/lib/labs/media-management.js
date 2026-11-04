@@ -257,14 +257,29 @@ export async function finalizeOwnerLabMediaUpload({ user, slug, uploadIntentId }
     fail("MEDIA_INVALID", "The uploaded asset did not match the approved Labs media policy or configured size limit.");
   }
 
-  asset.cloudinaryAssetId = String(remote.asset_id || undefined);
-  asset.format = remoteFormat;
-  asset.byteSize = remoteBytes;
-  asset.width = Number.isFinite(Number(remote.width)) ? Number(remote.width) : null;
-  asset.height = Number.isFinite(Number(remote.height)) ? Number(remote.height) : null;
-  asset.durationSeconds = Number.isFinite(Number(remote.duration)) ? Number(remote.duration) : null;
-  asset.status = "ready";
-  await asset.save();
+  const updateFields = {
+    format: remoteFormat,
+    byteSize: remoteBytes,
+    width: Number.isFinite(Number(remote.width)) ? Number(remote.width) : null,
+    height: Number.isFinite(Number(remote.height)) ? Number(remote.height) : null,
+    durationSeconds: Number.isFinite(Number(remote.duration)) ? Number(remote.duration) : null,
+    status: "ready",
+  };
+  if (typeof remote.asset_id === "string" && remote.asset_id) {
+    updateFields.cloudinaryAssetId = remote.asset_id;
+  }
+
+  const finalizedAsset = await LabMediaAsset.findOneAndUpdate(
+    { _id: asset._id, status: "uploading" },
+    { $set: updateFields },
+    { new: true, runValidators: true },
+  );
+
+  if (!finalizedAsset) {
+    const latestAsset = await LabMediaAsset.findById(asset._id);
+    if (latestAsset?.status === "ready") return serializeAsset(latestAsset);
+    fail("CONFLICT", "This upload is already being finalized. Refresh the media library.");
+  }
 
   await LabSourceAuditEvent.create({
     actorUserId: user.id,
