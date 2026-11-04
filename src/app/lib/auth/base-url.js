@@ -10,6 +10,12 @@ function toOrigin(value) {
   }
 }
 
+function toPreviewOrigin(host) {
+  if (typeof host !== "string" || !host.trim()) return "";
+  const value = host.trim();
+  return toOrigin(/^https?:\\/\\//i.test(value) ? value : `https://${value}`);
+}
+
 /**
  * Resolve the origin used for Better Auth links and callbacks.
  *
@@ -18,18 +24,19 @@ function toOrigin(value) {
  * Production and local development retain the canonical site URL fallback.
  */
 export function getAuthBaseURL(fallbackURL) {
-  const explicitURL = toOrigin(process.env.BETTER_AUTH_URL);
-  if (explicitURL) return explicitURL;
-
   if (process.env.VERCEL_ENV === "preview") {
-    const previewHost =
-      process.env.VERCEL_BRANCH_URL || process.env.VERCEL_URL || "";
-    const previewURL = toOrigin(
-      previewHost ? `https://${previewHost}` : "",
+    const previewURL = toPreviewOrigin(
+      process.env.VERCEL_BRANCH_URL || process.env.VERCEL_URL,
     );
 
     if (previewURL) return previewURL;
+
+    const requestOrigin = toOrigin(fallbackURL);
+    if (requestOrigin) return requestOrigin;
   }
+
+  const explicitURL = toOrigin(process.env.BETTER_AUTH_URL);
+  if (explicitURL) return explicitURL;
 
   const canonicalURL = toOrigin(process.env.NEXT_PUBLIC_SITE_URL);
   if (canonicalURL) return canonicalURL;
