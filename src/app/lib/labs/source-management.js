@@ -67,7 +67,10 @@ function validateFiles(input) {
     const path = typeof file.path === "string" ? file.path.trim() : "";
     const language =
       typeof file.language === "string" ? file.language.trim().toLowerCase() : "";
-    const content = typeof file.content === "string" ? file.content : "";
+    if (typeof file.content !== "string") {
+      throwCode("VALIDATION_ERROR", "Every source file must contain text content.");
+    }
+    const content = file.content;
 
     if (
       !SAFE_SOURCE_PATH.test(path) ||
