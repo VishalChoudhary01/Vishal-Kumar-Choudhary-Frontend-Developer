@@ -368,25 +368,24 @@ Do not send raw Cloudinary credentials, source content to public endpoints, comp
 ### Phase 2 — Media asset pipeline
 - **Initial upload foundation implemented:** signed direct-upload intent, Cloudinary Admin API preset-mode verification, upload finalization/resource verification, `LabMediaAsset` persistence, owner media inventory and audit events.
 - **Remaining:** configure the signed image/video presets and `LABS_MEDIA_MAX_UPLOAD_BYTES` in the actual Preview environment; complete format-by-format upload and authenticated-delivery tests.
-- Add owner-only private media preview delivery and a single optional `fallback-preview` attachment role with alt text/caption. Do not implement cover, gallery or in-experiment media roles.
-- Attach media references to immutable draft/release manifests.
+- **Implemented in the branch:** owner-only short-lived private media preview URLs, a single optional `fallback-preview` attachment role, alt text/caption and UI controls to select or clear the fallback. The data model and API reject cover, gallery and in-experiment roles.
+- **Remaining:** configure the signed image/video presets and upload-size ceiling in Preview; verify every accepted file type and Cloudinary authenticated delivery; pin the optional fallback to a saved draft/release and verify privacy/cleanup.
 - Verify draft media privacy, public release delivery, deletion/reference integrity and orphan cleanup.
 
 ### Phase 3 — React/JSX + Tailwind v4 + Motion compiler
-- Create fixed toolchain image with pinned React, ReactDOM, Motion, Tailwind v4/PostCSS and approved utilities.
-- Implement deterministic local import resolution and fixed package allowlist.
-- Compile JSX and Tailwind CSS in the isolated build worker.
-- Emit immutable static artifact and structured diagnostics.
-- Test a minimal React component, nested local components, hooks, Tailwind responsive utilities and Motion animation with reduced-motion behavior.
+- **Compiler prototype implemented:** `tools/labs-compiler` contains a separate pinned toolchain (Vite 8.3.5, React/ReactDOM 19.2.8, Motion 13.2.0, Tailwind/PostCSS 4.3.3 and esbuild 0.28.2).
+- The compiler validates the documented React entry structure, file count/size/path rules, and a fixed package allowlist; it rejects unknown packages, remote/absolute imports, Node built-ins, require/eval/Function and app storage/parent access patterns.
+- **Smoke tests passed in an isolated Vercel Sandbox:** React JSX + Motion + Tailwind v4 produced the expected CSS utilities, and a forbidden package import was rejected.
+- **Remaining before this phase is complete:** build-worker orchestration from the application, immutable toolchain image/snapshot lifecycle, bounded diagnostics, deterministic artifact verification, security review and broader nested-import/hooks/reduced-motion tests. The compiler prototype is not yet connected to the owner preview button or public release.
 
 ### Phase 4 — Full live preview
-- Replace/adapt the current srcDoc prototype to the separate-origin artifact runtime.
+- **Not yet complete:** replace/adapt the current srcDoc prototype to the separate-origin artifact runtime.
 - Add build status, ready state, console, runtime errors, timeouts, stop/restart and desktop/mobile size controls.
 - Do not require an @labs/assets module for fallback media. Test image, animated GIF and video only as fallback presentation when code preview cannot run.
 - Ensure no network access, app cookies, parent DOM access or user-session leakage.
 
 ### Phase 5 — Immutable release and public Labs detail page
-- Create release manifest tying metadata, code snapshot, build artifact and media manifest.
+- **Disabled:** create release manifest tying metadata, code snapshot, build artifact and optional fallback reference only after the preview/runtime gates pass.
 - Publish only a successful exact build/release.
 - Render the actual interactive demo on the public experiment detail page.
 - Render the actual interactive code runtime as the primary detail-page experience. Show the optional fallback asset only when the runtime cannot run or is unsupported.
