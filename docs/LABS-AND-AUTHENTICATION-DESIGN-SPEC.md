@@ -1,9 +1,9 @@
 # Labs & Authentication — Product and UX Design Specification
 
 **Document:** `docs/LABS-AND-AUTHENTICATION-DESIGN-SPEC.md`  
-**Version:** 1.8  
+**Version:** 1.9  
 **Status:** Detailed UX baseline; Labs authentication and protected-source foundation implemented, deployment/configuration and security verification still required  
-**Updated on:** 2026-11-03  
+**Updated on:** 2026-11-04  
 **Scope:** Labs listing, experiment detail/workspace, protected source access, Labs authentication UX, repository-aligned stack, module boundaries, hooks, components and state ownership  
 **Companion repository documents:** `docs/PRD.md`, `docs/ARCHITECTURE.md`, `docs/API-CONTRACTS.md`, `docs/PROJECT-STRUCTURE.md`, `docs/IMPLEMENTATION-PLAN.md`, and `docs/THREAT-MODEL.md`
 
@@ -586,7 +586,7 @@ Behavior:
 - Back to experiment navigates to the public experiment detail page.
 - Do not add `Request access` until a real access-request workflow exists.
 
-**OPEN:** The actual policy that determines which account/role/entitlement is authorized for which source is not decided. Do not assume every authenticated user is allowed or that only a particular role is allowed.
+**LOCKED — IMPLEMENTATION BASELINE:** Regular registered users require an explicit active, unexpired per-user/per-experiment grant after Better Auth session and verified-email checks. The server derives the user ID from the session. A verified account alone does not imply source access. The singleton Owner uses a separate server-only owner authorization path for source management and does not require an ordinary user grant. Detailed owner identity, source lifecycle, versioning, grant administration, data migration and audit requirements are specified in `LABS-SOURCE-MANAGEMENT-SPEC.md`.
 
 ---
 
@@ -2270,3 +2270,57 @@ Do not copy code that must remain confidential into the public repository or exp
 - Provision a private source snapshot and explicit grant before testing successful source access. Verify missing, expired and revoked grants remain denied.
 - Run the full responsive/light-dark/authentication/accessibility regression suite and production build. This branch has not been locally built or browser-tested in the connected GitHub-only environment.
 - Do not begin CMS work as part of this implementation slice.
+## 37. Owner-managed Labs source lifecycle — 2026-11-04
+
+This section resolves the gap between the public source-access panel and the owner capabilities needed to create and maintain actual source snapshots. The detailed source-management specification is `docs/LABS-SOURCE-MANAGEMENT-SPEC.md`; it is the implementation planning authority for owner source management.
+
+### 37.1 Current baseline and missing capability
+
+- Better Auth + MongoDB adapter authentication is implemented on the Labs branch.
+- Current `LabSource` stores one mutable record per slug with embedded files, version string and published flag.
+- Current `LabSourceGrant` stores one grant per user/experiment and has a unique index.
+- Current `GET /api/v1/labs/:slug/source` requires a verified session, matching active grant and published source record.
+- Owner source create/edit/save/publish/unpublish/version/restore/grant/revoke/audit UI and APIs are not implemented.
+- Existing Atlas database setup did not yet show source collections or actual source snapshots. Empty collection creation is not equivalent to provisioning the source.
+
+### 37.2 Owner policy
+
+- First release is a singleton portfolio owner, not a general multi-admin system.
+- Recommended identity bootstrap is a server-only `LABS_OWNER_USER_ID` matching the stable Better Auth ID of the verified owner account. This remains a decision to approve before implementation.
+- Missing owner configuration denies owner operations. Never infer owner from first registration, email domain, browser state or request payload.
+- Owner authorization is checked server-side at every protected route/action and domain boundary.
+- Owner source-management capability is separate from ordinary user grants. Owner can create/manage source without a self-grant; regular users still require an active grant.
+- Public registration never creates or elevates an owner/admin role.
+
+### 37.3 Source lifecycle
+
+- Owner source editing is text-only; no code execution, terminal, package install or server execution.
+- The target storage model separates a source aggregate (experiment slug + draft/published pointers) from immutable version snapshots (file tree, server-computed content hash, version, parent version, actor and timestamp).
+- Save draft creates an immutable version and updates only the draft pointer.
+- Publish selects an exact saved version and advances the published pointer after explicit confirmation.
+- Unpublish prevents new regular-user source reads but preserves historical versions and grants.
+- Restore creates a new draft snapshot from an older immutable version.
+- A unique current grant row is retained for each canonical Better Auth user ID + experiment slug. Append-only audit events preserve prior grant/revoke and lifecycle actions.
+- The schema migration must preserve the current embedded-file model and any existing records until reconciliation succeeds; do not drop source data before a tested migration/rollback.
+
+### 37.4 Owner UI scope
+
+- Protected inventory of experiment source records and draft/published state.
+- File tree with add/edit/rename/delete text-file operations, safe path and size validation, and unsaved-state protection.
+- Save draft, validation result, version history, compare/restore, explicit publish/unpublish.
+- Experiment-scoped grant management: exact email lookup, verified-user check, grant/re-grant, optional expiry, revoke and status.
+- Owner-only audit history.
+- Lazy-load the chosen editor only within the protected owner workspace. Monaco is not installed in the inspected package manifest; editor choice and exact layout remain OPEN until reviewed.
+- Owner-only routes/APIs are private/no-store and must not load editor dependencies on the homepage, Labs listing or normal experiment pages.
+
+### 37.5 Security and execution boundary
+
+- Server derives actor ID from Better Auth; never accept a client user ID, owner role, grantor, active flag, published pointer or content hash as authoritative.
+- Validate file paths, file count, UTF-8 byte limits, languages, duplicate names and suspicious secret-bearing content on the server. Do not log source text or matched secret values.
+- Save, publish, unpublish, restore and grant mutations require concurrency protection, idempotency and audit events.
+- The existing public demos remain code-owned. Stored source is text only; do not evaluate it in the main app or server.
+- Any later live execution of owner-authored code requires a separate isolated-preview runtime choice and threat-model review.
+
+### 37.6 Implementation authorization
+
+The existence of this specification does not authorize code changes. Implementation must follow the phases and gates in `LABS-SOURCE-MANAGEMENT-SPEC.md`, with explicit owner-identity and editor decisions confirmed first. CMS, general portfolio content management and multi-admin functionality remain deferred.
