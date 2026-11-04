@@ -138,8 +138,8 @@ Middleware may be used for lightweight request routing, canonical redirects, coa
 
 ## 6. Authorization policy
 Roles/capabilities: Guest, Registered User (email unverified), Verified Registered User, and singleton Owner/Admin.
-- Guest: published public metadata/media and explicitly public code-owned demos only. No source files, source snippets, source copying or source likes.
-- Registered User with unverified email: guest capabilities only; no source, copy or like controls.
+- Guest: published public metadata/media and explicitly public code-owned demos only. No source files, source snippets or source copying. Public experiment likes remain best-effort/browser-scoped where supported.
+- Registered User with unverified email: guest capabilities only; no source or copy. Public experiment likes remain best-effort/browser-scoped where supported.
 - Verified Registered User: full source for every published experiment automatically; may copy source and like/unlike experiments. No per-user source grant is required.
 - Owner/Admin: all approved management operations after server-side singleton-owner verification, including draft/version/source management and aggregate source-engagement analytics.
 - Owner assignment occurs only through trusted server-side `LABS_OWNER_USER_ID` provisioning; public registration never elevates privileges.
@@ -201,7 +201,7 @@ The source-management plan is detailed in `LABS-SOURCE-MANAGEMENT-SPEC.md`. This
 - Separate the mutable source aggregate/head from immutable source-version snapshots.
 - Source aggregate stores canonical experiment slug and draft/published version pointers.
 - Immutable version records store text files, server-computed content hash, version number, parent/restored-from version, actor and timestamp.
-- `lab_likes` maintains one current like-state record per verified user + experiment. `lab_analytics_events` records source opens, successful code-copy actions and server-confirmed like/unlike transitions. `lab_source_audit_events` records owner mutations.
+- `lab_likes` maintains one persistent like-state record per verified user + experiment. `lab_analytics_events` records verified source opens/copies/like transitions and separate anonymous guest-like action counts where supported. `lab_source_audit_events` records owner mutations.
 - Save draft, publish exact version, unpublish and restore are separate domain use cases with concurrency checks and idempotency. There are no per-user source-grant use cases in the target design.
 - Never overwrite an immutable version. Restore creates a new version. Publishing never executes the saved code.
 - Data migration and index bootstrap must be idempotent and preserve any existing source documents. The legacy `lab_source_grants` model/collection must be retired only after all runtime references are removed and any existing records are reconciled; it must not gate verified-user access.
