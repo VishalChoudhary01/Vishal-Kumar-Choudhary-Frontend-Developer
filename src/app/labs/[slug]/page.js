@@ -71,8 +71,8 @@ export default async function LabExperimentPage({ params }) {
         <LabDetailHeader experiment={experiment} />
         <LabWorkspace key={experiment.slug} experiment={experiment} />
         <LabExplanation explanation={experiment.explanation} />
-        <LabSourceAccess slug={experiment.slug} />
-        <LabEngagement slug={experiment.slug} />
+        <LabSourceAccess key={experiment.slug} slug={experiment.slug} />
+        <LabEngagement key={experiment.slug} slug={experiment.slug} />
       </main>
     </LabsPageShell>
   );
