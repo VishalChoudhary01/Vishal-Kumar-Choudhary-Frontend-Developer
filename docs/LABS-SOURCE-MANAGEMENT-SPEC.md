@@ -1,6 +1,6 @@
 # Labs Source Management — Owner Console and Protected Code Lifecycle
 
-**Status:** Planning specification; implementation not authorized by this document alone  
+**Status:** Planning specification; singleton owner provisioning and source-management authority approved; implementation not authorized by this document alone  
 **Version:** 0.1  
 **Branch baseline:** `feat/labs-public-page`  
 **Updated:** 2026-11-04  
@@ -92,7 +92,7 @@ The following is grounded in the inspected `feat/labs-public-page` implementatio
 - The owner can manage source and grants without first granting the owner account ordinary user-level access to each experiment. Owner management/read authority is a separate permission path; it must not weaken the regular-user grant rule.
 - Every owner page, Server Action, Route Handler, domain use case and repository operation must enforce owner authorization server-side. Hiding controls in React is not protection.
 
-**Recommended first-release identity mechanism — OPEN pending owner approval:** a server-only `LABS_OWNER_USER_ID` environment value containing the stable Better Auth user ID of the already-created owner account. This avoids email matching, first-user-wins behavior and a premature general role-management system. If absent or invalid, owner management is disabled/denied. Never fall back to the first registered user or to an email supplied by the browser. A later multi-admin model can use persisted roles after a separate review.
+**LOCKED — USER APPROVED (2026-11-04):** the initial owner is identified by the server-only `LABS_OWNER_USER_ID` environment variable, containing the stable Better Auth user ID of the already-created, verified owner account. This avoids email matching, first-user-wins behavior and a premature general role-management system. If absent or invalid, owner management is disabled/denied. Never fall back to the first registered user or to an email supplied by the browser. The owner is the sole privileged administrator for this first Labs source-management release and is authorized to create/manage source records, files, drafts, immutable versions, publish/unpublish/restore source, grant/revoke/expire per-experiment access, and inspect audit history. A later multi-admin model requires a separate decision.
 
 The product's existing Guest / Registered User / Admin taxonomy remains. For this first narrow slice, the singleton Owner is the only manually provisioned privileged Admin. Whether to introduce multiple Admins later is outside this plan.
 
@@ -328,8 +328,8 @@ All mutations call server-only domain use cases and repositories. Never let UI c
 ## 11. Implementation phases and gates
 
 ### Phase A — Confirm policy and owner bootstrap
-- Approve singleton Owner identity mechanism and whether the Owner is the sole Admin in the first release.
-- Approve that regular registered users require an explicit per-experiment grant.
+- **Complete — user approved 2026-11-04:** singleton Owner identity uses server-only `LABS_OWNER_USER_ID`; owner is the sole privileged administrator for the first release and manages all Labs source lifecycle and access-grant operations.
+- **Locked baseline:** regular registered users require an explicit per-experiment grant.
 - Confirm editor MVP (basic text editor vs new editor dependency).
 - **Gate:** owner authorization tests are designed before owner routes exist.
 
@@ -381,7 +381,7 @@ All mutations call server-only domain use cases and repositories. Never let UI c
 
 ## 13. Open decisions — do not silently assume
 
-1. **Owner bootstrap:** approve `LABS_OWNER_USER_ID` singleton environment allowlist or choose a persisted role model. Recommendation: environment allowlist for the initial one-owner release; revisit for multiple admins.
+1. **Owner bootstrap:** **RESOLVED / LOCKED.** Use the singleton server-only `LABS_OWNER_USER_ID` environment allowlist. The owner is the sole privileged administrator for the initial Labs source-management release. Do not add persisted multi-admin roles in this phase.
 2. **Editor:** lightweight accessible textarea/code editor for MVP or add Monaco/CodeMirror after dependency and bundle review. Neither editor is currently present as a direct dependency in the inspected package manifest.
 3. **User grant default:** explicit per-user/per-experiment grant (recommended and consistent with current API) versus a different entitlement model. The PRD has been aligned in this plan to explicit grants; confirm before implementation.
 4. **Source import strategy:** manually create files in owner UI, import an allowlisted set of repository files, or support both. Initial `magnetic-interaction` canonical file inventory must be audited.
