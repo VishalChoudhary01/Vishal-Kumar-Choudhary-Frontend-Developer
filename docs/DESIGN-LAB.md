@@ -174,3 +174,10 @@ The detailed source-management product and lifecycle contract is owned by `LABS-
 - Whether source import from repository files is supported in the first release or source is authored through the owner workspace.
 
 Do not invent these items as locked decisions. The source-management specification defines security/data contracts; final visual composition must be reviewed as a separate design slice before implementation.
+
+### 13.2 Owner entry point and public demo separation
+
+- Provide a discoverable owner-only entry into the source workspace, such as a server-authorized owner account-menu item and/or a `Manage source` action in the experiment source section.
+- Only server-derived owner capability may reveal that navigation item. Directly opening an owner URL must still run the owner guard.
+- Editing a protected Atlas snapshot does not update the public demo runtime. Existing public demos remain code-owned and are changed through the canonical repository and normal deployment workflow.
+- Do not imply that Save/Publish source executes code or updates the live demo. Any live preview of stored source is a separate isolated-preview design and security gate.
