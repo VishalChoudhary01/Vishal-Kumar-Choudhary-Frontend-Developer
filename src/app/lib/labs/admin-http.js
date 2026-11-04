@@ -48,6 +48,11 @@ export function adminError(error) {
     CONFLICT: 409,
     VALIDATION_ERROR: 400,
     PREVIEW_REQUIRED: 409,
+    MEDIA_INVALID: 400,
+    MEDIA_UPLOAD_EXPIRED: 409,
+    MEDIA_NOT_READY: 409,
+    MEDIA_CONFIG_MISSING: 503,
+    MEDIA_PROVIDER_ERROR: 503,
   };
   const status = statusByCode[error?.code] || 503;
   const message =
