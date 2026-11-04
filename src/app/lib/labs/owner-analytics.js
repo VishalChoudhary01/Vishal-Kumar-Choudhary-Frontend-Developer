@@ -38,7 +38,7 @@ export async function getLabsOwnerAnalytics({ user, days = 30 }) {
   await connectToDatabase();
   await ensureIndexes();
 
-  const [eventGroups, verifiedLikeGroups, guestLikeGroups] = await Promise.all([
+  const [eventGroups, verifiedLikeGroups, guestLikeGroups, dailyGroups] = await Promise.all([
     LabAnalyticsEvent.aggregate([
       { $match: { occurredAt: { $gte: since } } },
       {
@@ -58,8 +58,47 @@ export async function getLabsOwnerAnalytics({ user, days = 30 }) {
       { $group: { _id: "$experimentSlug", count: { $sum: 1 } } },
     ]),
     LabGuestLike.aggregate([
-      { $match: { active: true } },
+      { $match: { active: true, expiresAt: { $gt: new Date() } } },
       { $group: { _id: "$experimentSlug", count: { $sum: 1 } } },
+    ]),
+    LabAnalyticsEvent.aggregate([
+      { $match: { occurredAt: { $gte: since } } },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: "%Y-%m-%d",
+              date: "$occurredAt",
+              timezone: "UTC",
+            },
+          },
+          sourceOpens: {
+            $sum: { $cond: [{ $eq: ["$eventType", "source_open"] }, 1, 0] },
+          },
+          codeCopies: {
+            $sum: { $cond: [{ $eq: ["$eventType", "code_copy"] }, 1, 0] },
+          },
+          verifiedLikeActions: {
+            $sum: {
+              $cond: [
+                { $in: ["$eventType", ["like", "unlike"]] },
+                1,
+                0,
+              ],
+            },
+          },
+          anonymousLikeActions: {
+            $sum: {
+              $cond: [
+                { $in: ["$eventType", ["guest_like", "guest_unlike"]] },
+                1,
+                0,
+              ],
+            },
+          },
+        },
+      },
+      { $sort: { _id: 1 } },
     ]),
   ]);
 
@@ -147,6 +186,18 @@ export async function getLabsOwnerAnalytics({ user, days = 30 }) {
     since: since.toISOString(),
     generatedAt: new Date().toISOString(),
     totals,
+    daily: dailyGroups.map((day) => ({
+      date: day._id,
+      sourceOpens: day.sourceOpens,
+      codeCopies: day.codeCopies,
+      verifiedLikeActions: day.verifiedLikeActions,
+      anonymousLikeActions: day.anonymousLikeActions,
+      totalActions:
+        day.sourceOpens +
+        day.codeCopies +
+        day.verifiedLikeActions +
+        day.anonymousLikeActions,
+    })),
     experiments: rows,
   };
 }
