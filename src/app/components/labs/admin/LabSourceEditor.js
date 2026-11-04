@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   ArrowLeft,
   Eye,
-  FileCode2,
   FilePlus2,
   FileUp,
   LoaderCircle,
@@ -156,7 +155,7 @@ export default function LabSourceEditor({ initialSource, initialVersions }) {
 
     try {
       const content = await file.text();
-      if (/\\u0000/.test(content)) {
+      if (content.includes("\u0000")) {
         setError("Binary files cannot be imported as source text.");
         return;
       }
