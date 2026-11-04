@@ -146,3 +146,31 @@ Lab editor supports:
 - [ ] Preview/source failure states are clear and do not leak sensitive details.
 - [ ] Lab-only dependencies do not affect the critical public homepage bundle.
 - [ ] Existing public portfolio and project detail pages pass regression checks.
+
+## 13. Owner-managed source workspace
+
+The detailed source-management product and lifecycle contract is owned by `LABS-SOURCE-MANAGEMENT-SPEC.md`. This section adds the design-level expectations without authorizing general CMS/Admin implementation.
+
+- The owner workspace is a protected management surface and is distinct from the compact public experiment source-access section.
+- The first release is for one trusted, manually provisioned owner; do not design a multi-admin permission matrix unless separately approved.
+- Workspace layout should prioritize experiment identity, file tree, editable code area, validation feedback, unsaved state, save-draft action, version history, and explicit publish/unpublish controls.
+- Source editing is text-only. The editor is not a terminal or live execution console. Do not imply that Save or Publish runs the code.
+- File add/rename/delete operations are explicit; deleting a file requires confirmation. Invalid paths, duplicate names, unsupported file types and size failures preserve the current editor input and explain the correction.
+- Save draft and Publish source are separate actions. Publishing requires confirmation of the exact saved version; a save must never publish implicitly.
+- Version history is owner-only, read-only for past snapshots, and supports restore by creating a new draft. It must not edit historical snapshots in place.
+- Grant management is scoped to one experiment. The owner searches by exact email, sees only the minimum account status needed, grants/revokes access, and may set an expiry. The UI must not expose raw user IDs or permit changing roles.
+- Show distinct empty, loading, validation, stale-version/conflict, save-success, publish-success, publish-failure, unavailable database and unauthorized states.
+- The editor and syntax-highlighting code are lazy-loaded only inside the owner route. They must not load on `/`, `/labs` or ordinary experiment pages.
+- Reuse the existing portfolio tokens, typography, focus/keyboard conventions, restrained radius and responsive rules. Do not introduce a new UI system.
+- Owner source management does not alter the existing compact public source-access panel, public experiment demo or Labs layout.
+
+### 13.1 Owner workspace design items still open
+
+- Exact route/navigation placement within a future protected admin shell.
+- Editor package and syntax-highlighting language support; Monaco is not installed in the inspected package manifest.
+- Whether the first editor provides a lightweight textarea/code editor or a new editor dependency after bundle/accessibility review.
+- Exact desktop file-tree/editor split and mobile file-navigation treatment.
+- Diff presentation and whether version comparison is side-by-side or unified.
+- Whether source import from repository files is supported in the first release or source is authored through the owner workspace.
+
+Do not invent these items as locked decisions. The source-management specification defines security/data contracts; final visual composition must be reviewed as a separate design slice before implementation.
