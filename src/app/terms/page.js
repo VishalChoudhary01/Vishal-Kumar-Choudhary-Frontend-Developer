@@ -87,7 +87,7 @@ export default function TermsPage() {
           <li>Bypass authentication, access grants, rate limits, or other technical controls.</li>
           <li>Interfere with the availability, security, or normal operation of the website or its providers.</li>
           <li>Probe, scan, or test systems in a way that could damage them or affect other users without prior written permission.</li>
-          <li>Misrepresent your identity or use another person's account without permission.</li>
+          <li>Misrepresent your identity or use another person&apos;s account without permission.</li>
         </ul>
       </Section>
 
@@ -105,7 +105,7 @@ export default function TermsPage() {
 
       <Section id="ownership" title="5. Intellectual property">
         <p>
-          Unless a page, repository, or separate licence says otherwise, the portfolio's original design, text, branding, visual assets, and Labs materials belong to their respective owner or licensors. These terms do not transfer ownership to you.
+          Unless a page, repository, or separate licence says otherwise, the portfolio&apos;s original design, text, branding, visual assets, and Labs materials belong to their respective owner or licensors. These terms do not transfer ownership to you.
         </p>
         <p>
           You may access and use the website for personal, lawful viewing and learning. You may not reproduce, redistribute, commercially exploit, or publish protected materials as your own without permission, except where a separate open-source or third-party licence expressly permits it.
