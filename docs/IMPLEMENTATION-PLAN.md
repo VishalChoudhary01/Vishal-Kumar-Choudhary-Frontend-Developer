@@ -223,7 +223,7 @@ Do not mark a row complete because a page renders. Each capability still needs i
 - No unintended public UI/layout/motion/functionality/SEO/accessibility regressions.
 - Performance changes are supported by comparable measurements.
 - Rollback and incident recovery are tested/documented.
-- Production release is explicitly approved; documentation-only branch does not itself authorize implementation or deployment.
+- Production release is explicitly approved; this plan and its documentation updates do not by themselves authorize implementation or deployment.
 
 ## Universal definition of done
 A requirement is done only when all applicable conditions are met:
