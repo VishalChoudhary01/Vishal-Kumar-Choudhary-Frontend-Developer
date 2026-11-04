@@ -1,6 +1,6 @@
 # Implementation Plan — Portfolio Platform
 
-**Status:** Living implementation plan. The `feat/labs-public-page` branch contains an initial public Labs, Better Auth and protected-source-read foundation. Owner-managed source creation/versioning/grants and complete release verification remain planned. Phase entries below are not evidence of completion unless explicitly recorded in the current-state section.
+**Status:** Living implementation plan. The `feat/labs-public-page` branch contains an initial public Labs, Better Auth and protected-source-read foundation. Owner-managed source creation/versioning, verified-account engagement analytics, grant-model retirement and complete release verification remain planned. Phase entries below are not evidence of completion unless explicitly recorded in the current-state section.
 
 ## Principles
 - Inspect first; change second.
@@ -20,10 +20,10 @@ The following is the inspected code baseline, not a production-readiness certifi
 | Better Auth + MongoDB adapter | Foundation implemented | Final session policy and security/release tests |
 | Email/password registration, verification, reset and SMTP transport | Implemented in branch and configured for Preview; email delivery observed | Validate real verification completion, duplicate behavior, reset, production deployment |
 | First-party Terms/Privacy pages and consent receipts | Implemented | Legal review and operational rights/deletion workflow review |
-| Protected source read endpoint and per-user grant model | Implemented | Source snapshot provisioning, grants, test matrix, collection bootstrap |
+| Protected source read endpoint with legacy per-user grant check | Implemented (transitional) | Remove grant lookup; automatically allow any verified account to read a published source; provision source snapshots and complete authorization tests |
 | Source record creation/file editor/versioning/publish/restore | Not implemented | Phase 8 source-management slice described in `LABS-SOURCE-MANAGEMENT-SPEC.md` |
 | Owner identity/authorization and owner management UI | Not implemented | Approve singleton owner identity, implement server guard and owner workspace |
-| Source audit and immutable source-version storage | Not implemented | Add collections/indexes, migration and audit tests |
+| Source audit, immutable source versions and engagement analytics storage | Not implemented | Add source-version/audit/likes/events collections, indexes, migration and analytics tests |
 | Isolated execution of stored/admin-authored source | Not implemented and not approved | Separate Phase 8B threat-model and infrastructure decision |
 | General CMS/Admin, media management, analytics and scheduling | Deferred | Begin only after Labs work is complete and separately authorized |
 
@@ -137,26 +137,33 @@ Do not mark a row complete because a page renders. Each capability still needs i
 - Search and filters compose predictably; pagination avoids duplicate/missing results.
 - Existing portfolio pages remain visually and behaviorally unchanged.
 
-## Phase 8 — Owner-managed protected source lifecycle
+## Phase 8 — Owner-managed source lifecycle and verified-user access
 **Work**
 - Follow `docs/LABS-SOURCE-MANAGEMENT-SPEC.md` as the detailed source-management plan.
-- Approve and provision a singleton owner identity (recommended server-only `LABS_OWNER_USER_ID`); owner operations deny by default when the identity is absent.
+- Implement the approved singleton owner identity with server-only `LABS_OWNER_USER_ID`; owner operations deny by default when the setting is absent or mismatched.
 - Evolve the current mutable LabSource record into a source aggregate with draft/published pointers and immutable source-version snapshots; preserve/migrate existing records safely.
-- Add idempotent collection/index bootstrap for source heads, immutable versions, append-only audit events and the existing per-user/per-experiment grants.
-- Implement server-only owner use cases for source creation, file add/edit/rename/delete, save draft, version history, compare/restore, explicit publish/unpublish, verified-user grant/re-grant/revoke and audit.
+- Add idempotent collection/index bootstrap for source heads, immutable versions, append-only owner audit events, verified-user likes and source-engagement events.
+- Retire the legacy `LabSourceGrant` model and `lab_source_grants` collection from the access-control path after checking/exporting any existing records and safely removing runtime references. Do not migrate individual grants as active entitlements.
+- Implement owner-only use cases for source creation, file add/edit/rename/delete, save draft, version history, compare/restore, explicit publish/unpublish and audit.
+- Implement verified-session source authorization: any Better Auth session with `emailVerified === true` may read every published source. Guests and signed-in-unverified users are denied. No per-user grant, expiry or revoke is required.
+- Enforce verified-account code copy and like/unlike; create one active like state per user/experiment and record only server-confirmed state transitions.
+- Record successful source opens and code-copy actions with server-derived actor IDs and idempotency keys; never store source text, clipboard contents, email or raw IP in analytics events.
+- Build the lazy-loaded owner source workspace and per-experiment source-engagement analytics dashboard. Dashboard aggregates: source opens, unique verified accounts, copies, current active likes, like/unlike actions, trends and rankings.
 - Add optimistic concurrency, idempotency, strict text/path/language/byte/secret validation and private/no-store response behavior.
-- Build the lazy-loaded owner source workspace and grant manager without placing editor dependencies in public bundles.
 - Provision the first reviewed `magnetic-interaction` source snapshot from an audited canonical file list; do not guess files or import secrets.
-- Keep ordinary user source access deny-by-default: verified Better Auth session + active unexpired grant + published source pointer. Owner management is a separate explicit authorization path.
 
 **Gate / done**
-- Guest, unverified, verified-ungranted, verified-granted and owner behavior passes direct API/IDOR tests.
-- Owner access is never based on the first account, browser email, client role or supplied user ID.
-- Draft saves do not change the published pointer; publish selects an exact immutable version; unpublish denies subsequent user reads; restore creates a new snapshot.
-- Grant/revoke/expiry changes take effect on the next protected request; unique grant index prevents duplicate user/experiment rows.
-- Source content does not appear in guest HTML/RSC, public APIs, client bundles, source maps, shared caches, analytics or logs.
+- Guest and signed-in-unverified users receive 401/403 and no source. Any verified registered account reads all published source without manual owner action or per-user grant.
+- Owner access is never based on first registration, browser email, client role or supplied user ID.
+- Draft saves do not change the published pointer; publish selects an exact immutable version; unpublish denies subsequent reads for every regular user; restore creates a new snapshot.
+- Verified users can copy code and like/unlike. One active like per user/experiment is enforced; duplicate requests do not inflate likes or action counts.
+- Source-open events occur only after a successful authorized source response; copy events require successful Clipboard API acknowledgement; retries are idempotent.
+- Owner/admin analytics show per-experiment counts for source opens, unique verified accounts, copies, active likes and like/unlike trends; no user-level source browsing history or email list is exposed.
+- Source content does not appear in guest/unverified HTML/RSC, public APIs, client bundles, source maps, shared caches, analytics or logs.
+- Legacy grant lookup is removed, no new grant records are created, and the legacy grant collection is safely retired after reconciliation.
 - Migration/bootstrap is replay-safe and the rollback/reconciliation procedure is tested.
-- Owner editor dependencies remain out of the homepage and public Labs listing bundle.
+- Owner editor/analytics dependencies remain out of the homepage and public Labs listing bundle.
+- Privacy Policy disclosure, analytics retention, deduplication and account-deletion handling are approved before Production analytics is enabled.
 - The existing public demo behavior and routes remain unchanged.
 
 ## Phase 8B — Isolated live previews (separate security-gated work)
@@ -175,15 +182,16 @@ Do not mark a row complete because a page renders. Each capability still needs i
 
 ## Phase 9 — Likes, user dashboard and analytics
 **Work**
-- Implement guest and authenticated likes with separate reporting.
-- Add event schema, event validation, deduplication and abuse protections.
-- Build user dashboard lists/activity and admin analytics dashboard with date ranges and segment filters.
+- Keep guest likes disabled; implement verified-account likes with one active state per user/experiment.
+- Add server-validated source-open, code-copy, like and unlike event schema with idempotency, rate limits and abuse protections.
+- Build owner/admin aggregate source-engagement dashboard with date ranges, per-experiment source opens/unique verified accounts/copies/active likes/like-unlike trends. Keep individual user histories out of the first release.
+- User dashboard personal activity remains separately scoped and must not be confused with owner aggregate reporting.
 - Document every metric, denominator, event source and known limitation.
 
 **Gate / done**
 - One active authenticated like per user/experiment is enforced server-side.
 - Metrics reconcile against controlled test events.
-- Copy events are labelled as copy actions, not verified use.
+- Source opens are separate from public detail views. Copy events are labelled as successful clipboard actions, not verified code usage.
 - Charts have accessible text/table alternatives; private personal activity cannot be queried by other users.
 
 ## Phase 10 — Scheduling and operational recovery
