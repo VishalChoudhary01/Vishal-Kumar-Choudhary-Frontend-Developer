@@ -1,9 +1,9 @@
 import "server-only";
 
 const PROJECT_HOST = "vishal-kumar-choudhary-frontend-developer.vercel.app";
-const PROJECT_PREVIEW_HOST = /^vishal-kumar-choudhary-frontend-developer-[a-z0-9-]+\\.vercel\\.app$/i;
+const PROJECT_PREVIEW_HOST = /^vishal-kumar-choudhary-frontend-developer-[a-z0-9-]+\.vercel\.app$/i;
 const PROJECT_BRANCH_ALIAS_HOST =
-  /^vishal-kumar-choudh-git-[a-z0-9-]+-vishal-kumar-choudharys-projects\\.vercel\\.app$/i;
+  /^vishal-kumar-choudh-git-[a-z0-9-]+-vishal-kumar-choudharys-projects\.vercel\.app$/i;
 
 function toOrigin(value) {
   if (typeof value !== "string" || !value.trim()) return "";
