@@ -3,7 +3,6 @@ import "server-only";
 import { connectToDatabase } from "@/app/lib/db/mongoose";
 
 import LabSource from "./models/LabSource";
-import LabSourceGrant from "./models/LabSourceGrant";
 
 const SAFE_SOURCE_PATH =
   /^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[A-Za-z0-9._/-]{1,180}$/;
@@ -15,25 +14,8 @@ export async function getAuthorizedLabSource({ user, slug }) {
 
   await connectToDatabase();
 
-  const now = new Date();
-  const grant = await LabSourceGrant.findOne({
-    userId: user.id,
-    experimentSlug: slug,
-    active: true,
-    revokedAt: null,
-    $or: [
-      { expiresAt: null },
-      { expiresAt: { $exists: false } },
-      { expiresAt: { $gt: now } },
-    ],
-  })
-    .select("_id")
-    .lean();
-
-  if (!grant) {
-    return { status: "forbidden" };
-  }
-
+  // Every verified account can read every published snapshot. Source access
+  // is no longer dependent on a per-user grant record.
   const source = await LabSource.findOne({
     slug,
     published: true,
@@ -60,12 +42,12 @@ export async function getAuthorizedLabSource({ user, slug }) {
       content: file.content,
     }));
 
-  const totalCharacters = files.reduce(
-    (total, file) => total + file.content.length,
+  const totalBytes = files.reduce(
+    (total, file) => total + Buffer.byteLength(file.content, "utf8"),
     0,
   );
 
-  if (!files.length || totalCharacters > 1000000) {
+  if (!files.length || totalBytes > 1000000) {
     return { status: "unavailable" };
   }
 
