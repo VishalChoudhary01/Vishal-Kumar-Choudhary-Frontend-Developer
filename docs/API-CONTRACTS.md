@@ -70,8 +70,8 @@ These paths are candidate REST endpoints; the same use cases may be Server Actio
 ### Lab
 - `GET /api/lab` — published listing with bounded query parameters for search, filters, sort and pagination.
 - `GET /api/lab/:slug` — published experiment metadata and public demo references only; never source file contents.
-- `POST /api/lab/:id/like` — create/activate a like for a valid verified Better Auth user; server confirms a state transition.
-- `DELETE /api/lab/:id/like` — remove the current verified user's like; no guest/unverified likes in the initial policy.
+- `POST /api/lab/:id/like` — create/activate a persistent like for a valid verified Better Auth user; for guests and signed-in-unverified visitors, retain the existing best-effort public-like behavior where supported.
+- `DELETE /api/lab/:id/like` — remove the current verified user's persistent like; anonymous guest-like state remains best-effort/browser-scoped.
 - `GET /api/v1/labs/:slug/source` — current implementation requires verified session + legacy per-user grant; target implementation requires a valid Better Auth session, `emailVerified === true`, and a published source version only. Remove the grant lookup; return private/no-store.
 - `POST /api/v1/labs/:slug/source/copy` — record a code-copy action after a successful client Clipboard API write; server rechecks verified session and published source, validates an idempotency key and never accepts clipboard/source content.
 - `POST /api/v1/labs/:slug/source/open` — record a source-viewer open after a successful authorized source load; server derives the actor and source version, and deduplicates retries with an idempotency key.
@@ -291,7 +291,7 @@ These are candidate endpoints, not permission to build a full CMS. Same-app muta
 - `like`/`unlike` events are written only when the unique current like-state record actually changes. Duplicate clicks/retries that preserve state do not increment counts.
 - Admin analytics endpoints return aggregates grouped by experiment and reporting period: detail views, source opens, unique verified accounts, copy actions, current active likes, like/unlike transitions and trend/ranking data.
 - The first release does not expose individual users' source-open/copy/like histories, emails or raw event rows in the admin dashboard.
-- Event records use the server-derived Better Auth user ID for deduplication/abuse controls. They do not store raw IP, email, clipboard data, source contents or unnecessary device identifiers.
+- Verified events use the server-derived Better Auth user ID for deduplication/abuse controls. Guest-like events use `actorCategory: guest` and no user ID; do not introduce stable cross-device guest identity. Events do not store raw IP, email, clipboard data, source contents or unnecessary device identifiers.
 - Event retention and account-deletion handling are deployment gates and must be disclosed in the Privacy Policy before production analytics is enabled.
 
 ### Proposed source domain records
@@ -299,14 +299,14 @@ These are candidate endpoints, not permission to build a full CMS. Same-app muta
 - `lab_sources`: unique canonical `slug` (retain the current field name), `draftVersionId`, `publishedVersionId`, created/updated actor and timestamps.
 - `lab_source_versions`: source ID/slug, monotonic version number, immutable files, server-calculated content hash, parent version, bounded change summary, actor and timestamp.
 - `lab_likes`: canonical Better Auth user ID, experiment slug, active state and state timestamps; unique `{ userId, experimentSlug }`.
-- `lab_analytics_events`: server-validated `source_open`, `code_copy`, `like`, `unlike` events with experiment slug, source version where relevant, server timestamp and idempotency key. Never store email, clipboard content or source text.
+- `lab_analytics_events`: server-validated `source_open` and `code_copy` events for verified users; `like`/`unlike` events for verified state transitions; and separate anonymous `guest_like`/`guest_unlike` action events where the public like mechanism reports them. Store experiment slug, source version where relevant, actor category, optional server-derived verified user ID, server timestamp and idempotency key. Never store email, clipboard content or source text.
 - `lab_source_audit_events`: actor, action, experiment, version references, request ID, safe outcome code and timestamp. Owner source lifecycle mutations only; append-only, no source text, email, credentials, raw tokens or secrets.
 
 These are target records. The inspected implementation currently embeds `files` in a mutable `LabSource` record and has no separate immutable version/audit collection. Do not treat the proposed model as already migrated.
 
 ### Additional contract tests
 
-- Guest, signed-in unverified user, verified registered user, owner, unpublished source, source-open/copy idempotency replay and like/unlike state transitions.
+- Guest, signed-in unverified user, verified registered user, owner, unpublished source, source-open/copy idempotency replay, verified like/unlike state transitions and best-effort guest-like reporting.
 - Owner guard missing/mismatched, owner session expired, user attempts owner API directly, client forges actor/user/role/version/published fields.
 - Duplicate source aggregate, duplicate file path, path traversal, binary/oversized file, secret-bearing file, stale draft pointer, publish of unsaved/wrong version, repeated publish/revoke/save.
 - Failed writes preserve the previous published pointer. Restore creates a new version. Revoke/unpublish affects the next source request.
