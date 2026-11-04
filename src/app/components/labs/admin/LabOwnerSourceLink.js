@@ -2,12 +2,27 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { authClient } from "@/app/lib/auth/client";
 
 export default function LabOwnerSourceLink() {
+  const { data: session, isPending: sessionPending } = authClient.useSession();
   const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
     let active = true;
+
+    if (sessionPending) {
+      return () => {
+        active = false;
+      };
+    }
+
+    if (!session?.user?.id || session.user.emailVerified !== true) {
+      setIsOwner(false);
+      return () => {
+        active = false;
+      };
+    }
 
     fetch("/api/v1/admin/labs/owner-status", {
       method: "GET",
@@ -29,7 +44,7 @@ export default function LabOwnerSourceLink() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [session?.user?.id, session?.user?.emailVerified, sessionPending]);
 
   if (!isOwner) return null;
 
