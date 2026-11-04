@@ -1,6 +1,6 @@
 # Implementation Plan — Portfolio Platform
 
-**Status:** Planning baseline only. Do not interpret these phases as completed work.
+**Status:** Living implementation plan. The `feat/labs-public-page` branch contains an initial public Labs, Better Auth and protected-source-read foundation. Owner-managed source creation/versioning/grants and complete release verification remain planned. Phase entries below are not evidence of completion unless explicitly recorded in the current-state section.
 
 ## Principles
 - Inspect first; change second.
@@ -9,6 +9,25 @@
 - Use the locked stack: Next.js App Router, JavaScript, Tailwind CSS v4, Motion (`motion/react`), MongoDB, Cloudinary and Vercel.
 - Keep decisions open when they remain unselected; document alternatives and validation requirements.
 - Prefer small, reversible phases and isolated commits. No broad rewrites for convenience.
+
+## Current implementation baseline — 2026-11-04
+
+The following is the inspected code baseline, not a production-readiness certificate:
+
+| Capability | Current state on `feat/labs-public-page` | Remaining work |
+|---|---|---|
+| Public Labs listing/detail and code-owned demos | Implemented | Regression verification and approved outstanding UX polish |
+| Better Auth + MongoDB adapter | Foundation implemented | Final session policy and security/release tests |
+| Email/password registration, verification, reset and SMTP transport | Implemented in branch and configured for Preview; email delivery observed | Validate real verification completion, duplicate behavior, reset, production deployment |
+| First-party Terms/Privacy pages and consent receipts | Implemented | Legal review and operational rights/deletion workflow review |
+| Protected source read endpoint and per-user grant model | Implemented | Source snapshot provisioning, grants, test matrix, collection bootstrap |
+| Source record creation/file editor/versioning/publish/restore | Not implemented | Phase 8 source-management slice described in `LABS-SOURCE-MANAGEMENT-SPEC.md` |
+| Owner identity/authorization and owner management UI | Not implemented | Approve singleton owner identity, implement server guard and owner workspace |
+| Source audit and immutable source-version storage | Not implemented | Add collections/indexes, migration and audit tests |
+| Isolated execution of stored/admin-authored source | Not implemented and not approved | Separate Phase 8B threat-model and infrastructure decision |
+| General CMS/Admin, media management, analytics and scheduling | Deferred | Begin only after Labs work is complete and separately authorized |
+
+Do not mark a row complete because a page renders. Each capability still needs its required direct-request, authorization, failure, accessibility, privacy, performance and regression evidence.
 
 ## Phase 0 — Repository discovery and baseline
 **Work**
@@ -27,7 +46,7 @@
 ## Phase 1 — Architecture and threat-model approval
 **Work**
 - Define domain boundaries for portfolio content, Lab content, immutable versions, media references, users/roles, likes, analytics and scheduled jobs.
-- Select auth provider/session implementation, MongoDB hosting, cache invalidation, scheduler and isolated preview execution only after validating constraints.
+- Preserve the selected Better Auth + MongoDB adapter implementation. Review the final session-lifetime/concurrency policy, owner identity bootstrap, cache invalidation, scheduler and isolated preview execution where those decisions are still open.
 - Define schemas, indexes, migration/backfill strategy, API/server-action contracts, permission matrix and error model.
 - Threat-model untrusted source execution, upload signatures, drafts, cache leakage, redirects, analytics abuse and account deletion.
 - Specify rollback/recovery for publication and scheduled jobs.
@@ -42,7 +61,7 @@
 **Work**
 - Implement validated domain models and indexes.
 - Establish server-only data access boundaries and centralized authorization helpers.
-- Implement user role provisioning without any public self-service admin escalation.
+- Implement the approved singleton-owner provisioning path without any public self-service owner/admin escalation. The owner identity mechanism remains open pending explicit approval.
 - Add safe error handling, rate/abuse controls and audit metadata where required.
 - Add tests for protected reads and mutations.
 
@@ -225,10 +244,10 @@ A requirement is done only when all applicable conditions are met:
 Every task should track: ID, requirement reference, phase, owner, dependencies, risk, status, decision links, test evidence, public-regression impact, security/privacy impact, performance impact, rollback/recovery note, and acceptance sign-off.
 
 ## Branching and release discipline
-- This branch is documentation-only: `docs/portfolio-platform-spec`.
-- Keep code changes out of this branch unless explicitly requested later.
-- Prefer one logical implementation phase per branch/PR; avoid mixing unrelated content, auth, execution-sandbox and analytics changes.
-- Do not merge or deploy automatically.
+- Current Labs implementation and this specification update are on `feat/labs-public-page`.
+- Keep each logical implementation phase isolated in commits/PRs; do not mix unrelated content, auth, source-management, execution-sandbox and analytics changes.
+- Do not merge into `main` or deploy Production without explicit user approval.
+- Preview deployments may be used for focused validation; do not expose previews broadly or disable deployment protection to simplify external integrations.
 
 
 ## Required architecture deliverables before feature implementation
