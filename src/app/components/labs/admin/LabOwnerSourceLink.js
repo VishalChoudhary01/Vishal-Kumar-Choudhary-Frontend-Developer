@@ -6,7 +6,8 @@ import { authClient } from "@/app/lib/auth/client";
 
 export default function LabOwnerSourceLink() {
   const { data: session, isPending: sessionPending } = authClient.useSession();
-  const [isOwner, setIsOwner] = useState(false);
+  const [ownerUserId, setOwnerUserId] = useState(null);
+  const isVerifiedSession = Boolean(session?.user?.id) && session.user.emailVerified === true;
 
   useEffect(() => {
     let active = true;
@@ -17,8 +18,7 @@ export default function LabOwnerSourceLink() {
       };
     }
 
-    if (!session?.user?.id || session.user.emailVerified !== true) {
-      setIsOwner(false);
+    if (!isVerifiedSession) {
       return () => {
         active = false;
       };
@@ -35,18 +35,18 @@ export default function LabOwnerSourceLink() {
         return response.json().catch(() => null);
       })
       .then((payload) => {
-        if (active) setIsOwner(payload?.data?.isOwner === true);
+        if (active) setOwnerUserId(payload?.data?.isOwner === true ? session.user.id : null);
       })
       .catch(() => {
-        if (active) setIsOwner(false);
+        if (active) setOwnerUserId(null);
       });
 
     return () => {
       active = false;
     };
-  }, [session?.user?.id, session?.user?.emailVerified, sessionPending]);
+  }, [session?.user?.id, isVerifiedSession, sessionPending]);
 
-  if (!isOwner) return null;
+  if (!isVerifiedSession || ownerUserId !== session.user.id) return null;
 
   return (
     <div className="mx-auto mt-8 flex w-full max-w-[1440px] justify-end px-6 sm:px-8 lg:px-20">
