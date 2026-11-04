@@ -12,6 +12,7 @@ export default function SignupForm({
   returnTo,
   legal,
   registrationEnabled,
+  readiness,
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -228,8 +229,20 @@ export default function SignupForm({
         </div>
 
         {!registrationEnabled ? (
-          <AuthMessage>
-            Account registration will be available after email delivery and both legal documents are configured.
+          <AuthMessage title="Account registration is not ready">
+            Complete the remaining server setup before new accounts can be created.
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              {!readiness?.database ? (
+                <li>Database and authentication configuration is incomplete.</li>
+              ) : null}
+              {!readiness?.emailDelivery ? (
+                <li>Email delivery for verification and password recovery is not configured.</li>
+              ) : null}
+              {!readiness?.legalDocuments ? (
+                <li>First-party Terms of Service and Privacy Policy URLs are not valid.</li>
+              ) : null}
+            </ul>
+            Your form data is not submitted until all requirements are ready.
           </AuthMessage>
         ) : null}
 
