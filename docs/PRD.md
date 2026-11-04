@@ -36,17 +36,17 @@ Extend the existing developer portfolio into a maintainable platform where the o
 
 ### Registered user
 - All guest capabilities.
-- Access full experiment source and copy the full source through authenticated server-authorized flows.
+- Access full experiment source and copy the full source only when the account has an explicit active grant for that experiment; a verified account alone does not grant source access.
 - Access interactive previews only through the approved isolated preview mechanism.
 - Like/unlike with a server-enforced one-active-like-per-user-per-experiment rule.
 - Use a personal dashboard for liked experiments, recently viewed experiments, recently accessed components, account settings, and personal activity.
 - Manage display name/profile image, view email, manage password where applicable, reset password, sign out, and delete account.
-- Cannot grant themselves Admin privileges.
+- Cannot grant themselves Admin privileges or source-access grants.
 
 ### Admin
 - Access protected admin routes and operations after server-side role checks.
 - Manage portfolio dynamic content, projects, experience, Lab experiments, media, publication workflow, schedules, versions, and analytics.
-- Admin role is provisioned manually through trusted setup; public registration never grants it.
+- Admin role is provisioned manually through trusted setup; public registration never grants it. The initial Labs source-management release uses a single manually provisioned Owner identity, which is the only privileged administrator until multi-admin roles are separately approved.
 
 ## 5. Content ownership and rendering
 ### CMS-managed dynamic content
@@ -81,7 +81,10 @@ Extend the existing developer portfolio into a maintainable platform where the o
 - A save action must not automatically publish.
 
 ### FR-02 Lab management
-- Create and edit experiment metadata and source/configuration.
+- Create and edit experiment metadata and source/configuration through an owner-only management workflow.
+- Create source aggregates for existing experiment slugs, add/edit/rename/delete text files, validate file paths and size limits, and save draft snapshots.
+- Publish/unpublish an exact saved source version; preserve immutable history and restore by creating a new version.
+- Grant and revoke source access for an individual verified account and experiment; public registration never creates a grant.
 - Support static previews (image, GIF, video) and interactive previews for repository-managed components or admin-managed source in a controlled isolated environment.
 - Preview before publication; publish/unpublish with explicit confirmation.
 - Validate source/configuration and dependency allowlists before an experiment becomes eligible for interactive preview.
@@ -255,3 +258,15 @@ Requirements are not complete merely because UI exists. Each capability must pas
 - Cloudinary: media storage/delivery.
 - Vercel: existing Next.js application deployment.
 - Authentication provider/session implementation, MongoDB host, scheduler and isolated preview runtime remain open and must be validated during architecture phase.
+
+### FR-11 Owner-managed protected source lifecycle
+- A manually provisioned portfolio owner can create and maintain private source snapshots for existing Labs experiments through a protected owner-only workspace.
+- Owner identity is derived from trusted server-side configuration or a separately approved role store; it is never supplied by the browser or created by public registration.
+- Source editing is text-only. Saved code is not executed by the source-management workflow or in the main portfolio application runtime.
+- Saving creates an immutable draft snapshot. Publishing explicitly selects one saved version; saving never publishes implicitly. Unpublishing prevents new user source reads without silently deleting grants or historical versions.
+- Restore creates a new version from an immutable historical snapshot.
+- The owner can grant/revoke an individual verified account's access to one experiment, optionally with expiry. The server resolves the account from an exact email lookup and stores the canonical Better Auth user ID; the client never selects a user ID or role.
+- Every privileged source/grant mutation is server-authorized, validated, concurrency-safe and auditable.
+- Regular registered users require an active, unexpired grant matching their own server-derived user ID and the experiment slug. Owner management authority is separate from ordinary user grants.
+- Source, draft, version and grant data remain private/no-store. Untrusted execution requires a separate approved isolated-preview architecture and threat-model gate.
+- Database bootstrap/migration must be idempotent and preserve existing records; source collections must not depend on manual empty-collection creation in Atlas.
