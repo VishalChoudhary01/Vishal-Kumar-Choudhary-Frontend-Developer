@@ -117,12 +117,12 @@ No new infrastructure provider or runtime has been selected by this register. Th
 
 ## ADR-016 — Owner-managed Labs source lifecycle
 
-- **Status:** Planning specification recorded; implementation/owner bootstrap OPEN
-- **Decision direction:** Add a narrow owner-only source-management capability before general CMS/Admin. The first release is a singleton trusted portfolio owner, not a multi-admin role system.
-- **Recommended owner identity:** Server-only `LABS_OWNER_USER_ID` containing the existing verified Better Auth user ID. Missing/mismatched configuration denies owner actions. First-user-wins, email matching supplied by the browser and client role flags are prohibited. This mechanism requires explicit approval before implementation.
+- **Status:** Owner identity and source-management authority ACCEPTED (2026-11-04); implementation pending
+- **Accepted decision:** Add a narrow owner-only source-management capability before general CMS/Admin. The first release is a singleton trusted portfolio owner, not a multi-admin role system. This owner manages source records/files/drafts/versions/publishing/restoration, per-experiment grants and source audit history.
+- **Accepted owner identity:** Server-only `LABS_OWNER_USER_ID` containing the existing verified Better Auth user ID. Missing/mismatched configuration denies owner actions. First-user-wins, email matching supplied by the browser and client role flags are prohibited. The owner is the sole privileged administrator in the first release.
 - **Regular-user policy:** A verified Registered User receives full source only with an explicit active, unexpired per-user/per-experiment grant. Registration and email verification never create grants.
 - **Data direction:** Source aggregate with draft/published pointers; immutable `lab_source_versions`; existing unique per-user/per-experiment `lab_source_grants`; append-only `lab_source_audit_events`. Migration and bootstrap must be idempotent and preserve existing records.
 - **Lifecycle:** Save draft, publish exact version, unpublish and restore are separate operations. Restore creates a new immutable version. Source editing is text-only and does not execute code.
-- **Still OPEN:** Owner identity approval, final route naming, editor dependency, exact byte/file/language limits, source import strategy and version retention/storage implications.
+- **Owner identity:** RESOLVED / LOCKED. **Still OPEN:** final route naming, editor dependency, exact byte/file/language limits, source import strategy and version retention/storage implications.
 - **Security gate:** Live execution of owner-authored source remains blocked until a separate isolated-preview architecture and threat-model review are approved.
 - **Source of detail:** `docs/LABS-SOURCE-MANAGEMENT-SPEC.md`.
