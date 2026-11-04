@@ -166,7 +166,7 @@ export async function listOwnerLabSources({ user }) {
       title: experiment.title,
       description: experiment.description,
       hasSource: Boolean(head),
-      published: Boolean(head?.published && (head.publishedVersionId || head.files?.length)),
+      published: head?.published === true,
       draftVersionId: head?.draftVersionId || null,
       publishedVersionId: head?.publishedVersionId || null,
       legacyVersion: head?.version || null,
