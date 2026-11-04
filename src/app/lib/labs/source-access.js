@@ -41,7 +41,7 @@ export async function getAuthorizedLabSource({ user, slug }) {
     return { status: "unavailable" };
   }
 
-  const files = source.files
+  const files = snapshot.files
     .filter(
       (file) =>
         file &&
