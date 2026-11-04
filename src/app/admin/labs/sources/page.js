@@ -31,7 +31,10 @@ function Metric({ icon: Icon, label, value, detail }) {
   );
 }
 
-export default async function LabsSourceAdminPage() {
+export default async function LabsSourceAdminPage({ searchParams }) {
+  const query = await searchParams;
+  const requestedDays = Number(query?.days || 30);
+  const days = [7, 30, 90, 365].includes(requestedDays) ? requestedDays : 30;
   const session = await getCurrentAuthSession();
 
   if (!session?.user?.id) {
@@ -44,7 +47,7 @@ export default async function LabsSourceAdminPage() {
 
   let analytics;
   try {
-    analytics = await getLabsOwnerAnalytics({ user: session.user, days: 30 });
+    analytics = await getLabsOwnerAnalytics({ user: session.user, days });
   } catch {
     notFound();
   }
@@ -83,11 +86,74 @@ export default async function LabsSourceAdminPage() {
           </div>
         </header>
 
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-tertiary">Reporting period</p>
+            <p className="mt-1 text-sm text-text-secondary">Choose the window used for opens, copies and like activity.</p>
+          </div>
+          <nav aria-label="Analytics reporting period" className="flex flex-wrap gap-1.5">
+            {[7, 30, 90, 365].map((period) => (
+              <Link
+                key={period}
+                href={"/admin/labs/sources?days=" + period}
+                aria-current={analytics.periodDays === period ? "page" : undefined}
+                className={[
+                  "inline-flex h-8 items-center border px-3 text-xs font-medium transition-colors",
+                  analytics.periodDays === period
+                    ? "border-brand bg-brand-soft text-brand"
+                    : "border-border text-text-secondary hover:border-brand hover:text-brand",
+                ].join(" ")}
+              >
+                {period} days
+              </Link>
+            ))}
+          </nav>
+        </div>
+
         <section aria-label="Engagement overview" className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <Metric icon={Eye} label="Source opens" value={totals.sourceOpens} detail="Successful verified source loads" />
           <Metric icon={Users} label="Verified accounts" value={totals.uniqueVerifiedAccounts} detail="Per-experiment unique accounts, summed" />
           <Metric icon={Copy} label="Code copies" value={totals.codeCopies} detail="Reported after clipboard success" />
           <Metric icon={Heart} label="Active likes" value={totals.totalActiveLikes} detail={number(totals.activeAnonymousLikes) + " anonymous · " + number(totals.activeVerifiedLikes) + " verified"} />
+        </section>
+
+        <section aria-labelledby="engagement-trend-title" className="mt-8 rounded-sm border border-border bg-surface-1 p-4 sm:p-5">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 id="engagement-trend-title" className="text-sm font-semibold">Daily engagement activity</h2>
+              <p className="mt-1 text-xs text-text-tertiary">Successful source opens, copies and like/unlike state changes, in UTC.</p>
+            </div>
+            <span className="text-xs text-text-tertiary">{analytics.daily.length} active days</span>
+          </div>
+          {analytics.daily.length ? (
+            <div className="mt-5 overflow-x-auto">
+              <div className="flex h-36 min-w-[560px] items-end gap-1 border-b border-border pb-2" role="img" aria-label="Daily engagement activity bar chart">
+                {analytics.daily.map((day) => {
+                  const maximum = Math.max(1, ...analytics.daily.map((item) => item.totalActions));
+                  const height = Math.max(3, (day.totalActions / maximum) * 100);
+                  return (
+                    <div key={day.date} className="group flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1">
+                      <span className="text-[9px] tabular-nums text-text-tertiary opacity-0 transition-opacity group-hover:opacity-100">
+                        {number(day.totalActions)}
+                      </span>
+                      <div
+                        className="w-full min-w-[3px] bg-brand/70 transition-colors group-hover:bg-brand"
+                        style={{ height: height + "%" }}
+                        title={day.date + ": " + day.totalActions + " actions"}
+                      />
+                      <span className="text-[9px] text-text-tertiary">
+                        {new Date(day.date + "T00:00:00Z").toLocaleDateString("en-IN", { day: "2-digit", month: "short", timeZone: "UTC" })}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <p className="mt-5 border border-dashed border-border p-6 text-center text-xs text-text-tertiary">
+              No engagement events have been recorded during this period.
+            </p>
+          )}
         </section>
 
         <LabSourceInventory />
