@@ -1,8 +1,8 @@
 # Product Requirements Document — Portfolio Platform
 
-**Status:** Approved requirements baseline; implementation pending  
-**Version:** 1.0  
-**Scope:** Existing portfolio extension: CMS/admin, analytics, media library, user accounts, and Component Lab.
+**Status:** Approved requirements baseline; Labs/authentication foundation implemented; owner source management planned; CMS/Admin deferred  
+**Version:** 1.1  
+**Scope:** Existing portfolio extension: CMS/admin, analytics, media library, user accounts, and Component Lab. The current Labs branch includes the initial auth and protected-source read foundation; owner-managed source authoring/versioning/grants remain planned.
 
 ## 1. Product vision
 Extend the existing developer portfolio into a maintainable platform where the owner can manage selected portfolio content and publish React component/animation experiments through a controlled Lab. Provide useful engagement analytics without compromising the public portfolio's performance, design, security, SEO, or behavior.
@@ -172,10 +172,12 @@ Track, at minimum:
 - Vercel for the Next.js application/deployment.
 
 ### Open decisions requiring repository/architecture validation
-- Authentication provider and exact session implementation.
-- MongoDB hosting, connection lifecycle and data/index migration approach.
+- Final Better Auth session-lifetime/concurrency policy and recovery behavior.
+- Owner identity bootstrap (`LABS_OWNER_USER_ID` singleton or a separately approved persisted role model).
+- MongoDB hosting, connection lifecycle, source-version migration and data/index migration approach.
+- Source editor dependency/interaction model and exact file/language/byte limits.
 - Scheduler mechanism, bounded retry policy and operational recovery.
-- Isolated interactive-preview runtime/provider and threat model.
+- Isolated interactive-preview runtime/provider and threat model; stored source management does not authorize source execution.
 - Cache tags/revalidation strategy.
 - Final schemas, event payloads, retention for analytics and user activity.
 - Gallery structure and supported video limits.
