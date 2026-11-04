@@ -1,8 +1,8 @@
 # Product Requirements Document — Portfolio Platform
 
-**Status:** Approved requirements baseline; Labs/authentication foundation implemented; owner source management planned; CMS/Admin deferred  
+**Status:** Approved requirements baseline; Labs/authentication foundation implemented; owner source management and engagement analytics planned; CMS/Admin deferred  
 **Version:** 1.1  
-**Scope:** Existing portfolio extension: CMS/admin, analytics, media library, user accounts, and Component Lab. The current Labs branch includes the initial auth and protected-source read foundation; owner-managed source authoring/versioning/grants remain planned.
+**Scope:** Existing portfolio extension: CMS/admin, analytics, media library, user accounts, and Component Lab. The current Labs branch includes the initial auth and protected-source read foundation; owner-managed source authoring/versioning and engagement analytics remain planned.
 
 ## 1. Product vision
 Extend the existing developer portfolio into a maintainable platform where the owner can manage selected portfolio content and publish React component/animation experiments through a controlled Lab. Provide useful engagement analytics without compromising the public portfolio's performance, design, security, SEO, or behavior.
@@ -31,17 +31,17 @@ Extend the existing developer portfolio into a maintainable platform where the o
 - View public portfolio pages and published Lab listing/detail pages.
 - View permitted static media previews. Guest partial-source snippets remain disabled unless a separate content policy, exact exposure scope and UX are approved.
 - Search, filter, sort, paginate/load more, and view published experiment metadata.
-- Like experiments through an anonymous mechanism where available, subject to browser storage and abuse controls.
+- Cannot view, copy or like source; guest source-like controls are not rendered.
 - Cannot access private drafts, full source, restricted interactive previews, user-only features, or admin pages.
 
 ### Registered user
 - All guest capabilities.
-- Access full experiment source and copy the full source only when the account has an explicit active grant for that experiment; a verified account alone does not grant source access.
+- Automatically access and copy the full source of every published experiment after signing in with a verified email address. No per-user/per-experiment owner grant is needed.
 - Access interactive previews only through the approved isolated preview mechanism.
-- Like/unlike with a server-enforced one-active-like-per-user-per-experiment rule.
+- Like/unlike experiments with a server-enforced one-active-like-per-user-per-experiment rule; this capability requires a verified account.
 - Use a personal dashboard for liked experiments, recently viewed experiments, recently accessed components, account settings, and personal activity.
 - Manage display name/profile image, view email, manage password where applicable, reset password, sign out, and delete account.
-- Cannot grant themselves Admin privileges or source-access grants.
+- Cannot grant themselves Owner/Admin privileges or alter source publication state.
 
 ### Admin
 - Access protected admin routes and operations after server-side role checks.
@@ -84,7 +84,7 @@ Extend the existing developer portfolio into a maintainable platform where the o
 - Create and edit experiment metadata and source/configuration through an owner-only management workflow.
 - Create source aggregates for existing experiment slugs, add/edit/rename/delete text files, validate file paths and size limits, and save draft snapshots.
 - Publish/unpublish an exact saved source version; preserve immutable history and restore by creating a new version.
-- Grant and revoke source access for an individual verified account and experiment; public registration never creates a grant.
+- Published source is automatically readable by every registered account whose email is verified. There is no per-user source grant/revoke workflow; the owner controls availability through publish/unpublish.
 - Support static previews (image, GIF, video) and interactive previews for repository-managed components or admin-managed source in a controlled isolated environment.
 - Preview before publication; publish/unpublish with explicit confirmation.
 - Validate source/configuration and dependency allowlists before an experiment becomes eligible for interactive preview.
@@ -106,9 +106,9 @@ Extend the existing developer portfolio into a maintainable platform where the o
 - Restore intended navigation/action where safe, but do not automatically repeat unsafe or unintended operations.
 
 ### FR-05 Likes and user dashboard
-- Guest likes may be recorded through browser storage/appropriate safeguards and are not guaranteed unique-person counts or cross-device persistence.
-- Authenticated likes persist across sessions/devices and enforce one active like per user/experiment server-side.
-- Track guest and authenticated interactions separately where measurable.
+- Guest likes are disabled in the initial Labs source/engagement release. Only signed-in verified accounts can like or unlike.
+- Verified-account likes persist across sessions/devices and enforce one active like per user/experiment server-side.
+- Track verified-account source opens, code-copy actions and like/unlike transitions. Do not collect guest source/copy/like events because these controls are unavailable to guests.
 - User dashboard includes account summary/settings, liked experiments, recently viewed experiments, recently accessed components and personal activity.
 - Personal activity is private to the appropriate user. Do not attach anonymous activity to an account without an explicit, disclosed mechanism.
 
@@ -116,12 +116,12 @@ Extend the existing developer portfolio into a maintainable platform where the o
 Track, at minimum:
 - Experiment detail views.
 - Likes and unlikes.
-- Full-source access.
+- Successful source-viewer opens (distinct from public experiment detail-page views).
 - Copy-code actions.
 - Preview starts and explicitly instrumented preview interactions.
-- Per-experiment view/copy/like metrics, most-viewed/most-copied rankings, engagement rate such as copies per view, daily/monthly trends and guest-vs-authenticated segments where measurable.
+- Per-experiment public detail-page views, successful source opens, unique verified accounts opening source, successful code-copy actions, current active likes, like/unlike actions, copies-per-source-open, and daily/monthly trends. Owner/Admin analytics are aggregates, not user-level browsing histories.
 - Deduplication, bot/abuse safeguards and documented metric definitions.
-- A copy action is a copy attempt, not proof of downstream use.
+- A code-copy action is recorded only after the supported client reports a successful Clipboard API write; it is not proof that code was pasted, executed or shipped.
 
 ### FR-07 Publishing and scheduling
 - Content states: Draft, Published, Unpublished.
@@ -160,6 +160,17 @@ Track, at minimum:
 - Support loading, empty, success, validation and error states.
 - Lazy-load heavy editors and preview code.
 - Admin and editor bundles must not enter the critical public-home-page bundle.
+
+
+### FR-12 Labs source engagement analytics
+- Record a successful source open only when a verified account successfully receives the published source from the protected source endpoint. A public experiment detail-page view is a separate event.
+- Record code-copy actions only after the client confirms a successful Clipboard API write and the server validates the current verified session and published source version.
+- Record likes/unlikes only when the server confirms an actual state transition. Enforce one current like per verified user and experiment.
+- The owner/admin dashboard must show each experiment's source-open count, unique verified accounts opening source, code-copy count, current active-like count, like/unlike actions and trends over a selected period.
+- Provide aggregate rankings by source opens, copies and active likes, plus daily/monthly trends and a transparent copies-per-source-open formula.
+- Admin analytics must not expose individual users' source browsing/copy/like history or email addresses in the first release. Use aggregate reporting and server-derived actor IDs for abuse control/deduplication.
+- Analytics events must be idempotent, rate-limited, server-validated and privacy-minimized. Never store clipboard contents, full source payloads, passwords, verification tokens or raw email in analytics events.
+- Define and disclose analytics retention, account deletion treatment and event deduplication before production analytics is enabled.
 
 ## 7. Technology baseline and open decisions
 ### Selected baseline
@@ -262,13 +273,13 @@ Requirements are not complete merely because UI exists. Each capability must pas
 - Authentication provider/session implementation, MongoDB host, scheduler and isolated preview runtime remain open and must be validated during architecture phase.
 
 ### FR-11 Owner-managed protected source lifecycle
-- The manually provisioned singleton portfolio owner is the sole privileged administrator for the first source-management release and can create and maintain private source snapshots for existing Labs experiments through a protected owner-only workspace.
+- The manually provisioned singleton portfolio owner is the sole privileged administrator for the first source-management release and can create and maintain private source snapshots for existing Labs experiments through a protected owner-only workspace and inspect aggregate source-engagement analytics.
 - Owner identity is derived exclusively from the locked server-only `LABS_OWNER_USER_ID` environment variable, matching the stable Better Auth user ID of the verified owner account; it is never supplied by the browser or created by public registration.
 - Source editing is text-only. Saved code is not executed by the source-management workflow or in the main portfolio application runtime.
 - Saving creates an immutable draft snapshot. Publishing explicitly selects one saved version; saving never publishes implicitly. Unpublishing prevents new user source reads without silently deleting grants or historical versions.
 - Restore creates a new version from an immutable historical snapshot.
-- The owner can grant/revoke an individual verified account's access to one experiment, optionally with expiry. The server resolves the account from an exact email lookup and stores the canonical Better Auth user ID; the client never selects a user ID or role.
+- All verified registered users automatically receive source access to each published experiment. The owner does not issue per-user grants; publishing/unpublishing controls source availability for all verified accounts.
 - Every privileged source/grant mutation is server-authorized, validated, concurrency-safe and auditable.
-- Regular registered users require an active, unexpired grant matching their own server-derived user ID and the experiment slug. Owner management authority is separate from ordinary user grants.
-- Source, draft, version and grant data remain private/no-store. Untrusted execution requires a separate approved isolated-preview architecture and threat-model gate.
+- Regular registered users require only a valid Better Auth session with `emailVerified === true` and a published source snapshot for the requested experiment. Owner management authority is separately checked for drafts and unpublished versions.
+- Source, draft, version and analytics data remain private/no-store. Untrusted execution requires a separate approved isolated-preview architecture and threat-model gate.
 - Database bootstrap/migration must be idempotent and preserve existing records; source collections must not depend on manual empty-collection creation in Atlas.
