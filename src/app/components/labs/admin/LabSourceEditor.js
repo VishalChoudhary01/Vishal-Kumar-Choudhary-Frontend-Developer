@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import LabSourceLivePreview from "./LabSourceLivePreview";
+import LabMediaLibrary from "./LabMediaLibrary";
 import Link from "next/link";
 import {
   ArrowDown,
@@ -790,6 +791,8 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
           </div>
           {source.isCustom ? <LabSourceLivePreview files={files} /> : null}
         </section>
+
+        {source.isCustom ? <LabMediaLibrary slug={source.slug} /> : null}
 
         <section className="mt-8 rounded-sm border border-border bg-surface-1 p-4 sm:p-5">
           <div className="flex flex-wrap items-end justify-between gap-3">

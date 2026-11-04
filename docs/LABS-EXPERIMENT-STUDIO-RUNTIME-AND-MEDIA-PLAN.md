@@ -372,11 +372,11 @@ Do not send raw Cloudinary credentials, source content to public endpoints, comp
 - Owner-only creation and inventory tests.
 
 ### Phase 2 — Media asset pipeline
-- Signed direct upload to Cloudinary for images, GIFs and videos.
-- Verify upload intent and provider asset metadata on the server.
-- Implement LabMediaAsset records, owner media library, cover/gallery ordering, alt text/caption and poster metadata.
-- Attach media references to an immutable draft/release manifest.
-- Verify draft media privacy and public release delivery.
+- **Initial upload foundation implemented:** signed direct-upload intent, Cloudinary Admin API preset-mode verification, upload finalization/resource verification, `LabMediaAsset` persistence, owner media inventory and audit events.
+- **Remaining:** configure the signed image/video presets and `LABS_MEDIA_MAX_UPLOAD_BYTES` in the actual Preview environment; complete format-by-format upload and authenticated-delivery tests.
+- Add media preview delivery, cover/gallery/runtime attachment roles, alt text/caption and video poster metadata.
+- Attach media references to immutable draft/release manifests.
+- Verify draft media privacy, public release delivery, deletion/reference integrity and orphan cleanup.
 
 ### Phase 3 — React/JSX + Tailwind v4 + Motion compiler
 - Create fixed toolchain image with pinned React, ReactDOM, Motion, Tailwind v4/PostCSS and approved utilities.

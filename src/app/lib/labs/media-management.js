@@ -131,6 +131,16 @@ export async function createOwnerLabMediaUploadIntent({ user, slug, input }) {
     fail("MEDIA_CONFIG_MISSING", "Configure a signed Cloudinary Labs " + mediaKind + " upload preset before uploading media.");
   }
 
+  let preset;
+  try {
+    preset = await client.api.upload_preset(uploadPreset);
+  } catch {
+    fail("MEDIA_CONFIG_MISSING", "The configured Cloudinary Labs " + mediaKind + " upload preset could not be verified.");
+  }
+  if (!preset || preset.unsigned !== false) {
+    fail("MEDIA_CONFIG_MISSING", "The Cloudinary Labs " + mediaKind + " upload preset must use signed mode.");
+  }
+
   await LabMediaAsset.createIndexes();
   await LabSourceAuditEvent.createIndexes();
 
