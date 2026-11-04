@@ -127,6 +127,13 @@ export async function POST(request, { params }) {
     }
 
     const data = await setLabLike({ slug, actor, liked: body.liked });
+    if (data.rateLimited) {
+      return json(
+        { error: { code: "RATE_LIMITED", message: "Please wait a moment before changing your like again." } },
+        429,
+      );
+    }
+
     const response = json({ data });
 
     if (identity?.token) {
