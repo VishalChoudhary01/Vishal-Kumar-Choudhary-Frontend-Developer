@@ -1,7 +1,7 @@
 # Architecture Decision Records
 
 **Status:** Phase 1 decision register; choices marked OPEN are not approved.  
-**Branch:** `docs/portfolio-platform-spec`  
+**Branch:** `feat/labs-public-page`  
 **Related:** PRD.md, ARCHITECTURE.md, API-CONTRACTS.md, IMPLEMENTATION-PLAN.md, THREAT-MODEL.md
 
 This document records current decisions, known repository facts and unresolved choices separately. A proposed design is not an implemented capability. Update this register when a decision is approved; record its rationale, consequences and any required migration.
@@ -37,10 +37,11 @@ This document records current decisions, known repository facts and unresolved c
 
 ## ADR-005 — Authentication and sessions
 
-- **Status:** OPEN
-- **Requirement:** Email/password and Google sign-in; required lifecycle includes verification, password reset, secure logout/session handling, profile management and account deletion. GitHub sign-in/multi-provider scope must be reconciled with the PRD before implementation.
-- **Not decided:** Provider/library, session/token mechanism, cookie policy, account linking, rate limits and recovery mechanics.
-- **Rule:** Do not implement a custom password/session protocol or add an auth package until a provider/session decision is approved.
+- **Status:** Provider selected and foundation implemented; final session policy OPEN
+- **Decision:** Better Auth with `@better-auth/mongo-adapter` is the Labs authentication foundation. Better Auth uses the native MongoDB driver against the configured application database; Mongoose remains the application repository/model layer.
+- **Required lifecycle:** Email/password, verification, password reset, secure logout/session handling, Google sign-in when configured, profile management and account deletion.
+- **Not decided:** Final session lifetime/concurrency policy, recovery operations, account deletion cascade/retention workflow and final production verification.
+- **Rule:** Do not implement a custom password/session protocol or enable another provider without an approved decision. GitHub sign-in is not selected.
 
 ## ADR-006 — Client-side server-state management
 
@@ -112,3 +113,16 @@ This document records current decisions, known repository facts and unresolved c
 ## Decision approval log
 
 No new infrastructure provider or runtime has been selected by this register. The accepted items above capture directions already present in the platform plan and repository evidence; all OPEN/BLOCKED items remain unresolved.
+
+
+## ADR-016 — Owner-managed Labs source lifecycle
+
+- **Status:** Planning specification recorded; implementation/owner bootstrap OPEN
+- **Decision direction:** Add a narrow owner-only source-management capability before general CMS/Admin. The first release is a singleton trusted portfolio owner, not a multi-admin role system.
+- **Recommended owner identity:** Server-only `LABS_OWNER_USER_ID` containing the existing verified Better Auth user ID. Missing/mismatched configuration denies owner actions. First-user-wins, email matching supplied by the browser and client role flags are prohibited. This mechanism requires explicit approval before implementation.
+- **Regular-user policy:** A verified Registered User receives full source only with an explicit active, unexpired per-user/per-experiment grant. Registration and email verification never create grants.
+- **Data direction:** Source aggregate with draft/published pointers; immutable `lab_source_versions`; existing unique per-user/per-experiment `lab_source_grants`; append-only `lab_source_audit_events`. Migration and bootstrap must be idempotent and preserve existing records.
+- **Lifecycle:** Save draft, publish exact version, unpublish and restore are separate operations. Restore creates a new immutable version. Source editing is text-only and does not execute code.
+- **Still OPEN:** Owner identity approval, final route naming, editor dependency, exact byte/file/language limits, source import strategy and version retention/storage implications.
+- **Security gate:** Live execution of owner-authored source remains blocked until a separate isolated-preview architecture and threat-model review are approved.
+- **Source of detail:** `docs/LABS-SOURCE-MANAGEMENT-SPEC.md`.
