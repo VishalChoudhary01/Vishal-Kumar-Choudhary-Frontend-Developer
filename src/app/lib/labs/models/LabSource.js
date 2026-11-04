@@ -36,8 +36,33 @@ const labSourceSchema = new mongoose.Schema(
     },
     version: {
       type: String,
-      required: true,
+      default: "0.0",
       maxlength: 80,
+    },
+    draftVersionId: {
+      type: String,
+      default: null,
+      maxlength: 64,
+    },
+    publishedVersionId: {
+      type: String,
+      default: null,
+      maxlength: 64,
+    },
+    nextVersionNumber: {
+      type: Number,
+      default: 1,
+      min: 1,
+    },
+    createdBy: {
+      type: String,
+      default: null,
+      maxlength: 128,
+    },
+    updatedBy: {
+      type: String,
+      default: null,
+      maxlength: 128,
     },
     published: {
       type: Boolean,
@@ -46,11 +71,10 @@ const labSourceSchema = new mongoose.Schema(
     },
     files: {
       type: [labSourceFileSchema],
-      required: true,
+      default: [],
       validate: {
-        validator: (files) =>
-          Array.isArray(files) && files.length > 0 && files.length <= 40,
-        message: "A source snapshot must contain between 1 and 40 files.",
+        validator: (files) => Array.isArray(files) && files.length <= 40,
+        message: "A source snapshot cannot contain more than 40 files.",
       },
     },
   },
