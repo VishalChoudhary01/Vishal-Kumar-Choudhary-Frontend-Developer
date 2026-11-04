@@ -72,7 +72,7 @@ export default function TermsPage() {
           Labs accounts are intended for people aged 18 or older who can legally enter into an agreement where they live. Do not create an account if you are under 18. During registration you are asked to confirm that you meet this age requirement.
         </p>
         <p>
-          You must provide an email address you control, keep your sign-in credentials and verification links secure, and use your account yourself. Email verification is required before protected-source access. Creating an account does not automatically grant access to every experiment.
+          You must provide an email address you control, keep your sign-in credentials and verification links secure, and use your account yourself. Email verification is required before protected-source access. Every verified account can access any published source snapshot; an unverified account cannot access protected source.
         </p>
         <p>
           You are responsible for activity carried out through your account unless it results from a security incident outside your reasonable control. Contact me promptly through the <Link className="text-brand underline-offset-4 hover:underline" href="/#contact">Contact section</Link> if you believe your account has been accessed without permission.
