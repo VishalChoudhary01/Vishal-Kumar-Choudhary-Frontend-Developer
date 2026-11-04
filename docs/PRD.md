@@ -262,8 +262,8 @@ Requirements are not complete merely because UI exists. Each capability must pas
 - Authentication provider/session implementation, MongoDB host, scheduler and isolated preview runtime remain open and must be validated during architecture phase.
 
 ### FR-11 Owner-managed protected source lifecycle
-- A manually provisioned portfolio owner can create and maintain private source snapshots for existing Labs experiments through a protected owner-only workspace.
-- Owner identity is derived from trusted server-side configuration or a separately approved role store; it is never supplied by the browser or created by public registration.
+- The manually provisioned singleton portfolio owner is the sole privileged administrator for the first source-management release and can create and maintain private source snapshots for existing Labs experiments through a protected owner-only workspace.
+- Owner identity is derived exclusively from the locked server-only `LABS_OWNER_USER_ID` environment variable, matching the stable Better Auth user ID of the verified owner account; it is never supplied by the browser or created by public registration.
 - Source editing is text-only. Saved code is not executed by the source-management workflow or in the main portfolio application runtime.
 - Saving creates an immutable draft snapshot. Publishing explicitly selects one saved version; saving never publishes implicitly. Unpublishing prevents new user source reads without silently deleting grants or historical versions.
 - Restore creates a new version from an immutable historical snapshot.
