@@ -31,6 +31,49 @@ function makeRequestId() {
     "req_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
 }
 
+function validateDraftFiles(files) {
+  if (!Array.isArray(files) || files.length < 1 || files.length > 40) {
+    return "A source snapshot must contain between 1 and 40 files.";
+  }
+
+  const seenPaths = new Set();
+  let totalBytes = 0;
+  const safePathPattern = /^(?!\/)(?!.*(?:^|\/)\.{1,2}(?:\/|$))[A-Za-z0-9._/-]{1,180}$/;
+  const secretFilePattern = /(^|\/)\.env(?:\.|$)|(^|\/)(?:id_rsa|id_ed25519|credentials(?:\.json)?|secrets?\.(?:json|ya?ml))$/i;
+
+  for (const file of files) {
+    const path = typeof file?.path === "string" ? file.path.trim() : "";
+    if (
+      !safePathPattern.test(path) ||
+      path.split("/").some((segment) => !segment || segment === "." || segment === "..") ||
+      /[\u0000-\u001f\u007f]/.test(path) ||
+      secretFilePattern.test(path)
+    ) {
+      return "A file path is invalid or uses a restricted name. Check the path and remove environment/credential files.";
+    }
+
+    const normalizedPath = path.toLowerCase();
+    if (seenPaths.has(normalizedPath)) {
+      return "File paths must be unique. Rename the duplicate file before saving.";
+    }
+    seenPaths.add(normalizedPath);
+
+    if (!LANGUAGES.includes(file.language)) {
+      return "Choose a supported language for every file.";
+    }
+    if (typeof file.content !== "string" || /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(file.content)) {
+      return "Source files must contain plain text only.";
+    }
+
+    const bytes = new TextEncoder().encode(file.content).length;
+    if (bytes > 500000) return "Each source file must be 500 KB or smaller.";
+    totalBytes += bytes;
+    if (totalBytes > 1000000) return "The complete source snapshot must be 1 MB or smaller.";
+  }
+
+  return "";
+}
+
 export default function LabSourceEditor({ initialSource, initialVersions, initialAudit }) {
   const [source, setSource] = useState(initialSource);
   const [files, setFiles] = useState(initialSource.files || []);
@@ -217,8 +260,9 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
   }
 
   async function saveDraft() {
-    if (!files.length) {
-      setError("Add at least one source file before saving.");
+    const validationError = validateDraftFiles(files);
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
@@ -250,11 +294,15 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
       }));
       setChangeSummary("");
       setMessage(data.version + " saved as a private draft.");
-      const [nextVersions] = await Promise.all([
-        requestJson("/api/v1/admin/labs/sources/" + encodeURIComponent(source.slug) + "/versions"),
-        refreshAudit(),
-      ]);
-      setVersions(nextVersions || []);
+      try {
+        const [nextVersions] = await Promise.all([
+          requestJson("/api/v1/admin/labs/sources/" + encodeURIComponent(source.slug) + "/versions"),
+          refreshAudit(),
+        ]);
+        setVersions(nextVersions || []);
+      } catch {
+        setMessage(data.version + " was saved. The history panel could not refresh; reload the page to see the latest activity.");
+      }
     } catch (reason) {
       setError(reason.message || "The draft could not be saved.");
     } finally {
@@ -286,8 +334,12 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
         publishedVersionId: versionId,
       }));
       setConfirmPublish(false);
-      await refreshAudit();
       setMessage("Source published. Every verified account can now access this version.");
+      try {
+        await refreshAudit();
+      } catch {
+        setMessage("Source was published. The audit timeline could not refresh; reload the page to see the latest activity.");
+      }
     } catch (reason) {
       setError(reason.message || "Source could not be published.");
     } finally {
@@ -315,8 +367,12 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
         publishedVersionId: null,
       }));
       setConfirmUnpublish(false);
-      await refreshAudit();
       setMessage("Source unpublished. New source requests are now blocked.");
+      try {
+        await refreshAudit();
+      } catch {
+        setMessage("Source was unpublished. The audit timeline could not refresh; reload the page to see the latest activity.");
+      }
     } catch (reason) {
       setError(reason.message || "Source could not be unpublished.");
     } finally {
@@ -343,7 +399,10 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
   }
 
   async function restoreVersion(versionId, versionLabel) {
-    if (!window.confirm("Restore " + versionLabel + " as a new draft? Existing versions will remain unchanged.")) return;
+    const restoreMessage = hasUnsavedChanges
+      ? "Restore " + versionLabel + " as a new draft? This replaces the current unsaved editor contents. Existing saved versions remain unchanged."
+      : "Restore " + versionLabel + " as a new draft? Existing saved versions remain unchanged.";
+    if (!window.confirm(restoreMessage)) return;
 
     setBusy("restore");
     setError("");
@@ -359,8 +418,12 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
           requestId: makeRequestId(),
         },
       );
-      await refreshSource();
       setMessage(versionLabel + " restored as a new draft.");
+      try {
+        await refreshSource();
+      } catch {
+        setMessage(versionLabel + " was restored. Reload the workspace to refresh the source and version history.");
+      }
     } catch (reason) {
       setError(reason.message || "The selected version could not be restored.");
     } finally {
@@ -396,6 +459,11 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                   Live: {source.publishedVersion.version}
                 </span>
               ) : null}
+              {hasUnsavedChanges ? (
+                <span className="border border-warning/40 bg-warning/10 px-2 py-1 text-warning">Unsaved edits</span>
+              ) : (
+                <span className="border border-border px-2 py-1 text-text-tertiary">Working copy saved</span>
+              )}
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -409,8 +477,22 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
           </div>
         </header>
 
-        {message ? <p role="status" className="mt-4 text-sm text-brand">{message}</p> : null}
-        {error ? <p role="alert" className="mt-4 text-sm text-warning">{error}</p> : null}
+        <section aria-label="Source snapshot summary" className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {[
+            { label: "Files in working copy", value: files.length + " / 40" },
+            { label: "Snapshot size", value: (totalBytes / 1024).toFixed(1) + " KB / 1000 KB" },
+            { label: "Saved draft", value: source.draft?.version || "Not saved" },
+            { label: "Published version", value: source.publishedVersion?.version || "Not published" },
+          ].map((metric) => (
+            <div key={metric.label} className="border border-border bg-surface-1 px-3 py-3">
+              <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-text-tertiary">{metric.label}</p>
+              <p className="mt-1 truncate text-sm font-semibold tabular-nums" title={metric.value}>{metric.value}</p>
+            </div>
+          ))}
+        </section>
+
+        {message ? <p role="status" className="mt-4 border border-brand/30 bg-brand-soft/30 px-3 py-2 text-xs text-brand">{message}</p> : null}
+        {error ? <p role="alert" className="mt-4 border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning">{error}</p> : null}
 
         <section className="mt-6 grid gap-5 xl:grid-cols-[280px_minmax(0,1fr)]">
           <aside className="rounded-sm border border-border bg-surface-1 p-4">
@@ -441,22 +523,34 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
               </div>
             </div>
             <div className="mt-3 space-y-1">
-              {files.map((file, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => setSelectedIndex(index)}
-                  aria-pressed={selectedIndex === index}
-                  className={[
-                    "block w-full truncate border-l-2 px-3 py-2 text-left text-xs transition-colors",
-                    selectedIndex === index
-                      ? "border-brand bg-brand-soft text-text-primary"
-                      : "border-transparent text-text-secondary hover:bg-surface-2",
-                  ].join(" ")}
-                >
-                  {file.path}
-                </button>
-              ))}
+              {files.map((file, index) => {
+                const originalFile = (source.files || []).find((candidate) => candidate.path === file.path);
+                const fileState = !originalFile
+                  ? "New"
+                  : originalFile.content !== file.content || originalFile.language !== file.language
+                    ? "Edited"
+                    : "";
+
+                return (
+                  <button
+                    key={file.path + "-" + index}
+                    type="button"
+                    onClick={() => setSelectedIndex(index)}
+                    aria-pressed={selectedIndex === index}
+                    className={[
+                      "flex min-h-9 w-full items-center justify-between gap-2 border-l-2 px-3 py-2 text-left text-xs transition-colors",
+                      selectedIndex === index
+                        ? "border-brand bg-brand-soft text-text-primary"
+                        : "border-transparent text-text-secondary hover:bg-surface-2",
+                    ].join(" ")}
+                  >
+                    <span className="min-w-0 truncate">{file.path}</span>
+                    {fileState ? (
+                      <span className="shrink-0 text-[9px] font-semibold uppercase tracking-[0.08em] text-warning">{fileState}</span>
+                    ) : null}
+                  </button>
+                );
+              })}
               {!files.length ? (
                 <p className="px-2 py-5 text-xs leading-5 text-text-tertiary">No files yet. Add a file to begin your source snapshot.</p>
               ) : null}
@@ -496,7 +590,9 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                     <button
                       type="button"
                       onClick={removeSelectedFile}
-                      className="inline-flex h-9 items-center gap-1 border border-border px-3 text-xs text-text-secondary hover:border-warning hover:text-warning"
+                      disabled={files.length <= 1 || Boolean(busy)}
+                      title={files.length <= 1 ? "A saved source snapshot must contain at least one file." : "Remove selected file"}
+                      className="inline-flex h-9 items-center gap-1 border border-border px-3 text-xs text-text-secondary hover:border-warning hover:text-warning disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       <X size={13} aria-hidden="true" />
                       Remove
@@ -504,7 +600,12 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                   </div>
                 </div>
                 <label className="mt-4 block">
-                  <span className="mb-1 block text-[11px] font-medium uppercase tracking-[0.1em] text-text-tertiary">Source content</span>
+                  <span className="mb-1 flex flex-wrap items-center justify-between gap-2 text-[11px] font-medium uppercase tracking-[0.1em] text-text-tertiary">
+                    <span>Source content</span>
+                    <span className="font-mono normal-case tracking-normal">
+                      {new TextEncoder().encode(selectedFile.content || "").length.toLocaleString("en-IN")} bytes · {(selectedFile.content || "").split("\n").length} lines
+                    </span>
+                  </span>
                   <textarea
                     value={selectedFile.content}
                     onChange={(event) => updateSelected({ content: event.target.value })}
@@ -541,17 +642,18 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                 <button
                   type="button"
                   onClick={saveDraft}
-                  disabled={Boolean(busy) || !files.length}
+                  disabled={Boolean(busy) || !hasUnsavedChanges || !files.length}
                   className="inline-flex h-9 items-center gap-2 bg-brand px-4 text-xs font-semibold text-brand-contrast hover:bg-brand-hover disabled:opacity-50"
                 >
                   {busy === "save" ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <Save size={13} aria-hidden="true" />}
-                  Save draft
+                  {busy === "save" ? "Saving…" : hasUnsavedChanges ? "Save draft" : "Draft saved"}
                 </button>
                 <button
                   type="button"
                   onClick={() => {
                     if (window.confirm("Discard all unsaved file changes?")) {
                       setFiles(source.files || []);
+                      setSelectedIndex(0);
                       setError("");
                     }
                   }}
@@ -611,11 +713,22 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
             {versions.map((version) => (
               <div key={version.versionId} className="flex flex-wrap items-center justify-between gap-3 py-3">
                 <div>
-                  <p className="text-xs font-semibold">{version.version}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-xs font-semibold">{version.version}</p>
+                    {source.draftVersionId === version.versionId ? (
+                      <span className="border border-border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-text-secondary">Draft</span>
+                    ) : null}
+                    {source.publishedVersionId === version.versionId ? (
+                      <span className="border border-brand/40 bg-brand-soft px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-brand">Live</span>
+                    ) : null}
+                  </div>
                   <p className="mt-1 text-[11px] text-text-tertiary">
                     {version.fileCount} files · {version.changeSummary || "No summary"} · {version.createdAt ? new Date(version.createdAt).toLocaleString() : "Unknown date"}
                   </p>
-                  <p className="mt-1 break-all font-mono text-[10px] text-text-tertiary">{version.contentHash}</p>
+                  <details className="mt-1 text-[10px] text-text-tertiary">
+                    <summary className="w-fit cursor-pointer select-none hover:text-text-secondary">View content hash</summary>
+                    <p className="mt-1 max-w-[520px] break-all font-mono">{version.contentHash}</p>
+                  </details>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <button
