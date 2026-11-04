@@ -197,7 +197,7 @@ This is a target model proposal, not the current Atlas schema. Final indexes and
 ### 6.1 `lab_sources` — source aggregate/head
 
 One record per experiment slug:
-- `experimentSlug` (unique; canonical Labs slug).
+- `slug` (unique; canonical Labs slug; retain the existing model/API field name).
 - `draftVersionId` (nullable).
 - `publishedVersionId` (nullable).
 - `createdBy`, `updatedBy`.
