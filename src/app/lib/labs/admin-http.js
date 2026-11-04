@@ -47,6 +47,7 @@ export function adminError(error) {
     NOT_FOUND: 404,
     CONFLICT: 409,
     VALIDATION_ERROR: 400,
+    PREVIEW_REQUIRED: 409,
   };
   const status = statusByCode[error?.code] || 503;
   const message =

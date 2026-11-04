@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import LabSourceLivePreview from "./LabSourceLivePreview";
 import Link from "next/link";
 import {
   ArrowDown,
@@ -525,7 +526,12 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
         {message ? <p role="status" className="mt-4 border border-brand/30 bg-brand-soft/30 px-3 py-2 text-xs text-brand">{message}</p> : null}
         {error ? <p role="alert" className="mt-4 border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning">{error}</p> : null}
 
-        <section className="mt-6 grid gap-5 xl:grid-cols-[280px_minmax(0,1fr)]">
+        <section className={[
+          "mt-6 grid gap-5",
+          source.isCustom
+            ? "xl:grid-cols-[240px_minmax(0,1.2fr)_minmax(340px,0.9fr)]"
+            : "xl:grid-cols-[280px_minmax(0,1fr)]",
+        ].join(" ")}>
           <aside className="rounded-sm border border-border bg-surface-1 p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -782,6 +788,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
               </div>
             ) : null}
           </div>
+          {source.isCustom ? <LabSourceLivePreview files={files} /> : null}
         </section>
 
         <section className="mt-8 rounded-sm border border-border bg-surface-1 p-4 sm:p-5">
