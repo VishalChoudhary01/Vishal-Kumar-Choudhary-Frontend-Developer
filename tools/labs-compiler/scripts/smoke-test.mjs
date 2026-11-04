@@ -26,9 +26,14 @@ const files = [
   },
 ];
 
-await fs.rm(fixture, { recursive: true, force: true });
-await fs.rm(input, { recursive: true, force: true });
-await fs.rm(output, { recursive: true, force: true });
-await fs.mkdir(input, { recursive: true });
-await fs.writeFile(path.join(input, "files.json"), JSON.stringify(files));
-await fs.writeFile(path.join(input, "assets.j¶»§q«^
+async function runBuild(buildInput, buildRoot, buildOutput) {
+  return spawnSync(process.execPath, [path.join(root, "scripts/build.mjs")], {
+    cwd: root,
+    env: {
+      ...process.env,
+      LABS_BUILD_INPUT: buildInput,
+      LABS_PROJECT_ROOT: buildRoot,
+      LABS_BUILD_OUTPUT: buildOutput,
+    },
+    encoding: "utf8",
+ ¶»§q«^
