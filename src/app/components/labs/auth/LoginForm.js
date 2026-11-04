@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Chrome } from "lucide-react";
+import { GrGoogle } from "react-icons/gr";
 
 import { authClient } from "@/app/lib/auth/client";
 import { publishAuthEvent } from "@/app/lib/auth/session-events";
@@ -189,7 +189,7 @@ export default function LoginForm({
             disabled={loading}
             className="flex h-11 w-full items-center justify-center gap-2 rounded-sm border border-border px-4 text-sm font-medium text-text-primary transition-colors hover:border-border-strong hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-55"
           >
-            <Chrome size={16} aria-hidden="true" />
+            <GrGoogle size={16} aria-hidden="true" />
             Continue with Google
           </button>
         </>
