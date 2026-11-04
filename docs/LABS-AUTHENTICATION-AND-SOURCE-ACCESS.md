@@ -12,7 +12,7 @@
 - Email/password with email verification and password reset. Google sign-in is enabled only when both OAuth credentials are configured.
 - No GitHub sign-in.
 - Public Labs browsing and code-owned demos remain available without sign-in.
-- **Target policy (locked 2026-11-04):** any signed-in account with `emailVerified === true` can read all published source from `lab_sources` automatically. Guests and signed-in unverified accounts cannot read or copy source. There is no per-user grant workflow. The current deployed code still contains a legacy `lab_source_grants` check until the migration is implemented and deployed.
+- **Target policy (locked 2026-11-04):** any signed-in account with `emailVerified === true` can read all published source automatically. Guests and signed-in unverified accounts cannot read or copy source. Anonymous visitors and verified accounts can like/unlike; signed-in unverified accounts cannot. There is no per-user grant workflow. The legacy `LabSourceGrant` model remains for migration safety but is not queried by the integration-branch authorization service.
 
 ## 2. Required environment configuration
 
@@ -31,7 +31,7 @@ Copy the authentication variables from `.env.example` into the deployment enviro
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Optional | Enable the Google action and OAuth callback. |
 | `NEXT_PUBLIC_SITE_URL` | Yes for canonical policy links | The app derives `/terms` and `/privacy` from this site origin. |
 
-The Terms of Service and Privacy Policy are first-party pages at `/terms` and `/privacy`. Their URLs are derived from `NEXT_PUBLIC_SITE_URL`; policy versions are maintained in `src/app/lib/legal/policies.js` and recorded server-side at registration. No manual legal URL/version environment variables are required. Registration remains unavailable until MongoDB/auth secrets and SMTP delivery are configured.
+The Terms of Service and Privacy Policy are first-party pages at `/terms` and `/privacy`. Their URLs are derived from `NEXT_PUBLIC_SITE_URL`; policy versions are maintained in `src/app/lib/legal/policies.js` and recorded server-side at registration. No manual legal URL/version environment variables are required. Registration remains unavailable until MongoDB/auth secrets and SMTP delivery are configured. In Vercel, the five SMTP values must be available to the `feat/labs-platform-integration` Preview branch specifically; values scoped only to `feat/labs-public-page` are not inherited by this branch.
 
 ### Google OAuth callback
 
@@ -96,10 +96,10 @@ Validation limits: 1–40 files, file paths must be safe relative paths, each fi
 - A valid Better Auth session with `emailVerified === true` is sufficient to read every published experiment source.
 - Guests and signed-in unverified accounts cannot view or copy source.
 - The owner does not grant/revoke source access for individual users. The owner controls availability globally per experiment using publish/unpublish.
-- Verified accounts can copy source and like/unlike experiments. Guests and unverified accounts cannot use these source-engagement controls.
-- The owner/admin dashboard receives aggregate source opens, unique verified accounts, copies, active likes and like/unlike trends per experiment; it does not expose individual users' event histories.
+- Verified accounts can open/copy source and like/unlike experiments. Anonymous guests can like/unlike without viewing source. Signed-in unverified accounts cannot open/copy/like source.
+- The owner dashboard receives aggregate source opens, unique verified accounts, copies, active anonymous and verified likes, and separate like/unlike actions per experiment; it does not expose individual users' browsing/action histories.
 
-**Branch implementation status:** `feat/labs-source-engagement` removes the `LabSourceGrant` lookup from `src/app/lib/labs/source-access.js`; verified users are authorized from their server-side verified session plus the source's published state. The legacy model and collection are intentionally retained for migration safety. The currently deployed/mainline version is not changed until this branch is merged and deployed; do not treat branch code as production behavior.
+**Integration-branch implementation status:** `feat/labs-platform-integration` removes the `LabSourceGrant` lookup from `src/app/lib/labs/source-access.js`; verified users are authorized from their server-side verified session, canonical Labs slug and published source state. The legacy model and collection are intentionally retained for migration safety. This code is not production behavior until the integration branch is released.
 
 **Migration requirements:**
 
@@ -194,7 +194,7 @@ Both routes are public and indexable, included in the sitemap, linked from the g
 
 The server-owned policy versions are maintained in `src/app/lib/legal/policies.js`; the initial version of each is `2026-11-04`. The registration endpoint reads those constants and writes them into the consent receipt. The browser cannot submit or override policy versions. When either document changes materially, update its version constant in the same commit as the text change.
 
-The Privacy Policy describes the documented current implementation: account/session processing, separate consent and verification collections, registration rate-limit digest, protected source records, contact-form email delivery, browser preferences, hosting/database/auth/email providers, retention, and the Contact channel for privacy requests. Before source-engagement analytics are enabled, update the Privacy Policy to disclose source-open, successful copy-action and like/unlike event collection, aggregate reporting, event retention and account-deletion handling; bump `PRIVACY_VERSION` with the material text change.
+The Privacy Policy now discloses protected-source opens, successful copy actions, verified likes, anonymous browser likes and aggregate owner analytics. `PRIVACY_VERSION` and `TERMS_VERSION` are both `2026-11-04.1`. Engagement-event retention and account-deletion handling remain release-review items; event records currently have no automatic TTL.
 
 These are operational policy drafts. The owner should review them with a qualified Indian privacy lawyer before launch, confirm the real provider list and data locations, and implement any additional rights/request/deletion procedures identified by that review.
 ## 12. Vercel Preview origins and Better Auth Dash onboarding
@@ -202,7 +202,7 @@ These are operational policy drafts. The owner should review them with a qualifi
 - Preview deployments use Better Auth's dynamic `baseURL` allowlist. Accepted Preview hosts are restricted to this project's deployment host pattern and Vercel's branch-alias pattern for this team; arbitrary `*.vercel.app` hosts are not trusted.
 - Registration and verification-resend callbacks use the current request's approved Preview origin. This prevents email links from pointing at the Production domain or a different deployment alias.
 - `BETTER_AUTH_API_KEY` is a Better Auth Infrastructure credential, not an SMTP/Gmail/Resend credential. The `dash()` plugin is registered only when this value is non-empty.
-- While the Labs/auth work is only on `feat/labs-public-page`, the Production domain on `main` does not yet expose the Better Auth routes or Dash plugin. Use the current branch Preview base URL for a Preview test. After the branch is merged and Production is redeployed, use the canonical Production origin in Better Auth Dash.
+- The current integration work is maintained on `feat/labs-platform-integration`; the Production domain on `main` does not expose the new Labs owner/source routes until the approved release. Use the integration branch Preview base URL for Preview testing. After merge and Production redeployment, use the canonical Production origin in Better Auth Dash.
 - Vercel Deployment Protection is enabled for Previews. Do not disable SSO or broadly expose a Preview just to make external dashboard verification succeed. If Better Auth Dash cannot reach the protected Preview, complete its ownership check after the approved Production rollout or implement a narrowly scoped access path.
 - After changing auth origin configuration, request a fresh verification email. Do not reuse a link generated by an earlier deployment if its callback host was not in the allowlist at that time.
 
@@ -212,30 +212,19 @@ The original Sections 4–5 grant instructions have been superseded by the verif
 
 Follow `docs/LABS-SOURCE-MANAGEMENT-SPEC.md` for the target owner capability and migration plan.
 
-### Current state
-- `LabSource` currently stores a mutable per-slug document with embedded files, a version string and a published flag.
-- `LabSourceGrant` currently stores a unique per-user/per-experiment grant; this is legacy transition state and will be retired.
-- The protected source endpoint currently requires verified Better Auth identity + matching active grant + published source record. The locked target removes the grant requirement.
-- No owner source editor, source CRUD/publish/version API, source-engagement dashboard or append-only source audit collection exists yet.
-- Source collections/snapshots are not created by public account registration. An empty collection is not a valid source snapshot.
+### Current state on `feat/labs-platform-integration`
+- `LabSource` is the source head; `LabSourceVersion` stores immutable snapshots and draft/published pointers.
+- `LabSourceGrant` remains as legacy transition state but is not queried by the new source authorization service.
+- The protected source endpoint requires a verified Better Auth session, a canonical Labs experiment slug and a published source snapshot; no grant is required.
+- Owner source inventory/editor, source create/save/version/restore/publish/unpublish/audit APIs, engagement models and aggregate analytics dashboard are implemented.
+- Source records/files are not populated automatically. The owner must create a source head and add reviewed files before publishing.
 
-### Target owner release
-- **Locked — user approved 2026-11-04:** initial owner is the portfolio operator's verified Better Auth account, provisioned by server-only `LABS_OWNER_USER_ID`; never use first-user-wins or client-provided roles.
-- The owner can create/manage source for an existing canonical experiment slug. Every verified registered user automatically reads published source; no per-user grant is issued.
-- Source editing is text-only: add/edit/rename/delete files, validate, save draft, inspect immutable versions, restore, publish/unpublish, and inspect source-engagement aggregates.
-- The target data model separates source aggregate pointers, immutable `lab_source_versions`, verified-user current likes in `lab_likes`, source/copy/like events in `lab_analytics_events`, and append-only `lab_source_audit_events`. Legacy `lab_source_grants` is retired.
-- Save draft never publishes. Publish selects an exact immutable version. Restore creates a new version. Unpublish stops subsequent regular-user source reads without deleting history or engagement events.
-- Owner endpoints, editor state and source contents are private/no-store. All operations derive actor identity server-side, enforce owner authorization at each boundary, use concurrency/idempotency, validate source text, and emit safe audit events. Analytics endpoints expose aggregates only.
-- Database bootstrap/migration must be idempotent and preserve current records. Do not manually create empty collections as a substitute for a migration or source import.
-- Stored source is not executed. Any future live preview of owner-authored code requires a separate isolated runtime decision and threat-model review.
 
-### Recommended implementation order
-1. Owner identity and automatic verified-account source access are approved; implement the singleton owner guard and remove the legacy per-user source grant check.
-2. Audit the canonical `magnetic-interaction` source file inventory; do not guess paths or include secrets.
-3. Implement source aggregate/version/audit/likes/analytics schemas, indexes, idempotent bootstrap and migration tests.
-4. Implement owner guard and source/likes/analytics domain use cases before UI.
-5. Build the lazy-loaded owner editor and aggregate source-engagement dashboard; keep editor/analytics dependencies out of public routes.
-6. Import the first source snapshot, publish it and validate guest/unverified denial, automatic verified-account access, copy/like actions and owner management.
+### Remaining implementation and release order
+1. Configure the branch-specific SMTP variables and `LABS_OWNER_USER_ID` in Vercel Preview; do not make secret variables global across unrelated Preview branches.
+2. Verify the shared Preview MongoDB/Better Auth settings and run signup → verification → login → password-reset mail tests.
+3. Inspect Atlas for existing `lab_sources` and `lab_source_grants` records; preserve a backup and migrate/reconcile before retiring legacy data.
+4. Audit the canonical `magnetic-interaction` source file inventory; do not guess paths or include secrets. Populate the first reviewed draft from the owner editor.
+5. Run the full Guest / Unverified / Verified / Owner, stale-version, like deduplication and private/no-store tests against Atlas.
+6. Complete browser-based keyboard, responsive, focus, contrast and accessibility QA.
 7. Keep live source execution deferred until separately approved and threat-modelled.
-
-Do not create manual Atlas source grants. The legacy grant model is transitional only and must be removed after the approved verified-account access migration. Owner source audit and engagement analytics are separate records.
