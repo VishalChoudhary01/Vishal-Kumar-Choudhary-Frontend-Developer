@@ -1,57 +1,21 @@
-import {
-  adminJson,
-  getLabsOwnerUser,
-  isSameOriginMutation,
-} from "@/app/lib/labs/admin-http";
-import {
-  LAB_RUNTIME_SOURCE_SLUGS,
-  getLabRuntimeSourceFiles,
-} from "@/app/lib/labs/runtime-source-manifest";
-import {
-  createOwnerLabSource,
-  getOwnerLabSource,
-  saveOwnerLabDraft,
-} from "@/app/lib/labs/source-management";
-
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
-export async function POST(request) {
-  const { user, response } = await getLabsOwnerUser();
-  if (response) return response;
-
-  if (!isSameOriginMutation(request)) {
-    return adminJson(
-      { error: { code: "INVALID_ORIGIN", message: "This request is not allowed." } },
-      403,
-    );
+import {adminJson,getLabsOwnerUser,isSameOriginMutation} from "@/app/lib/labs/admin-http";
+import {LAB_RUNTIME_SOURCE_SLUGS,getLabRuntimeSourceFiles} from "@/app/lib/labs/runtime-source-manifest";
+import {createOwnerLabSource,listOwnerLabSources,saveOwnerLabDraft} from "@/app/lib/labs/source-management";
+export const runtime="nodejs",dynamic="force-dynamic",revalidate=0;
+export async function POST(request){
+ const {user,response}=await getLabsOwnerUser();if(response)return response;
+ if(!isSameOriginMutation(request))return adminJson({error:{code:"INVALID_ORIGIN",message:"Request not allowed."}},403);
+ try{
+  const inventory=await listOwnerLabSources({user}),bySlug=new Map(inventory.map(x=>[x.slug,x])),result={imported:[],skipped:[],failed:[]};
+  for(const slug of LAB_RUNTIME_SOURCE_SLUGS){
+   try{
+    let source=bySlug.get(slug);
+    if(!source?.hasSource){await createOwnerLabSource({user,slug});source=null}
+    if(source?.draftVersionId){result.skipped.push(slug);continue}
+    const saved=await saveOwnerLabDraft({user,slug,files:await getLabRuntimeSourceFiles(slug),expectedDraftVersionId:null,changeSummary:"Initial import of reviewed runtime source"});
+    result.imported.push({slug,version:saved.version,fileCount:saved.fileCount});
+   }catch(e){result.failed.push({slug,code:e?.code||"UNAVAILABLE"})}
   }
-
-  const imported = [];
-  const skipped = [];
-  const failed = [];
-
-  for (const slug of LAB_RUNTIME_SOURCE_SLUGS) {
-    try {
-      let source;
-      try {
-        source = await getOwnerLabSource({ user, slug });
-      } catch (error) {
-        if (error?.code !== "NOT_FOUND") throw error;
-        await createOwnerLabSource({ user, slug });
-        source = await getOwnerLabSource({ user, slug });
-      }
-
-      if (source.draftVersionId) {
-        skipped.push({ slug, reason: "A draft already exists; existing work was preserved." });
-        continue;
-      }
-
-      const files = await getLabRuntimeSourceFiles(slug);
-      const version = await saveOwnerLabDraft({
-        user,
-        slug,
-        files,
-        expectedDraftVersionId: null,
-        ¶»§q«^
+  return adminJson({data:result});
+ }catch(e){return adminJson({error:{code:e?.code||"UNAVAILABLE",message:"Runtime import is temporarily unavailable."}},503)}
+}
