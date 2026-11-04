@@ -65,20 +65,19 @@ Risk levels are initial qualitative assessments, not measured probabilities. The
 
 ## 4. Required authorization matrix
 
-| Capability | Guest | Registered user | Admin |
-|---|---|---|---|
-| Read published portfolio/project/Lab metadata | Allow | Allow | Allow |
-| Read permitted partial Lab source | Allow | Allow | Allow |
-| Read full Lab source | Deny | Allow only when policy permits | Allow |
-| Start approved interactive preview | Deny unless later explicitly approved | Allow under preview policy | Allow under preview policy |
-| Like experiment | Guest policy only, privacy/abuse limited | Own account, one active like per experiment | Own account under same rule; admin status does not bypass invariant |
-| Read own dashboard/activity | Deny | Own records only | Own records only unless a separate, approved admin analytics capability applies |
-| Read admin analytics | Deny | Deny | Allow |
-| Read/write drafts, versions, publication and schedules | Deny | Deny | Allow after server-side checks |
-| Upload/manage media library | Deny | Deny | Allow after server-side checks |
-| Assign Admin role | Deny | Deny | No self-service assignment; trusted provisioning procedure only |
+| Capability | Guest | Registered, email unverified | Registered, email verified | Owner/Admin |
+|---|---|---|---|---|
+| Read published portfolio/Lab metadata and public demos | Allow | Allow | Allow | Allow |
+| Read full source of a published experiment | Deny | Deny | Allow automatically | Allow |
+| Copy published source | Deny | Deny | Allow | Allow |
+| Like/unlike experiment | Deny | Deny | Own account, one active like per experiment | Own account under same invariant |
+| Read own dashboard/activity | Deny | Deny | Own records only | Own records only |
+| Read aggregate source-engagement analytics | Deny | Deny | Deny | Allow |
+| Read/write source drafts, versions and publication | Deny | Deny | Deny | Allow after owner guard |
+| Upload/manage media library | Deny | Deny | Deny | Allow after server-side checks |
+| Assign Owner/Admin role | Deny | Deny | Deny | No self-service assignment; singleton owner comes only from trusted `LABS_OWNER_USER_ID` provisioning |
 
-This matrix is a planning contract. Exact distinctions for source/preview access and account deletion must be finalized before endpoints are implemented.
+This matrix is the approved target source-access contract. The current implementation still has a legacy per-user grant lookup; remove it before claiming this policy is live. Interactive preview remains separately blocked pending the isolation gate.
 
 ## 5. Required defensive patterns
 
@@ -117,10 +116,12 @@ This matrix is a planning contract. Exact distinctions for source/preview access
 
 - Collect only the event fields needed for approved metrics.
 - Do not put full source, credentials, message bodies or unnecessary personal data into analytics.
-- Guest identifiers, if used, require an explicit privacy review and must not be described as verified unique people.
-- Separate guest and authenticated engagement metrics where attribution differs.
-- A copy event records an observed copy action; it does not prove the source was pasted, run or used.
-- Activity retention, deletion, export and analytics retention are unresolved policy decisions. Do not invent a retention period.
+- The initial source/copy/like event stream contains verified-account events only; guests and unverified users cannot trigger these controls.
+- Aggregate source opens, unique verified accounts, copies, active likes and like/unlike transitions by experiment. Do not expose user-level source activity in the first admin dashboard.
+- A copy event records a successful Clipboard API write acknowledgement accepted by the server; it does not prove the source was pasted, run or used.
+- A source-open event represents a successful authorized source response, not a public experiment detail-page view.
+- Like/unlike events are recorded only for server-confirmed changes to the unique user/experiment like state.
+- Event retention, event deduplication window, account-deletion treatment and Privacy Policy wording are release gates. Do not invent retention periods; disclose the selected policy before enabling production analytics.
 
 ## 7. Security verification gates
 
@@ -184,12 +185,12 @@ Remaining release/security gates:
 
 ## 8. Owner-managed Labs source threats and controls
 
-The owner source-management workflow adds privileged code-writing and access-grant surfaces. It does not relax the existing public/private source boundary.
+The owner source-management workflow adds privileged code-writing and source-publication surfaces. Every verified registered account automatically receives published-source access; there is no per-user grant-management system in the target policy.
 
 | Threat | Risk | Required controls |
 |---|---:|---|
 | T-OWNER-01: attacker reaches owner page/API or forges owner identity | Critical | Server-only singleton owner identity; server-derived Better Auth actor; deny if owner config is absent; recheck owner permission at transport, use-case and repository boundaries; no first-user/email/client-role fallback; negative IDOR tests |
-| T-OWNER-02: regular user grants themselves or another user source access | Critical | Owner-only grant mutations; accept normalized email, resolve user server-side; require verified target; never accept user ID, grantor, active state or role from the browser; unique user/experiment index; audit grant/revoke |
+| T-OWNER-02: source endpoint accidentally allows a guest/unverified account or an unpublished snapshot | Critical | Require server-derived Better Auth session with `emailVerified === true` on every read; require a published pointer; reject client-supplied identity/publication state; test guest, unverified, verified, owner and unpublished matrices |
 | T-OWNER-03: malicious source path, oversized/binary file or crafted editor payload | High | Text-only format, strict relative-path and language allowlists, duplicate-path rejection, UTF-8 byte/file-count limits, server-computed hashes, safe error messages and mutation rate limits |
 | T-OWNER-04: credentials/secrets accidentally stored in source snapshots | High | Reject/flag secret files and suspicious secret patterns before persistence; never log matched values or file contents; provide owner correction workflow; document that scanning is defense-in-depth, not proof of no secrets |
 | T-OWNER-05: source draft or version leaks through guest HTML/RSC/API/cache/logging | Critical | Separate owner DTOs and source API; private/no-store headers; do not preload source; no public static assets/source maps; response/cache tests across guest, user and owner identities; redact logs and analytics |
@@ -197,18 +198,19 @@ The owner source-management workflow adds privileged code-writing and access-gra
 | T-OWNER-07: restore mutates historical source or deletes audit evidence | High | Restore creates a new immutable version; version and audit repositories are append-only to the application; no historical edit/delete UI/API; backup and migration reconciliation |
 | T-OWNER-08: owner-authored code executes with main-app cookies, credentials or server privileges | Critical | Source management is text-only; do not evaluate source. Any later live preview requires a separately approved isolated runtime and its own threat-model gate. |
 | T-OWNER-09: owner mutation CSRF or replay | High | Same-origin/CSRF protections compatible with Better Auth cookies, origin checks, POST/DELETE semantics, rate limiting, idempotency and audit correlation IDs |
+| T-OWNER-10: source-open/copy/like analytics are forged, replayed or inflated | High | Only verified sessions may submit; server derives actor and published source version; unique idempotency/event IDs; source-open recorded after successful response; copy requires client Clipboard API success acknowledgement; likes count only server state transitions; rate limits; aggregate-only admin DTOs |
 
 ### 8.1 Required verification before source-management release
 
-- Guest and regular verified-user direct requests to every owner endpoint return 401/403 and never include source, version drafts, target-user information or audit details.
+- Guest and signed-in-unverified source requests return 401/403 and never include source. Verified registered accounts can read any published source without a grant. Non-owners receive 401/403 for owner endpoints and never receive drafts/version details/audit data.
 - Owner identity missing, malformed, wrong, deleted or unverified denies owner operations.
-- Client attempts to forge actor ID, owner role, target user ID, grantor, published pointer, version number, content hash or audit actor are ignored/rejected.
+- Client attempts to forge actor ID, owner role, published pointer, version number, content hash, event actor or aggregate metric values are ignored/rejected.
 - Source path traversal, absolute paths, duplicate names, unsupported encodings, binary data, excessive file count/bytes and secret-like content are rejected without logging sensitive values.
 - Concurrent draft saves return a conflict rather than overwriting newer content.
 - Publish/unpublish/restore failures leave the previous published pointer intact; restore creates a new snapshot.
-- Grant/revoke/expiry take effect on the next protected source request and do not reveal account existence through public endpoints.
-- Test cache isolation between two registered users, an owner, a guest and an ungranted account.
-- Verify audit entries contain no source content, passwords, tokens, SMTP/API keys or raw secret values.
+- Unpublishing denies subsequent source requests for all users. Verified-user source opens/copies/likes are idempotently counted, and duplicate likes do not inflate the active-like total.
+- Test cache isolation between two verified users, a guest, an unverified account and the owner; verify every source response is private/no-store.
+- Verify audit and analytics records contain no source content, clipboard text, emails, passwords, tokens, SMTP/API keys or raw secret values.
 - Confirm database bootstrap/migration can be replayed and reconciled without dropping legacy data.
 - Existing public Labs demos remain code-owned; no text stored in Atlas is executed by this feature.
 
