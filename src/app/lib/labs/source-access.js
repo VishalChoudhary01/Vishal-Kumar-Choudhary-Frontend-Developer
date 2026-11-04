@@ -22,6 +22,13 @@ const ALLOWED_LANGUAGES = new Set([
   "text",
   "svg",
 ]);
+const SECRET_CONTENT = [
+  /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/,
+  /\bAKIA[0-9A-Z]{16}\b/,
+  /\bgh[pousr]_[A-Za-z0-9]{30,}\b/,
+  /\bsk-[A-Za-z0-9_-]{24,}\b/,
+  /mongodb(?:\+srv)?:\/\/[^/\s:@]+:[^@\s]+@/i,
+];
 
 export async function getAuthorizedLabSource({ user, slug }) {
   if (!user?.id || user.emailVerified !== true) {
@@ -83,7 +90,8 @@ export async function getAuthorizedLabSource({ user, slug }) {
 
     const safeContent =
       typeof file?.content === "string" &&
-      !/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(file.content);
+      !/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(file.content) &&
+      !SECRET_CONTENT.some((pattern) => pattern.test(file.content));
 
     if (!safePath || !safeLanguage || !safeContent) {
       return { status: "unavailable" };
