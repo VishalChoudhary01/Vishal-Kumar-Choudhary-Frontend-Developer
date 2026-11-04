@@ -189,8 +189,8 @@ The source-management plan is detailed in `LABS-SOURCE-MANAGEMENT-SPEC.md`. This
 ### 13.1 Owner identity and authorization
 
 - The initial release is a singleton-owner capability, not general multi-role administration.
-- Recommended bootstrap is server-only `LABS_OWNER_USER_ID`, containing the stable Better Auth user ID for the already-created owner account. This identity mechanism remains subject to explicit approval before implementation.
-- A missing/mismatched owner ID denies all owner operations. Never elevate the first account, email supplied by the browser, client role flags or arbitrary request headers.
+- **Locked — user approved 2026-11-04:** bootstrap is server-only `LABS_OWNER_USER_ID`, containing the stable Better Auth user ID for the already-created, verified owner account. The owner is the sole privileged administrator for this first release and manages all Labs source lifecycle and per-experiment grant operations.
+- A missing/mismatched owner ID denies all owner operations. Never elevate the first account, email supplied by the browser, client role flags or arbitrary request headers. Configure the value separately for Preview and Production; do not expose it through `NEXT_PUBLIC_*`.
 - Resolve actor identity from Better Auth session only. Owner guard must be called independently at Route Handler/Server Action, domain use case and repository boundaries.
 - Owner management permission is separate from ordinary source grants. The owner can manage source without manufacturing a self-grant, while regular users still require a matching per-experiment grant.
 - Do not persist a general role field or multi-admin hierarchy merely to support the first owner. A future multiple-admin model requires a separate decision and threat-model update.
