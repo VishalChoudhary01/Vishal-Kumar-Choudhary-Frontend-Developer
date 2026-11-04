@@ -93,8 +93,14 @@ export default function PrivacyPage() {
           <DataItem title="Contact form messages">
             If you use the Contact form, I receive the name, email address, project type, and message you submit. The form sends that information by email to the configured receiving inbox. Contact messages may remain in that email mailbox and provider systems until deleted under their retention practices.
           </DataItem>
-          <DataItem title="Experiment and source-access records">
-            If you use Labs, the service may process the experiment page or source you request, your account identifier, and whether an access grant is active, expired, or revoked. Protected source snapshots and access grants are stored separately from public demo pages. Source content is returned only after the server checks the account and grant.
+          <DataItem title="Protected source access and engagement">
+            Published experiment source is available only to signed-in accounts with a verified email address. When a verified account opens protected source or copies a file, the service records the experiment, source version, event type, timestamp, and account identifier. Copy events are recorded after the browser reports that the clipboard write succeeded; the clipboard contents are not collected. Verified likes are linked to the account and experiment so the like can be retained and later removed.
+          </DataItem>
+          <DataItem title="Anonymous likes">
+            You can like a Labs experiment without signing in. When you first use the anonymous like control, the service creates a random browser identifier in a signed, HTTP-only cookie and stores a keyed digest of that identifier with the experiment's like state. It is used to remember your like in that browser; it is not a verified identity and is not used to claim a count of unique people. Clearing cookies, using another browser, or switching devices may create another anonymous like identity. Anonymous like state expires after 180 days without a visit that refreshes the identity.
+          </DataItem>
+          <DataItem title="Engagement analytics">
+            The owner dashboard displays aggregate source opens, copy actions, and current likes separately for anonymous browser identities and verified accounts. It does not provide a list of individual visitors' source activity or expose their email addresses. Engagement records do not contain source text, clipboard contents, passwords, authentication tokens, or raw IP addresses.
           </DataItem>
           <DataItem title="Preferences stored in your browser">
             The website may store local preferences such as theme selection and whether an introductory animation has already been shown. These preferences are kept in browser storage and are used to remember your interface settings.
@@ -107,7 +113,7 @@ export default function PrivacyPage() {
           <li>To display the portfolio, operate interactive Labs experiments, and respond to contact messages.</li>
           <li>To create and maintain accounts, verify email addresses, authenticate sign-ins, and deliver password-reset messages.</li>
           <li>To record the policy versions accepted during registration and maintain the associated verification record.</li>
-          <li>To check per-experiment source permissions and prevent unauthorised access.</li>
+          <li>To provide verified-account access to published source, remember likes, and measure aggregate experiment engagement.</li>
           <li>To detect abusive registration activity, protect the service, diagnose errors, and maintain reliability.</li>
           <li>To remember interface preferences and provide a consistent experience.</li>
           <li>To meet legal obligations, handle disputes, and enforce the published service terms where necessary.</li>
@@ -121,7 +127,7 @@ export default function PrivacyPage() {
         </p>
         <ul className="list-disc space-y-2 pl-5 marker:text-brand">
           <li><strong className="font-semibold text-text-primary">Vercel:</strong> website hosting, deployment, server execution, and associated platform logs.</li>
-          <li><strong className="font-semibold text-text-primary">MongoDB Atlas / MongoDB:</strong> database storage for account, session, consent, verification, rate-limit, source, and access-grant records.</li>
+          <li><strong className="font-semibold text-text-primary">MongoDB Atlas / MongoDB:</strong> database storage for account, session, consent, verification, rate-limit, protected source, like-state, audit, and engagement-event records.</li>
           <li><strong className="font-semibold text-text-primary">Better Auth:</strong> authentication libraries and, when configured, the Better Auth Dash infrastructure integration.</li>
           <li><strong className="font-semibold text-text-primary">Email providers:</strong> the configured SMTP provider for authentication messages; the portfolio contact endpoint uses Gmail SMTP.</li>
           <li><strong className="font-semibold text-text-primary">Google:</strong> only if Google sign-in is configured and you choose that sign-in method.</li>
@@ -133,7 +139,7 @@ export default function PrivacyPage() {
 
       <Section id="cookies" title="5. Cookies and browser storage">
         <p>
-          Authentication uses server-managed session cookies so the website can recognise a signed-in account and protect account-only requests. The site also uses browser storage for interface preferences such as the selected theme and introductory-animation state.
+          Authentication uses server-managed session cookies so the website can recognise a signed-in account and protect account-only requests. If you choose to like an experiment anonymously, a separate signed, HTTP-only cookie remembers the anonymous like identity in that browser. The anonymous like cookie is created when you use the like control, rather than simply because you visit an experiment page. The site also uses browser storage for interface preferences such as the selected theme and introductory-animation state.
         </p>
         <p>
           These storage mechanisms support core functionality. Blocking or deleting them may sign you out, reset preferences, or affect account and Labs features. You can manage cookies and site storage through your browser settings.
@@ -145,6 +151,7 @@ export default function PrivacyPage() {
           <li>Account and session records are kept while needed to operate the account, protect the service, and meet applicable obligations. Sessions may expire or be revoked by sign-out or password reset.</li>
           <li>Verification-flow records have a seven-day expiry. Registration rate-limit records are configured for approximately 24-hour expiry.</li>
           <li>Consent receipts are retained separately from short-lived verification records so the policy versions and acceptance time can be referenced. They are not automatically removed by verification-flow expiry.</li>
+          <li>Verified likes remain active until you unlike the experiment or the account is deleted. Anonymous like identities and their active like state expire after 180 days without a visit that refreshes the identity. Engagement event records are retained for service measurement and integrity; a fixed automatic expiry period is not currently configured.</li>
           <li>Contact messages remain in the receiving email mailbox and associated provider systems until deleted under mailbox retention practices or no longer needed for a legitimate purpose.</li>
           <li>Hosting and provider logs follow the relevant provider's retention controls and may remain in backups for a limited period.</li>
         </ul>
@@ -155,7 +162,7 @@ export default function PrivacyPage() {
 
       <Section id="security" title="7. Security">
         <p>
-          The implementation uses HTTPS for deployed access, server-side secret configuration, authentication controls, password hashing through the authentication provider, database-backed sessions, email verification, rate limiting, and per-experiment source grants. Access to private source snapshots is checked on the server for each request.
+          The implementation uses HTTPS for deployed access, server-side secret configuration, authentication controls, password hashing through the authentication provider, database-backed sessions, email verification, rate limiting, signed anonymous-like cookies, and server-side source authorization. Every protected source request checks the current verified session and publication state.
         </p>
         <p>
           No website, transmission, or storage system can be guaranteed completely secure. Please use a unique password, keep verification and reset links private, and contact me promptly if you suspect unauthorised account activity.
