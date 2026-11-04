@@ -29,7 +29,7 @@ Extend the existing developer portfolio into a maintainable platform where the o
 ## 4. Users and permissions
 ### Guest
 - View public portfolio pages and published Lab listing/detail pages.
-- View permitted static media previews. Guest partial-source snippets remain disabled unless a separate content policy, exact exposure scope and UX are approved.
+- View permitted static media previews and explicitly public demos. Guests receive no source bytes, including partial snippets.
 - Search, filter, sort, paginate/load more, and view published experiment metadata.
 - Cannot view, copy or like source; guest source-like controls are not rendered.
 - Cannot access private drafts, full source, restricted interactive previews, user-only features, or admin pages.
@@ -279,7 +279,7 @@ Requirements are not complete merely because UI exists. Each capability must pas
 - Saving creates an immutable draft snapshot. Publishing explicitly selects one saved version; saving never publishes implicitly. Unpublishing prevents new user source reads without silently deleting grants or historical versions.
 - Restore creates a new version from an immutable historical snapshot.
 - All verified registered users automatically receive source access to each published experiment. The owner does not issue per-user grants; publishing/unpublishing controls source availability for all verified accounts.
-- Every privileged source/grant mutation is server-authorized, validated, concurrency-safe and auditable.
+- Every privileged source mutation is server-authorized, validated, concurrency-safe and auditable.
 - Regular registered users require only a valid Better Auth session with `emailVerified === true` and a published source snapshot for the requested experiment. Owner management authority is separately checked for drafts and unpublished versions.
 - Source, draft, version and analytics data remain private/no-store. Untrusted execution requires a separate approved isolated-preview architecture and threat-model gate.
 - Database bootstrap/migration must be idempotent and preserve existing records; source collections must not depend on manual empty-collection creation in Atlas.
