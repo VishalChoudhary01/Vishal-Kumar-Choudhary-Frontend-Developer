@@ -42,16 +42,15 @@ Required:
 
 ## Explicitly not included yet
 
-- Public or owner preview URL generation for authenticated assets.
-- Public fallback delivery conversion at publish time and binding the fallback to an immutable release manifest.
+- Public fallback delivery conversion at publish time; owner previews are generated as short-lived private URLs by the owner media inventory.
+- Public fallback delivery conversion at publish time and binding the optional fallback to an immutable release manifest.
 - Public runtime fallback behavior for failed/unsupported code previews.
-- Immutable per-version asset manifests.
+- Immutable per-version fallback reference in the draft/release manifest.
 - Asset deletion/cleanup and orphan reconciliation.
-- Public media delivery conversion at publish time.
 - Optional fallback-video poster generation, if the selected public delivery mode requires it.
 - Chunked/resumable video transfer.
 
-These remain part of the release phase. Until that work is complete, uploaded assets stay private. The single optional fallback must not replace the live code preview.
+These remain part of the release phase. Until public fallback delivery is verified, uploaded assets stay private. The single optional fallback is considered only when code preview cannot run or is unsupported; it never replaces a working code preview.
 
 ## Validation still required
 
