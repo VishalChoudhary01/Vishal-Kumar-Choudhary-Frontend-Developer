@@ -246,7 +246,7 @@ For each endpoint/action, test:
 ### Owner authorization prerequisite
 
 - All endpoints in this section require a valid Better Auth session, verified email, and the server-side singleton Owner authorization check.
-- Recommended initial owner resolution is a server-only `LABS_OWNER_USER_ID` environment setting containing the stable Better Auth user ID. If absent or mismatched, deny with 403; never fall back to the first user or client-provided role.
+- **Locked — user approved 2026-11-04:** owner resolution uses server-only `LABS_OWNER_USER_ID` containing the stable Better Auth user ID of the verified owner account. If absent or mismatched, deny with 403; never fall back to the first user or client-provided role. The owner is the sole privileged source manager in the initial release.
 - The owner may manage source without creating an ordinary user grant. This exception does not apply to regular registered accounts.
 - Owner routes/actions must be independently protected at transport, domain-use-case and data-access boundaries.
 
