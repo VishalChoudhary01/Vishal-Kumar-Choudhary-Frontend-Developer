@@ -6,7 +6,7 @@ import { buildSiteUrl } from "@/app/lib/seo/urls";
  * registration request.
  */
 export const TERMS_VERSION = "2026-11-04";
-export const PRIVACY_VERSION = "2026-11-04";
+export const PRIVACY_VERSION = "2026-11-04.1";
 
 export function getLegalDocumentConfig() {
   const siteUrl = buildSiteUrl();
