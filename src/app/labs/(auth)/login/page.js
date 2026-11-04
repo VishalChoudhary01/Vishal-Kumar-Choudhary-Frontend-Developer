@@ -7,7 +7,7 @@ import {
   isGoogleAuthConfigured,
 } from "@/app/lib/auth/auth";
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
-import { getSafeReturnTo } from "@/app/lib/auth/return-to";
+import { getSafeOwnerReturnTo, getSafeReturnTo } from "@/app/lib/auth/return-to";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -17,7 +17,7 @@ export const metadata = {
 
 export default async function LabsLoginPage({ searchParams }) {
   const query = await searchParams;
-  const returnTo = getSafeReturnTo(query?.returnTo);
+  const returnTo = getSafeOwnerReturnTo(query?.returnTo) || getSafeReturnTo(query?.returnTo);
   const session = await getCurrentAuthSession();
 
   if (session?.user?.id && session.user.emailVerified) {
