@@ -11,28 +11,26 @@
  */
 import { lazy } from "react";
 
-const LAB_RUNTIME_REGISTRY = Object.freeze({
-  "magnetic-interaction": lazy(() =>
-    import("./experiments/magnetic-interaction")
-  ),
-  "scroll-driven-text-reveal": lazy(() =>
-    import("./experiments/scroll-driven-text-reveal")
-  ),
-  "gradient-bloom": lazy(() =>
-    import("./experiments/gradient-bloom")
-  ),
-  "generative-particle-field": lazy(() =>
-    import("./experiments/generative-particle-field")
-  ),
-});
+export const MagneticInteractionRuntime = lazy(() =>
+  import("./experiments/magnetic-interaction")
+);
+export const ScrollDrivenTextRevealRuntime = lazy(() =>
+  import("./experiments/scroll-driven-text-reveal")
+);
+export const GradientBloomRuntime = lazy(() =>
+  import("./experiments/gradient-bloom")
+);
+export const GenerativeParticleFieldRuntime = lazy(() =>
+  import("./experiments/generative-particle-field")
+);
+
+const LAB_RUNTIME_KEYS = new Set([
+  "magnetic-interaction",
+  "scroll-driven-text-reveal",
+  "gradient-bloom",
+  "generative-particle-field",
+]);
 
 export function hasLabRuntime(runtimeKey) {
-  return Boolean(
-    runtimeKey &&
-    Object.prototype.hasOwnProperty.call(LAB_RUNTIME_REGISTRY, runtimeKey)
-  );
-}
-
-export function getLabRuntimeComponent(runtimeKey) {
-  return LAB_RUNTIME_REGISTRY[runtimeKey] || null;
+  return LAB_RUNTIME_KEYS.has(runtimeKey);
 }
