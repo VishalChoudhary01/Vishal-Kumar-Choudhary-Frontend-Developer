@@ -294,9 +294,17 @@ export default function LabSourceAccess({ slug }) {
                   Protected source snapshots are stored separately from the public demo runtime and are available to every account with a verified email.
                 </p>
                 {state === "verification" ? (
-                  <AuthMessage title="Verify your email">
-                    Verify your email address before requesting protected source.
-                  </AuthMessage>
+                  <div className="mt-3">
+                    <AuthMessage title="Verify your email">
+                      Verify your email address before requesting protected source.
+                    </AuthMessage>
+                    <Link
+                      href={"/labs/verify-email?returnTo=" + encodeURIComponent(returnTo)}
+                      className="mt-3 inline-flex min-h-9 items-center text-sm font-medium text-brand hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                    >
+                      Open email verification
+                    </Link>
+                  </div>
                 ) : null}
                 {state === "error" ? (
                   <AuthMessage>{error}</AuthMessage>
