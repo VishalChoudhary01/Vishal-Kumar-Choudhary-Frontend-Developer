@@ -58,19 +58,19 @@ Event names are conceptual until the event schema is approved. Store a consisten
 | Event | Meaning | Does not mean |
 |---|---|---|
 | `experiment_view` | A qualifying Lab detail view after the agreed deduplication rules | A unique human visitor unless separately justified |
-| `like` | Like state was successfully created/activated | A unique person for guest activity |
-| `unlike` | Like state was successfully removed/deactivated | A negative rating |
+| `like` | Verified account's current like state was successfully created/activated | A unique person for guest activity |
+| `unlike` | Verified account's current like state was successfully removed/deactivated | A negative rating |
 | `source_open` | A verified account successfully opened the protected source viewer and the published source response completed | A public detail-page view, proof source was read/understood, or source was used |
 | `code_copy` | The client reported a successful Clipboard API write and the server accepted the idempotent event for a verified account | Code was pasted, executed or shipped |
 | `preview_start` | Preview was successfully initiated under the agreed lifecycle definition | Preview completed successfully |
 | `preview_interaction` | An explicitly instrumented supported interaction occurred | Every possible interaction or meaningful learning |
 
-Only record successful server-confirmed state changes as likes/unlikes. A retry that leaves the like state unchanged must not create another event. Source opens are logged only after a successful authorized source response. Client-side attempted events are never counted as successful copy or like outcomes.
+Only record verified-account likes/unlikes when the server confirms a state transition; a retry that leaves state unchanged must not create another event. Best-effort guest likes may be counted separately as anonymous `guest_like` / `guest_unlike` action events where the public mechanism reports them; do not claim unique people or cross-device identity. Source opens are logged only after a successful authorized source response. Client-side attempted events are never counted as successful copy outcomes.
 
 ## 4. Metric definitions
 - **Views:** qualifying `experiment_view` events after documented bot and deduplication rules.
 - **Copy actions:** qualifying `code_copy` events; never label these “code usage.”
-- **Like actions:** successful like state changes; distinguish current active likes from action counts.
+- **Like actions:** verified-account server-confirmed state changes; distinguish current active verified likes from action counts. Report best-effort guest like/unlike actions separately where measurable.
 - **Net likes:** successful like actions minus successful unlike actions within the selected interval. State whether this is period net change or current active total.
 - **Source opens:** successful authorized source-viewer opens, not public detail-page views or source-button clicks alone. Deduplicate retries for one open using an idempotency key.
 - **Unique verified accounts opening source:** distinct server-derived user IDs with at least one successful source-open event in the selected period; label this as accounts, not people.
@@ -78,7 +78,7 @@ Only record successful server-confirmed state changes as likes/unlikes. A retry 
 - **Preview starts:** events meeting the agreed successful-start threshold.
 - **Copies per view:** qualifying copy actions divided by qualifying views for the same period/filter; define behavior when views are zero.
 - **Verified-account source activity:** source-open and code-copy events are accepted only from a valid Better Auth session with `emailVerified === true`; verified likes are persistent account state.
-- **Guest/unverified source activity:** guests and unverified users cannot open/copy source. Public guest likes may be recorded separately where measurable and must not be treated as unique people.
+- **Guest/unverified source activity:** guests and unverified users cannot open/copy source. Public guest likes may be recorded separately as best-effort actions where measurable and must not be treated as unique people.
 - **Unique visitor/session estimates:** do not add until identifier, consent/privacy and deduplication rules are approved.
 
 Metric names and formulas must be displayed or discoverable in the UI. Avoid combining events from incompatible definitions or version scopes.
@@ -97,8 +97,8 @@ Metric names and formulas must be displayed or discoverable in the UI. Avoid com
 - Use idempotency/deduplication keys where appropriate.
 - Apply rate limits and bot/abuse safeguards.
 - Avoid logging full source code, tokens, passwords, raw request headers or unnecessary personal identifiers.
-- Guest/unverified likes are disabled in the initial Labs engagement policy.
-- Verified-account likes enforce one active like per user/experiment, using a unique state record. Repeated like/unlike retries do not inflate event counts.
+- Public guest likes retain the existing best-effort browser-storage behavior where supported; they are not guaranteed unique or cross-device.
+- Verified-account likes enforce one active like per user/experiment, using a unique state record. Repeated like/unlike retries do not inflate event counts. Guest-like events remain separate anonymous action counts.
 - Restrict analytics endpoints to the singleton owner/admin. Return aggregate counts/trends by experiment and date range; do not expose raw event rows, user IDs or emails in the dashboard.
 - Define analytics retention and deletion policy before production. Content version retention is unlimited, but that does not imply unlimited analytics/user-activity retention.
 - Account deletion must follow the documented treatment of account-linked analytics and likes.
