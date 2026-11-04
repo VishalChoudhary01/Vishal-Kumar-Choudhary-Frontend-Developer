@@ -1,7 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
-import { isLabsOwner } from "@/app/lib/labs/owner-access";
 
 import LabsPageShell from "@/app/components/labs/LabsPageShell";
 import LabDetailHeader from "@/app/components/labs/detail/LabDetailHeader";
@@ -9,6 +6,7 @@ import LabWorkspace from "@/app/components/labs/detail/LabWorkspace";
 import LabExplanation from "@/app/components/labs/detail/LabExplanation";
 import LabSourceAccess from "@/app/components/labs/detail/LabSourceAccess";
 import LabEngagement from "@/app/components/labs/detail/LabEngagement";
+import LabOwnerSourceLink from "@/app/components/labs/admin/LabOwnerSourceLink";
 import {
   getPublishedLabExperimentBySlug,
   publishedLabExperiments,
@@ -59,7 +57,6 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export const dynamic = "force-dynamic";
 
 export default async function LabExperimentPage({ params }) {
   const { slug } = await params;
@@ -69,25 +66,13 @@ export default async function LabExperimentPage({ params }) {
     notFound();
   }
 
-  const session = await getCurrentAuthSession();
-  const canManageSources = isLabsOwner(session?.user);
-
   return (
     <LabsPageShell>
       <main className="min-h-screen bg-background pb-24 text-text-primary sm:pb-32">
         <LabDetailHeader experiment={experiment} />
         <LabWorkspace key={experiment.slug} experiment={experiment} />
         <LabExplanation explanation={experiment.explanation} />
-        {canManageSources ? (
-          <div className="mx-auto mt-8 flex w-full max-w-[1440px] justify-end px-6 sm:px-8 lg:px-20">
-            <Link
-              href="/admin/labs/sources"
-              className="inline-flex h-9 items-center border border-border px-3 text-xs font-semibold text-text-secondary transition-colors hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-            >
-              Manage Labs sources
-            </Link>
-          </div>
-        ) : null}
+        <LabOwnerSourceLink />
         <LabSourceAccess slug={experiment.slug} />
         <LabEngagement slug={experiment.slug} />
       </main>
