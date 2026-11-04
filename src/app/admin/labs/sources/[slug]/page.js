@@ -14,7 +14,10 @@ export const revalidate = 0;
 export default async function LabsSourceEditorPage({ params }) {
   const session = await getCurrentAuthSession();
 
-  if (!session?.user?.id) redirect("/labs/login");
+  if (!session?.user?.id) {
+    const { slug } = await params;
+    redirect("/labs/login?returnTo=" + encodeURIComponent("/admin/labs/sources/" + slug));
+  }
   if (!isLabsOwner(session.user)) notFound();
 
   const { slug } = await params;
