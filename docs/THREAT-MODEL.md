@@ -2,7 +2,7 @@
 
 **Status:** Phase 1 draft for review; not a security certification.  
 **Scope:** Existing Next.js portfolio extended with admin CMS, Component Lab, authentication, user dashboard, media library, analytics and scheduled publishing.  
-**Branch:** `docs/portfolio-platform-spec`  
+**Branch:** `feat/labs-public-page`  
 **Related:** PRD.md, ARCHITECTURE.md, API-CONTRACTS.md, FOUNDATION-AUDIT.md, DECISIONS.md
 
 ## 1. Security objectives
@@ -48,7 +48,7 @@ Risk levels are initial qualitative assessments, not measured probabilities. The
 | T-02 | User modifies role/user/content IDs to access another account or admin resources (IDOR / privilege escalation) | Critical | Server-derived actor identity; deny-by-default policy; resource ownership/state checks in use cases; admin role provisioned only through trusted setup; direct-request role matrix tests |
 | T-03 | Untrusted Lab source escapes preview sandbox or reads main-app context | Critical | Separate origin/runtime; no main-app credentials/cookies; strict CSP and dependency allowlist; network egress policy; CPU/memory/time limits; restrictive messaging; escape testing; no deployment before security review |
 | T-04 | Draft/private response enters a shared Next.js/CDN/TanStack Query cache | Critical | Explicit cache ownership; private/no-store for actor-specific/draft/source data; cache key isolation; revalidate only after successful publication; cross-user cache tests |
-| T-05 | Admin account compromised through weak session, reset or callback flow | Critical | Choose and configure established auth provider; secure cookie/session settings; email verification/reset protections; rate limiting; reauthentication for sensitive actions; revoke sessions where supported; recovery test plan |
+| T-05 | Admin account compromised through weak session, reset or callback flow | Critical | Better Auth with MongoDB adapter is selected; approve final session lifetime/concurrency policy; secure cookie/session settings; email verification/reset protections; rate limiting; reauthentication for sensitive actions; revoke sessions where supported; recovery test plan |
 | T-06 | Malicious/oversized media upload, signature reuse or unsafe media delivery | High | Admin authorization before signing; short-lived, scoped signed upload parameters; strict type/size limits; server confirmation; validate asset ownership and returned identifiers; secret isolation; abuse limits |
 | T-07 | Malicious URL or open redirect during sign-in/return navigation | High | Allow only local relative return paths or exact approved origins; reject protocol-relative/backslash/control-character variants; validate provider callbacks; test encoded and double-encoded cases |
 | T-08 | Forged analytics, repeated likes/copy events, bots or inflated views | High | Allowlisted event schema; bounded metadata; rate/abuse controls; idempotency/deduplication where feasible; separate guest/auth metrics; document that client events do not prove verified use |
@@ -125,7 +125,7 @@ This matrix is a planning contract. Exact distinctions for source/preview access
 ## 7. Security verification gates
 
 ### Before authentication/account implementation
-- Select provider/session approach and document cookie, callback, verification/reset, sign-out, session invalidation and deletion behavior.
+- Better Auth with the MongoDB adapter is selected. Document and test cookie, callback, verification/reset, sign-out, session invalidation and deletion behavior; approve the remaining session-lifetime/concurrency policy.
 - Test user/admin role separation and safe return URL validation.
 
 ### Before CMS/media implementation
