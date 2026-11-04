@@ -1,16 +1,37 @@
 import "server-only";
 
 import { connectToDatabase } from "@/app/lib/db/mongoose";
+import { getPublishedLabExperimentBySlug } from "@/app/data/labsExperiments";
 
 import LabSource from "./models/LabSource";
 import LabSourceVersion from "./models/LabSourceVersion";
 
 const SAFE_SOURCE_PATH =
-  /^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[A-Za-z0-9._/-]{1,180}$/;
+  /^(?!\/)(?!.*(?:^|\/)\.{1,2}(?:\/|$))[A-Za-z0-9._/-]{1,180}$/;
+const SECRET_FILE =
+  /(^|\/)\.env(?:\.|$)|(^|\/)(?:id_rsa|id_ed25519|credentials(?:\.json)?|secrets?\.(?:json|ya?ml))$/i;
+const ALLOWED_LANGUAGES = new Set([
+  "javascript",
+  "jsx",
+  "typescript",
+  "tsx",
+  "css",
+  "html",
+  "json",
+  "markdown",
+  "text",
+  "svg",
+]);
 
 export async function getAuthorizedLabSource({ user, slug }) {
   if (!user?.id || user.emailVerified !== true) {
     return { status: "forbidden" };
+  }
+
+  // Source snapshots may only belong to canonical public Labs experiments.
+  // This keeps stale/orphaned database rows from becoming addressable.
+  if (!getPublishedLabExperimentBySlug(slug)) {
+    return { status: "not-found" };
   }
 
   await connectToDatabase();
@@ -41,28 +62,43 @@ export async function getAuthorizedLabSource({ user, slug }) {
     return { status: "unavailable" };
   }
 
-  const files = snapshot.files
-    .filter(
-      (file) =>
-        file &&
-        typeof file.path === "string" &&
-        SAFE_SOURCE_PATH.test(file.path) &&
-        typeof file.language === "string" &&
-        typeof file.content === "string",
-    )
-    .map((file) => ({
+  if (snapshot.files.length < 1 || snapshot.files.length > 40) {
+    return { status: "unavailable" };
+  }
+
+  const files = [];
+  let totalBytes = 0;
+
+  for (const file of snapshot.files) {
+    const safePath =
+      file &&
+      typeof file.path === "string" &&
+      SAFE_SOURCE_PATH.test(file.path) &&
+      !file.path.split("/").some((segment) => !segment || segment === "." || segment === "..") &&
+      !SECRET_FILE.test(file.path);
+
+    const safeLanguage =
+      typeof file?.language === "string" &&
+      ALLOWED_LANGUAGES.has(file.language);
+
+    const safeContent =
+      typeof file?.content === "string" &&
+      !/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(file.content);
+
+    if (!safePath || !safeLanguage || !safeContent) {
+      return { status: "unavailable" };
+    }
+
+    totalBytes += Buffer.byteLength(file.content, "utf8");
+    if (totalBytes > 1000000) {
+      return { status: "unavailable" };
+    }
+
+    files.push({
       path: file.path,
       language: file.language,
       content: file.content,
-    }));
-
-  const totalBytes = files.reduce(
-    (total, file) => total + Buffer.byteLength(file.content, "utf8"),
-    0,
-  );
-
-  if (!files.length || totalBytes > 1000000) {
-    return { status: "unavailable" };
+    });
   }
 
   return {
