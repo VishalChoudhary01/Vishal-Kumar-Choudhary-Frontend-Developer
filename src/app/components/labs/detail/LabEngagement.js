@@ -7,12 +7,17 @@ import { authClient } from "@/app/lib/auth/client";
 
 export default function LabEngagement({ slug }) {
   const { data: session, isPending: sessionPending } = authClient.useSession();
-  const [engagement, setEngagement] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
+  const actorScope = session?.user?.id
+    ? session.user.id + ":" + String(session.user.emailVerified === true)
+    : "guest";
+  const scopeKey = slug + ":" + actorScope;
+  const [result, setResult] = useState(null);
+  const [savingScopeKey, setSavingScopeKey] = useState(null);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
     let active = true;
 
     async function load() {
@@ -32,30 +37,45 @@ export default function LabEngagement({ slug }) {
           throw new Error(payload?.error?.message || "Likes are temporarily unavailable.");
         }
 
-        if (active) setEngagement(payload.data);
+        if (active && requestIdRef.current === requestId) {
+          setResult({ scopeKey, data: payload.data, error: "" });
+        }
       } catch (error) {
-        if (active) setMessage(error.message || "Likes are temporarily unavailable.");
-      } finally {
-        if (active) setLoading(false);
+        if (active && requestIdRef.current === requestId) {
+          setResult({
+            scopeKey,
+            data: null,
+            error: error.message || "Likes are temporarily unavailable.",
+          });
+        }
       }
     }
 
     load();
     return () => {
       active = false;
+      if (requestIdRef.current === requestId) requestIdRef.current += 1;
     };
-  }, [slug, session?.user?.id, session?.user?.emailVerified]);
+  }, [slug, scopeKey, session?.user?.id, session?.user?.emailVerified]);
+
+  const currentResult = result?.scopeKey === scopeKey ? result : null;
+  const currentEngagement = currentResult?.data || null;
+  const isLoading = !currentResult;
+  const isSaving = savingScopeKey === scopeKey;
+  const message = currentResult?.error || "";
 
   async function toggleLike() {
-    if (!engagement?.likeAllowed || saving) return;
+    if (!currentEngagement?.likeAllowed || isSaving) return;
 
-    const nextLiked = !engagement.liked;
-    setSaving(true);
-    setMessage("");
+    const requestId = requestIdRef.current;
+    const requestedSlug = slug;
+    const requestedScopeKey = scopeKey;
+    const nextLiked = !currentEngagement.liked;
+    setSavingScopeKey(requestedScopeKey);
 
     try {
       const response = await fetch(
-        "/api/v1/labs/" + encodeURIComponent(slug) + "/engagement",
+        "/api/v1/labs/" + encodeURIComponent(requestedSlug) + "/engagement",
         {
           method: "POST",
           cache: "no-store",
@@ -73,11 +93,19 @@ export default function LabEngagement({ slug }) {
         throw new Error(payload?.error?.message || "Your like could not be saved.");
       }
 
-      setEngagement(payload.data);
+      if (requestIdRef.current === requestId) {
+        setResult({ scopeKey: requestedScopeKey, data: payload.data, error: "" });
+      }
     } catch (error) {
-      setMessage(error.message || "Your like could not be saved.");
+      if (requestIdRef.current === requestId) {
+        setResult({
+          scopeKey: requestedScopeKey,
+          data: currentEngagement,
+          error: error.message || "Your like could not be saved.",
+        });
+      }
     } finally {
-      setSaving(false);
+      if (requestIdRef.current === requestId) setSavingScopeKey(null);
     }
   }
 
@@ -101,39 +129,39 @@ export default function LabEngagement({ slug }) {
           <span
             className="min-w-8 text-right text-sm tabular-nums text-text-secondary"
             aria-live="polite"
-            aria-label={engagement ? engagement.totalLikes + " likes" : "Like count loading"}
+            aria-label={currentEngagement ? currentEngagement.totalLikes + " likes" : "Like count loading"}
           >
-            {loading ? "—" : (engagement?.totalLikes ?? 0).toLocaleString()}
+            {isLoading || !currentEngagement ? "—" : (currentEngagement.totalLikes ?? 0).toLocaleString()}
           </span>
           <button
             type="button"
             onClick={toggleLike}
             disabled={
-              loading ||
-              saving ||
-              !engagement?.likeAllowed ||
+              isLoading ||
+              isSaving ||
+              !currentEngagement?.likeAllowed ||
               sessionPending
             }
-            aria-pressed={engagement?.liked === true}
-            aria-label={engagement?.liked ? "Unlike this experiment" : "Like this experiment"}
+            aria-pressed={currentEngagement?.liked === true}
+            aria-label={currentEngagement?.liked ? "Unlike this experiment" : "Like this experiment"}
             className={[
               "inline-flex h-9 items-center gap-2 rounded-sm border px-3 text-xs font-semibold transition-colors",
-              engagement?.liked
+              currentEngagement?.liked
                 ? "border-brand bg-brand-soft text-brand"
                 : "border-border text-text-secondary hover:border-brand hover:text-brand",
               "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50",
             ].join(" ")}
           >
-            {saving ? (
+            {isSaving ? (
               <LoaderCircle size={14} className="animate-spin" aria-hidden="true" />
             ) : (
               <Heart
                 size={14}
-                fill={engagement?.liked ? "currentColor" : "none"}
+                fill={currentEngagement?.liked ? "currentColor" : "none"}
                 aria-hidden="true"
               />
             )}
-            {engagement?.liked ? "Liked" : "Like"}
+            {currentEngagement?.liked ? "Liked" : "Like"}
           </button>
         </div>
       </div>
@@ -141,7 +169,7 @@ export default function LabEngagement({ slug }) {
       {message ? (
         <p role="status" className="mt-2 text-xs text-text-tertiary">{message}</p>
       ) : null}
-      {!loading && !engagement?.likeAllowed ? (
+      {!isLoading && !currentEngagement?.likeAllowed ? (
         <p className="mt-2 text-xs text-text-tertiary">
           {isUnverified
             ? "Verify your email to like this experiment."
