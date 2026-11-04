@@ -53,16 +53,17 @@ Maintain stable descriptive URLs, e.g. `/lab/animated-gradient-card`. Slugs must
 - Respect supported format/size limits once selected in architecture.
 
 ### Interactive previews
-Support both repository-managed registered components and admin-managed source, but execute them only inside an explicitly approved isolation boundary.
-- Never execute untrusted source in the main portfolio React tree or same privileged application context.
-- An iframe by itself is not proof of adequate isolation.
-- Threat model origin separation, sandbox permissions, messaging protocol, resource/time limits, dependency allowlist, network access, CSP and failure recovery.
+Support both repository-managed registered components and owner-created experiments. Owner-created React/JSX projects must compile with the fixed React/ReactDOM, Tailwind CSS v4 and Motion (motion/react) toolchain; standalone HTML/CSS/JavaScript remains supported.
+- The compiler uses a pinned dependency allowlist, local project imports and a deterministic build manifest. No arbitrary package installation, remote script/CDN imports or server-side code.
+- Tailwind v4 utilities are compiled at build time; no Tailwind CDN/browser-time compiler is used.
+- Motion executes inside the isolated browser runtime, respects reduced motion and has no access to the portfolio's MotionProvider or Lenis state.
+- Never execute untrusted source in the main portfolio React tree, Next.js server or same privileged application context.
+- An iframe by itself is not proof of adequate isolation. Use a dedicated runtime origin, strict sandbox permissions, CSP, cookie/storage separation, validated messaging, network denial by default and resource/time limits.
 - Do not expose application cookies, privileged API endpoints, admin credentials, private source or user-session secrets to the preview runtime.
 - Do not permit arbitrary package installation or unrestricted network fetches.
-- Authenticate and authorize restricted preview launch on the server.
-- Validate preview configuration before publication.
-- Include starting, ready, runtime-error, timeout, stopped and unsupported states.
-- The exact execution provider and hosting boundary remain open until architecture/security validation.
+- Authenticate and authorize preview creation on the server; validate the exact source hash and asset manifest before publication.
+- Include queued/building, ready, build-error, runtime-error, timeout, stopped and unsupported states.
+- The final build provider, artifact store and hosting boundary remain open until architecture/security validation.
 
 ## 5. Source access and code-copy behavior
 - Guests see an access prompt only. Do not expose source snippets to guests until a separate content policy, exact scope and UX are explicitly approved.
@@ -106,14 +107,15 @@ Keep personal activity private to the user. Do not merge guest browsing into an 
 Lab records use Draft, Published and Unpublished states, immutable content versions, private preview and explicit publish/unpublish confirmation. Scheduled publication targets an exact version. Changes to a draft do not modify the published experience until a successful publish transition.
 
 Lab editor supports:
-- Metadata and slug validation.
-- Source/configuration editing.
-- Preview type selection and validation.
-- Static media and gallery selection.
-- Dependency allowlist validation for interactive execution.
-- Partial-source configuration.
-- Version history and restore.
-- Publication status and scheduled-job state.
+- Metadata and slug validation for owner-created experiments.
+- HTML/CSS/JavaScript and React/JSX project editing with the documented starter template.
+- Live preview of the actual code, not only a static thumbnail.
+- Tailwind v4 build validation and Motion runtime support through the fixed package allowlist.
+- Media upload for images, animated GIFs and videos.
+- Media selection for the card cover, detail gallery and in-experiment asset manifest.
+- Dependency/import policy validation, build diagnostics and runtime error feedback.
+- Version history, restore and explicit publication of an exact immutable release.
+- Publication state and scheduled-job state only if scheduling is separately approved.
 
 ## 10. Design, responsive and accessibility
 - Follow existing portfolio tokens, typography and visual hierarchy rather than inventing a conflicting brand.
@@ -128,7 +130,7 @@ Lab editor supports:
 ## 11. Performance and SEO
 - Do not load editor, syntax-highlighting, preview runtime or chart libraries in the public homepage bundle.
 - Lazy-load expensive detail-page modules and interactive previews.
-- Use static media as the default lightweight preview where possible.
+- Use static media as the default lightweight listing-card cover. On the experiment detail page, render the actual published interactive runtime as the primary experience; static media is supporting gallery content and never a substitute for the runnable experiment.
 - Optimize responsive images and reserve aspect ratio to reduce layout shift.
 - Published Lab pages have deliberate metadata and canonical behavior.
 - Draft/preview pages are private, non-indexable and excluded from public sitemap/search.
@@ -155,7 +157,7 @@ The detailed source-management product and lifecycle contract is owned by `LABS-
 - The owner workspace is a protected management surface and is distinct from the compact public experiment source-access section.
 - The first release is for one trusted, manually provisioned owner; do not design a multi-admin permission matrix unless separately approved.
 - Workspace layout should prioritize experiment identity, file tree, editable code area, validation feedback, unsaved state, save-draft action, version history, and explicit publish/unpublish controls.
-- Source editing is text-only. The editor is not a terminal or live execution console. Do not imply that Save or Publish runs the code.
+- Source files remain text snapshots; media binaries are managed as separate Cloudinary assets. The owner can run a controlled browser build/preview only through the isolated runtime boundary in the Runtime and Media Plan. The workspace is not a terminal, general shell or arbitrary package manager.
 - File add/rename/delete operations are explicit; deleting a file requires confirmation. Invalid paths, duplicate names, unsupported file types and size failures preserve the current editor input and explain the correction.
 - Save draft and Publish source are separate actions. Publishing requires confirmation of the exact saved version; a save must never publish implicitly.
 - Version history is owner-only, read-only for past snapshots, and supports restore by creating a new draft. It must not edit historical snapshots in place.
@@ -163,8 +165,20 @@ The detailed source-management product and lifecycle contract is owned by `LABS-
 - Show distinct empty, loading, validation, stale-version/conflict, save-success, publish-success, publish-failure, unavailable database and unauthorized states.
 - The editor and syntax-highlighting code are lazy-loaded only inside the owner route. They must not load on `/`, `/labs` or ordinary experiment pages.
 - Reuse the existing portfolio tokens, typography, focus/keyboard conventions, restrained radius and responsive rules. Do not introduce a new UI system.
-- Owner source management does not alter the existing compact public source-access panel, public experiment demo or Labs layout.
+- Owner-created experiments publish a full interactive runtime on their detail page. A card cover is a separate optional media asset; it must never be treated as the complete experiment.
+- The public detail page may show an optional image/GIF/video gallery in addition to the actual interactive runtime.
+- Owner source management does not weaken the compact public source-access gate or change the four existing code-owned demo runtimes.
 
+
+### 13.4 Media library and public media presentation
+
+- The owner can upload still images, animated GIFs and video clips to the Labs media library.
+- An uploaded asset can be selected as a card cover, a detail-page gallery item or an in-experiment asset.
+- Each gallery asset supports accessible alt text, optional caption, ordering and (for video) a poster image.
+- Card covers use lightweight responsive media; video uses a poster by default. Autoplay is opt-in, muted and subject to reduced-motion preferences.
+- Detail pages show the actual interactive experiment first/primary, with the media gallery as supporting content.
+- Media remains separate from source code and compiler artifacts. Do not serialize draft media references or unpublished media URLs into public payloads.
+- The exact upload limits and Cloudinary delivery mode are defined by the Runtime and Media Plan after checking the actual account plan.
 
 ### 13.3 Source access, likes and analytics policy
 

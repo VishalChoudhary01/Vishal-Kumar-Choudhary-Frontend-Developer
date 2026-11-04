@@ -107,8 +107,8 @@ Owns scheduled publication, retry, idempotency, execution status and recovery. A
 ### I. Analytics ingestion and query layer
 Ingestion validates allowed event names and metadata, deduplicates as designed and applies abuse safeguards. Reporting queries aggregate on the server/database. Never send full raw event history to a browser when aggregate data is sufficient.
 
-### J. Isolated preview boundary
-Untrusted experiment source must not execute in the main application process/origin with privileged app context. The sandbox design must specify origin separation, CSP, allowed dependencies, network policy, resource/time limits, messaging, data exposure and failure behavior. An iframe alone is not evidence that the design is secure. The provider and implementation are OPEN until threat-model approval.
+### J. Isolated preview and build boundary
+Untrusted experiment source must not execute in the main application process/origin or a privileged application context. React/JSX, Tailwind CSS v4 and Motion projects must be compiled in an ephemeral isolated build worker using a pinned toolchain and fixed dependency allowlist. The resulting static artifact runs in a sandboxed iframe from a dedicated runtime origin. Specify origin separation, CSP, cookie/storage separation, network policy, package allowlist, CPU/memory/time/output limits, validated messaging, media access and failure recovery. An iframe alone is not evidence that the design is secure. The final provider, artifact store and runtime host remain OPEN until threat-model approval.
 
 ## 4. Request flow
 ### Public published content
@@ -121,7 +121,7 @@ Admin UI → Server Action or Route Handler → authenticate actor → validate 
 Authenticated client request → Better Auth session and verified-email check → published source version lookup → private/no-store source DTO → record successful source-open event with an idempotency key. Guests and signed-in unverified users are denied before source lookup. Do not preload source in public or unverified payloads.
 
 ### Media upload
-Admin UI requests upload authorization → server checks admin permission and upload policy → server creates constrained signed upload parameters → browser uploads to Cloudinary → server validates returned asset and records metadata/reference → editor can attach asset. Never expose Cloudinary API secret.
+Owner UI requests an upload intent → server verifies singleton-owner permission and the allowed media class/quota → server creates constrained short-lived Cloudinary signed upload parameters → browser uploads directly to Cloudinary → server verifies upload intent/provider metadata/actual format → LabMediaAsset metadata is persisted → owner attaches the ready asset to a draft/release manifest. Initial Labs formats are JPEG, PNG, WebP, AVIF, GIF, MP4 and WebM; SVG is excluded pending sanitization. Never expose the Cloudinary API secret or treat client-supplied asset IDs as proof of ownership. Exact size/duration quotas depend on the actual Cloudinary account plan.
 
 ### Scheduled publish
 Scheduler/worker claims job idempotently → verifies due time, target immutable version and current schedule state → domain publication operation → updates publication pointers/status atomically where possible → revalidates affected cache → records success/failure → bounded retry/manual recovery.
@@ -214,12 +214,15 @@ The source-management plan is detailed in `LABS-SOURCE-MANAGEMENT-SPEC.md`. This
 - The editor and syntax-highlighting dependencies load only inside the owner workspace and must not enter public homepage, Labs listing or public demo bundles.
 - Editor dependency remains open; inspect the package manifest and bundle impact before approving Monaco/CodeMirror or other packages.
 
-### 13.4 Execution remains a separate trust boundary
+### 13.4 Execution is a planned capability with an explicit security gate
 
-- Storing/editing source does not authorize running it.
-- No source snapshot may be evaluated in the Next.js server, the main portfolio React tree, or the privileged application origin.
-- Live preview of owner-authored or untrusted source requires the separate-origin isolated-preview decision and threat-model gate: CSP, sandbox permissions, cookie/storage separation, network egress, package allowlist, resource/time limits, message protocol, abuse monitoring and recovery.
-- Until that gate passes, owner workflows support text management, validation, versioning and protected viewing only. Existing code-owned public demos remain unchanged.
+- The current srcDoc iframe runner is a limited HTML/CSS/JavaScript prototype. It is not production security approval and does not execute React/JSX, compile Tailwind v4 or bundle Motion.
+- The target Studio supports browser-only HTML/CSS/JavaScript and React/JSX authored projects. React, ReactDOM, Tailwind v4 and Motion (motion/react) must use pinned compiler/runtime versions and a fixed package allowlist.
+- Compile in an ephemeral worker with no application secrets, no arbitrary package installation and no outbound network. Emit immutable static build artifacts outside MongoDB.
+- Run artifacts from a dedicated origin inside a sandboxed iframe. Do not grant app cookies, local storage, parent DOM/API access or unrestricted network egress.
+- Bind the built artifact to the exact source hash and media manifest. A draft save or preview run never publishes automatically.
+- Production publication remains blocked until the full runtime threat model, cross-origin isolation, CSP, resource limits, messaging and abuse-recovery tests pass.
+- Existing four code-owned public demos remain unchanged by this custom-experiment runtime.
 
 ### 13.5 Owner source-management request flow
 
@@ -233,3 +236,17 @@ Owner request → Better Auth session → server-only singleton-owner check → 
 - Verified-account like/unlike analytics events are recorded only for actual server-confirmed transitions in the unique per-user/per-experiment like-state record. Best-effort guest-like actions may be recorded separately where supported, without unique-person attribution.
 - Owner/Admin dashboard queries aggregate by experiment and date range: detail views, source opens, unique verified accounts opening source, copy actions, current active verified likes, verified like/unlike transitions, and separate guest-like action counts where measurable, plus rankings and trends.
 - The dashboard does not expose individual account browsing/copy/like histories or emails in the first release. Event storage uses server-derived IDs for idempotency/abuse control and minimizes personal data.
+
+## 14. Labs Experiment Studio runtime and media architecture
+
+The product-level runtime contract, media model, immutable release model, build phases and acceptance tests are maintained in `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`.
+
+Architecture summary:
+
+- Authored project source and uploaded binary media are separate data classes. Code snapshots remain immutable text versions; images/GIFs/videos are Cloudinary assets referenced by stable IDs.
+- React/JSX is transformed and bundled in a restricted build worker. Tailwind v4 CSS is generated at build time with the approved PostCSS integration. Motion code runs only in the isolated browser runtime.
+- Build output is an immutable static artifact stored in a dedicated artifact/object store, not embedded in MongoDB source files or treated as a Cloudinary media asset.
+- A release manifest ties the exact experiment metadata, source version, successful build artifact and ordered media asset manifest together. The published pointer advances only after all references are ready and content hashes match.
+- Labs listing cards use a lightweight optional cover. The public detail page renders the actual interactive published demo and may also show a media gallery.
+- Verified registered users receive source access to the published release automatically. Public runtime/media access does not make source files public.
+- Vercel Sandbox, compiler choice, artifact storage provider, exact package pins and Cloudinary quotas remain open pending operational and security validation.

@@ -1,10 +1,9 @@
 # Labs Source Management — Owner Console and Protected Code Lifecycle
 
-**Status:** Implemented on `feat/labs-platform-integration`; production release remains gated by owner/SMTP configuration, Atlas provisioning/migration, end-to-end security tests and privacy review.  
-**Version:** 0.1  
-**Branch baseline:** `feat/labs-public-page`  
-**Updated:** 2026-11-04  
-**Related:** `PRD.md`, `ARCHITECTURE.md`, `API-CONTRACTS.md`, `THREAT-MODEL.md`, `IMPLEMENTATION-PLAN.md`, `LABS-AND-AUTHENTICATION-DESIGN-SPEC.md`, `LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md`
+**Status:** Source storage/editor foundation and owner-created experiment catalogue are implemented on `feat/labs-platform-integration`. The HTML/CSS/JavaScript iframe runner is a limited prototype; React/JSX compilation, media upload, immutable runtime releases and public custom-experiment execution remain planned. Production release remains gated by owner/SMTP configuration, Atlas provisioning/migration, sandbox/security validation and privacy review.  
+**Version:** 0.2  
+**Updated:** 2026-11-05  
+**Related:** `PRD.md`, `ARCHITECTURE.md`, `API-CONTRACTS.md`, `THREAT-MODEL.md`, `IMPLEMENTATION-PLAN.md`, `DESIGN-LAB.md`, `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`, `LABS-AND-AUTHENTICATION-DESIGN-SPEC.md`, `LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md`
 
 ---
 
@@ -12,7 +11,9 @@
 
 Provide a secure, owner-only way to create and maintain the separate source snapshots used by the Labs protected-source viewer. The owner can create source records for existing experiments, add/edit/remove files, save drafts, publish/unpublish specific source versions, inspect history and restore earlier versions. Every logged-in account with a verified email automatically receives read access to all published source; no per-user grant is issued or required.
 
-This is a **narrow Labs source-management and engagement capability**, not approval to build the full portfolio CMS/Admin area. It must not change the public Labs layout or execute arbitrary code inside the main portfolio application. The automatic access rule is based only on a valid Better Auth session, `emailVerified === true`, and a published source snapshot.
+This remains a **Labs-specific experiment-authoring and source-management capability**, not approval to build a general portfolio CMS/Admin area. It includes original experiment metadata, code snapshots, a constrained media library, isolated build/preview and explicit public releases. Authored code must never execute in the main portfolio application or privileged application origin. The automatic source-access rule is based only on a valid Better Auth session, `emailVerified === true`, and the exact published source release.
+
+The complete forward-looking contract for React/JSX, Tailwind CSS v4, Motion, build isolation, media uploads, immutable artifacts and custom experiment publication is `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`. Where this older source-only specification says execution/media management is out of scope, that statement is superseded by the newer Labs-specific plan; general portfolio CMS/media management remains out of scope.
 
 The integration branch contains the Labs source-access gate, anonymous/verified likes, source-open/copy events, owner-only APIs, source inventory/editor, immutable versions, publish/unpublish/restore, audit history and aggregate analytics. It has passed a clean `npm ci`, targeted Labs/auth/admin/legal lint and a Next.js production build. Atlas end-to-end flows have not yet been exercised against a provisioned owner account, and no source snapshots are seeded automatically; the owner must create a source record and import reviewed files before publishing.
 
@@ -64,7 +65,7 @@ This table captures the pre-implementation `feat/labs-public-page` baseline. The
 
 ### Non-goals for this slice
 
-- Building the entire CMS for projects, experience, portfolio metadata, media library or analytics.
+- Building a general-purpose portfolio CMS or a cross-project media-management product. Labs-specific experiment metadata and an experiment-scoped image/GIF/video asset library are included in the Studio plan.
 - Making source public to every registered account.
 - Running saved source with `eval`, dynamic imports, server execution, or the main portfolio React tree.
 - Enabling arbitrary package installation, network access, secrets or environment variables for authored code.
@@ -129,7 +130,7 @@ The inventory must not change public Labs cards or expose private metadata to gu
 - Start with an empty draft only in the owner workspace. It must not appear in public DTOs or be fetchable from the user source endpoint.
 - Prevent duplicate source aggregates for the same experiment slug.
 
-Whether this narrow slice should also create the public experiment metadata record is **OUT OF SCOPE**; full Lab experiment CMS remains deferred.
+Owner-created experiment metadata is now included through the `LabExperiment` model and owner-only create flow. This is a narrow Labs catalogue, not a general portfolio CMS. The experiment remains private until an exact validated release is published.
 
 ### 5.3 File tree and editor
 
@@ -144,7 +145,21 @@ The owner can:
 
 The editor must be lazy-loaded only on the protected owner page. Monaco is not present in the inspected package manifest. The editor library and version are **OPEN**; do not add Monaco or another large editor dependency without an implementation decision. A lightweight accessible text editor may be used for the first slice if the owner approves the reduced syntax-highlighting experience.
 
-The editor stores a protected source snapshot as text. It is not a terminal, build server, package manager or execution console. Editing/publishing this Atlas snapshot does not modify or hot-update the public demo; current public demos remain code-owned and change through the normal repository/deployment workflow. Any mechanism that executes the saved snapshot is a separate isolated-preview capability and remains out of scope until its security gate passes.
+Code files remain text snapshots, but the Studio is intended to add a controlled build/preview workflow for owner-authored browser experiments. The editor is not a terminal, server shell, arbitrary package manager or execution console. A separate isolated compiler/runtime must build the exact React/JSX, Tailwind v4, Motion or HTML/CSS/JavaScript project and run it outside the main application origin. See `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`. The existing four code-owned public demos continue through the normal repository/deployment workflow; custom experiments use immutable database-backed releases.
+
+### 5.3.1 Media library and experiment assets
+
+The owner Studio includes a Labs-specific asset library for still images, animated GIFs and video. It does not expand into a general portfolio media CMS.
+
+- The initial formats are JPEG, PNG, WebP, AVIF, GIF, MP4 and WebM. SVG is excluded until a sanitizer/rasterization decision is approved.
+- Uploads use owner-authorized, short-lived signed Cloudinary upload intents. Provider credentials remain server-only.
+- Verify upload intent, provider response, actual format/signature, dimensions, byte size, video duration and processing status server-side.
+- MongoDB stores LabMediaAsset metadata and references; Cloudinary stores the binary media. Do not put binary media into source files or source-version documents.
+- Asset roles are card cover, detail-page gallery and in-experiment asset. Gallery order, alt text, captions and video poster references are part of the experiment release manifest.
+- Draft assets must not be publicly discoverable. Public delivery is enabled only for assets included in a published release and only after verifying the configured Cloudinary access mode.
+- Do not delete an asset while any draft, published or historical release references it.
+- Exact file size, duration, dimension and quota ceilings are open until checked against the actual Cloudinary account plan. Do not infer or invent account limits.
+- The card cover is only a discovery preview. The public experiment detail page must render the actual interactive runtime, with the optional media gallery as supporting content.
 
 ### 5.4 Validation before save/publish
 
@@ -366,9 +381,13 @@ All mutations call server-only domain use cases and repositories. Never let UI c
 - Test guest/unverified denial, verified-user automatic access, unpublish/re-publish, restore, likes/unlikes, copy events and owner access.
 - **Gate:** no source leakage and correct response/cache behavior for the full role matrix.
 
-### Separate future phase — Isolated live preview
-- Select and threat-model a cross-origin isolated preview runtime before executing stored source.
-- Until this gate is approved and passed, source management is code editing/storage/viewing only, not code execution.
+### Separate future phases — Runtime, media and release publishing
+- The current HTML/CSS/JavaScript iframe runner is a limited prototype, not a production-approved security boundary.
+- Implement isolated React/JSX compilation, Tailwind v4 CSS generation and Motion execution using a fixed, pinned browser dependency allowlist.
+- Implement Cloudinary media upload and immutable media manifests for images, GIFs and video.
+- Build the exact saved source/media hash in an isolated worker, store static artifacts outside MongoDB, then publish an immutable release manifest.
+- The public detail page must execute the full published experiment; a card thumbnail alone is not an acceptable published demo.
+- Follow the sequence, security gates and acceptance tests in `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`.
 
 ## 12. Acceptance criteria
 
@@ -399,7 +418,7 @@ All mutations call server-only domain use cases and repositories. Never let UI c
 5. **Source import strategy:** **RESOLVED for the first slice.** The owner creates source records and manually adds/pastes allowlisted text files in the owner editor. A bulk repository import and the initial `magnetic-interaction` canonical file inventory remain deferred.
 6. **Version retention:** PRD currently says immutable versions are retained indefinitely. Confirm storage/backup/cost implications before production.
 7. **Analytics retention/privacy:** the Privacy Policy now discloses source opens, copy events, verified likes, anonymous browser likes and aggregate owner analytics (version `2026-11-04.1`). Anonymous like identities/state expire after 180 days without a visit that refreshes the identity. Engagement event records currently have no automatic TTL; retention and account-deletion handling must be reviewed before production release.
-8. **Live preview:** provider, separate origin, CSP, network policy and resource limits remain open and out of this source-only scope.
-9. **Admin scope expansion:** general multi-admin, portfolio CMS, scheduling and media administration remain deferred.
+8. **Interactive runtime:** compiler, isolated build provider, artifact storage, separate runtime origin, CSP, network policy, fixed package allowlist and resource limits are specified in the Runtime and Media Plan but remain open implementation decisions until threat-model approval.
+9. **Media:** Labs-specific Cloudinary upload, image/GIF/video handling, asset references and release pinning are in scope. Exact Cloudinary account limits, draft access mode and upload quotas remain open until verified. General portfolio media administration remains deferred.
 
 Implementation was explicitly authorized and is being maintained on `feat/labs-platform-integration`. Before production release, configure `LABS_OWNER_USER_ID` and the five branch-scoped SMTP variables (`AUTH_SMTP_PORT`, `AUTH_SMTP_USER`, `AUTH_SMTP_PASSWORD`, `AUTH_SMTP_SECURE`, `AUTH_EMAIL_FROM`); verify shared Preview MongoDB/Better Auth settings; validate Atlas indexes/transactions and legacy-data migration; test the Guest / Unverified / Verified / Owner matrix; complete browser accessibility/security QA; and seed the first reviewed source snapshot. The tracked production build and targeted lint have passed; full-repository lint still reports existing errors outside this feature.
