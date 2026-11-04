@@ -81,7 +81,7 @@ export async function POST(request, { params }) {
       .select("version files published publishedVersionId")
       .lean();
 
-    if (!source || (source.published !== true && !source.publishedVersionId)) {
+    if (!source || source.published !== true) {
       return json({ error: { code: "NOT_FOUND", message: "Source is not available." } }, 404);
     }
 
