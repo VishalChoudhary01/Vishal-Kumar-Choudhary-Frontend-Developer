@@ -160,7 +160,7 @@ The Atlas-backed source viewer protects separate source snapshots. Do not claim 
 - [ ] Authentication secret is unique, strong and stored only in server-side environment variables.
 - [ ] Trusted origins and proxy IP header match the actual deployment.
 - [ ] SMTP sends and delivers verification/password-reset messages successfully.
-- [ ] Real Terms/Privacy URLs and versions are configured; registration is disabled if they are missing.
+- [ ] First-party `/terms` and `/privacy` pages are reachable on the deployed canonical origin; server-owned policy versions match the published text and are recorded on registration.
 - [ ] Google callback, email verification requirement and trusted account linking are verified if Google is enabled.
 - [ ] Duplicate registration responses do not expose account existence.
 - [ ] Registration, sign-in, reset and resend rate limits are tested.
