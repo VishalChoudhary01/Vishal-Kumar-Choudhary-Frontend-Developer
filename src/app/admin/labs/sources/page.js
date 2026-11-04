@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   Copy,
   Eye,
+  FileCode2,
   Heart,
   Users,
 } from "lucide-react";
@@ -94,15 +95,24 @@ export default async function LabsSourceAdminPage({ searchParams }) {
               See how published experiment source is opened, copied and liked. Anonymous likes are reported separately from verified-account likes.
             </p>
           </div>
-          {analytics ? (
-            <div className="text-xs text-text-tertiary">
-              Last {analytics.periodDays} days · Updated {formatGeneratedAt(analytics.generatedAt)}
-            </div>
-          ) : (
-            <span className="border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning">
-              Analytics temporarily unavailable
-            </span>
-          )}
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/admin/labs/sources/import"
+              className="inline-flex h-9 items-center gap-2 border border-brand/40 bg-brand-soft/30 px-3 text-xs font-semibold text-brand transition-colors hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            >
+              <FileCode2 size={14} aria-hidden="true" />
+              Initialize sources
+            </Link>
+            {analytics ? (
+              <div className="text-xs text-text-tertiary">
+                Last {analytics.periodDays} days · Updated {formatGeneratedAt(analytics.generatedAt)}
+              </div>
+            ) : (
+              <span className="border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning">
+                Analytics temporarily unavailable
+              </span>
+            )}
+          </div>
         </header>
 
         {analytics ? (
