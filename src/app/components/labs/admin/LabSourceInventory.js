@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   ArrowUpRight,
   CheckCircle2,
+  Plus,
   Clock3,
   FileCode2,
   FolderPlus,
@@ -211,13 +212,21 @@ export default function LabSourceInventory() {
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-brand">SOURCE LIBRARY</p>
           <h2 id="source-inventory-title" className="mt-2 text-xl font-semibold tracking-tight">
-            Experiment sources
+            Experiment workspace
           </h2>
           <p className="mt-1 max-w-2xl text-xs leading-5 text-text-tertiary">
-            Create a private source record, prepare file snapshots, then publish a version for every verified Labs account.
+            Manage the four built-in demos and create original experiments with private source workspaces.
           </p>
         </div>
-        <button
+        <div className="flex items-center gap-2">
+          <Link
+            href="/admin/labs/experiments/new"
+            className="inline-flex h-9 items-center gap-2 bg-brand px-3 text-xs font-semibold text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          >
+            <Plus size={14} aria-hidden="true" />
+            New experiment
+          </Link>
+          <button
           type="button"
           onClick={() => loadInventory({ quiet: true })}
           disabled={loading || refreshing || Boolean(creating)}
@@ -229,7 +238,8 @@ export default function LabSourceInventory() {
             <RefreshCw size={14} aria-hidden="true" />
           )}
           Refresh
-        </button>
+          </button>
+        </div>
       </header>
 
       <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -314,6 +324,11 @@ export default function LabSourceInventory() {
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="truncate text-sm font-semibold text-text-primary">{item.title}</h3>
+                      {item.isCustom ? (
+                        <span className="inline-flex h-6 items-center border border-brand/30 bg-brand/5 px-2 text-[10px] font-semibold text-brand">
+                          OWNER CREATED
+                        </span>
+                      ) : null}
                       <StateLabel state={state} />
                     </div>
                     <p className="mt-1 truncate font-mono text-[10px] text-text-tertiary">{item.slug}</p>

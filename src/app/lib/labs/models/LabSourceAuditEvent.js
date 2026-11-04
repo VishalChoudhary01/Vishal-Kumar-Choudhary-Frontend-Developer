@@ -10,6 +10,7 @@ const labSourceAuditEventSchema = new mongoose.Schema(
       required: true,
       enum: [
         "source_created",
+        "experiment_created",
         "draft_saved",
         "source_published",
         "source_unpublished",

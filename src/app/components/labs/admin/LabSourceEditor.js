@@ -492,13 +492,19 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href={"/labs/" + encodeURIComponent(source.slug)}
-              target="_blank"
-              className="inline-flex h-9 items-center border border-border px-3 text-xs font-medium text-text-secondary hover:text-text-primary"
-            >
-              View experiment
-            </Link>
+            {source.isCustom ? (
+              <span className="inline-flex h-9 items-center border border-border px-3 text-xs text-text-tertiary">
+                Private experiment draft
+              </span>
+            ) : (
+              <Link
+                href={"/labs/" + encodeURIComponent(source.slug)}
+                target="_blank"
+                className="inline-flex h-9 items-center border border-border px-3 text-xs font-medium text-text-secondary hover:text-text-primary"
+              >
+                View experiment
+              </Link>
+            )}
           </div>
         </header>
 
@@ -733,7 +739,16 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
               </div>
             </div>
 
-            {source.draftVersionId ? (
+            {source.isCustom ? (
+              <div className="mt-5 border-t border-border pt-4">
+                <p className="text-xs font-semibold">Private experiment draft</p>
+                <p className="mt-1 max-w-2xl text-xs leading-5 text-text-tertiary">
+                  Your source files and versions can be saved here. Isolated live preview and public publishing will be enabled after the secure runtime phase is complete.
+                </p>
+              </div>
+            ) : null}
+
+            {!source.isCustom && source.draftVersionId ? (
               <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
                 <div>
                   <p className="text-xs font-semibold">Publish saved draft</p>
@@ -753,7 +768,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
               </div>
             ) : null}
 
-            {source.published ? (
+            {!source.isCustom && source.published ? (
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                 <p className="text-xs text-text-tertiary">Published source is available to verified accounts.</p>
                 <button
@@ -838,6 +853,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                   <p className="text-xs font-semibold text-text-primary">
                     {({
                       source_created: "Source record created",
+                      experiment_created: "New experiment created",
                       draft_saved: "Draft version saved",
                       source_published: "Source published",
                       source_unpublished: "Source unpublished",

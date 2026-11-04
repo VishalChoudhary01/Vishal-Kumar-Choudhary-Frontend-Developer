@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import { connectToDatabase } from "@/app/lib/db/mongoose";
 import { publishedLabExperiments } from "@/app/data/labsExperiments";
 import LabSource from "./models/LabSource";
+import LabExperiment from "./models/LabExperiment";
 import LabSourceVersion from "./models/LabSourceVersion";
 import LabSourceAuditEvent from "./models/LabSourceAuditEvent";
 import { isLabsOwner } from "./owner-access";
@@ -45,10 +46,18 @@ function assertOwner(user) {
   }
 }
 
-function assertExperiment(slug) {
-  const experiment = publishedLabExperiments.find((item) => item.slug === slug);
-  if (!experiment) throwCode("NOT_FOUND", "Experiment not found.");
-  return experiment;
+async function getExperiment(slug) {
+  if (typeof slug !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+    throwCode("NOT_FOUND", "Experiment not found.");
+  }
+
+  const builtIn = publishedLabExperiments.find((item) => item.slug === slug);
+  if (builtIn) return { ...builtIn, isCustom: false };
+
+  await connectToDatabase();
+  const custom = await LabExperiment.findOne({ slug, kind: "custom" }).lean();
+  if (!custom) throwCode("NOT_FOUND", "Experiment not found.");
+  return { ...custom, isCustom: true };
 }
 
 function validateFiles(input) {
@@ -124,6 +133,7 @@ let sourceIndexesPromise;
 async function ensureIndexes() {
   if (!sourceIndexesPromise) {
     sourceIndexesPromise = Promise.all([
+      LabExperiment.createIndexes(),
       LabSource.createIndexes(),
       LabSourceVersion.createIndexes(),
       LabSourceAuditEvent.createIndexes(),
@@ -141,7 +151,7 @@ export async function listOwnerLabSources({ user }) {
   await connectToDatabase();
   await ensureIndexes();
 
-  const [heads, versions] = await Promise.all([
+  const [heads, versions, customExperiments] = await Promise.all([
     LabSource.find({})
       .select("slug version published draftVersionId publishedVersionId updatedAt")
       .lean(),
@@ -149,12 +159,16 @@ export async function listOwnerLabSources({ user }) {
       { $sort: { versionNumber: -1 } },
       { $group: { _id: "$experimentSlug", latestVersion: { $first: "$version" }, versionCount: { $sum: 1 } } },
     ]),
+    LabExperiment.find({ kind: "custom" })
+      .select("slug title description category status createdAt updatedAt")
+      .sort({ updatedAt: -1 })
+      .lean(),
   ]);
 
   const headBySlug = new Map(heads.map((head) => [head.slug, head]));
   const versionBySlug = new Map(versions.map((version) => [version._id, version]));
 
-  return publishedLabExperiments.map((experiment) => {
+  const builtInItems = publishedLabExperiments.map((experiment) => {
     const head = headBySlug.get(experiment.slug) || null;
     const versionInfo = versionBySlug.get(experiment.slug);
 
@@ -162,6 +176,8 @@ export async function listOwnerLabSources({ user }) {
       slug: experiment.slug,
       title: experiment.title,
       description: experiment.description,
+      category: experiment.category,
+      isCustom: false,
       hasSource: Boolean(head),
       published: head?.published === true,
       draftVersionId: head?.draftVersionId || null,
@@ -172,11 +188,37 @@ export async function listOwnerLabSources({ user }) {
       updatedAt: head?.updatedAt ? new Date(head.updatedAt).toISOString() : null,
     };
   });
+
+  const customItems = customExperiments.map((experiment) => {
+    const head = headBySlug.get(experiment.slug) || null;
+    const versionInfo = versionBySlug.get(experiment.slug);
+
+    return {
+      slug: experiment.slug,
+      title: experiment.title,
+      description: experiment.description,
+      category: experiment.category,
+      isCustom: true,
+      lifecycleStatus: experiment.status,
+      hasSource: Boolean(head),
+      published: head?.published === true,
+      draftVersionId: head?.draftVersionId || null,
+      publishedVersionId: head?.publishedVersionId || null,
+      legacyVersion: head?.version || null,
+      latestVersion: versionInfo?.latestVersion || null,
+      versionCount: versionInfo?.versionCount || 0,
+      updatedAt: head?.updatedAt
+        ? new Date(head.updatedAt).toISOString()
+        : experiment.updatedAt?.toISOString?.() || null,
+    };
+  });
+
+  return [...builtInItems, ...customItems];
 }
 
 export async function createOwnerLabSource({ user, slug }) {
   assertOwner(user);
-  assertExperiment(slug);
+  await getExperiment(slug);
   await connectToDatabase();
   await ensureIndexes();
 
@@ -229,7 +271,7 @@ export async function createOwnerLabSource({ user, slug }) {
 
 export async function getOwnerLabSource({ user, slug }) {
   assertOwner(user);
-  assertExperiment(slug);
+  const experiment = await getExperiment(slug);
   await connectToDatabase();
   await ensureIndexes();
 
@@ -253,7 +295,8 @@ export async function getOwnerLabSource({ user, slug }) {
 
   return {
     slug,
-    title: assertExperiment(slug).title,
+    title: experiment.title,
+    isCustom: experiment.isCustom === true,
     published: source.published === true,
     draftVersionId: source.draftVersionId || null,
     publishedVersionId: source.publishedVersionId || null,
@@ -291,7 +334,7 @@ export async function saveOwnerLabDraft({
   auditAction = "draft_saved",
 }) {
   assertOwner(user);
-  assertExperiment(slug);
+  await getExperiment(slug);
 
   if (!["draft_saved", "version_restored"].includes(auditAction)) {
     throwCode("VALIDATION_ERROR", "The source audit action is invalid.");
@@ -382,7 +425,7 @@ export async function saveOwnerLabDraft({
 
 export async function listOwnerLabVersions({ user, slug }) {
   assertOwner(user);
-  assertExperiment(slug);
+  await getExperiment(slug);
   await connectToDatabase();
   await ensureIndexes();
 
@@ -410,7 +453,7 @@ export async function listOwnerLabVersions({ user, slug }) {
 
 export async function getOwnerLabVersion({ user, slug, versionId }) {
   assertOwner(user);
-  assertExperiment(slug);
+  await getExperiment(slug);
 
   if (typeof versionId !== "string" || versionId.length > 64) {
     throwCode("VALIDATION_ERROR", "The source version identifier is invalid.");
@@ -453,7 +496,7 @@ export async function restoreOwnerLabVersion({
   requestId = null,
 }) {
   assertOwner(user);
-  assertExperiment(slug);
+  await getExperiment(slug);
   await connectToDatabase();
   await ensureIndexes();
 
@@ -482,7 +525,13 @@ export async function publishOwnerLabSource({
   requestId = null,
 }) {
   assertOwner(user);
-  assertExperiment(slug);
+  const experiment = await getExperiment(slug);
+  if (experiment.isCustom) {
+    throwCode(
+      "PREVIEW_REQUIRED",
+      "Custom experiments need a successful isolated preview before publishing is enabled.",
+    );
+  }
   if (typeof versionId !== "string" || versionId.length > 64) {
     throwCode("VALIDATION_ERROR", "Choose a saved source version to publish.");
   }
@@ -542,7 +591,7 @@ export async function unpublishOwnerLabSource({
   requestId = null,
 }) {
   assertOwner(user);
-  assertExperiment(slug);
+  await getExperiment(slug);
   await connectToDatabase();
 
   const session = await mongoose.startSession();
@@ -582,7 +631,7 @@ export async function unpublishOwnerLabSource({
 
 export async function listOwnerLabAuditEvents({ user, slug, limit = 20 }) {
   assertOwner(user);
-  assertExperiment(slug);
+  await getExperiment(slug);
 
   const safeLimit = Math.min(50, Math.max(1, Number(limit) || 20));
 
