@@ -31,7 +31,7 @@ Extend the existing developer portfolio into a maintainable platform where the o
 - View public portfolio pages and published Lab listing/detail pages.
 - View permitted static media previews and explicitly public demos. Guests receive no source bytes, including partial snippets.
 - Search, filter, sort, paginate/load more, and view published experiment metadata.
-- Cannot view, copy or like source; guest source-like controls are not rendered.
+- Cannot view or copy source. May like public experiments through the existing best-effort anonymous mechanism where available.
 - Cannot access private drafts, full source, restricted interactive previews, user-only features, or admin pages.
 
 ### Registered user
@@ -106,9 +106,9 @@ Extend the existing developer portfolio into a maintainable platform where the o
 - Restore intended navigation/action where safe, but do not automatically repeat unsafe or unintended operations.
 
 ### FR-05 Likes and user dashboard
-- Guest likes are disabled in the initial Labs source/engagement release. Only signed-in verified accounts can like or unlike.
+- Guest likes may be recorded through browser storage/appropriate safeguards; they are not guaranteed unique people or cross-device. Signed-in verified accounts receive persistent likes with one active like per user/experiment.
 - Verified-account likes persist across sessions/devices and enforce one active like per user/experiment server-side.
-- Track verified-account source opens, code-copy actions and like/unlike transitions. Do not collect guest source/copy/like events because these controls are unavailable to guests.
+- Track verified-account source opens and code-copy actions. Track verified likes/unlikes and guest like actions separately where measurable; never treat a guest action count as unique people. Guests/unverified users cannot view or copy source.
 - User dashboard includes account summary/settings, liked experiments, recently viewed experiments, recently accessed components and personal activity.
 - Personal activity is private to the appropriate user. Do not attach anonymous activity to an account without an explicit, disclosed mechanism.
 
@@ -166,8 +166,8 @@ Track, at minimum:
 - Record a successful source open only when a verified account successfully receives the published source from the protected source endpoint. A public experiment detail-page view is a separate event.
 - Record code-copy actions only after the client confirms a successful Clipboard API write and the server validates the current verified session and published source version.
 - Record likes/unlikes only when the server confirms an actual state transition. Enforce one current like per verified user and experiment.
-- The owner/admin dashboard must show each experiment's source-open count, unique verified accounts opening source, code-copy count, current active-like count, like/unlike actions and trends over a selected period.
-- Provide aggregate rankings by source opens, copies and active likes, plus daily/monthly trends and a transparent copies-per-source-open formula.
+- The owner/admin dashboard must show each experiment's source-open count, unique verified accounts opening source, code-copy count, current active verified-account likes, verified like/unlike actions, and guest like actions separately where measurable, with trends over a selected period.
+- Provide aggregate rankings by source opens, copies and active verified-account likes, plus daily/monthly trends and a transparent copies-per-source-open formula.
 - Admin analytics must not expose individual users' source browsing/copy/like history or email addresses in the first release. Use aggregate reporting and server-derived actor IDs for abuse control/deduplication.
 - Analytics events must be idempotent, rate-limited, server-validated and privacy-minimized. Never store clipboard contents, full source payloads, passwords, verification tokens or raw email in analytics events.
 - Define and disclose analytics retention, account deletion treatment and event deduplication before production analytics is enabled.
