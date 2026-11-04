@@ -9,7 +9,7 @@
 
 1. Preserve public portfolio availability and prevent private content from entering public output.
 2. Only a verified admin may create or modify privileged content and settings.
-3. Registered users may access only their own private account/activity data and the Lab capabilities explicitly granted to them.
+3. Registered users may access only their own private account/activity data. Any registered user with a verified email may automatically read published Labs source; guests and unverified accounts cannot.
 4. Never execute untrusted Lab source with the main application's origin, secrets, cookies, server privileges or unrestricted network access.
 5. Prevent media-upload abuse, cross-user cache leakage, unauthorized content changes and analytics manipulation.
 6. Make publishing, scheduling, retries and recovery auditable and safe against duplicate execution.
@@ -163,13 +163,13 @@ The highest-risk feature is untrusted interactive source execution, followed by 
 
 ## 10. Labs authentication and protected-source implementation status — 2026-11-03
 
-The Labs foundation now uses Better Auth with the MongoDB adapter. Email/password, email verification, password reset, optional Google sign-in, server-side sessions, privacy-safe registration handling, trusted-origin validation, rate limiting and explicit per-experiment source grants are implemented in the application branch.
+The Labs foundation uses Better Auth with the MongoDB adapter. Email/password, email verification, password reset, optional Google sign-in, server-side sessions, privacy-safe registration handling, trusted-origin validation and rate limiting are implemented. The current source endpoint still uses a legacy per-experiment grant lookup; the approved migration removes that lookup and grants published-source reads to every verified account automatically.
 
 Remaining release/security gates:
 - Configure production secrets, the trusted proxy IP header, SMTP sender, actual HTTPS Terms/Privacy URLs and version identifiers. Registration remains disabled if required delivery/legal configuration is absent.
 - Configure Google OAuth and verify callback, trusted origin and verified-account linking behavior.
 - Verify session cookies, origin checks, session expiration, tab synchronization and password-reset revocation in the deployed environment.
-- Provision an Atlas source snapshot and a grant, then test the Guest / authenticated-ungranted / authenticated-granted / expired-grant / revoked-grant matrix.
+- Provision and publish an Atlas source snapshot; test Guest / signed-in-unverified denial and automatic Verified Registered User access without a grant. Confirm Owner can access drafts through a separate owner guard.
 - Test direct requests, IDOR attempts, malformed source paths, oversized snapshots, no-store headers, and absence of source in anonymous HTML/RSC/public caches.
 - The current repository is public and existing demo runtimes ship client-side code. Protected source snapshots must be kept separate from public runtime code; a protected viewer does not make source code in a public repository or a browser bundle confidential.
 - No build/browser/security test evidence has been produced from this connected GitHub-only editing session. Do not describe the feature as production-certified or mark the security verification gate as passed.
