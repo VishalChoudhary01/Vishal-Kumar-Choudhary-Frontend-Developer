@@ -1,6 +1,6 @@
 # Labs Source Management — Owner Console and Protected Code Lifecycle
 
-**Status:** Planning specification; singleton owner provisioning and source-management authority approved; verified-account source access and engagement analytics locked (2026-11-04); implementation not authorized by this document alone  
+**Status:** Implementation in progress on `feat/labs-source-engagement`; production release remains gated by configuration, migration, privacy review and runtime verification.  
 **Version:** 0.1  
 **Branch baseline:** `feat/labs-public-page`  
 **Updated:** 2026-11-04  
@@ -14,7 +14,7 @@ Provide a secure, owner-only way to create and maintain the separate source snap
 
 This is a **narrow Labs source-management and engagement capability**, not approval to build the full portfolio CMS/Admin area. It must not change the public Labs layout or execute arbitrary code inside the main portfolio application. The automatic access rule is based only on a valid Better Auth session, `emailVerified === true`, and a published source snapshot.
 
-This document describes the target plan. It does not claim that the owner console, source snapshots, version history, likes, event analytics or audit log already exist.
+This implementation is being developed against the approved target policy. The feature branch now contains the first source-access, likes, engagement analytics, owner API, source-editor and immutable-version slices. This branch has not been locally built or linted, has not been deployed, and has not been provisioned against the production Atlas database. No source snapshots are seeded automatically; the owner must create a source record and add its files before publishing.
 
 ## 2. Repository and deployment audit — current baseline
 
@@ -392,10 +392,10 @@ All mutations call server-only domain use cases and repositories. Never let UI c
 1. **Owner bootstrap:** **RESOLVED / LOCKED.** Use the singleton server-only `LABS_OWNER_USER_ID` environment allowlist. The owner is the sole privileged administrator for the initial Labs source-management release. Do not add persisted multi-admin roles in this phase.
 2. **Source access policy:** **RESOLVED / LOCKED (2026-11-04).** Every logged-in account with `emailVerified === true` can read all published experiment source automatically. Guests and signed-in unverified accounts cannot read source. No per-user grant, expiry or revoke workflow exists in the target design; publish/unpublish controls availability per experiment.
 3. **Engagement policy:** **RESOLVED / LOCKED (2026-11-04).** Only verified accounts can open source and copy code. Verified accounts receive persistent likes; existing best-effort public guest-like behavior remains available where supported. The owner dashboard shows per-experiment source-open counts, unique verified-account counts, copy-action counts, current active verified likes, verified like/unlike trends, and separate guest-like action counts where measurable; it does not expose individual users' browsing/action histories in the first release.
-4. **Editor:** lightweight accessible textarea/code editor for MVP or add Monaco/CodeMirror after dependency and bundle review. Neither editor is currently present as a direct dependency in the inspected package manifest.
-5. **Source import strategy:** manually create files in owner UI, import an allowlisted set of repository files, or support both. Initial `magnetic-interaction` canonical file inventory must be audited.
+4. **Editor:** **RESOLVED for MVP.** Use the lightweight accessible textarea editor; do not add Monaco/CodeMirror in this slice.
+5. **Source import strategy:** **RESOLVED for the first slice.** The owner creates source records and manually adds/pastes allowlisted text files in the owner editor. A bulk repository import and the initial `magnetic-interaction` canonical file inventory remain deferred.
 6. **Version retention:** PRD currently says immutable versions are retained indefinitely. Confirm storage/backup/cost implications before production.
-7. **Analytics retention/privacy:** retention period, event deduplication window, account-deletion treatment and final policy wording must be approved before analytics go live.
+7. **Analytics retention/privacy:** the Privacy Policy now discloses source opens, copy events, verified likes, anonymous browser likes and aggregate owner analytics (version `2026-11-04.1`). Anonymous like identities/state expire after 180 days without a visit that refreshes the identity. Engagement event records currently have no automatic TTL; retention and account-deletion handling must be reviewed before production release.
 8. **Live preview:** provider, separate origin, CSP, network policy and resource limits remain open and out of this source-only scope.
 9. **Admin scope expansion:** general multi-admin, portfolio CMS, scheduling and media administration remain deferred.
 
