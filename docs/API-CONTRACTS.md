@@ -265,10 +265,7 @@ For each endpoint/action, test:
 | View a version | `GET /api/v1/admin/labs/sources/:slug/versions/:versionId` | Owner-only source contents, private/no-store |
 | Restore version | `POST /api/v1/admin/labs/sources/:slug/restore/:versionId` | Creates a new draft snapshot based on an immutable historical version |
 | Publish exact version | `POST /api/v1/admin/labs/sources/:slug/publish` | Explicitly advances published pointer to a previously saved version |
-| Unpublish source | `POST /api/v1/admin/labs/sources/:slug/unpublish` | Clears published pointer; preserves versions and grants |
-| List grants | `GET /api/v1/admin/labs/sources/:slug/grants` | Owner-only per-experiment grants |
-| Grant/re-grant by email | `POST /api/v1/admin/labs/sources/:slug/grants` | Resolves exact normalized email server-side; target must exist and be verified |
-| Revoke grant | `DELETE /api/v1/admin/labs/sources/:slug/grants/:grantId` | Revokes one grant; grant ID is scoped to the route experiment |
+| Unpublish source | `POST /api/v1/admin/labs/sources/:slug/unpublish` | Clears published pointer; preserves immutable versions, audit and engagement events |
 | Read source audit | `GET /api/v1/admin/labs/sources/:slug/audit` | Owner-only paginated append-only audit metadata |
 
 These are candidate endpoints, not permission to build a full CMS. Same-app mutations may use Server Actions if that yields a smaller attack surface; whichever transport is selected must preserve these domain contracts.
@@ -303,8 +300,7 @@ These are candidate endpoints, not permission to build a full CMS. Same-app muta
 - `lab_source_versions`: source ID/slug, monotonic version number, immutable files, server-calculated content hash, parent version, bounded change summary, actor and timestamp.
 - `lab_likes`: canonical Better Auth user ID, experiment slug, active state and state timestamps; unique `{ userId, experimentSlug }`.
 - `lab_analytics_events`: server-validated `source_open`, `code_copy`, `like`, `unlike` events with experiment slug, source version where relevant, server timestamp and idempotency key. Never store email, clipboard content or source text.
-- `lab_source_audit_events`: owner source lifecycle mutations only; append-only, no source text/secrets.
-- `lab_source_audit_events`: actor, action, experiment, version/target user references, request ID, safe outcome code and timestamp. No source text, credentials, raw tokens or secrets.
+- `lab_source_audit_events`: actor, action, experiment, version references, request ID, safe outcome code and timestamp. Owner source lifecycle mutations only; append-only, no source text, email, credentials, raw tokens or secrets.
 
 These are target records. The inspected implementation currently embeds `files` in a mutable `LabSource` record and has no separate immutable version/audit collection. Do not treat the proposed model as already migrated.
 
