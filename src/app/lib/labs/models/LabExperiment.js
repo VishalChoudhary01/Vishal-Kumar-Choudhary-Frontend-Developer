@@ -2,6 +2,34 @@ import "server-only";
 
 import mongoose from "mongoose";
 
+const MEDIA_ATTACHMENT_ROLES = ["card-cover", "detail-gallery", "in-experiment"];
+
+const labMediaAttachmentSchema = new mongoose.Schema(
+  {
+    assetId: { type: mongoose.Schema.Types.ObjectId, required: true },
+    roles: {
+      type: [{ type: String, enum: MEDIA_ATTACHMENT_ROLES }],
+      required: true,
+      validate: {
+        validator: (roles) => Array.isArray(roles) && roles.length > 0 && new Set(roles).size === roles.length,
+        message: "Choose at least one unique media attachment role.",
+      },
+    },
+    assetKey: {
+      type: String,
+      default: null,
+      trim: true,
+      lowercase: true,
+      maxlength: 64,
+      match: /^[a-z][a-z0-9]*(?:[-.][a-z0-9]+)*$/,
+    },
+    position: { type: Number, default: 0, min: 0, max: 99 },
+    altText: { type: String, default: "", trim: true, maxlength: 300 },
+    caption: { type: String, default: "", trim: true, maxlength: 500 },
+  },
+  { _id: false, strict: "throw" },
+);
+
 const labExperimentSchema = new mongoose.Schema(
   {
     slug: {
@@ -36,6 +64,14 @@ const labExperimentSchema = new mongoose.Schema(
       },
     },
     kind: { type: String, required: true, enum: ["custom"], default: "custom" },
+    mediaAttachments: {
+      type: [labMediaAttachmentSchema],
+      default: [],
+      validate: {
+        validator: (attachments) => Array.isArray(attachments) && attachments.length <= 100,
+        message: "An experiment can have at most 100 media attachments.",
+      },
+    },
     status: { type: String, required: true, enum: ["draft", "published"], default: "draft", index: true },
     createdBy: { type: String, required: true, maxlength: 128 },
     updatedBy: { type: String, required: true, maxlength: 128 },

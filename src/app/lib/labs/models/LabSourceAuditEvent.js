@@ -13,6 +13,7 @@ const labSourceAuditEventSchema = new mongoose.Schema(
         "experiment_created",
         "media_upload_intent_created",
         "media_uploaded",
+        "media_attachments_updated",
         "draft_saved",
         "source_published",
         "source_unpublished",

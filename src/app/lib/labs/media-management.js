@@ -1,6 +1,7 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
+import mongoose from "mongoose";
 import { v2 as cloudinary } from "cloudinary";
 
 import { connectToDatabase } from "@/app/lib/db/mongoose";
@@ -95,13 +96,13 @@ async function assertCustomExperiment(slug) {
   }
   await connectToDatabase();
   const experiment = await LabExperiment.findOne({ slug, kind: "custom" })
-    .select("slug")
+    .select("slug mediaAttachments")
     .lean();
   if (!experiment) fail("NOT_FOUND", "Experiment not found.");
   return experiment;
 }
 
-function serializeAsset(asset) {
+function serializeAsset(asset, attachment = null, previewUrl = null) {
   return {
     id: String(asset._id),
     uploadIntentId: asset.uploadIntentId,
@@ -114,10 +115,29 @@ function serializeAsset(asset) {
     height: asset.height,
     durationSeconds: asset.durationSeconds,
     status: asset.status,
-    altText: asset.altText || "",
-    caption: asset.caption || "",
+    altText: attachment?.altText || asset.altText || "",
+    caption: attachment?.caption || asset.caption || "",
+    roles: attachment?.roles || [],
+    assetKey: attachment?.assetKey || null,
+    position: attachment?.position ?? 0,
+    previewUrl,
     createdAt: asset.createdAt ? new Date(asset.createdAt).toISOString() : null,
   };
+}
+
+
+function createOwnerPreviewUrl(client, asset) {
+  if (!asset?.cloudinaryPublicId || !asset?.format) return null;
+  try {
+    return client.utils.private_download_url(asset.cloudinaryPublicId, asset.format, {
+      resource_type: asset.resourceType,
+      type: asset.deliveryType,
+      expires_at: Math.floor(Date.now() / 1000) + 300,
+      attachment: false,
+    });
+  } catch {
+    return null;
+  }
 }
 
 export async function createOwnerLabMediaUploadIntent({ user, slug, input }) {
@@ -291,12 +311,12 @@ export async function finalizeOwnerLabMediaUpload({ user, slug, uploadIntentId }
     createdAt: new Date(),
   });
 
-  return serializeAsset(asset);
+  return serializeAsset(finalizedAsset);
 }
 
 export async function listOwnerLabMediaAssets({ user, slug }) {
   if (!isLabsOwner(user)) fail("OWNER_ACCESS_DENIED", "Owner access is required.");
-  await assertCustomExperiment(slug);
+  const experiment = await assertCustomExperiment(slug);
   await LabMediaAsset.createIndexes();
 
   const assets = await LabMediaAsset.find({
@@ -308,5 +328,124 @@ export async function listOwnerLabMediaAssets({ user, slug }) {
     .limit(100)
     .lean();
 
-  return assets.map(serializeAsset);
+  const attachments = new Map(
+    (experiment.mediaAttachments || []).map((attachment) => [String(attachment.assetId), attachment]),
+  );
+  let client = null;
+  if (assets.length) {
+    try {
+      ({ client } = getCloudinary());
+    } catch {
+      client = null;
+    }
+  }
+
+  return assets.map((asset) => serializeAsset(
+    asset,
+    attachments.get(String(asset._id)) || null,
+    client ? createOwnerPreviewUrl(client, asset) : null,
+  ));
+}
+
+export async function saveOwnerLabMediaAttachments({ user, slug, attachments: input }) {
+  if (!isLabsOwner(user)) fail("OWNER_ACCESS_DENIED", "Owner access is required.");
+  if (!Array.isArray(input) || input.length > 100) {
+    fail("MEDIA_INVALID", "Submit a valid media attachment list with at most 100 items.");
+  }
+
+  const experiment = await assertCustomExperiment(slug);
+  const allowedRoles = new Set(["card-cover", "detail-gallery", "in-experiment"]);
+  const seenAssetIds = new Set();
+  const seenAssetKeys = new Set();
+  let coverCount = 0;
+  let galleryCount = 0;
+
+  const normalized = input.map((item) => {
+    const assetId = typeof item?.assetId === "string" ? item.assetId.trim() : "";
+    if (!mongoose.isValidObjectId(assetId)) fail("MEDIA_INVALID", "An attachment references an invalid asset.");
+    if (seenAssetIds.has(assetId)) fail("MEDIA_INVALID", "An asset can appear only once in the attachment list.");
+    seenAssetIds.add(assetId);
+
+    const roles = Array.isArray(item?.roles) ? [...new Set(item.roles)] : [];
+    if (!roles.length || roles.some((role) => !allowedRoles.has(role))) {
+      fail("MEDIA_INVALID", "Every attachment must have at least one supported role.");
+    }
+    if (roles.includes("card-cover")) coverCount += 1;
+    if (roles.includes("detail-gallery")) galleryCount += 1;
+
+    const rawKey = typeof item?.assetKey === "string" ? item.assetKey.trim().toLowerCase() : "";
+    const assetKey = roles.includes("in-experiment") ? rawKey : null;
+    if (roles.includes("in-experiment")) {
+      if (!/^[a-z][a-z0-9]*(?:[-.][a-z0-9]+)*$/.test(assetKey || "") || assetKey.length > 64) {
+        fail("MEDIA_INVALID", "Runtime asset keys must start with a letter and use lowercase letters, numbers, dots or hyphens.");
+      }
+      if (seenAssetKeys.has(assetKey)) fail("MEDIA_INVALID", "Runtime asset keys must be unique within an experiment.");
+      seenAssetKeys.add(assetKey);
+    }
+
+    const position = Number(item?.position ?? 0);
+    if (!Number.isInteger(position) || position < 0 || position > 99) {
+      fail("MEDIA_INVALID", "Media attachment order is invalid.");
+    }
+    const altText = typeof item?.altText === "string" ? item.altText.trim() : "";
+    const caption = typeof item?.caption === "string" ? item.caption.trim() : "";
+    if (altText.length > 300 || caption.length > 500) {
+      fail("MEDIA_INVALID", "Alt text or caption is too long.");
+    }
+
+    return {
+      assetId: new mongoose.Types.ObjectId(assetId),
+      roles,
+      assetKey,
+      position: roles.includes("detail-gallery") ? position : 0,
+      altText,
+      caption,
+    };
+  });
+
+  if (coverCount > 1) fail("MEDIA_INVALID", "Choose only one card cover for an experiment.");
+  if (galleryCount > 30) fail("MEDIA_INVALID", "A detail gallery can contain at most 30 assets.");
+
+  const assetIds = normalized.map((item) => item.assetId);
+  const readyAssets = assetIds.length
+    ? await LabMediaAsset.find({
+        _id: { $in: assetIds },
+        experimentSlug: slug,
+        ownerUserId: user.id,
+        status: "ready",
+      }).select("_id mediaKind").lean()
+    : [];
+  if (readyAssets.length !== normalized.length) {
+    fail("MEDIA_INVALID", "One or more selected assets are not ready or do not belong to this experiment.");
+  }
+  const assetKinds = new Map(readyAssets.map((asset) => [String(asset._id), asset.mediaKind]));
+
+  await LabExperiment.updateOne(
+    { _id: experiment._id, kind: "custom" },
+    { $set: { mediaAttachments: normalized, updatedBy: user.id } },
+    { runValidators: true },
+  );
+
+  await LabSourceAuditEvent.create({
+    actorUserId: user.id,
+    action: "media_attachments_updated",
+    experimentSlug: slug,
+    versionId: null,
+    requestId: randomUUID(),
+    resultCode: "ok",
+    createdAt: new Date(),
+  });
+
+  return {
+    attachments: normalized.map((item) => ({
+      assetId: String(item.assetId),
+      roles: item.roles,
+      assetKey: item.assetKey,
+      position: item.position,
+      altText: item.altText,
+      caption: item.caption,
+      mediaKind: assetKinds.get(String(item.assetId)),
+    })),
+    assets: await listOwnerLabMediaAssets({ user, slug }),
+  };
 }

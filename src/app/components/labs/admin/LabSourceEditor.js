@@ -748,10 +748,18 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
 
             {source.isCustom ? (
               <div className="mt-5 border-t border-border pt-4">
-                <p className="text-xs font-semibold">Private experiment draft</p>
-                <p className="mt-1 max-w-2xl text-xs leading-5 text-text-tertiary">
-                  Your source files and versions can be saved here. Isolated live preview and public publishing will be enabled after the secure runtime phase is complete.
-                </p>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold">Release readiness</p>
+                    <p className="mt-1 max-w-2xl text-xs leading-5 text-text-tertiary">This experiment remains a private draft. The release workflow is prepared in the owner workspace, but public publishing stays server-blocked until the compiler, isolated runtime and immutable artifact checks are complete.</p>
+                  </div>
+                  <span className="inline-flex h-8 items-center gap-1.5 border border-warning/40 bg-warning/10 px-2.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-warning"><Eye size={12} aria-hidden="true" /> Release blocked</span>
+                </div>
+                <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                  <div className="border border-brand/30 bg-brand-soft/20 p-3"><p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-brand">Available in this phase</p><p className="mt-1 text-[11px] leading-5 text-text-secondary">Private media preview, card-cover/gallery/runtime roles, alt text, captions and gallery order.</p></div>
+                  <div className="border border-border bg-background p-3"><p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-text-tertiary">Still required before release</p><p className="mt-1 text-[11px] leading-5 text-text-secondary">Isolated React/JSX + Tailwind v4 + Motion build, separate-origin runtime, immutable build artifact and media manifest, security QA and atomic release pointer.</p></div>
+                </div>
+                <button type="button" disabled className="mt-4 inline-flex h-9 cursor-not-allowed items-center gap-2 border border-border px-3 text-xs font-semibold text-text-tertiary opacity-60" title="Public publishing is disabled until all release gates pass">Publish release <span aria-hidden="true">—</span> Not ready</button>
               </div>
             ) : null}
 
