@@ -2,6 +2,8 @@ import "server-only";
 
 const PROJECT_HOST = "vishal-kumar-choudhary-frontend-developer.vercel.app";
 const PROJECT_PREVIEW_HOST = /^vishal-kumar-choudhary-frontend-developer-[a-z0-9-]+\\.vercel\\.app$/i;
+const PROJECT_BRANCH_ALIAS_HOST =
+  /^vishal-kumar-choudh-git-[a-z0-9-]+-vishal-kumar-choudharys-projects\\.vercel\\.app$/i;
 
 function toOrigin(value) {
   if (typeof value !== "string" || !value.trim()) return "";
@@ -19,7 +21,7 @@ function toProjectOrigin(value) {
 
   const hostname = new URL(origin).hostname.toLowerCase();
 
-  if (hostname === PROJECT_HOST || PROJECT_PREVIEW_HOST.test(hostname)) {
+  if (hostname === PROJECT_HOST || PROJECT_PREVIEW_HOST.test(hostname) || PROJECT_BRANCH_ALIAS_HOST.test(hostname)) {
     return origin;
   }
 
@@ -74,6 +76,7 @@ export function getAuthBaseURLConfig() {
     allowedHosts: [
       PROJECT_HOST,
       "vishal-kumar-choudhary-frontend-developer-*.vercel.app",
+      "vishal-kumar-choudh-git-*-vishal-kumar-choudharys-projects.vercel.app",
     ],
     protocol: "https",
     fallback: getCanonicalAuthBaseURL(),
