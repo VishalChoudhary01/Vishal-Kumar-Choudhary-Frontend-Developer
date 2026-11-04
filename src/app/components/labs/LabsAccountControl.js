@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, UserRound } from "lucide-react";
+import Link from "next/link";
+import { Code2, LogOut, UserRound } from "lucide-react";
 
 import { authClient } from "@/app/lib/auth/client";
 import { publishAuthEvent, subscribeAuthEvents } from "@/app/lib/auth/session-events";
@@ -15,6 +16,7 @@ export default function LabsAccountControl() {
   const [loading, setLoading] = useState(false);
   const [session, setSession] = useState(null);
   const [isPending, setIsPending] = useState(true);
+  const [ownerStatus, setOwnerStatus] = useState({ userId: null, isOwner: false });
   const [logoutError, setLogoutError] = useState("");
 
   useEffect(() => {
@@ -51,6 +53,44 @@ export default function LabsAccountControl() {
       window.removeEventListener("focus", onFocus);
     };
   }, []);
+
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId || session?.user?.emailVerified !== true) return undefined;
+
+    let active = true;
+
+    fetch("/api/v1/admin/labs/owner-status", {
+      method: "GET",
+      cache: "no-store",
+      credentials: "same-origin",
+      headers: { Accept: "application/json" },
+    })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return response.json().catch(() => null);
+      })
+      .then((payload) => {
+        if (active) {
+          setOwnerStatus({
+            userId,
+            isOwner: payload?.data?.isOwner === true,
+          });
+        }
+      })
+      .catch(() => {
+        if (active) setOwnerStatus({ userId, isOwner: false });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [session?.user?.id, session?.user?.emailVerified]);
+
+  const isOwner =
+    session?.user?.emailVerified === true &&
+    ownerStatus.userId === session.user.id &&
+    ownerStatus.isOwner;
 
   useEffect(() => {
     if (!open) return undefined;
@@ -131,6 +171,17 @@ export default function LabsAccountControl() {
           <p className="truncate px-3 py-2 text-xs text-text-secondary" title={session.user.email}>
             {session.user.email}
           </p>
+          {isOwner ? (
+            <Link
+              href="/admin/labs/sources"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="flex min-h-10 w-full items-center gap-2 rounded-sm px-3 text-left text-sm transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand"
+            >
+              <Code2 size={15} aria-hidden="true" />
+              Manage Labs sources
+            </Link>
+          ) : null}
           <div className="my-1 h-px bg-border" />
           {logoutError ? (
             <p role="alert" className="px-3 py-2 text-xs leading-5 text-error">
