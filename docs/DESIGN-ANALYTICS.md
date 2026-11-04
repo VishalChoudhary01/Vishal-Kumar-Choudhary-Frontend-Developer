@@ -4,7 +4,7 @@
 **Related:** [PRD](./PRD.md), [Admin design](./DESIGN-ADMIN.md)
 
 ## 1. Purpose
-Give the portfolio owner reliable insight into Lab discovery and engagement, without presenting estimates as exact people counts or implying actions prove downstream outcomes. Analytics are private to authorized admins. Personal user activity is separately scoped to the owning user.
+Give the portfolio owner reliable insight into Lab discovery and engagement, without presenting estimates as exact people counts or implying actions prove downstream outcomes. Analytics are private to the singleton owner/admin. For the first source-engagement release, reporting is aggregate per experiment and reporting period; it does not expose individual users' source-view/copy/like histories.
 
 ## 2. Dashboard structure
 ### Header and global controls
@@ -18,9 +18,10 @@ Give the portfolio owner reliable insight into Lab discovery and engagement, wit
 ### Summary metric cards
 At minimum, display the following where reliable event data exists:
 - Experiment detail views.
-- Like actions and net likes (likes minus unlikes, with definition visible).
-- Full-source access events.
-- Copy-code actions.
+- Current active likes per experiment, successful like actions and successful unlike actions.
+- Successful source-viewer opens (distinct from public experiment detail-page views).
+- Unique verified accounts that opened source.
+- Code-copy actions after a successful Clipboard API write.
 - Preview starts.
 - Instrumented preview interactions.
 - Copies per view or another explicitly defined engagement rate.
@@ -59,23 +60,25 @@ Event names are conceptual until the event schema is approved. Store a consisten
 | `experiment_view` | A qualifying Lab detail view after the agreed deduplication rules | A unique human visitor unless separately justified |
 | `like` | Like state was successfully created/activated | A unique person for guest activity |
 | `unlike` | Like state was successfully removed/deactivated | A negative rating |
-| `source_access` | Authorized full-source response/access flow completed | Source was read or used |
-| `code_copy` | Copy action was triggered/reported by the supported client flow | Code was pasted, executed or shipped |
+| `source_open` | A verified account successfully opened the protected source viewer and the published source response completed | A public detail-page view, proof source was read/understood, or source was used |
+| `code_copy` | The client reported a successful Clipboard API write and the server accepted the idempotent event for a verified account | Code was pasted, executed or shipped |
 | `preview_start` | Preview was successfully initiated under the agreed lifecycle definition | Preview completed successfully |
 | `preview_interaction` | An explicitly instrumented supported interaction occurred | Every possible interaction or meaningful learning |
 
-Only record successful server-confirmed state changes as likes/unlikes. Client-side attempted events should be distinguished from server-confirmed outcomes.
+Only record successful server-confirmed state changes as likes/unlikes. A retry that leaves the like state unchanged must not create another event. Source opens are logged only after a successful authorized source response. Client-side attempted events are never counted as successful copy or like outcomes.
 
 ## 4. Metric definitions
 - **Views:** qualifying `experiment_view` events after documented bot and deduplication rules.
 - **Copy actions:** qualifying `code_copy` events; never label these “code usage.”
 - **Like actions:** successful like state changes; distinguish current active likes from action counts.
 - **Net likes:** successful like actions minus successful unlike actions within the selected interval. State whether this is period net change or current active total.
-- **Source accesses:** successful authorized source access events, not client button clicks alone.
+- **Source opens:** successful authorized source-viewer opens, not public detail-page views or source-button clicks alone. Deduplicate retries for one open using an idempotency key.
+- **Unique verified accounts opening source:** distinct server-derived user IDs with at least one successful source-open event in the selected period; label this as accounts, not people.
+- **Copy actions:** successful Clipboard API write acknowledgements accepted by the server for a verified account; do not call this code usage.
 - **Preview starts:** events meeting the agreed successful-start threshold.
 - **Copies per view:** qualifying copy actions divided by qualifying views for the same period/filter; define behavior when views are zero.
-- **Authenticated activity:** events tied to a valid account under disclosed rules.
-- **Guest activity:** events not tied to an authenticated account; cannot reliably identify a person across devices.
+- **Verified-account activity:** source open/copy/like events are accepted only from a valid Better Auth session with `emailVerified === true`.
+- **Guest/unverified source activity:** not collected because source/copy/like controls are unavailable to those actors.
 - **Unique visitor/session estimates:** do not add until identifier, consent/privacy and deduplication rules are approved.
 
 Metric names and formulas must be displayed or discoverable in the UI. Avoid combining events from incompatible definitions or version scopes.
@@ -94,9 +97,9 @@ Metric names and formulas must be displayed or discoverable in the UI. Avoid com
 - Use idempotency/deduplication keys where appropriate.
 - Apply rate limits and bot/abuse safeguards.
 - Avoid logging full source code, tokens, passwords, raw request headers or unnecessary personal identifiers.
-- Guest likes are best-effort and not guaranteed unique or cross-device.
-- Authenticated likes enforce one active like per user/experiment.
-- Restrict analytics endpoints to authorized roles; prevent arbitrary query filters from accessing personal records.
+- Guest/unverified likes are disabled in the initial Labs engagement policy.
+- Verified-account likes enforce one active like per user/experiment, using a unique state record. Repeated like/unlike retries do not inflate event counts.
+- Restrict analytics endpoints to the singleton owner/admin. Return aggregate counts/trends by experiment and date range; do not expose raw event rows, user IDs or emails in the dashboard.
 - Define analytics retention and deletion policy before production. Content version retention is unlimited, but that does not imply unlimited analytics/user-activity retention.
 - Account deletion must follow the documented treatment of account-linked analytics and likes.
 
@@ -127,3 +130,43 @@ Metric names and formulas must be displayed or discoverable in the UI. Avoid com
 - [ ] Charts have accessible text/table equivalents and responsive behavior.
 - [ ] Rate limits, deduplication, privacy and retention are documented.
 - [ ] Analytics code does not affect the public homepage bundle.
+
+
+## 10. Labs source-engagement dashboard requirements
+
+### Per-experiment metrics
+
+For each experiment/source page, the owner/admin must be able to see:
+- **Experiment detail views:** public experiment-page views (reported separately from source opens).
+- **Source opens:** successful verified-user source-viewer opens.
+- **Unique verified accounts:** distinct verified Better Auth accounts that opened the source during the selected period.
+- **Code copies:** successful Clipboard API copy actions accepted by the server.
+- **Current likes:** active verified-account likes at query time.
+- **Like actions / unlike actions:** server-confirmed like-state transitions during the selected period.
+- **Copies per source open:** copy actions divided by source opens for the same experiment and period. Show no rate when the denominator is zero.
+
+### Collection-wide overview and rankings
+
+- Total source opens, unique verified accounts, copy actions and current active likes across published experiments.
+- Most-opened source pages, most-copied source pages and most-liked experiments.
+- Daily/monthly trends based on the selected date range and configured timezone.
+- Per-experiment rows link to that experiment's analytics detail.
+- A date range selector applies consistently to all period-based metrics. Current active likes are labelled as a current-state count, not a period action count.
+
+### Event correctness
+
+- Source open is counted after the protected source API returns a successful response to a verified account. A public detail-page view or click on "View source" is not a source open.
+- The viewer generates an idempotency key per intentional open; network retries of the same action must not increase the count. A later deliberate reopen/refresh is a new open according to the event deduplication policy.
+- Copy is counted only after the browser reports a successful Clipboard API write and the server accepts the event. Never send clipboard contents or source code in the event request.
+- A like/unlike is counted only when the server changes the unique like-state record. A duplicate request with no state change is not counted again.
+- Every event is attributed to the verified user ID derived from the server session; ignore client-supplied actor IDs.
+- Admin views are aggregates only in the first release. Do not show a user-level event timeline or email address attached to source activity.
+- Event retention, deduplication window, account deletion handling and Privacy Policy disclosure must be approved before production analytics is enabled.
+
+### Required dashboard states
+
+- Distinguish no events from query failure and loading.
+- Show the selected date range, timezone, metric definition and last-updated time only when the backend can provide them accurately.
+- Provide accessible table equivalents to charts and rankings.
+- Do not fabricate zeroes while data is loading or unavailable.
+
