@@ -9,7 +9,7 @@
 
 ## 1. Product outcome
 
-The Studio is an owner-only creative coding workspace. The owner must be able to create an original experiment, write or import its code, attach image/GIF/video assets, run the actual interactive experience, inspect errors, save immutable drafts and publish a complete release.
+The Studio is an owner-only creative coding workspace. The owner must be able to create an original experiment, write or import its code, run the actual interactive experience, inspect errors and save immutable drafts. Image/GIF/video upload is optional and exists only as a fallback when the code preview cannot run or is unsupported.
 
 The public experience is an actual interactive code runtime. A published experiment detail page must render that runtime at its intended size. Optional image/GIF/video fallback media appears only when the runtime cannot run or is unsupported; it is never a substitute for a working code preview.
 
@@ -31,7 +31,7 @@ The editor and compiler dependencies remain lazy-loaded from owner-only routes. 
 
 ### 2.2 Public Labs listing
 
-Each card may show one selected cover asset: an image, GIF or video poster/preview where the owner chooses it. The card also shows experiment metadata and links to the stable detail route. Do not boot every experiment runtime inside the listing; doing so would create unnecessary CPU, memory and network work.
+Each listing card shows experiment metadata and links to the stable detail route. Do not show fallback media in the listing and do not boot every experiment runtime inside the listing; doing so would create unnecessary CPU, memory and network work.
 
 The interactive code runtime is the experiment. Fallback media is not a listing thumbnail, card cover, gallery or in-experiment asset.
 
@@ -113,18 +113,18 @@ Motion is available through the fixed motion/react dependency. Motion code runs 
 
 Owner working copy  
 → validate file tree and package/import policy  
-→ attach an immutable media manifest  
+→ attach an optional single fallback reference when selected  
 → create preview run request  
 → build in an isolated ephemeral build environment  
 → compile JSX/React and local modules  
 → compile Tailwind v4 CSS  
-→ emit static HTML, JS chunks, CSS and asset manifest  
+→ emit static HTML, JS chunks and CSS  
 → run artifact in a separate-origin browser sandbox  
 → collect bounded build/runtime diagnostics  
 → save an immutable draft version  
 → publish an immutable experiment release after all gates pass.
 
-Preview and publication use the same deterministic build contract. A successful local-looking preview is not sufficient if the published build is produced by a different compiler, dependency version or asset manifest.
+Preview and publication use the same deterministic build contract. A successful preview is not sufficient if the published build is produced by a different compiler or dependency version. The optional fallback reference is tracked separately from the code bundle.
 
 ### 4.2 Isolated build worker
 
@@ -254,7 +254,7 @@ Proposed collection for provider-backed assets:
 - Cloudinary asset/public identifiers and resource type.
 - Verified format, byte size, dimensions and video duration where applicable.
 - Processing state: pending, ready, failed or blocked.
-- Safe alt text, caption and optional poster asset ID.
+- Safe alt text and caption for the optional fallback; a poster may be generated for a fallback video if required.
 - Created/updated timestamps and usage/reference metadata.
 
 Provider credentials and upload signatures are never stored in public DTOs. Asset deletion/cleanup checks references before removing the provider object.
@@ -301,7 +301,7 @@ Preview-run status and short-lived artifacts/logs may use a separate LabPreviewR
 11. A later save/preview does not change the public release. Publish the new exact release to replace it.
 12. Unpublish prevents new public runtime/source access; historical releases remain available to the owner for rollback/restore under the approved retention policy.
 
-A successful preview of unsaved code is not publishable by itself. A fallback asset is not a substitute for a successful production-equivalent compiler/runtime validation and cannot make a failed build publishable. Publication requires a successful build for the exact saved source version and exact media manifest being published. Any code, metadata, dependency or fallback-reference change invalidates the prior release validation.
+A successful preview of unsaved code is not publishable by itself. A fallback asset is not a substitute for a successful production-equivalent compiler/runtime validation and cannot make a failed build publishable. Publication requires a successful build for the exact saved source version and, if selected, the exact optional fallback reference. Any code, metadata, dependency or fallback-reference change invalidates the prior release validation.
 
 ## 8. Proposed API/service boundaries
 
@@ -328,7 +328,7 @@ Do not send raw Cloudinary credentials, source content to public endpoints, comp
 - Browser execution is on a dedicated origin with no access to portfolio storage, cookies or DOM.
 - Default network policy blocks external connections and requests to portfolio APIs.
 - Fixed dependency allowlist; no arbitrary package installation, postinstall scripts, remote ESM or external scripts/CDNs.
-- Validate source paths, import graph, archive contents, file count, file bytes, asset manifest and source secrets.
+- Validate source paths, import graph, archive contents, file count, file bytes, the optional fallback reference and source secrets.
 - Uploads use expiring server-signed intents, exact allowed formats and account quotas; verify the provider callback before attaching assets.
 - Draft assets/artifacts are not public. Published assets/artifacts are immutable and tied to the published release pointer.
 - Apply rate limits and cost ceilings to preview builds, video transformations and media uploads.
@@ -340,11 +340,11 @@ Do not send raw Cloudinary credentials, source content to public endpoints, comp
 
 ## 10. Public performance and media behavior
 
-- Keep the Labs listing lightweight: one cover asset per card, responsive transformations, aspect-ratio reservation and lazy loading except for the actual LCP candidate.
+- Keep the Labs listing lightweight and metadata-only; do not load fallback media in cards.
 - Do not start interactive runtime builds/iframes in card lists.
 - Load the published detail-page runtime on demand, with clear loading/error/retry states and a responsive preview canvas.
 - Keep optional fallback media separate from code bundles; load it only when the runtime is unavailable or unsupported.
-- Use generated video posters and appropriate responsive image/video transforms.
+- Use a generated poster and appropriate responsive transform only if an optional fallback video is selected.
 - Pause/stop offscreen previews when practical, and stop the runtime when navigating away.
 - Respect reduced motion for Motion animations, animated GIF behavior and any video auto-preview.
 - Do not use the full source, editor or compiler package on public pages.
@@ -444,9 +444,8 @@ These decisions must be resolved before the corresponding implementation phase. 
 4. Exact fixed dependency versions and package allowlist.
 5. Cloudinary upload limits, transformation quotas, draft access mode and public delivery mode.
 6. Exact max upload size, video duration, dimensions and per-owner storage quota, derived from the actual account plan.
-7. Whether video card auto-preview is enabled; default is poster-only.
-8. Whether additional browser capabilities such as Web Workers, WebGL/Three.js, WebAssembly and controlled outbound API access are added after the initial release.
-9. Whether TypeScript/TSX is added after JavaScript/JSX is stable.
-10. Whether a media-only experiment type is ever needed; the current baseline remains an interactive code experiment with optional fallback media only.
+7. Whether additional browser capabilities such as Web Workers, WebGL/Three.js, WebAssembly and controlled outbound API access are added after the initial release.
+8. Whether TypeScript/TSX is added after JavaScript/JSX is stable.
+9. Whether a media-only experiment type is ever needed; the current baseline remains an interactive code experiment with optional fallback media only.
 
 No package installation, Production configuration change, media quota assumption, provider selection or release publication is authorized merely by this planning document.
