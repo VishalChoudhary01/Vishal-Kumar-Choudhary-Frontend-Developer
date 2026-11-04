@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Heart, LoaderCircle } from "lucide-react";
 
 import { authClient } from "@/app/lib/auth/client";
