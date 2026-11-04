@@ -124,6 +124,29 @@ function validateFiles(input) {
   return { files, totalBytes };
 }
 
+export async function validateOwnerLabPreviewFiles({ user, slug, inputFiles }) {
+  assertOwner(user);
+  const experiment = await getExperiment(slug);
+  if (experiment.isCustom !== true) {
+    throwCode("NOT_FOUND", "Only owner-created experiments can use the isolated React preview.");
+  }
+
+  const { files, totalBytes } = validateFiles(inputFiles);
+  const allowedExtensions = new Set(["html", "js", "jsx", "mjs", "css", "json", "txt", "md"]);
+  const unsupported = files.find((file) => {
+    const extension = file.path.split(".").pop()?.toLowerCase() || "";
+    return !allowedExtensions.has(extension);
+  });
+  if (unsupported) {
+    throwCode(
+      "VALIDATION_ERROR",
+      "The React preview currently supports HTML, JavaScript, JSX, CSS, JSON, text and Markdown files. Unsupported file: " + unsupported.path,
+    );
+  }
+
+  return { files, totalBytes };
+}
+
 function formatVersion(number) {
   return "v" + String(number);
 }
