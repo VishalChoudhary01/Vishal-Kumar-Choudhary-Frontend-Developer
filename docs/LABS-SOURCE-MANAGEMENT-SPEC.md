@@ -90,7 +90,13 @@ The product's existing Guest / Registered User / Admin taxonomy remains. For thi
 
 ## 5. Owner source-management experience
 
-Proposed route family: an owner-only Labs source workspace under the existing admin route convention, for example `/admin/lab/sources`. Exact route naming is **OPEN** until the API/UI implementation slice is approved.
+Proposed route family: an owner-only Labs source workspace under the existing admin route convention, for example `/admin/labs/sources`. Exact route naming is **OPEN** until the API/UI implementation slice is approved.
+
+
+Owner navigation/authentication requirements:
+- If an unauthenticated visitor opens the owner route, preserve the exact internal owner destination through the existing Better Auth login flow.
+- The current `getSafeReturnTo` implementation is intentionally scoped to `/labs`. Do not widen that generic validator to accept arbitrary `/admin` paths.
+- Add a separate narrow owner return-path validator for the exact approved owner source route(s), rejecting external origins, protocol-relative paths, backslashes, encoded traversal and unrelated admin paths. Owner authorization is still rechecked after login; a safe return path is not an authorization grant.
 
 ### 5.1 Source inventory
 
@@ -212,6 +218,8 @@ One document per saved snapshot:
 - `changeSummary` (bounded plain text).
 - `createdBy` and `createdAt`.
 
+Suggested indexes: unique `{ sourceId, versionNumber }`; supporting `{ experimentSlug, createdAt: -1 }`. Version numbers must be allocated atomically per source; hashes must be computed over a deterministic canonical representation of the stored file list.
+
 Content fields are append-only and immutable. Do not update file contents in place after insertion. The source aggregate's pointers select which immutable snapshot is the current draft/published source.
 
 ### 6.3 `lab_source_grants` — per-user access
@@ -235,7 +243,7 @@ Record safe metadata for:
 - Validation failure when useful for owner diagnostics.
 - Bootstrap/provisioning result.
 
-Recommended fields: `actorUserId`, `action`, `experimentSlug`, `versionId`, `targetUserId`/grant reference where applicable, `requestId`, safe result code, and `createdAt`. Never store raw passwords, verification tokens, SMTP/API keys, full source contents or secret values in audit metadata.
+Recommended fields: `actorUserId`, `action`, `experimentSlug`, `versionId`, `targetUserId`/grant reference where applicable, `requestId`, safe result code, and `createdAt`. Suggested index `{ experimentSlug, createdAt: -1 }`. Never store raw passwords, verification tokens, SMTP/API keys, full source contents or secret values in audit metadata.
 
 ## 7. API and domain boundaries
 
