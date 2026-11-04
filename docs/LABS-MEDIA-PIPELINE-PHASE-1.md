@@ -48,7 +48,7 @@ Required:
 - Immutable per-version asset manifests.
 - Asset deletion/cleanup and orphan reconciliation.
 - Public media delivery conversion at publish time.
-- Video poster generation and gallery rendering.
+- Optional fallback-video poster generation, if the selected public delivery mode requires it.
 - Chunked/resumable video transfer.
 
 These remain part of the release phase. Until that work is complete, uploaded assets stay private. The single optional fallback must not replace the live code preview.
