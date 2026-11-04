@@ -99,7 +99,7 @@ Validation limits: 1–40 files, file paths must be safe relative paths, each fi
 - Verified accounts can copy source and like/unlike experiments. Guests and unverified accounts cannot use these source-engagement controls.
 - The owner/admin dashboard receives aggregate source opens, unique verified accounts, copies, active likes and like/unlike trends per experiment; it does not expose individual users' event histories.
 
-**Current implementation status:** the present `src/app/lib/labs/source-access.js` still queries the legacy `LabSourceGrant` model. Until the target implementation is merged/deployed, a verified user without a legacy grant will continue to be denied. Do not confuse the approved target policy with the current runtime behavior.
+**Branch implementation status:** `feat/labs-source-engagement` removes the `LabSourceGrant` lookup from `src/app/lib/labs/source-access.js`; verified users are authorized from their server-side verified session plus the source's published state. The legacy model and collection are intentionally retained for migration safety. The currently deployed/mainline version is not changed until this branch is merged and deployed; do not treat branch code as production behavior.
 
 **Migration requirements:**
 
