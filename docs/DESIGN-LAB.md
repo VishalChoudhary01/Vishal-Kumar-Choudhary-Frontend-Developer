@@ -75,7 +75,7 @@ Support both repository-managed registered components and admin-managed source, 
 - Cache policy must not let an authorized response be reused for guests.
 
 ## 6. Likes
-- Guest and signed-in-unverified likes are disabled in the initial engagement policy. Verified accounts can like/unlike with one active like per user/experiment.
+- Guest likes may use the existing best-effort browser-storage mechanism where available and are not guaranteed unique/cross-device. Verified accounts receive persistent likes with one active like per user/experiment.
 - Authenticated likes are persisted server-side and enforce one active like per user/experiment.
 - Like/unlike state must be clear and accessible.
 - Handle rapid repeated actions, pending states, server failure and retry without creating duplicate records.
