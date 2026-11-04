@@ -56,7 +56,7 @@ The following is grounded in the inspected `feat/labs-public-page` implementatio
 3. Published source versions are immutable and can be restored without overwriting history.
 4. Every registered user with a valid session and verified email can read every published experiment source automatically.
 5. The owner can see aggregate source opens, copy actions, likes/unlikes and active likes for each experiment in the owner/admin dashboard.
-6. Every privileged source mutation is auditable; verified-user source opens, copies and like/unlike transitions are recorded as separate analytics events.
+6. Every privileged source mutation is auditable; verified-user source opens/copies/likes and best-effort guest-like actions where supported are recorded as separate analytics events.
 7. Source code stays server-side until the source endpoint independently authorizes the request.
 8. Editor-only code and dependencies stay out of the public homepage and ordinary Labs listing bundle.
 
@@ -192,7 +192,7 @@ The owner/admin can inspect aggregated engagement per published experiment and a
 - Successful like and unlike state transitions over the selected date range.
 - Daily/monthly trends and rankings for source opens, copies and active likes.
 
-The dashboard shows experiment-level aggregates and reporting periods, not a browsable list of individual users' source-view/copy/like histories or their email addresses. Do not expose user-level event records to the browser. A verified account may open/copy/like multiple experiments; deduplication must prevent retries from multiplying one action. Show verified active likes/actions separately from best-effort guest like/unlike action counts; guest counts are not unique users and may be incomplete.
+The dashboard shows experiment-level aggregates and reporting periods, not a browsable list of individual users' source-view/copy/like histories or their email addresses. Do not expose user-level event records to the browser. Distinguish verified current-like state from anonymous guest-like action counts; guest actions are not unique people. A verified account may open/copy/like multiple experiments; deduplication must prevent retries from multiplying one action. Show verified active likes/actions separately from best-effort guest like/unlike action counts; guest counts are not unique users and may be incomplete.
 
 Source-open events are recorded only after the source endpoint successfully authorizes and returns the published source for a verified account. A public detail-page view is not a source open. Copy events are recorded only after the client reports a successful Clipboard API write; a copy event is not proof that code was pasted, executed or shipped. Like/unlike events are recorded only for actual server-confirmed state transitions.
 
