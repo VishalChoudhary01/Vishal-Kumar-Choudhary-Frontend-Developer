@@ -25,7 +25,7 @@ The following is the inspected code baseline, not a production-readiness certifi
 | Owner identity/authorization and owner management UI | Not implemented | Approve singleton owner identity, implement server guard and owner workspace |
 | Source audit, immutable source versions and engagement analytics storage | Not implemented | Add source-version/audit/likes/events collections, indexes, migration and analytics tests |
 | Isolated execution of stored/admin-authored source | Not implemented and not approved | Separate Phase 8B threat-model and infrastructure decision |
-| General CMS/Admin, media management, analytics and scheduling | Deferred | Begin only after Labs work is complete and separately authorized |
+| General CMS/Admin, media management, portfolio-wide analytics and scheduling | Deferred | Begin only after Labs work is complete and separately authorized; Labs source-engagement aggregates are included in Phase 8 |
 
 Do not mark a row complete because a page renders. Each capability still needs its required direct-request, authorization, failure, accessibility, privacy, performance and regression evidence.
 
