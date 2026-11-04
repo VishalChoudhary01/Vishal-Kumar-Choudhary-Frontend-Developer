@@ -31,6 +31,8 @@ The following is grounded in the inspected `feat/labs-public-page` implementatio
 | Database setup | Better Auth and registration collections are created/used by their current flows | Source collections are not automatically provisioned; the current Atlas screenshot showed neither `lab_sources` nor `lab_source_grants` |
 | Preview execution | Existing public demos are code-owned browser runtimes | No approved sandbox for executing admin-authored source; arbitrary stored source must remain non-executable |
 
+This table captures the pre-implementation \`feat/labs-public-page\` baseline. The current \`feat/labs-source-engagement\` branch has since added the verified-only published-source gate, anonymous/verified engagement models, owner APIs, source editor and immutable-version workflow described below. The legacy grant model remains in the repository but is no longer consulted by the feature-branch source authorization service. Existing Atlas data has not been migrated or cleaned up.
+
 ### 2.1 Important existing constraints
 
 - The current source model allows 1–40 files, safe relative file paths and a per-file character limit of 500,000. The source service also caps the returned source payload at 1,000,000 characters. Revalidate limits using UTF-8 byte sizes before implementing writes; do not silently increase them.
@@ -266,11 +268,11 @@ Record safe metadata for source aggregate creation, draft saves, publish/unpubli
 
 ## 7. API and domain boundaries
 
-Candidate owner-only endpoints (final routes/verbs are owned by `API-CONTRACTS.md` and require review before implementation):
+The following route contracts are implemented on `feat/labs-source-engagement`. They are feature-branch code and are not deployed until the branch is merged and released:
 
 | Operation | Proposed endpoint | Result |
 |---|---|---|
-| List source aggregates | `GET /api/v1/admin/labs/sources` | Paginated owner-only inventory |
+| List source aggregates | `GET /api/v1/admin/labs/sources` | Owner-only inventory for the existing published Labs experiments |
 | Create source aggregate | `POST /api/v1/admin/labs/sources` | Creates empty source head for an existing experiment slug |
 | Read editor state | `GET /api/v1/admin/labs/sources/:slug` | Draft/published pointers and owner-only draft metadata |
 | Save a draft snapshot | `POST /api/v1/admin/labs/sources/:slug/versions` | Validates files and creates immutable draft version |
@@ -278,17 +280,19 @@ Candidate owner-only endpoints (final routes/verbs are owned by `API-CONTRACTS.m
 | Restore a version | `POST /api/v1/admin/labs/sources/:slug/restore/:versionId` | Creates a new draft from an old snapshot |
 | Publish exact version | `POST /api/v1/admin/labs/sources/:slug/publish` | Advances published pointer to a saved version |
 | Unpublish source | `POST /api/v1/admin/labs/sources/:slug/unpublish` | Clears published pointer / stops new reads |
-| Source analytics | `GET /api/v1/admin/labs/sources/:slug/analytics` | Owner-only aggregate opens, unique verified accounts, copies, current likes and like/unlike trends |
-| Read audit | `GET /api/v1/admin/labs/sources/:slug/audit` | Paginated owner-only audit metadata |
+| Source analytics | `GET /api/v1/admin/labs/analytics?days=30` | Owner-only aggregate analytics across experiments; supports 7, 30, 90 or 365 days |
+| Owner status | `GET /api/v1/admin/labs/owner-status` | Safe boolean capability response for the owner navigation link |
+
+The source-management service writes append-only owner audit records. A read-only audit-history API and editor timeline are not part of this first UI slice.
 
 Keep the existing user-facing endpoint `GET /api/v1/labs/:slug/source` as the only regular-user source read. Target policy requires a valid verified Better Auth session + published pointer; no grant lookup is performed. The response remains private/no-store.
 
 
-Verified-user source engagement endpoints (candidate contracts):
-- `POST /api/v1/labs/:slug/source/open` — called after the viewer receives the successful source response; accepts an idempotency key and records one `source_open` event for the verified session.
-- `POST /api/v1/labs/:slug/source/copy` — called only after successful Clipboard API write; accepts source version + idempotency key, rechecks verified session and current publication, and records `code_copy` without receiving clipboard contents.
-- Existing verified-user like/unlike actions create or deactivate the unique `lab_likes` state and record analytics events only when the server confirms a state transition.
-- Owner/Admin aggregate analytics reads use the owner-only source-analytics endpoints; no raw event/user history is returned.
+Engagement endpoints:
+- `GET /api/v1/labs/:slug/engagement` — returns public aggregate like counts and the current actor's like state. It does not create an anonymous cookie for a visitor who has not interacted.
+- `POST /api/v1/labs/:slug/engagement` — toggles one verified-account or anonymous-browser like. Verified accounts are keyed by the server-derived Better Auth user ID. Anonymous identities use a signed HTTP-only cookie and a keyed database digest; anonymous counts do not represent unique people. Signed-in unverified accounts are denied.
+- `POST /api/v1/labs/:slug/source/events` — records `source_open` or `code_copy` for a verified session. Copy events are submitted only after the browser reports clipboard success; clipboard contents are never sent.
+- `GET /api/v1/admin/labs/analytics?days=30` — returns aggregate owner analytics without individual browsing/action histories.
 
 
 All mutations call server-only domain use cases and repositories. Never let UI components query MongoDB or make direct Mongoose calls.
@@ -391,7 +395,7 @@ All mutations call server-only domain use cases and repositories. Never let UI c
 
 1. **Owner bootstrap:** **RESOLVED / LOCKED.** Use the singleton server-only `LABS_OWNER_USER_ID` environment allowlist. The owner is the sole privileged administrator for the initial Labs source-management release. Do not add persisted multi-admin roles in this phase.
 2. **Source access policy:** **RESOLVED / LOCKED (2026-11-04).** Every logged-in account with `emailVerified === true` can read all published experiment source automatically. Guests and signed-in unverified accounts cannot read source. No per-user grant, expiry or revoke workflow exists in the target design; publish/unpublish controls availability per experiment.
-3. **Engagement policy:** **RESOLVED / LOCKED (2026-11-04).** Only verified accounts can open source and copy code. Verified accounts receive persistent likes; existing best-effort public guest-like behavior remains available where supported. The owner dashboard shows per-experiment source-open counts, unique verified-account counts, copy-action counts, current active verified likes, verified like/unlike trends, and separate guest-like action counts where measurable; it does not expose individual users' browsing/action histories in the first release.
+3. **Engagement policy:** **RESOLVED / LOCKED (2026-11-04).** Only verified accounts can open source and copy code. Both anonymous visitors and verified accounts can like/unlike once per browser identity or account per experiment; logged-in unverified users cannot like. Verified likes persist until unlike; anonymous like identity/state expires after 180 days without a visit that refreshes it. The owner dashboard shows per-experiment source-open counts, unique verified-account counts, copy-action counts, current active verified and anonymous likes, and separate like/unlike action counts. Guest totals do not represent unique people; individual browsing/action histories are not exposed.
 4. **Editor:** **RESOLVED for MVP.** Use the lightweight accessible textarea editor; do not add Monaco/CodeMirror in this slice.
 5. **Source import strategy:** **RESOLVED for the first slice.** The owner creates source records and manually adds/pastes allowlisted text files in the owner editor. A bulk repository import and the initial `magnetic-interaction` canonical file inventory remain deferred.
 6. **Version retention:** PRD currently says immutable versions are retained indefinitely. Confirm storage/backup/cost implications before production.
@@ -399,4 +403,4 @@ All mutations call server-only domain use cases and repositories. Never let UI c
 8. **Live preview:** provider, separate origin, CSP, network policy and resource limits remain open and out of this source-only scope.
 9. **Admin scope expansion:** general multi-admin, portfolio CMS, scheduling and media administration remain deferred.
 
-No code implementation, collection migration or source import is authorized merely by this planning document. The source-access and owner policies above are approved; remaining editor/source-import/analytics-retention decisions and the normal phase gates must be resolved before implementation.
+Implementation is authorized by the user's explicit instruction to begin on `feat/labs-source-engagement`; this specification records the approved requirements but does not itself authorize deployment or destructive migration. Before production release, configure `LABS_OWNER_USER_ID`, validate the Atlas indexes/transactions and legacy-data migration plan, verify the Guest / Unverified / Verified / Owner matrix, confirm the Privacy Policy and event-retention/account-deletion treatment, seed the first reviewed source snapshot, and complete build, lint, accessibility and security checks.
