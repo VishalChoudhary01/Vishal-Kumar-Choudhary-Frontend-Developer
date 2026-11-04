@@ -71,6 +71,20 @@ export default function LabSourceAccess({ slug }) {
 
       sourceRef.current = payload.data;
       setSource(payload.data);
+      fetch("/api/v1/labs/" + encodeURIComponent(slug) + "/source/events", {
+        method: "POST",
+        cache: "no-store",
+        credentials: "same-origin",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          eventType: "source_open",
+          sourceVersion: payload.data.version,
+          eventId: globalThis.crypto?.randomUUID?.() || "open_" + Date.now() + "_" + Math.random().toString(36).slice(2),
+        }),
+      }).catch(() => {});
       setSelectedFile(0);
       setState("loaded");
     } catch {
@@ -163,6 +177,21 @@ export default function LabSourceAccess({ slug }) {
 
     try {
       await navigator.clipboard.writeText(file.content);
+      fetch("/api/v1/labs/" + encodeURIComponent(slug) + "/source/events", {
+        method: "POST",
+        cache: "no-store",
+        credentials: "same-origin",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          eventType: "code_copy",
+          sourceVersion: source.version,
+          filePath: file.path,
+          eventId: globalThis.crypto?.randomUUID?.() || "copy_" + Date.now() + "_" + Math.random().toString(36).slice(2),
+        }),
+      }).catch(() => {});
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1600);
     } catch {
@@ -191,7 +220,7 @@ export default function LabSourceAccess({ slug }) {
                 Your account doesn&apos;t currently have permission to view this experiment&apos;s source code.
               </p>
               <p className="mt-1 text-xs text-text-tertiary">
-                You&apos;re signed in, but this source is not available to your account.
+                You&apos;re signed in, but this source is currently unpublished.
               </p>
               <Link
                 href={"/labs/" + slug}
@@ -261,7 +290,7 @@ export default function LabSourceAccess({ slug }) {
               <div className="min-w-0 flex-1">
                 <h2 className="text-base font-semibold">View the source</h2>
                 <p className="mt-1 max-w-2xl text-sm leading-6 text-text-secondary">
-                  Protected source snapshots are stored separately from the public demo runtime and are available only to accounts that have been granted access.
+                  Protected source snapshots are stored separately from the public demo runtime and are available to every account with a verified email.
                 </p>
                 {state === "verification" ? (
                   <AuthMessage title="Verify your email">
