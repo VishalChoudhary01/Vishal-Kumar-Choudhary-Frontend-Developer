@@ -1,6 +1,6 @@
 # Portfolio Platform — Documentation Index
 
-**Status:** Requirements baseline; Labs/auth implementation in progress; CMS/Admin implementation deferred.  
+**Status:** Labs/authentication foundation implemented; owner-managed source lifecycle planned; CMS/Admin implementation deferred.  
 **Branch:** `feat/labs-public-page` (current Labs implementation branch)
 
 This documentation defines the proposed portfolio platform extension. It is not proof that any feature has been implemented or that infrastructure decisions have been validated against the current repository.
