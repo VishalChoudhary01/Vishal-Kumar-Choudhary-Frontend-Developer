@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
 import { connectToDatabase } from "@/app/lib/db/mongoose";
 import LabSource from "@/app/lib/labs/models/LabSource";
+import LabSourceVersion from "@/app/lib/labs/models/LabSourceVersion";
 import { recordVerifiedSourceEvent } from "@/app/lib/labs/engagement";
 import { getPublishedLabExperimentBySlug } from "@/app/data/labsExperiments";
 
@@ -76,11 +77,25 @@ export async function POST(request, { params }) {
   try {
     await connectToDatabase();
 
-    const source = await LabSource.findOne({ slug, published: true })
-      .select("version files")
+    const source = await LabSource.findOne({ slug })
+      .select("version files published publishedVersionId")
       .lean();
 
-    if (!source) {
+    if (!source || (source.published !== true && !source.publishedVersionId)) {
+      return json({ error: { code: "NOT_FOUND", message: "Source is not available." } }, 404);
+    }
+
+    let snapshot = source;
+    if (source.publishedVersionId) {
+      snapshot = await LabSourceVersion.findOne({
+        versionId: source.publishedVersionId,
+        experimentSlug: slug,
+      })
+        .select("version files")
+        .lean();
+    }
+
+    if (!snapshot || !Array.isArray(snapshot.files)) {
       return json({ error: { code: "NOT_FOUND", message: "Source is not available." } }, 404);
     }
 
@@ -90,8 +105,9 @@ export async function POST(request, { params }) {
         return json({ error: { code: "INVALID_FILE", message: "A valid source file is required." } }, 400);
       }
 
-      const exists = Array.isArray(source.files) &&
-        source.files.some((file) => file?.path === body.filePath && typeof file.content === "string");
+      const exists = snapshot.files.some(
+        (file) => file?.path === body.filePath && typeof file.content === "string",
+      );
 
       if (!exists) {
         return json({ error: { code: "INVALID_FILE", message: "The requested source file is not available." } }, 404);
@@ -102,7 +118,7 @@ export async function POST(request, { params }) {
 
     if (
       typeof body?.sourceVersion !== "string" ||
-      body.sourceVersion !== source.version
+      body.sourceVersion !== snapshot.version
     ) {
       return json({ error: { code: "SOURCE_VERSION_CHANGED", message: "The published source has changed. Refresh and try again." } }, 409);
     }
@@ -111,7 +127,7 @@ export async function POST(request, { params }) {
       eventType,
       slug,
       userId: session.user.id,
-      sourceVersion: source.version,
+      sourceVersion: snapshot.version,
       filePath,
       eventId,
     });
