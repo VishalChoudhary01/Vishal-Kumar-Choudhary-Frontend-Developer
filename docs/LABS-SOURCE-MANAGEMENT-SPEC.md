@@ -327,8 +327,8 @@ All mutations call server-only domain use cases and repositories. Never let UI c
 ## 11. Implementation phases and gates
 
 ### Phase A — Confirm policy and owner bootstrap
-- **Complete — user approved 2026-11-04:** singleton Owner identity uses server-only `LABS_OWNER_USER_ID`; owner is the sole privileged administrator for the first release and manages all Labs source lifecycle and access-grant operations.
-- **Locked baseline:** regular registered users require an explicit per-experiment grant.
+- **Complete — user approved 2026-11-04:** singleton Owner identity uses server-only `LABS_OWNER_USER_ID`; owner is the sole privileged administrator for the first release and manages all Labs source lifecycle and source-engagement analytics.
+- **Locked baseline:** every registered user with `emailVerified === true` automatically accesses all published source; no per-user grant is required.
 - Confirm editor MVP (basic text editor vs new editor dependency).
 - **Gate:** owner authorization tests are designed before owner routes exist.
 
@@ -336,7 +336,7 @@ All mutations call server-only domain use cases and repositories. Never let UI c
 - Evolve `LabSource` to a source aggregate/head and add immutable version + audit repositories.
 - Retire the legacy `LabSourceGrant` model and `lab_source_grants` collection after safe migration/reconciliation; introduce `lab_likes` and `lab_analytics_events` with approved indexes.
 - Add idempotent database/index bootstrap and a safe migration/rollback plan.
-- **Gate:** integration tests cover existing/empty collections, duplicate slugs/grants, immutable versions, failed writes and migration replay.
+- **Gate:** integration tests cover existing/empty collections, duplicate slugs/likes/events, immutable versions, failed writes and migration replay.
 
 ### Phase C — Server use cases and API
 - Implement create source, save draft, list/view versions, restore, publish/unpublish and audit use cases; implement verified-user like/unlike and source-open/copy analytics.
