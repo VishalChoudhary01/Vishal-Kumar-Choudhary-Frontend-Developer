@@ -192,7 +192,7 @@ The owner/admin can inspect aggregated engagement per published experiment and a
 - Successful like and unlike state transitions over the selected date range.
 - Daily/monthly trends and rankings for source opens, copies and active likes.
 
-The dashboard shows experiment-level aggregates and reporting periods, not a browsable list of individual users' source-view/copy/like histories or their email addresses. Do not expose user-level event records to the browser. A verified account may open/copy/like multiple experiments; deduplication must prevent retries from multiplying one action.
+The dashboard shows experiment-level aggregates and reporting periods, not a browsable list of individual users' source-view/copy/like histories or their email addresses. Do not expose user-level event records to the browser. A verified account may open/copy/like multiple experiments; deduplication must prevent retries from multiplying one action. Show verified active likes/actions separately from best-effort guest like/unlike action counts; guest counts are not unique users and may be incomplete.
 
 Source-open events are recorded only after the source endpoint successfully authorizes and returns the published source for a verified account. A public detail-page view is not a source open. Copy events are recorded only after the client reports a successful Clipboard API write; a copy event is not proof that code was pasted, executed or shipped. Like/unlike events are recorded only for actual server-confirmed state transitions.
 
@@ -246,18 +246,19 @@ One current like-state record per verified Better Auth user and experiment:
 - `active` boolean.
 - `createdAt`, `updatedAt`, and the timestamps of the latest state transition.
 
-Use a unique index on `{ userId, experimentSlug }`. A repeated like/unlike request that does not change state must not create another like action event. Guest and unverified-user likes are disabled. Keep the current active-like count derivable from state records or a server-maintained aggregate with reconciliation.
+Use a unique index on `{ userId, experimentSlug }`. A repeated verified like/unlike request that does not change state must not create another verified like action event. Guest and signed-in-unverified users retain the existing best-effort anonymous public-like behavior where the public UI supports it; their current like state is not stored as an account entitlement or guaranteed across devices. Where guest-like telemetry is accepted, count `guest_like` / `guest_unlike` actions separately without claiming unique people.
 
 ### 6.4 `lab_analytics_events` — source engagement events
 
-Append-only events for `source_open`, `code_copy`, `like` and `unlike`:
-- `eventId`/idempotency key unique per accepted user action.
+Append-only events for `source_open`, `code_copy`, verified `like` / `unlike`, and best-effort guest `guest_like` / `guest_unlike` actions:
+- `eventId` / idempotency key unique per accepted action.
 - `eventType` from the strict allowlist.
 - `experimentSlug` and the published `sourceVersionId` where relevant.
-- `actorUserId` from the Better Auth session (no client-supplied identity).
+- `actorCategory`: `verified_user` or `guest`.
+- `actorUserId` is present only for a verified-user event and is always derived from the Better Auth session; guest events have no user ID.
 - `occurredAt` server timestamp and bounded safe event metadata.
 
-Do not store email, raw IP, clipboard contents, source text, passwords or authentication tokens. Add indexes for `{ experimentSlug, occurredAt: -1 }` and `{ eventType, occurredAt: -1 }` only after confirming query patterns. Source-view/copy events are not likes; likes are additionally represented by the unique `lab_likes` current-state record.
+Only verified sessions can generate `source_open`, `code_copy`, `like` or `unlike`. Guest events are restricted to best-effort public like/unlike actions where the existing public interaction is supported; do not create a stable guest identity or claim unique-person counts. Do not store email, raw IP, clipboard contents, source text, passwords or authentication tokens. Add indexes for `{ experimentSlug, occurredAt: -1 }` and `{ eventType, occurredAt: -1 }` only after confirming query patterns. Persistent verified likes are additionally represented by the unique `lab_likes` current-state record.
 
 ### 6.5 `lab_source_audit_events` — append-only owner audit
 
@@ -381,7 +382,7 @@ All mutations call server-only domain use cases and repositories. Never let UI c
 - [ ] Source files never appear in guest HTML, RSC payloads, public DTOs, source maps or public caches.
 - [ ] All private responses use no-store/private cache headers.
 - [ ] Failed or stale mutations do not overwrite newer draft/published state.
-- [ ] Audit records exist for owner source mutations; analytics records exist for source opens, copy actions and like/unlike transitions without raw source/secrets.
+- [ ] Audit records exist for owner source mutations; analytics records exist for verified source opens/copies/likes and separate anonymous guest-like actions where supported, without raw source/secrets.
 - [ ] Database bootstrap/migration is idempotent and has a rollback/reconciliation procedure.
 - [ ] Owner editor and its dependencies do not affect homepage/Labs listing loading.
 - [ ] Existing public demos, routes, UI, animation, SEO, accessibility and behavior remain unchanged.
