@@ -1,8 +1,8 @@
 # Labs & Authentication — Product and UX Design Specification
 
 **Document:** `docs/LABS-AND-AUTHENTICATION-DESIGN-SPEC.md`  
-**Version:** 1.9  
-**Status:** Detailed UX baseline; Labs authentication and protected-source foundation implemented, deployment/configuration and security verification still required  
+**Version:** 2.0
+**Status:** Labs public experience and authentication/source-management implementation are on `feat/labs-platform-integration`; Atlas, Vercel environment, end-to-end and browser QA gates remain.
 **Updated on:** 2026-11-04  
 **Scope:** Labs listing, experiment detail/workspace, protected source access, Labs authentication UX, repository-aligned stack, module boundaries, hooks, components and state ownership  
 **Companion repository documents:** `docs/PRD.md`, `docs/ARCHITECTURE.md`, `docs/API-CONTRACTS.md`, `docs/PROJECT-STRUCTURE.md`, `docs/IMPLEMENTATION-PLAN.md`, and `docs/THREAT-MODEL.md`
@@ -28,7 +28,7 @@ This file records the product and UX decisions made for Labs and its authenticat
 
 1. Read this document before designing or implementing Labs or its authentication screens.
 2. Read the companion architecture reference before changing repository structure, API boundaries, database models, data flow, or infrastructure.
-3. This document is a **product/UX specification**, not permission to begin implementation. Do not write or modify application code until the user explicitly authorizes implementation.
+3. This document remains the product/UX source of truth. The user explicitly authorized implementation on `feat/labs-platform-integration`; feature and bug-fix work must land on that integration branch. Do not merge into `main`, deploy Production, or run destructive data migrations without the corresponding release approval.
 4. Do not replace, redesign, migrate, or regress the existing portfolio UI, interactions, animations, responsive behavior, SEO, or project-detail experience.
 5. Keep the existing application in JavaScript. Do not introduce TypeScript or substitute the approved stack without explicit approval.
 6. Do not invent an authentication provider, social provider, auth library, email service, session lifetime, password policy, authorization tier, route path, API schema, database schema, or Cloudinary upload policy where this document marks the item OPEN.
@@ -83,7 +83,7 @@ Do not put Labs records inside `portfolio.projects`, and do not flatten project 
 ### 1.3 Current priority
 
 1. Finalize Labs product and UX design.
-2. Implement and validate the Labs experience after explicit implementation authorization.
+2. Implement and validate the Labs experience on the approved integration branch.
 3. Complete the Labs authentication screens and required authentication behavior as part of the Labs scope.
 4. Only after Labs is complete, begin CMS/Admin design and implementation.
 
@@ -208,7 +208,7 @@ The architecture reference identifies an endpoint concept such as `GET /api/v1/l
 - `/labs` loads lightweight experiment metadata and optimized thumbnails/posters only.
 - `/labs/[slug]` loads only the selected experiment runtime.
 - Heavy dependencies are dynamically imported at the feature boundary.
-- Monaco is dynamically imported only when an authorized user opens the source viewer. It must not be imported globally or in the Labs listing.
+- The protected source viewer uses the lightweight text viewer/editor implementation. No Monaco/CodeMirror dependency is installed; do not add one without an approved dependency decision.
 - Media is lazy-loaded where appropriate. Videos should use a poster first, avoid unnecessary preload, and not autoplay unless the individual experiment explicitly requires it.
 - Avoid layout shift by reserving media/canvas dimensions and providing stable loading placeholders.
 - Public metadata may be cached appropriately; protected source must never be publicly cached.
@@ -519,7 +519,7 @@ Important runtime distinction:
 - If an experiment requires user-authored/admin-managed source execution, a restricted preview, or capabilities beyond a code-owned public demo, it must use the separately approved isolated preview boundary. The hosting/provider, origin, CSP, dependency allowlist, network policy and resource limits remain OPEN until the threat-model gate is passed.
 - A restricted interactive preview may have its own authentication/authorization requirement. That is distinct from the public demo permission.
 - Full source remains protected and is never returned to guests.
-- No source bytes (full or partial) are returned to guests or signed-in unverified accounts. Only signed-in verified accounts can load/copy published source. The existing best-effort public experiment-like behavior remains distinct from source access.
+- No source bytes (full or partial) are returned to guests or signed-in unverified accounts. Anonymous visitors may like/unlike the experiment without viewing source; verified accounts may view/copy source and like/unlike.
 
 Authentication and authorization apply to protected source and any separately restricted preview functionality, not to ordinary public browsing or demos explicitly published as public.
 
@@ -538,24 +538,24 @@ Authentication and authorization apply to protected source and any separately re
 
 1. User selects `Sign in to view source` or `Create an account`.
 2. Preserve a validated internal return destination identifying the current experiment/source target.
-3. If anonymous, complete the chosen authentication flow.
-4. Email verification may be required after registration.
+3. If anonymous, complete the chosen authentication flow. If signed in but unverified, direct the user to the email-verification/resend flow.
+4. Email verification is required after registration before protected source can be requested.
 5. After verification, user manually signs in.
 6. After successful sign-in, return to the preserved destination.
 7. Server authenticates and separately authorizes the source request.
 8. If authorized, load the protected source viewer.
 9. If authenticated but unauthorized, show the Access Denied state below.
 
-**Target policy (locked 2026-11-04):** a valid signed-in session with `emailVerified === true` automatically grants read access to every published experiment source. Email verification is the source-access gate; there is no owner-issued per-user grant. This does not grant access to drafts or owner-management operations.
+**Target policy (locked 2026-11-04):** a valid signed-in session with `emailVerified === true` automatically grants read access to every published experiment source. Email verification is the source-access gate; there is no owner-issued per-user grant. Anonymous visitors can like/unlike without source access; signed-in unverified users cannot like. This does not grant access to drafts or owner-management operations.
 
 ### 5.4 Protected source viewer and Monaco
 
 - Source code is not loaded until the server confirms authentication and authorization.
-- Monaco is dynamically imported only when an authorized user opens the source viewer.
+- The protected source viewer uses the lightweight text viewer/editor implementation. No Monaco/CodeMirror dependency is installed; do not add one without an approved dependency decision.
 - Do not load Monaco on the homepage, project pages, Labs listing, or ordinary experiment demo page.
 - Do not send source in unauthenticated HTML, route data, public APIs, or metadata.
 - Do not publicly cache source responses.
-- Exact viewer controls, editor theme mapping, source-file navigation and final copy/download presentation remain OPEN. Source snapshot lifecycle, immutable versioning, owner workspace and verified-user engagement analytics are defined by Section 37 and `LABS-SOURCE-MANAGEMENT-SPEC.md`.
+- The implemented viewer supports source-file navigation and file copy; source download and syntax-highlighting editor dependencies remain out of scope.
 
 ### 5.5 Access Denied state
 
@@ -564,8 +564,8 @@ Authentication and authorization apply to protected source and any separately re
 Copy:
 
 - Heading: `Access not available`
-- Description: `Your account doesn't currently have permission to view this experiment's source code.`
-- Supporting status text may say: `You're signed in, but this source is not available to your account.`
+- Description: `This experiment's source code has not been published yet.`
+- Supporting status text may say: `Published source will be available automatically to every verified Labs account.`
 - Action: `Back to experiment`
 
 Visual treatment:
@@ -586,7 +586,7 @@ Behavior:
 - Back to experiment navigates to the public experiment detail page.
 - Do not add `Request access` until a real access-request workflow exists.
 
-**LOCKED — TARGET SOURCE-ACCESS POLICY (USER APPROVED 2026-11-04):** any signed-in registered account with `emailVerified === true` can access all published experiment source automatically. Guests and signed-in unverified accounts cannot view/copy source. There is no per-user source grant, expiry or revoke workflow. The singleton Owner uses a separate server-only owner authorization path for drafts, source editing, versions and publication. The current deployed source route still contains a legacy grant check and must be migrated before this target policy is live. Detailed owner identity, source lifecycle, verified-user likes, source-open/copy analytics, data migration and audit requirements are specified in `LABS-SOURCE-MANAGEMENT-SPEC.md`.
+**LOCKED — TARGET SOURCE-ACCESS POLICY (USER APPROVED 2026-11-04):** any signed-in registered account with `emailVerified === true` can access all published experiment source automatically. Guests and signed-in unverified accounts cannot view/copy source. Anonymous visitors and verified accounts can like/unlike once per browser identity/account per experiment; signed-in unverified accounts cannot like. There is no per-user source grant, expiry or revoke workflow. The singleton Owner uses a separate server-only owner authorization path for drafts, source editing, versions and publication. The integration branch implementation is in `feat/labs-platform-integration`; release remains gated by owner/SMTP environment setup, Atlas migration and end-to-end QA. Detailed lifecycle/API/analytics requirements are in `LABS-SOURCE-MANAGEMENT-SPEC.md` and `LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md`.
 
 ---
 
@@ -1771,7 +1771,7 @@ Authentication/email/session variable names are not finalized. Do not invent nam
 
 ## 24. Proposed Labs Folder Structure — Adapted to This Repository
 
-**Status:** Proposed target structure only. These folders/files do not all exist. Create only the paths needed by an approved implementation phase.
+**Status:** Labs public experience and authentication/source-management implementation are on `feat/labs-platform-integration`; Atlas, Vercel environment, end-to-end and browser QA gates remain.
 
 The following proposal uses the current src/app convention and keeps public routes, feature UI, client hooks, server-only data access and experiment runtimes separated.
 
