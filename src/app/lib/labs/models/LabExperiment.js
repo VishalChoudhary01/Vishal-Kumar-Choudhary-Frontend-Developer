@@ -2,7 +2,7 @@ import "server-only";
 
 import mongoose from "mongoose";
 
-const MEDIA_ATTACHMENT_ROLES = ["card-cover", "detail-gallery", "in-experiment"];
+const MEDIA_ATTACHMENT_ROLES = ["fallback-preview"];
 
 const labMediaAttachmentSchema = new mongoose.Schema(
   {
@@ -11,19 +11,10 @@ const labMediaAttachmentSchema = new mongoose.Schema(
       type: [{ type: String, enum: MEDIA_ATTACHMENT_ROLES }],
       required: true,
       validate: {
-        validator: (roles) => Array.isArray(roles) && roles.length > 0 && new Set(roles).size === roles.length,
-        message: "Choose at least one unique media attachment role.",
+        validator: (roles) => Array.isArray(roles) && roles.length === 1 && roles[0] === "fallback-preview",
+        message: "Media may only be attached as an optional fallback preview.",
       },
     },
-    assetKey: {
-      type: String,
-      default: null,
-      trim: true,
-      lowercase: true,
-      maxlength: 64,
-      match: /^[a-z][a-z0-9]*(?:[-.][a-z0-9]+)*$/,
-    },
-    position: { type: Number, default: 0, min: 0, max: 99 },
     altText: { type: String, default: "", trim: true, maxlength: 300 },
     caption: { type: String, default: "", trim: true, maxlength: 500 },
   },
@@ -68,8 +59,8 @@ const labExperimentSchema = new mongoose.Schema(
       type: [labMediaAttachmentSchema],
       default: [],
       validate: {
-        validator: (attachments) => Array.isArray(attachments) && attachments.length <= 100,
-        message: "An experiment can have at most 100 media attachments.",
+        validator: (attachments) => Array.isArray(attachments) && attachments.length <= 1,
+        message: "An experiment can have at most one optional fallback preview.",
       },
     },
     status: { type: String, required: true, enum: ["draft", "published"], default: "draft", index: true },
