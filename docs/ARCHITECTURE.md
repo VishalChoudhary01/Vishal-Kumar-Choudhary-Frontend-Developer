@@ -137,14 +137,15 @@ Middleware may be used for lightweight request routing, canonical redirects, coa
 - Keep public routes working without unnecessary session/database lookups.
 
 ## 6. Authorization policy
-Roles: Guest, Registered User, Admin.
-- Guest: published public metadata/media and allowed partial source only.
-- Registered User: guest access plus authorized full source, isolated interactive preview, likes and own dashboard/account data.
-- Admin: all approved management operations after server-side verification.
-- Admin assignment occurs only through trusted manual provisioning.
-- Check ownership and resource state in the use case, not only at route entry.
-- Protect against IDOR by checking every resource access against actor and resource policy.
-- Preview, draft, version and source endpoints use explicit private cache policy.
+Roles/capabilities: Guest, Registered User (email unverified), Verified Registered User, and singleton Owner/Admin.
+- Guest: published public metadata/media and explicitly public code-owned demos only. No source files, source snippets, source copying or source likes.
+- Registered User with unverified email: guest capabilities only; no source, copy or like controls.
+- Verified Registered User: full source for every published experiment automatically; may copy source and like/unlike experiments. No per-user source grant is required.
+- Owner/Admin: all approved management operations after server-side singleton-owner verification, including draft/version/source management and aggregate source-engagement analytics.
+- Owner assignment occurs only through trusted server-side `LABS_OWNER_USER_ID` provisioning; public registration never elevates privileges.
+- Check identity, verification, publication state and resource state in the use case, not only at route entry.
+- Protect against IDOR by deriving actor identity from the server session and checking each resource access.
+- Preview, draft, version, source, analytics and owner endpoints use explicit private/no-store cache policy as applicable.
 - Deny by default; return safe error shapes without leaking record existence when sensitive.
 
 ## 7. Data and cache boundaries
