@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import LabSourceInventory from "@/app/components/labs/admin/LabSourceInventory";
 import { ArrowLeft, Code2, Copy, Eye, Heart, Users } from "lucide-react";
 
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
@@ -88,6 +89,8 @@ export default async function LabsSourceAdminPage() {
           <Metric icon={Copy} label="Code copies" value={totals.codeCopies} detail="Reported after clipboard success" />
           <Metric icon={Heart} label="Active likes" value={totals.totalActiveLikes} detail={number(totals.activeAnonymousLikes) + " anonymous · " + number(totals.activeVerifiedLikes) + " verified"} />
         </section>
+
+        <LabSourceInventory />
 
         <section className="mt-10">
           <div className="flex flex-wrap items-end justify-between gap-4">
