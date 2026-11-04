@@ -5,6 +5,7 @@ import { isLabsOwner } from "@/app/lib/labs/owner-access";
 import {
   getOwnerLabSource,
   listOwnerLabVersions,
+  listOwnerLabAuditEvents,
 } from "@/app/lib/labs/source-management";
 import LabSourceEditor from "@/app/components/labs/admin/LabSourceEditor";
 
@@ -23,12 +24,19 @@ export default async function LabsSourceEditorPage({ params }) {
   const { slug } = await params;
 
   try {
-    const [source, versions] = await Promise.all([
+    const [source, versions, audit] = await Promise.all([
       getOwnerLabSource({ user: session.user, slug }),
       listOwnerLabVersions({ user: session.user, slug }),
+      listOwnerLabAuditEvents({ user: session.user, slug, limit: 20 }),
     ]);
 
-    return <LabSourceEditor initialSource={source} initialVersions={versions} />;
+    return (
+      <LabSourceEditor
+        initialSource={source}
+        initialVersions={versions}
+        initialAudit={audit}
+      />
+    );
   } catch (error) {
     if (error?.code === "NOT_FOUND") notFound();
     throw error;
