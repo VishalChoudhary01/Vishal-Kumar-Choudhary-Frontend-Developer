@@ -182,9 +182,9 @@ Do not mark a row complete because a page renders. Each capability still needs i
 
 ## Phase 9 — Likes, user dashboard and analytics
 **Work**
-- Keep guest likes disabled; implement verified-account likes with one active state per user/experiment.
+- Preserve best-effort guest public likes where supported; implement verified-account likes with one persistent active state per user/experiment.
 - Add server-validated source-open, code-copy, like and unlike event schema with idempotency, rate limits and abuse protections.
-- Build owner/admin aggregate source-engagement dashboard with date ranges, per-experiment source opens/unique verified accounts/copies/active likes/like-unlike trends. Keep individual user histories out of the first release.
+- Build owner/admin aggregate source-engagement dashboard with date ranges, per-experiment source opens/unique verified accounts/copies/active verified likes/verified like-unlike trends, and separate guest-like action counts where measurable. Keep individual user histories out of the first release.
 - User dashboard personal activity remains separately scoped and must not be confused with owner aggregate reporting.
 - Document every metric, denominator, event source and known limitation.
 
