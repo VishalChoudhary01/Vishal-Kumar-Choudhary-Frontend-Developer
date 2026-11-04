@@ -284,7 +284,7 @@ These are candidate endpoints, not permission to build a full CMS. Same-app muta
 
 ### Proposed source domain records
 
-- `lab_sources`: unique experiment slug, `draftVersionId`, `publishedVersionId`, created/updated actor and timestamps.
+- `lab_sources`: unique canonical `slug` (retain the current field name), `draftVersionId`, `publishedVersionId`, created/updated actor and timestamps.
 - `lab_source_versions`: source ID/slug, monotonic version number, immutable files, server-calculated content hash, parent version, bounded change summary, actor and timestamp.
 - `lab_source_grants`: canonical Better Auth user ID, experiment slug, active state, grantor, grant/revoke timestamps and optional expiry. Preserve the current unique user/experiment index.
 - `lab_source_audit_events`: actor, action, experiment, version/target user references, request ID, safe outcome code and timestamp. No source text, credentials, raw tokens or secrets.
