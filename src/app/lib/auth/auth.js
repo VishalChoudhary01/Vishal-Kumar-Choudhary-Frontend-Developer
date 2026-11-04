@@ -6,6 +6,7 @@ import { mongodbAdapter } from "@better-auth/mongo-adapter";
 import { betterAuth } from "better-auth";
 import { dash } from "@better-auth/infra";
 import { areLegalDocumentsConfigured } from "@/app/lib/legal/policies";
+import { getAuthBaseURL } from "./base-url";
 
 import { sendAuthEmail, isAuthEmailConfigured } from "./email";
 import {
@@ -19,7 +20,7 @@ const configuredSecret = process.env.BETTER_AUTH_SECRET;
 const isDatabaseConfigured = Boolean(
   configuredMongoUri && configuredDatabaseName && configuredSecret,
 );
-const baseURL = process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const baseURL = getAuthBaseURL();
 const trustedOrigins = [
   baseURL,
   ...(process.env.BETTER_AUTH_TRUSTED_ORIGINS || "").split(",").map((value) => value.trim()).filter(Boolean),
