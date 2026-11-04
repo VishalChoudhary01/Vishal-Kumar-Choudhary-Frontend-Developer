@@ -1,7 +1,7 @@
 "use client";
 
-import { Component, lazy, Suspense, useMemo } from "react";
-import { loadLabRuntime } from "./registry";
+import { Component, Suspense } from "react";
+import { getLabRuntimeComponent } from "./registry";
 
 function RuntimeLoadingState() {
   return (
@@ -62,10 +62,7 @@ export default function LabRuntimeBoundary({
   restartKey,
   isFullscreen,
 }) {
-  const Runtime = useMemo(() => {
-    const loader = loadLabRuntime(runtimeKey);
-    return loader ? lazy(loader) : null;
-  }, [runtimeKey]);
+  const Runtime = getLabRuntimeComponent(runtimeKey);
 
   if (!Runtime) {
     return <RuntimeUnavailableState />;
