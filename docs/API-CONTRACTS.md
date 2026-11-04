@@ -69,11 +69,12 @@ These paths are candidate REST endpoints; the same use cases may be Server Actio
 
 ### Lab
 - `GET /api/lab` — published listing with bounded query parameters for search, filters, sort and pagination.
-- `GET /api/lab/:slug` — published experiment metadata and guest-safe partial source only.
-- `POST /api/lab/:id/like` — create/activate like under actor-specific policy.
-- `DELETE /api/lab/:id/like` — remove authenticated like; guest behavior must be explicitly defined.
-- `GET /api/v1/labs/:slug/source` — implemented authenticated full-source read; currently requires a verified Better Auth session and a separate active per-user/per-experiment grant; private/no-store response. A separate owner source-management authorization path is planned and is not yet implemented.
-- `POST /api/lab/:id/copy-event` — record supported copy action with abuse controls; never accept source content as a trusted event claim.
+- `GET /api/lab/:slug` — published experiment metadata and public demo references only; never source file contents.
+- `POST /api/lab/:id/like` — create/activate a like for a valid verified Better Auth user; server confirms a state transition.
+- `DELETE /api/lab/:id/like` — remove the current verified user's like; no guest/unverified likes in the initial policy.
+- `GET /api/v1/labs/:slug/source` — current implementation requires verified session + legacy per-user grant; target implementation requires a valid Better Auth session, `emailVerified === true`, and a published source version only. Remove the grant lookup; return private/no-store.
+- `POST /api/v1/labs/:slug/source/copy` — record a code-copy action after a successful client Clipboard API write; server rechecks verified session and published source, validates an idempotency key and never accepts clipboard/source content.
+- `POST /api/v1/labs/:slug/source/open` — record a source-viewer open after a successful authorized source load; server derives the actor and source version, and deduplicates retries with an idempotency key.
 - `POST /api/lab/:id/preview-session` — authorize preview launch; actual execution is delegated to approved isolated infrastructure.
 - `POST /api/lab/:id/preview-events` — accept only allowlisted, bounded, validated instrumented events.
 - `GET /api/user/dashboard` — current user's dashboard data only.
@@ -103,10 +104,12 @@ Gallery attach/detach/order changes may be content-draft mutations rather than i
 
 ### Analytics
 - `POST /api/analytics/events` — ingest allowlisted client-observable events with validation/rate limiting/deduplication.
-- `GET /api/admin/analytics/summary` — aggregate summary cards.
-- `GET /api/admin/analytics/trends` — daily/monthly aggregates.
-- `GET /api/admin/analytics/rankings` — most viewed/copied/liked under documented formulas.
-- `GET /api/admin/analytics/experiments/:id` — per-experiment report.
+- `GET /api/admin/analytics/summary` — aggregate portfolio/Labs summary cards.
+- `GET /api/admin/analytics/trends` — daily/monthly aggregate trends.
+- `GET /api/admin/analytics/rankings` — most-viewed, most-source-opened, most-copied and most-liked experiments.
+- `GET /api/admin/analytics/experiments/:id` — per-experiment aggregate report.
+- `GET /api/v1/admin/labs/analytics` — owner-only aggregate source opens, unique verified accounts, copy actions, current active likes and like/unlike counts/trends across Labs.
+- `GET /api/v1/admin/labs/analytics/:slug` — owner-only source engagement aggregate for one experiment and a bounded date range.
 All admin analytics reads require Admin authorization. Do not allow arbitrary collection/query expressions from clients.
 
 ### Publishing and schedules
@@ -220,10 +223,10 @@ For each endpoint/action, test:
 - Registration is consent-gated and routed through `POST /api/labs/register`; direct Better Auth email sign-up is blocked at the App Router adapter.
 - Consent records use the server-owned Terms/Privacy versions from `src/app/lib/legal/policies.js` and a server-generated acceptance timestamp. The browser does not choose these values.
 - The source DTO returned from `GET /api/v1/labs/:slug/source` contains only `slug`, `version`, `updatedAt` and validated file objects (`path`, `language`, `content`). It is never included in public Labs listing/detail DTOs.
-- Regular-user source authorization is deny-by-default and requires an active grant matching the server-derived Better Auth user ID and experiment slug. The future owner-management policy is separate and must be checked through a server-only owner guard. Do not trust a client-supplied user ID, grant ID, owner status or role.
-- Atlas collections used by the feature are `lab_sources`, `lab_source_grants`, and Better Auth's provider-managed collections. Source/grant records are not created automatically by the public application.
+- Target regular-user source authorization is deny-by-default and requires only a valid Better Auth session with `emailVerified === true` and a published source version. No per-user grant is checked or required. Owner-only draft/version management is a separate server-side `LABS_OWNER_USER_ID` guard. Do not trust client identity/role claims.
+- Current code defines `lab_sources` and legacy `lab_source_grants`; the target removes `lab_source_grants` from authorization and retires it after safe migration. Target collections include `lab_sources`, `lab_source_versions`, `lab_likes`, `lab_analytics_events` and `lab_source_audit_events`, in addition to Better Auth-managed collections.
 - Response headers are `Cache-Control: private, no-store, no-cache, max-age=0, must-revalidate`, `Pragma: no-cache`, and `Vary: Cookie, Authorization`.
-- See `docs/LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md` for environment setup, grant provisioning and the public-runtime source-confidentiality limitation.
+- See `docs/LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md` for environment setup, verified-account access policy and source confidentiality.
 
 
 ### Labs consent and verification collections
@@ -275,27 +278,41 @@ These are candidate endpoints, not permission to build a full CMS. Same-app muta
 - Source aggregate is one-per-experiment and holds only draft/published version pointers plus lifecycle metadata.
 - Immutable source versions hold file arrays, server-computed content hash, version number, actor, timestamp and optional parent version.
 - Saving a draft never advances the published pointer. Publishing selects an existing immutable version and does not execute it.
-- Unpublishing denies subsequent regular-user reads even when grants remain active.
+- Unpublishing denies subsequent source reads for every regular user, including verified accounts.
 - Restoring a prior version creates a new immutable version; it never modifies the historical snapshot.
-- Grant identity is `{ userId, experimentSlug }`, with a unique index. A re-grant updates this row; audit events preserve prior grant/revoke actions.
-- The grant endpoint accepts email and expiry only; the server resolves the user. Never accept a client-supplied user ID, grantor, role or active flag.
-- Source/draft/version/grant/audit responses are private/no-store and are never included in public DTOs.
+- No per-user source grant is part of the target authorization model. Do not build grant/regrant/revoke endpoints or require owner approval for a verified account.
+- Like state is unique by `{ userId, experimentSlug }`; only a verified session can create a state transition.
+- Source/draft/version/analytics/audit responses are private/no-store and are never included in public DTOs.
 - Every state-changing operation requires concurrency protection, idempotency/replay handling and an audit event.
+
+
+### Source engagement analytics contracts
+
+- `source_open` is generated only after a verified user's source request successfully returns the published source; do not count the public experiment detail-page view as a source open.
+- A deliberate viewer opening is associated with a client-generated idempotency key so retries of the same request do not inflate counts. A later explicit reopen/refresh is a new open according to the approved deduplication window.
+- `code_copy` is accepted only after the browser reports that the Clipboard API write succeeded. The server rechecks the verified session and the current published source. The event never includes clipboard contents or source file text.
+- `like`/`unlike` events are written only when the unique current like-state record actually changes. Duplicate clicks/retries that preserve state do not increment counts.
+- Admin analytics endpoints return aggregates grouped by experiment and reporting period: detail views, source opens, unique verified accounts, copy actions, current active likes, like/unlike transitions and trend/ranking data.
+- The first release does not expose individual users' source-open/copy/like histories, emails or raw event rows in the admin dashboard.
+- Event records use the server-derived Better Auth user ID for deduplication/abuse controls. They do not store raw IP, email, clipboard data, source contents or unnecessary device identifiers.
+- Event retention and account-deletion handling are deployment gates and must be disclosed in the Privacy Policy before production analytics is enabled.
 
 ### Proposed source domain records
 
 - `lab_sources`: unique canonical `slug` (retain the current field name), `draftVersionId`, `publishedVersionId`, created/updated actor and timestamps.
 - `lab_source_versions`: source ID/slug, monotonic version number, immutable files, server-calculated content hash, parent version, bounded change summary, actor and timestamp.
-- `lab_source_grants`: canonical Better Auth user ID, experiment slug, active state, grantor, grant/revoke timestamps and optional expiry. Preserve the current unique user/experiment index.
+- `lab_likes`: canonical Better Auth user ID, experiment slug, active state and state timestamps; unique `{ userId, experimentSlug }`.
+- `lab_analytics_events`: server-validated `source_open`, `code_copy`, `like`, `unlike` events with experiment slug, source version where relevant, server timestamp and idempotency key. Never store email, clipboard content or source text.
+- `lab_source_audit_events`: owner source lifecycle mutations only; append-only, no source text/secrets.
 - `lab_source_audit_events`: actor, action, experiment, version/target user references, request ID, safe outcome code and timestamp. No source text, credentials, raw tokens or secrets.
 
 These are target records. The inspected implementation currently embeds `files` in a mutable `LabSource` record and has no separate immutable version/audit collection. Do not treat the proposed model as already migrated.
 
 ### Additional contract tests
 
-- Guest, unverified user, verified-ungranted user, verified-granted user, owner, expired grant, revoked grant and unpublished source.
+- Guest, signed-in unverified user, verified registered user, owner, unpublished source, source-open/copy idempotency replay and like/unlike state transitions.
 - Owner guard missing/mismatched, owner session expired, user attempts owner API directly, client forges actor/user/role/version/published fields.
 - Duplicate source aggregate, duplicate file path, path traversal, binary/oversized file, secret-bearing file, stale draft pointer, publish of unsaved/wrong version, repeated publish/revoke/save.
 - Failed writes preserve the previous published pointer. Restore creates a new version. Revoke/unpublish affects the next source request.
-- Source contents do not leak into list APIs, guest HTML/RSC, public APIs, logs, analytics or shared caches.
+- Source contents do not leak into guest/unverified HTML/RSC, public APIs, logs, analytics payloads or shared caches. Analytics stores only allowed event metadata, never the source payload.
 
