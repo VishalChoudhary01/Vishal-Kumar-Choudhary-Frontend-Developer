@@ -146,3 +146,18 @@ Before moving/creating files:
 5. Make a small change and run focused checks.
 6. Verify public homepage and project detail routes and bundles.
 7. Remove old files only after references and tests prove safe.
+
+## 8. Labs owner source-management module boundary
+
+The detailed capability is specified in `LABS-SOURCE-MANAGEMENT-SPEC.md`. The target repository tree should keep these responsibilities server/client separated without forcing a broad restructure:
+
+- Owner route/layout: composes the protected owner workspace and performs a server-side session/owner check before rendering privileged editor data.
+- Owner UI: file tree, text editor, draft/publish controls, version history and grant controls. It must not import Mongoose or privileged repositories.
+- Owner source use cases: create source head, validate file set, save immutable version, publish/unpublish exact version, restore, grant/revoke and append audit events.
+- Owner identity policy: server-only singleton owner guard; recommended `LABS_OWNER_USER_ID` requires explicit approval. No browser roles or first-user-wins fallback.
+- Repositories/models: source aggregate, immutable versions, grants and audit records remain server-only. The existing `LabSource` and `LabSourceGrant` files are current implementations and must be migrated deliberately rather than duplicated.
+- Schemas/validation: safe relative paths, text-only language allowlist, file/byte bounds, deterministic hash, expected version pointers and exact email lookup.
+- Editor dependency: lazy-load only within the owner workspace after server authorization. Editor package choice remains OPEN; Monaco is not installed in the inspected manifest.
+- Live execution: not part of source management. Any future preview runtime is a separate isolated trust boundary and does not belong in the ordinary Labs React tree.
+
+The specific route names and physical folders remain subject to a fresh repository-tree inspection when implementation is authorized. Do not create empty proposed folders merely to match this conceptual document.
