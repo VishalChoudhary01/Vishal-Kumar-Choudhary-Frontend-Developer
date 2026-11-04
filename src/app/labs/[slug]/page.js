@@ -88,8 +88,8 @@ export default async function LabExperimentPage({ params }) {
             </Link>
           </div>
         ) : null}
-        <LabEngagement slug={experiment.slug} />
         <LabSourceAccess slug={experiment.slug} />
+        <LabEngagement slug={experiment.slug} />
       </main>
     </LabsPageShell>
   );
