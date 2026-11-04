@@ -1,6 +1,6 @@
 # Labs Source Management — Owner Console and Protected Code Lifecycle
 
-**Status:** Planning specification; singleton owner provisioning and source-management authority approved; implementation not authorized by this document alone  
+**Status:** Planning specification; singleton owner provisioning and source-management authority approved; verified-account source access and engagement analytics locked (2026-11-04); implementation not authorized by this document alone  
 **Version:** 0.1  
 **Branch baseline:** `feat/labs-public-page`  
 **Updated:** 2026-11-04  
@@ -12,7 +12,7 @@
 
 Provide a secure, owner-only way to create and maintain the separate source snapshots used by the Labs protected-source viewer. The portfolio owner must be able to create a source record for an existing experiment, add/edit/remove files, save drafts, publish a specific source version, inspect history, restore an earlier version, and grant or revoke an individual verified account's access.
 
-This is a **narrow Labs source-management capability**, not approval to build the full portfolio CMS/Admin area. It must not change the public Labs layout or execute arbitrary code inside the main portfolio application.
+This is a **narrow Labs source-management and engagement capability**, not approval to build the full portfolio CMS/Admin area. It must not change the public Labs layout or execute arbitrary code inside the main portfolio application. Every registered account with a verified email can automatically read all published experiment source; the owner does not issue per-user source grants.
 
 This document describes the target plan. It does not claim that the owner console, owner identity, source snapshots, grant UI, version history, or audit log already exist.
 
@@ -24,10 +24,10 @@ The following is grounded in the inspected `feat/labs-public-page` implementatio
 |---|---|---|
 | Authentication | Better Auth + MongoDB adapter; the server returns a user ID and verified-email state | No owner/admin role or owner identity check is implemented in the inspected auth module |
 | Source schema | `src/app/lib/labs/models/LabSource.js`; collection `lab_sources`; one document per slug with `version`, `published` and embedded `files` | No dedicated immutable source-version collection or draft/published version pointers |
-| Grant schema | `src/app/lib/labs/models/LabSourceGrant.js`; collection `lab_source_grants`; per-user/per-experiment active/expiry/revocation fields and unique index | No owner-facing grant-management UI or API |
-| Source authorization | `src/app/lib/labs/source-access.js` checks verified user + active grant + published source | Owner has no explicit bypass/management permission; regular signed-in users remain denied without a grant |
+| Legacy grant schema | `src/app/lib/labs/models/LabSourceGrant.js`; collection `lab_source_grants`; per-user/per-experiment active/expiry/revocation fields and unique index | Must be removed from the source authorization path and retired after a safe data/dependency check; no grant-management UI/API will be built |
+| Source authorization | `src/app/lib/labs/source-access.js` currently checks verified user + active grant + published source | Target policy removes the active-grant lookup: verified Better Auth session + published source is sufficient for regular users; owner uses a separate draft/version management guard |
 | Source API | `GET /api/v1/labs/:slug/source` | No owner source CRUD, version, publish, grant, audit or import endpoints |
-| UI | `LabSourceAccess.js` displays the source panel and handles the authorized viewer/denied states | No owner-only source manager, file tree, code editing, version history or grant controls |
+| UI | `LabSourceAccess.js` displays the source panel and handles the authorized viewer/denied states | No owner-only source manager, file tree, code editing, version history or engagement analytics dashboard |
 | Database setup | Better Auth and registration collections are created/used by their current flows | Source collections are not automatically provisioned; the current Atlas screenshot showed neither `lab_sources` nor `lab_source_grants` |
 | Preview execution | Existing public demos are code-owned browser runtimes | No approved sandbox for executing admin-authored source; arbitrary stored source must remain non-executable |
 
@@ -165,8 +165,8 @@ Recommended lifecycle:
 1. Owner creates/edits the working file set.
 2. **Save draft** creates an immutable source-version snapshot and advances the draft pointer. It does not change the published pointer.
 3. Owner reviews the saved version and validation report.
-4. **Publish source** explicitly selects the exact saved version and advances the published pointer. Publishing source makes that version eligible for authorized source reads; it does not make source public and does not execute it.
-5. **Unpublish source** clears/withdraws the published pointer. It must stop new source reads even if grants remain; existing grants are retained unless the owner separately revokes them.
+4. **Publish source** explicitly selects the exact saved version and advances the published pointer. Publishing source makes that version available to every registered user with a verified email; it does not make source public to guests and does not execute it.
+5. **Unpublish source** clears/withdraws the published pointer. It immediately stops new source reads for all regular users. There are no per-user source grants to revoke; historical versions and engagement analytics are retained under their approved policies.
 6. **Restore** copies a prior immutable version into a new draft version. It never mutates or deletes the old snapshot.
 7. Every transition records actor, timestamp, target version and outcome.
 
@@ -183,20 +183,20 @@ The owner can list versions and see:
 
 The owner can view and compare version contents, then restore an old version by creating a new snapshot. Historical source versions are immutable; no in-place edit/delete endpoint is planned. Retention should follow the PRD's immutable version-history baseline unless a later storage/retention decision changes it.
 
-### 5.7 Grant management
+### 5.7 Source engagement analytics
 
-The owner can:
-- Search by exact normalized email address.
-- See a minimal match record (email, verified status, stable internal user reference).
-- Grant a specific experiment to that verified account.
-- Choose no expiry or an explicit expiry.
-- See active/expired/revoked state and grant actor/time.
-- Revoke a grant with confirmation and immediate server-side effect.
-- Re-grant by updating the single unique user/experiment grant record; preserve audit history separately.
+The owner/admin can inspect aggregated engagement per published experiment and across the Labs collection:
+- Successful source-viewer opens, grouped by experiment slug/title.
+- Code-copy actions reported after the supported clipboard operation succeeds.
+- Current active likes per experiment.
+- Successful like and unlike state transitions over the selected date range.
+- Daily/monthly trends and rankings for source opens, copies and active likes.
 
-The browser sends an email address and requested expiry, **not a user ID**. The server resolves the target account from the Better Auth user collection and stores the canonical Better Auth ID. The target must exist and be email-verified. Unknown/unverified users receive a safe owner-facing validation result; no public API exposes this lookup.
+The dashboard shows experiment-level aggregates and reporting periods, not a browsable list of individual users' source-view/copy/like histories or their email addresses. Do not expose user-level event records to the browser. A verified account may open/copy/like multiple experiments; deduplication must prevent retries from multiplying one action.
 
-Do not add a public "request access" workflow in this phase. Do not automatically grant access at registration or verification.
+Source-open events are recorded only after the source endpoint successfully authorizes and returns the published source for a verified account. A public detail-page view is not a source open. Copy events are recorded only after the client reports a successful Clipboard API write; a copy event is not proof that code was pasted, executed or shipped. Like/unlike events are recorded only for actual server-confirmed state transitions.
+
+Analytics event records use the server-derived Better Auth user ID for abuse control/deduplication, never a client-supplied identity. Avoid storing email, raw IP, full source contents, clipboard text or unnecessary device data. Retention and account-deletion handling must be approved and disclosed before production analytics launch.
 
 
 ### 5.8 Owner entry point
@@ -238,28 +238,30 @@ Suggested indexes: unique `{ sourceId, versionNumber }`; supporting `{ experimen
 
 Content fields are append-only and immutable. Do not update file contents in place after insertion. The source aggregate's pointers select which immutable snapshot is the current draft/published source.
 
-### 6.3 `lab_source_grants` — per-user access
+### 6.3 `lab_likes` — verified-user like state
 
-Retain the current per-user/per-experiment model:
-- `userId` (canonical Better Auth user ID).
-- `experimentSlug`.
-- `active`, `grantedBy`, `grantedAt`.
-- `expiresAt` (nullable), `revokedAt` (nullable).
-- `createdAt`, `updatedAt`.
+One current like-state record per verified Better Auth user and experiment:
+- `userId` (server-derived Better Auth user ID).
+- `experimentSlug` (canonical Labs slug).
+- `active` boolean.
+- `createdAt`, `updatedAt`, and the timestamps of the latest state transition.
 
-Keep the unique index on `{ userId, experimentSlug }`. A re-grant updates the current grant state; audit events preserve the historical grant/revoke history. Do not create multiple competing active records for one user/experiment.
+Use a unique index on `{ userId, experimentSlug }`. A repeated like/unlike request that does not change state must not create another like action event. Guest and unverified-user likes are disabled. Keep the current active-like count derivable from state records or a server-maintained aggregate with reconciliation.
 
-### 6.4 `lab_source_audit_events` — append-only management audit
+### 6.4 `lab_analytics_events` — source engagement events
 
-Record safe metadata for:
-- Source aggregate created.
-- Draft version saved.
-- Version published/unpublished/restored.
-- Grant created/updated/revoked.
-- Validation failure when useful for owner diagnostics.
-- Bootstrap/provisioning result.
+Append-only events for `source_open`, `code_copy`, `like` and `unlike`:
+- `eventId`/idempotency key unique per accepted user action.
+- `eventType` from the strict allowlist.
+- `experimentSlug` and the published `sourceVersionId` where relevant.
+- `actorUserId` from the Better Auth session (no client-supplied identity).
+- `occurredAt` server timestamp and bounded safe event metadata.
 
-Recommended fields: `actorUserId`, `action`, `experimentSlug`, `versionId`, `targetUserId`/grant reference where applicable, `requestId`, safe result code, and `createdAt`. Suggested index `{ experimentSlug, createdAt: -1 }`. Never store raw passwords, verification tokens, SMTP/API keys, full source contents or secret values in audit metadata.
+Do not store email, raw IP, clipboard contents, source text, passwords or authentication tokens. Add indexes for `{ experimentSlug, occurredAt: -1 }` and `{ eventType, occurredAt: -1 }` only after confirming query patterns. Source-view/copy events are not likes; likes are additionally represented by the unique `lab_likes` current-state record.
+
+### 6.5 `lab_source_audit_events` — append-only owner audit
+
+Record safe metadata for source aggregate creation, draft saves, publish/unpublish/restore, validation failures and bootstrap/migration outcomes. Recommended fields: `actorUserId`, `action`, `experimentSlug`, `versionId`, `requestId`, safe result code, and `createdAt`. Suggested index `{ experimentSlug, createdAt: -1 }`. Never store full source contents, emails, passwords, verification tokens, SMTP/API keys or raw secret values.
 
 ## 7. API and domain boundaries
 
@@ -288,22 +290,20 @@ All mutations call server-only domain use cases and repositories. Never let UI c
 
 - Guest: deny.
 - Signed-in but unverified: deny.
-- Verified registered user without an active grant: deny.
-- Verified registered user with a matching active, unexpired grant and a published source pointer: allow.
-- Owner with valid owner authorization: allow owner management/source read without a separate user grant.
-- Unpublished source: deny regular-user access even when a grant exists.
-- Expired or revoked grant: deny immediately on the next request.
-- All source/draft/version/grant/audit responses: private, no-store, no-cache; never use a shared public cache.
+- Verified registered user: allow source read automatically when the requested experiment has a published source pointer; no owner-issued grant is required.
+- Owner with valid owner authorization: allow source management and draft/version reads, including unpublished source.
+- Unpublished source: deny regular-user access to all accounts; owner can still inspect drafts and historical versions.
+- All source/draft/version/analytics/audit responses: private, no-store, no-cache; never use a shared public cache.
 - Source UI must clear loaded text when the session expires, owner status is removed, access is revoked or the source is unpublished. Server authorization is authoritative on every subsequent request.
 
 ## 9. Security and reliability requirements
 
 1. **Server-derived identity:** actor user ID comes only from the verified Better Auth session.
 2. **Owner guard:** independently enforce singleton-owner authorization in pages, actions, Route Handlers, domain functions and repositories. If owner configuration is missing, deny; never degrade into "any signed-in user".
-3. **No client grants:** users cannot set `active`, `grantedBy`, `role`, `publishedVersionId`, `versionId` or another user's ID.
+3. **No client authorization claims:** users cannot set `role`, `owner`, `publishedVersionId`, `versionId`, `actorUserId`, analytics aggregates or another user's ID. Source access is based on the verified server session and publication state.
 4. **CSRF/origin:** protect cookie-authenticated owner mutations using the approved Better Auth/Next.js origin and CSRF strategy; require same-origin mutation requests and test forged requests.
 5. **Optimistic concurrency:** save/publish operations include expected draft/version pointers; return 409 for stale editor state.
-6. **Idempotency:** repeated grant, revoke, publish or save requests must not create duplicate or inconsistent state.
+6. **Idempotency:** repeated like/unlike, source-open/copy event, publish or save requests must not create duplicate or inconsistent state.
 7. **Validation:** enforce slug/path/language/size/file-count/content-hash constraints server-side; do not trust client values.
 8. **Secret protection:** keep source text, SMTP credentials, auth secrets and API keys out of logs, URLs, local storage, analytics and public page data.
 9. **Public boundary:** do not include source in guest HTML, RSC payloads, listing/detail DTOs, static files, public CDN URLs or source maps.
@@ -314,16 +314,17 @@ All mutations call server-only domain use cases and repositories. Never let UI c
 
 ## 10. Provisioning and migration plan
 
-1. Confirm the actual owner Better Auth user ID after the account is verified.
-2. Approve the owner identity mechanism. Recommended initial mechanism: set `LABS_OWNER_USER_ID` server-side for Preview and Production; never put it in a `NEXT_PUBLIC_*` variable.
-3. Implement an idempotent database bootstrap/migration for the required collections and indexes; do not ask the owner to manually create empty collections in Atlas.
+1. Confirm the actual owner Better Auth user ID after the account is verified and configure `LABS_OWNER_USER_ID` server-side for Preview; configure Production only during the approved release.
+2. Implement idempotent bootstrap/migration for source heads, immutable versions, verified-user likes, analytics events and owner audit; do not ask the owner to manually create empty collections in Atlas.
+3. Check whether any legacy `lab_source_grants` collection/documents exist. Preserve an export for rollback/audit, remove the grant lookup from the source endpoint, then retire the legacy model/index/collection only after code/deployment references are removed and reconciliation succeeds.
 4. Migrate any pre-existing `lab_sources` documents into the new aggregate + immutable version representation if records exist. Preserve the original content hash and published state; do not drop the old collection until reconciliation succeeds.
 5. Provision the first source snapshot for `magnetic-interaction` from the reviewed canonical source files after a repository file inventory. Do not guess file paths or import unrelated components/secrets.
 6. Verify the snapshot is stored privately and not exposed to public HTML/client output.
-7. Use the owner console to publish the source version and grant the verified owner/user account as required by the approved policy.
-8. Confirm a regular user with no grant is denied and the target granted user can read the source.
+7. Publish the source version. A verified registered test account must then read it automatically without any manual grant.
+8. Verify guest and unverified account access is denied; verify verified account source open, code copy and like/unlike events are recorded once and appear in owner/admin aggregates.
 9. Remove any temporary Atlas `0.0.0.0/0` network access rule after connectivity validation and replace it with an approved stable-egress allowlist.
-10. Record deployment and rollback evidence.
+10. Update and version the Privacy Policy before source engagement analytics go live; document event fields, purpose, retention, aggregation and account-deletion handling.
+11. Record deployment and rollback evidence.
 
 ## 11. Implementation phases and gates
 
@@ -335,24 +336,24 @@ All mutations call server-only domain use cases and repositories. Never let UI c
 
 ### Phase B — Data model, indexes and bootstrap
 - Evolve `LabSource` to a source aggregate/head and add immutable version + audit repositories.
-- Preserve/extend the existing grant model and unique index.
+- Retire the legacy `LabSourceGrant` model and `lab_source_grants` collection after safe migration/reconciliation; introduce `lab_likes` and `lab_analytics_events` with approved indexes.
 - Add idempotent database/index bootstrap and a safe migration/rollback plan.
 - **Gate:** integration tests cover existing/empty collections, duplicate slugs/grants, immutable versions, failed writes and migration replay.
 
 ### Phase C — Server use cases and API
-- Implement create source, save draft, list/view versions, restore, publish/unpublish, grant/revoke and audit use cases.
+- Implement create source, save draft, list/view versions, restore, publish/unpublish and audit use cases; implement verified-user like/unlike and source-open/copy analytics.
 - Implement owner guard and rate limits at every boundary.
 - **Gate:** direct API tests cover Guest, unverified user, regular verified user, owner, expired session, wrong slug, wrong user, stale version and replayed mutation.
 
 ### Phase D — Owner source workspace UI
-- Build source inventory, editor/file tree, save/discard, validation, version history, publish confirmation and grant manager.
+- Build source inventory, editor/file tree, save/discard, validation, version history, publish confirmation and an owner/admin source-engagement analytics view.
 - Lazy-load the editor and preserve unsaved input on validation/network failure.
 - **Gate:** keyboard, responsive, accessibility, autosave/unsaved-change and error-state tests pass; no owner UI/code editor bundle loads on public pages.
 
 ### Phase E — First real source snapshot and end-to-end validation
 - Import the audited `magnetic-interaction` source files into a draft version.
-- Validate, publish, grant a verified user and test the protected source viewer.
-- Test revoke, expiry, unpublish, restore and owner access.
+- Validate and publish the source; verify a regular verified account can open it automatically without provisioning a grant.
+- Test guest/unverified denial, verified-user automatic access, unpublish/re-publish, restore, likes/unlikes, copy events and owner access.
 - **Gate:** no source leakage and correct response/cache behavior for the full role matrix.
 
 ### Separate future phase — Isolated live preview
@@ -368,13 +369,13 @@ All mutations call server-only domain use cases and repositories. Never let UI c
 - [ ] Save draft creates a new immutable version and preserves the prior published pointer.
 - [ ] Publish/unpublish is explicit, audited and updates only the intended source pointer.
 - [ ] Restore creates a new version; historical source remains unchanged.
-- [ ] Owner can grant one verified user access by exact email and revoke/expire that grant.
-- [ ] Regular verified users without a grant remain denied; users cannot grant themselves.
-- [ ] The owner can manage/read source without creating a self-grant.
+- [ ] Every verified registered user can access all published source without per-user grants.
+- [ ] Guests and signed-in unverified users are denied; verified accounts are allowed when source is published.
+- [ ] The owner can manage drafts/versions and view analytics without a per-experiment grant.
 - [ ] Source files never appear in guest HTML, RSC payloads, public DTOs, source maps or public caches.
 - [ ] All private responses use no-store/private cache headers.
 - [ ] Failed or stale mutations do not overwrite newer draft/published state.
-- [ ] Audit records exist for source and grant mutations and do not contain raw source/secrets.
+- [ ] Audit records exist for owner source mutations; analytics records exist for source opens, copy actions and like/unlike transitions without raw source/secrets.
 - [ ] Database bootstrap/migration is idempotent and has a rollback/reconciliation procedure.
 - [ ] Owner editor and its dependencies do not affect homepage/Labs listing loading.
 - [ ] Existing public demos, routes, UI, animation, SEO, accessibility and behavior remain unchanged.
@@ -382,11 +383,13 @@ All mutations call server-only domain use cases and repositories. Never let UI c
 ## 13. Open decisions — do not silently assume
 
 1. **Owner bootstrap:** **RESOLVED / LOCKED.** Use the singleton server-only `LABS_OWNER_USER_ID` environment allowlist. The owner is the sole privileged administrator for the initial Labs source-management release. Do not add persisted multi-admin roles in this phase.
-2. **Editor:** lightweight accessible textarea/code editor for MVP or add Monaco/CodeMirror after dependency and bundle review. Neither editor is currently present as a direct dependency in the inspected package manifest.
-3. **User grant default:** explicit per-user/per-experiment grant (recommended and consistent with current API) versus a different entitlement model. The PRD has been aligned in this plan to explicit grants; confirm before implementation.
-4. **Source import strategy:** manually create files in owner UI, import an allowlisted set of repository files, or support both. Initial `magnetic-interaction` canonical file inventory must be audited.
-5. **Version retention:** PRD currently says immutable versions are retained indefinitely. Confirm storage/backup/cost implications before production.
-6. **Live preview:** provider, separate origin, CSP, network policy and resource limits remain open and out of this source-only scope.
-7. **Admin scope expansion:** general multi-admin, portfolio CMS, analytics, scheduling and media administration remain deferred.
+2. **Source access policy:** **RESOLVED / LOCKED (2026-11-04).** Every logged-in account with `emailVerified === true` can read all published experiment source automatically. Guests and signed-in unverified accounts cannot read source. No per-user grant, expiry or revoke workflow exists in the target design; publish/unpublish controls availability per experiment.
+3. **Engagement policy:** **RESOLVED / LOCKED (2026-11-04).** Only verified accounts can like/unlike experiments and copy source. The owner/admin dashboard shows experiment-level aggregate source opens, copy actions, current likes and like/unlike trends; it does not expose individual users' browsing/action histories in the first release.
+4. **Editor:** lightweight accessible textarea/code editor for MVP or add Monaco/CodeMirror after dependency and bundle review. Neither editor is currently present as a direct dependency in the inspected package manifest.
+5. **Source import strategy:** manually create files in owner UI, import an allowlisted set of repository files, or support both. Initial `magnetic-interaction` canonical file inventory must be audited.
+6. **Version retention:** PRD currently says immutable versions are retained indefinitely. Confirm storage/backup/cost implications before production.
+7. **Analytics retention/privacy:** retention period, event deduplication window, account-deletion treatment and final policy wording must be approved before analytics go live.
+8. **Live preview:** provider, separate origin, CSP, network policy and resource limits remain open and out of this source-only scope.
+9. **Admin scope expansion:** general multi-admin, portfolio CMS, scheduling and media administration remain deferred.
 
-No code implementation, collection migration, source import or account grant is authorized merely by this planning document. Request explicit implementation approval after the owner/auth/editor decisions are accepted.
+No code implementation, collection migration or source import is authorized merely by this planning document. The source-access and owner policies above are approved; remaining editor/source-import/analytics-retention decisions and the normal phase gates must be resolved before implementation.
