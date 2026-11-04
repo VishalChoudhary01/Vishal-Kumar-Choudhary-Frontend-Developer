@@ -5,11 +5,6 @@ import { Heart, LoaderCircle } from "lucide-react";
 
 import { authClient } from "@/app/lib/auth/client";
 
-function makeEventId() {
-  return globalThis.crypto?.randomUUID?.() ||
-    "evt_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 12);
-}
-
 export default function LabEngagement({ slug }) {
   const { data: session, isPending: sessionPending } = authClient.useSession();
   const [engagement, setEngagement] = useState(null);
@@ -19,6 +14,8 @@ export default function LabEngagement({ slug }) {
 
   useEffect(() => {
     let active = true;
+    setLoading(true);
+    setMessage("");
 
     async function load() {
       try {
@@ -49,7 +46,7 @@ export default function LabEngagement({ slug }) {
     return () => {
       active = false;
     };
-  }, [slug]);
+  }, [slug, session?.user?.id, session?.user?.emailVerified]);
 
   async function toggleLike() {
     if (!engagement?.likeAllowed || saving) return;
