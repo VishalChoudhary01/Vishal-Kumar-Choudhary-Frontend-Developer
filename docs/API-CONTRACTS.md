@@ -34,7 +34,7 @@ The Labs authentication provider is Better Auth with the MongoDB adapter. Provid
 - `GET /api/auth/get-session` — current server-backed session used by the Labs account/source UI.
 - Public UI routes: `/labs/login`, `/labs/signup`, `/labs/forgot-password`, `/labs/reset-password`, `/labs/verify-email`.
 
-SMTP delivery, Google OAuth credentials, legal-document URLs/versions and session-lifetime policy remain deployment/release decisions. Do not implement a homemade password/session protocol.
+SMTP delivery and Google OAuth credentials remain deployment/release configuration; first-party legal pages and server-owned policy versions are implemented. Final session-lifetime/concurrency policy remains open. Do not implement a homemade password/session protocol.
 
 ### Public portfolio content
 Public pages may read published content through server-side page data access without exposing a public JSON endpoint by default.
@@ -72,7 +72,7 @@ These paths are candidate REST endpoints; the same use cases may be Server Actio
 - `GET /api/lab/:slug` — published experiment metadata and guest-safe partial source only.
 - `POST /api/lab/:id/like` — create/activate like under actor-specific policy.
 - `DELETE /api/lab/:id/like` — remove authenticated like; guest behavior must be explicitly defined.
-- `GET /api/v1/labs/:slug/source` — implemented authenticated full-source read; requires a verified Better Auth session and a separate active per-user/per-experiment grant (or a separately verified owner policy); private/no-store response.
+- `GET /api/v1/labs/:slug/source` — implemented authenticated full-source read; currently requires a verified Better Auth session and a separate active per-user/per-experiment grant; private/no-store response. A separate owner source-management authorization path is planned and is not yet implemented.
 - `POST /api/lab/:id/copy-event` — record supported copy action with abuse controls; never accept source content as a trusted event claim.
 - `POST /api/lab/:id/preview-session` — authorize preview launch; actual execution is delegated to approved isolated infrastructure.
 - `POST /api/lab/:id/preview-events` — accept only allowlisted, bounded, validated instrumented events.
@@ -218,7 +218,7 @@ For each endpoint/action, test:
 
 - Authentication persistence is owned by Better Auth and `@better-auth/mongo-adapter`. Mongoose remains the application model/repository layer.
 - Registration is consent-gated and routed through `POST /api/labs/register`; direct Better Auth email sign-up is blocked at the App Router adapter.
-- Consent records use the current `TERMS_OF_SERVICE_VERSION`, `PRIVACY_POLICY_VERSION` and server-generated `consentAcceptedAt`. The browser does not choose these values.
+- Consent records use the server-owned Terms/Privacy versions from `src/app/lib/legal/policies.js` and a server-generated acceptance timestamp. The browser does not choose these values.
 - The source DTO returned from `GET /api/v1/labs/:slug/source` contains only `slug`, `version`, `updatedAt` and validated file objects (`path`, `language`, `content`). It is never included in public Labs listing/detail DTOs.
 - Regular-user source authorization is deny-by-default and requires an active grant matching the server-derived Better Auth user ID and experiment slug. The future owner-management policy is separate and must be checked through a server-only owner guard. Do not trust a client-supplied user ID, grant ID, owner status or role.
 - Atlas collections used by the feature are `lab_sources`, `lab_source_grants`, and Better Auth's provider-managed collections. Source/grant records are not created automatically by the public application.
