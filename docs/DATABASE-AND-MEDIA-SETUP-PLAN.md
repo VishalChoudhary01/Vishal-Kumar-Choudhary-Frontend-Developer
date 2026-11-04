@@ -458,3 +458,55 @@ The remote repository cannot establish the state of local files or private provi
 **Full Phase 0:** Not yet complete. The local working tree, Atlas private configuration, Cloudinary account configuration, and runtime baseline checks still require verification.
 
 No database connection utility, Cloudinary client, upload-signature endpoint, schema, model, or API route should be implemented until the remaining local/provider checks are complete. This avoids writing integration code against unknown local dependency state or unverified credentials/network access.
+
+## 15. Labs authentication and protected source data — 2026-11-04
+
+This section updates the generic collection-planning guidance for the approved Labs authentication/protected-source foundation and the new owner-source-management specification. It records current versus target state; it does not claim that source collections have already been created or migrated.
+
+### 15.1 Current authentication/source persistence
+
+- Better Auth with `@better-auth/mongo-adapter` is implemented on `feat/labs-public-page` and uses the native MongoDB driver against `MONGODB_URI` / `MONGODB_DB_NAME`.
+- Mongoose remains the application model/repository layer and targets the same configured database.
+- The current Atlas database screenshot showed Better Auth `user` / `account` / `rateLimit`-related collections and Labs registration-consent/verification collections.
+- The current code defines `LabSource` in `src/app/lib/labs/models/LabSource.js` using `lab_sources`, with one mutable per-slug record embedding `version`, `published` and `files`.
+- The current code defines `LabSourceGrant` in `src/app/lib/labs/models/LabSourceGrant.js` using `lab_source_grants`, with a unique user/experiment index.
+- The protected source API currently reads the published source record after validating Better Auth session, verified email and a matching active grant.
+- Source collections/snapshots were not visible in the Atlas screenshot. Do not assume a source record exists because the Mongoose model or API exists.
+
+### 15.2 Target source-management collections
+
+Follow `docs/LABS-SOURCE-MANAGEMENT-SPEC.md` and `docs/API-CONTRACTS.md` before creating any source collections or indexes:
+
+| Collection | Role | Status |
+|---|---|---|
+| `lab_sources` | One source aggregate per canonical experiment slug; draft/published version pointers and actor timestamps | Exists as a Mongoose model definition; live collection/records not yet verified; current document shape is mutable and requires migration |
+| `lab_source_versions` | Immutable source snapshots with files, server-computed hash, version number, parent version, actor and timestamp | Planned; not implemented/provisioned |
+| `lab_source_grants` | One current grant per Better Auth user ID + experiment slug, with active/expiry/revocation | Exists as a Mongoose model definition; live collection/records not yet verified |
+| `lab_source_audit_events` | Append-only owner source/grant lifecycle audit metadata | Planned; not implemented/provisioned |
+
+Do not manually create empty collections to make the source viewer appear ready. The application bootstrap/migration must create required indexes idempotently and seed no source content unless a reviewed source snapshot is explicitly imported.
+
+### 15.3 Bootstrap, index and migration requirements
+
+- Preserve Better Auth-managed collections and indexes; do not edit their schema manually unless the selected adapter explicitly requires a documented migration.
+- Create/verify the unique `lab_sources.slug` index and the existing unique `lab_source_grants.{ userId, experimentSlug }` index.
+- For immutable versions, add a unique `{ sourceId, versionNumber }` index and a supporting `{ experimentSlug, createdAt: -1 }` index.
+- For audit events, add a supporting `{ experimentSlug, createdAt: -1 }` index; audit records must not contain source text, passwords, tokens, SMTP/API keys or raw secret values.
+- Use a server-side migration that detects legacy mutable `lab_sources` documents, computes deterministic content hashes, creates a corresponding immutable version, and only then updates aggregate pointers. Preserve the original records until migration reconciliation and rollback are proven.
+- Bootstrap must be safe to execute more than once, must not duplicate versions/audit/grants, and must fail closed if uniqueness or pointer integrity cannot be established.
+- Source reads must confirm the published version belongs to the requested source slug. A dangling, mismatched or missing pointer returns a safe unavailable/not-found outcome.
+- The current response size cap and Mongoose model limits must be reconciled with explicit UTF-8 byte limits before implementation. Never rely only on JavaScript character counts for storage or response bounds.
+
+### 15.4 Owner identity and secrets
+
+- The recommended initial owner setting is server-only `LABS_OWNER_USER_ID`, containing the stable Better Auth user ID. It must not use a `NEXT_PUBLIC_` prefix or be exposed to browser DTOs.
+- This setting and its Preview/Production scoping require explicit approval before owner-management implementation.
+- Do not store owner identity, grants, source contents or audit records in Cloudinary. MongoDB is the structured source-of-truth store for this text-only source lifecycle.
+- Source editing and versioning do not authorize source execution. Any live execution requires the separate isolated-preview threat-model gate.
+
+### 15.5 Atlas network and production hygiene
+
+- The temporary Atlas `0.0.0.0/0` IP allowlist entry used for connectivity diagnosis must be removed after testing. Replace it with a supported stable-egress allowlist or another approved secure connection approach.
+- Confirm Atlas database credentials are a dedicated database user with only the required access to the selected application database.
+- Verify Preview and Production use the intended database and owner configuration; do not accidentally point a test migration at Production.
+- Take/verify a backup or export/rollback point before migrating any non-empty source collection.
