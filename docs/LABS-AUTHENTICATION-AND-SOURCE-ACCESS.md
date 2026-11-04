@@ -1,7 +1,7 @@
 # Labs Authentication and Protected Source — Setup and Provisioning
 
 **Status:** Implementation runbook; production rollout is configuration- and test-gated.  
-**Scope:** Better Auth + MongoDB Adapter, Labs account flows, email delivery, Google OAuth, consent configuration and private source snapshot/grant provisioning.  
+**Scope:** Better Auth + MongoDB Adapter, Labs account flows, email delivery, Google OAuth, consent configuration, private source snapshots and verified-account source-access migration.  
 **Related:** `LABS-AND-AUTHENTICATION-DESIGN-SPEC.md`, `ARCHITECTURE.md`, `API-CONTRACTS.md`, `THREAT-MODEL.md`.
 
 ## 1. Selected implementation
@@ -12,7 +12,7 @@
 - Email/password with email verification and password reset. Google sign-in is enabled only when both OAuth credentials are configured.
 - No GitHub sign-in.
 - Public Labs browsing and code-owned demos remain available without sign-in.
-- Full source is retrieved only from the private `lab_sources` collection after the server verifies an active `lab_source_grants` record.
+- **Target policy (locked 2026-11-04):** any signed-in account with `emailVerified === true` can read all published source from `lab_sources` automatically. Guests and signed-in unverified accounts cannot read or copy source. There is no per-user grant workflow. The current deployed code still contains a legacy `lab_source_grants` check until the migration is implemented and deployed.
 
 ## 2. Required environment configuration
 
@@ -89,51 +89,25 @@ One record per experiment slug:
 
 Validation limits: 1–40 files, file paths must be safe relative paths, each file is limited to 500 KB, and the full response is capped at 1 MB. Do not store executable preview configuration, secrets, credentials or unrestricted runtime instructions in this collection. The endpoint only returns source text after authorization; it never evaluates the stored source.
 
-## 5. Grant an account access to one experiment
+## 5. Source-access policy and legacy grant migration
 
-Mongoose model: `src/app/lib/labs/models/LabSourceGrant.js`  
-MongoDB collection: `lab_source_grants`
+**LOCKED target policy (user approved 2026-11-04):**
 
-The policy is deny-by-default. A registered and verified user still receives 403 unless an operator explicitly creates a grant. The user ID must be read from the Better Auth user record; never accept a user ID supplied by the browser.
+- A valid Better Auth session with `emailVerified === true` is sufficient to read every published experiment source.
+- Guests and signed-in unverified accounts cannot view or copy source.
+- The owner does not grant/revoke source access for individual users. The owner controls availability globally per experiment using publish/unpublish.
+- Verified accounts can copy source and like/unlike experiments. Guests and unverified accounts cannot use these source-engagement controls.
+- The owner/admin dashboard receives aggregate source opens, unique verified accounts, copies, active likes and like/unlike trends per experiment; it does not expose individual users' event histories.
 
-Example Atlas/Mongo shell operation (replace every placeholder with the verified values and use a trusted administrative connection):
+**Current implementation status:** the present `src/app/lib/labs/source-access.js` still queries the legacy `LabSourceGrant` model. Until the target implementation is merged/deployed, a verified user without a legacy grant will continue to be denied. Do not confuse the approved target policy with the current runtime behavior.
 
-```javascript
-db.lab_source_grants.updateOne(
-  {
-    userId: "<Better Auth user id>",
-    experimentSlug: "magnetic-interaction"
-  },
-  {
-    $set: {
-      active: true,
-      grantedBy: "<trusted operator id>",
-      expiresAt: null,
-      revokedAt: null
-    }
-  },
-  { upsert: true }
-);
-```
+**Migration requirements:**
 
-To revoke access:
-
-```javascript
-db.lab_source_grants.updateOne(
-  {
-    userId: "<Better Auth user id>",
-    experimentSlug: "magnetic-interaction"
-  },
-  {
-    $set: {
-      active: false,
-      revokedAt: new Date()
-    }
-  }
-);
-```
-
-The unique user/experiment index prevents multiple active grant rows for the same account and experiment. Provisioning is currently a trusted operator task; no CMS/admin grant UI or public grant API has been added.
+1. Inspect whether `lab_source_grants` exists and whether it contains records. Export/backup any existing records for rollback/audit before cleanup.
+2. Remove the grant lookup from the protected source endpoint/domain service. Require verified Better Auth session + published source only.
+3. Do not create new grant records and do not build grant/re-grant/revoke UI or APIs.
+4. After the new endpoint is deployed and references are removed, retire the legacy `LabSourceGrant` model, indexes and collection through a reviewed idempotent migration. Do not drop data before confirming no active code path imports it.
+5. Add owner source management and engagement collections/indexes through application bootstrap; do not manually create empty collections in Atlas.
 
 ## 6. Protected source endpoint
 
@@ -143,7 +117,7 @@ Server checks, in order:
 1. Valid experiment slug.
 2. Better Auth session exists.
 3. Account email is verified.
-4. Active grant matches the server-derived user ID and experiment slug and has not expired/revoked.
+4. Target policy: require `session.user.emailVerified === true`; no grant lookup.
 5. Published source snapshot exists and passes size/path validation.
 
 Unauthorized responses never contain source. Successful responses use `private, no-store, no-cache` headers and are excluded from public page data. The source panel clears the loaded text when the session is signed out, reset or no longer verifiable; the current session is rechecked every 60 seconds and when the tab becomes visible.
@@ -220,7 +194,7 @@ Both routes are public and indexable, included in the sitemap, linked from the g
 
 The server-owned policy versions are maintained in `src/app/lib/legal/policies.js`; the initial version of each is `2026-11-04`. The registration endpoint reads those constants and writes them into the consent receipt. The browser cannot submit or override policy versions. When either document changes materially, update its version constant in the same commit as the text change.
 
-The Privacy Policy describes the documented current implementation: account/session processing, separate consent and verification collections, registration rate-limit digest, protected source grants, contact-form email delivery, browser preferences, hosting/database/auth/email providers, retention, and the Contact channel for privacy requests.
+The Privacy Policy describes the documented current implementation: account/session processing, separate consent and verification collections, registration rate-limit digest, protected source records, contact-form email delivery, browser preferences, hosting/database/auth/email providers, retention, and the Contact channel for privacy requests. Before source-engagement analytics are enabled, update the Privacy Policy to disclose source-open, successful copy-action and like/unlike event collection, aggregate reporting, event retention and account-deletion handling; bump `PRIVACY_VERSION` with the material text change.
 
 These are operational policy drafts. The owner should review them with a qualified Indian privacy lawyer before launch, confirm the real provider list and data locations, and implement any additional rights/request/deletion procedures identified by that review.
 ## 12. Vercel Preview origins and Better Auth Dash onboarding
@@ -240,28 +214,28 @@ Follow `docs/LABS-SOURCE-MANAGEMENT-SPEC.md` for the target owner capability and
 
 ### Current state
 - `LabSource` currently stores a mutable per-slug document with embedded files, a version string and a published flag.
-- `LabSourceGrant` currently stores a unique per-user/per-experiment grant.
-- The protected source endpoint requires verified Better Auth identity + matching active grant + published source record.
+- `LabSourceGrant` currently stores a unique per-user/per-experiment grant; this is legacy transition state and will be retired.
+- The protected source endpoint currently requires verified Better Auth identity + matching active grant + published source record. The locked target removes the grant requirement.
 - No owner source editor, source CRUD/publish/version API, grant administration UI or append-only source audit collection exists yet.
 - Source collections/snapshots are not created by public account registration. An empty collection is not a valid source snapshot.
 
 ### Target owner release
-- Initial owner is the portfolio operator's verified Better Auth account, provisioned by a trusted server-only identity setting. The recommended `LABS_OWNER_USER_ID` mechanism requires explicit approval; never use first-user-wins or client-provided roles.
-- The owner can create and manage source for an existing canonical experiment slug without a normal user grant. Regular users continue to require their own explicit per-experiment grant.
-- Source editing is text-only: add/edit/rename/delete files, validate, save draft, inspect immutable versions, restore, publish/unpublish, and manage verified-account grants.
-- The target data model separates source aggregate pointers, immutable `lab_source_versions`, the current per-user/per-experiment `lab_source_grants`, and append-only `lab_source_audit_events`.
-- Save draft never publishes. Publish selects an exact immutable version. Restore creates a new version. Unpublish stops subsequent regular-user source reads without deleting history or grants.
+- **Locked — user approved 2026-11-04:** initial owner is the portfolio operator's verified Better Auth account, provisioned by server-only `LABS_OWNER_USER_ID`; never use first-user-wins or client-provided roles.
+- The owner can create/manage source for an existing canonical experiment slug. Every verified registered user automatically reads published source; no per-user grant is issued.
+- Source editing is text-only: add/edit/rename/delete files, validate, save draft, inspect immutable versions, restore, publish/unpublish, and inspect source-engagement aggregates.
+- The target data model separates source aggregate pointers, immutable `lab_source_versions`, verified-user current likes in `lab_likes`, source/copy/like events in `lab_analytics_events`, and append-only `lab_source_audit_events`. Legacy `lab_source_grants` is retired.
+- Save draft never publishes. Publish selects an exact immutable version. Restore creates a new version. Unpublish stops subsequent regular-user source reads without deleting history or engagement events.
 - Owner endpoints, editor state and source contents are private/no-store. All operations derive actor identity server-side, enforce owner authorization at each boundary, use concurrency/idempotency, validate source text, and emit safe audit events.
 - Database bootstrap/migration must be idempotent and preserve current records. Do not manually create empty collections as a substitute for a migration or source import.
 - Stored source is not executed. Any future live preview of owner-authored code requires a separate isolated runtime decision and threat-model review.
 
 ### Recommended implementation order
-1. Approve the singleton owner identity mechanism and source grant policy.
+1. Owner identity and automatic verified-account source access are approved; implement the singleton owner guard and remove the legacy per-user source grant check.
 2. Audit the canonical `magnetic-interaction` source file inventory; do not guess paths or include secrets.
 3. Implement source aggregate/version/audit schemas, indexes, idempotent bootstrap and migration tests.
-4. Implement owner guard and source/grant domain use cases before UI.
+4. Implement owner guard and source/likes/analytics domain use cases before UI.
 5. Build the lazy-loaded owner editor and grant UI; keep editor dependencies out of public routes.
-6. Import the first source snapshot, publish it, grant a verified test account and validate guest/ungranted/granted/owner behavior.
+6. Import the first source snapshot, publish it and validate guest/unverified denial, automatic verified-account access, copy/like actions and owner management.
 7. Keep live source execution deferred until separately approved and threat-modelled.
 
-Do not use the manual Atlas grant snippet in Section 5 as the long-term management workflow once the owner console is implemented. The unique grant row remains a persistence invariant; audit events are the historical record.
+Do not create manual Atlas source grants. The legacy grant model is transitional only and must be removed after the approved verified-account access migration. Owner source audit and engagement analytics are separate records.
