@@ -1,7 +1,12 @@
 "use client";
 
 import { Component, Suspense } from "react";
-import { getLabRuntimeComponent } from "./registry";
+import {
+  MagneticInteractionRuntime,
+  ScrollDrivenTextRevealRuntime,
+  GradientBloomRuntime,
+  GenerativeParticleFieldRuntime,
+} from "./registry";
 
 function RuntimeLoadingState() {
   return (
@@ -56,22 +61,43 @@ class RuntimeErrorBoundary extends Component {
   }
 }
 
+function LabRuntimeRenderer({
+  runtimeKey,
+  settings,
+  restartKey,
+  isFullscreen,
+}) {
+  const runtimeProps = {
+    settings,
+    restartKey,
+    isFullscreen,
+  };
+
+  switch (runtimeKey) {
+    case "magnetic-interaction":
+      return <MagneticInteractionRuntime {...runtimeProps} />;
+    case "scroll-driven-text-reveal":
+      return <ScrollDrivenTextRevealRuntime {...runtimeProps} />;
+    case "gradient-bloom":
+      return <GradientBloomRuntime {...runtimeProps} />;
+    case "generative-particle-field":
+      return <GenerativeParticleFieldRuntime {...runtimeProps} />;
+    default:
+      return <RuntimeUnavailableState />;
+  }
+}
+
 export default function LabRuntimeBoundary({
   runtimeKey,
   settings,
   restartKey,
   isFullscreen,
 }) {
-  const Runtime = getLabRuntimeComponent(runtimeKey);
-
-  if (!Runtime) {
-    return <RuntimeUnavailableState />;
-  }
-
   return (
     <RuntimeErrorBoundary key={`${runtimeKey}-${restartKey}`}>
       <Suspense fallback={<RuntimeLoadingState />}>
-        <Runtime
+        <LabRuntimeRenderer
+          runtimeKey={runtimeKey}
           settings={settings}
           restartKey={restartKey}
           isFullscreen={isFullscreen}
