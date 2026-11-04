@@ -34,7 +34,7 @@ export default function VerifyEmailPanel({ verified, invalid, emailDeliveryEnabl
       setCountdown((current) => Math.max(0, current - 1));
     }, 1000);
     return () => window.clearInterval(timer);
-  }, [countdown > 0]);
+  }, [countdown]);
 
   const resend = async (event) => {
     event.preventDefault();
