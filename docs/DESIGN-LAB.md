@@ -65,8 +65,8 @@ Support both repository-managed registered components and admin-managed source, 
 - The exact execution provider and hosting boundary remain open until architecture/security validation.
 
 ## 5. Source access and code-copy behavior
-- Guests see only explicitly approved partial snippets or an access prompt.
-- Full source is fetched through a server-authorized endpoint only for eligible authenticated users.
+- Guests see an access prompt only. Do not expose source snippets to guests until a separate content policy, exact scope and UX are explicitly approved.
+- Full source is fetched through a server-authorized endpoint only for a verified authenticated user with an explicit active, unexpired per-user/per-experiment grant. A verified session alone does not grant source access.
 - Do not embed the full source in guest HTML, static props, RSC payloads, hidden DOM, client bundles or public API responses.
 - Copy control is available only when full source access is authorized.
 - Provide feedback for copy success/failure and a selectable fallback if clipboard permission is unavailable.
