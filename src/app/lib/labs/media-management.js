@@ -118,8 +118,6 @@ function serializeAsset(asset, attachment = null, previewUrl = null) {
     altText: attachment?.altText || asset.altText || "",
     caption: attachment?.caption || asset.caption || "",
     roles: attachment?.roles || [],
-    assetKey: attachment?.assetKey || null,
-    position: attachment?.position ?? 0,
     previewUrl,
     createdAt: asset.createdAt ? new Date(asset.createdAt).toISOString() : null,
   };
@@ -349,76 +347,42 @@ export async function listOwnerLabMediaAssets({ user, slug }) {
 
 export async function saveOwnerLabMediaAttachments({ user, slug, attachments: input }) {
   if (!isLabsOwner(user)) fail("OWNER_ACCESS_DENIED", "Owner access is required.");
-  if (!Array.isArray(input) || input.length > 100) {
-    fail("MEDIA_INVALID", "Submit a valid media attachment list with at most 100 items.");
+  if (!Array.isArray(input) || input.length > 1) {
+    fail("MEDIA_INVALID", "An experiment can use at most one optional fallback preview.");
   }
 
   const experiment = await assertCustomExperiment(slug);
-  const allowedRoles = new Set(["card-cover", "detail-gallery", "in-experiment"]);
-  const seenAssetIds = new Set();
-  const seenAssetKeys = new Set();
-  let coverCount = 0;
-  let galleryCount = 0;
-
   const normalized = input.map((item) => {
     const assetId = typeof item?.assetId === "string" ? item.assetId.trim() : "";
-    if (!mongoose.isValidObjectId(assetId)) fail("MEDIA_INVALID", "An attachment references an invalid asset.");
-    if (seenAssetIds.has(assetId)) fail("MEDIA_INVALID", "An asset can appear only once in the attachment list.");
-    seenAssetIds.add(assetId);
-
+    if (!mongoose.isValidObjectId(assetId)) fail("MEDIA_INVALID", "The fallback preview references an invalid asset.");
     const roles = Array.isArray(item?.roles) ? [...new Set(item.roles)] : [];
-    if (!roles.length || roles.some((role) => !allowedRoles.has(role))) {
-      fail("MEDIA_INVALID", "Every attachment must have at least one supported role.");
-    }
-    if (roles.includes("card-cover")) coverCount += 1;
-    if (roles.includes("detail-gallery")) galleryCount += 1;
-
-    const rawKey = typeof item?.assetKey === "string" ? item.assetKey.trim().toLowerCase() : "";
-    const assetKey = roles.includes("in-experiment") ? rawKey : null;
-    if (roles.includes("in-experiment")) {
-      if (!/^[a-z][a-z0-9]*(?:[-.][a-z0-9]+)*$/.test(assetKey || "") || assetKey.length > 64) {
-        fail("MEDIA_INVALID", "Runtime asset keys must start with a letter and use lowercase letters, numbers, dots or hyphens.");
-      }
-      if (seenAssetKeys.has(assetKey)) fail("MEDIA_INVALID", "Runtime asset keys must be unique within an experiment.");
-      seenAssetKeys.add(assetKey);
-    }
-
-    const position = Number(item?.position ?? 0);
-    if (!Number.isInteger(position) || position < 0 || position > 99) {
-      fail("MEDIA_INVALID", "Media attachment order is invalid.");
+    if (roles.length !== 1 || roles[0] !== "fallback-preview") {
+      fail("MEDIA_INVALID", "Uploaded media may only be attached as an optional fallback when the code preview cannot run or is unsupported.");
     }
     const altText = typeof item?.altText === "string" ? item.altText.trim() : "";
     const caption = typeof item?.caption === "string" ? item.caption.trim() : "";
     if (altText.length > 300 || caption.length > 500) {
-      fail("MEDIA_INVALID", "Alt text or caption is too long.");
+      fail("MEDIA_INVALID", "Fallback alt text or caption is too long.");
     }
-
     return {
       assetId: new mongoose.Types.ObjectId(assetId),
-      roles,
-      assetKey,
-      position: roles.includes("detail-gallery") ? position : 0,
+      roles: ["fallback-preview"],
       altText,
       caption,
     };
   });
 
-  if (coverCount > 1) fail("MEDIA_INVALID", "Choose only one card cover for an experiment.");
-  if (galleryCount > 30) fail("MEDIA_INVALID", "A detail gallery can contain at most 30 assets.");
-
-  const assetIds = normalized.map((item) => item.assetId);
-  const readyAssets = assetIds.length
-    ? await LabMediaAsset.find({
-        _id: { $in: assetIds },
-        experimentSlug: slug,
-        ownerUserId: user.id,
-        status: "ready",
-      }).select("_id mediaKind").lean()
-    : [];
-  if (readyAssets.length !== normalized.length) {
-    fail("MEDIA_INVALID", "One or more selected assets are not ready or do not belong to this experiment.");
+  if (normalized.length) {
+    const readyAsset = await LabMediaAsset.findOne({
+      _id: normalized[0].assetId,
+      experimentSlug: slug,
+      ownerUserId: user.id,
+      status: "ready",
+    }).select("_id").lean();
+    if (!readyAsset) {
+      fail("MEDIA_INVALID", "The selected fallback preview is not ready or does not belong to this experiment.");
+    }
   }
-  const assetKinds = new Map(readyAssets.map((asset) => [String(asset._id), asset.mediaKind]));
 
   await LabExperiment.updateOne(
     { _id: experiment._id, kind: "custom" },
@@ -440,11 +404,8 @@ export async function saveOwnerLabMediaAttachments({ user, slug, attachments: in
     attachments: normalized.map((item) => ({
       assetId: String(item.assetId),
       roles: item.roles,
-      assetKey: item.assetKey,
-      position: item.position,
       altText: item.altText,
       caption: item.caption,
-      mediaKind: assetKinds.get(String(item.assetId)),
     })),
     assets: await listOwnerLabMediaAssets({ user, slug }),
   };
