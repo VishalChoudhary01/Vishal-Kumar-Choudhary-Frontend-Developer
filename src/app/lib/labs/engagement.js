@@ -167,10 +167,27 @@ export async function setLabLike({ slug, actor, liked }) {
     : liked ? "guest_like" : "guest_unlike";
 
   let transitioned = false;
+  let rateLimited = false;
   const session = await mongoose.startSession();
 
   try {
     await session.withTransaction(async () => {
+      const currentState = await Model.findOne({
+        [identityField]: identityValue,
+        experimentSlug: slug,
+      })
+        .select("lastTransitionAt")
+        .session(session)
+        .lean();
+
+      if (
+        currentState?.lastTransitionAt &&
+        now.getTime() - new Date(currentState.lastTransitionAt).getTime() < 1000
+      ) {
+        rateLimited = true;
+        return;
+      }
+
       if (liked) {
         const update = {
           $set: { active: true, lastTransitionAt: now },
@@ -243,6 +260,7 @@ export async function setLabLike({ slug, actor, liked }) {
   return {
     ...(await getLabEngagement({ slug, actor })),
     transitioned,
+    rateLimited,
   };
 }
 
