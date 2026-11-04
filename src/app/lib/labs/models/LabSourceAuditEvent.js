@@ -11,6 +11,8 @@ const labSourceAuditEventSchema = new mongoose.Schema(
       enum: [
         "source_created",
         "experiment_created",
+        "media_upload_intent_created",
+        "media_uploaded",
         "draft_saved",
         "source_published",
         "source_unpublished",

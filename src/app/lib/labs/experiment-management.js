@@ -26,7 +26,7 @@ function slugify(value) {
     .replace(/-+$/g, "");
 }
 
-function validateInput(input) {
+function validateInput(input, user) {
   const title = typeof input?.title === "string" ? input.title.trim() : "";
   const description = typeof input?.description === "string" ? input.description.trim() : "";
   const explanation = typeof input?.explanation === "string" ? input.explanation.trim() : "";
@@ -78,7 +78,7 @@ function validateInput(input) {
 export async function createOwnerLabExperiment({ user, input }) {
   if (!isLabsOwner(user)) fail("OWNER_ACCESS_DENIED", "Owner access is required.");
 
-  const experiment = validateInput(input);
+  const experiment = validateInput(input, user);
   await connectToDatabase();
   await Promise.all([
     LabExperiment.createIndexes(),
