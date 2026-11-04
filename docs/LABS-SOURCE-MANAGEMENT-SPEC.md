@@ -39,6 +39,14 @@ The following is grounded in the inspected `feat/labs-public-page` implementatio
 - The current source schema is mutable and does not satisfy the PRD's immutable content-history requirement. Do not call the current `version` string immutable version history.
 - The source collections and initial snapshot data have not been provisioned in the shown Atlas database. Creating empty collections is not sufficient; a valid snapshot and grant must be written through the planned workflow.
 
+
+### 2.1 Public demo versus protected source snapshot
+
+- The existing four public demos are code-owned and their runtime is delivered through the public application. A database source snapshot does not replace that runtime.
+- Editing a protected snapshot changes only the owner-managed source record/viewer. It does not change the live public demo or deploy new client code.
+- Updates to the live demo's behavior continue through the canonical source repository and normal reviewed deployment pipeline.
+- A future flow that builds/runs a snapshot and displays it as a live demo is a separate isolated-preview capability; do not ship it as a side effect of the source editor.
+
 ## 3. Goals and non-goals
 
 ### Goals
@@ -134,7 +142,7 @@ The owner can:
 
 The editor must be lazy-loaded only on the protected owner page. Monaco is not present in the inspected package manifest. The editor library and version are **OPEN**; do not add Monaco or another large editor dependency without an implementation decision. A lightweight accessible text editor may be used for the first slice if the owner approves the reduced syntax-highlighting experience.
 
-The editor stores text. It is not a terminal, build server, package manager or execution console.
+The editor stores a protected source snapshot as text. It is not a terminal, build server, package manager or execution console. Editing/publishing this Atlas snapshot does not modify or hot-update the public demo; current public demos remain code-owned and change through the normal repository/deployment workflow. Any mechanism that executes the saved snapshot is a separate isolated-preview capability and remains out of scope until its security gate passes.
 
 ### 5.4 Validation before save/publish
 
@@ -189,6 +197,14 @@ The owner can:
 The browser sends an email address and requested expiry, **not a user ID**. The server resolves the target account from the Better Auth user collection and stores the canonical Better Auth ID. The target must exist and be email-verified. Unknown/unverified users receive a safe owner-facing validation result; no public API exposes this lookup.
 
 Do not add a public "request access" workflow in this phase. Do not automatically grant access at registration or verification.
+
+
+### 5.8 Owner entry point
+
+- The owner must have a discoverable, authenticated entry into source management. Candidate entry points are an owner-only Labs account-menu item and/or a `Manage source` action in the experiment's protected-source section.
+- The server determines whether the current actor is the owner and passes only the safe UI capability state. The client must never infer owner access from email text or browser state.
+- The final navigation placement and wording remain an owner UX review item. Direct navigation to the owner route must still run the owner guard and return 403 for non-owners.
+- The public experiment demo and ordinary user source-access panel remain unchanged for guests and regular users.
 
 ## 6. Recommended data model evolution
 
