@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import LabSourceInventory from "@/app/components/labs/admin/LabSourceInventory";
 import { ArrowLeft, Code2, Copy, Eye, Heart, Users } from "lucide-react";
 
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
 import { getLabsOwnerAnalytics } from "@/app/lib/labs/owner-analytics";
-import { isLabsOwner } from "@/app/lib/labs/owner-access";
+import { getLabsOwnerAccessStatus } from "@/app/lib/labs/owner-access";
+import LabsOwnerAccessNotice from "@/app/components/labs/admin/LabsOwnerAccessNotice";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -41,18 +42,21 @@ export default async function LabsSourceAdminPage({ searchParams }) {
     redirect("/labs/login?returnTo=" + encodeURIComponent("/admin/labs/sources"));
   }
 
-  if (!isLabsOwner(session.user)) {
-    notFound();
+  const ownerStatus = getLabsOwnerAccessStatus(session.user);
+  if (ownerStatus !== "owner") {
+    return <LabsOwnerAccessNotice status={ownerStatus} />;
   }
 
-  let analytics;
+  let analytics = null;
+  let analyticsUnavailable = false;
   try {
     analytics = await getLabsOwnerAnalytics({ user: session.user, days });
-  } catch {
-    notFound();
+  } catch (error) {
+    analyticsUnavailable = true;
+    console.error("[labs-owner] analytics unavailable:", error?.code || "ANALYTICS_UNAVAILABLE");
   }
 
-  const totals = analytics.totals;
+  const totals = analytics?.totals;
 
   return (
     <main className="min-h-screen bg-background px-5 py-10 text-text-primary sm:px-8 lg:px-12">
@@ -77,46 +81,61 @@ export default async function LabsSourceAdminPage({ searchParams }) {
               See how published experiment source is opened, copied and liked. Anonymous likes are reported separately from verified-account likes.
             </p>
           </div>
-          <div className="text-xs text-text-tertiary">
-            Last {analytics.periodDays} days · Updated{" "}
-            {new Intl.DateTimeFormat("en-IN", {
-              dateStyle: "medium",
-              timeStyle: "short",
-            }).format(new Date(analytics.generatedAt))}
-          </div>
+          {analytics ? (
+            <div className="text-xs text-text-tertiary">
+              Last {analytics.periodDays} days · Updated{" "}
+              {new Intl.DateTimeFormat("en-IN", {
+                dateStyle: "medium",
+                timeStyle: "short",
+              }).format(new Date(analytics.generatedAt))}
+            </div>
+          ) : (
+            <span className="border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning">
+              Analytics temporarily unavailable
+            </span>
+          )}
         </header>
 
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-tertiary">Reporting period</p>
-            <p className="mt-1 text-sm text-text-secondary">Choose the window used for opens, copies and like activity.</p>
+        {analytics ? (
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-tertiary">Reporting period</p>
+              <p className="mt-1 text-sm text-text-secondary">Choose the window used for opens, copies and like activity.</p>
+            </div>
+            <nav aria-label="Analytics reporting period" className="flex flex-wrap gap-1.5">
+              {[7, 30, 90, 365].map((period) => (
+                <Link
+                  key={period}
+                  href={"/admin/labs/sources?days=" + period}
+                  aria-current={analytics.periodDays === period ? "page" : undefined}
+                  className={[
+                    "inline-flex h-8 items-center border px-3 text-xs font-medium transition-colors",
+                    analytics.periodDays === period
+                      ? "border-brand bg-brand-soft text-brand"
+                      : "border-border text-text-secondary hover:border-brand hover:text-brand",
+                  ].join(" ")}
+                >
+                  {period} days
+                </Link>
+              ))}
+            </nav>
           </div>
-          <nav aria-label="Analytics reporting period" className="flex flex-wrap gap-1.5">
-            {[7, 30, 90, 365].map((period) => (
-              <Link
-                key={period}
-                href={"/admin/labs/sources?days=" + period}
-                aria-current={analytics.periodDays === period ? "page" : undefined}
-                className={[
-                  "inline-flex h-8 items-center border px-3 text-xs font-medium transition-colors",
-                  analytics.periodDays === period
-                    ? "border-brand bg-brand-soft text-brand"
-                    : "border-border text-text-secondary hover:border-brand hover:text-brand",
-                ].join(" ")}
-              >
-                {period} days
-              </Link>
-            ))}
-          </nav>
-        </div>
-
-        <section aria-label="Engagement overview" className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <Metric icon={Eye} label="Source opens" value={totals.sourceOpens} detail="Successful verified source loads" />
-          <Metric icon={Users} label="Verified accounts" value={totals.uniqueVerifiedAccounts} detail="Per-experiment unique accounts, summed" />
-          <Metric icon={Copy} label="Code copies" value={totals.codeCopies} detail="Reported after clipboard success" />
-          <Metric icon={Heart} label="Active likes" value={totals.totalActiveLikes} detail={number(totals.activeAnonymousLikes) + " anonymous · " + number(totals.activeVerifiedLikes) + " verified"} />
-        </section>
-
+  
+          <section aria-label="Engagement overview" className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <Metric icon={Eye} label="Source opens" value={totals.sourceOpens} detail="Successful verified source loads" />
+            <Metric icon={Users} label="Verified accounts" value={totals.uniqueVerifiedAccounts} detail="Per-experiment unique accounts, summed" />
+            <Metric icon={Copy} label="Code copies" value={totals.codeCopies} detail="Reported after clipboard success" />
+            <Metric icon={Heart} label="Active likes" value={totals.totalActiveLikes} detail={number(totals.activeAnonymousLikes) + " anonymous · " + number(totals.activeVerifiedLikes) + " verified"} />
+          </section>
+        ) : (
+          <section role="alert" className="mt-7 border border-warning/40 bg-warning/10 p-5">
+            <h2 className="text-sm font-semibold text-warning">Engagement analytics could not be loaded</h2>
+            <p className="mt-2 text-xs leading-5 text-text-secondary">
+              The owner session is valid, but the analytics service could not read MongoDB. Confirm the Preview database connection and check the deployment function logs. The source inventory below can still load independently.
+            </p>
+          </section>
+        )}
+        {analytics ? (
         <section aria-labelledby="engagement-trend-title" className="mt-8 rounded-sm border border-border bg-surface-1 p-4 sm:p-5">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
@@ -156,8 +175,11 @@ export default async function LabsSourceAdminPage({ searchParams }) {
           )}
         </section>
 
+        ) : null}
+
         <LabSourceInventory />
 
+        {analytics ? (
         <section className="mt-10">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
@@ -223,6 +245,7 @@ export default async function LabsSourceAdminPage({ searchParams }) {
             </p>
           </article>
         </section>
+        ) : null}
       </div>
     </main>
   );
