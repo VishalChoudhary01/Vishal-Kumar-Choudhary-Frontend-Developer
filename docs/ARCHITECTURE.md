@@ -230,6 +230,6 @@ Owner request → Better Auth session → server-only singleton-owner check → 
 - Only users with a valid Better Auth session and `emailVerified === true` may open source, copy code or like/unlike experiments.
 - A successful source-open event is recorded after the protected source response is successfully authorized and returned. Public experiment detail-page views are a separate event.
 - Code-copy events are accepted after the client reports a successful Clipboard API write; the server rechecks the verified session and current published source. Never send or store clipboard contents.
-- Like/unlike analytics events are recorded only for actual server-confirmed transitions in the unique per-user/per-experiment like-state record.
-- Owner/Admin dashboard queries aggregate by experiment and date range: detail views, source opens, unique verified accounts opening source, copy actions, current active likes, like/unlike transitions, rankings and trends.
+- Verified-account like/unlike analytics events are recorded only for actual server-confirmed transitions in the unique per-user/per-experiment like-state record. Best-effort guest-like actions may be recorded separately where supported, without unique-person attribution.
+- Owner/Admin dashboard queries aggregate by experiment and date range: detail views, source opens, unique verified accounts opening source, copy actions, current active verified likes, verified like/unlike transitions, and separate guest-like action counts where measurable, plus rankings and trends.
 - The dashboard does not expose individual account browsing/copy/like histories or emails in the first release. Event storage uses server-derived IDs for idempotency/abuse control and minimizes personal data.
