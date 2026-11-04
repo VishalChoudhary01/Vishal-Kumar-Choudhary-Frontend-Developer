@@ -14,8 +14,6 @@ export default function LabEngagement({ slug }) {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    setMessage("");
 
     async function load() {
       try {
