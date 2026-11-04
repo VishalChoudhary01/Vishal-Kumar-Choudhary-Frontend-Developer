@@ -1,6 +1,6 @@
 # Labs Source Management — Owner Console and Protected Code Lifecycle
 
-**Status:** Implementation in progress on `feat/labs-source-engagement`; production release remains gated by configuration, migration, privacy review and runtime verification.  
+**Status:** Implemented on `feat/labs-platform-integration`; production release remains gated by owner/SMTP configuration, Atlas provisioning/migration, end-to-end security tests and privacy review.  
 **Version:** 0.1  
 **Branch baseline:** `feat/labs-public-page`  
 **Updated:** 2026-11-04  
@@ -14,7 +14,7 @@ Provide a secure, owner-only way to create and maintain the separate source snap
 
 This is a **narrow Labs source-management and engagement capability**, not approval to build the full portfolio CMS/Admin area. It must not change the public Labs layout or execute arbitrary code inside the main portfolio application. The automatic access rule is based only on a valid Better Auth session, `emailVerified === true`, and a published source snapshot.
 
-This implementation is being developed against the approved target policy. The feature branch now contains the first source-access, likes, engagement analytics, owner API, source-editor and immutable-version slices. This branch has not been locally built or linted, has not been deployed, and has not been provisioned against the production Atlas database. No source snapshots are seeded automatically; the owner must create a source record and add its files before publishing.
+The integration branch contains the Labs source-access gate, anonymous/verified likes, source-open/copy events, owner-only APIs, source inventory/editor, immutable versions, publish/unpublish/restore, audit history and aggregate analytics. It has passed a clean `npm ci`, targeted Labs/auth/admin/legal lint and a Next.js production build. Atlas end-to-end flows have not yet been exercised against a provisioned owner account, and no source snapshots are seeded automatically; the owner must create a source record and import reviewed files before publishing.
 
 ## 2. Repository and deployment audit — current baseline
 
@@ -31,7 +31,7 @@ The following is grounded in the inspected `feat/labs-public-page` implementatio
 | Database setup | Better Auth and registration collections are created/used by their current flows | Source collections are not automatically provisioned; the current Atlas screenshot showed neither `lab_sources` nor `lab_source_grants` |
 | Preview execution | Existing public demos are code-owned browser runtimes | No approved sandbox for executing admin-authored source; arbitrary stored source must remain non-executable |
 
-This table captures the pre-implementation \`feat/labs-public-page\` baseline. The current \`feat/labs-source-engagement\` branch has since added the verified-only published-source gate, anonymous/verified engagement models, owner APIs, source editor and immutable-version workflow described below. The legacy grant model remains in the repository but is no longer consulted by the feature-branch source authorization service. Existing Atlas data has not been migrated or cleaned up.
+This table captures the pre-implementation `feat/labs-public-page` baseline. The current `feat/labs-platform-integration` branch implements the target access gate, engagement models, owner APIs, source editor and immutable-version workflow described below. The legacy `LabSourceGrant` model remains only for migration safety and is not consulted by the new authorization service. Existing Atlas data has not been migrated or cleaned up.
 
 ### 2.1 Important existing constraints
 
@@ -260,7 +260,7 @@ Append-only events for `source_open`, `code_copy`, verified `like` / `unlike`, a
 - `actorUserId` is present only for a verified-user event and is always derived from the Better Auth session; guest events have no user ID.
 - `occurredAt` server timestamp and bounded safe event metadata.
 
-Only verified sessions can generate `source_open`, `code_copy`, `like` or `unlike`. Guest events are restricted to best-effort public like/unlike actions where the existing public interaction is supported; do not create a stable guest identity or claim unique-person counts. Do not store email, raw IP, clipboard contents, source text, passwords or authentication tokens. Add indexes for `{ experimentSlug, occurredAt: -1 }` and `{ eventType, occurredAt: -1 }` only after confirming query patterns. Persistent verified likes are additionally represented by the unique `lab_likes` current-state record.
+Only verified sessions can generate `source_open` and `code_copy`. Both verified accounts and anonymous visitors can generate like/unlike actions, using separate identity/state collections. Anonymous identity is a signed, HTTP-only browser cookie; its counts are active browser identities/actions, not unique people.
 
 ### 6.5 `lab_source_audit_events` — append-only owner audit
 
@@ -268,7 +268,7 @@ Record safe metadata for source aggregate creation, draft saves, publish/unpubli
 
 ## 7. API and domain boundaries
 
-The following route contracts are implemented on `feat/labs-source-engagement`. They are feature-branch code and are not deployed until the branch is merged and released:
+The following route contracts are implemented on `feat/labs-platform-integration`. They are available in the integration branch but remain subject to deployment configuration and Atlas verification:
 
 | Operation | Proposed endpoint | Result |
 |---|---|---|
@@ -276,14 +276,14 @@ The following route contracts are implemented on `feat/labs-source-engagement`. 
 | Create source aggregate | `POST /api/v1/admin/labs/sources` | Creates empty source head for an existing experiment slug |
 | Read editor state | `GET /api/v1/admin/labs/sources/:slug` | Draft/published pointers and owner-only draft metadata |
 | Save a draft snapshot | `POST /api/v1/admin/labs/sources/:slug/versions` | Validates files and creates immutable draft version |
-| List/view versions | `GET /api/v1/admin/labs/sources/:slug/versions` | Version metadata; content read remains owner-only |
+| List/view versions | `GET /api/v1/admin/labs/sources/:slug/versions` and `GET /api/v1/admin/labs/sources/:slug/versions/:versionId` | Version metadata and owner-only immutable snapshot content |
 | Restore a version | `POST /api/v1/admin/labs/sources/:slug/restore/:versionId` | Creates a new draft from an old snapshot |
 | Publish exact version | `POST /api/v1/admin/labs/sources/:slug/publish` | Advances published pointer to a saved version |
 | Unpublish source | `POST /api/v1/admin/labs/sources/:slug/unpublish` | Clears published pointer / stops new reads |
 | Source analytics | `GET /api/v1/admin/labs/analytics?days=30` | Owner-only aggregate analytics across experiments; supports 7, 30, 90 or 365 days |
 | Owner status | `GET /api/v1/admin/labs/owner-status` | Safe boolean capability response for the owner navigation link |
 
-The source-management service writes append-only owner audit records. A read-only audit-history API and editor timeline are not part of this first UI slice.
+The source-management service writes append-only owner audit records; `GET /api/v1/admin/labs/sources/:slug/audit` and the editor's recent audit timeline are implemented. Owner analytics are aggregate-only and do not expose visitor-level event histories.
 
 Keep the existing user-facing endpoint `GET /api/v1/labs/:slug/source` as the only regular-user source read. Target policy requires a valid verified Better Auth session + published pointer; no grant lookup is performed. The response remains private/no-store.
 
@@ -325,7 +325,7 @@ All mutations call server-only domain use cases and repositories. Never let UI c
 
 ## 10. Provisioning and migration plan
 
-1. Confirm the actual owner Better Auth user ID after the account is verified and configure `LABS_OWNER_USER_ID` server-side for Preview; configure Production only during the approved release.
+1. Confirm the actual owner Better Auth user ID after the account is verified and configure `LABS_OWNER_USER_ID` server-side for the `feat/labs-platform-integration` Preview. The owner ID is currently not configured; configure Production only during the approved release.
 2. Implement idempotent bootstrap/migration for source heads, immutable versions, verified-user likes, analytics events and owner audit; do not ask the owner to manually create empty collections in Atlas.
 3. Check whether any legacy `lab_source_grants` collection/documents exist. Preserve an export for rollback/audit, remove the grant lookup from the source endpoint, then retire the legacy model/index/collection only after code/deployment references are removed and reconciliation succeeds.
 4. Migrate any pre-existing `lab_sources` documents into the new aggregate + immutable version representation if records exist. Preserve the original content hash and published state; do not drop the old collection until reconciliation succeeds.
@@ -339,27 +339,26 @@ All mutations call server-only domain use cases and repositories. Never let UI c
 
 ## 11. Implementation phases and gates
 
-### Phase A — Confirm policy and owner bootstrap
-- **Complete — user approved 2026-11-04:** singleton Owner identity uses server-only `LABS_OWNER_USER_ID`; owner is the sole privileged administrator for the first release and manages all Labs source lifecycle and source-engagement analytics.
-- **Locked baseline:** every registered user with `emailVerified === true` automatically accesses all published source; no per-user grant is required.
-- Confirm editor MVP (basic text editor vs new editor dependency).
-- **Gate:** owner authorization tests are designed before owner routes exist.
+### Phase A — Policy, authentication boundary and owner guard
+- **Code complete:** singleton Owner identity uses server-only `LABS_OWNER_USER_ID`; owner is the only privileged administrator for the first release. The environment value is still required before owner pages can be used.
+- **Code complete:** every verified account can access every published source automatically; no per-user grant is required.
+- **Code complete:** email/password account flows, verification, resend, forgot-password and reset-password UI/API are present. SMTP must be configured for this branch before registration and recovery can send mail.
+- **Code complete:** lightweight accessible textarea source editor selected; no Monaco/CodeMirror dependency was added.
 
-### Phase B — Data model, indexes and bootstrap
-- Evolve `LabSource` to a source aggregate/head and add immutable version + audit repositories.
-- Retire the legacy `LabSourceGrant` model and `lab_source_grants` collection after safe migration/reconciliation; introduce `lab_likes` and `lab_analytics_events` with approved indexes.
-- Add idempotent database/index bootstrap and a safe migration/rollback plan.
-- **Gate:** integration tests cover existing/empty collections, duplicate slugs/likes/events, immutable versions, failed writes and migration replay.
+### Phase B — Data model and indexes
+- **Code complete:** source head, immutable versions, verified likes, anonymous likes, engagement events and append-only audit models exist with unique/query indexes.
+- **Code complete:** application services create required indexes idempotently when the relevant feature is first used.
+- **Remaining:** inspect/migrate existing Atlas `lab_sources` and legacy grant records. Do not drop the old collection/model until reconciliation and rollback evidence exist.
 
 ### Phase C — Server use cases and API
-- Implement create source, save draft, list/view versions, restore, publish/unpublish and audit use cases; implement verified-user like/unlike and source-open/copy analytics.
-- Implement owner guard and rate limits at every boundary.
-- **Gate:** direct API tests cover Guest, unverified user, regular verified user, owner, expired session, wrong slug, wrong user, stale version and replayed mutation.
+- **Code complete:** owner-only create/read/save/list/view/restore/publish/unpublish/audit routes; verified-only published source read; anonymous/verified like/unlike; verified source-open/copy event routes; aggregate owner analytics.
+- **Code complete:** owner guard and same-origin checks on owner mutation routes; like transitions have a server-side rapid-toggle limit.
+- **Remaining:** run Atlas-backed integration tests for Guest, unverified, verified, Owner, expired session, stale pointers, unique-index races and replayed mutations.
 
 ### Phase D — Owner source workspace UI
-- Build source inventory, editor/file tree, save/discard, validation, version history, publish confirmation and an owner/admin source-engagement analytics view.
-- Lazy-load the editor and preserve unsaved input on validation/network failure.
-- **Gate:** keyboard, responsive, accessibility, autosave/unsaved-change and error-state tests pass; no owner UI/code editor bundle loads on public pages.
+- **Code complete:** owner inventory, file add/import/edit/rename/delete, save/discard, validation, immutable version history and read-only version preview, restore-as-new-draft, publish/unpublish confirmations, audit timeline, engagement period controls and daily activity chart.
+- **Validation:** targeted lint passes and the production build confirms all owner/API routes. Visual keyboard, responsive, contrast and accessibility QA remains to be performed in a browser.
+- **Remaining:** complete browser-based QA; owner UI/editor is isolated from the public Labs listing and public detail rendering.
 
 ### Phase E — First real source snapshot and end-to-end validation
 - Import the audited `magnetic-interaction` source files into a draft version.
@@ -403,4 +402,4 @@ All mutations call server-only domain use cases and repositories. Never let UI c
 8. **Live preview:** provider, separate origin, CSP, network policy and resource limits remain open and out of this source-only scope.
 9. **Admin scope expansion:** general multi-admin, portfolio CMS, scheduling and media administration remain deferred.
 
-Implementation is authorized by the user's explicit instruction to begin on `feat/labs-source-engagement`; this specification records the approved requirements but does not itself authorize deployment or destructive migration. Before production release, configure `LABS_OWNER_USER_ID`, validate the Atlas indexes/transactions and legacy-data migration plan, verify the Guest / Unverified / Verified / Owner matrix, confirm the Privacy Policy and event-retention/account-deletion treatment, seed the first reviewed source snapshot, and complete build, lint, accessibility and security checks.
+Implementation was explicitly authorized and is being maintained on `feat/labs-platform-integration`. Before production release, configure `LABS_OWNER_USER_ID` and the five branch-scoped SMTP variables (`AUTH_SMTP_PORT`, `AUTH_SMTP_USER`, `AUTH_SMTP_PASSWORD`, `AUTH_SMTP_SECURE`, `AUTH_EMAIL_FROM`); verify shared Preview MongoDB/Better Auth settings; validate Atlas indexes/transactions and legacy-data migration; test the Guest / Unverified / Verified / Owner matrix; complete browser accessibility/security QA; and seed the first reviewed source snapshot. The tracked production build and targeted lint have passed; full-repository lint still reports existing errors outside this feature.
