@@ -1,0 +1,160 @@
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { ArrowLeft, Code2, Copy, Eye, Heart, Users } from "lucide-react";
+
+import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
+import { getLabsOwnerAnalytics } from "@/app/lib/labs/owner-analytics";
+import { isLabsOwner } from "@/app/lib/labs/owner-access";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+function number(value) {
+  return new Intl.NumberFormat("en-IN").format(value || 0);
+}
+
+function Metric({ icon: Icon, label, value, detail }) {
+  return (
+    <article className="rounded-sm border border-border bg-surface-1 p-5">
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-xs font-medium uppercase tracking-[0.12em] text-text-tertiary">
+          {label}
+        </p>
+        <Icon size={17} className="text-text-tertiary" aria-hidden="true" />
+      </div>
+      <p className="mt-4 text-3xl font-semibold tabular-nums tracking-tight text-text-primary">
+        {number(value)}
+      </p>
+      {detail ? <p className="mt-1 text-xs text-text-tertiary">{detail}</p> : null}
+    </article>
+  );
+}
+
+export default async function LabsSourceAdminPage() {
+  const session = await getCurrentAuthSession();
+
+  if (!session?.user?.id) {
+    redirect("/labs/login");
+  }
+
+  if (!isLabsOwner(session.user)) {
+    notFound();
+  }
+
+  let analytics;
+  try {
+    analytics = await getLabsOwnerAnalytics({ user: session.user, days: 30 });
+  } catch {
+    notFound();
+  }
+
+  const totals = analytics.totals;
+
+  return (
+    <main className="min-h-screen bg-background px-5 py-10 text-text-primary sm:px-8 lg:px-12">
+      <div className="mx-auto w-full max-w-[1280px]">
+        <Link
+          href="/labs"
+          className="inline-flex items-center gap-2 text-xs font-medium text-text-secondary transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
+        >
+          <ArrowLeft size={14} aria-hidden="true" />
+          Back to Labs
+        </Link>
+
+        <header className="mt-10 flex flex-wrap items-end justify-between gap-5 border-b border-border pb-6">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
+              PRIVATE OWNER AREA
+            </p>
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+              Source engagement
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">
+              See how published experiment source is opened, copied and liked. Anonymous likes are reported separately from verified-account likes.
+            </p>
+          </div>
+          <div className="text-xs text-text-tertiary">
+            Last {analytics.periodDays} days · Updated{" "}
+            {new Intl.DateTimeFormat("en-IN", {
+              dateStyle: "medium",
+              timeStyle: "short",
+            }).format(new Date(analytics.generatedAt))}
+          </div>
+        </header>
+
+        <section aria-label="Engagement overview" className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <Metric icon={Eye} label="Source opens" value={totals.sourceOpens} detail="Successful verified source loads" />
+          <Metric icon={Users} label="Verified accounts" value={totals.uniqueVerifiedAccounts} detail="Per-experiment unique accounts, summed" />
+          <Metric icon={Copy} label="Code copies" value={totals.codeCopies} detail="Reported after clipboard success" />
+          <Metric icon={Heart} label="Active likes" value={totals.totalActiveLikes} detail={number(totals.activeAnonymousLikes) + " anonymous · " + number(totals.activeVerifiedLikes) + " verified"} />
+        </section>
+
+        <section className="mt-10">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold">Experiments</h2>
+              <p className="mt-1 text-xs text-text-tertiary">
+                Current active likes and activity recorded during the selected period.
+              </p>
+            </div>
+            <span className="text-xs text-text-tertiary">{analytics.experiments.length} published experiments</span>
+          </div>
+
+          <div className="mt-4 overflow-x-auto rounded-sm border border-border">
+            <table className="w-full min-w-[900px] border-collapse text-left text-sm">
+              <thead className="bg-surface-2 text-[11px] uppercase tracking-[0.1em] text-text-tertiary">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Experiment</th>
+                  <th className="px-4 py-3 text-right font-medium">Opens</th>
+                  <th className="px-4 py-3 text-right font-medium">Unique verified</th>
+                  <th className="px-4 py-3 text-right font-medium">Copies</th>
+                  <th className="px-4 py-3 text-right font-medium">Anonymous likes</th>
+                  <th className="px-4 py-3 text-right font-medium">Verified likes</th>
+                  <th className="px-4 py-3 text-right font-medium">Total active</th>
+                </tr>
+              </thead>
+              <tbody>
+                {analytics.experiments.map((experiment) => (
+                  <tr key={experiment.slug} className="border-t border-border">
+                    <th scope="row" className="px-4 py-4 font-medium text-text-primary">
+                      <span className="block">{experiment.title}</span>
+                      <span className="mt-1 block text-xs font-normal text-text-tertiary">{experiment.slug}</span>
+                    </th>
+                    <td className="px-4 py-4 text-right tabular-nums">{number(experiment.sourceOpens)}</td>
+                    <td className="px-4 py-4 text-right tabular-nums">{number(experiment.uniqueVerifiedAccounts)}</td>
+                    <td className="px-4 py-4 text-right tabular-nums">{number(experiment.codeCopies)}</td>
+                    <td className="px-4 py-4 text-right tabular-nums">{number(experiment.activeAnonymousLikes)}</td>
+                    <td className="px-4 py-4 text-right tabular-nums">{number(experiment.activeVerifiedLikes)}</td>
+                    <td className="px-4 py-4 text-right font-semibold tabular-nums">{number(experiment.totalActiveLikes)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className="mt-8 grid gap-3 sm:grid-cols-2">
+          <article className="rounded-sm border border-border p-5">
+            <h2 className="text-sm font-semibold">Like activity</h2>
+            <div className="mt-4 grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-text-tertiary">Verified like / unlike</p>
+                <p className="mt-1 text-lg font-semibold tabular-nums">{number(totals.verifiedLikeActions)} / {number(totals.verifiedUnlikeActions)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-text-tertiary">Anonymous like / unlike</p>
+                <p className="mt-1 text-lg font-semibold tabular-nums">{number(totals.anonymousLikeActions)} / {number(totals.anonymousUnlikeActions)}</p>
+              </div>
+            </div>
+          </article>
+          <article className="rounded-sm border border-border p-5">
+            <h2 className="text-sm font-semibold">Anonymous measurement</h2>
+            <p className="mt-2 text-xs leading-6 text-text-secondary">
+              Anonymous totals represent active browser identities and recorded actions, not verified people. Clearing cookies, changing browsers or using another device may create another anonymous identity.
+            </p>
+          </article>
+        </section>
+      </div>
+    </main>
+  );
+}
