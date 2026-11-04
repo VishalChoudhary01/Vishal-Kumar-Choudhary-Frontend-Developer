@@ -1,7 +1,8 @@
-import { notFound, redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
-import { isLabsOwner } from "@/app/lib/labs/owner-access";
+import { getLabsOwnerAccessStatus } from "@/app/lib/labs/owner-access";
+import LabsOwnerAccessNotice from "@/app/components/labs/admin/LabsOwnerAccessNotice";
 import {
   getOwnerLabSource,
   listOwnerLabVersions,
@@ -19,7 +20,8 @@ export default async function LabsSourceEditorPage({ params }) {
     const { slug } = await params;
     redirect("/labs/login?returnTo=" + encodeURIComponent("/admin/labs/sources/" + slug));
   }
-  if (!isLabsOwner(session.user)) notFound();
+  const ownerStatus = getLabsOwnerAccessStatus(session.user);
+  if (ownerStatus !== "owner") return <LabsOwnerAccessNotice status={ownerStatus} />;
 
   const { slug } = await params;
 
