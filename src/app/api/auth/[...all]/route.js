@@ -33,7 +33,7 @@ export async function POST(request) {
    * rate-limits attempts, and returns the same generic response for all
    * account-specific outcomes.
    */
-  const pathname = new URL(request.url).pathname.replace(/\\/+$/, "");
+  const pathname = new URL(request.url).pathname.replace(/\/+$/, "");
   if (pathname.endsWith("/sign-up/email")) {
     return NextResponse.json(
       { error: { code: "NOT_FOUND", message: "Not found." } },
