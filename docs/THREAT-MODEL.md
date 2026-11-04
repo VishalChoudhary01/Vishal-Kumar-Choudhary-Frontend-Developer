@@ -70,7 +70,7 @@ Risk levels are initial qualitative assessments, not measured probabilities. The
 | Read published portfolio/Lab metadata and public demos | Allow | Allow | Allow | Allow |
 | Read full source of a published experiment | Deny | Deny | Allow automatically | Allow |
 | Copy published source | Deny | Deny | Allow | Allow |
-| Like/unlike experiment | Deny | Deny | Own account, one active like per experiment | Own account under same invariant |
+| Like/unlike public experiment | Best-effort anonymous/browser-scoped like where supported | Same best-effort public-like capability; no account linkage | Own account, one persistent active like per experiment | Own account under same invariant |
 | Read own dashboard/activity | Deny | Deny | Own records only | Own records only |
 | Read aggregate source-engagement analytics | Deny | Deny | Deny | Allow |
 | Read/write source drafts, versions and publication | Deny | Deny | Deny | Allow after owner guard |
@@ -116,11 +116,11 @@ This matrix is the approved target source-access contract. The current implement
 
 - Collect only the event fields needed for approved metrics.
 - Do not put full source, credentials, message bodies or unnecessary personal data into analytics.
-- The initial source/copy/like event stream contains verified-account events only; guests and unverified users cannot trigger these controls.
+- Source-open and code-copy events are verified-account-only. Verified likes are persistent state transitions; public guest/unverified like actions may be counted separately where measurable as anonymous actions, not unique people.
 - Aggregate source opens, unique verified accounts, copies, active likes and like/unlike transitions by experiment. Do not expose user-level source activity in the first admin dashboard.
 - A copy event records a successful Clipboard API write acknowledgement accepted by the server; it does not prove the source was pasted, run or used.
 - A source-open event represents a successful authorized source response, not a public experiment detail-page view.
-- Like/unlike events are recorded only for server-confirmed changes to the unique user/experiment like state.
+- Verified like/unlike events are recorded only for server-confirmed changes to the unique user/experiment like state. Guest-like action events are separate best-effort counts and must not be represented as unique people.
 - Event retention, event deduplication window, account-deletion treatment and Privacy Policy wording are release gates. Do not invent retention periods; disclose the selected policy before enabling production analytics.
 
 ## 7. Security verification gates
@@ -198,7 +198,7 @@ The owner source-management workflow adds privileged code-writing and source-pub
 | T-OWNER-07: restore mutates historical source or deletes audit evidence | High | Restore creates a new immutable version; version and audit repositories are append-only to the application; no historical edit/delete UI/API; backup and migration reconciliation |
 | T-OWNER-08: owner-authored code executes with main-app cookies, credentials or server privileges | Critical | Source management is text-only; do not evaluate source. Any later live preview requires a separately approved isolated runtime and its own threat-model gate. |
 | T-OWNER-09: owner mutation CSRF or replay | High | Same-origin/CSRF protections compatible with Better Auth cookies, origin checks, POST/DELETE semantics, rate limiting, idempotency and audit correlation IDs |
-| T-OWNER-10: source-open/copy/like analytics are forged, replayed or inflated | High | Only verified sessions may submit; server derives actor and published source version; unique idempotency/event IDs; source-open recorded after successful response; copy requires client Clipboard API success acknowledgement; likes count only server state transitions; rate limits; aggregate-only admin DTOs |
+| T-OWNER-10: source-open/copy/like analytics are forged, replayed or inflated | High | Only verified sessions may submit source-open/copy events; server derives actor and published source version; unique idempotency/event IDs; source-open recorded after successful response; copy requires client Clipboard API success acknowledgement; verified likes count only server state transitions; guest-like actions are separately categorized, rate-limited and never counted as unique people; aggregate-only admin DTOs |
 
 ### 8.1 Required verification before source-management release
 
@@ -208,7 +208,7 @@ The owner source-management workflow adds privileged code-writing and source-pub
 - Source path traversal, absolute paths, duplicate names, unsupported encodings, binary data, excessive file count/bytes and secret-like content are rejected without logging sensitive values.
 - Concurrent draft saves return a conflict rather than overwriting newer content.
 - Publish/unpublish/restore failures leave the previous published pointer intact; restore creates a new snapshot.
-- Unpublishing denies subsequent source requests for all users. Verified-user source opens/copies/likes are idempotently counted, and duplicate likes do not inflate the active-like total.
+- Unpublishing denies subsequent source requests for all users. Verified-user source opens/copies/likes are idempotently counted, duplicate likes do not inflate active-like totals, and anonymous guest-like actions (if measurable) remain separately labelled.
 - Test cache isolation between two verified users, a guest, an unverified account and the owner; verify every source response is private/no-store.
 - Verify audit and analytics records contain no source content, clipboard text, emails, passwords, tokens, SMTP/API keys or raw secret values.
 - Confirm database bootstrap/migration can be replayed and reconciled without dropping legacy data.
