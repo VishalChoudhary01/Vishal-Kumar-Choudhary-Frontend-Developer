@@ -5,13 +5,13 @@ const COPY = {
   "not-configured": {
     title: "Owner access is not configured",
     description:
-      "This deployment does not have LABS_OWNER_USER_ID available. Add the owner account's stable Better Auth user ID to the Preview environment for feat/labs-platform-integration, then create a new deployment.",
+      "This deployment does not have LABS_OWNER_USER_ID available. Add either the owner's stable Better Auth user ID as LABS_OWNER_USER_ID or the verified email as LABS_OWNER_EMAIL to the Preview environment for feat/labs-platform-integration, then create a new deployment.",
     icon: AlertTriangle,
   },
   "account-mismatch": {
     title: "This account is not the configured Labs owner",
     description:
-      "You are signed in, but this account does not match LABS_OWNER_USER_ID. Set that variable to this account's stable Better Auth user ID in the integration branch's Preview environment, then redeploy.",
+      "You are signed in, but this account does not match the configured Labs owner. Set LABS_OWNER_USER_ID to the stable Better Auth user ID, or set LABS_OWNER_EMAIL to this verified email address, in the integration branch's Preview environment. Then redeploy.",
     icon: ShieldAlert,
   },
   "email-unverified": {
