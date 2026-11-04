@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
 import {
-  createGuestIdentity,
   getLabEngagement,
   LABS_GUEST_LIKE_COOKIE,
   resolveGuestIdentity,
@@ -59,16 +58,22 @@ export async function GET(request, { params }) {
 
   try {
     const session = await readSession();
+    const hasGuestCookie = Boolean(
+      request.cookies?.get?.(LABS_GUEST_LIKE_COOKIE)?.value,
+    );
     const identity =
-      session?.user?.id ? null : resolveGuestIdentity(request);
+      session?.user?.id || !hasGuestCookie
+        ? null
+        : resolveGuestIdentity(request);
     const actor = actorFor(session, identity);
     const engagement = await getLabEngagement({ slug, actor });
+    const canLikeAsGuest = !session?.user?.id;
 
     const response = json({
       data: {
         ...engagement,
-        likeAllowed: Boolean(actor),
-        actorType: actor?.type || "unverified",
+        likeAllowed: Boolean(actor) || canLikeAsGuest,
+        actorType: actor?.type || (canLikeAsGuest ? "guest" : "unverified"),
       },
     });
 
