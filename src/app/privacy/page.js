@@ -221,7 +221,7 @@ export default function PrivacyPage() {
           </ul>
         </div>
         <p>
-          For privacy questions, requests, or complaints, use the website's <Link className="text-brand underline-offset-4 hover:underline" href="/#contact">Contact section</Link>. Do not send passwords, one-time codes, session cookies, or password-reset links.
+          For privacy questions, requests, or complaints, use the website&apos;s <Link className="text-brand underline-offset-4 hover:underline" href="/#contact">Contact section</Link>. Do not send passwords, one-time codes, session cookies, or password-reset links.
         </p>
       </Section>
     </LegalDocumentPage>
