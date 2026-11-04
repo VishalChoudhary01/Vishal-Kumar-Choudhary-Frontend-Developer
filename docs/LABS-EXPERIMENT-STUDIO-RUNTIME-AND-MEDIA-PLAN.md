@@ -185,9 +185,14 @@ The first release should focus on DOM, CSS, pointer/keyboard events, Canvas 2D, 
 
 ## 5. Media upload and media library
 
+### Media fallback rule — locked product behavior
+
+The actual interactive code preview is always the primary experiment experience. Images, animated GIFs and videos are optional fallback media only; they are not required when the live code preview builds and runs successfully. The owner may attach at most one fallback item, and it is considered only when the selected runtime is unsupported, a build fails, or the runtime cannot start. A fallback must never replace a working React/JSX or HTML/CSS/JavaScript preview. It is not a card cover, gallery, or in-experiment asset role. Public detail pages should show the working runtime first and display the fallback only in a clearly labelled unavailable/unsupported state. If no fallback is supplied, the normal code-preview error/unsupported state is shown.
+
+
 ### 5.1 Supported user media
 
-The initial upload UI should support:
+Fallback media is optional, not part of the normal happy path. Upload media only when a code runtime cannot be previewed. The upload UI may support:
 - Still images: JPEG, PNG, WebP and AVIF.
 - Animated images: GIF.
 - Video: MP4 and WebM.
@@ -213,11 +218,9 @@ Never accept a client-supplied Cloudinary public ID as proof of ownership. Verif
 ### 5.3 Media roles
 
 One asset may be attached for one or more explicitly selected roles:
-- Card cover: used on the Labs listing.
-- Detail gallery: displayed in the experiment detail page.
-- In-experiment asset: referenced by authored HTML/CSS/React code.
+- Fallback preview: one optional image, animated GIF or video shown only when the code runtime cannot run or is unsupported.
 
-The owner can reorder gallery items, select a cover, edit alt text/caption and remove an attachment. Removing an attachment must not destroy an asset still referenced by a draft, published release or historical version.
+The owner can select or clear the single fallback asset and edit its alt text/caption. No gallery, card-cover or in-experiment attachment roles are part of this scope. Removing an attachment must not destroy an asset still referenced by a draft, published release or historical version.
 
 Video assets should have a poster image. Public video players use controls and do not autoplay with sound. Card video behavior is opt-in and muted; a poster is the default. Animated GIF motion must respect reduced-motion preferences and must not be the only way to communicate essential information.
 
@@ -242,7 +245,7 @@ Do not store original media binary payloads in MongoDB. MongoDB stores provider 
 
 ## 6. Versioned data and immutable release model
 
-The existing LabSourceVersion remains the code snapshot record. The complete published experience must also pin its metadata, build and media. A new immutable release manifest is therefore recommended.
+The existing LabSourceVersion remains the code snapshot record. The complete published experience must pin its metadata and build. If a fallback is attached, that single fallback reference is pinned in the release manifest. No other media manifest is required.
 
 ### 6.1 LabExperiment
 
@@ -282,7 +285,7 @@ Proposed immutable release manifest tying together:
 - Experiment slug and a snapshot of public metadata.
 - Exact LabSourceVersion ID.
 - Exact successful LabBuildArtifact ID.
-- Exact ordered LabMediaAsset IDs and role/alt/caption/poster metadata.
+- Optional single fallback LabMediaAsset ID with role `fallback-preview`, alt text and caption.
 - Runtime/toolchain/dependency manifest.
 - Server-created content hash, validation result, actor and timestamp.
 
@@ -307,7 +310,7 @@ Preview-run status and short-lived artifacts/logs may use a separate LabPreviewR
 11. A later save/preview does not change the public release. Publish the new exact release to replace it.
 12. Unpublish prevents new public runtime/source access; historical releases remain available to the owner for rollback/restore under the approved retention policy.
 
-A successful preview of unsaved code is not publishable by itself. Publication requires a successful build for the exact saved source version and exact media manifest being published. Any code, metadata, dependency or asset change invalidates the prior release validation.
+A successful preview of unsaved code is not publishable by itself. A fallback asset is not a substitute for a successful production-equivalent compiler/runtime validation and cannot make a failed build publishable. Publication requires a successful build for the exact saved source version and exact media manifest being published. Any code, metadata, dependency or asset change invalidates the prior release validation.
 
 ## 8. Proposed API/service boundaries
 
@@ -374,7 +377,7 @@ Do not send raw Cloudinary credentials, source content to public endpoints, comp
 ### Phase 2 — Media asset pipeline
 - **Initial upload foundation implemented:** signed direct-upload intent, Cloudinary Admin API preset-mode verification, upload finalization/resource verification, `LabMediaAsset` persistence, owner media inventory and audit events.
 - **Remaining:** configure the signed image/video presets and `LABS_MEDIA_MAX_UPLOAD_BYTES` in the actual Preview environment; complete format-by-format upload and authenticated-delivery tests.
-- Add media preview delivery, cover/gallery/runtime attachment roles, alt text/caption and video poster metadata.
+- Add owner-only private media preview delivery and a single optional `fallback-preview` attachment role with alt text/caption. Do not implement cover, gallery or in-experiment media roles.
 - Attach media references to immutable draft/release manifests.
 - Verify draft media privacy, public release delivery, deletion/reference integrity and orphan cleanup.
 
@@ -388,15 +391,14 @@ Do not send raw Cloudinary credentials, source content to public endpoints, comp
 ### Phase 4 — Full live preview
 - Replace/adapt the current srcDoc prototype to the separate-origin artifact runtime.
 - Add build status, ready state, console, runtime errors, timeouts, stop/restart and desktop/mobile size controls.
-- Resolve @labs/assets from the exact uploaded media manifest.
-- Test image, animated GIF and video inside React and in plain HTML/CSS/JS.
+- Do not require an @labs/assets module for fallback media. Test image, animated GIF and video only as fallback presentation when code preview cannot run.
 - Ensure no network access, app cookies, parent DOM access or user-session leakage.
 
 ### Phase 5 — Immutable release and public Labs detail page
 - Create release manifest tying metadata, code snapshot, build artifact and media manifest.
 - Publish only a successful exact build/release.
 - Render the actual interactive demo on the public experiment detail page.
-- Render selected cover media on the listing card and optional media gallery on the detail page.
+- Render the actual interactive code runtime as the primary detail-page experience. Show the optional fallback asset only when the runtime cannot run or is unsupported.
 - Keep source viewer restricted to verified registered accounts and expose only the source belonging to the published release.
 - Add unpublish, restore/republish and cache invalidation behavior.
 
@@ -420,7 +422,7 @@ Do not send raw Cloudinary credentials, source content to public endpoints, comp
 ### Media
 - Owner uploads valid JPEG/PNG/WebP/AVIF, GIF, MP4 and WebM.
 - Invalid MIME/signature, oversized media, unsupported format and failed transformations are rejected with safe feedback.
-- Cover selection, gallery order, alt text, captions and video poster display correctly.
+- The optional fallback media is shown only for failed/unsupported runtime states; a successful code preview always takes precedence. Alt text and captions display correctly.
 - React source can reference an attached asset through the virtual asset module.
 - Unknown asset keys fail validation; an experiment cannot reference another owner's asset.
 - Draft assets are inaccessible from public routes; published release assets load through the approved CDN.
