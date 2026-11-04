@@ -139,7 +139,7 @@ The Atlas-backed source viewer protects separate source snapshots. Do not claim 
 - [ ] Duplicate registration responses do not expose account existence.
 - [ ] Registration, sign-in, reset and resend rate limits are tested.
 - [ ] Safe return-path cases reject external/protocol-relative destinations.
-- [ ] Guest, unverified, verified-ungranted, granted, expired-grant and revoked-grant requests are tested.
+- [ ] Guest and signed-in-unverified source requests are denied; every verified account can access any published source without a grant.
 - [ ] Source responses carry private/no-store headers and source never appears in anonymous HTML, RSC payloads or public caches.
 - [ ] Logout and password reset revoke access across tabs/devices; active source views clear on invalidation.
 - [ ] Light/dark, mobile/keyboard, accessibility and existing portfolio regression checks pass.
@@ -208,7 +208,7 @@ These are operational policy drafts. The owner should review them with a qualifi
 
 ## 13. Owner-managed source lifecycle — planning update (2026-11-04)
 
-The current Sections 4–5 describe the **existing interim storage/grant shape**. They are not a completed owner management workflow and must not be mistaken for immutable versioning or a provisioned source snapshot.
+The original Sections 4–5 grant instructions have been superseded by the verified-account source-access decision. Section 5 is now a migration runbook, not an instruction to insert grant documents. These notes distinguish the legacy runtime from the approved target and must not be mistaken for completed owner management or immutable versioning.
 
 Follow `docs/LABS-SOURCE-MANAGEMENT-SPEC.md` for the target owner capability and migration plan.
 
@@ -216,7 +216,7 @@ Follow `docs/LABS-SOURCE-MANAGEMENT-SPEC.md` for the target owner capability and
 - `LabSource` currently stores a mutable per-slug document with embedded files, a version string and a published flag.
 - `LabSourceGrant` currently stores a unique per-user/per-experiment grant; this is legacy transition state and will be retired.
 - The protected source endpoint currently requires verified Better Auth identity + matching active grant + published source record. The locked target removes the grant requirement.
-- No owner source editor, source CRUD/publish/version API, grant administration UI or append-only source audit collection exists yet.
+- No owner source editor, source CRUD/publish/version API, source-engagement dashboard or append-only source audit collection exists yet.
 - Source collections/snapshots are not created by public account registration. An empty collection is not a valid source snapshot.
 
 ### Target owner release
@@ -225,16 +225,16 @@ Follow `docs/LABS-SOURCE-MANAGEMENT-SPEC.md` for the target owner capability and
 - Source editing is text-only: add/edit/rename/delete files, validate, save draft, inspect immutable versions, restore, publish/unpublish, and inspect source-engagement aggregates.
 - The target data model separates source aggregate pointers, immutable `lab_source_versions`, verified-user current likes in `lab_likes`, source/copy/like events in `lab_analytics_events`, and append-only `lab_source_audit_events`. Legacy `lab_source_grants` is retired.
 - Save draft never publishes. Publish selects an exact immutable version. Restore creates a new version. Unpublish stops subsequent regular-user source reads without deleting history or engagement events.
-- Owner endpoints, editor state and source contents are private/no-store. All operations derive actor identity server-side, enforce owner authorization at each boundary, use concurrency/idempotency, validate source text, and emit safe audit events.
+- Owner endpoints, editor state and source contents are private/no-store. All operations derive actor identity server-side, enforce owner authorization at each boundary, use concurrency/idempotency, validate source text, and emit safe audit events. Analytics endpoints expose aggregates only.
 - Database bootstrap/migration must be idempotent and preserve current records. Do not manually create empty collections as a substitute for a migration or source import.
 - Stored source is not executed. Any future live preview of owner-authored code requires a separate isolated runtime decision and threat-model review.
 
 ### Recommended implementation order
 1. Owner identity and automatic verified-account source access are approved; implement the singleton owner guard and remove the legacy per-user source grant check.
 2. Audit the canonical `magnetic-interaction` source file inventory; do not guess paths or include secrets.
-3. Implement source aggregate/version/audit schemas, indexes, idempotent bootstrap and migration tests.
+3. Implement source aggregate/version/audit/likes/analytics schemas, indexes, idempotent bootstrap and migration tests.
 4. Implement owner guard and source/likes/analytics domain use cases before UI.
-5. Build the lazy-loaded owner editor and grant UI; keep editor dependencies out of public routes.
+5. Build the lazy-loaded owner editor and aggregate source-engagement dashboard; keep editor/analytics dependencies out of public routes.
 6. Import the first source snapshot, publish it and validate guest/unverified denial, automatic verified-account access, copy/like actions and owner management.
 7. Keep live source execution deferred until separately approved and threat-modelled.
 
