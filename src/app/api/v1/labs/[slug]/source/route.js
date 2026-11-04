@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
 import { getAuthorizedLabSource } from "@/app/lib/labs/source-access";
+import { getPublishedLabExperimentBySlug } from "@/app/data/labsExperiments";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,7 +24,10 @@ function response(body, status) {
 export async function GET(_request, { params }) {
   const { slug } = await params;
 
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug || "")) {
+  if (
+    !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug || "") ||
+    !getPublishedLabExperimentBySlug(slug)
+  ) {
     return response(
       { error: { code: "NOT_FOUND", message: "Source is not available." } },
       404,
@@ -77,7 +81,7 @@ export async function GET(_request, { params }) {
           error: {
             code: "SOURCE_ACCESS_DENIED",
             message:
-              "Your account doesn't currently have permission to view this experiment's source code.",
+              "Verify your email before requesting protected source.",
           },
         },
         403,
