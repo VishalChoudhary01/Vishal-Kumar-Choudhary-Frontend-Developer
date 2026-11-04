@@ -181,3 +181,37 @@ Remaining release/security gates:
 - Verification-flow IDs are random, short-lived references. The success screen checks server-side state written by Better Auth's post-verification hook. Query parameters alone never prove email ownership.
 - Verification-flow rows have a seven-day TTL. Legal consent receipts are not automatically expired by that transient-flow TTL.
 - Resend requests return generic results to avoid revealing whether an email maps to an account.
+
+## 8. Owner-managed Labs source threats and controls
+
+The owner source-management workflow adds privileged code-writing and access-grant surfaces. It does not relax the existing public/private source boundary.
+
+| Threat | Risk | Required controls |
+|---|---:|---|
+| T-OWNER-01: attacker reaches owner page/API or forges owner identity | Critical | Server-only singleton owner identity; server-derived Better Auth actor; deny if owner config is absent; recheck owner permission at transport, use-case and repository boundaries; no first-user/email/client-role fallback; negative IDOR tests |
+| T-OWNER-02: regular user grants themselves or another user source access | Critical | Owner-only grant mutations; accept normalized email, resolve user server-side; require verified target; never accept user ID, grantor, active state or role from the browser; unique user/experiment index; audit grant/revoke |
+| T-OWNER-03: malicious source path, oversized/binary file or crafted editor payload | High | Text-only format, strict relative-path and language allowlists, duplicate-path rejection, UTF-8 byte/file-count limits, server-computed hashes, safe error messages and mutation rate limits |
+| T-OWNER-04: credentials/secrets accidentally stored in source snapshots | High | Reject/flag secret files and suspicious secret patterns before persistence; never log matched values or file contents; provide owner correction workflow; document that scanning is defense-in-depth, not proof of no secrets |
+| T-OWNER-05: source draft or version leaks through guest HTML/RSC/API/cache/logging | Critical | Separate owner DTOs and source API; private/no-store headers; do not preload source; no public static assets/source maps; response/cache tests across guest, user and owner identities; redact logs and analytics |
+| T-OWNER-06: editor save overwrites a newer draft or publishes unintended content | High | Immutable snapshots, expected-version/draft-pointer precondition, 409 conflicts, explicit save/publish separation, exact version ID on publish, idempotency and failure-safe pointer updates |
+| T-OWNER-07: restore mutates historical source or deletes audit evidence | High | Restore creates a new immutable version; version and audit repositories are append-only to the application; no historical edit/delete UI/API; backup and migration reconciliation |
+| T-OWNER-08: owner-authored code executes with main-app cookies, credentials or server privileges | Critical | Source management is text-only; do not evaluate source. Any later live preview requires a separately approved isolated runtime and its own threat-model gate. |
+| T-OWNER-09: owner mutation CSRF or replay | High | Same-origin/CSRF protections compatible with Better Auth cookies, origin checks, POST/DELETE semantics, rate limiting, idempotency and audit correlation IDs |
+
+### 8.1 Required verification before source-management release
+
+- Guest and regular verified-user direct requests to every owner endpoint return 401/403 and never include source, version drafts, target-user information or audit details.
+- Owner identity missing, malformed, wrong, deleted or unverified denies owner operations.
+- Client attempts to forge actor ID, owner role, target user ID, grantor, published pointer, version number, content hash or audit actor are ignored/rejected.
+- Source path traversal, absolute paths, duplicate names, unsupported encodings, binary data, excessive file count/bytes and secret-like content are rejected without logging sensitive values.
+- Concurrent draft saves return a conflict rather than overwriting newer content.
+- Publish/unpublish/restore failures leave the previous published pointer intact; restore creates a new snapshot.
+- Grant/revoke/expiry take effect on the next protected source request and do not reveal account existence through public endpoints.
+- Test cache isolation between two registered users, an owner, a guest and an ungranted account.
+- Verify audit entries contain no source content, passwords, tokens, SMTP/API keys or raw secret values.
+- Confirm database bootstrap/migration can be replayed and reconciled without dropping legacy data.
+- Existing public Labs demos remain code-owned; no text stored in Atlas is executed by this feature.
+
+### 8.2 Scope boundary
+
+Owner-only source editing, snapshot storage and authorized source viewing do not approve arbitrary live execution. A later preview runtime must separately address cross-origin isolation, cookie/storage separation, strict CSP, network egress, dependency policy, resource/time limits, messaging and abuse monitoring before implementation.
