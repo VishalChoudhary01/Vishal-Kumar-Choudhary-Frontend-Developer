@@ -23,22 +23,26 @@ export default async function LabsSourceEditorPage({ params }) {
 
   const { slug } = await params;
 
+  let source;
+  let versions;
+  let audit;
+
   try {
-    const [source, versions, audit] = await Promise.all([
+    [source, versions, audit] = await Promise.all([
       getOwnerLabSource({ user: session.user, slug }),
       listOwnerLabVersions({ user: session.user, slug }),
       listOwnerLabAuditEvents({ user: session.user, slug, limit: 20 }),
     ]);
-
-    return (
-      <LabSourceEditor
-        initialSource={source}
-        initialVersions={versions}
-        initialAudit={audit}
-      />
-    );
   } catch (error) {
     if (error?.code === "NOT_FOUND") notFound();
     throw error;
   }
+
+  return (
+    <LabSourceEditor
+      initialSource={source}
+      initialVersions={versions}
+      initialAudit={audit}
+    />
+  );
 }
