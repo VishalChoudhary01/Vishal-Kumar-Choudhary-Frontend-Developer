@@ -72,7 +72,7 @@ These paths are candidate REST endpoints; the same use cases may be Server Actio
 - `GET /api/lab/:slug` — published experiment metadata and guest-safe partial source only.
 - `POST /api/lab/:id/like` — create/activate like under actor-specific policy.
 - `DELETE /api/lab/:id/like` — remove authenticated like; guest behavior must be explicitly defined.
-- `GET /api/v1/labs/:slug/source` — implemented authenticated full-source read; requires a verified Better Auth session and a separate active per-user/per-experiment grant; private/no-store response.
+- `GET /api/v1/labs/:slug/source` — implemented authenticated full-source read; requires a verified Better Auth session and a separate active per-user/per-experiment grant (or a separately verified owner policy); private/no-store response.
 - `POST /api/lab/:id/copy-event` — record supported copy action with abuse controls; never accept source content as a trusted event claim.
 - `POST /api/lab/:id/preview-session` — authorize preview launch; actual execution is delegated to approved isolated infrastructure.
 - `POST /api/lab/:id/preview-events` — accept only allowlisted, bounded, validated instrumented events.
@@ -220,7 +220,7 @@ For each endpoint/action, test:
 - Registration is consent-gated and routed through `POST /api/labs/register`; direct Better Auth email sign-up is blocked at the App Router adapter.
 - Consent records use the current `TERMS_OF_SERVICE_VERSION`, `PRIVACY_POLICY_VERSION` and server-generated `consentAcceptedAt`. The browser does not choose these values.
 - The source DTO returned from `GET /api/v1/labs/:slug/source` contains only `slug`, `version`, `updatedAt` and validated file objects (`path`, `language`, `content`). It is never included in public Labs listing/detail DTOs.
-- Source authorization is deny-by-default and requires an active grant matching the server-derived Better Auth user ID and experiment slug. Do not trust a client-supplied user ID, grant ID or role.
+- Regular-user source authorization is deny-by-default and requires an active grant matching the server-derived Better Auth user ID and experiment slug. The future owner-management policy is separate and must be checked through a server-only owner guard. Do not trust a client-supplied user ID, grant ID, owner status or role.
 - Atlas collections used by the feature are `lab_sources`, `lab_source_grants`, and Better Auth's provider-managed collections. Source/grant records are not created automatically by the public application.
 - Response headers are `Cache-Control: private, no-store, no-cache, max-age=0, must-revalidate`, `Pragma: no-cache`, and `Vary: Cookie, Authorization`.
 - See `docs/LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md` for environment setup, grant provisioning and the public-runtime source-confidentiality limitation.
@@ -238,3 +238,64 @@ For each endpoint/action, test:
 - `GET /privacy` — public, indexable Privacy Policy page.
 - Both routes are included in the sitemap and linked from the site footer, contact form and Labs registration screen.
 - Policy version values are selected on the server from `src/app/lib/legal/policies.js`; clients cannot submit alternate values as authoritative consent.
+
+## 9. Owner-only Labs source-management contracts
+
+**Status:** Proposed contracts from `LABS-SOURCE-MANAGEMENT-SPEC.md`; not implemented by the current source-viewing foundation. Final route naming is subject to Phase 1 approval.
+
+### Owner authorization prerequisite
+
+- All endpoints in this section require a valid Better Auth session, verified email, and the server-side singleton Owner authorization check.
+- Recommended initial owner resolution is a server-only `LABS_OWNER_USER_ID` environment setting containing the stable Better Auth user ID. If absent or mismatched, deny with 403; never fall back to the first user or client-provided role.
+- The owner may manage source without creating an ordinary user grant. This exception does not apply to regular registered accounts.
+- Owner routes/actions must be independently protected at transport, domain-use-case and data-access boundaries.
+
+### Proposed endpoints
+
+| Operation | Proposed endpoint | Contract |
+|---|---|---|
+| List source inventory | `GET /api/v1/admin/labs/sources` | Owner-only paginated aggregate metadata; no file contents in list response |
+| Create source aggregate | `POST /api/v1/admin/labs/sources` | Validates an existing canonical experiment slug; creates one source head only |
+| Read source editor state | `GET /api/v1/admin/labs/sources/:slug` | Owner-only draft/published pointers, current draft files and validation metadata |
+| Save draft snapshot | `POST /api/v1/admin/labs/sources/:slug/versions` | Validates file set; creates immutable snapshot; requires expected draft/version token |
+| List versions | `GET /api/v1/admin/labs/sources/:slug/versions` | Owner-only version metadata, actor and timestamp |
+| View a version | `GET /api/v1/admin/labs/sources/:slug/versions/:versionId` | Owner-only source contents, private/no-store |
+| Restore version | `POST /api/v1/admin/labs/sources/:slug/restore/:versionId` | Creates a new draft snapshot based on an immutable historical version |
+| Publish exact version | `POST /api/v1/admin/labs/sources/:slug/publish` | Explicitly advances published pointer to a previously saved version |
+| Unpublish source | `POST /api/v1/admin/labs/sources/:slug/unpublish` | Clears published pointer; preserves versions and grants |
+| List grants | `GET /api/v1/admin/labs/sources/:slug/grants` | Owner-only per-experiment grants |
+| Grant/re-grant by email | `POST /api/v1/admin/labs/sources/:slug/grants` | Resolves exact normalized email server-side; target must exist and be verified |
+| Revoke grant | `DELETE /api/v1/admin/labs/sources/:slug/grants/:grantId` | Revokes one grant; grant ID is scoped to the route experiment |
+| Read source audit | `GET /api/v1/admin/labs/sources/:slug/audit` | Owner-only paginated append-only audit metadata |
+
+These are candidate endpoints, not permission to build a full CMS. Same-app mutations may use Server Actions if that yields a smaller attack surface; whichever transport is selected must preserve these domain contracts.
+
+### Domain invariants
+
+- Source aggregate is one-per-experiment and holds only draft/published version pointers plus lifecycle metadata.
+- Immutable source versions hold file arrays, server-computed content hash, version number, actor, timestamp and optional parent version.
+- Saving a draft never advances the published pointer. Publishing selects an existing immutable version and does not execute it.
+- Unpublishing denies subsequent regular-user reads even when grants remain active.
+- Restoring a prior version creates a new immutable version; it never modifies the historical snapshot.
+- Grant identity is `{ userId, experimentSlug }`, with a unique index. A re-grant updates this row; audit events preserve prior grant/revoke actions.
+- The grant endpoint accepts email and expiry only; the server resolves the user. Never accept a client-supplied user ID, grantor, role or active flag.
+- Source/draft/version/grant/audit responses are private/no-store and are never included in public DTOs.
+- Every state-changing operation requires concurrency protection, idempotency/replay handling and an audit event.
+
+### Proposed source domain records
+
+- `lab_sources`: unique experiment slug, `draftVersionId`, `publishedVersionId`, created/updated actor and timestamps.
+- `lab_source_versions`: source ID/slug, monotonic version number, immutable files, server-calculated content hash, parent version, bounded change summary, actor and timestamp.
+- `lab_source_grants`: canonical Better Auth user ID, experiment slug, active state, grantor, grant/revoke timestamps and optional expiry. Preserve the current unique user/experiment index.
+- `lab_source_audit_events`: actor, action, experiment, version/target user references, request ID, safe outcome code and timestamp. No source text, credentials, raw tokens or secrets.
+
+These are target records. The inspected implementation currently embeds `files` in a mutable `LabSource` record and has no separate immutable version/audit collection. Do not treat the proposed model as already migrated.
+
+### Additional contract tests
+
+- Guest, unverified user, verified-ungranted user, verified-granted user, owner, expired grant, revoked grant and unpublished source.
+- Owner guard missing/mismatched, owner session expired, user attempts owner API directly, client forges actor/user/role/version/published fields.
+- Duplicate source aggregate, duplicate file path, path traversal, binary/oversized file, secret-bearing file, stale draft pointer, publish of unsaved/wrong version, repeated publish/revoke/save.
+- Failed writes preserve the previous published pointer. Restore creates a new version. Revoke/unpublish affects the next source request.
+- Source contents do not leak into list APIs, guest HTML/RSC, public APIs, logs, analytics or shared caches.
+
