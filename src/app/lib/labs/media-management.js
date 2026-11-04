@@ -51,7 +51,7 @@ function getCloudinary() {
 }
 
 function safeFilename(value) {
-  const filename = typeof value === "string" ? value.trim().split(/[\\\\/]/).pop() : "";
+  const filename = typeof value === "string" ? value.trim().split(/[\\/]/).pop() : "";
   const safe = (filename || "upload").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 180);
   return safe || "upload";
 }
