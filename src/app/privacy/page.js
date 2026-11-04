@@ -153,7 +153,7 @@ export default function PrivacyPage() {
           <li>Consent receipts are retained separately from short-lived verification records so the policy versions and acceptance time can be referenced. They are not automatically removed by verification-flow expiry.</li>
           <li>Verified likes remain active until you unlike the experiment or the account is deleted. Anonymous like identities and their active like state expire after 180 days without a visit that refreshes the identity. Engagement event records are retained for service measurement and integrity; a fixed automatic expiry period is not currently configured.</li>
           <li>Contact messages remain in the receiving email mailbox and associated provider systems until deleted under mailbox retention practices or no longer needed for a legitimate purpose.</li>
-          <li>Hosting and provider logs follow the relevant provider's retention controls and may remain in backups for a limited period.</li>
+          <li>Hosting and provider logs follow the relevant provider&apos;s retention controls and may remain in backups for a limited period.</li>
         </ul>
         <p>
           Where you request account deletion, I will review the request and delete or de-identify information that no longer needs to be retained, subject to legal, security, backup, and dispute-resolution requirements.
@@ -198,7 +198,7 @@ export default function PrivacyPage() {
           This policy may be updated when the service, data practices, providers, or applicable law changes. The effective date and version at the top identify the current text. For material changes to the information collected or the purposes for which it is used, the relevant notice and consent flow will be updated where required.
         </p>
         <p>
-          This notice is prepared with reference to India's Digital Personal Data Protection Act, 2023 and Digital Personal Data Protection Rules, 2025. Those instruments have phased commencement. Applicability depends on the relevant provision and its notified commencement date; publication of this policy is not a certification that the service has completed every compliance requirement.
+          This notice is prepared with reference to India&apos;s Digital Personal Data Protection Act, 2023 and Digital Personal Data Protection Rules, 2025. Those instruments have phased commencement. Applicability depends on the relevant provision and its notified commencement date; publication of this policy is not a certification that the service has completed every compliance requirement.
         </p>
         <div className="rounded-sm border border-border bg-surface-1 p-5">
           <p className="text-sm font-semibold text-text-primary">Official Indian privacy-law resources</p>
