@@ -1,6 +1,6 @@
 # Labs Source Management — Owner Console and Protected Code Lifecycle
 
-**Status:** Source storage/editor foundation and owner-created experiment catalogue are implemented on `feat/labs-platform-integration`. The HTML/CSS/JavaScript iframe runner is a limited prototype; React/JSX compilation, media upload, immutable runtime releases and public custom-experiment execution remain planned. Production release remains gated by owner/SMTP configuration, Atlas provisioning/migration, sandbox/security validation and privacy review.  
+**Status:** Source storage/editor foundation, owner-created experiment catalogue, and the initial signed Cloudinary upload/verification path are implemented on `feat/labs-platform-integration`. The HTML/CSS/JavaScript iframe runner is a limited prototype; React/JSX compilation, media preview/attachment, immutable runtime releases and public custom-experiment execution remain planned. Production release remains gated by owner/SMTP configuration, Atlas provisioning/migration, Cloudinary preset/quota setup, sandbox/security validation and privacy review.  
 **Version:** 0.2  
 **Updated:** 2026-11-05  
 **Related:** `PRD.md`, `ARCHITECTURE.md`, `API-CONTRACTS.md`, `THREAT-MODEL.md`, `IMPLEMENTATION-PLAN.md`, `DESIGN-LAB.md`, `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`, `LABS-AND-AUTHENTICATION-DESIGN-SPEC.md`, `LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md`
