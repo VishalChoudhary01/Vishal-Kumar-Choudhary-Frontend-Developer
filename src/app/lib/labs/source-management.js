@@ -569,3 +569,29 @@ export async function unpublishOwnerLabSource({
 
   return { published: false, publishedVersionId: null };
 }
+
+export async function listOwnerLabAuditEvents({ user, slug, limit = 20 }) {
+  assertOwner(user);
+  assertExperiment(slug);
+
+  const safeLimit = Math.min(50, Math.max(1, Number(limit) || 20));
+
+  await connectToDatabase();
+  await ensureIndexes();
+
+  const events = await LabSourceAuditEvent.find({ experimentSlug: slug })
+    .select("action experimentSlug versionId requestId resultCode createdAt")
+    .sort({ createdAt: -1 })
+    .limit(safeLimit)
+    .lean();
+
+  return events.map((event) => ({
+    action: event.action,
+    experimentSlug: event.experimentSlug,
+    versionId: event.versionId || null,
+    requestId: event.requestId || null,
+    resultCode: event.resultCode,
+    createdAt: event.createdAt?.toISOString?.() || null,
+  }));
+}
+
