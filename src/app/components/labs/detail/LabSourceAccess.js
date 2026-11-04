@@ -22,17 +22,23 @@ export default function LabSourceAccess({ slug }) {
   const [copied, setCopied] = useState(false);
   const { data: session, isPending: sessionPending } = authClient.useSession();
   const sourceRef = useRef(null);
+  const sourceRequestRef = useRef(0);
+  const autoOpenKeyRef = useRef(null);
 
   const signInHref = "/labs/login?returnTo=" + encodeURIComponent(returnTo);
   const signUpHref = "/labs/signup?returnTo=" + encodeURIComponent(returnTo);
 
   async function loadSource() {
+    const requestId = sourceRequestRef.current + 1;
+    sourceRequestRef.current = requestId;
+    const requestedSlug = slug;
+
     setLoading(true);
     setError("");
 
     try {
       const response = await fetch(
-        "/api/v1/labs/" + encodeURIComponent(slug) + "/source",
+        "/api/v1/labs/" + encodeURIComponent(requestedSlug) + "/source",
         {
           method: "GET",
           cache: "no-store",
@@ -41,6 +47,7 @@ export default function LabSourceAccess({ slug }) {
         },
       );
       const payload = await response.json().catch(() => ({}));
+      if (sourceRequestRef.current !== requestId) return;
 
       if (response.status === 401) {
         sourceRef.current = null;
@@ -84,9 +91,9 @@ export default function LabSourceAccess({ slug }) {
         return;
       }
 
-      sourceRef.current = payload.data;
-      setSource(payload.data);
-      fetch("/api/v1/labs/" + encodeURIComponent(slug) + "/source/events", {
+      sourceRef.current = { ...payload.data, slug: requestedSlug };
+      setSource({ ...payload.data, slug: requestedSlug });
+      fetch("/api/v1/labs/" + encodeURIComponent(requestedSlug) + "/source/events", {
         method: "POST",
         cache: "no-store",
         credentials: "same-origin",
@@ -103,20 +110,27 @@ export default function LabSourceAccess({ slug }) {
       setSelectedFile(0);
       setState("loaded");
     } catch {
-      setError("Unable to load source right now. Please try again.");
-      setState("error");
+      if (sourceRequestRef.current === requestId) {
+        setError("Unable to load source right now. Please try again.");
+        setState("error");
+      }
     } finally {
-      setLoading(false);
+      if (sourceRequestRef.current === requestId) setLoading(false);
     }
   }
 
   useEffect(() => {
     const shouldOpen = new URLSearchParams(window.location.search).get("source") === "1";
+    const autoOpenKey =
+      pathname + ":" + slug + ":" + (session?.user?.id || "guest");
+    const canAutoOpen =
+      shouldOpen && !sessionPending && autoOpenKeyRef.current !== autoOpenKey;
 
-    const autoOpenTimer =
-      shouldOpen && !sessionPending
-        ? window.setTimeout(() => loadSource(), 0)
-        : null;
+    if (canAutoOpen) autoOpenKeyRef.current = autoOpenKey;
+
+    const autoOpenTimer = canAutoOpen
+      ? window.setTimeout(() => loadSource(), 0)
+      : null;
 
     let checking = false;
 
@@ -179,6 +193,8 @@ export default function LabSourceAccess({ slug }) {
     });
 
     return () => {
+      sourceRequestRef.current += 1;
+      sourceRef.current = null;
       window.clearInterval(timer);
       if (autoOpenTimer !== null) window.clearTimeout(autoOpenTimer);
       document.removeEventListener("visibilitychange", onVisibilityChange);
@@ -186,9 +202,10 @@ export default function LabSourceAccess({ slug }) {
     };
     // Wait for the client session check before auto-requesting protected source.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionPending, session?.user?.id]);
+  }, [pathname, slug, sessionPending, session?.user?.id]);
 
   const copyCurrentFile = async () => {
+    if (source?.slug !== slug) return;
     const file = source?.files?.[selectedFile];
     if (!file) return;
 
@@ -265,10 +282,10 @@ export default function LabSourceAccess({ slug }) {
             <div>
               <h2 className="text-base font-semibold">{accessHeading}</h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">
-                Your account doesn&apos;t currently have permission to view this experiment&apos;s source code.
+                This source is not available for the current request. No individual source grant is required.
               </p>
               <p className="mt-1 text-xs text-text-tertiary">
-                You&apos;re signed in, but this source is currently unpublished.
+                Every Labs account with a verified email can automatically access a published source snapshot.
               </p>
               <Link
                 href={"/labs/" + slug}
