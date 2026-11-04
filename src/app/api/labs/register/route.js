@@ -8,6 +8,7 @@ import {
 } from "@/app/lib/auth/auth";
 import { consumeRegistrationAttempt } from "@/app/lib/auth/registration-rate-limit";
 import { getSafeReturnTo } from "@/app/lib/auth/return-to";
+import { getLegalDocumentConfig } from "@/app/lib/legal/policies";
 import {
   discardUnlinkedRegistrationConsent,
   recordRegistrationConsent,
@@ -63,21 +64,9 @@ export async function POST(request) {
       );
     }
 
-    const termsVersion = process.env.TERMS_OF_SERVICE_VERSION;
-    const privacyVersion = process.env.PRIVACY_POLICY_VERSION;
-    const termsUrl = process.env.NEXT_PUBLIC_TERMS_OF_SERVICE_URL;
-    const privacyUrl = process.env.NEXT_PUBLIC_PRIVACY_POLICY_URL;
-
-    if (
-      !termsVersion || !privacyVersion || !termsUrl || !privacyUrl ||
-      new URL(termsUrl).protocol !== "https:" ||
-      new URL(privacyUrl).protocol !== "https:"
-    ) {
-      return json(
-        { error: { code: "AUTH_SETUP_REQUIRED", message: "Account registration is not available yet." } },
-        503,
-      );
-    }
+    const legalDocuments = getLegalDocumentConfig();
+    const termsVersion = legalDocuments.terms.version;
+    const privacyVersion = legalDocuments.privacy.version;
 
     const rate = await consumeRegistrationAttempt(request);
     if (!rate.allowed) {

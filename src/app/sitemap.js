@@ -24,6 +24,18 @@ export default function sitemap() {
       changeFrequency: "monthly",
       priority: 0.75,
     },
+    {
+      url: `${base}/terms`,
+      lastModified: new Date("2026-11-04T00:00:00.000Z"),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: `${base}/privacy`,
+      lastModified: new Date("2026-11-04T00:00:00.000Z"),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
   ];
 
   for (const project of projects) {

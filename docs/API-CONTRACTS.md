@@ -230,3 +230,11 @@ For each endpoint/action, test:
 
 - `labs_registration_consents`: opaque receipt ID, keyed email digest, Better Auth user ID when linked, Terms version, Privacy version, server acceptance timestamp, linkage timestamp and verification timestamp. Do not store raw email or accept legal version/timestamp values from the client.
 - `labs_verification_flows`: opaque flow ID, keyed email digest, created/expiry timestamps and verified timestamp. A TTL index removes expired flow records after seven days. This is transport state, not the legal audit record.
+
+
+### Public legal-document routes
+
+- `GET /terms` — public, indexable Terms of Service page.
+- `GET /privacy` — public, indexable Privacy Policy page.
+- Both routes are included in the sitemap and linked from the site footer, contact form and Labs registration screen.
+- Policy version values are selected on the server from `src/app/lib/legal/policies.js`; clients cannot submit alternate values as authoritative consent.

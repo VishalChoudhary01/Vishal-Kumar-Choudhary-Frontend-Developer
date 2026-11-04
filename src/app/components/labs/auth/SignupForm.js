@@ -183,7 +183,7 @@ export default function SignupForm({
             <input
               id="legal-consent"
               type="checkbox"
-              aria-label="I agree to the Terms of Service and Privacy Policy."
+              aria-label="I confirm I am 18 or older and agree to the Terms of Service and Privacy Policy."
               checked={accepted}
               disabled={loading || !registrationEnabled}
               onChange={(event) => {
@@ -196,7 +196,7 @@ export default function SignupForm({
             />
             <div className="text-sm leading-6 text-text-secondary">
               <label htmlFor="legal-consent">
-                I agree to the{" "}
+                I confirm I am 18 or older and agree to the{" "}
               </label>
               <a
                 href={legal.termsUrl || undefined}

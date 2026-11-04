@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { motion, useInView } from "motion/react";
 
 import { portfolio } from "@/app/data/portfolio";
@@ -177,6 +178,21 @@ export default function Footer() {
                             links={portfolio.socialLinks}
                         />
                     </motion.div>
+
+                    <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-[11px] text-text-tertiary">
+                        <Link
+                            href="/terms"
+                            className="transition-colors hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
+                        >
+                            Terms of Service
+                        </Link>
+                        <Link
+                            href="/privacy"
+                            className="transition-colors hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
+                        >
+                            Privacy Policy
+                        </Link>
+                    </div>
 
                     {/* Meta */}
 

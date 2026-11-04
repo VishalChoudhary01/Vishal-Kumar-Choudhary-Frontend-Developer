@@ -2218,9 +2218,10 @@ This section records the implementation baseline on `feat/labs-public-page`. It 
 ### 36.2 Registration, email verification and privacy
 
 - Registration writes a server-managed receipt in the private `labs_registration_consents` collection. It stores the server-selected Terms/Privacy versions, server timestamp, a keyed email digest, linked Better Auth user ID and verified timestamp. Consent values are not editable from client profile input.
-- The Terms of Service and Privacy Policy links/versions are deployment configuration, not invented page content.
-- Registration stays disabled unless MongoDB/auth secrets, SMTP delivery, both HTTPS legal-document URLs and both legal-document versions are configured.
+- The Terms of Service and Privacy Policy are first-party pages at `/terms` and `/privacy`. Their canonical URLs derive from `NEXT_PUBLIC_SITE_URL`; server-side policy versions are maintained in `src/app/lib/legal/policies.js`.
+- Registration stays disabled unless MongoDB/auth secrets and SMTP delivery are configured. First-party Terms and Privacy pages are wired into the sign-up flow; current versions are selected by the server.
 - Consent receipts live in `labs_registration_consents`; verification-flow identifiers and status live separately in `labs_verification_flows`. Email values are stored only as keyed HMAC digests in these records, not in plaintext.
+- Public legal routes `/terms` and `/privacy` are included in the sitemap and linked from the footer, contact form and Labs sign-up page. Policy versions are server-owned (`2026-11-04` initially) and must be incremented alongside material text changes.
 - Duplicate and new-account submissions receive the same generic public response. Account-specific results are not returned to the browser.
 - A server-side HMAC rate limit allows at most five registration attempts per trusted proxy IP per minute. Configure `AUTH_TRUSTED_IP_HEADER` to the deployment's trusted proxy header; do not trust a browser-controlled forwarding header.
 - Better Auth rate limits additionally apply to sign-in, social sign-in, password-reset request/completion and verification resend routes. Registration HMAC IP-bucket records expire automatically after 24 hours.

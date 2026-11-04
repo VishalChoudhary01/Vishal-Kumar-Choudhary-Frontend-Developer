@@ -5,6 +5,7 @@ import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
 import { betterAuth } from "better-auth";
 import { dash } from "@better-auth/infra";
+import { areLegalDocumentsConfigured } from "@/app/lib/legal/policies";
 
 import { sendAuthEmail, isAuthEmailConfigured } from "./email";
 import {
@@ -30,21 +31,7 @@ const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 export const isGoogleAuthConfigured = Boolean(googleClientId && googleClientSecret);
 export const isAuthRuntimeConfigured = () => isDatabaseConfigured;
 export const isAuthDeliveryConfigured = () => isDatabaseConfigured && isAuthEmailConfigured();
-function isHttpsDocumentUrl(value) {
-  try {
-    return new URL(value).protocol === "https:";
-  } catch {
-    return false;
-  }
-}
-
-export const isLegalConsentConfigured = () =>
-  Boolean(
-    isHttpsDocumentUrl(process.env.NEXT_PUBLIC_TERMS_OF_SERVICE_URL) &&
-    isHttpsDocumentUrl(process.env.NEXT_PUBLIC_PRIVACY_POLICY_URL) &&
-    process.env.TERMS_OF_SERVICE_VERSION &&
-    process.env.PRIVACY_POLICY_VERSION
-  );
+export const isLegalConsentConfigured = areLegalDocumentsConfigured;
 
 /*
  * Better Auth uses the native MongoDB driver so its adapter can use Atlas

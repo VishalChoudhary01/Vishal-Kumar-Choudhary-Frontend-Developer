@@ -19,7 +19,7 @@ This documentation defines the proposed portfolio platform extension. It is not 
 - Dynamic CMS-managed content: hero/introduction, about, skills, experience, projects, project details, media/gallery metadata, project links, featured and publication state.
 - Education content remains static in code. Layout, design system, typography, animation and interactions remain code-controlled.
 - Next.js App Router, JavaScript, Tailwind CSS v4, Motion (`motion/react`), MongoDB, Cloudinary and Vercel are the chosen baseline technologies.
-- Email/password and Google sign-in are required. Better Auth with the MongoDB adapter is the selected Labs authentication foundation. Google OAuth credentials, SMTP delivery configuration, legal-document URLs/versions and the final session-lifetime policy remain deployment/release requirements.
+- Email/password and Google sign-in are required. Better Auth with the MongoDB adapter is the selected Labs authentication foundation. Google OAuth credentials, SMTP delivery configuration and the final session-lifetime policy remain deployment/release requirements. First-party Terms and Privacy pages are integrated at `/terms` and `/privacy`; server-owned policy versions are recorded at sign-up.
 - Guests can browse published Lab entries and interact with demos explicitly designated public. Full source remains protected; restricted/untrusted interactive previews require the approved authentication/isolation policy.
 - Admin has portfolio CMS, Lab management, analytics, media library, drafts/publishing, scheduled publication, and immutable content-version history.
 - Cloudinary-backed advanced media library with usage tracking and reference-safe replacement/deletion.
@@ -60,3 +60,6 @@ The `feat/labs-public-page` branch contains the Labs listing/detail implementati
 - [Labs authentication and protected-source setup/provisioning runbook](./LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md).
 
 CMS/Admin remains deferred until Labs is complete. Existing public portfolio routes and demos must remain usable when authentication configuration is absent.
+
+
+First-party legal pages are maintained at `/terms` and `/privacy`. Their policy versions are server-owned in `src/app/lib/legal/policies.js`; increment the relevant version whenever published legal text changes materially.

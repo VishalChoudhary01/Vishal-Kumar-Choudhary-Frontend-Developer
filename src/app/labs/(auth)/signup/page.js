@@ -8,6 +8,7 @@ import {
   isLegalConsentConfigured,
 } from "@/app/lib/auth/auth";
 import { getSafeReturnTo } from "@/app/lib/auth/return-to";
+import { getLegalDocumentConfig } from "@/app/lib/legal/policies";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -24,9 +25,10 @@ export default async function LabsSignupPage({ searchParams }) {
     redirect(returnTo);
   }
 
+  const legalDocuments = getLegalDocumentConfig();
   const legal = {
-    termsUrl: process.env.NEXT_PUBLIC_TERMS_OF_SERVICE_URL || "",
-    privacyUrl: process.env.NEXT_PUBLIC_PRIVACY_POLICY_URL || "",
+    termsUrl: legalDocuments.terms.url,
+    privacyUrl: legalDocuments.privacy.url,
   };
 
   const registrationEnabled =

@@ -29,12 +29,9 @@ Copy the authentication variables from `.env.example` into the deployment enviro
 | `AUTH_SMTP_HOST`, `AUTH_SMTP_PORT`, `AUTH_SMTP_USER`, `AUTH_SMTP_PASSWORD`, `AUTH_EMAIL_FROM` | Yes for registration/recovery | Authenticated SMTP transport for verification and password reset messages. |
 | `AUTH_SMTP_SECURE` | Optional | Set true when SMTP uses implicit TLS (normally port 465). |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Optional | Enable the Google action and OAuth callback. |
-| `NEXT_PUBLIC_TERMS_OF_SERVICE_URL` | Yes to enable registration | Published HTTPS Terms of Service document. |
-| `NEXT_PUBLIC_PRIVACY_POLICY_URL` | Yes to enable registration | Published HTTPS Privacy Policy document. |
-| `TERMS_OF_SERVICE_VERSION` | Yes to enable registration | Version accepted at account creation. |
-| `PRIVACY_POLICY_VERSION` | Yes to enable registration | Version accepted at account creation. |
+| `NEXT_PUBLIC_SITE_URL` | Yes for canonical policy links | The app derives `/terms` and `/privacy` from this site origin. |
 
-The current public registration route remains unavailable until MongoDB/auth secrets, SMTP delivery and both real legal documents/versions are configured. This is intentional; do not invent legal content or point the UI at placeholder links.
+The Terms of Service and Privacy Policy are first-party pages at `/terms` and `/privacy`. Their URLs are derived from `NEXT_PUBLIC_SITE_URL`; policy versions are maintained in `src/app/lib/legal/policies.js` and recorded server-side at registration. No manual legal URL/version environment variables are required. Registration remains unavailable until MongoDB/auth secrets and SMTP delivery are configured.
 
 ### Google OAuth callback
 
@@ -211,3 +208,18 @@ If the deployed server was already configured with `BETTER_AUTH_API_KEY`, a fres
 A value had been committed in the tracked `.env.example` under `BETTER_AUTH_SECRET`. It has been removed from the example file and replaced with a blank placeholder. Treat the old value as exposed: generate a new unique Better Auth secret and replace `BETTER_AUTH_SECRET` in Vercel before enabling authentication. This runbook intentionally does not reproduce that value.
 
 The API key is not available to the repository integration; it must be copied from the user's Better Auth Dash project directly into Vercel. Do not attempt to infer or generate a Dash API key.
+
+
+## 11. First-party Terms and Privacy pages
+
+The website publishes:
+- Terms of Service: `/terms`
+- Privacy Policy: `/privacy`
+
+Both routes are public and indexable, included in the sitemap, linked from the global footer, and linked from the contact form. Labs sign-up links directly to the same canonical documents and asks the registrant to confirm they are at least 18 years old before accepting the current terms and privacy notice.
+
+The server-owned policy versions are maintained in `src/app/lib/legal/policies.js`; the initial version of each is `2026-11-04`. The registration endpoint reads those constants and writes them into the consent receipt. The browser cannot submit or override policy versions. When either document changes materially, update its version constant in the same commit as the text change.
+
+The Privacy Policy describes the documented current implementation: account/session processing, separate consent and verification collections, registration rate-limit digest, protected source grants, contact-form email delivery, browser preferences, hosting/database/auth/email providers, retention, and the Contact channel for privacy requests.
+
+These are operational policy drafts. The owner should review them with a qualified Indian privacy lawyer before launch, confirm the real provider list and data locations, and implement any additional rights/request/deletion procedures identified by that review.
