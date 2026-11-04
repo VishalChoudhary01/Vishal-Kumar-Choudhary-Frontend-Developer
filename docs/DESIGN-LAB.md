@@ -66,16 +66,16 @@ Support both repository-managed registered components and admin-managed source, 
 
 ## 5. Source access and code-copy behavior
 - Guests see an access prompt only. Do not expose source snippets to guests until a separate content policy, exact scope and UX are explicitly approved.
-- Full source is fetched through a server-authorized endpoint only for a verified authenticated user with an explicit active, unexpired per-user/per-experiment grant. A verified session alone does not grant source access.
+- Full source is fetched through a server-authorized endpoint for any user with a valid Better Auth session and `emailVerified === true`, provided the requested source version is published. No per-user grant or owner approval is required.
 - Do not embed the full source in guest HTML, static props, RSC payloads, hidden DOM, client bundles or public API responses.
-- Copy control is available only when full source access is authorized.
+- Copy control is available only when the verified source viewer is authorized; code-copy actions are reported after successful Clipboard API writes.
 - Provide feedback for copy success/failure and a selectable fallback if clipboard permission is unavailable.
 - Instrument a copy action only when the supported client flow reports the action; do not imply that code was pasted or used.
 - Handle expired sessions and permission changes without leaking the source in errors or cached responses.
 - Cache policy must not let an authorized response be reused for guests.
 
 ## 6. Likes
-- Guest likes may use browser storage/appropriate safeguards; they are not guaranteed unique, permanent or cross-device.
+- Guest and signed-in-unverified likes are disabled in the initial engagement policy. Verified accounts can like/unlike with one active like per user/experiment.
 - Authenticated likes are persisted server-side and enforce one active like per user/experiment.
 - Like/unlike state must be clear and accessible.
 - Handle rapid repeated actions, pending states, server failure and retry without creating duplicate records.
@@ -142,7 +142,8 @@ Lab editor supports:
 - [ ] Untrusted source never executes in the main application context.
 - [ ] Isolation boundary and threat model are reviewed before interactive execution ships.
 - [ ] Static previews are responsive, accessible and optimized.
-- [ ] Like state and analytics reflect the actual guest/authenticated limitations.
+- [ ] Guests and signed-in-unverified users cannot view/copy source or use source engagement controls; verified users receive published source automatically.
+- [ ] Source opens, copies and like/unlike actions are counted once under the approved idempotency rules and appear as experiment-level aggregates in owner/admin analytics.
 - [ ] Preview/source failure states are clear and do not leak sensitive details.
 - [ ] Lab-only dependencies do not affect the critical public homepage bundle.
 - [ ] Existing public portfolio and project detail pages pass regression checks.
@@ -158,11 +159,21 @@ The detailed source-management product and lifecycle contract is owned by `LABS-
 - File add/rename/delete operations are explicit; deleting a file requires confirmation. Invalid paths, duplicate names, unsupported file types and size failures preserve the current editor input and explain the correction.
 - Save draft and Publish source are separate actions. Publishing requires confirmation of the exact saved version; a save must never publish implicitly.
 - Version history is owner-only, read-only for past snapshots, and supports restore by creating a new draft. It must not edit historical snapshots in place.
-- Grant management is scoped to one experiment. The owner searches by exact email, sees only the minimum account status needed, grants/revokes access, and may set an expiry. The UI must not expose raw user IDs or permit changing roles.
+- Per-user source grant management is not part of the target design. The owner publishes/unpublishes source for all verified accounts. The owner/admin analytics view shows aggregate source opens, unique verified accounts, copies, active likes and like/unlike trends per experiment.
 - Show distinct empty, loading, validation, stale-version/conflict, save-success, publish-success, publish-failure, unavailable database and unauthorized states.
 - The editor and syntax-highlighting code are lazy-loaded only inside the owner route. They must not load on `/`, `/labs` or ordinary experiment pages.
 - Reuse the existing portfolio tokens, typography, focus/keyboard conventions, restrained radius and responsive rules. Do not introduce a new UI system.
 - Owner source management does not alter the existing compact public source-access panel, public experiment demo or Labs layout.
+
+
+### 13.3 Source access, likes and analytics policy
+
+- A source-open is counted only after the verified-user source endpoint successfully returns the published source. A public experiment detail-page view is a separate metric.
+- A code-copy action is counted only after the client confirms a successful Clipboard API write and the server accepts the idempotent event. Never transmit clipboard text to analytics.
+- Like/unlike is available only to verified accounts and increments action metrics only when the server confirms a state transition. A unique per-user/experiment like-state record enforces one active like.
+- The owner/admin dashboard is per experiment and aggregate-only: source opens, unique verified accounts opening source, copy actions, active likes, like/unlike action counts, daily/monthly trends and source-open/copy rankings.
+- Do not show individual user names, emails or per-user source browsing/copy history in the first release.
+- Analytics retention, event deduplication and account deletion behavior must be approved and disclosed before events are enabled in Production.
 
 ### 13.1 Owner workspace design items still open
 
