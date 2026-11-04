@@ -14,6 +14,22 @@ const LINES = [
   ["sense", "of", "life."],
 ];
 
+const INDEXED_LINES = (() => {
+  let nextIndex = 0;
+
+  return LINES.map((line) =>
+    line.map((word) => ({
+      word,
+      index: nextIndex++,
+    }))
+  );
+})();
+
+const TOTAL_WORDS = INDEXED_LINES.reduce(
+  (count, line) => count + line.length,
+  0,
+);
+
 function RevealWord({
   word,
   index,
@@ -46,13 +62,6 @@ function RevealContent({
   showProgress,
   prefersReducedMotion,
 }) {
-  const totalWords = LINES.reduce(
-    (count, line) => count + line.length,
-    0
-  );
-
-  let wordIndex = 0;
-
   return (
     <>
       <div
@@ -78,27 +87,22 @@ function RevealContent({
           aria-label="Motion gives interfaces a sense of life"
           className="flex max-w-4xl flex-col items-center gap-y-1 text-center font-display text-[clamp(2.75rem,7.5vw,6.5rem)] font-normal leading-[0.94] tracking-[-0.055em] text-text-muted sm:gap-y-2"
         >
-          {LINES.map((line, lineIndex) => (
+          {INDEXED_LINES.map((line, lineIndex) => (
             <div
               key={lineIndex}
               className="flex flex-wrap justify-center gap-x-[0.22em]"
             >
-              {line.map((word) => {
-                const index = wordIndex;
-                wordIndex += 1;
-
-                return (
-                  <RevealWord
-                    key={word}
-                    word={word}
-                    index={index}
-                    total={totalWords}
-                    progress={scrollYProgress}
-                    spanFactor={revealSpan / 100}
-                    prefersReducedMotion={prefersReducedMotion}
-                  />
-                );
-              })}
+              {line.map(({ word, index }) => (
+                <RevealWord
+                  key={word}
+                  word={word}
+                  index={index}
+                  total={TOTAL_WORDS}
+                  progress={scrollYProgress}
+                  spanFactor={revealSpan / 100}
+                  prefersReducedMotion={prefersReducedMotion}
+                />
+              ))}
             </div>
           ))}
         </div>
