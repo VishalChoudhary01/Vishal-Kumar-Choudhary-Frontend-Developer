@@ -31,11 +31,12 @@ function makeRequestId() {
     "req_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
 }
 
-export default function LabSourceEditor({ initialSource, initialVersions }) {
+export default function LabSourceEditor({ initialSource, initialVersions, initialAudit }) {
   const [source, setSource] = useState(initialSource);
   const [files, setFiles] = useState(initialSource.files || []);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [versions, setVersions] = useState(initialVersions || []);
+  const [audit, setAudit] = useState(initialAudit || []);
   const [changeSummary, setChangeSummary] = useState("");
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
@@ -198,14 +199,24 @@ export default function LabSourceEditor({ initialSource, initialVersions }) {
   }
 
   async function refreshSource() {
-    const [nextSource, nextVersions] = await Promise.all([
-      requestJson("/api/v1/admin/labs/sources/" + encodeURIComponent(source.slug)),
-      requestJson("/api/v1/admin/labs/sources/" + encodeURIComponent(source.slug) + "/versions"),
+    const base = "/api/v1/admin/labs/sources/" + encodeURIComponent(source.slug);
+    const [nextSource, nextVersions, nextAudit] = await Promise.all([
+      requestJson(base),
+      requestJson(base + "/versions"),
+      requestJson(base + "/audit?limit=20"),
     ]);
     setSource(nextSource);
     setFiles(nextSource.files || []);
     setVersions(nextVersions || []);
+    setAudit(nextAudit || []);
     setSelectedIndex(0);
+  }
+
+  async function refreshAudit() {
+    const nextAudit = await requestJson(
+      "/api/v1/admin/labs/sources/" + encodeURIComponent(source.slug) + "/audit?limit=20",
+    );
+    setAudit(nextAudit || []);
   }
 
   async function saveDraft() {
@@ -242,9 +253,10 @@ export default function LabSourceEditor({ initialSource, initialVersions }) {
       }));
       setChangeSummary("");
       setMessage(data.version + " saved as a private draft.");
-      const nextVersions = await requestJson(
-        "/api/v1/admin/labs/sources/" + encodeURIComponent(source.slug) + "/versions",
-      );
+      const [nextVersions] = await Promise.all([
+        requestJson("/api/v1/admin/labs/sources/" + encodeURIComponent(source.slug) + "/versions"),
+        refreshAudit(),
+      ]);
       setVersions(nextVersions || []);
     } catch (reason) {
       setError(reason.message || "The draft could not be saved.");
@@ -277,6 +289,7 @@ export default function LabSourceEditor({ initialSource, initialVersions }) {
         publishedVersionId: versionId,
       }));
       setConfirmPublish(false);
+      await refreshAudit();
       setMessage("Source published. Every verified account can now access this version.");
     } catch (reason) {
       setError(reason.message || "Source could not be published.");
@@ -305,6 +318,7 @@ export default function LabSourceEditor({ initialSource, initialVersions }) {
         publishedVersionId: null,
       }));
       setConfirmUnpublish(false);
+      await refreshAudit();
       setMessage("Source unpublished. New source requests are now blocked.");
     } catch (reason) {
       setError(reason.message || "Source could not be unpublished.");
@@ -628,6 +642,43 @@ export default function LabSourceEditor({ initialSource, initialVersions }) {
               </div>
             ))}
             {!versions.length ? <p className="py-5 text-xs text-text-tertiary">No saved versions yet.</p> : null}
+          </div>
+        </section>
+
+        <section className="mt-8 rounded-sm border border-border bg-surface-1 p-4 sm:p-5">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold">Source audit history</h2>
+              <p className="mt-1 text-xs text-text-tertiary">Owner actions for this experiment. Historical entries are read-only.</p>
+            </div>
+            <span className="text-xs text-text-tertiary">{audit.length} recent entries</span>
+          </div>
+          <div className="mt-4 divide-y divide-border">
+            {audit.map((event, index) => (
+              <div key={(event.requestId || event.versionId || event.action) + "-" + index} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-text-primary">
+                    {({
+                      source_created: "Source record created",
+                      draft_saved: "Draft version saved",
+                      source_published: "Source published",
+                      source_unpublished: "Source unpublished",
+                      version_restored: "Previous version restored",
+                      validation_failed: "Source validation failed",
+                    })[event.action] || event.action}
+                  </p>
+                  <p className="mt-1 break-all font-mono text-[10px] text-text-tertiary">
+                    {event.versionId || event.requestId || "No version reference"}
+                  </p>
+                </div>
+                <time className="text-[11px] text-text-tertiary">
+                  {event.createdAt ? new Date(event.createdAt).toLocaleString() : "Unknown time"}
+                </time>
+              </div>
+            ))}
+            {!audit.length ? (
+              <p className="py-5 text-xs text-text-tertiary">No owner actions have been recorded for this source yet.</p>
+            ) : null}
           </div>
         </section>
       </div>
