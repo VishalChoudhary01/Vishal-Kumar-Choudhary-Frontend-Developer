@@ -282,6 +282,14 @@ Candidate owner-only endpoints (final routes/verbs are owned by `API-CONTRACTS.m
 
 Keep the existing user-facing endpoint `GET /api/v1/labs/:slug/source` as the only regular-user source read. Target policy requires a valid verified Better Auth session + published pointer; no grant lookup is performed. The response remains private/no-store.
 
+
+Verified-user source engagement endpoints (candidate contracts):
+- `POST /api/v1/labs/:slug/source/open` — called after the viewer receives the successful source response; accepts an idempotency key and records one `source_open` event for the verified session.
+- `POST /api/v1/labs/:slug/source/copy` — called only after successful Clipboard API write; accepts source version + idempotency key, rechecks verified session and current publication, and records `code_copy` without receiving clipboard contents.
+- Existing verified-user like/unlike actions create or deactivate the unique `lab_likes` state and record analytics events only when the server confirms a state transition.
+- Owner/Admin aggregate analytics reads use the owner-only source-analytics endpoints; no raw event/user history is returned.
+
+
 All mutations call server-only domain use cases and repositories. Never let UI components query MongoDB or make direct Mongoose calls.
 
 ## 8. Source access decision and cache behavior
@@ -292,7 +300,7 @@ All mutations call server-only domain use cases and repositories. Never let UI c
 - Owner with valid owner authorization: allow source management and draft/version reads, including unpublished source.
 - Unpublished source: deny regular-user access to all accounts; owner can still inspect drafts and historical versions.
 - All source/draft/version/analytics/audit responses: private, no-store, no-cache; never use a shared public cache.
-- Source UI must clear loaded text when the session expires, owner status is removed, access is revoked or the source is unpublished. Server authorization is authoritative on every subsequent request.
+- Source UI must clear loaded text when the session expires, email-verification state is no longer valid, or the source is unpublished. Server authorization is authoritative on every subsequent request.
 
 ## 9. Security and reliability requirements
 
