@@ -1,6 +1,6 @@
 # Labs Media Pipeline — Phase 1
 
-**Status:** Implemented in the integration branch as an owner-only Cloudinary upload and verification foundation. Media attachment, preview delivery, gallery/cover selection and release publication remain follow-up work.
+**Status:** Upload and verification foundation plus owner-only private preview and a single optional fallback attachment are implemented in the integration branch. Fallback media is used only when the live code preview cannot run or is unsupported. Public fallback delivery and release publication remain gated.
 
 ## Included in this phase
 
@@ -16,7 +16,8 @@
 - Only ready assets belonging to the current experiment and owner are returned by the owner media inventory.
 - Every upload intent and successful finalize action is written to the Labs owner audit timeline.
 - Binary media is stored at Cloudinary. MongoDB stores only verified metadata and private references.
-- Draft asset delivery URLs are not returned by the media library API.
+- The owner media inventory returns short-lived private preview URLs; these are not public and are not included in public DTOs.
+- An owner may attach at most one asset with the `fallback-preview` role. This is optional and never replaces a successfully running code preview.
 
 ## Required Cloudinary environment configuration
 
@@ -42,15 +43,15 @@ Required:
 ## Explicitly not included yet
 
 - Public or owner preview URL generation for authenticated assets.
-- Attach an asset to card cover, detail gallery or experiment code.
-- Reorder gallery media or set alt text/captions through the UI.
+- Public fallback delivery conversion at publish time and binding the fallback to an immutable release manifest.
+- Public runtime fallback behavior for failed/unsupported code previews.
 - Immutable per-version asset manifests.
 - Asset deletion/cleanup and orphan reconciliation.
 - Public media delivery conversion at publish time.
 - Video poster generation and gallery rendering.
 - Chunked/resumable video transfer.
 
-These remain part of the media attachment and immutable release phase. Until that work is complete, an uploaded asset is stored as private/authenticated media and is not included in public pages or runtime bundles.
+These remain part of the release phase. Until that work is complete, uploaded assets stay private. The single optional fallback must not replace the live code preview.
 
 ## Validation still required
 
