@@ -29,7 +29,7 @@ Extend the existing developer portfolio into a maintainable platform where the o
 ## 4. Users and permissions
 ### Guest
 - View public portfolio pages and published Lab listing/detail pages.
-- View permitted static media previews and partial source snippets.
+- View permitted static media previews. Guest partial-source snippets remain disabled unless a separate content policy, exact exposure scope and UX are approved.
 - Search, filter, sort, paginate/load more, and view published experiment metadata.
 - Like experiments through an anonymous mechanism where available, subject to browser storage and abuse controls.
 - Cannot access private drafts, full source, restricted interactive previews, user-only features, or admin pages.
