@@ -21,7 +21,7 @@ export async function getAuthorizedLabSource({ user, slug }) {
     .select("version files updatedAt published publishedVersionId")
     .lean();
 
-  if (!source || (source.published !== true && !source.publishedVersionId)) {
+  if (!source || source.published !== true) {
     return { status: "not-found" };
   }
 
