@@ -500,6 +500,7 @@ Do not manually create empty collections to make the source viewer appear ready.
 - Use a server-side migration that detects legacy mutable `lab_sources` documents, computes deterministic content hashes, creates a corresponding immutable version, and only then updates aggregate pointers. Preserve the original records until migration reconciliation and rollback are proven.
 - Bootstrap must be safe to execute more than once, must not duplicate versions/audit/grants, and must fail closed if uniqueness or pointer integrity cannot be established.
 - Source reads must confirm the published version belongs to the requested source slug. A dangling, mismatched or missing pointer returns a safe unavailable/not-found outcome.
+- Protected Atlas snapshots are separate from the code-owned public demo runtime. Editing/publishing a snapshot changes only the protected source viewer; it does not hot-update the public demo. Live demo behavior changes follow the canonical repository/deployment workflow.
 - The current response size cap and Mongoose model limits must be reconciled with explicit UTF-8 byte limits before implementation. Never rely only on JavaScript character counts for storage or response bounds.
 
 ### 15.4 Owner identity and secrets
