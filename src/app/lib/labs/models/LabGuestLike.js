@@ -27,6 +27,10 @@ const labGuestLikeSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    expiresAt: {
+      type: Date,
+      required: true,
+    },
   },
   {
     collection: "lab_guest_likes",
@@ -41,8 +45,12 @@ labGuestLikeSchema.index(
   { unique: true, name: "lab_guest_like_browser_experiment_unique" },
 );
 labGuestLikeSchema.index(
-  { experimentSlug: 1, active: 1 },
-  { name: "lab_guest_like_experiment_active" },
+  { experimentSlug: 1, active: 1, expiresAt: 1 },
+  { name: "lab_guest_like_experiment_active_expiry" },
+);
+labGuestLikeSchema.index(
+  { expiresAt: 1 },
+  { expireAfterSeconds: 0, name: "lab_guest_like_expiry" },
 );
 
 const LabGuestLike =
