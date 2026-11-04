@@ -433,9 +433,14 @@ Therefore, the repository version currently available on GitHub does not prove t
 - `scripts/setup-env.cjs` creates `.env.local` with a `NEXT_PUBLIC_SITE_URL` template only when no file exists. When `.env.local` already exists, it intentionally does not overwrite it. Preserve this behavior; add new variables manually or through a carefully reviewed setup change.
 - No private local `.env.local` contents were accessed or requested.
 
-### 14.4 Integration-specific findings
+### 14.4 Integration-specific findings (historical audit reconciled 2026-11-04)
 
-- There is no existing MongoDB connection helper, Mongoose model folder, Cloudinary utility, or Cloudinary upload route in the inspected application paths.
+The original Phase 0 inspection predates the current Labs implementation branch. Its earlier statement that no MongoDB/Cloudinary helpers existed is superseded by the current repository:
+
+- Mongoose connection helper now exists at `src/app/lib/db/mongoose.js`; Mongoose models now exist under `src/app/lib/labs/models/`.
+- Better Auth uses a separate server-only native MongoDB client through `@better-auth/mongo-adapter`, targeting the same configured database.
+- Cloudinary server utility now exists at `src/app/lib/cloudinary/index.js`. This confirms code wiring only; valid deployed/local credentials and media upload workflow still require environment/runtime verification.
+- Labs source/grant models and protected read endpoint now exist. Owner source creation, immutable source-version migration, audit collection and owner management UI remain planned as described in `LABS-SOURCE-MANAGEMENT-SPEC.md`.
 - Portfolio/project content currently comes from JavaScript modules under `src/app/data/`. Do not migrate these records to MongoDB as part of connection setup; data migration requires a separate feature and compatibility plan.
 - `next.config.mjs` configures Next Image formats, sizes and quality values, but it does not currently declare Cloudinary remote image hosts. When the actual Cloudinary delivery hostname and media use case are confirmed, add the narrowest suitable `images.remotePatterns` entry. Do not add a broad wildcard pre-emptively.
 - Keep the connection and Cloudinary SDK utilities server-only. Database-dependent route handlers must use the Node.js runtime, not Edge-only runtime.
@@ -454,10 +459,10 @@ The remote repository cannot establish the state of local files or private provi
 
 ### 14.6 Phase 0 exit decision
 
-**Repository inspection:** Complete for the GitHub branch and the corresponding `main` files reviewed.  
-**Full Phase 0:** Not yet complete. The local working tree, Atlas private configuration, Cloudinary account configuration, and runtime baseline checks still require verification.
+**Repository inspection:** Current Labs branch source inspection updated through 2026-11-04.  
+**Full Phase 0:** Not yet complete. The local working tree, private provider configuration, Cloudinary account/asset workflow, runtime baseline checks and production network policy still require verification.
 
-No database connection utility, Cloudinary client, upload-signature endpoint, schema, model, or API route should be implemented until the remaining local/provider checks are complete. This avoids writing integration code against unknown local dependency state or unverified credentials/network access.
+Do not duplicate the existing Mongoose/Cloudinary utilities or broadly restructure the application. New source-management schemas and migrations must follow `LABS-SOURCE-MANAGEMENT-SPEC.md`; they remain planned and must not be manually provisioned as empty collections. Runtime/build/browser checks remain separate release gates.
 
 ## 15. Labs authentication and protected source data — 2026-11-04
 
