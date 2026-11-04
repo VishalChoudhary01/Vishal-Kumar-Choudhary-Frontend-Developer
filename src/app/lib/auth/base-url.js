@@ -13,7 +13,11 @@ function toOrigin(value) {
 function toPreviewOrigin(host) {
   if (typeof host !== "string" || !host.trim()) return "";
   const value = host.trim();
-  return toOrigin(/^https?:\\/\\//i.test(value) ? value : `https://${value}`);
+  const lowerValue = value.toLowerCase();
+  const hasProtocol =
+    lowerValue.startsWith("https://") || lowerValue.startsWith("http://");
+
+  return toOrigin(hasProtocol ? value : `https://${value}`);
 }
 
 /**
