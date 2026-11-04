@@ -555,7 +555,7 @@ Do not automatically grant source access merely because account creation, email 
 - Do not load Monaco on the homepage, project pages, Labs listing, or ordinary experiment demo page.
 - Do not send source in unauthenticated HTML, route data, public APIs, or metadata.
 - Do not publicly cache source responses.
-- Exact viewer controls, editor theme mapping, source-file navigation, copy/download behavior, and source-versioning strategy are OPEN unless specified in another approved design document.
+- Exact viewer controls, editor theme mapping, source-file navigation and copy/download behavior remain OPEN. Source snapshot lifecycle, immutable versioning, owner workspace and per-user grants are defined by Section 37 and `LABS-SOURCE-MANAGEMENT-SPEC.md`.
 
 ### 5.5 Access Denied state
 
@@ -2098,7 +2098,7 @@ Do not create Express controllers or a separate Express deployment unless an app
 Recommended vertical slices after explicit implementation authorization:
 
 1. Repository/baseline recheck: branch head, package files, route tree, layout/footer, providers, tests and current deploy status.
-2. Resolve blockers: auth provider/session (including required Google sign-in), route names, source authorization policy, exact password policy, email delivery, public-vs-restricted preview classification, and API/cache contracts.
+2. Resolve remaining blockers: final Better Auth session policy, route naming/API details, singleton owner identity bootstrap, editor choice, exact source file limits, exact password policy if changed, email operations, public-vs-restricted preview classification, and cache contracts.
 3. Implement public Labs listing with safe published metadata and static thumbnails; verify the current portfolio does not load Labs-only code.
 4. Implement one experiment detail route and one code-owned demo runtime; verify mobile/desktop canvas, controls, restart/fullscreen/reset and reduced motion.
 5. Implement the validated Lab repository/service/DTO layer and any needed Next.js Route Handlers/Server Actions. Do not finalize schema fields from illustrative examples.
@@ -2123,7 +2123,7 @@ The repository contains older broader platform requirements that remain relevant
 7. **Related experiments:** the section is in the detail-page order, but exact matching, number, layout and empty-state behavior remain OPEN.
 8. **Authentication route layout:** current root layout renders the portfolio Footer globally. A separate auth footer/layout requires a deliberate route/layout boundary. Do not assume route groups alone remove the root Footer.
 9. **State tooling:** TanStack Query is conditionally approved but not a direct dependency in the inspected package manifest. The current Redux store files import a package absent from the manifest and are not mounted by AppProviders. Neither is an established Labs state layer today.
-10. **Source editor:** Monaco is not installed, and editor UI/package choices remain OPEN. Its loading boundary must remain after server authorization.
+10. **Source editor:** Monaco is not installed, and editor UI/package choices remain OPEN. Its loading boundary must remain inside the owner workspace after server-side owner authorization. Source lifecycle and immutable-version data rules are defined in Section 37.
 11. **Documentation precedence:** PRD owns product capabilities; ARCHITECTURE owns server boundaries; API-CONTRACTS owns API contracts; PROJECT-STRUCTURE owns generic module conventions; this document owns detailed Labs/auth UX. Where page appearance or interaction details conflict with older DESIGN-LAB examples, this newer approved UX baseline controls. Where a feature requirement is not addressed here, PRD/DESIGN-LAB continue to apply.
 
 Before feature coding, update any dependent PRD/API/README wording that still uses obsolete route or preview assumptions. Do not silently leave conflicting paths in examples.
