@@ -5,7 +5,7 @@ import { buildSiteUrl } from "@/app/lib/seo/urls";
  * published policy changes materially. Never accept these values from a
  * registration request.
  */
-export const TERMS_VERSION = "2026-11-04";
+export const TERMS_VERSION = "2026-11-04.1";
 export const PRIVACY_VERSION = "2026-11-04.1";
 
 export function getLegalDocumentConfig() {
