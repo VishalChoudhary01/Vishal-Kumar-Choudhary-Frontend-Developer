@@ -1,12 +1,15 @@
 import "server-only";
 
-export function isLabsOwner(user) {
-  const configuredOwnerId = process.env.LABS_OWNER_USER_ID;
+export function getLabsOwnerAccessStatus(user) {
+  if (!user?.id) return "unauthenticated";
+  if (user.emailVerified !== true) return "email-unverified";
 
-  return Boolean(
-    configuredOwnerId &&
-    user?.id &&
-    user.id === configuredOwnerId &&
-    user.emailVerified === true
-  );
+  const configuredOwnerId = process.env.LABS_OWNER_USER_ID?.trim();
+  if (!configuredOwnerId) return "not-configured";
+
+  return user.id === configuredOwnerId ? "owner" : "account-mismatch";
+}
+
+export function isLabsOwner(user) {
+  return getLabsOwnerAccessStatus(user) === "owner";
 }
