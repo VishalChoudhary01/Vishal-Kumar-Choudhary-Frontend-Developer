@@ -119,12 +119,21 @@ function formatVersion(number) {
   return "v" + String(number);
 }
 
+let sourceIndexesPromise;
+
 async function ensureIndexes() {
-  await Promise.all([
-    LabSource.createIndexes(),
-    LabSourceVersion.createIndexes(),
-    LabSourceAuditEvent.createIndexes(),
-  ]);
+  if (!sourceIndexesPromise) {
+    sourceIndexesPromise = Promise.all([
+      LabSource.createIndexes(),
+      LabSourceVersion.createIndexes(),
+      LabSourceAuditEvent.createIndexes(),
+    ]).catch((error) => {
+      sourceIndexesPromise = null;
+      throw error;
+    });
+  }
+
+  await sourceIndexesPromise;
 }
 
 async function writeAudit({ userId, action, slug, versionId = null, requestId = null }) {
@@ -264,6 +273,7 @@ export async function saveOwnerLabDraft({
   slug,
   files: inputFiles,
   expectedDraftVersionId,
+  basedOnVersionId = null,
   changeSummary = "",
   requestId = null,
 }) {
@@ -313,7 +323,8 @@ export async function saveOwnerLabDraft({
         version: formatVersion(versionNumber),
         files,
         contentHash,
-        basedOnVersionId: currentDraftId || source.publishedVersionId || null,
+        basedOnVersionId:
+          basedOnVersionId || currentDraftId || source.publishedVersionId || null,
         changeSummary: safeSummary,
         createdBy: user.id,
       };
@@ -379,6 +390,44 @@ export async function listOwnerLabVersions({ user, slug }) {
   }));
 }
 
+
+export async function getOwnerLabVersion({ user, slug, versionId }) {
+  assertOwner(user);
+  assertExperiment(slug);
+
+  if (typeof versionId !== "string" || versionId.length > 64) {
+    throwCode("VALIDATION_ERROR", "The source version identifier is invalid.");
+  }
+
+  await connectToDatabase();
+  await ensureIndexes();
+
+  const source = await LabSource.findOne({ slug }).select("_id").lean();
+  if (!source) throwCode("NOT_FOUND", "Source record not found.");
+
+  const version = await LabSourceVersion.findOne({
+    sourceId: source._id,
+    experimentSlug: slug,
+    versionId,
+  })
+    .select("versionId version versionNumber contentHash basedOnVersionId changeSummary createdBy createdAt files")
+    .lean();
+
+  if (!version) throwCode("NOT_FOUND", "The selected source version was not found.");
+
+  return {
+    versionId: version.versionId,
+    version: version.version,
+    versionNumber: version.versionNumber,
+    contentHash: version.contentHash,
+    basedOnVersionId: version.basedOnVersionId || null,
+    changeSummary: version.changeSummary || "",
+    createdBy: version.createdBy,
+    createdAt: version.createdAt?.toISOString?.() || null,
+    files: version.files,
+  };
+}
+
 export async function restoreOwnerLabVersion({
   user,
   slug,
@@ -389,6 +438,7 @@ export async function restoreOwnerLabVersion({
   assertOwner(user);
   assertExperiment(slug);
   await connectToDatabase();
+  await ensureIndexes();
 
   const oldVersion = await LabSourceVersion.findOne({ versionId, experimentSlug: slug }).lean();
   if (!oldVersion) throwCode("NOT_FOUND", "The selected source version was not found.");
@@ -398,6 +448,7 @@ export async function restoreOwnerLabVersion({
     slug,
     files: oldVersion.files,
     expectedDraftVersionId,
+    basedOnVersionId: oldVersion.versionId,
     changeSummary: "Restore " + oldVersion.version,
     requestId,
   });
