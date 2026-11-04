@@ -7,6 +7,7 @@ import {
 } from "@/app/lib/auth/auth";
 import { createVerificationFlow } from "@/app/lib/auth/registration-consent";
 import { getSafeReturnTo } from "@/app/lib/auth/return-to";
+import { getAuthBaseURL } from "@/app/lib/auth/base-url";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,10 +58,7 @@ export async function POST(request) {
     }
 
     const flowId = await createVerificationFlow(email);
-    const siteUrl =
-      process.env.BETTER_AUTH_URL ||
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      new URL(request.url).origin;
+    const siteUrl = getAuthBaseURL(new URL(request.url).origin);
     const callbackURL = new URL("/labs/verify-email", siteUrl);
     callbackURL.searchParams.set("flow", flowId);
     callbackURL.searchParams.set(
