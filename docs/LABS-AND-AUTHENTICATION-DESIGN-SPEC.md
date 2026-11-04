@@ -519,7 +519,7 @@ Important runtime distinction:
 - If an experiment requires user-authored/admin-managed source execution, a restricted preview, or capabilities beyond a code-owned public demo, it must use the separately approved isolated preview boundary. The hosting/provider, origin, CSP, dependency allowlist, network policy and resource limits remain OPEN until the threat-model gate is passed.
 - A restricted interactive preview may have its own authentication/authorization requirement. That is distinct from the public demo permission.
 - Full source remains protected and is never returned to guests.
-- The PRD and older DESIGN-LAB document mention permitted partial source snippets for guests. This consolidated UX did not approve a partial-source UI or content policy. Until the snippet scope and exposure are explicitly designed, do not expose source to guests.
+- No source bytes (full or partial) are returned to guests or signed-in unverified accounts. Only signed-in verified accounts can load/copy published source. The existing best-effort public experiment-like behavior remains distinct from source access.
 
 Authentication and authorization apply to protected source and any separately restricted preview functionality, not to ordinary public browsing or demos explicitly published as public.
 
@@ -2330,9 +2330,9 @@ The existence of this specification does not authorize code changes. Owner ident
 ### 37.7 Verified-user source engagement and admin analytics
 
 - Every signed-in account with `emailVerified === true` can open and copy any published experiment source without owner permission or an individual grant.
-- Guests and signed-in unverified accounts cannot access source bytes, source copy controls or like/unlike controls. Public demos remain viewable as currently designed.
+- Guests and signed-in unverified accounts cannot access source bytes or source-copy controls. The existing best-effort public experiment-like behavior remains available where supported; verified accounts receive persistent likes.
 - `source_open` counts a successful source-viewer open after the protected source response succeeds; public detail-page views are counted separately.
 - `code_copy` counts a successful Clipboard API write acknowledged by the client and accepted by the server; no clipboard content is sent to analytics.
-- `like` and `unlike` events are counted only when a unique per-user/experiment like-state record changes on the server.
-- The Owner/Admin dashboard presents aggregate rows by experiment: detail views, source opens, unique verified accounts, copies, current likes, like/unlike counts and date-range trends/rankings.
+- Verified `like` and `unlike` events are counted only when a unique per-user/experiment like-state record changes on the server. Best-effort guest-like actions may be counted separately where measurable, without a unique-person claim.
+- The Owner/Admin dashboard presents aggregate rows by experiment: detail views, source opens, unique verified accounts, copies, current active verified likes, verified like/unlike counts, and guest-like action counts separately where measurable, with date-range trends/rankings.
 - The first release does not show individual account names/emails or user-level source-view/copy/like history. Analytics retention, deduplication and account-deletion handling must be approved and included in the Privacy Policy before production event writes.
