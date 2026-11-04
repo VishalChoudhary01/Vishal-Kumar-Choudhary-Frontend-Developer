@@ -11,7 +11,7 @@
 
 The Studio is an owner-only creative coding workspace. The owner must be able to create an original experiment, write or import its code, attach image/GIF/video assets, run the actual interactive experience, inspect errors, save immutable drafts and publish a complete release.
 
-The public experience is not a code screenshot or a card thumbnail. A published experiment detail page must render the actual interactive runtime at its intended size and provide its supporting media. A card cover is only a discovery preview and must never replace the interactive detail-page runtime.
+The public experience is an actual interactive code runtime. A published experiment detail page must render that runtime at its intended size. Optional image/GIF/video fallback media appears only when the runtime cannot run or is unsupported; it is never a substitute for a working code preview.
 
 The four existing code-owned experiments remain supported by the existing literal runtime registry. Owner-created experiments use database-backed metadata and versioned source/build records. Creating or publishing a custom experiment must not require editing the repository runtime registry.
 
@@ -23,7 +23,7 @@ The owner workspace contains:
 - Experiment metadata: title, slug, summary, full explanation, category, technologies and publication state.
 - File explorer and editor for HTML, CSS, JavaScript and React/JSX source.
 - Media library for images, animated GIFs and video clips.
-- Media attachment controls for a card cover, detail-page gallery and assets consumed inside the experiment.
+- One optional fallback-media attachment for an unsupported or unavailable code preview.
 - Run/Restart controls, desktop/mobile preview sizes, build status, console output and runtime errors.
 - Draft save, immutable version history, validation results and explicit publish/unpublish actions.
 
@@ -33,14 +33,14 @@ The editor and compiler dependencies remain lazy-loaded from owner-only routes. 
 
 Each card may show one selected cover asset: an image, GIF or video poster/preview where the owner chooses it. The card also shows experiment metadata and links to the stable detail route. Do not boot every experiment runtime inside the listing; doing so would create unnecessary CPU, memory and network work.
 
-The card cover is not the experiment itself. Card media selection must not replace or suppress the actual interactive experience on the detail page.
+The interactive code runtime is the experiment. Fallback media is not a listing thumbnail, card cover, gallery or in-experiment asset.
 
 ### 2.3 Public experiment detail page
 
 A published detail page provides:
 1. Experiment title, description and metadata.
 2. The actual interactive runtime, in a responsive preview frame that can expand or use the available detail-page canvas.
-3. Optional uploaded media gallery containing images, GIFs and videos, with captions/alt text and controls.
+3. Optional fallback media, shown only when the code runtime cannot run or is unsupported, with alt text and an optional caption.
 4. Like/engagement controls.
 5. Protected source viewer for verified logged-in users.
 
@@ -220,7 +220,7 @@ Never accept a client-supplied Cloudinary public ID as proof of ownership. Verif
 One asset may be attached for one or more explicitly selected roles:
 - Fallback preview: one optional image, animated GIF or video shown only when the code runtime cannot run or is unsupported.
 
-The owner can select or clear the single fallback asset and edit its alt text/caption. No gallery, card-cover or in-experiment attachment roles are part of this scope. Removing an attachment must not destroy an asset still referenced by a draft, published release or historical version.
+The owner can select or clear the single fallback asset and edit its alt text/caption. No gallery, card-cover or in-experiment attachment roles are part of this scope. Clearing an attachment must not delete the underlying asset if a draft or historical release still references it.
 
 Video assets should have a poster image. Public video players use controls and do not autoplay with sound. Card video behavior is opt-in and muted; a poster is the default. Animated GIF motion must respect reduced-motion preferences and must not be the only way to communicate essential information.
 
@@ -352,7 +352,7 @@ Do not send raw Cloudinary credentials, source content to public endpoints, comp
 - Keep the Labs listing lightweight: one cover asset per card, responsive transformations, aspect-ratio reservation and lazy loading except for the actual LCP candidate.
 - Do not start interactive runtime builds/iframes in card lists.
 - Load the published detail-page runtime on demand, with clear loading/error/retry states and a responsive preview canvas.
-- Keep media gallery assets separate from code bundles and load them lazily when not in the initial viewport.
+- Keep optional fallback media separate from code bundles; load it only when the runtime is unavailable or unsupported.
 - Use generated video posters and appropriate responsive image/video transforms.
 - Pause/stop offscreen previews when practical, and stop the runtime when navigating away.
 - Respect reduced motion for Motion animations, animated GIF behavior and any video auto-preview.
@@ -443,7 +443,7 @@ Do not send raw Cloudinary credentials, source content to public endpoints, comp
 - Guest and signed-in-unverified visitors can run the published demo and view public media but cannot open/copy source.
 - Verified accounts can open/copy the published source automatically.
 - Unpublish stops new public demo/source access; republishing a prior immutable release works.
-- Public card cover remains distinct from the full interactive experiment on the detail page.
+- A working code preview always takes precedence over optional fallback media.
 
 ## 13. Decisions still open
 
@@ -457,6 +457,6 @@ These decisions must be resolved before the corresponding implementation phase. 
 7. Whether video card auto-preview is enabled; default is poster-only.
 8. Whether additional browser capabilities such as Web Workers, WebGL/Three.js, WebAssembly and controlled outbound API access are added after the initial release.
 9. Whether TypeScript/TSX is added after JavaScript/JSX is stable.
-10. Whether a media-only experiment type is ever needed; the current baseline remains an interactive experiment with optional cover/gallery media.
+10. Whether a media-only experiment type is ever needed; the current baseline remains an interactive code experiment with optional fallback media only.
 
 No package installation, Production configuration change, media quota assumption, provider selection or release publication is authorized merely by this planning document.
