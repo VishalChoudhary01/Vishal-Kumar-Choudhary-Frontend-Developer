@@ -97,6 +97,7 @@ export default async function LabsSourceAdminPage({ searchParams }) {
         </header>
 
         {analytics ? (
+          <>
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-tertiary">Reporting period</p>
@@ -174,7 +175,7 @@ export default async function LabsSourceAdminPage({ searchParams }) {
             </p>
           )}
         </section>
-
+          </>
         ) : null}
 
         <LabSourceInventory />
