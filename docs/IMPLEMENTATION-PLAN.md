@@ -126,7 +126,7 @@ Do not mark a row complete because a page renders. Each capability still needs i
 
 ## Phase 7 — Lab public experience and discovery
 **Work**
-- Build listing/detail pages, metadata, static previews, partial-source rendering, search/filter/sort and pagination/progressive loading.
+- Build listing/detail pages, metadata, static previews, source-access prompt (no guest source bytes), search/filter/sort and pagination/progressive loading.
 - Enforce published-only reads and guest restrictions on the server.
 - Create accessible loading, empty, error and no-results states.
 - Keep Lab-specific dependencies out of the public homepage bundle unless already needed.
