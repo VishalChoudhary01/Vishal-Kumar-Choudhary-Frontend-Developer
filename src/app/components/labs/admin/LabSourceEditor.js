@@ -59,10 +59,6 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
   );
 
   useEffect(() => {
-    if (selectedIndex >= files.length) setSelectedIndex(Math.max(0, files.length - 1));
-  }, [files.length, selectedIndex]);
-
-  useEffect(() => {
     if (!hasUnsavedChanges) return undefined;
 
     const warnBeforeLeave = (event) => {
@@ -180,6 +176,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
     if (!selectedFile) return;
     if (!window.confirm("Remove " + selectedFile.path + " from this draft?")) return;
     setFiles((current) => current.filter((_, index) => index !== selectedIndex));
+    setSelectedIndex(Math.max(0, Math.min(selectedIndex, files.length - 2)));
   }
 
   async function requestJson(url, method = "GET", body) {
