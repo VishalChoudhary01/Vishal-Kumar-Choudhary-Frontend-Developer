@@ -118,7 +118,7 @@ Browser request → App Router page → server-only use case/query → repositor
 Admin UI → Server Action or Route Handler → authenticate actor → validate input → authorize action against server-loaded role/resource → domain use case → repository transaction/atomic update → audit/status result → revalidate affected public cache only after successful publication transition → safe response to UI.
 
 ### Full source access
-Authenticated client request → server session verification → experiment publication/access policy → source version lookup → source DTO response with private/no-store policy as required → record access event according to approved analytics definition. Do not preload source in guest payloads.
+Authenticated client request → Better Auth session and verified-email check → published source version lookup → private/no-store source DTO → record successful source-open event with an idempotency key. Guests and signed-in unverified users are denied before source lookup. Do not preload source in public or unverified payloads.
 
 ### Media upload
 Admin UI requests upload authorization → server checks admin permission and upload policy → server creates constrained signed upload parameters → browser uploads to Cloudinary → server validates returned asset and records metadata/reference → editor can attach asset. Never expose Cloudinary API secret.
@@ -172,7 +172,7 @@ Before touching a feature, identify its route, presentation components, domain u
 
 ## 11. Labs authentication implementation note
 
-The Labs authentication foundation uses Better Auth with `@better-auth/mongo-adapter` and the existing MongoDB database. The Better Auth API is hosted by the Next.js App Router at `/api/auth/[...all]`; the direct email sign-up endpoint is blocked so registration must pass through the consent-aware Labs registration route. Server-side source access verifies the Better Auth session and a separate per-user/per-experiment grant before querying the private source collection. See `LABS-AND-AUTHENTICATION-DESIGN-SPEC.md` Section 36 and `LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md` for setup and provisioning.
+The Labs authentication foundation uses Better Auth with `@better-auth/mongo-adapter` and the existing MongoDB database. The Better Auth API is hosted by the Next.js App Router at `/api/auth/[...all]`; the direct email sign-up endpoint is blocked so registration must pass through the consent-aware Labs registration route. Target server-side source access verifies a Better Auth session with `emailVerified === true` and a published source pointer before querying the private source collection; no per-user grant is required. The current grant query is legacy and must be removed in the approved migration. See `LABS-AND-AUTHENTICATION-DESIGN-SPEC.md` Section 36 and `LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md` for setup and provisioning.
 
 This implementation is a feature foundation, not proof of production readiness: SMTP/Google/legal configuration, source provisioning, session-policy approval, full security testing and the private-code migration boundary remain release gates.
 
@@ -189,10 +189,10 @@ The source-management plan is detailed in `LABS-SOURCE-MANAGEMENT-SPEC.md`. This
 ### 13.1 Owner identity and authorization
 
 - The initial release is a singleton-owner capability, not general multi-role administration.
-- **Locked — user approved 2026-11-04:** bootstrap is server-only `LABS_OWNER_USER_ID`, containing the stable Better Auth user ID for the already-created, verified owner account. The owner is the sole privileged administrator for this first release and manages all Labs source lifecycle and per-experiment grant operations.
+- **Locked — user approved 2026-11-04:** bootstrap is server-only `LABS_OWNER_USER_ID`, containing the stable Better Auth user ID for the already-created, verified owner account. The owner is the sole privileged administrator for this first release and manages all Labs source lifecycle and source-engagement analytics.
 - A missing/mismatched owner ID denies all owner operations. Never elevate the first account, email supplied by the browser, client role flags or arbitrary request headers. Configure the value separately for Preview and Production; do not expose it through `NEXT_PUBLIC_*`.
 - Resolve actor identity from Better Auth session only. Owner guard must be called independently at Route Handler/Server Action, domain use case and repository boundaries.
-- Owner management permission is separate from ordinary source grants. The owner can manage source without manufacturing a self-grant, while regular users still require a matching per-experiment grant.
+- Owner management permission is separate from regular source reads. The owner can manage drafts and versions without a self-grant; every other verified account can read any published source automatically.
 - Do not persist a general role field or multi-admin hierarchy merely to support the first owner. A future multiple-admin model requires a separate decision and threat-model update.
 
 ### 13.2 Source lifecycle and persistence
@@ -200,10 +200,10 @@ The source-management plan is detailed in `LABS-SOURCE-MANAGEMENT-SPEC.md`. This
 - Separate the mutable source aggregate/head from immutable source-version snapshots.
 - Source aggregate stores canonical experiment slug and draft/published version pointers.
 - Immutable version records store text files, server-computed content hash, version number, parent/restored-from version, actor and timestamp.
-- Grants remain one current record per canonical user ID + experiment slug. An append-only audit collection preserves grant/revoke and source lifecycle history.
-- Save draft, publish exact version, unpublish, restore, grant and revoke are separate domain use cases with concurrency checks and idempotency.
+- `lab_likes` maintains one current like-state record per verified user + experiment. `lab_analytics_events` records source opens, successful code-copy actions and server-confirmed like/unlike transitions. `lab_source_audit_events` records owner mutations.
+- Save draft, publish exact version, unpublish and restore are separate domain use cases with concurrency checks and idempotency. There are no per-user source-grant use cases in the target design.
 - Never overwrite an immutable version. Restore creates a new version. Publishing never executes the saved code.
-- Data migration and index bootstrap must be idempotent and preserve any existing source documents/grants. Do not drop old collections until migration reconciliation succeeds.
+- Data migration and index bootstrap must be idempotent and preserve any existing source documents. The legacy `lab_source_grants` model/collection must be retired only after all runtime references are removed and any existing records are reconciled; it must not gate verified-user access.
 
 ### 13.3 Source editor trust boundary
 
@@ -220,6 +220,15 @@ The source-management plan is detailed in `LABS-SOURCE-MANAGEMENT-SPEC.md`. This
 - Live preview of owner-authored or untrusted source requires the separate-origin isolated-preview decision and threat-model gate: CSP, sandbox permissions, cookie/storage separation, network egress, package allowlist, resource/time limits, message protocol, abuse monitoring and recovery.
 - Until that gate passes, owner workflows support text management, validation, versioning and protected viewing only. Existing code-owned public demos remain unchanged.
 
-### 13.5 Owner source request flow
+### 13.5 Owner source-management request flow
 
-Owner request → Better Auth session → server-only singleton-owner check → input/schema validation → source domain use case → repository transaction/conditional update → append-only audit record → private/no-store response. No owner operation is authorized solely by the admin route layout or a hidden control.
+Owner request → Better Auth session → server-only singleton-owner check → input/schema validation → source domain use case → repository transaction/conditional update → append-only owner audit record → private/no-store response. No owner operation is authorized solely by the admin route layout or a hidden control.
+
+### 13.6 Verified-user source engagement analytics
+
+- Only users with a valid Better Auth session and `emailVerified === true` may open source, copy code or like/unlike experiments.
+- A successful source-open event is recorded after the protected source response is successfully authorized and returned. Public experiment detail-page views are a separate event.
+- Code-copy events are accepted after the client reports a successful Clipboard API write; the server rechecks the verified session and current published source. Never send or store clipboard contents.
+- Like/unlike analytics events are recorded only for actual server-confirmed transitions in the unique per-user/per-experiment like-state record.
+- Owner/Admin dashboard queries aggregate by experiment and date range: detail views, source opens, unique verified accounts opening source, copy actions, current active likes, like/unlike transitions, rankings and trends.
+- The dashboard does not expose individual account browsing/copy/like histories or emails in the first release. Event storage uses server-derived IDs for idempotency/abuse control and minimizes personal data.
