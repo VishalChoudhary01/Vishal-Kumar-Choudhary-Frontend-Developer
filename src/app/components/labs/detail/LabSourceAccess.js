@@ -43,7 +43,14 @@ export default function LabSourceAccess({ slug }) {
       const payload = await response.json().catch(() => ({}));
 
       if (response.status === 401) {
-        router.replace(signInHref);
+        sourceRef.current = null;
+        setSource(null);
+        setState(session?.user?.id ? "session-mismatch" : "unauthenticated");
+        setError(
+          session?.user?.id
+            ? "Your browser shows a signed-in account, but this deployment did not receive its Labs session cookie. Sign in again on this exact Labs address."
+            : "Sign in on this Labs address before requesting protected source.",
+        );
         return;
       }
 
@@ -58,6 +65,14 @@ export default function LabSourceAccess({ slug }) {
         sourceRef.current = null;
         setSource(null);
         setState("verification");
+        return;
+      }
+
+      if (response.status === 404) {
+        sourceRef.current = null;
+        setSource(null);
+        setError("This experiment does not have a published source snapshot yet. Once the owner publishes one, every verified Labs account can view it.");
+        setState("unpublished");
         return;
       }
 
@@ -98,9 +113,10 @@ export default function LabSourceAccess({ slug }) {
   useEffect(() => {
     const shouldOpen = new URLSearchParams(window.location.search).get("source") === "1";
 
-    const autoOpenTimer = shouldOpen
-      ? window.setTimeout(() => loadSource(), 0)
-      : null;
+    const autoOpenTimer =
+      shouldOpen && !sessionPending
+        ? window.setTimeout(() => loadSource(), 0)
+        : null;
 
     let checking = false;
 
@@ -168,9 +184,9 @@ export default function LabSourceAccess({ slug }) {
       document.removeEventListener("visibilitychange", onVisibilityChange);
       unsubscribe();
     };
-    // The source request should only auto-run once per page mount.
+    // Wait for the client session check before auto-requesting protected source.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [sessionPending, session?.user?.id]);
 
   const copyCurrentFile = async () => {
     const file = source?.files?.[selectedFile];
@@ -212,7 +228,38 @@ export default function LabSourceAccess({ slug }) {
       className="mx-auto mt-12 w-full max-w-[1440px] px-6 sm:px-8 lg:px-20"
     >
       <div className="rounded-[var(--radius-md)] border border-border bg-surface-1 p-5 sm:p-6">
-        {state === "denied" ? (
+        {state === "session-mismatch" || state === "unauthenticated" ? (
+          <div className="flex items-start gap-3">
+            <LockKeyhole size={19} className="mt-0.5 shrink-0 text-warning" aria-hidden="true" />
+            <div>
+              <h2 className="text-base font-semibold">
+                {state === "session-mismatch" ? "Sign in again on this address" : "Sign in to view source"}
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">{error}</p>
+              <Link
+                href={signInHref}
+                className="mt-4 inline-flex min-h-9 items-center gap-2 bg-brand px-3 text-xs font-semibold text-brand-contrast hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              >
+                Sign in on this Labs address
+                <ArrowUpRight size={13} aria-hidden="true" />
+              </Link>
+            </div>
+          </div>
+        ) : state === "unpublished" ? (
+          <div className="flex items-start gap-3">
+            <AlertTriangle size={19} className="mt-0.5 shrink-0 text-text-tertiary" aria-hidden="true" />
+            <div>
+              <h2 className="text-base font-semibold">Source not published yet</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">{error}</p>
+              <Link
+                href={"/labs/" + slug}
+                className="mt-4 inline-flex min-h-9 items-center text-sm font-medium text-brand hover:underline"
+              >
+                Back to experiment
+              </Link>
+            </div>
+          </div>
+        ) : state === "denied" ? (
           <div className="flex items-start gap-3">
             <AlertTriangle size={19} className="mt-0.5 shrink-0 text-warning" aria-hidden="true" />
             <div>
