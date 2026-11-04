@@ -4,6 +4,7 @@ import { after } from "next/server";
 import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
 import { betterAuth } from "better-auth";
+import { dash } from "@better-auth/infra";
 
 import { sendAuthEmail, isAuthEmailConfigured } from "./email";
 import {
@@ -110,6 +111,11 @@ export const auth = betterAuth({
   secret: authSecret,
   trustedOrigins,
   database: mongodbAdapter(database, { client: mongoClient }),
+  // Activate Better Auth Dash only when its server-side project key is present.
+  // Authentication itself remains available when Dash has not been connected.
+  plugins: process.env.BETTER_AUTH_API_KEY
+    ? [dash({ apiKey: process.env.BETTER_AUTH_API_KEY })]
+    : [],
   databaseHooks: {
     user: {
       create: {

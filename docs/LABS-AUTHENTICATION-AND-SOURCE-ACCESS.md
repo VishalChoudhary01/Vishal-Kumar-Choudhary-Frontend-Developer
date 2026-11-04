@@ -183,3 +183,31 @@ No deployment secrets are committed to this repository. This runbook does not ce
 - `labs_verification_flows` stores a separate random flow ID, email digest, created/expiry timestamps and verified timestamp. The flow expires automatically after seven days. It is not the legal consent audit record.
 - The registration callback URL carries the flow ID. The Better Auth `afterEmailVerification` hook marks active flows for that email digest. The server-rendered verification page checks the stored flow status; manually adding a query parameter cannot produce a verified state.
 - Resend goes through `POST /api/labs/verification/resend`. The client receives a generic response and does not learn whether the email exists. The client cooldown is 30 seconds; Better Auth's server-side rate limits are authoritative.
+
+
+## 10. Better Auth Dash ownership verification
+
+The Better Auth Dash connection is separate from the core MongoDB authentication adapter.
+
+- The project includes `@better-auth/infra` and registers the server-side `dash()` plugin only when `BETTER_AUTH_API_KEY` is present.
+- The key is read only by `src/app/lib/auth/auth.js`; it is never exposed through a `NEXT_PUBLIC_*` variable or the browser auth client.
+- Dash is not the Sentinel security plugin. Sentinel is not enabled by this change.
+- The application does not enable Dash activity tracking, so no `lastActiveAt` schema field/migration is introduced.
+
+### Connect the deployed project
+
+1. In Better Auth Dash, open the project and copy its API key using the dashboard's **Copy key** action.
+2. In Vercel, open the `vishal-kumar-choudhary-frontend-developer` project → **Settings** → **Environment Variables**.
+3. Add `BETTER_AUTH_API_KEY` as a **Sensitive** environment variable. Paste the key directly into Vercel; do not commit it, place it in `.env.example` with a value, or send it in chat.
+4. Select the environments you want connected (at minimum the deployment URL entered in Better Auth Dash; include Preview separately when using preview URLs).
+5. Confirm `BETTER_AUTH_URL` or `NEXT_PUBLIC_SITE_URL` resolves to the exact deployed base URL entered in Better Auth Dash. The server uses `BETTER_AUTH_URL` first.
+6. Redeploy the selected Vercel environment so the new server variable and plugin are loaded.
+7. Return to Better Auth Dash and select **Retry connection**.
+
+If the deployed server was already configured with `BETTER_AUTH_API_KEY`, a fresh deploy of this code is still required so the `dash()` plugin is registered.
+
+### Important secret hygiene
+
+A value had been committed in the tracked `.env.example` under `BETTER_AUTH_SECRET`. It has been removed from the example file and replaced with a blank placeholder. Treat the old value as exposed: generate a new unique Better Auth secret and replace `BETTER_AUTH_SECRET` in Vercel before enabling authentication. This runbook intentionally does not reproduce that value.
+
+The API key is not available to the repository integration; it must be copied from the user's Better Auth Dash project directly into Vercel. Do not attempt to infer or generate a Dash API key.
