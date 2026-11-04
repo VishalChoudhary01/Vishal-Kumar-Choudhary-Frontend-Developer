@@ -8,6 +8,7 @@ import {
 } from "@/app/lib/auth/auth";
 import { consumeRegistrationAttempt } from "@/app/lib/auth/registration-rate-limit";
 import { getSafeReturnTo } from "@/app/lib/auth/return-to";
+import { getAuthBaseURL } from "@/app/lib/auth/base-url";
 import { getLegalDocumentConfig } from "@/app/lib/legal/policies";
 import {
   discardUnlinkedRegistrationConsent,
@@ -76,10 +77,7 @@ export async function POST(request) {
       );
     }
 
-    const siteUrl =
-      process.env.BETTER_AUTH_URL ||
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      new URL(request.url).origin;
+    const siteUrl = getAuthBaseURL(new URL(request.url).origin);
 
     const returnTo = getSafeReturnTo(payload?.returnTo);
     const verificationCallback = new URL("/labs/verify-email", siteUrl);
