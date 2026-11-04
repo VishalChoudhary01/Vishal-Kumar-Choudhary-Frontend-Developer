@@ -13,7 +13,7 @@ This documentation defines the proposed portfolio platform extension. It is not 
 5. LABS-AND-AUTHENTICATION-DESIGN-SPEC.md — detailed Labs page/auth UX and repository-aligned implementation guide. This is the detailed UX authority for the public Labs route and authentication screen decisions.
 6. LABS-SOURCE-MANAGEMENT-SPEC.md — owner-only protected source lifecycle, source versions, grants, audit and migration plan. This is the detailed implementation-planning authority for owner-managed Labs source; it does not authorize live source execution.
 7. DESIGN-LAB.md — broader Lab product capabilities (search, sorting, likes, source/preview policy, engagement and publishing). Apply unless a detailed page UX decision in LABS-AND-AUTHENTICATION-DESIGN-SPEC.md explicitly supersedes it.
-7. Existing project-level source-of-truth documents and current implementation — authoritative for current behavior and technical conventions. Inspect before changing code.
+8. Existing project-level source-of-truth documents and current implementation — authoritative for current behavior and technical conventions. Inspect before changing code.
 
 ## Locked baseline
 - Preserve the current public portfolio home page, project detail pages, education section, design, responsive behavior, animation, SEO, accessibility, and functionality.
@@ -35,6 +35,7 @@ This documentation defines the proposed portfolio platform extension. It is not 
 - [Lab design](./DESIGN-LAB.md)
 
 - [Labs and authentication UX + implementation guide](./LABS-AND-AUTHENTICATION-DESIGN-SPEC.md) — detailed Labs page design, auth flows, current stack/repository baseline, proposed components/hooks/state ownership and feature implementation guidance.
+- [Labs owner-managed source lifecycle](./LABS-SOURCE-MANAGEMENT-SPEC.md) — protected owner workspace, source snapshots/versions, per-user grants, auditing, migration and rollout phases.
 - [Database and media setup plan](./DATABASE-AND-MEDIA-SETUP-PLAN.md) — MongoDB Atlas, Mongoose, Cloudinary, environment variables, security, testing and deployment setup.
 
 ## Change control
