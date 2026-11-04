@@ -1,6 +1,6 @@
 # API Contracts, Domain Schemas and Endpoint Ownership
 
-**Status:** Contract baseline for planning. Exact schemas/routes must be finalized after repository and auth-provider inspection.  
+**Status:** Implemented Labs/auth/source routes are recorded below; portfolio CMS and future preview endpoints remain proposals.  
 **Related:** ARCHITECTURE.md, PROJECT-STRUCTURE.md, PRD.md
 
 ## 1. Contract rules
@@ -11,7 +11,7 @@
 - Validate request parameters/body using the selected schema library/current repository conventions.
 - Do not trust client-provided role, owner ID, publication state, aggregate counts, actor identity or arbitrary MongoDB filters.
 - Responses must not contain credentials, internal stack traces, hidden source for guests or unnecessary personal data.
-- Route names, verbs and payloads are proposed. Confirm exact naming and compatibility during Phase 1 before implementation.
+- Route names, verbs and payloads in the Labs/auth/source sections below reflect the implemented `feat/labs-platform-integration` branch. Other portfolio CMS routes remain proposals and require separate approval.
 
 ## 2. Response and error conventions
 For JSON endpoints, use a consistent envelope selected during Phase 1, for example:
@@ -67,21 +67,34 @@ These paths are candidate REST endpoints; the same use cases may be Server Actio
 - `PUT /api/admin/experience/:id` — edit draft.
 - Publish/unpublish/version operations follow the shared content workflow, not a second bespoke implementation.
 
-### Lab
-- `GET /api/lab` — published listing with bounded query parameters for search, filters, sort and pagination.
-- `GET /api/lab/:slug` — published experiment metadata and public demo references only; never source file contents.
-- `POST /api/lab/:id/like` — create/activate a persistent like for a valid verified Better Auth user; for guests and signed-in-unverified visitors, retain the existing best-effort public-like behavior where supported.
-- `DELETE /api/lab/:id/like` — remove the current verified user's persistent like; anonymous guest-like state remains best-effort/browser-scoped.
-- `GET /api/v1/labs/:slug/source` — current implementation requires verified session + legacy per-user grant; target implementation requires a valid Better Auth session, `emailVerified === true`, and a published source version only. Remove the grant lookup; return private/no-store.
-- `POST /api/v1/labs/:slug/source/copy` — record a code-copy action after a successful client Clipboard API write; server rechecks verified session and published source, validates an idempotency key and never accepts clipboard/source content.
-- `POST /api/v1/labs/:slug/source/open` — record a source-viewer open after a successful authorized source load; server derives the actor and source version, and deduplicates retries with an idempotency key.
-- `POST /api/lab/:id/preview-session` — authorize preview launch; actual execution is delegated to approved isolated infrastructure.
-- `POST /api/lab/:id/preview-events` — accept only allowlisted, bounded, validated instrumented events.
-- `GET /api/user/dashboard` — current user's dashboard data only.
-- `GET /api/user/likes` — current user's likes.
-- `GET /api/user/activity` — current user's activity, subject to retention rules.
+### Labs public pages, engagement and protected source
 
-Do not return full source in the listing/detail endpoint for guests. A source route must check the current actor and experiment policy on every request.
+Public page routes:
+- `/labs` — statically rendered public experiment listing from the canonical Labs metadata module.
+- `/labs/:slug` — statically generated public experiment detail and code-owned demo runtime. Public page DTOs never include protected source contents.
+
+Public engagement routes:
+- `GET /api/v1/labs/:slug/engagement` — returns active anonymous/verified aggregate like counts and the current actor's like state. A guest identity is not created just by reading the count.
+- `POST /api/v1/labs/:slug/engagement` — toggles a like using `{ liked: boolean }`. Verified accounts use their server-derived Better Auth user ID. Anonymous visitors use a signed HTTP-only browser cookie and keyed digest. Signed-in unverified accounts are denied. Anonymous counts are browser identities/actions, not unique people.
+
+Protected source routes:
+- `GET /api/v1/labs/:slug/source` — requires a valid verified Better Auth session, canonical public Labs experiment slug and a published source snapshot. No per-user grant lookup is performed. The server validates the published file snapshot and responds private/no-store.
+- `POST /api/v1/labs/:slug/source/events` — records `source_open` or `code_copy` for a verified session. The browser sends copy events only after Clipboard API success; the request never contains clipboard/source text. The server rechecks publication/version/file metadata and deduplicates by event ID.
+
+Owner-only Labs source management routes:
+- `GET /api/v1/admin/labs/owner-status` — returns the safe owner capability used by Labs account navigation.
+- `GET /api/v1/admin/labs/sources` — list source status for canonical published Labs experiments.
+- `POST /api/v1/admin/labs/sources` — create an unpublished source head for a canonical experiment.
+- `GET /api/v1/admin/labs/sources/:slug` — load owner-only draft/published editor state.
+- `GET /api/v1/admin/labs/sources/:slug/versions` — list immutable version metadata.
+- `POST /api/v1/admin/labs/sources/:slug/versions` — validate and save a new immutable draft snapshot with optimistic concurrency.
+- `GET /api/v1/admin/labs/sources/:slug/versions/:versionId` — read immutable file content for the owner-only version preview.
+- `POST /api/v1/admin/labs/sources/:slug/restore/:versionId` — restore a historical version as a new draft.
+- `POST /api/v1/admin/labs/sources/:slug/publish` and `POST /api/v1/admin/labs/sources/:slug/unpublish` — explicit publication transitions.
+- `GET /api/v1/admin/labs/sources/:slug/audit` — read-only owner audit history.
+- `GET /api/v1/admin/labs/analytics?days=7|30|90|365` — owner-only aggregate source opens, verified accounts, copies, active anonymous/verified likes and like/unlike activity.
+
+The owner guard uses server-only `LABS_OWNER_USER_ID` and requires a verified session. All owner mutations require same-origin requests; all owner APIs enforce authorization independently. Source, draft, version, audit and analytics responses are private/no-store. Do not return source in anonymous listing/detail payloads.
 
 ### Admin Lab management
 - `GET /api/admin/lab` — search/filter admin experiments and statuses.
@@ -108,9 +121,8 @@ Gallery attach/detach/order changes may be content-draft mutations rather than i
 - `GET /api/admin/analytics/trends` — daily/monthly aggregate trends.
 - `GET /api/admin/analytics/rankings` — most-viewed, most-source-opened, most-copied and most-liked experiments.
 - `GET /api/admin/analytics/experiments/:id` — per-experiment aggregate report.
-- `GET /api/v1/admin/labs/analytics` — owner-only aggregate source opens, unique verified accounts, copy actions, current active likes and like/unlike counts/trends across Labs.
-- `GET /api/v1/admin/labs/analytics/:slug` — owner-only source engagement aggregate for one experiment and a bounded date range.
-All admin analytics reads require Admin authorization. Do not allow arbitrary collection/query expressions from clients.
+- `GET /api/v1/admin/labs/analytics?days=7|30|90|365` — implemented owner-only aggregate Labs source engagement across experiments.
+The implemented Labs analytics endpoint requires the singleton Owner authorization guard. Other generic Admin analytics endpoints remain future portfolio CMS scope. Do not allow arbitrary collection/query expressions from clients.
 
 ### Publishing and schedules
 - `GET /api/admin/schedules` — authorized schedule list/status.
