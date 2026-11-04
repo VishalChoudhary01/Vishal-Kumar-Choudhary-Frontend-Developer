@@ -2286,7 +2286,7 @@ This section resolves the gap between the public source-access panel and the own
 ### 37.2 Owner policy
 
 - First release is a singleton portfolio owner, not a general multi-admin system.
-- Recommended identity bootstrap is a server-only `LABS_OWNER_USER_ID` matching the stable Better Auth ID of the verified owner account. This remains a decision to approve before implementation.
+- **LOCKED — USER APPROVED (2026-11-04):** owner identity is a server-only `LABS_OWNER_USER_ID` matching the stable Better Auth ID of the verified owner account. The owner is the sole privileged administrator for the first source-management release and manages all source lifecycle and grant operations. Missing configuration denies owner access.
 - Missing owner configuration denies owner operations. Never infer owner from first registration, email domain, browser state or request payload.
 - Owner authorization is checked server-side at every protected route/action and domain boundary.
 - Owner source-management capability is separate from ordinary user grants. Owner can create/manage source without a self-grant; regular users still require an active grant.
@@ -2325,4 +2325,4 @@ This section resolves the gap between the public source-access panel and the own
 
 ### 37.6 Implementation authorization
 
-The existence of this specification does not authorize code changes. Implementation must follow the phases and gates in `LABS-SOURCE-MANAGEMENT-SPEC.md`, with explicit owner-identity and editor decisions confirmed first. CMS, general portfolio content management and multi-admin functionality remain deferred.
+The existence of this specification does not authorize code changes. Owner identity is approved. Implementation must follow the phases and gates in `LABS-SOURCE-MANAGEMENT-SPEC.md`; the editor dependency and source-import strategy remain open and must be resolved before their dependent implementation work. CMS, general portfolio content management and multi-admin functionality remain deferred.
