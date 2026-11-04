@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
+import mongoose from "mongoose";
 
 import { connectToDatabase } from "@/app/lib/db/mongoose";
 import LabLike from "./models/LabLike";
@@ -10,6 +11,7 @@ import LabAnalyticsEvent from "./models/LabAnalyticsEvent";
 export const LABS_GUEST_LIKE_COOKIE = "labs_guest_like";
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 180;
+const COOKIE_MAX_AGE_MS = COOKIE_MAX_AGE * 1000;
 const EVENT_ID_PATTERN = /^[A-Za-z0-9_-]{8,100}$/;
 
 function getGuestSecret() {
@@ -58,8 +60,10 @@ export function resolveGuestIdentity(request) {
       receivedBuffer.length === expectedBuffer.length &&
       timingSafeEqual(receivedBuffer, expectedBuffer)
     ) {
+      // Return the existing signed token so the API can refresh its rolling
+      // cookie expiry after the visitor has chosen to use the like feature.
       return {
-        token: null,
+        token: raw,
         guestKeyHash: hashGuestId(id, secret),
       };
     }
@@ -105,9 +109,26 @@ export async function getLabEngagement({ slug, actor }) {
   await connectToDatabase();
   await ensureEngagementIndexes();
 
+  const now = new Date();
+
+  if (actor?.type === "guest") {
+    const rollingExpiry = new Date(now.getTime() + COOKIE_MAX_AGE_MS);
+    await LabGuestLike.updateMany(
+      {
+        guestKeyHash: actor.guestKeyHash,
+        active: true,
+      },
+      { $set: { expiresAt: rollingExpiry } },
+    );
+  }
+
   const [verifiedLikes, anonymousLikes, actorLike] = await Promise.all([
     LabLike.countDocuments({ experimentSlug: slug, active: true }),
-    LabGuestLike.countDocuments({ experimentSlug: slug, active: true }),
+    LabGuestLike.countDocuments({
+      experimentSlug: slug,
+      active: true,
+      expiresAt: { $gt: now },
+    }),
     actor?.type === "verified"
       ? LabLike.findOne({
           userId: actor.userId,
@@ -119,6 +140,7 @@ export async function getLabEngagement({ slug, actor }) {
             guestKeyHash: actor.guestKeyHash,
             experimentSlug: slug,
             active: true,
+            expiresAt: { $gt: now },
           }).select("_id").lean()
         : null,
   ]);
@@ -145,53 +167,77 @@ export async function setLabLike({ slug, actor, liked }) {
     : liked ? "guest_like" : "guest_unlike";
 
   let transitioned = false;
+  const session = await mongoose.startSession();
 
-  if (liked) {
-    try {
-      const result = await Model.updateOne(
-        {
-          [identityField]: identityValue,
-          experimentSlug: slug,
-          active: { $ne: true },
-        },
-        {
+  try {
+    await session.withTransaction(async () => {
+      if (liked) {
+        const update = {
           $set: { active: true, lastTransitionAt: now },
           $setOnInsert: {
             [identityField]: identityValue,
             experimentSlug: slug,
           },
-        },
-        { upsert: true, runValidators: true },
-      );
+        };
 
-      transitioned = result.modifiedCount > 0 || result.upsertedCount > 0;
-    } catch (error) {
-      // A concurrent duplicate like is already represented by the unique key.
-      if (error?.code !== 11000) throw error;
-    }
-  } else {
-    const result = await Model.updateOne(
-      {
-        [identityField]: identityValue,
-        experimentSlug: slug,
-        active: true,
-      },
-      { $set: { active: false, lastTransitionAt: now } },
-      { runValidators: true },
-    );
+        if (!isVerified) {
+          update.$set.expiresAt = new Date(now.getTime() + COOKIE_MAX_AGE_MS);
+        }
 
-    transitioned = result.modifiedCount > 0;
-  }
+        const result = await Model.updateOne(
+          {
+            [identityField]: identityValue,
+            experimentSlug: slug,
+            active: { $ne: true },
+          },
+          update,
+          { upsert: true, runValidators: true, session },
+        );
 
-  if (transitioned) {
-    await LabAnalyticsEvent.create({
-      eventId: randomUUID(),
-      eventType,
-      experimentSlug: slug,
-      actorCategory: isVerified ? "verified_user" : "guest",
-      actorUserId: isVerified ? actor.userId : null,
-      occurredAt: now,
+        transitioned = result.modifiedCount > 0 || result.upsertedCount > 0;
+      } else {
+        const update = {
+          $set: { active: false, lastTransitionAt: now },
+        };
+
+        if (!isVerified) {
+          update.$set.expiresAt = new Date(now.getTime() + COOKIE_MAX_AGE_MS);
+        }
+
+        const result = await Model.updateOne(
+          {
+            [identityField]: identityValue,
+            experimentSlug: slug,
+            active: true,
+          },
+          update,
+          { runValidators: true, session },
+        );
+
+        transitioned = result.modifiedCount > 0;
+      }
+
+      if (transitioned) {
+        await LabAnalyticsEvent.create(
+          [{
+            eventId: randomUUID(),
+            eventType,
+            experimentSlug: slug,
+            actorCategory: isVerified ? "verified_user" : "guest",
+            actorUserId: isVerified ? actor.userId : null,
+            occurredAt: now,
+          }],
+          { session },
+        );
+      }
     });
+  } catch (error) {
+    // A concurrent request may win the unique user/browser + experiment
+    // index. The winning state is returned below without double-counting.
+    if (error?.code !== 11000) throw error;
+    transitioned = false;
+  } finally {
+    await session.endSession();
   }
 
   return {
