@@ -250,7 +250,7 @@ For each endpoint/action, test:
 
 - All endpoints in this section require a valid Better Auth session, verified email, and the server-side singleton Owner authorization check.
 - **Locked — user approved 2026-11-04:** owner resolution uses server-only `LABS_OWNER_USER_ID` containing the stable Better Auth user ID of the verified owner account. If absent or mismatched, deny with 403; never fall back to the first user or client-provided role. The owner is the sole privileged source manager in the initial release.
-- The owner may manage source without creating an ordinary user grant. This exception does not apply to regular registered accounts.
+- The owner may manage drafts and unpublished versions through the owner guard. Every other registered account with a verified email reads published source automatically; there is no per-user grant.
 - Owner routes/actions must be independently protected at transport, domain-use-case and data-access boundaries.
 
 ### Proposed endpoints
@@ -275,7 +275,7 @@ These are candidate endpoints, not permission to build a full CMS. Same-app muta
 - Source aggregate is one-per-experiment and holds only draft/published version pointers plus lifecycle metadata.
 - Immutable source versions hold file arrays, server-computed content hash, version number, actor, timestamp and optional parent version.
 - Saving a draft never advances the published pointer. Publishing selects an existing immutable version and does not execute it.
-- Unpublishing denies subsequent source reads for every regular user, including verified accounts.
+- Unpublishing denies subsequent source reads for all non-owner accounts, including verified users.
 - Restoring a prior version creates a new immutable version; it never modifies the historical snapshot.
 - No per-user source grant is part of the target authorization model. Do not build grant/regrant/revoke endpoints or require owner approval for a verified account.
 - Like state is unique by `{ userId, experimentSlug }`; only a verified session can create a state transition.
