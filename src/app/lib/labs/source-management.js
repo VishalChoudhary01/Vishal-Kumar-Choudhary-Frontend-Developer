@@ -136,18 +136,6 @@ async function ensureIndexes() {
   await sourceIndexesPromise;
 }
 
-async function writeAudit({ userId, action, slug, versionId = null, requestId = null }) {
-  await LabSourceAuditEvent.create({
-    actorUserId: userId,
-    action,
-    experimentSlug: slug,
-    versionId,
-    requestId,
-    resultCode: "ok",
-    createdAt: new Date(),
-  });
-}
-
 export async function listOwnerLabSources({ user }) {
   assertOwner(user);
   await connectToDatabase();
@@ -192,26 +180,50 @@ export async function createOwnerLabSource({ user, slug }) {
   await connectToDatabase();
   await ensureIndexes();
 
+  const session = await mongoose.startSession();
+  let source;
+
   try {
-    const source = await LabSource.create({
-      slug,
-      version: "0.0",
-      published: false,
-      files: [],
-      draftVersionId: null,
-      publishedVersionId: null,
-      nextVersionNumber: 1,
-      createdBy: user.id,
-      updatedBy: user.id,
+    await session.withTransaction(async () => {
+      const [created] = await LabSource.create(
+        [{
+          slug,
+          version: "0.0",
+          published: false,
+          files: [],
+          draftVersionId: null,
+          publishedVersionId: null,
+          nextVersionNumber: 1,
+          createdBy: user.id,
+          updatedBy: user.id,
+        }],
+        { session },
+      );
+
+      await LabSourceAuditEvent.create(
+        [{
+          actorUserId: user.id,
+          action: "source_created",
+          experimentSlug: slug,
+          versionId: null,
+          requestId: null,
+          resultCode: "ok",
+          createdAt: new Date(),
+        }],
+        { session },
+      );
+
+      source = created;
     });
 
-    await writeAudit({ userId: user.id, action: "source_created", slug });
     return { slug: source.slug, published: false, draftVersionId: null };
   } catch (error) {
     if (error?.code === 11000) {
       throwCode("CONFLICT", "A source record already exists for this experiment.");
     }
     throw error;
+  } finally {
+    await session.endSession();
   }
 }
 
@@ -276,9 +288,14 @@ export async function saveOwnerLabDraft({
   basedOnVersionId = null,
   changeSummary = "",
   requestId = null,
+  auditAction = "draft_saved",
 }) {
   assertOwner(user);
   assertExperiment(slug);
+
+  if (!["draft_saved", "version_restored"].includes(auditAction)) {
+    throwCode("VALIDATION_ERROR", "The source audit action is invalid.");
+  }
 
   if (
     expectedDraftVersionId !== null &&
@@ -338,7 +355,7 @@ export async function saveOwnerLabDraft({
       await LabSourceAuditEvent.create(
         [{
           actorUserId: user.id,
-          action: "draft_saved",
+          action: auditAction,
           experimentSlug: slug,
           versionId,
           requestId,
@@ -451,14 +468,7 @@ export async function restoreOwnerLabVersion({
     basedOnVersionId: oldVersion.versionId,
     changeSummary: "Restore " + oldVersion.version,
     requestId,
-  });
-
-  await writeAudit({
-    userId: user.id,
-    action: "version_restored",
-    slug,
-    versionId: result.versionId,
-    requestId,
+    auditAction: "version_restored",
   });
 
   return result;
