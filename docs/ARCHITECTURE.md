@@ -182,3 +182,44 @@ This implementation is a feature foundation, not proof of production readiness: 
 Labs registration consent is persisted separately from editable Better Auth user profile fields. The server writes a receipt to `labs_registration_consents` before calling Better Auth registration; it uses an HMAC of the normalized email address, the current legal-document versions and a server timestamp. A Better Auth user-create hook links the receipt to the persisted user ID. The client cannot submit or modify the legal version/timestamp fields.
 
 Verification-flow IDs are stored separately in `labs_verification_flows`. Better Auth's post-email-verification hook marks current flows for that email digest. The verification page checks the opaque flow ID against this server-side status rather than trusting a query-string flag. These flow records expire through a MongoDB TTL index after seven days; legal consent receipts are not covered by this transient-flow TTL.
+## 13. Owner-managed Labs source boundary
+
+The source-management plan is detailed in `LABS-SOURCE-MANAGEMENT-SPEC.md`. This section establishes the architecture boundary; it does not claim that owner management or immutable versions exist in the current code.
+
+### 13.1 Owner identity and authorization
+
+- The initial release is a singleton-owner capability, not general multi-role administration.
+- Recommended bootstrap is server-only `LABS_OWNER_USER_ID`, containing the stable Better Auth user ID for the already-created owner account. This identity mechanism remains subject to explicit approval before implementation.
+- A missing/mismatched owner ID denies all owner operations. Never elevate the first account, email supplied by the browser, client role flags or arbitrary request headers.
+- Resolve actor identity from Better Auth session only. Owner guard must be called independently at Route Handler/Server Action, domain use case and repository boundaries.
+- Owner management permission is separate from ordinary source grants. The owner can manage source without manufacturing a self-grant, while regular users still require a matching per-experiment grant.
+- Do not persist a general role field or multi-admin hierarchy merely to support the first owner. A future multiple-admin model requires a separate decision and threat-model update.
+
+### 13.2 Source lifecycle and persistence
+
+- Separate the mutable source aggregate/head from immutable source-version snapshots.
+- Source aggregate stores canonical experiment slug and draft/published version pointers.
+- Immutable version records store text files, server-computed content hash, version number, parent/restored-from version, actor and timestamp.
+- Grants remain one current record per canonical user ID + experiment slug. An append-only audit collection preserves grant/revoke and source lifecycle history.
+- Save draft, publish exact version, unpublish, restore, grant and revoke are separate domain use cases with concurrency checks and idempotency.
+- Never overwrite an immutable version. Restore creates a new version. Publishing never executes the saved code.
+- Data migration and index bootstrap must be idempotent and preserve any existing source documents/grants. Do not drop old collections until migration reconciliation succeeds.
+
+### 13.3 Source editor trust boundary
+
+- Owner editor writes text-only source. It is not an execution environment, terminal, build service or package installer.
+- Validate source paths, encodings, language allowlist, byte/file limits, duplicate paths and suspicious secret content server-side. Never log matched secret values or full source content.
+- Owner-only source drafts, versions, inventory and audit are private/no-store.
+- The editor and syntax-highlighting dependencies load only inside the owner workspace and must not enter public homepage, Labs listing or public demo bundles.
+- Editor dependency remains open; inspect the package manifest and bundle impact before approving Monaco/CodeMirror or other packages.
+
+### 13.4 Execution remains a separate trust boundary
+
+- Storing/editing source does not authorize running it.
+- No source snapshot may be evaluated in the Next.js server, the main portfolio React tree, or the privileged application origin.
+- Live preview of owner-authored or untrusted source requires the separate-origin isolated-preview decision and threat-model gate: CSP, sandbox permissions, cookie/storage separation, network egress, package allowlist, resource/time limits, message protocol, abuse monitoring and recovery.
+- Until that gate passes, owner workflows support text management, validation, versioning and protected viewing only. Existing code-owned public demos remain unchanged.
+
+### 13.5 Owner source request flow
+
+Owner request → Better Auth session → server-only singleton-owner check → input/schema validation → source domain use case → repository transaction/conditional update → append-only audit record → private/no-store response. No owner operation is authorized solely by the admin route layout or a hidden control.
