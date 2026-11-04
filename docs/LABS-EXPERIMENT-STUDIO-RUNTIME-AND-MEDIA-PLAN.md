@@ -1,6 +1,6 @@
 # Labs Experiment Studio — Runtime, Media and Publishing Plan
 
-**Status:** Approved direction for planning; implementation phases are not yet complete.  
+**Status:** Approved implementation source of truth. Media upload/owner preview and the isolated compiler prototype are implemented and smoke-tested; the public preview runtime and release pipeline remain disabled.  
 **Applies to:** Owner-created experiments in Labs, while preserving the four existing code-owned experiments.  
 **Primary implementation branch:** feat/labs-platform-integration  
 **Related source of truth:** LABS-SOURCE-MANAGEMENT-SPEC.md, DESIGN-LAB.md, ARCHITECTURE.md, LABS-EXPERIMENT-STUDIO-PHASE-1.md and LABS-EXPERIMENT-STUDIO-PHASE-2.md.
@@ -211,7 +211,7 @@ Exact file-size, video-duration, dimension, per-experiment and per-owner quotas 
 4. The browser uploads directly to Cloudinary; the Cloudinary API secret never reaches the browser.
 5. A server callback or verified finalize request checks the uploaded asset against the upload intent and provider response.
 6. The application records a LabMediaAsset metadata row and marks the asset ready only after validation/processing completes.
-7. The owner adds alt text, caption, poster/thumbnail choice and intended usage, then attaches it to an experiment.
+7. The owner may optionally attach this single asset as a fallback when the live code preview cannot run or is unsupported, and add alt text/caption. This is not needed for a working code preview.
 
 Never accept a client-supplied Cloudinary public ID as proof of ownership. Verify the upload signature/intent, asset ownership, resource type and allowed folder/prefix on the server.
 
@@ -222,24 +222,15 @@ One asset may be attached for one or more explicitly selected roles:
 
 The owner can select or clear the single fallback asset and edit its alt text/caption. No gallery, card-cover or in-experiment attachment roles are part of this scope. Clearing an attachment must not delete the underlying asset if a draft or historical release still references it.
 
-Video assets should have a poster image. Public video players use controls and do not autoplay with sound. Card video behavior is opt-in and muted; a poster is the default. Animated GIF motion must respect reduced-motion preferences and must not be the only way to communicate essential information.
+Fallback video players use controls and do not autoplay with sound. A video poster may be generated if the selected delivery mode requires one. Animated GIF motion must respect reduced-motion preferences and must not be the only way to communicate essential information.
 
-### 5.4 Asset references inside code
+### 5.4 Runtime media boundary
 
-Do not require the owner to paste long Cloudinary URLs into source files. Expose a build-time virtual module such as @labs/assets that maps stable owner-selected asset keys to the exact approved asset references for the current immutable version.
-
-Example usage in React source:
-- import { assets } from "@labs/assets";
-- render an image with assets.hero;
-- render a video using assets.demoClip and its generated poster.
-
-The compiler resolves this virtual module from the immutable asset manifest. Unknown keys fail the build. References cannot escape the experiment's manifest or point at arbitrary files. The generated runtime CSP permits image/video requests only from the configured media CDN. connect-src remains blocked.
-
-The exact helper API can be refined during implementation, but the alias and manifest must remain version-stable and documented.
+Fallback media is not imported by experiment source and is not exposed through a virtual asset module. It is resolved by the Labs page only after the code runtime reports a build failure, unsupported template or startup failure. A successful runtime always wins. The compiler's default network policy remains deny-all.
 
 ### 5.5 Media privacy and publication
 
-Unpublished assets must not be accidentally discoverable through public page payloads or predictable public delivery paths. Select and verify a Cloudinary delivery/access mode that supports private draft preview and public published assets. Draft preview URLs should be short-lived or otherwise access-controlled. On publication, only the assets included in the exact release manifest become publicly deliverable.
+Unpublished fallback assets must not be discoverable through public page payloads or predictable public delivery paths. Owner preview URLs are short-lived and returned only through the owner-only no-store inventory endpoint. Public fallback conversion/access mode remains a release-phase decision; until it is verified, fallback media stays private.
 
 Do not store original media binary payloads in MongoDB. MongoDB stores provider identifiers, safe metadata, ownership, processing state and immutable references. Cloudinary stores and transforms the actual media.
 
@@ -298,11 +289,11 @@ Preview-run status and short-lived artifacts/logs may use a separate LabPreviewR
 ## 7. Draft, preview and publication lifecycle
 
 1. Create experiment metadata. The record remains private.
-2. Add/edit code and upload media.
-3. Run the current working copy. The build/run uses an exact content hash and media manifest, even before saving a draft.
+2. Add/edit code. Upload image/GIF/video only when the code preview cannot run or is unsupported, then optionally attach one fallback.
+3. Run the current working copy. The build/run uses an exact source content hash. A fallback does not change the code build result.
 4. Inspect the live result, build output, console and responsive layout. Fix errors and run again.
-5. Save draft. This creates an immutable code snapshot and pins the media references used by that draft.
-6. Build/validate the saved version using the production-equivalent compiler contract. The successful build artifact is tied to that exact source hash, dependency set and asset manifest.
+5. Save draft. This creates an immutable code snapshot and, only when selected, pins the single optional fallback reference.
+6. Build/validate the saved version using the production-equivalent compiler contract. The successful build artifact is tied to that exact source hash and dependency set.
 7. Review the release summary: metadata, source version, runtime type, media, validation and preview result.
 8. Publish exact release. The server rechecks owner identity, immutable version pointers, successful build status, hash match, asset readiness, asset references and publication policy.
 9. Commit the published release pointer atomically. Revalidate public Labs listing, detail route, sitemap and relevant metadata/cache only after the pointer transition succeeds.
@@ -310,7 +301,7 @@ Preview-run status and short-lived artifacts/logs may use a separate LabPreviewR
 11. A later save/preview does not change the public release. Publish the new exact release to replace it.
 12. Unpublish prevents new public runtime/source access; historical releases remain available to the owner for rollback/restore under the approved retention policy.
 
-A successful preview of unsaved code is not publishable by itself. A fallback asset is not a substitute for a successful production-equivalent compiler/runtime validation and cannot make a failed build publishable. Publication requires a successful build for the exact saved source version and exact media manifest being published. Any code, metadata, dependency or asset change invalidates the prior release validation.
+A successful preview of unsaved code is not publishable by itself. A fallback asset is not a substitute for a successful production-equivalent compiler/runtime validation and cannot make a failed build publishable. Publication requires a successful build for the exact saved source version and exact media manifest being published. Any code, metadata, dependency or fallback-reference change invalidates the prior release validation.
 
 ## 8. Proposed API/service boundaries
 
@@ -318,8 +309,8 @@ These are planning contracts, not assertions that the routes are already impleme
 
 - Owner creates/updates experiment metadata through owner-only experiment routes.
 - Owner requests a constrained media-upload intent; browser uploads directly to Cloudinary; server verifies/finalizes the asset.
-- Owner lists/attaches/reorders/detaches media on an experiment.
-- Owner requests a preview run with a working-copy snapshot and selected asset manifest.
+- Owner lists private media and may attach or clear one optional fallback; there is no gallery ordering, cover selection or runtime-asset role.
+- Owner requests a preview run with a working-copy source snapshot. The optional fallback is a separate page-level reference and is not required by the compiler.
 - The server creates a bounded preview job and returns status/run identifier.
 - Owner polls/subscribes to build and runtime diagnostics through a private owner endpoint.
 - Owner saves immutable source draft versions.
