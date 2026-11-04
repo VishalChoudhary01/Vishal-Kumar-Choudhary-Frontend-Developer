@@ -77,8 +77,8 @@ Only record successful server-confirmed state changes as likes/unlikes. A retry 
 - **Copy actions:** successful Clipboard API write acknowledgements accepted by the server for a verified account; do not call this code usage.
 - **Preview starts:** events meeting the agreed successful-start threshold.
 - **Copies per view:** qualifying copy actions divided by qualifying views for the same period/filter; define behavior when views are zero.
-- **Verified-account activity:** source open/copy/like events are accepted only from a valid Better Auth session with `emailVerified === true`.
-- **Guest/unverified source activity:** not collected because source/copy/like controls are unavailable to those actors.
+- **Verified-account source activity:** source-open and code-copy events are accepted only from a valid Better Auth session with `emailVerified === true`; verified likes are persistent account state.
+- **Guest/unverified source activity:** guests and unverified users cannot open/copy source. Public guest likes may be recorded separately where measurable and must not be treated as unique people.
 - **Unique visitor/session estimates:** do not add until identifier, consent/privacy and deduplication rules are approved.
 
 Metric names and formulas must be displayed or discoverable in the UI. Avoid combining events from incompatible definitions or version scopes.
@@ -142,7 +142,7 @@ For each experiment/source page, the owner/admin must be able to see:
 - **Unique verified accounts:** distinct verified Better Auth accounts that opened the source during the selected period.
 - **Code copies:** successful Clipboard API copy actions accepted by the server.
 - **Current likes:** active verified-account likes at query time.
-- **Like actions / unlike actions:** server-confirmed like-state transitions during the selected period.
+- **Like actions / unlike actions:** server-confirmed verified-account like-state transitions during the selected period; any measurable guest like actions are a separate best-effort action count.
 - **Copies per source open:** copy actions divided by source opens for the same experiment and period. Show no rate when the denominator is zero.
 
 ### Collection-wide overview and rankings
