@@ -118,17 +118,41 @@
 - Search and filters compose predictably; pagination avoids duplicate/missing results.
 - Existing portfolio pages remain visually and behaviorally unchanged.
 
-## Phase 8 — Isolated interactive previews and full-source access
+## Phase 8 — Owner-managed protected source lifecycle
 **Work**
-- Implement authenticated source access/copy and isolated execution for approved registered/admin-managed components.
-- Establish dependency allowlist, resource limits, origin/network policy, message protocol and sandbox threat model.
-- Add preview lifecycle, error/timeout states and explicitly instrumented interactions.
+- Follow `docs/LABS-SOURCE-MANAGEMENT-SPEC.md` as the detailed source-management plan.
+- Approve and provision a singleton owner identity (recommended server-only `LABS_OWNER_USER_ID`); owner operations deny by default when the identity is absent.
+- Evolve the current mutable LabSource record into a source aggregate with draft/published pointers and immutable source-version snapshots; preserve/migrate existing records safely.
+- Add idempotent collection/index bootstrap for source heads, immutable versions, append-only audit events and the existing per-user/per-experiment grants.
+- Implement server-only owner use cases for source creation, file add/edit/rename/delete, save draft, version history, compare/restore, explicit publish/unpublish, verified-user grant/re-grant/revoke and audit.
+- Add optimistic concurrency, idempotency, strict text/path/language/byte/secret validation and private/no-store response behavior.
+- Build the lazy-loaded owner source workspace and grant manager without placing editor dependencies in public bundles.
+- Provision the first reviewed `magnetic-interaction` source snapshot from an audited canonical file list; do not guess files or import secrets.
+- Keep ordinary user source access deny-by-default: verified Better Auth session + active unexpired grant + published source pointer. Owner management is a separate explicit authorization path.
 
 **Gate / done**
-- No arbitrary source executes in the main origin/runtime.
-- Cross-origin isolation controls are tested; iframe usage alone is not accepted as sufficient proof.
-- Guests cannot access full source or restricted preview endpoints by bypassing the UI.
+- Guest, unverified, verified-ungranted, verified-granted and owner behavior passes direct API/IDOR tests.
+- Owner access is never based on the first account, browser email, client role or supplied user ID.
+- Draft saves do not change the published pointer; publish selects an exact immutable version; unpublish denies subsequent user reads; restore creates a new snapshot.
+- Grant/revoke/expiry changes take effect on the next protected request; unique grant index prevents duplicate user/experiment rows.
+- Source content does not appear in guest HTML/RSC, public APIs, client bundles, source maps, shared caches, analytics or logs.
+- Migration/bootstrap is replay-safe and the rollback/reconciliation procedure is tested.
+- Owner editor dependencies remain out of the homepage and public Labs listing bundle.
+- The existing public demo behavior and routes remain unchanged.
+
+## Phase 8B — Isolated live previews (separate security-gated work)
+**Work**
+- Do not couple source storage/editing approval to source execution.
+- Only after a separate threat-model approval, choose a separately isolated runtime for owner-authored/untrusted code.
+- Establish origin separation, CSP, cookie/storage isolation, dependency allowlist, network egress policy, CPU/memory/time limits, messaging protocol, abuse monitoring, cost limits and failure containment.
+- Add preview lifecycle, error/timeout/stopped states and explicitly instrumented interactions only after the runtime decision is approved.
+
+**Gate / done**
+- No arbitrary source executes in the main origin/runtime or server.
+- Cross-origin isolation controls are independently tested; iframe usage alone is not accepted as sufficient proof.
+- Guests cannot access restricted preview endpoints by bypassing the UI.
 - Resource/network escape, malformed source and runtime-failure tests pass.
+- Until this gate passes, stored source remains text-only and can be viewed only through the protected source flow.
 
 ## Phase 9 — Likes, user dashboard and analytics
 **Work**
