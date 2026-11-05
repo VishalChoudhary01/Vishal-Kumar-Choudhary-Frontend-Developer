@@ -7,6 +7,10 @@ import {
   publishedLabExperiments,
 } from "@/app/data/labsExperiments";
 import { buildSiteUrl } from "@/app/lib/seo/urls";
+import { getPublishedCustomLabExperiments } from "@/app/lib/labs/public-experiments";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const PAGE_TITLE = "Labs — Frontend Experiments";
 const PAGE_DESCRIPTION =
@@ -34,20 +38,23 @@ export function generateMetadata() {
   };
 }
 
-export default function LabsPage() {
+export default async function LabsPage() {
+  const customExperiments = await getPublishedCustomLabExperiments();
+  const experiments = [...publishedLabExperiments, ...customExperiments];
+
   return (
     <LabsPageShell>
       <main className="min-h-screen bg-background text-text-primary">
         <LabsIntroduction
-          experimentCount={publishedLabExperiments.length}
+          experimentCount={experiments.length}
           categoryCount={
-            new Set(publishedLabExperiments.map((experiment) => experiment.category)).size
+            new Set(experiments.map((experiment) => experiment.category)).size
           }
         />
         {featuredLabExperiment ? (
           <FeaturedExperiment experiment={featuredLabExperiment} />
         ) : null}
-        <LabsCollection experiments={publishedLabExperiments} />
+        <LabsCollection experiments={experiments} />
       </main>
     </LabsPageShell>
   );
