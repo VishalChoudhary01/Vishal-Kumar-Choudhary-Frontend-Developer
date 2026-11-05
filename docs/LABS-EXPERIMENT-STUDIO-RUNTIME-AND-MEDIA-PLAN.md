@@ -77,7 +77,7 @@ The compiler must reject missing or ambiguous entry points and report a clear ac
 
 ### 3.3 Fixed dependency allowlist
 
-The first React/JSX template should provide a preinstalled, version-pinned set of browser packages:
+The React/JSX/TSX template should provide a preinstalled, version-pinned set of browser packages:
 - react and react-dom.
 - motion, imported from motion/react.
 - lucide-react for icons.
@@ -85,7 +85,7 @@ The first React/JSX template should provide a preinstalled, version-pinned set o
 - typescript for isolated TS/TSX validation (`tsc --noEmit`).
 - clsx and tailwind-merge only if the template and bundle policy require them.
 
-These packages already appear in the main repository dependency manifest at the time of this plan, but the compiler environment must pin and independently validate its own approved versions. The browser project cannot choose arbitrary package versions.
+The React/JSX/TSX compiler environment must pin and independently validate its own approved versions; main application dependencies do not automatically become available inside the isolated compiler. The browser project cannot choose arbitrary package versions.
 
 The owner must not upload or edit a package manifest that triggers npm install, execute lifecycle scripts, add arbitrary dependencies or load executable packages from a CDN. Additional packages require an explicit allowlist/security review and a controlled toolchain update.
 
@@ -152,7 +152,7 @@ The current implementation uses Vercel Sandbox snapshots as the isolated build w
 
 ### 4.3 Deterministic compiler
 
-Use one versioned build toolchain for preview and publish. The implementation may select Vite plus esbuild or an equivalent pinned bundler, but the decision must be recorded before installing compiler dependencies.
+Use one versioned build toolchain for preview and publish. The current implementation selects Vite 8 with esbuild and the Tailwind CSS v4 PostCSS adapter. React/JSX is smoke-tested locally. TypeScript/TSX type checking and React Icons still require pinned dependency versions, lockfile updates and acceptance tests before the toolchain is complete.
 
 The compiler performs:
 1. Validate the declared template/entry point.
@@ -162,10 +162,10 @@ The compiler performs:
 5. For TS/TSX, run the pinned TypeScript compiler with a generated fixed config and `noEmit`; stop on type errors.
 6. Transform JSX/TSX for the pinned React runtime.
 7. Bundle React, ReactDOM, Motion, Lucide, approved React Icons subpaths and other allowlisted utilities into static browser output.
-7. Compile Tailwind v4 with the approved PostCSS adapter.
-8. Process local CSS and safe asset references.
-9. Create an immutable build manifest and SHA-256 content hash.
-10. Return build status, safe diagnostics and an artifact reference.
+8. Compile Tailwind v4 with the approved PostCSS adapter.
+9. Process local CSS and safe asset references.
+10. Create an immutable build manifest and SHA-256 content hash.
+11. Return build status, safe diagnostics and an artifact reference.
 
 Do not evaluate owner code with eval/new Function in the main app, use Node vm as a security boundary, or dynamically import a MongoDB source string in the application process.
 
@@ -419,7 +419,7 @@ Do not send raw Cloudinary credentials, source content to public endpoints, comp
 - Nested TSX imports compile and Tailwind v4 scans classes inside nested TSX files.
 - `motion/react`, `lucide-react` and approved `react-icons` subpaths work in TSX.
 - Local imports within the project root build; traversal, remote imports, unknown packages and Node APIs fail.
-- Tailwind v4 responsive and state utilities compile from every supported JSX file.
+- Tailwind v4 responsive and state utilities compile from supported JS/JSX/TS/TSX source files, including nested components.
 - Motion imports from motion/react work and respect reduced-motion.
 - Re-running the same source/dependency/media hash yields the same build identity or a documented deterministic equivalent.
 - A build failure preserves the working copy and previous published release.
@@ -453,10 +453,9 @@ Do not send raw Cloudinary credentials, source content to public endpoints, comp
 ## 13. Decisions still open
 
 These decisions must be resolved before the corresponding implementation phase. Do not silently guess:
-1. Isolated build provider and browser runtime host/origin. Vercel Sandbox is a candidate, not a locked choice.
-2. Immutable artifact/object storage provider for compiled JS/CSS/HTML bundles. Cloudinary is for media delivery, not the default compiler artifact store.
-3. Compiler choice and version pinning (for example Vite/esbuild with the existing Tailwind v4 PostCSS adapter).
-4. Exact fixed dependency versions and package allowlist.
+1. Immutable artifact/object storage provider for compiled JS/CSS/HTML bundles. Cloudinary is for media delivery, not the default compiler artifact store.
+2. The compiler's exact React/TypeScript/React Icons package versions and generated TypeScript settings must be pinned in the next toolchain release.
+3. Final resource ceilings, cost controls, snapshot retention/refresh policy and browser runtime host/origin must be verified against the deployed Vercel Sandbox configuration.
 5. Cloudinary upload limits, transformation quotas, draft access mode and public delivery mode.
 6. Exact max upload size, video duration, dimensions and per-owner storage quota, derived from the actual account plan.
 7. Whether additional browser capabilities such as Web Workers, WebGL/Three.js, WebAssembly and controlled outbound API access are added after the initial release.
