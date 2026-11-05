@@ -2,14 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { GrGoogle } from "react-icons/gr";
-
 import { authClient } from "@/app/lib/auth/client";
 import { publishAuthEvent } from "@/app/lib/auth/session-events";
 import AuthField from "./AuthField";
 import AuthSubmit from "./AuthSubmit";
 import AuthMessage from "./AuthMessage";
 import AuthLink from "./AuthLink";
+import SocialAuthButtons from "./SocialAuthButtons";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -17,6 +16,7 @@ export default function LoginForm({
   returnTo,
   initialError,
   googleEnabled,
+  githubEnabled,
 }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -85,26 +85,7 @@ export default function LoginForm({
     }
   };
 
-  const handleGoogle = async () => {
-    setLoading(true);
-    setGlobalError("");
 
-    try {
-      const result = await authClient.signIn.social({
-        provider: "google",
-        callbackURL: returnTo,
-        errorCallbackURL: "/labs/login?error=google&returnTo=" + encodeURIComponent(returnTo),
-      });
-
-      if (result?.error) {
-        setGlobalError("Google sign-in could not be completed. Please try again.");
-        setLoading(false);
-      }
-    } catch {
-      setGlobalError("Google sign-in could not be completed. Please try again.");
-      setLoading(false);
-    }
-  };
 
   return (
     <>
@@ -176,24 +157,14 @@ export default function LoginForm({
         </AuthSubmit>
       </form>
 
-      {googleEnabled ? (
-        <>
-          <div className="my-5 flex items-center gap-3 text-xs text-text-tertiary">
-            <span className="h-px flex-1 bg-border" />
-            <span>OR</span>
-            <span className="h-px flex-1 bg-border" />
-          </div>
-          <button
-            type="button"
-            onClick={handleGoogle}
-            disabled={loading}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-sm border border-border px-4 text-sm font-medium text-text-primary transition-colors hover:border-border-strong hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-55"
-          >
-            <GrGoogle size={16} aria-hidden="true" />
-            Continue with Google
-          </button>
-        </>
-      ) : null}
+      <SocialAuthButtons
+        intent="sign-in"
+        returnTo={returnTo}
+        googleEnabled={googleEnabled}
+        githubEnabled={githubEnabled}
+        disabled={loading}
+        onPendingChange={setLoading}
+      />
 
       <p className="mt-6 text-center text-sm text-text-secondary">
         Don&apos;t have an account?{" "}
