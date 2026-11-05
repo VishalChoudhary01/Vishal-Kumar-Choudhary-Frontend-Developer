@@ -9,6 +9,7 @@ import LabSource from "./models/LabSource";
 import LabExperiment from "./models/LabExperiment";
 import LabSourceVersion from "./models/LabSourceVersion";
 import LabSourceAuditEvent from "./models/LabSourceAuditEvent";
+import LabBuildArtifact from "./models/LabBuildArtifact";
 import { isLabsOwner } from "./owner-access";
 
 const SAFE_SOURCE_PATH =
@@ -301,12 +302,15 @@ export async function getOwnerLabSource({ user, slug }) {
   const source = await LabSource.findOne({ slug }).lean();
   if (!source) throwCode("NOT_FOUND", "Create a source record for this experiment first.");
 
-  const [draft, published] = await Promise.all([
+  const [draft, published, publishedArtifact] = await Promise.all([
     source.draftVersionId
       ? LabSourceVersion.findOne({ versionId: source.draftVersionId, experimentSlug: slug }).lean()
       : null,
     source.publishedVersionId
       ? LabSourceVersion.findOne({ versionId: source.publishedVersionId, experimentSlug: slug }).lean()
+      : null,
+    source.publishedArtifactId
+      ? LabBuildArtifact.findOne({ artifactId: source.publishedArtifactId, experimentSlug: slug, status: "ready" }).lean()
       : null,
   ]);
 
@@ -323,6 +327,12 @@ export async function getOwnerLabSource({ user, slug }) {
     published: source.published === true,
     draftVersionId: source.draftVersionId || null,
     publishedVersionId: source.publishedVersionId || null,
+    publishedArtifact: publishedArtifact ? {
+      artifactId: publishedArtifact.artifactId,
+      entryUrl: publishedArtifact.entryUrl,
+      buildHash: publishedArtifact.buildHash,
+      sourceVersionId: publishedArtifact.sourceVersionId,
+    } : null,
     draft: draft
       ? {
           versionId: draft.versionId,
@@ -544,17 +554,12 @@ export async function publishOwnerLabSource({
   user,
   slug,
   versionId,
+  artifactId = null,
   expectedPublishedVersionId,
   requestId = null,
 }) {
   assertOwner(user);
   const experiment = await getExperiment(slug);
-  if (experiment.isCustom) {
-    throwCode(
-      "PREVIEW_REQUIRED",
-      "Custom experiments need a successful isolated preview before publishing is enabled.",
-    );
-  }
   if (typeof versionId !== "string" || versionId.length > 64) {
     throwCode("VALIDATION_ERROR", "Choose a saved source version to publish.");
   }
@@ -581,7 +586,28 @@ export async function publishOwnerLabSource({
 
       if (!version) throwCode("NOT_FOUND", "The selected draft version was not found.");
 
+      let artifact = null;
+      if (experiment.isCustom) {
+        if (typeof artifactId !== "string" || artifactId.length > 64) {
+          throwCode("PREVIEW_REQUIRED", "Build the exact saved draft before publishing it.");
+        }
+        artifact = await LabBuildArtifact.findOne({
+          artifactId,
+          experimentSlug: slug,
+          sourceVersionId: version.versionId,
+          sourceContentHash: version.contentHash,
+          status: "ready",
+        }).session(session);
+        if (!artifact) {
+          throwCode("PREVIEW_REQUIRED", "A successful build for this exact saved version is required before publishing.");
+        }
+        version.buildArtifactId = artifact.artifactId;
+        version.buildHash = artifact.buildHash;
+        await version.save({ session });
+      }
+
       source.publishedVersionId = version.versionId;
+      source.publishedArtifactId = artifact?.artifactId || null;
       source.published = true;
       source.version = version.version;
       source.updatedBy = user.id;
@@ -629,6 +655,7 @@ export async function unpublishOwnerLabSource({
 
       source.published = false;
       source.publishedVersionId = null;
+      source.publishedArtifactId = null;
       source.updatedBy = user.id;
       await source.save({ session });
 
