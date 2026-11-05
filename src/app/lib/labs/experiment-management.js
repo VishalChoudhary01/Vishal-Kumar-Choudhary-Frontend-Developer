@@ -203,19 +203,17 @@ export async function deleteOwnerLabExperiment({ user, slug, confirmSlug }) {
   try {
     await session.withTransaction(async () => {
       const filters = { experimentSlug: slug };
-      await Promise.all([
-        LabSourceVersion.deleteMany(filters, { session }),
-        LabMediaAsset.deleteMany({ experimentSlug: slug, ownerUserId: user.id }, { session }),
-        LabBuildArtifact.deleteMany(filters, { session }),
-        LabPreviewRun.deleteMany(filters, { session }),
-        LabSourceGrant.deleteMany(filters, { session }),
-        LabAnalyticsEvent.deleteMany(filters, { session }),
-        LabLike.deleteMany(filters, { session }),
-        LabGuestLike.deleteMany(filters, { session }),
-        LabSourceAuditEvent.deleteMany(filters, { session }),
-        LabSource.deleteOne({ slug }, { session }),
-        LabExperiment.deleteOne({ _id: experiment._id, kind: "custom" }, { session }),
-      ]);
+      await LabSourceVersion.deleteMany(filters, { session });
+      await LabMediaAsset.deleteMany({ experimentSlug: slug, ownerUserId: user.id }, { session });
+      await LabBuildArtifact.deleteMany(filters, { session });
+      await LabPreviewRun.deleteMany(filters, { session });
+      await LabSourceGrant.deleteMany(filters, { session });
+      await LabAnalyticsEvent.deleteMany(filters, { session });
+      await LabLike.deleteMany(filters, { session });
+      await LabGuestLike.deleteMany(filters, { session });
+      await LabSourceAuditEvent.deleteMany(filters, { session });
+      await LabSource.deleteOne({ slug }, { session });
+      await LabExperiment.deleteOne({ _id: experiment._id, kind: "custom" }, { session });
     });
   } finally {
     await session.endSession();
