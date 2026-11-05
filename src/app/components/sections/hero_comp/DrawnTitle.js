@@ -160,33 +160,17 @@ function DrawnCharacterLine({
             className="inline-block overflow-visible"
             initial={{
               opacity: 0,
-
-              /*
-               * IMPORTANT:
-               *
-               * Negative top/bottom values prevent the
-               * large serif glyphs from being clipped.
-               *
-               * Horizontal clipping still performs
-               * the original left-to-right draw.
-               */
-              clipPath:
-                "inset(-0.12em 100% -0.12em 0%)",
-
-              transform:
-                "translate3d(0, 2px, 0)",
+              scaleX: 0,
+              transform: "translate3d(0, 2px, 0)",
             }}
             animate={{
               opacity: ready ? 1 : 0,
-
-              clipPath: ready
-                ? "inset(-0.12em 0% -0.12em 0%)"
-                : "inset(-0.12em 100% -0.12em 0)",
-
+              scaleX: ready ? 1 : 0,
               transform: ready
                 ? "translate3d(0, 0, 0)"
                 : "translate3d(0, 2px, 0)",
             }}
+            style={{ transformOrigin: "left center" }}
             transition={{
               opacity: {
                 duration: 0.1,
@@ -194,9 +178,8 @@ function DrawnCharacterLine({
                 ease: "linear",
               },
 
-              clipPath: {
-                duration:
-                  CHARACTER_DURATION,
+              scaleX: {
+                duration: CHARACTER_DURATION,
                 delay: animationDelay,
                 ease: [0.16, 1, 0.3, 1],
               },
