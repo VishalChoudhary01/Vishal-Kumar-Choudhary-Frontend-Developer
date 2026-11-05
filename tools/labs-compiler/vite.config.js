@@ -17,9 +17,13 @@ function labsSourcePolicy() {
     name: "labs-source-policy",
     enforce: "pre",
     resolveId(source, importer) {
-      if (!importer || !importer.startsWith(root + path.sep)) return null;
-      if (source === "vite/modulepreload-polyfill") return null;
-      if (source === "@labs/assets") return "\0labs-assets";
+      if (!importer || !importer.startsWith(root + path.sep)) {
+        return null;
+      }
+
+      if (source === "vite/modulepreload-polyfill") {
+        return null;
+      }
 
       if (!source.startsWith(".") && !source.startsWith("/")) {
         const packageName = source.startsWith("@")
@@ -35,13 +39,77 @@ function labsSourcePolicy() {
         return null;
       }
 
-      if (source.startsWith("/")) this.error("Absolute file imports are not allowed.");
+      if (source.startsWith("/")) {
+        this.error("Absolute file imports are not allowed.");
+      }
+
       const resolved = path.resolve(path.dirname(importer), source);
       if (!resolved.startsWith(root + path.sep)) {
         this.error("Import escapes the experiment root.");
       }
       return null;
     },
-    load(id) {
-      if (id === "\0labs-assets") {
-     ¶»§q«^
+    transform(code, id) {
+      if (!id.startsWith(root + path.sep)) {
+        return null;
+      }
+
+      if (/\b(?:eval|Function)\s*\(/.test(code) || /\brequire\s*\(/.test(code)) {
+        this.error("eval, Function and require are not supported in Labs experiments.");
+      }
+      if (/\bimport\s*\(\s*[^"']/.test(code)) {
+        this.error("Dynamic imports must use a static string path.");
+      }
+      if (/(?:from\s*|import\s*)["'](?:node:|https?:|\/\/|\/)/.test(code)) {
+        this.error("Node built-ins, remote URLs and absolute imports are blocked.");
+      }
+      if (/\b(?:process\.env|globalThis\.process|window\.parent|document\.cookie|localStorage|indexedDB)\b/.test(code)) {
+        this.error("Access to application secrets, parent context and persistent app storage is blocked.");
+      }
+
+      if (id.endsWith(".css")) {
+        if (/@import\s+(?:url\s*\(\s*["']?https?:|["']https?:)/i.test(code)) {
+          this.error("Remote CSS imports are blocked.");
+        }
+        if (/url\s*\(\s*["']?https?:/i.test(code) && !/res\.cloudinary\.com/i.test(code)) {
+          this.error("External CSS assets are blocked.");
+        }
+      }
+
+      return null;
+    },
+  };
+}
+
+export default defineConfig({
+  configFile: false,
+  root,
+  plugins: [labsSourcePolicy()],
+  resolve: {
+    dedupe: ["react", "react-dom"],
+    alias: [
+      {
+        find: /^tailwindcss$/,
+        replacement: path.resolve(process.cwd(), "node_modules/tailwindcss/index.css"),
+      },
+    ],
+  },
+  esbuild: {
+    jsx: "automatic",
+  },
+  css: {
+    postcss: {
+      plugins: [tailwindcss({ base: root })],
+    },
+  },
+  base: process.env.LABS_BUILD_BASE || "/",
+  build: {
+    outDir: process.env.LABS_BUILD_OUTPUT || "/vercel/sandbox/output",
+    emptyOutDir: true,
+    assetsDir: "assets",
+    sourcemap: false,
+    minify: "esbuild",
+    cssMinify: "esbuild",
+    manifest: true,
+  },
+});
