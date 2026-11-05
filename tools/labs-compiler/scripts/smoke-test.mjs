@@ -250,6 +250,100 @@ try {
     invalidOutput,
   ].map((directory) => fs.rm(directory, { recursive: true, force: true })));
 
+  const staticHtmlFiles = prepareReactProject([
+    {
+      path: "index.html",
+      language: "html",
+      content: [
+        "<!doctype html>",
+        '<html lang="en"><head><meta charset="UTF-8"><title>Static Labs preview</title></head>',
+        '<body><main class="static-card"><h1 id="message">Static HTML preview</h1></main></body></html>',
+      ].join("\n"),
+    },
+    {
+      path: "styles.css",
+      language: "css",
+      content: ".static-card { color: #123456; padding: 24px; }",
+    },
+    {
+      path: "main.js",
+      language: "javascript",
+      content: 'document.querySelector("#message").textContent = "Static HTML/CSS/JS preview passed";',
+    },
+  ]);
+  const staticHtmlEntry = staticHtmlFiles.find((file) => file.path === "index.html")?.content || "";
+  if (!staticHtmlEntry.includes("./styles.css") || !staticHtmlEntry.includes("./main.js")) {
+    throw new Error("The static HTML adapter did not preserve/inject its CSS and JavaScript entry files.");
+  }
+  const staticInput = path.join(root, ".smoke-static-input");
+  const staticProject = path.join(root, ".smoke-static-project");
+  const staticOutput = path.join(root, ".smoke-static-output");
+  await writeInput(
+    staticInput,
+    staticHtmlFiles.map(({ path: filePath, content }) => ({ path: filePath, content })),
+  );
+  const staticBuild = runBuild(staticInput, staticProject, staticOutput);
+  if (staticBuild.status !== 0) {
+    process.stderr.write(staticBuild.stderr || staticBuild.stdout || "The static HTML/CSS/JS build failed.\n");
+    process.exit(1);
+  }
+  const staticManifest = JSON.parse(
+    await fs.readFile(path.join(staticOutput, "labs-build-result.json"), "utf8"),
+  );
+  const staticCssFile = staticManifest.outputFiles.find((file) => file.path.endsWith(".css"));
+  const staticJsFile = staticManifest.outputFiles.find((file) => file.path.endsWith(".js"));
+  if (!staticManifest.outputFiles.some((file) => file.path === "index.html") || !staticCssFile || !staticJsFile) {
+    throw new Error("The static HTML/CSS/JS build did not emit its HTML, CSS and JavaScript files.");
+  }
+  const staticHtmlOutput = await fs.readFile(path.join(staticOutput, "index.html"), "utf8");
+  if (!staticHtmlOutput.includes("Static Labs preview")) {
+    throw new Error("The custom static HTML entry was not preserved.");
+  }
+  const staticCssOutput = await fs.readFile(path.join(staticOutput, staticCssFile.path), "utf8");
+  if (!staticCssOutput.includes("#123456")) {
+    throw new Error("The standalone CSS file was not compiled into the static HTML preview.");
+  }
+  const staticJsOutput = await fs.readFile(path.join(staticOutput, staticJsFile.path), "utf8");
+  if (!staticJsOutput.includes("Static HTML/CSS/JS preview passed")) {
+    throw new Error("The static JavaScript file was not bundled into the static HTML preview.");
+  }
+
+  const cssOnlyFiles = prepareReactProject([
+    {
+      path: "styles.css",
+      language: "css",
+      content: "body { background: #0b0b0e; color: #f5f5f5; }",
+    },
+  ]);
+  const cssOnlyHtml = cssOnlyFiles.find((file) => file.path === "index.html")?.content || "";
+  if (!cssOnlyHtml.includes("./styles.css") || !cssOnlyHtml.includes("labs-root")) {
+    throw new Error("The CSS-only preview did not generate a linked HTML entry.");
+  }
+  const cssOnlyInput = path.join(root, ".smoke-css-only-input");
+  const cssOnlyProject = path.join(root, ".smoke-css-only-project");
+  const cssOnlyOutput = path.join(root, ".smoke-css-only-output");
+  await writeInput(cssOnlyInput, cssOnlyFiles.map(({ path: filePath, content }) => ({ path: filePath, content })));
+  const cssOnlyBuild = runBuild(cssOnlyInput, cssOnlyProject, cssOnlyOutput);
+  if (cssOnlyBuild.status !== 0) {
+    process.stderr.write(cssOnlyBuild.stderr || cssOnlyBuild.stdout || "The CSS-only build failed.\n");
+    process.exit(1);
+  }
+  const cssOnlyManifest = JSON.parse(
+    await fs.readFile(path.join(cssOnlyOutput, "labs-build-result.json"), "utf8"),
+  );
+  if (!cssOnlyManifest.outputFiles.some((file) => file.path.endsWith(".css"))) {
+    throw new Error("The CSS-only preview did not emit its stylesheet.");
+  }
+
+  await Promise.all([
+    staticInput,
+    staticProject,
+    staticOutput,
+    cssOnlyInput,
+    cssOnlyProject,
+    cssOnlyOutput,
+  ].map((directory) => fs.rm(directory, { recursive: true, force: true })));
+
   const previewServer = spawn(process.execPath, [path.join(root, "scripts/serve-preview.mjs")], {
     cwd: root,
     env: {
@@ -305,7 +399,7 @@ try {
   }
 
   process.stdout.write(
-    "PASS: idempotent sandbox input setup (missing + existing directory), JSX + TSX type checking, React 19, Motion, Lucide, React Icons, Tailwind v4, CSP, isolated preview HTTP server/bridge, traversal blocking and invalid-type rejection.\n",
+    "PASS: idempotent sandbox input setup, static HTML/CSS/JS and CSS-only builds, JSX + TSX type checking, React 19, Motion, Lucide, React Icons, Tailwind v4, CSP, isolated preview HTTP server/bridge, traversal blocking and invalid-type rejection.\n",
   );
 } finally {
   await Promise.all([
