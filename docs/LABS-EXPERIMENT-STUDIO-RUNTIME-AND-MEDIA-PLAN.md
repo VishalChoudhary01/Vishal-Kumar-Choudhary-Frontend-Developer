@@ -1,8 +1,8 @@
 # Labs Experiment Studio — Runtime, Media and Publishing Plan
 
-**Status:** Phase 0 recovery code is implemented on `feat/labs-platform-integration`: published artifacts now have a controlled inline runtime route with an artifact-scoped ready/error bridge; public detail previews and owner Run show startup timeouts and retry/error states. The current unsaved-working-copy Run request and compiler path are preserved. A Vercel Preview build including the runtime route passed and is READY, and the compiler smoke suite passed on a fresh isolated sandbox. **End-to-end browser proof remains pending**: the authenticated owner must run HTML/CSS/JS, JSX and TSX, and the public Spotlight Dock/custom artifact must be confirmed visually in a browser. Gallery posters/media roles and later UX phases have not started.
+**Status:** Phase 0 recovery code and a second visual-regression repair are committed on `feat/labs-platform-integration` (latest branch HEAD `8d832832a60750983e51bee99a9b33deae3abc41`). Published artifacts use a controlled inline runtime route with artifact-scoped readiness/error handling. The 5 November browser screenshots exposed a CSP conflict: the compiled HTML's `script-src 'self'` / `style-src 'self'` meta policy blocks same-host assets inside the public iframe's opaque sandbox origin, leaving static pages unstyled and React previews blank. The route now strips only that redundant meta policy, sends one path-scoped same-origin HTTP CSP, and readiness checks actual rendered page content rather than assuming a React `#root`. Targeted CSP tests and the compiler smoke suite passed in a fresh isolated sandbox. **The latest fix is not deployed yet**: the previous READY Preview predates it, and Vercel's daily deployment API quota was exhausted. Authenticated owner Run and public artifact rendering still need browser confirmation. Gallery posters/media roles and later UX phases have not started.
 **Branch:** `feat/labs-platform-integration` (latest repository HEAD: `143a04dc3603a75eaf2470e33fca5f887989f0a1`).
-**Latest READY runtime-recovery Preview:** [vishal-kumar-choudhary-frontend-developer-l99ap6cy7.vercel.app](https://vishal-kumar-choudhary-frontend-developer-l99ap6cy7.vercel.app/) on commit `48d7585e97414de3f71a976c3d77426854f15aac`. It contains the new published runtime route and visible readiness/error/retry UI. The latest branch HEAD `143a04d` adds immutable edge caching for published artifact assets; a follow-up deployment could not be created because Vercel returned the daily deployment API quota limit. The READY deployment is build evidence, not proof that a published experiment renders in a real browser.
+**Latest previously READY runtime-recovery Preview:** [vishal-kumar-choudhary-frontend-developer-l99ap6cy7.vercel.app](https://vishal-kumar-choudhary-frontend-developer-l99ap6cy7.vercel.app/) on commit `48d7585e97414de3f71a976c3d77426854f15aac`. It predates the 5 November opaque-origin CSP fix below and will continue to show the reported blank/unstyled preview until a newer Preview is built. Branch HEAD `8d832832` contains the CSP and readiness fixes plus immutable asset caching. Vercel returned the daily deployment API quota limit when a follow-up deployment was requested; do not treat the older READY URL as testing the latest code.
 **Compiler verification:** `npm run test:smoke` passed on a fresh Vercel sandbox with JSX/TSX type checking, React 19, Motion, Lucide, React Icons, Tailwind v4, CSP, isolated preview HTTP server/bridge, traversal blocking and invalid-type rejection. This suite does not exercise a logged-in owner Run click or the deployed published-artifact iframe.
 **Applies to:** Owner-created experiments and the four existing code-owned experiments.
 **Primary implementation branch:** `feat/labs-platform-integration`
@@ -67,6 +67,25 @@ Do not enable Production publishing until owner Run, the exact published artifac
 - The runtime route streams only files listed in the ready immutable artifact manifest, validates path segments and the Vercel Blob host, assigns explicit inline MIME/Content-Disposition headers and applies a restrictive CSP. It never returns source snapshot files.
 - The HTML entry receives a small bridge that reports startup errors and readiness for the matching artifact ID. The parent iframe remains sandboxed with `allow-scripts` only (no `allow-same-origin`), correlates messages to the expected iframe and artifact ID, and shows a themed loading state, 15-second startup timeout, diagnostic-safe error and Retry action.
 - Published artifact assets have immutable IDs. The latest branch version applies long-lived immutable caching to the runtime asset route; deploy this cache-header-only commit after the current Preview build quota permits.
+
+### Second visual regression review — 5 November 2026
+
+The owner supplied two screenshots from the READY Preview:
+
+- **Spotlight Dock:** the runtime frame showed “The experiment loaded but did not render any visible content.”
+- **Fluid Gradient Playground:** HTML text appeared in default browser typography on a white background; the linked stylesheet and animation were absent.
+
+These are not new editor controls or poster-generation problems. The compiled HTML includes a build-time CSP meta tag with `script-src 'self'` and `style-src 'self'`. The public runtime iframe deliberately uses `sandbox="allow-scripts"` without `allow-same-origin`, so the iframe has an opaque origin. In that context, `'self'` does not identify the portfolio host, and the compiled JavaScript/CSS assets are blocked. The React root never mounts; the static document falls back to unstyled HTML.
+
+**Committed repair:**
+
+- The published runtime response removes only the compiler-generated CSP meta tag from the HTML entry. Other metadata and markup remain untouched.
+- The runtime route is the single CSP authority for published output. It emits a validated HTTPS, same-origin, artifact-path-scoped policy for JS, CSS, images, fonts and media, while continuing to block external connections, nested frames, objects and forms.
+- Cross-origin asset bases are rejected by the CSP builder. Published source files remain inaccessible; only the current published artifact manifest can be served.
+- Bridge insertion offsets are calculated after policy removal so the inline bridge remains inside the HTML head.
+- Readiness now checks rendered body text, visible elements, Canvas/SVG/media and a styled body background. It no longer assumes that content must be mounted in a React element named `#root`, which also supports static HTML/CSS experiments.
+
+**Verification:** targeted tests passed for CSP-meta removal, preservation of unrelated HTML, path-scoped script/style allowances and rejection of a different asset origin. The Labs compiler smoke suite also exited successfully in a fresh isolated Vercel sandbox. The current branch's regression suite includes the targeted CSP assertions. The latest code has not yet been deployed because the Vercel deployment API daily quota was exhausted, so the supplied READY URL is not a browser test of this repair.
 
 ### Owner Studio Run
 
