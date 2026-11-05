@@ -3,17 +3,14 @@ import { NextResponse } from "next/server";
 import {
   auth,
   isAuthDeliveryConfigured,
-  isAuthRuntimeConfigured,
-  isLegalConsentConfigured,
 } from "@/app/lib/auth/auth";
 import { consumeRegistrationAttempt } from "@/app/lib/auth/registration-rate-limit";
 import { getSafeReturnTo } from "@/app/lib/auth/return-to";
 import { getAuthBaseURL } from "@/app/lib/auth/base-url";
-import { getLegalDocumentConfig } from "@/app/lib/legal/policies";
 import {
-  discardUnlinkedRegistrationConsent,
-  recordRegistrationConsent,
-} from "@/app/lib/auth/registration-consent";
+  createVerificationFlow,
+  discardPendingVerificationFlow,
+} from "@/app/lib/auth/verification-flows";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,7 +29,8 @@ function json(body, status) {
 }
 
 function isValidEmail(value) {
-  return typeof value === "string" && value.length <= 254 &&
+  return typeof value === "string" &&
+    value.length <= 254 &&
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
@@ -41,14 +39,20 @@ function isValidPassword(value) {
 }
 
 export async function POST(request) {
-  if (!isAuthRuntimeConfigured() || !isAuthDeliveryConfigured() || !isLegalConsentConfigured()) {
+  if (!isAuthDeliveryConfigured()) {
     return json(
-      { error: { code: "AUTH_SETUP_REQUIRED", message: "Account registration is not available yet." } },
+      {
+        error: {
+          code: "AUTH_SETUP_REQUIRED",
+          message: "Email/password registration is not available yet.",
+        },
+      },
       503,
     );
   }
 
   const startedAt = Date.now();
+  let flowId = null;
 
   try {
     const payload = await request.json();
@@ -56,54 +60,52 @@ export async function POST(request) {
       ? payload.email.trim().toLowerCase()
       : "";
     const password = payload?.password;
-    const acceptedTerms = payload?.acceptedTerms === true;
 
-    if (!isValidEmail(email) || !isValidPassword(password) || !acceptedTerms) {
+    if (!isValidEmail(email) || !isValidPassword(password)) {
       return json(
-        { error: { code: "VALIDATION_ERROR", message: "Check the form fields and accept both legal documents." } },
+        {
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Enter a valid email address and password.",
+          },
+        },
         422,
       );
     }
 
-    const legalDocuments = getLegalDocumentConfig();
-    const termsVersion = legalDocuments.terms.version;
-    const privacyVersion = legalDocuments.privacy.version;
-
     const rate = await consumeRegistrationAttempt(request);
     if (!rate.allowed) {
       return json(
-        { error: { code: "RATE_LIMITED", message: "Too many attempts. Please try again shortly." } },
+        {
+          error: {
+            code: "RATE_LIMITED",
+            message: "Too many attempts. Please try again shortly.",
+          },
+        },
         429,
       );
     }
 
     const siteUrl = getAuthBaseURL(new URL(request.url).origin);
-
     const returnTo = getSafeReturnTo(payload?.returnTo);
     const verificationCallback = new URL("/labs/verify-email", siteUrl);
     verificationCallback.searchParams.set("returnTo", returnTo);
 
-    const receiptId = await recordRegistrationConsent({
-      email,
-      termsVersion,
-      privacyVersion,
-    });
-    verificationCallback.searchParams.set("flow", receiptId);
+    flowId = await createVerificationFlow(email);
+    verificationCallback.searchParams.set("flow", flowId);
 
-    try {
-      await auth.api.signUpEmail({
-        headers: request.headers,
-        body: {
-          name: "Labs member",
-          email,
-          password,
-          callbackURL: verificationCallback.toString(),
-        },
-      });
-    } catch {
-      // A failed/duplicate registration must not leave an unused consent row.
-      await discardUnlinkedRegistrationConsent(receiptId).catch(() => {});
-      // Duplicate or other account-specific outcomes remain generic.
+    const result = await auth.api.signUpEmail({
+      headers: request.headers,
+      body: {
+        name: "Labs member",
+        email,
+        password,
+        callbackURL: verificationCallback.toString(),
+      },
+    });
+
+    if (result?.error) {
+      await discardPendingVerificationFlow(flowId).catch(() => {});
     }
 
     const remaining = 700 - (Date.now() - startedAt);
@@ -113,9 +115,21 @@ export async function POST(request) {
 
     return json(GENERIC_RESPONSE, 202);
   } catch (error) {
-    console.error("[labs-register] registration request failed:", error?.code || "REGISTRATION_ERROR");
+    if (flowId) {
+      await discardPendingVerificationFlow(flowId).catch(() => {});
+    }
+
+    console.error(
+      "[labs-register] registration request failed:",
+      error?.code || "REGISTRATION_ERROR",
+    );
     return json(
-      { error: { code: "SERVICE_UNAVAILABLE", message: "Unable to create your account right now. Please try again." } },
+      {
+        error: {
+          code: "SERVICE_UNAVAILABLE",
+          message: "Unable to create your account right now. Please try again.",
+        },
+      },
       503,
     );
   }
