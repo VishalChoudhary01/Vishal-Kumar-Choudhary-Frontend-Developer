@@ -171,7 +171,7 @@ function DrawnCharacterLine({
                * the original left-to-right draw.
                */
               clipPath:
-                "inset(-0.12em 100% -0.12em 0)",
+                "inset(-0.12em 100% -0.12em 0%)",
 
               transform:
                 "translate3d(0, 2px, 0)",
@@ -180,7 +180,7 @@ function DrawnCharacterLine({
               opacity: ready ? 1 : 0,
 
               clipPath: ready
-                ? "inset(-0.12em 0% -0.12em 0)"
+                ? "inset(-0.12em 0% -0.12em 0%)"
                 : "inset(-0.12em 100% -0.12em 0)",
 
               transform: ready
