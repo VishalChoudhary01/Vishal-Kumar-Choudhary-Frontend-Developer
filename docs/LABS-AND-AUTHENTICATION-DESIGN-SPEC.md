@@ -2144,7 +2144,7 @@ The repository contains older broader platform requirements that remain relevant
 
 1. **Public route naming:** PRD/DESIGN-LAB examples include singular /lab. This document locks /labs for the Labs listing and /labs/[slug] for detail. Update route references in dependent docs before implementation; do not ship duplicate route aliases by assumption.
 2. **Backend:** any older Express-oriented architecture wording is superseded by docs/ARCHITECTURE.md and docs/README.md. Next.js-native server modules, Route Handlers and Server Actions are the default. Express remains conditional and requires explicit approval.
-3. **Authentication:** Email/password and Google sign-in are required by PRD. This document defines the email/password UX in detail; Google button presentation and provider integration still need a decision. GitHub is not selected.
+3. **Authentication:** email/password remains required; Google and GitHub registration/login are now required alongside it. The implementation plan and current-vs-target provider status are documented in docs/LABS-AUTHENTICATION-PROVIDERS-AND-LEGAL-CLEANUP-PLAN.md.
 4. **Guest demos vs restricted previews:** this document allows guests to use explicitly public demos. It does not authorize untrusted code execution in the main application. The threat model and isolation architecture still gate admin-authored/untrusted interactive previews.
 5. **Guest source exposure:** no source bytes (full or partial) are returned to guests or signed-in unverified accounts. Only signed-in verified accounts can load/copy published source.
 6. **Search/sort/likes/analytics/dashboard:** PRD/DESIGN-LAB describe broader search fields, filtering/sort options, likes, user activity and analytics. The current landing-page UX locks the category navigation and six-item Load More interaction, but does not define every broader filter/sort control or engagement widget. These product requirements are not silently cancelled; their detailed UI, URL state, API and privacy contracts remain OPEN.
@@ -2237,7 +2237,7 @@ This section records the implementation baseline on `feat/labs-public-page`. It 
 
 - **Selected:** Better Auth with `@better-auth/mongo-adapter`, using the native MongoDB driver and the configured `MONGODB_URI` / `MONGODB_DB_NAME`.
 - Mongoose remains the application data-model/repository connection. Both clients target the same configured database, remain server-only and use bounded pools.
-- Authentication APIs are mounted at `/api/auth/[...all]`. The raw Better Auth email sign-up endpoint is blocked; public registration must use the consent-aware `POST /api/labs/register` route.
+- Authentication APIs are mounted at `/api/auth/[...all]`. The raw Better Auth email sign-up endpoint is blocked; email/password registration uses `POST /api/labs/register`. The Terms consent requirement is scheduled for removal from that route; the verification flow remains.
 - Email/password is enabled. Sign-up does not automatically establish a session; email verification is required before sign-in.
 - Passwords currently enforce 8–128 characters. Password reset revokes existing sessions.
 - Google sign-in currently appears only when both `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` exist. It is currently login/linking only; Google account creation is disabled.
