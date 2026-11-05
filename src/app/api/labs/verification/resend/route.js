@@ -5,7 +5,7 @@ import {
   isAuthDeliveryConfigured,
   isAuthRuntimeConfigured,
 } from "@/app/lib/auth/auth";
-import { createVerificationFlow } from "@/app/lib/auth/registration-consent";
+import { createVerificationFlow } from "@/app/lib/auth/verification-flows";
 import { getSafeReturnTo } from "@/app/lib/auth/return-to";
 import { getAuthBaseURL } from "@/app/lib/auth/base-url";
 
