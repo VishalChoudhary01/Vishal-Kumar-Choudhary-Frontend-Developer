@@ -2237,19 +2237,19 @@ This section records the implementation baseline on `feat/labs-public-page`. It 
 
 - **Selected:** Better Auth with `@better-auth/mongo-adapter`, using the native MongoDB driver and the configured `MONGODB_URI` / `MONGODB_DB_NAME`.
 - Mongoose remains the application data-model/repository connection. Both clients target the same configured database, remain server-only and use bounded pools.
-- Authentication APIs are mounted at `/api/auth/[...all]`. The raw Better Auth email sign-up endpoint is blocked; email/password registration uses `POST /api/labs/register`. The Terms consent requirement is scheduled for removal from that route; the verification flow remains.
+- Authentication APIs are mounted at `/api/auth/[...all]`. The raw Better Auth email sign-up endpoint is blocked; email/password registration uses `POST /api/labs/register` without Terms consent or acceptedTerms. Verification remains a separate seven-day flow in `src/app/lib/auth/verification-flows.js`.
 - Email/password is enabled. Sign-up does not automatically establish a session; email verification is required before sign-in.
 - Passwords currently enforce 8–128 characters. Password reset revokes existing sessions.
-- Google sign-in currently appears only when both `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` exist. It is currently login/linking only; Google account creation is disabled.
-- GitHub OAuth is not yet configured. The approved target adds Google and GitHub registration/login while preserving email/password. Do not treat this target as implemented until provider setup and browser tests pass.
+- Google and GitHub actions are available on both Login and Create account when each provider's server credentials are configured. Both providers set `disableImplicitSignUp: true`; Login omits signup intent and Create account sends `requestSignUp: true`.
+- GitHub requests `read:user` and `user:email`. Its server profile mapper uses a verified email returned by GitHub and fails closed when none is available. Credentials remain server-only; live provider callback tests still require OAuth apps and Vercel variables.
 
 ### 36.2 Registration, email verification and privacy
 
-- The previous implementation records Terms/Privacy consent receipts in `labs_registration_consents`. This receipt system and Terms-only registration gate are in the approved removal scope; split the verification-flow functions out of `registration-consent.js` before deleting consent-only helpers.
-- Keep `labs_verification_flows` for email verification. It is distinct from legal consent receipts and must not be removed.
-- Keep the public `/privacy` page and its footer/contact/sitemap links. Remove the standalone `/terms` route and Terms-only links/SEO references as part of the cleanup. The Privacy Policy is informational and is not a registration checkbox or gate.
-- Remove Terms-only readiness checks so registration depends on MongoDB/auth and email delivery configuration, not a Terms page.
-- Update Privacy wording to describe current email/password, Google and GitHub data flows and remove stale claims about recording Terms consent.
+- The Terms consent receipt writer, signup checkbox, Terms-only registration readiness and registration-consent.js module have been removed. Email/password registration no longer sends acceptedTerms or writes new consent receipts.
+- labs_verification_flows remains separate in src/app/lib/auth/verification-flows.js; it is used by registration, resend, status and the verification page. Do not remove it.
+- The standalone /terms route, footer link, sitemap entry and Terms-specific policy configuration have been removed. /privacy remains public, informational and linked from the footer/contact/sitemap.
+- The existing labs_registration_consents MongoDB collection is historical data only; the application no longer writes or reads it. No collection/index deletion has been run. Back up and review any existing records before a separate retention migration.
+- The Privacy Policy now describes email/password, Google/GitHub identity information and verification flows; its version was advanced to 2026-11-05.1.
 - Duplicate and new-account submissions receive the same generic public response. Account-specific results are not returned to the browser.
 - A server-side HMAC rate limit allows at most five registration attempts per trusted proxy IP per minute. Configure `AUTH_TRUSTED_IP_HEADER` to the deployment's trusted proxy header; do not trust a browser-controlled forwarding header.
 - Better Auth rate limits additionally apply to sign-in, social sign-in, password-reset request/completion and verification resend routes. Registration HMAC IP-bucket records expire automatically after 24 hours.
