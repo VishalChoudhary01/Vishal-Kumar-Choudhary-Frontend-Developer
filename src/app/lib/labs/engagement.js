@@ -382,3 +382,46 @@ export async function getLabEngagementBatch({ slugs, actor = null }) {
     ];
   }));
 }
+
+/**
+ * Build the visitor-scoped engagement DTO for server-rendered Labs surfaces.
+ * Only aggregate counts and the current actor's own liked state are returned.
+ */
+export async function getLabEngagementSnapshot({
+  slugs,
+  session = null,
+  guestCookieValue = "",
+}) {
+  const isVerified = Boolean(session?.user?.id && session.user.emailVerified === true);
+  const isUnverified = Boolean(session?.user?.id && session.user.emailVerified !== true);
+  let actor = isVerified ? { type: "verified", userId: session.user.id } : null;
+
+  if (!session?.user?.id && typeof guestCookieValue === "string" && guestCookieValue) {
+    const identity = resolveGuestIdentity({
+      cookies: {
+        get: (name) => name === LABS_GUEST_LIKE_COOKIE ? { value: guestCookieValue } : undefined,
+      },
+    });
+    actor = { type: "guest", guestKeyHash: identity.guestKeyHash };
+  }
+
+  const engagementBySlug = await getLabEngagementBatch({ slugs, actor });
+  const uniqueSlugs = [...new Set(
+    (Array.isArray(slugs) ? slugs : [])
+      .filter((slug) => typeof slug === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)),
+  )].slice(0, 100);
+
+  return Object.fromEntries(uniqueSlugs.map((slug) => [
+    slug,
+    {
+      ...(engagementBySlug[slug] || {
+        verifiedLikes: 0,
+        anonymousLikes: 0,
+        totalLikes: 0,
+        liked: false,
+      }),
+      likeAllowed: !session?.user?.id || isVerified,
+      actorType: isVerified ? "verified_user" : isUnverified ? "unverified" : "guest",
+    },
+  ]));
+}
