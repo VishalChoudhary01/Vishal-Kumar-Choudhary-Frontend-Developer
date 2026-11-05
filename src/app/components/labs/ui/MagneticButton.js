@@ -28,7 +28,7 @@ import {
  * Pass `fieldRef` to measure pointer distance from a larger experiment
  * canvas. Without it, the component uses its own button wrapper as the field.
  */
-export default function MagneticButton({
+export function MagneticButton({
   children = "Magnetic button",
   fieldRef = null,
   strength = DEFAULT_MAGNETIC_STRENGTH,
@@ -155,3 +155,5 @@ export {
   MAX_MAGNETIC_STRENGTH,
   MIN_MAGNETIC_RADIUS,
 } from "./magnetic-physics.mjs";
+
+export default MagneticButton;
