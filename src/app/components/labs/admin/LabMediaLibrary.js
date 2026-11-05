@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useActionToast } from "@/app/providers/ActionToastProvider";
 import { Image as ImageIcon, LoaderCircle, RefreshCw, Save, UploadCloud } from "lucide-react";
 
 const ACCEPT = "image/jpeg,image/png,image/webp,image/avif,image/gif,video/mp4,video/webm";
@@ -29,6 +30,7 @@ async function readJson(response) {
 }
 
 export default function LabMediaLibrary({ slug }) {
+  const { showToast } = useActionToast();
   const [assets, setAssets] = useState([]);
   const [selectedFallbackId, setSelectedFallbackId] = useState(null);
   const [fallbackText, setFallbackText] = useState({ altText: "", caption: "" });
@@ -112,6 +114,7 @@ export default function LabMediaLibrary({ slug }) {
         : "Fallback removed. The experiment will use its code preview only.");
     } catch (reason) {
       setError(reason.message || "Fallback preview could not be saved.");
+      showToast("error", reason.message || "Fallback preview could not be saved.");
     } finally {
       setSaving(false);
     }
@@ -181,9 +184,11 @@ export default function LabMediaLibrary({ slug }) {
       }
       await loadAssets();
       setMessage(uploaded + (uploaded === 1 ? " media asset uploaded." : " media assets uploaded.") + " Choose at most one only as fallback when code preview cannot run.");
+      showToast("success", uploaded + (uploaded === 1 ? " fallback media asset uploaded." : " fallback media assets uploaded."));
     } catch (reason) {
       try { await loadAssets(); } catch { /* Keep the original upload error. */ }
       setError(reason.message || "The media upload could not be completed.");
+      showToast("error", reason.message || "The media upload could not be completed.");
     } finally {
       setBusy(false);
       setProgressLabel("");
