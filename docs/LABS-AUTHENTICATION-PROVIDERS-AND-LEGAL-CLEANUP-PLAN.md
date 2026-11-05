@@ -12,7 +12,7 @@
 3. **Add GitHub OAuth registration and login.**
 4. A user may choose email/password, Google, or GitHub from the Labs account screens.
 5. Keep the existing account-security lifecycle: email verification for password accounts, password reset, secure sessions, sign-out, rate limiting and safe returnTo navigation.
-6. Simplify the Terms/Conditions-related registration UI and remove redundant legal-registration conditionals and files only after the deletion boundary below is approved. Keep Privacy Policy disclosure and email-verification state.
+6. Remove the Terms/Conditions registration checkbox, standalone Terms page and Terms-only conditionals/files. Keep the Privacy Policy as an informational disclosure (not a mandatory acceptance gate) and retain email-verification state.
 
 ## 2. Current repository baseline
 
@@ -87,26 +87,26 @@ If an OAuth identity already belongs to an existing verified account, the same-e
 - Never merge accounts based only on a display name, GitHub username, avatar or unverified email.
 - Do not build a provider-management/settings page in this scope. Account unlinking and manual linking UI remain deferred.
 
-## 6. Requested Terms/Conditions cleanup — safe deletion boundary
+## 6. Terms/Conditions cleanup — approved deletion scope
 
-**Requested direction:** simplify account creation by removing the mandatory Terms/Conditions checkbox and its redundant registration gate. The following files/data have mixed responsibilities, so deletion must be selective.
+**User-approved direction:** remove the mandatory Terms/Conditions checkbox and Terms-only registration gate, remove the standalone Terms page and its related references/files, and keep the Privacy Policy as an informational disclosure rather than a required acceptance checkbox. The following files/data have mixed responsibilities, so deletion must be selective.
 
 ### Remove from the registration flow
 
-- Remove the combined Terms/Privacy/18+ checkbox from SignupForm if the user confirms this is the intended legal change.
+- Remove the combined Terms/Privacy/18+ checkbox from SignupForm.
 - Remove client-only acceptedTerms, consentError, and checkbox-required validation.
 - Remove the acceptedTerms request property and its validation from POST /api/labs/register.
-- Remove Terms-specific registration readiness from getAuthRegistrationReadiness(); registration readiness should depend on required database/auth and email delivery, not the presence of a Terms page.
+- Remove Terms-specific registration readiness from getAuthRegistrationReadiness(); registration readiness should depend on required database/auth and email delivery, not a Terms page.
 - Do not keep a social-signup-only consent blocker if Terms acceptance is being removed from email/password registration. All account methods must follow the same approved registration policy.
 
 ### Related code/data to retire only after the usage audit
 
-- Terms-specific configuration in src/app/lib/legal/policies.js, including TERMS_VERSION, if the Terms document itself is being removed.
+- Terms-specific configuration in src/app/lib/legal/policies.js, including TERMS_VERSION.
 - Consent-only functions in src/app/lib/auth/registration-consent.js: recordRegistrationConsent, linkLatestRegistrationConsent, markRegistrationConsentVerified, and discardUnlinkedRegistrationConsent.
 - The labs_registration_consents collection and its indexes only after backup, reference removal and a reviewed migration.
 - Consent-only imports and hooks in src/app/lib/auth/auth.js and src/app/api/labs/register/route.js.
-- Terms-only UI links, footer/contact references, sitemap entries, SEO metadata and policy version references if /terms is removed.
-- Update the Privacy Policy text so it no longer claims that a Terms/Privacy consent receipt is stored if that record is retired.
+- The standalone src/app/terms/page.js route, Terms-only UI links, footer/contact references, sitemap entry, SEO metadata and Terms policy version references.
+- Update the Privacy Policy so it no longer claims that a Terms page or Terms/Privacy consent receipt exists. Keep accurate disclosures about account creation, email/password, Google/GitHub identity data, verification, sessions, source engagement and retention.
 
 ### Must remain
 
@@ -116,13 +116,10 @@ If an OAuth identity already belongs to an existing verified account, the same-e
 - Privacy disclosures for account/session data, provider information, source opens/copies, likes, cookies, security logs and retention.
 - The shared LegalDocumentPage component while it is still used by the Privacy Policy.
 
-### Explicit unresolved deletion decision
+### Deletion boundary
 
-The current Terms page includes an 18+ eligibility rule and acceptable-use/account rules. Removing the checkbox is not automatically the same as removing those policy terms or the age restriction. Before deleting /terms, confirm whether the request is to:
-1. remove only the signup checkbox/registration gate while leaving the public Terms page available, or
-2. remove the Terms page itself and all related links, versions and policy claims.
+The Terms page, Terms checkbox and 18+ acknowledgement are in the approved removal scope. Remove the 18+ checkbox and its matching Terms-only registration clause at the same time; do not leave a signup age gate in a second file after removing its confirmation. Keep an accurate Privacy Policy at /privacy. This records the requested product/UI cleanup and is not legal advice.
 
-Do not silently leave an 18+ rule in one file after removing its confirmation everywhere else. Review the age/eligibility requirement and public policy wording before the deletion migration. This plan defaults to **removing the signup checkbox/gate, retaining the Privacy Policy, and leaving the standalone Terms page pending that explicit boundary decision**.
 
 ## 7. Phased implementation plan
 
@@ -157,11 +154,11 @@ Do not silently leave an 18+ rule in one file after removing its confirmation ev
 
 ### Phase D — Terms/consent cleanup
 
-- Remove the mandatory registration checkbox and associated payload/conditional when the legal boundary is approved.
+- Remove the mandatory registration checkbox and acceptedTerms payload/validation.
 - Separate verification-flow functions from consent receipts.
 - Remove Terms-only readiness and unused imports.
-- If the Terms page is to be deleted, remove all references and update sitemap/footer/contact/SEO/legal copy together.
-- Back up and migrate labs_registration_consents only after confirming no live code depends on it.
+- Remove the Terms page and all references; update sitemap/footer/contact/SEO/legal copy together.
+- Back up and retire labs_registration_consents after splitting verification-flow helpers, removing all code references and completing a reviewed migration.
 - Retain and verify labs_verification_flows and the Privacy Policy.
 
 **Gate:** no broken links, no stale policy claims, no orphaned imports/index creation, and email verification still works.
@@ -208,7 +205,7 @@ Test at minimum:
 | src/app/lib/auth/registration-consent.js | Split verification-flow responsibilities before removing consent-only helpers |
 | src/app/lib/auth/auth.js | Remove consent hooks only after verification flow has its own module |
 | src/app/lib/legal/policies.js | Retain Privacy version/config; retire Terms-only parts only if /terms is deleted |
-| src/app/terms/page.js and global links | Delete only after the Terms-page boundary is approved |
+| src/app/terms/page.js and global links | Delete the Terms route and all Terms-only footer/contact/sitemap/SEO references |
 | src/app/privacy/page.js | Update provider and registration-data disclosures; retain page |
 | .env.example and auth runbook | Document GitHub variable names and callback; no secrets |
 | Auth docs, PRD and implementation tracker | Update provider requirements and staged acceptance criteria |
