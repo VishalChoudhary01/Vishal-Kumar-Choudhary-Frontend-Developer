@@ -1,8 +1,8 @@
-export { default as MagneticButton } from "./MagneticButton";
+export { default, default as MagneticButton } from "./MagneticButton";
 export {
-  DEFAULT_RADIUS as DEFAULT_MAGNETIC_RADIUS,
-  DEFAULT_STRENGTH as DEFAULT_MAGNETIC_STRENGTH,
-  MAX_RADIUS as MAX_MAGNETIC_RADIUS,
-  MAX_STRENGTH as MAX_MAGNETIC_STRENGTH,
-  MIN_RADIUS as MIN_MAGNETIC_RADIUS,
+  DEFAULT_MAGNETIC_RADIUS,
+  DEFAULT_MAGNETIC_STRENGTH,
+  MAX_MAGNETIC_RADIUS,
+  MAX_MAGNETIC_STRENGTH,
+  MIN_MAGNETIC_RADIUS,
 } from "./MagneticButton";
