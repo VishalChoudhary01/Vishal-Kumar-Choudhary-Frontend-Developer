@@ -1,9 +1,9 @@
 # Labs Experiment Studio — Runtime, Media and Publishing Plan
 
-**Status:** Product and engineering plan for the Labs Studio, published preview runtime, gallery, media and interaction UX. The branch contains the owner source editor, isolated compiler and artifact/runtime foundations, but deployed end-to-end Run and public detail rendering are **not release-verified**. The 5 November 2026 browser review shows custom gallery cards without intended visual previews and a blank white runtime canvas on `/labs/spotlight-dock`. Treat both as regressions to resolve before adding gallery features. Compiler smoke tests do not replace browser verification.
-**Branch:** `feat/labs-platform-integration` (functional repository baseline inspected before this documentation-only update: `f3c79a159360b1d29c5fa06a2e2e2d00e64560ae`; latest documentation commit in this planning sequence: `be766f510c6737f422afa092690187f2158f7d0f`).
-**Latest observed READY Preview:** [vishal-kumar-choudhary-frontend-developer-blo9pd425.vercel.app](https://vishal-kumar-choudhary-frontend-developer-blo9pd425.vercel.app/) on commit `b0ba9a977526c778b4faa377d3f545f4bd016229`. This deployment is behind the repository HEAD; the supplied screenshots show the gallery/runtime defects described above. READY deployment status is not proof that an experiment preview renders correctly.
-**Compiler baseline:** React JSX/TSX and static HTML/CSS/JS compiler smoke coverage exists; isolated static-HTML tests cover a single HTML file and a three-file HTML/CSS/classic-JS project. Re-run against the checked-in compiler and verify Run in a real authenticated browser before calling the workflow complete.
+**Status:** Phase 0 recovery code is implemented on `feat/labs-platform-integration`: published artifacts now have a controlled inline runtime route with an artifact-scoped ready/error bridge; public detail previews and owner Run show startup timeouts and retry/error states. The current unsaved-working-copy Run request and compiler path are preserved. A Vercel Preview build including the runtime route passed and is READY, and the compiler smoke suite passed on a fresh isolated sandbox. **End-to-end browser proof remains pending**: the authenticated owner must run HTML/CSS/JS, JSX and TSX, and the public Spotlight Dock/custom artifact must be confirmed visually in a browser. Gallery posters/media roles and later UX phases have not started.
+**Branch:** `feat/labs-platform-integration` (latest repository HEAD: `143a04dc3603a75eaf2470e33fca5f887989f0a1`).
+**Latest READY runtime-recovery Preview:** [vishal-kumar-choudhary-frontend-developer-l99ap6cy7.vercel.app](https://vishal-kumar-choudhary-frontend-developer-l99ap6cy7.vercel.app/) on commit `48d7585e97414de3f71a976c3d77426854f15aac`. It contains the new published runtime route and visible readiness/error/retry UI. The latest branch HEAD `143a04d` adds immutable edge caching for published artifact assets; a follow-up deployment could not be created because Vercel returned the daily deployment API quota limit. The READY deployment is build evidence, not proof that a published experiment renders in a real browser.
+**Compiler verification:** `npm run test:smoke` passed on a fresh Vercel sandbox with JSX/TSX type checking, React 19, Motion, Lucide, React Icons, Tailwind v4, CSP, isolated preview HTTP server/bridge, traversal blocking and invalid-type rejection. This suite does not exercise a logged-in owner Run click or the deployed published-artifact iframe.
 **Applies to:** Owner-created experiments and the four existing code-owned experiments.
 **Primary implementation branch:** `feat/labs-platform-integration`
 
@@ -59,6 +59,30 @@ The observed READY Preview is [vishal-kumar-choudhary-frontend-developer-blo9pd4
 Treat this as a failed browser verification despite the deployment being READY. The currently observed Preview is behind the branch's latest functional/docs state. The owner Run action must also be tested against the current deployed branch with unsaved HTML/CSS/JS, JSX and TSX projects. The earlier `18e5ff9` deployment note is historical and is not the latest browser evidence.
 
 Do not enable Production publishing until owner Run, the exact published artifact detail runtime, iframe ready/error bridge, media/poster delivery and the sandbox security gate have all passed in a deployed Preview.
+## Phase 0 implementation progress — 5 November 2026
+
+### Published detail runtime
+
+- **Root cause addressed:** the public detail page previously placed the Vercel Blob `entryUrl` directly in an iframe. The application had no controlled inline response, artifact-scoped runtime handshake or visible failure state. The new detail runtime URL is an application-owned route under `/api/v1/labs/:slug/runtime/:artifactId/*`; it validates the experiment's current published pointer and exact source version before serving the requested compiled output.
+- The runtime route streams only files listed in the ready immutable artifact manifest, validates path segments and the Vercel Blob host, assigns explicit inline MIME/Content-Disposition headers and applies a restrictive CSP. It never returns source snapshot files.
+- The HTML entry receives a small bridge that reports startup errors and readiness for the matching artifact ID. The parent iframe remains sandboxed with `allow-scripts` only (no `allow-same-origin`), correlates messages to the expected iframe and artifact ID, and shows a themed loading state, 15-second startup timeout, diagnostic-safe error and Retry action.
+- Published artifact assets have immutable IDs. The latest branch version applies long-lived immutable caching to the runtime asset route; deploy this cache-header-only commit after the current Preview build quota permits.
+
+### Owner Studio Run
+
+- The existing Run action remains connected to the current unsaved `files` array and still posts those files to the owner-only preview endpoint. Run does not save or publish and does not mutate the current/published source pointer.
+- The owner preview now has a runtime-start timeout, visible loading overlay, iframe load error, early runtime-error handling and Retry affordance. Existing desktop/mobile viewport controls and console remain.
+- **Not yet verified in the deployed browser:** owner Run for single HTML, HTML/CSS/classic JS, React JSX and React TSX. A successful compiler smoke suite is not a substitute for this test.
+
+### Verification and remaining gate
+
+- Vercel deployment `dpl_9Ck9zmvx9t9A7JBPet94FfojaWLY` built commit `48d7585e97414de3f71a976c3d77426854f15aac` successfully and reached READY. Its URL is listed above.
+- Fresh isolated compiler `npm run test:smoke` exited 0 with the capabilities listed above.
+- The latest cache-header commit `143a04dc3603a75eaf2470e33fca5f887989f0a1` is on the branch but was not deployed: Vercel returned `402 api-deployments-free-per-day` (daily API quota exceeded). Do not work around this by changing billing/security settings or deploying to Production.
+- Phase 0 is **implementation-complete for the route/UI code but not release-verified** until an authenticated browser confirms owner Run and the public detail runtime visually renders HTML/Canvas and React/Motion artifacts on a deployed Preview. All four built-in experiments must also be regression-checked.
+
+---
+
 ## 1. Product outcome
 
 The Studio is an owner-only creative coding workspace. The owner must be able to create an original experiment, write/import code, run the actual current working copy, inspect bounded build/runtime errors, save immutable drafts and publish an exact successfully built version. **Run is core functionality and must remain available throughout all gallery/media work.** Image/GIF/video uploads are optional visual assets; they do not replace code execution.
@@ -510,7 +534,9 @@ This is the **next implementation sequence**. It supersedes the earlier broad ph
 - Verify the bridge lifecycle: build started, iframe starting, ready for current run ID, console/error messages, timeout, stop/restart and stale-message rejection.
 - Restore public published-artifact execution on `/labs/[slug]`. The 5 November screenshot shows `/labs/spotlight-dock` with a blank white iframe; this is a release-blocking runtime failure, not a poster problem. Keep a themed placeholder until a valid ready message arrives. On failure, show a diagnostic-safe error/retry and runtime-fallback media when present.
 - Verify all four built-in experiments continue to run through their existing registry and custom published artifacts run through the isolated artifact URL.
-- **Gate:** authenticated browser QA proves Run works for HTML/CSS/JS and JSX/TSX, and the public detail page renders the matching immutable artifact. Local smoke tests alone do not pass this gate.
+- **Implemented on branch (2026-11-05):** the published artifact route, artifact-version validation, HTML inline response/CSP/bridge, opaque-origin detail iframe, ready/error/timeout/retry UI, and owner Run timeout/error/retry UI are committed. The current unsaved working-copy Run request remains intact.
+- **Build evidence:** deployment `dpl_9Ck9zmvx9t9A7JBPet94FfojaWLY` for commit `48d7585e97414de3f71a976c3d77426854f15aac` reached READY; the compiler smoke suite exited 0 in a fresh Vercel sandbox.
+- **Gate still OPEN:** authenticated browser QA must confirm unsaved HTML/CSS/JS, JSX and TSX Run, plus visually rendered public custom HTML/Canvas and React/Motion artifacts. Regress all four built-in demos. Do not mark Phase 0 release-complete based on build/smoke status alone.
 
 ### Phase 1 — Route loading and skeleton system
 
