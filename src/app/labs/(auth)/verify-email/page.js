@@ -1,6 +1,6 @@
 import VerifyEmailPanel from "@/app/components/labs/auth/VerifyEmailPanel";
 import { isAuthDeliveryConfigured } from "@/app/lib/auth/auth";
-import { getVerificationFlowStatus } from "@/app/lib/auth/registration-consent";
+import { getVerificationFlowStatus } from "@/app/lib/auth/verification-flows";
 import { getSafeReturnTo } from "@/app/lib/auth/return-to";
 
 export const dynamic = "force-dynamic";
