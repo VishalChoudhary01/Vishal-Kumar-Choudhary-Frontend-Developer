@@ -115,7 +115,12 @@ function LabCard({ experiment, index, total, engagement }) {
       </Link>
 
       <div className="mt-3 flex justify-end border-t border-border-subtle pt-2">
-        <LabLikeButton slug={experiment.slug} initialData={engagement} compact />
+        <LabLikeButton
+          slug={experiment.slug}
+          initialData={engagement}
+          loadOnMount={false}
+          compact
+        />
       </div>
     </article>
   );
