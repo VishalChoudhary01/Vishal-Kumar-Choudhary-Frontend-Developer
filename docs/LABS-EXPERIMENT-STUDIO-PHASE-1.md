@@ -1,6 +1,6 @@
 # Labs Experiment Studio — Phase 1
 
-**Status:** Implemented on `feat/labs-platform-integration` as a private catalogue foundation. Isolated runtime execution and public custom-experiment publication remain deferred.
+**Status:** Private catalogue and owner creation foundation implemented on `feat/labs-platform-integration`. This document records the original Phase 1 slice. The isolated compiler/preview foundation has since advanced in the main Runtime and Media Plan, but deployed owner Run and public custom-experiment detail rendering are not yet release-verified; custom publishing remains gated.
 
 ## Purpose
 
@@ -18,7 +18,7 @@ Allow the provisioned Labs owner to create original experiment records without a
 
 ## Execution and publication boundary
 
-Custom experiment publication is rejected until isolated preview execution has been implemented and validated. The existing four code-owned experiments continue using the literal runtime registry. MongoDB source contents are never evaluated by the Next.js server or inserted into the main application React tree.
+Custom experiment publication remains gated until the exact saved source version can be built, served in the isolated runtime, rendered on its public detail route and security-reviewed. Compiler and isolated preview foundations now exist in later integration-branch work; consult `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md` for current status and verification gates. The existing four code-owned experiments continue using the literal runtime registry. MongoDB source contents are never evaluated by the Next.js server or inserted into the main application React tree.
 
 ## Validation required before the next phase
 
