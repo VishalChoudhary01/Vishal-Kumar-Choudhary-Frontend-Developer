@@ -537,21 +537,23 @@ Authentication and authorization apply to protected source and any separately re
 - Theme-aware surface and subtle border.
 - Existing restrained radius.
 - Short heading and concise explanatory text.
-- Keep the source CTA visible in the detail-page source section to every visitor; do not hide the CTA based on client authentication state.
-- When a verified Better Auth session is already known, fetch and show the published source directly. Do not render a redundant “Check source access” action.
-- For a guest who chooses source access, show both `Sign in` and `Create an account` actions.
-- For a signed-in but unverified account, show the verification/resend action.
+- Keep the protected source section in the detail-page flow, but render its actions strictly by auth state rather than keeping guest CTAs visible to everyone.
+- While the session is pending, show a compact source-loading state; do not flash guest CTAs.
+- For a guest, show `Sign in` and `Create account` actions in the source section and in the Labs navbar. On the login page, the navbar shows only Create account; on the signup page, it shows only Sign in.
+- For a signed-in but unverified account, hide guest auth actions and show `Verify email`.
+- For a verified session, automatically fetch and render the published source. Do not show a source-access button, “Check source access” action, Sign in or Create account CTA.
 - Preserve the current experiment/source destination through the authentication journey.
 - No large promotional panel or oversized illustration.
 
 ### 5.3 Source authorization flow
 
-1. The source CTA remains visible to every visitor; the user initiates source access only when choosing that section.
-2. If an already-known valid session has `emailVerified === true`, request the published source immediately and render the source viewer. No intermediate access-check button is shown.
-3. If anonymous, present both Sign in and Create an account; preserve a validated internal return destination for the current experiment/source section.
-4. If signed in but unverified, do not request source; direct the user to the email verification/resend flow and return to the same experiment afterward.
-5. The server always authenticates and authorizes the source request independently. Client session state controls presentation only and is never an authorization boundary.
-6. If authorized, load the protected source viewer. If denied/unpublished/session expired, show the appropriate safe state without source bytes.
+1. Resolve the client session before rendering source-access actions; use a loading state while pending to avoid guest-CTA flicker.
+2. For a guest, show Sign in and Create account in the source panel and Labs navbar. Preserve a validated internal return destination to the same experiment and source section.
+3. For a signed-in unverified account, hide guest actions and show Verify email/resend guidance. Do not request source bytes.
+4. For a verified session, automatically fetch the published source and render the viewer without a second click or guest CTA.
+5. Keep the navbar account control for signed-in users; show the account menu instead of Sign in/Create account. The menu exposes Verify email for unverified accounts and owner tools only when server-derived owner status is true.
+6. The server always authenticates and authorizes the source request independently. Client session state controls presentation only and is never an authorization boundary.
+7. If the request is unavailable, unpublished or the session no longer matches, show the appropriate recovery state without exposing source bytes.
 
 **Target policy (locked 2026-11-04):** a valid signed-in session with `emailVerified === true` automatically grants read access to every published experiment source. Email verification is the source-access gate; there is no owner-issued per-user grant. Anonymous visitors can like/unlike without source access; signed-in unverified users cannot like. This does not grant access to drafts or owner-management operations.
 
@@ -1546,7 +1548,7 @@ Use this checklist before considering Labs design/implementation complete. A che
 - [ ] Unauthorized users see Access not available and no source data.
 - [ ] Authorized source request is the first point where source is returned.
 - [ ] Monaco is dynamically imported only for an authorized source viewer.
-- [ ] Source CTA remains visible to all detail-page visitors.
+- [ ] Source actions are conditional: guests see Sign in/Create account; unverified users see Verify email; verified users automatically load source with no auth CTA.
 - [ ] Known verified sessions load published source directly without a redundant check action.
 - [ ] Guests choosing source access see both Sign in and Create an account; signed-in unverified users see verification.
 - [ ] Source access works correctly after the return-to-source authentication flow.
@@ -1619,7 +1621,7 @@ The following Labs behavior is now locked and detailed in `docs/LABS-EXPERIMENT-
 - The existing backend's single `fallback-preview` attachment is the current implementation. Target `gallery-preview`, `detail-gallery` and `runtime-fallback` roles require a reviewed migration; do not present the target roles as implemented.
 - Use route-level skeletons for Labs listing/detail and owner inventory/editor; preserve space and do not stack them with the global PageLoader. The isolated canvas also owns its own runtime-ready/error state.
 - Use React 19 `useOptimistic` only for reversible server-backed transitions, with rollback on rejection. Local file add/delete/reorder remains unsaved working-copy state. Publish/unpublish/delete wait for server confirmation. Copy feedback and copy analytics follow successful Clipboard API acknowledgement.
-- Keep source CTA visible to everyone. Known verified users go directly to source; guests choosing source see Sign in and Create account; signed-in unverified users see verification. Server-side verified-session authorization remains mandatory.
+- Render source actions conditionally by session state: guests see Sign in/Create account; signed-in unverified users see Verify email; verified users auto-load source and see no guest/auth CTA. Server-side verified-session authorization remains mandatory.
 
 The next implementation order is: (0) restore/prove Run and public detail runtime, (1) page/canvas skeletons, (2) source CTA and optimistic interactions, (3) generated code-output posters, (4) first-class media roles/card rendering, (5) integrated responsive/performance/security regression. See the runtime/media plan for phase gates. This is planning approval only; it does not assert implementation completion or authorize Production release.
 
@@ -2416,10 +2418,11 @@ This section records the approved UX decisions that connect the public gallery, 
 
 ### 38.6 Source CTA and authentication behavior
 
-- Source CTA is visible on the experiment detail page to guests, unverified users and verified users. Do not hide it based on client session checks.
-- If a verified session is already known, load the published source directly; there is no redundant “Check source access” step.
-- If a guest selects source access, show both Sign in and Create account CTAs and preserve the validated return path to that experiment.
-- If signed in but unverified, show Verify email/resend guidance. Never request source bytes before server authorization.
+- The protected source section is present on the detail page, but its actions are conditional by session state. Do not flash guest actions while session detection is pending.
+- Verified sessions automatically load the published source; show no Sign in, Create account or “Check source access” CTA in the source panel.
+- Guests see Sign in and Create account in the source section and Labs navbar, with the validated return path to the same experiment. Avoid duplicate auth links on the respective login/signup pages.
+- Signed-in unverified users see Verify email in the source section and account menu; they do not see guest CTAs and never receive source bytes before server authorization.
+- Signed-in users see the account menu in the navbar instead of guest auth links.
 - Every source request continues to require server-derived Better Auth session with `emailVerified === true` and a published source version. Client state only chooses the user experience; it is never the security boundary.
 
 ### 38.7 Implementation order
