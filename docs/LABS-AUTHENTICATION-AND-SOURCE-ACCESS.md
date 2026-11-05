@@ -246,3 +246,10 @@ Follow `docs/LABS-SOURCE-MANAGEMENT-SPEC.md` for the target owner capability and
 - `/privacy` remains informational and now lists Google/GitHub provider data. Privacy version: `2026-11-05.1`.
 - No provider secrets have been committed. Add `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` to the intended Vercel Preview/Production environments and register the matching callback URLs.
 - Live OAuth callback, account linking, GitHub private-email, build and browser regression tests remain required. Existing `labs_registration_consents` database records have not been deleted.
+
+## 15. Preview provider configuration check — 5 November 2026
+
+A project environment-variable inventory was checked without decrypting secrets. The Preview environment includes the database, Better Auth and SMTP configuration used by Labs. It did not list `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID` or `GITHUB_CLIENT_SECRET`.
+
+The Google/GitHub buttons are therefore hidden by design until all four server-side credentials are added to the intended Vercel Preview environment. Configure the OAuth app callback paths documented above; do not add empty placeholders or expose secrets through `NEXT_PUBLIC_*`. The latest integration branch deployment is READY at commit `7ee4fd8381a91366613b134cbc074c2a4cabc8a0`; live provider sign-in has not yet been tested because credentials are not configured.
+
