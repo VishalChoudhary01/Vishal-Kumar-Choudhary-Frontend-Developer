@@ -242,7 +242,7 @@ try {
       throw new Error("The preview server did not serve the bridged React entry document.");
     }
 
-    const scriptMatch = pageHtml.match(/src="([^"]+\\.js)"/);
+    const scriptMatch = pageHtml.match(/src="([^"]+\.js)"/);
     if (!scriptMatch) throw new Error("The served preview HTML is missing its JavaScript bundle.");
     const scriptResponse = await fetch(new URL(scriptMatch[1], previewBase));
     if (!scriptResponse.ok || !(scriptResponse.headers.get("content-type") || "").includes("javascript")) {
