@@ -15,6 +15,7 @@ function normalizeEngagement(value) {
     totalLikes: Math.max(0, Number(value.totalLikes) || verifiedLikes + anonymousLikes),
     liked: value.liked === true,
     likeAllowed: value.likeAllowed === true,
+    available: value.available !== false,
     actorType: value.actorType || "guest",
   };
 }
@@ -41,6 +42,7 @@ export default function LabLikeButton({
   slug,
   initialData = null,
   compact = false,
+  loadOnMount = true,
 }) {
   const [confirmed, setConfirmed] = useState(() => normalizeEngagement(initialData));
   const [message, setMessage] = useState("");
@@ -51,10 +53,7 @@ export default function LabLikeButton({
   );
 
   useEffect(() => {
-    if (initialData) {
-      setConfirmed(normalizeEngagement(initialData));
-      return undefined;
-    }
+    if (initialData || !loadOnMount) return undefined;
 
     let active = true;
     const controller = new AbortController();
@@ -91,7 +90,7 @@ export default function LabLikeButton({
       active = false;
       controller.abort();
     };
-  }, [initialData, slug]);
+  }, [initialData, loadOnMount, slug]);
 
   async function toggleLike() {
     if (!optimistic?.likeAllowed || isPending || !optimistic) return;
@@ -141,7 +140,7 @@ export default function LabLikeButton({
 
   const data = optimistic || confirmed;
   const isDisabled = !data || !data.likeAllowed || isPending;
-  const count = data ? data.totalLikes.toLocaleString() : "—";
+  const count = data?.available ? data.totalLikes.toLocaleString() : "—";
 
   return (
     <div className={compact ? "inline-flex min-w-0 items-center gap-2" : "flex flex-wrap items-center gap-3"}>
@@ -178,7 +177,10 @@ export default function LabLikeButton({
           {message}
         </span>
       ) : null}
-      {!message && data && !data.likeAllowed ? (
+      {!message && (!data || !data.available) ? (
+        <span className="text-[10px] leading-4 text-text-tertiary">Likes unavailable.</span>
+      ) : null}
+      {!message && data?.available && !data.likeAllowed ? (
         <span className="text-[10px] leading-4 text-text-tertiary">
           {data.actorType === "unverified" ? "Verify your email to like." : "Likes unavailable."}
         </span>
