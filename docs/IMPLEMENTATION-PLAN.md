@@ -19,7 +19,8 @@ The following is the inspected code baseline, not a production-readiness certifi
 | Public Labs listing/detail and four code-owned demos | Implemented in integration branch | Regress all four; custom published-artifact detail runtime currently has a blank-canvas defect in browser evidence and must be restored |
 | Better Auth + MongoDB adapter | Foundation implemented | Final session policy and security/release tests |
 | Email/password registration, verification, reset and SMTP transport | Implemented in branch and configured for Preview; email delivery observed | Validate real verification completion, duplicate behavior, reset, production deployment |
-| Privacy Policy | Implemented and retained | Update Google/GitHub provider disclosures; remove stale Terms/consent claims. Standalone Terms route and consent receipts are approved cleanup targets but not yet removed |
+| Google/GitHub OAuth + email/password | Code implemented on integration branch | Configure OAuth apps/Preview variables and run complete login/signup/linking/verified-email browser tests |
+| Privacy Policy / Terms cleanup | Privacy retained; Terms route/checkbox/consent code removed | Review Privacy wording and separately assess any historical labs_registration_consents collection data; no collection drop was run |
 | Protected source read endpoint | Verified-session + published-source policy implemented in integration branch; legacy grant model retained for migration safety | Verify guest/unverified denial, verified direct access, no-store responses and CTA/session UX in deployed browser |
 | Owner source inventory/editor and lifecycle routes | Implemented in the integration branch | Re-verify deployed create/add/edit/delete/save/version/restore/publish/unpublish flows, owner guard, stale-version and failure states |
 | Source audit, immutable versions, likes and engagement analytics | Implemented in integration-branch foundation | Re-verify Atlas bootstrap, migration/retention, idempotency, privacy disclosure and aggregate-only reporting |
@@ -344,10 +345,10 @@ Phase 0/1 must produce or reconcile these documents with the actual repository:
 
 This tracker reflects the 5 November screenshots and the subsequent CSP/readiness repair committed at `8d832832`. Targeted CSP tests and an isolated compiler smoke suite passed, but the READY Preview predates the repair. A new deployment could not be created because Vercel returned its daily deployment API quota limit. Authenticated owner Run and visual public-runtime browser QA remain open; do not mark Phase 0 release-complete until those tests pass.
 
-## Labs authentication provider expansion and Terms cleanup — 5 November 2026 (planning only)
+## Labs authentication provider expansion and Terms cleanup — implementation update 5 November 2026
 
-The user confirmed that email/password registration/login must remain, Google and GitHub registration/login must be added, and the unnecessary Terms checkbox, Terms page and related Terms-only registration conditionals/files should be removed. The Privacy Policy remains as an informational page; email verification remains mandatory for email/password accounts and its separate verification-flow records must be kept.
+The integration branch now includes email/password and shared Google/GitHub OAuth actions on both Login and Create account. Providers are enabled independently by server-only credentials. Configured social providers use disableImplicitSignUp: true; only the signup screen sends requestSignUp: true. GitHub's server profile mapper fetches the profile and email list, prefers a verified primary email and fails closed when no verified email exists.
 
-Current implementation status: Google login-only exists; Google signup is disabled; GitHub is not configured. Terms consent receipt and signup checkbox remain in code. Nothing was deleted or migrated in this planning update.
+The Terms checkbox, acceptedTerms registration payload/validation, Terms route, footer link, sitemap entry, Terms-only policy configuration and consent module have been removed. The Privacy Policy remains informational. Email verification is preserved in src/app/lib/auth/verification-flows.js. Historical labs_registration_consents collection data, if present, was not dropped.
 
-Follow docs/LABS-AUTHENTICATION-PROVIDERS-AND-LEGAL-CLEANUP-PLAN.md. Do not release until email/password, Google, GitHub, verified-email linking, provider errors and guest/unverified/verified source access all pass in a deployed browser.
+Remaining release work: configure Google/GitHub OAuth apps and Vercel environment variables/callbacks; run email/password, Google, GitHub, same-verified-email linking, private GitHub email and source-access browser tests; complete build/lint and responsive/accessibility checks. Do not merge or deploy Production without the release approval.
