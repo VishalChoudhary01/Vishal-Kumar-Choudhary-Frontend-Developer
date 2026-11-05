@@ -1,7 +1,7 @@
 # Labs Authentication and Protected Source — Setup and Provisioning
 
 **Status:** Implementation runbook; production rollout is configuration- and test-gated.  
-**Scope:** Better Auth + MongoDB Adapter, Labs account flows, email delivery, Google OAuth, consent configuration, private source snapshots and verified-account source-access migration.  
+**Scope:** Better Auth + MongoDB Adapter, Labs account flows, email delivery, Google and GitHub OAuth, Terms/registration cleanup, private source snapshots and verified-account source-access migration.  
 **Related:** `LABS-AND-AUTHENTICATION-DESIGN-SPEC.md`, `ARCHITECTURE.md`, `API-CONTRACTS.md`, `THREAT-MODEL.md`.
 
 ## 1. Selected implementation
@@ -9,8 +9,9 @@
 - Better Auth `1.7.15` with `@better-auth/mongo-adapter` `1.7.15`.
 - Native MongoDB driver for Better Auth persistence; existing Mongoose module remains responsible for application models and repository queries.
 - Next.js App Router route handlers; no Express server.
-- Email/password with email verification and password reset. Google sign-in is enabled only when both OAuth credentials are configured.
-- No GitHub sign-in.
+- Email/password with email verification and password reset remains supported.
+- Google OAuth is currently login-only when both credentials are configured; provider signup is not yet enabled.
+- GitHub OAuth is not yet configured. The approved target is Google and GitHub registration/login alongside email/password; see docs/LABS-AUTHENTICATION-PROVIDERS-AND-LEGAL-CLEANUP-PLAN.md.
 - Public Labs browsing and code-owned demos remain available without sign-in.
 - **Target policy (locked 2026-11-04):** any signed-in account with `emailVerified === true` can read all published source automatically. Guests and signed-in unverified accounts cannot read or copy source. Anonymous visitors and verified accounts can like/unlike; signed-in unverified accounts cannot. There is no per-user grant workflow. The legacy `LabSourceGrant` model remains for migration safety but is not queried by the integration-branch authorization service.
 
@@ -28,10 +29,10 @@ Copy the authentication variables from `.env.example` into the deployment enviro
 | `AUTH_TRUSTED_IP_HEADER` | Yes on proxy deployments | Trusted reverse-proxy header used for registration rate limiting. Vercel default is `x-vercel-forwarded-for`. |
 | `AUTH_SMTP_HOST`, `AUTH_SMTP_PORT`, `AUTH_SMTP_USER`, `AUTH_SMTP_PASSWORD`, `AUTH_EMAIL_FROM` | Yes for registration/recovery | Authenticated SMTP transport for verification and password reset messages. |
 | `AUTH_SMTP_SECURE` | Optional | Set true when SMTP uses implicit TLS (normally port 465). |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Optional | Enable the Google action and OAuth callback. |
-| `NEXT_PUBLIC_SITE_URL` | Yes for canonical policy links | The app derives `/terms` and `/privacy` from this site origin. |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Optional | Enable Google OAuth after the provider expansion is implemented. |
+| `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | Optional | Planned; enable GitHub OAuth after implementation. |\n| `NEXT_PUBLIC_SITE_URL` | Yes for the canonical Privacy Policy link | The app derives `/privacy` from this site origin. |
 
-The Terms of Service and Privacy Policy are first-party pages at `/terms` and `/privacy`. Their URLs are derived from `NEXT_PUBLIC_SITE_URL`; policy versions are maintained in `src/app/lib/legal/policies.js` and recorded server-side at registration. No manual legal URL/version environment variables are required. Registration remains unavailable until MongoDB/auth secrets and SMTP delivery are configured. In Vercel, the five SMTP values must be available to the `feat/labs-platform-integration` Preview branch specifically; values scoped only to `feat/labs-public-page` are not inherited by this branch.
+The Privacy Policy is a first-party informational page at `/privacy` and its URL derives from `NEXT_PUBLIC_SITE_URL`. The Terms route, Terms checkbox and legal-consent receipt gate are scheduled for removal. Registration readiness must depend on database/auth and SMTP configuration, not Terms content. Registration remains unavailable until MongoDB/auth secrets and SMTP delivery are configured. In Vercel, the five SMTP values must be available to the `feat/labs-platform-integration` Preview branch specifically; values scoped only to `feat/labs-public-page` are not inherited by this branch.
 
 ### Google OAuth callback
 
@@ -41,7 +42,17 @@ Register the deployed callback path:
 https://<your-auth-origin>/api/auth/callback/google
 ```
 
-The app shows the Google action only when both Google credentials are present. The implementation disallows implicit Google account creation so the Google button does not bypass the required legal-consent registration route. Google sign-in requires the provider's verified email signal. Matching verified Google identities can link under Better Auth's verified-email linking behavior; no force-trusted-provider override is configured. Implicit Google sign-up is disabled so this action cannot bypass legal consent.
+Google is currently login-only and is hidden until both Google credentials are configured. The planned target adds explicit Google account creation from the signup route. Login and signup OAuth intents must remain separate and same-verified-email linking must remain enforced.
+
+### GitHub OAuth callback — planned
+
+Register the deployed callback path after GitHub provider configuration is implemented:
+
+```text
+https://<your-auth-origin>/api/auth/callback/github
+```
+
+The GitHub app should request identity/email only, including the user:email scope needed to retrieve a primary verified email when the profile email is private. Do not request repository access. The login action must not create new users implicitly; account creation is explicit from the signup route. Confirm installed Better Auth 1.7.15 behavior before implementing the signup intent.
 
 ### SMTP verification
 
@@ -51,8 +62,8 @@ Before enabling account registration, send a verification message and a password
 
 | User flow | Route / handler | Behavior |
 | --- | --- | --- |
-| Login | `/labs/login` | Email/password; optional Google action; validated local return destination. |
-| Registration | `/labs/signup` → `POST /api/labs/register` | Requires consent; generic confirmation whether or not an account already exists. |
+| Login | `/labs/login` | Email/password; target Google and GitHub login actions when configured; validated local return destination. |
+| Registration | `/labs/signup` → `POST /api/labs/register` | Email/password remains; target explicit Google/GitHub account creation; generic response remains. No Terms checkbox or consent receipt. |
 | Verification | `/labs/verify-email` | Verify-link callback confirmed against server-side flow state (Better Auth default token lifetime) and 30-second resend UX cooldown. |
 | Resend verification | `POST /api/labs/verification/resend` | Generic response; creates an opaque flow ID and invokes Better Auth's privacy-safe resend handler. |
 | Verification status | `GET /api/labs/verification/status?flow=:id` | No-store read of a random flow ID marked verified by the Better Auth post-verification hook. |
@@ -61,7 +72,7 @@ Before enabling account registration, send a verification message and a password
 | Auth transport | `/api/auth/[...all]` | Better Auth-owned handlers; direct `/sign-up/email` is blocked to prevent consent bypass. |
 | Session read | `GET /api/auth/get-session` | Server-backed session read; used by Labs account UI and protected-source revalidation. |
 
-The registration endpoint records the server's current legal-document versions and acceptance time. The browser cannot choose these values. Registration has an additional five-attempts-per-minute trusted-proxy-IP limit. Better Auth also applies the route-specific rate limits configured in `src/app/lib/auth/auth.js`.
+The registration endpoint must keep generic account-creation responses and the trusted-proxy-IP rate limit. Remove the Terms acceptedTerms field and consent-receipt write during the approved cleanup; retain a separate server-side verification flow for email verification. Better Auth also applies the route-specific rate limits configured in `src/app/lib/auth/auth.js`.
 
 Return destinations must be relative paths under `/labs`. External URLs, protocol-relative URLs, malformed paths and authentication routes are rejected.
 
@@ -228,3 +239,9 @@ Follow `docs/LABS-SOURCE-MANAGEMENT-SPEC.md` for the target owner capability and
 5. Run the full Guest / Unverified / Verified / Owner, stale-version, like deduplication and private/no-store tests against Atlas.
 6. Complete browser-based keyboard, responsive, focus, contrast and accessibility QA.
 7. Keep live source execution deferred until separately approved and threat-modelled.
+
+## 14. Provider expansion and Terms cleanup — plan status
+
+The user-approved target preserves email/password and adds Google and GitHub registration/login. The current implementation remains behind that target: Google is login-only and GitHub is not configured. The same user decision removes the Terms signup checkbox, Terms page and Terms-only registration receipt logic. The Privacy Policy stays available as informational disclosure. Email-verification flow records remain separate and must be preserved.
+
+Follow docs/LABS-AUTHENTICATION-PROVIDERS-AND-LEGAL-CLEANUP-PLAN.md for implementation, migration, file deletion, provider setup and release tests. Do not treat this runbook update as evidence that providers have been configured or that any code/data has been deleted.
