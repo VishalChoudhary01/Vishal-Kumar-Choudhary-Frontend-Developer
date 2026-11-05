@@ -15,9 +15,9 @@ const runtimeHtmlFixture = [
   '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'self\'; style-src \'self\'">',
   "<title>Published runtime CSP regression</title>",
   "</head><body><main>Published experiment</main></body></html>",
-].join("\\n");
+].join("\n");
 const publishedHtml = stripPublishedRuntimeCspMeta(runtimeHtmlFixture);
-if (/http-equiv\\s*=\\s*["']content-security-policy["']/i.test(publishedHtml)) {
+if (/http-equiv\s*=\s*["']content-security-policy["']/i.test(publishedHtml)) {
   throw new Error("The published runtime retained its conflicting build-time CSP meta tag.");
 }
 if (!publishedHtml.includes('<meta charset="UTF-8">') || !publishedHtml.includes("<main>Published experiment</main>")) {
