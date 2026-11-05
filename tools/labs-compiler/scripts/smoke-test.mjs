@@ -3,6 +3,52 @@ import path from "node:path";
 import { spawn, spawnSync } from "node:child_process";
 import { prepareReactProject } from "../../../src/app/lib/labs/prepare-react-project.mjs";
 import { ensureSandboxInputDirectory } from "../../../src/app/lib/labs/sandbox-directory.mjs";
+import {
+  buildPublishedRuntimeCsp,
+  stripPublishedRuntimeCspMeta,
+} from "../../../src/app/lib/labs/runtime-html.mjs";
+
+const runtimeHtmlFixture = [
+  "<!doctype html>",
+  "<html><head>",
+  '<meta charset="UTF-8">',
+  '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'self\'; style-src \'self\'">',
+  "<title>Published runtime CSP regression</title>",
+  "</head><body><main>Published experiment</main></body></html>",
+].join("\\n");
+const publishedHtml = stripPublishedRuntimeCspMeta(runtimeHtmlFixture);
+if (/http-equiv\\s*=\\s*["']content-security-policy["']/i.test(publishedHtml)) {
+  throw new Error("The published runtime retained its conflicting build-time CSP meta tag.");
+}
+if (!publishedHtml.includes('<meta charset="UTF-8">') || !publishedHtml.includes("<main>Published experiment</main>")) {
+  throw new Error("Removing the build-time CSP changed unrelated HTML content.");
+}
+
+const publishedAssetBase = "https://portfolio.example/api/v1/labs/spotlight-dock/runtime/00000000-0000-4000-8000-000000000000/";
+const publishedCsp = buildPublishedRuntimeCsp({
+  assetBase: publishedAssetBase,
+  parentOrigin: "https://portfolio.example",
+});
+for (const directive of ["script-src 'unsafe-inline' " + publishedAssetBase, "style-src 'unsafe-inline' " + publishedAssetBase]) {
+  if (!publishedCsp.includes(directive)) {
+    throw new Error("The published runtime CSP does not allow its scoped compiled assets.");
+  }
+}
+if (publishedCsp.includes("'self'") || !publishedCsp.includes("connect-src 'none'")) {
+  throw new Error("The opaque-origin runtime CSP is not restrictive or still depends on 'self'.");
+}
+let rejectedCrossOriginAssets = false;
+try {
+  buildPublishedRuntimeCsp({
+    assetBase: "https://untrusted.example/runtime/",
+    parentOrigin: "https://portfolio.example",
+  });
+} catch {
+  rejectedCrossOriginAssets = true;
+}
+if (!rejectedCrossOriginAssets) {
+  throw new Error("The published runtime CSP accepted an asset origin outside the portfolio origin.");
+}
 
 const root = path.resolve(process.cwd());
 const fixture = path.join(root, ".smoke-fixture");
