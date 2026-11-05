@@ -105,6 +105,7 @@ Extend the existing developer portfolio into a maintainable platform where the o
 ### FR-04 Authentication and authorization
 - Email/password, Google OAuth and GitHub OAuth registration/sign-in. Email/password remains supported alongside both providers.
 - Email verification, password reset, secure session handling, sign-out, profile management and account deletion.
+- Keep `/privacy` available as an informational disclosure; do not require a Terms/Conditions checkbox or Terms consent receipt during registration. Email verification remains a separate account-security requirement.
 - Better Auth with the MongoDB adapter is selected for the Labs authentication implementation. Production session-lifetime/concurrency policy remains an architecture decision.
 - Enforce authorization on the server for every protected read and mutation.
 - Validate post-authentication return destinations against allowed local paths; prevent open redirects.
