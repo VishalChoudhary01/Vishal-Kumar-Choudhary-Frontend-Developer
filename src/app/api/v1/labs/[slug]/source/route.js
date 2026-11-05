@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
 import { getAuthorizedLabSource } from "@/app/lib/labs/source-access";
 import { getPublishedLabExperimentBySlug } from "@/app/data/labsExperiments";
+import { isPublishedCustomLabSlug } from "@/app/lib/labs/public-experiments";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,7 +27,7 @@ export async function GET(_request, { params }) {
 
   if (
     !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug || "") ||
-    !getPublishedLabExperimentBySlug(slug)
+    (!getPublishedLabExperimentBySlug(slug) && !(await isPublishedCustomLabSlug(slug)))
   ) {
     return response(
       { error: { code: "NOT_FOUND", message: "Source is not available." } },
