@@ -49,6 +49,11 @@ const labSourceSchema = new mongoose.Schema(
       default: null,
       maxlength: 64,
     },
+    publishedArtifactId: {
+      type: String,
+      default: null,
+      maxlength: 64,
+    },
     nextVersionNumber: {
       type: Number,
       default: 1,
