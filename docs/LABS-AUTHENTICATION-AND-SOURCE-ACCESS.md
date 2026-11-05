@@ -145,8 +145,8 @@ The Atlas-backed source viewer protects separate source snapshots. Do not claim 
 - [ ] Authentication secret is unique, strong and stored only in server-side environment variables.
 - [ ] Trusted origins and proxy IP header match the actual deployment.
 - [ ] SMTP sends and delivers verification/password-reset messages successfully.
-- [ ] First-party `/terms` and `/privacy` pages are reachable on the deployed canonical origin; server-owned policy versions match the published text and are recorded on registration.
-- [ ] Google callback, email verification requirement and trusted account linking are verified if Google is enabled.
+- [ ] The `/privacy` page is reachable on the deployed canonical origin and accurately describes account, provider, verification and Labs engagement data. No Terms consent receipt is required after the cleanup.
+- [ ] Google and GitHub callbacks, verified-email requirement, explicit signup intent, login-only intent and safe same-email account linking are verified.
 - [ ] Duplicate registration responses do not expose account existence.
 - [ ] Registration, sign-in, reset and resend rate limits are tested.
 - [ ] Safe return-path cases reject external/protocol-relative destinations.
@@ -159,11 +159,12 @@ The Atlas-backed source viewer protects separate source snapshots. Do not claim 
 No deployment secrets are committed to this repository. This runbook does not certify that any external provider, Atlas cluster or browser test has been configured or passed.
 
 
-## 9. Consent receipt and verification-flow records
+## 9. Email-verification flow records and Terms cleanup
 
-- Legal acceptance is stored in `labs_registration_consents`, not in client-editable user fields. Email identity is represented by an HMAC digest; the record contains the Terms version, Privacy version, server acceptance timestamp, linked Better Auth user ID and verification timestamp.
-- `labs_verification_flows` stores a separate random flow ID, email digest, created/expiry timestamps and verified timestamp. The flow expires automatically after seven days. It is not the legal consent audit record.
-- The registration callback URL carries the flow ID. The Better Auth `afterEmailVerification` hook marks active flows for that email digest. The server-rendered verification page checks the stored flow status; manually adding a query parameter cannot produce a verified state.
+- The current implementation still contains `labs_registration_consents`, which stores a Terms version, Privacy version, server timestamp and account linkage. This receipt system is scheduled for removal with the Terms signup checkbox and Terms route. Do not remove it until its code references and database indexes are inventoried and a reviewed backup/migration is completed.
+- `labs_verification_flows` stores a separate random flow ID, email digest, created/expiry timestamps and verified timestamp. It is required by email verification and must remain even after consent receipts are removed.
+- Before deleting `registration-consent.js`, move its verification-flow functions into a separate server-only module and update Better Auth hooks/imports to use that module.
+- The registration callback URL carries the flow ID. The Better Auth `afterEmailVerification` hook marks active flows for that email digest. The server-rendered verification page checks stored flow status; manually adding a query parameter cannot produce a verified state.
 - Resend goes through `POST /api/labs/verification/resend`. The client receives a generic response and does not learn whether the email exists. The client cooldown is 30 seconds; Better Auth's server-side rate limits are authoritative.
 
 
@@ -195,19 +196,17 @@ A value had been committed in the tracked `.env.example` under `BETTER_AUTH_SECR
 The API key is not available to the repository integration; it must be copied from the user's Better Auth Dash project directly into Vercel. Do not attempt to infer or generate a Dash API key.
 
 
-## 11. First-party Terms and Privacy pages
+## 11. Privacy Policy and Terms-page removal
 
-The website publishes:
-- Terms of Service: `/terms`
-- Privacy Policy: `/privacy`
+The public Privacy Policy remains at `/privacy`. It is informational disclosure, not a mandatory checkbox or registration gate. Keep its footer/contact/sitemap links and update its provider disclosure to include Google and GitHub identity information when those providers are enabled.
 
-Both routes are public and indexable, included in the sitemap, linked from the global footer, and linked from the contact form. Labs sign-up links directly to the same canonical documents and asks the registrant to confirm they are at least 18 years old before accepting the current terms and privacy notice.
+The standalone Terms page at `/terms`, its 18+ signup acknowledgement, Terms-only footer/contact/sitemap/SEO links, Terms version configuration and consent-receipt gate are in the approved removal scope. Remove them together so no stale links or policy claims remain.
 
-The server-owned policy versions are maintained in `src/app/lib/legal/policies.js`; the initial version of each is `2026-11-04`. The registration endpoint reads those constants and writes them into the consent receipt. The browser cannot submit or override policy versions. When either document changes materially, update its version constant in the same commit as the text change.
+The current `labs_registration_consents` receipt collection and helpers are legacy cleanup targets. The separate `labs_verification_flows` collection and verification callback must remain. Split verification-flow functions out of `registration-consent.js` before removing consent-only code or retiring its collection/indexes.
 
-The Privacy Policy now discloses protected-source opens, successful copy actions, verified likes, anonymous browser likes and aggregate owner analytics. `PRIVACY_VERSION` and `TERMS_VERSION` are both `2026-11-04.1`. Engagement-event retention and account-deletion handling remain release-review items; event records currently have no automatic TTL.
+The Privacy Policy must accurately disclose email/password accounts, Google/GitHub provider data, sessions, verification, source opens/copies, likes, cookies, security logs and retention after the Terms cleanup. Do not leave claims about Terms acceptance receipts in its text. This runbook does not certify legal compliance; confirm the final privacy disclosure and any applicable policy requirements before launch.
 
-These are operational policy drafts. The owner should review them with a qualified Indian privacy lawyer before launch, confirm the real provider list and data locations, and implement any additional rights/request/deletion procedures identified by that review.
+
 ## 12. Vercel Preview origins and Better Auth Dash onboarding
 
 - Preview deployments use Better Auth's dynamic `baseURL` allowlist. Accepted Preview hosts are restricted to this project's deployment host pattern and Vercel's branch-alias pattern for this team; arbitrary `*.vercel.app` hosts are not trusted.
