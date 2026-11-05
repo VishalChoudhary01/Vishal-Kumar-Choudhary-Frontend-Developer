@@ -1,46 +1,55 @@
 # Labs Experiment Studio — Runtime, Media and Publishing Plan
 
-**Status:** The isolated compiler supports React JSX/TSX and standalone HTML/CSS/JavaScript. The latest verified feature-branch source passes the expanded compiler smoke suite (including HTTP delivery of static HTML, CSS and JS), targeted ESLint, and a clean Next.js production build with all 18 static pages. The 503 root cause was confirmed as non-idempotent `sandbox.mkDir("/vercel/sandbox/input")` against a snapshot where the directory already exists; the branch now uses `mkdir -p` through `ensureSandboxInputDirectory()`. A fresh Git-connected Preview is READY at [mx029pt12.vercel.app](https://vishal-kumar-choudhary-frontend-developer-mx029pt12.vercel.app/) on commit `5c36673`, which includes the Sandbox wiring fix, static HTML/CSS path and `clipPath` percentage fixes. Its last 30-minute runtime-log query returned no errors, but a fresh authenticated Run click still needs owner browser verification. The current branch is ahead with additional smoke-test cleanup and `.htm` extension alignment. Keep Production publishing disabled until browser Run and public artifact checks pass.
-**Latest local branch commit:** `be8ddd83e72c81bbeab9848ae7c376d04f91db97`
-**Latest READY Preview:** `5c366730cafa6ba9300af0986aa5d379410e787d`
+**Status:** React JS/JSX and React TS/TSX are the locked primary authoring starters and pass the compiler suite. Standalone HTML/CSS/JavaScript is a separate supported static mode, not a replacement for React. The latest branch also runs the nested Fluid Gradient HTML fixture, preserves inline CSS/Canvas JavaScript, rewrites nested local asset URLs, and passes the expanded smoke suite. Targeted ESLint and a clean Next.js production build pass with all 18 static pages.
+**Latest validated branch commit:** `e3fd60ac09fe072afd9f7025a414e842069ab7fd`
+**Last READY Preview deployment:** `5c366730cafa6ba9300af0986aa5d379410e787d` at [mx029pt12.vercel.app](https://vishal-kumar-choudhary-frontend-developer-mx029pt12.vercel.app/). This deployment predates the nested HTML entry and Vite root-relative asset fixes. The latest branch has passed local compiler and app builds, but does not yet have a READY Preview deployment.
 **Applies to:** Owner-created experiments in Labs, while preserving the four existing code-owned experiments.
 **Primary implementation branch:** `feat/labs-platform-integration`
+
 ---
 
-## Latest preview regression investigation — 5 November 2026
+## Runtime decision locked — React first, static HTML/CSS retained
 
-### Confirmed 503 cause and branch fix
-The current live Preview runtime logs show `POST /api/v1/admin/labs/sources/spotlight-dock/preview` failing with HTTP 400 from `sandbox.mkDir("/vercel/sandbox/input")` because the directory already exists in the restored snapshot. The owner API reports this as 503. The branch replaces that call with `ensureSandboxInputDirectory()`, which runs `mkdir -p`, and includes a repeated-initialization regression test.
+1. **React JS/JSX is a first-class mode.** The `React JS` starter creates the root HTML, `src/main.jsx`, `src/App.jsx` and Tailwind v4 CSS entry. React 19, Motion, Lucide and React Icons are available from the fixed compiler image.
+2. **React TypeScript/TSX is a first-class mode.** The `React TSX` starter creates `src/main.tsx`, `src/App.tsx` and a generated strict TypeScript configuration. `tsc --noEmit` must pass before Vite builds the browser bundle. Invalid types block the preview with diagnostics.
+3. **Static HTML/CSS/JavaScript is a separate mode.** It preserves the HTML document, inline `<style>` and `<script>` blocks, and compiles linked CSS/JS assets. CSS-only experiments receive a generated HTML entry. Static projects are not wrapped in React.
+4. **Mode detection is deterministic.** A valid React entry structure or a single JSX/TSX component selects React mode. Otherwise the compiler selects static mode. Ambiguous multi-HTML projects must provide an explicit root `index.html`.
+5. **Run and publish use the same toolchain contract.** Owner preview compiles the current working copy in an isolated sandbox. Publish rebuilds the exact saved source version and stores the resulting immutable artifact. Fallback media is optional and is not used when code runs.
 
-### HTML/CSS preview regression
-The previous project preparation helper accepted only a complete React project or one JSX/TSX component. Standalone HTML/CSS/JavaScript source therefore failed before Vite had a chance to compile it. The branch now detects React projects separately and otherwise prepares a static project:
-- Preserve a root `index.html` and link local CSS/JavaScript files.
-- If there is one root HTML file, normalize it to `index.html`.
-- Generate a minimal `index.html` for CSS-only and JavaScript-only experiments.
-- Use Vite's normal HTML build so linked styles and scripts become immutable, addressable output assets.
-- Keep React JSX/TSX entry validation and TypeScript checking unchanged.
+---
 
-### Clip-path warnings
-The browser warning `Invalid keyframe value for property clipPath` was caused by Motion interpolating between percentage values and unitless zero values in `inset()`. Footer and hero reveal keyframes now use percentage units for both horizontal inset values (for example, `0%` instead of `0`). Other component clip-path declarations were reviewed.
+## Latest Fluid Gradient and build regression — 5 November 2026
 
-### Verification on latest branch
-- Expanded compiler smoke suite passes: idempotent Sandbox input setup; static HTML/CSS/JavaScript build and server delivery; CSS-only generated HTML; JSX and TSX builds; invalid TypeScript rejection; React 19, Motion, Lucide, React Icons, Tailwind v4; preview health, HTML/JS delivery, bridge and traversal protection.
-- Targeted ESLint passes for the changed preview/compiler/animation files.
-- Clean Next.js production build passes SEO validation, app compilation, TypeScript and 18 static pages.
-- Latest branch commit: `b7cae3729ba3ecded5d56a35f9c632e6e9dc6b78`.
+### Why the HTML file did not run
+The uploaded entry was named `src/fluid_gradient_background-1-.html`, not root `index.html`. The previous static adapter rejected nested HTML entries. After that check was relaxed, Vite generated root-relative asset references such as `/src/main.jsx`; the Labs source-policy plugin incorrectly rejected all leading-slash paths, including Vite-generated local assets. A subsequent edit also introduced an escaped-quote syntax error in the generated root HTML string.
+
+### Fixes now on the branch
+- A single nested HTML entry is promoted to build-time `index.html`; the saved source path is not mutated.
+- Relative `src`, `href`, `poster` and CSS `url(...)` references are rewritten against the HTML file's original folder, so imported files under `src/` still resolve after entry promotion.
+- Inline `<style>`, inline `<script>`, Canvas markup and `requestAnimationFrame` code remain in the HTML document.
+- Vite root-relative local assets are accepted only when they resolve inside the isolated experiment root. External, absolute/escaping and unapproved imports remain blocked.
+- The generated HTML root string now uses valid JavaScript quoting. The earlier Turbopack parse failure is fixed.
+- The Files panel controls now wrap instead of overflowing its narrow sidebar. An `HTML/CSS` starter was added next to the locked `React JS` and `React TSX` starters. Preview labels are framework-neutral.
+
+### Implementation phases
+
+| Phase | Implementation | Why it exists | Verification |
+|---|---|---|---|
+| 1. Lock React authoring | React JS and React TSX starter templates; fixed runtime packages; generated React entry points | Gives the owner reliable, known-good React scaffolding instead of arbitrary project guessing | JSX/TSX build, Motion, icons, Tailwind v4 and TypeScript-error tests pass |
+| 2. Detect project mode | React entry detection is separate from static HTML detection | Prevents a standalone HTML experiment from being incorrectly forced into React | React fixtures and static fixtures compile independently |
+| 3. Prepare static HTML | Promote one nested HTML entry to `index.html`; preserve inline CSS/JS; resolve linked local assets | Vite requires a root HTML entry; original relative asset paths otherwise point to the wrong directory | Fluid Gradient nested-entry fixture passes, including inline Canvas and external CSS/JS references |
+| 4. Enforce safe asset resolution | Permit Vite-generated root-relative references only inside the project root | Vite emits root-relative URLs during HTML processing; blanket rejection broke valid assets, while unrestricted paths would weaken isolation | Vite source-policy regression plus traversal/security tests pass |
+| 5. Build and serve | Vite emits HTML/CSS/JS, isolated server delivers each asset under a per-run URL | An emitted bundle is not a visible preview until its page and assets are actually served | HTTP health/page/CSS/JS tests pass |
+| 6. Owner QA and release | Test the authenticated Run button, then rebuild and publish the exact saved version | Local tests cannot prove the deployed owner session or public artifact route | Pending a new READY Preview deployment and authenticated browser test |
+
+### Latest verification
+- Expanded `npm run test:smoke` passes: nested Fluid Gradient HTML with inline styles and Canvas JavaScript; nested external CSS/JS path rewriting; standalone HTML/CSS/JS build and HTTP asset delivery; CSS-only generated HTML; React JSX and TSX; invalid TypeScript rejection; Tailwind v4; Motion; Lucide; React Icons; sandbox directory idempotency; preview bridge and traversal rejection.
+- Targeted ESLint passes for the changed editor, preview, compiler and animation files.
+- `npm run build` passes: SEO validation, Next.js compilation, TypeScript and all 18 static pages.
+- The specific Vercel build error `Expected ',', got 'ident'` came from an invalid escaped quote in generated `labs-root` markup; corrected to a single-quoted JavaScript string and verified by the clean build.
 
 ### Deployment gate
-The latest READY Preview deployment remains commit `096e185`, before the compiler-service wiring fix, standalone HTML/CSS path and clip-path changes. Vercel rejected further API deployment creation with HTTP 402 (`api-deployments-free-per-day`, retry-after 24 hours). The 503 and browser warnings can therefore persist on that old deployment. Deploy the latest branch commit when the quota allows; then verify the owner Run route for HTML/CSS, JSX and TSX, confirm iframe asset requests return 200, and inspect the browser console for clip-path warnings. Do not enable Production publishing until this deployed browser QA and an immutable public artifact test pass.
-
-## Latest preview deployment — 5 November 2026
-
-- New Git-connected Preview READY: `https://vishal-kumar-choudhary-frontend-developer-mx029pt12.vercel.app/` (commit `5c36673`).
-- The deployed commit includes the idempotent Sandbox directory initialization, standalone HTML/CSS/JS preparation/build path, static preview asset server and footer/hero clip-path percentage fixes.
-- The last 30-minute runtime-log query for this deployment found no errors; it did not show a Run request. The owner must perform the first authenticated Run test on this deployment.
-- The current branch has later changes to smoke-test cleanup and `.htm` extension alignment; those are verified locally but are not part of this deployment.
-- Test URL for the existing owner experiment: `/admin/labs/sources/spotlight-dock`.
-- Test HTML/CSS, JSX and TSX. Confirm the Run API returns a preview URL, the iframe document and its CSS/JS assets return HTTP 200, and the browser console has no invalid `clipPath` keyframe warning.
-- Do not publish to Production until a saved test version is published in Preview and the public Labs detail page is confirmed to run the same immutable artifact.
+The last READY deployment is still commit `5c36673`, before the nested HTML and Vite root-relative asset fixes. Vercel deployments for intermediate commits failed while the quote and path-policy regressions were being corrected. The latest branch commit `e3fd60a` now passes the local build and smoke suite, but must receive a fresh READY Preview deployment before the owner Run button can be confirmed in a browser. Do not enable Production publishing until HTML/CSS, JSX and TSX Run have been verified in deployed Preview and the public detail page has been proven to render the matching immutable artifact.
 ## 1. Product outcome
 
 The Studio is an owner-only creative coding workspace. The owner must be able to create an original experiment, write or import its code, run the actual interactive experience, inspect errors and save immutable drafts. Image/GIF/video upload is optional and exists only as a fallback when the code preview cannot run or is unsupported.
@@ -93,7 +102,7 @@ The first complete custom runtime should support:
 - React projects written in JavaScript and JSX.
 - React projects written in TypeScript and TSX, using a fixed generated TypeScript configuration and a separate `tsc --noEmit` validation stage before Vite bundling.
 
-The TS/TSX target is approved, but it is not complete until type-check diagnostics, nested TSX imports, React typings and exact-version publish tests pass. See `LABS-REACT-JSX-TSX-TAILWIND-MOTION-RUNTIME-PLAN.md` for the detailed contract.
+React JSX and TSX compilation and type-error rejection are implemented and smoke-tested with the pinned compiler image. Deployed browser Run and exact-version publish verification remain release gates. See `LABS-REACT-JSX-TSX-TAILWIND-MOTION-RUNTIME-PLAN.md` for the detailed contract.
 
 No server components, server actions, API route handlers, Node.js APIs, backend processes or server-side rendering are available inside an experiment. Experiments are browser-only static applications.
 
