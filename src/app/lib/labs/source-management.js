@@ -58,6 +58,9 @@ async function getExperiment(slug) {
   await connectToDatabase();
   const custom = await LabExperiment.findOne({ slug, kind: "custom" }).lean();
   if (!custom) throwCode("NOT_FOUND", "Experiment not found.");
+  if (custom.status === "deleting") {
+    throwCode("EXPERIMENT_DELETE_IN_PROGRESS", "This experiment is being deleted. Retry cleanup from the source inventory.");
+  }
   return { ...custom, isCustom: true };
 }
 
