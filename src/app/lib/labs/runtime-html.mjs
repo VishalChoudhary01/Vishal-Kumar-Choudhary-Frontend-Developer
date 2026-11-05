@@ -12,7 +12,7 @@ export function stripPublishedRuntimeCspMeta(html) {
   }
 
   return html.replace(
-    /<meta\b(?=[^>]*\bhttp-equiv\s*=\s*("?content-security-policy"|'content-security-policy'|content-security-policy)(?=[\s/>]))[^>]*\/?>/gi,
+    /<meta\b(?=[^>]*\bhttp-equiv\s*=\s*(?:"content-security-policy"|'content-security-policy'|content-security-policy)(?=[\s/>]))[^>]*\/?>/gi,
     "",
   );
 }
