@@ -1,8 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import LabArtwork from "./landing/LabArtwork";
+import LabExperimentPreview from "./LabExperimentPreview";
 import LabLikeButton from "./LabLikeButton";
 import useLabCategoryFilter from "@/app/hooks/labs/useLabCategoryFilter";
 import useLabLoadMore from "@/app/hooks/labs/useLabLoadMore";
@@ -59,21 +58,10 @@ function LabCard({ experiment, index, total, engagement }) {
         className="group flex h-full min-w-0 flex-col rounded-[var(--radius-sm)] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4 focus-visible:ring-offset-background motion-reduce:transform-none motion-reduce:transition-none"
       >
         <div className="relative aspect-[4/3] overflow-hidden rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2">
-          {experiment.thumbnail?.src ? (
-            <Image
-              src={experiment.thumbnail.src}
-              alt={experiment.thumbnail.alt || ""}
-              width={900}
-              height={675}
-              sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
-              className={[
-                "h-full w-full transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.02] motion-reduce:transform-none motion-reduce:transition-none",
-                experiment.thumbnail.fit === "contain" ? "object-contain" : "object-cover",
-              ].join(" ")}
-            />
-          ) : (
-            <LabArtwork experiment={experiment} />
-          )}
+          <LabExperimentPreview
+            experiment={experiment}
+            className="h-full w-full transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.02] motion-reduce:transform-none motion-reduce:transition-none"
+          />
 
           <span className="pointer-events-none absolute right-3 top-3 font-mono text-[8px] tabular-nums tracking-[0.14em] text-text-muted sm:right-4 sm:top-4">
             {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
