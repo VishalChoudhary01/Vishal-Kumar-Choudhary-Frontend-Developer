@@ -9,7 +9,6 @@ import {
   isGitHubAuthConfigured,
 } from "@/app/lib/auth/auth";
 import { getSafeReturnTo } from "@/app/lib/auth/return-to";
-import { getLegalDocumentConfig } from "@/app/lib/legal/policies";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -26,12 +25,6 @@ export default async function LabsSignupPage({ searchParams }) {
     redirect(returnTo);
   }
 
-  const legalDocuments = getLegalDocumentConfig();
-  const legal = {
-    termsUrl: legalDocuments.terms.url,
-    privacyUrl: legalDocuments.privacy.url,
-  };
-
   const readiness = getAuthRegistrationReadiness();
   const registrationEnabled = Object.values(readiness).every(Boolean);
   const googleEnabled = isAuthRuntimeConfigured() && isGoogleAuthConfigured;
@@ -40,7 +33,6 @@ export default async function LabsSignupPage({ searchParams }) {
   return (
     <SignupForm
       returnTo={returnTo}
-      legal={legal}
       registrationEnabled={registrationEnabled}
       readiness={readiness}
       googleEnabled={googleEnabled}
