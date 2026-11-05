@@ -96,19 +96,66 @@ function isReactProject(files) {
   );
 }
 
+function resolveHtmlAssetPath(sourceDirectory, value) {
+  const trimmed = String(value || "").trim();
+  if (
+    !trimmed ||
+    /^(?:[a-z][a-z0-9+.-]*:|\/\/|\/|#)/i.test(trimmed)
+  ) {
+    return trimmed;
+  }
+
+  const suffixIndex = trimmed.search(/[?#]/);
+  const pathname = suffixIndex < 0 ? trimmed : trimmed.slice(0, suffixIndex);
+  const suffix = suffixIndex < 0 ? "" : trimmed.slice(suffixIndex);
+  const segments = sourceDirectory ? sourceDirectory.split("/") : [];
+  for (const segment of pathname.split("/")) {
+    if (!segment || segment === ".") continue;
+    if (segment === "..") {
+      if (segments.length) segments.pop();
+      continue;
+    }
+    segments.push(segment);
+  }
+  return "./" + segments.join("/") + suffix;
+}
+
+function rewriteNestedHtmlAssetPaths(html, sourceDirectory) {
+  if (!sourceDirectory) return html;
+
+  let result = html.replace(
+    /\b(src|href|poster)\s*=\s*(["\'])(.*?)\2/gi,
+    (match, attribute, quote, value) => {
+      const rewritten = resolveHtmlAssetPath(sourceDirectory, value);
+      return attribute + "=" + quote + rewritten + quote;
+    },
+  );
+
+  result = result.replace(
+    /url\(\s*(["\']?)([^)"\']+)\1\s*\)/gi,
+    (match, quote, value) => {
+      const rewritten = resolveHtmlAssetPath(sourceDirectory, value);
+      return "url(" + (quote || "") + rewritten + (quote || "") + ")";
+    },
+  );
+
+  return result;
+}
+
 function createStaticHtml(files) {
   const htmlFiles = files.filter((file) => /\.html?$/i.test(file.path));
   let index = files.find((file) => file.path === "index.html");
+  let sourceDirectory = "";
 
   if (!index && htmlFiles.length === 1) {
     const existing = htmlFiles[0];
-    if (existing.path.includes("/")) {
-      fail(
-        "MISSING_HTML_ENTRY",
-        "Move the HTML entry to the project root and name it index.html so local asset paths resolve consistently.",
-      );
-    }
-    index = { ...existing, path: "index.html" };
+    sourceDirectory = existing.path.split("/").slice(0, -1).join("/");
+    index = {
+      ...existing,
+      path: "index.html",
+      language: "html",
+      content: rewriteNestedHtmlAssetPaths(existing.content, sourceDirectory),
+    };
     files = files.map((file) => file === existing ? index : file);
   }
 
@@ -119,7 +166,7 @@ function createStaticHtml(files) {
     if (!styles.length && !scripts.length) {
       fail(
         "MISSING_HTML_ENTRY",
-        "Add an index.html file or a CSS/JavaScript file to create a runnable page.",
+        "Add an HTML file, a stylesheet, or a JavaScript file to create a runnable page.",
       );
     }
 
@@ -147,7 +194,7 @@ function createStaticHtml(files) {
         "  " + styleLinks,
         "</head>",
         "<body>",
-        "  <main id=\"labs-root\"></main>",
+        "  <main id=\\"labs-root\\"></main>",
         "  " + scriptTag,
         "</body>",
         "</html>",
@@ -196,7 +243,6 @@ function createStaticHtml(files) {
       : file,
   );
 }
-
 export function prepareReactProject(inputFiles) {
   if (!Array.isArray(inputFiles) || inputFiles.length < 1 || inputFiles.length > 40) {
     fail("INVALID_FILE_COUNT", "Add between 1 and 40 source files.");
