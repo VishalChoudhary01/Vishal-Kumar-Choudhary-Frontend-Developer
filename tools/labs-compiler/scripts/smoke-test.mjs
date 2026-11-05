@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { spawn, spawnSync } from "node:child_process";
 import { prepareReactProject } from "../../../src/app/lib/labs/prepare-react-project.mjs";
+import { ensureSandboxInputDirectory } from "../../../src/app/lib/labs/sandbox-directory.mjs";
 
 const root = path.resolve(process.cwd());
 const fixture = path.join(root, ".smoke-fixture");
@@ -10,6 +11,45 @@ const output = path.join(root, ".smoke-output");
 const negativeInput = path.join(root, ".smoke-negative-input");
 const negativeRoot = path.join(root, ".smoke-negative-project");
 const negativeOutput = path.join(root, ".smoke-negative-output");
+
+const sandboxInputDirectory = "/vercel/sandbox/input";
+await fs.rm(sandboxInputDirectory, { recursive: true, force: true });
+
+const directoryCommands = [];
+const fakeSandbox = {
+  async runCommand(options) {
+    directoryCommands.push(options);
+    const result = spawnSync(options.cmd, options.args, {
+      cwd: options.cwd,
+      encoding: "utf8",
+    });
+    return {
+      exitCode: result.status ?? 1,
+      stdout: async () => result.stdout || "",
+      stderr: async () => result.stderr || "",
+    };
+  },
+  async mkDir() {
+    throw new Error("sandbox.mkDir must not be used for an existing input directory");
+  },
+};
+
+await ensureSandboxInputDirectory(fakeSandbox);
+await ensureSandboxInputDirectory(fakeSandbox);
+
+if (directoryCommands.length !== 2) {
+  throw new Error("Input directory initialization should be safe to repeat.");
+}
+for (const command of directoryCommands) {
+  if (
+    command.cmd !== "mkdir" ||
+    !command.args.includes("-p") ||
+    !command.args.includes(sandboxInputDirectory)
+  ) {
+    throw new Error("Sandbox input initialization must use mkdir -p.");
+  }
+}
+await fs.writeFile(path.join(sandboxInputDirectory, "existing-directory-check.txt"), "ready");
 
 const source = [
   {
@@ -265,7 +305,7 @@ try {
   }
 
   process.stdout.write(
-    "PASS: JSX + TSX type checking, React 19, Motion, Lucide, React Icons, Tailwind v4, CSP, isolated preview HTTP server/bridge, traversal blocking and invalid-type rejection.\n",
+    "PASS: idempotent sandbox input setup (missing + existing directory), JSX + TSX type checking, React 19, Motion, Lucide, React Icons, Tailwind v4, CSP, isolated preview HTTP server/bridge, traversal blocking and invalid-type rejection.\n",
   );
 } finally {
   await Promise.all([
