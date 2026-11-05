@@ -5,14 +5,10 @@ import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
 import { betterAuth } from "better-auth";
 import { dash } from "@better-auth/infra";
-import { areLegalDocumentsConfigured } from "@/app/lib/legal/policies";
 import { getAuthBaseURL, getAuthBaseURLConfig } from "./base-url";
 
 import { sendAuthEmail, isAuthEmailConfigured } from "./email";
-import {
-  linkLatestRegistrationConsent,
-  markRegistrationConsentVerified,
-} from "./registration-consent";
+import { markVerificationFlowVerified } from "./verification-flows";
 
 const configuredMongoUri = process.env.MONGODB_URI;
 const configuredDatabaseName = process.env.MONGODB_DB_NAME;
@@ -98,17 +94,15 @@ async function getGitHubUserInfo(token) {
 }
 export const isAuthRuntimeConfigured = () => isDatabaseConfigured;
 export const isAuthDeliveryConfigured = () => isDatabaseConfigured && isAuthEmailConfigured();
-export const isLegalConsentConfigured = areLegalDocumentsConfigured;
 
 /**
- * Return non-sensitive readiness categories for the account-creation UI.
- * Never expose the configured values of database, auth or SMTP credentials.
+ * Return non-sensitive readiness categories for email/password registration.
+ * OAuth registration uses provider readiness separately and does not require SMTP.
  */
 export function getAuthRegistrationReadiness() {
   return {
     database: isDatabaseConfigured,
     emailDelivery: isDatabaseConfigured && isAuthEmailConfigured(),
-    legalDocuments: isLegalConsentConfigured(),
   };
 }
 
@@ -182,27 +176,6 @@ export const auth = betterAuth({
   plugins: process.env.BETTER_AUTH_API_KEY
     ? [dash({ apiKey: process.env.BETTER_AUTH_API_KEY })]
     : [],
-  databaseHooks: {
-    user: {
-      create: {
-        after: async (user) => {
-          try {
-            await linkLatestRegistrationConsent({
-              email: user.email,
-              userId: user.id,
-            });
-          } catch (error) {
-            // The account remains usable, but operations must reconcile any
-            // receipt that could not be linked after an infrastructure error.
-            console.error(
-              "[auth-consent] receipt linking failed:",
-              error?.code || "CONSENT_LINK_ERROR",
-            );
-          }
-        },
-      },
-    },
-  },
   account: {
     accountLinking: {
       enabled: true,
@@ -242,11 +215,11 @@ export const auth = betterAuth({
     autoSignInAfterVerification: false,
     afterEmailVerification: async (user) => {
       try {
-        await markRegistrationConsentVerified({ email: user.email });
+        await markVerificationFlowVerified({ email: user.email });
       } catch (error) {
         console.error(
-          "[auth-consent] verification receipt update failed:",
-          error?.code || "CONSENT_VERIFY_ERROR",
+          "[auth-verification] flow update failed:",
+          error?.code || "VERIFICATION_FLOW_ERROR",
         );
       }
     },
