@@ -111,12 +111,11 @@ export default function PrivacyPage() {
       <Section id="purposes" title="3. Why the information is used">
         <ul className="list-disc space-y-2 pl-5 marker:text-brand">
           <li>To display the portfolio, operate interactive Labs experiments, and respond to contact messages.</li>
-          <li>To create and maintain accounts, verify email addresses, authenticate sign-ins, and deliver password-reset messages.</li>
-          <li>To verify email addresses, maintain secure account sessions, and recover accounts when a password reset is requested.</li>
+          <li>To create and maintain accounts, verify email addresses, authenticate sign-ins, maintain secure sessions, and deliver password-reset messages.</li>
           <li>To provide verified-account access to published source, remember likes, and measure aggregate experiment engagement.</li>
           <li>To detect abusive registration activity, protect the service, diagnose errors, and maintain reliability.</li>
           <li>To remember interface preferences and provide a consistent experience.</li>
-          <li>To meet legal obligations, handle disputes, and enforce the published service terms where necessary.</li>
+          <li>To meet legal obligations, handle disputes, and protect the rights, safety, and reliability of the service.</li>
         </ul>
         <p>I do not sell personal information. I do not use Labs account or contact-form information to build advertising profiles or send marketing newsletters through the flows described here.</p>
       </Section>
