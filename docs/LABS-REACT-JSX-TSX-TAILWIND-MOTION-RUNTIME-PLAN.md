@@ -1,8 +1,8 @@
 # Labs React / JSX / TSX Runtime — Practical Implementation Plan
 
-**Status:** React JS/JSX and React TypeScript/TSX are locked first-class starters. Standalone HTML/CSS/JavaScript remains a separate supported runtime mode. The latest branch has passed the expanded compiler suite (including the nested Fluid Gradient HTML fixture), targeted ESLint and the full Next.js build with all 18 static pages.
-**Latest validated source before this documentation update:** `e3fd60ac09fe072afd9f7025a414e842069ab7fd`
-**Last READY Preview:** `5c366730cafa6ba9300af0986aa5d379410e787d` (`mx029pt12.vercel.app`) predates the nested HTML/Vite asset-path corrections. A fresh READY Preview and owner-browser Run test are still required. Production publishing remains disabled.
+**Status:** React JS/JSX and React TypeScript/TSX are locked first-class starters. Standalone HTML/CSS/JavaScript remains a separate supported runtime mode. The nested Fluid Gradient HTML regression, static HTML/CSS/JS assets, CSS-only mode, JSX/TSX type-checking, targeted ESLint and full Next.js build pass.
+**Latest validated functional source:** `e3fd60ac09fe072afd9f7025a414e842069ab7fd`.
+**Latest READY Preview:** `https://vishal-kumar-choudhary-frontend-developer-12tkvcm9s.vercel.app/` on commit `18e5ff96d20a7abc75ec19437e3ee6160b96eea2`. Sign in on this Preview and verify the owner Run action for the Fluid Gradient HTML experiment; also test the React JS and React TSX starters. Production publishing remains disabled until the browser Run and immutable publish checks pass.
 
 ## 1. Product decision
 
