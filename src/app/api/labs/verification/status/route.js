@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getVerificationFlowStatus } from "@/app/lib/auth/registration-consent";
+import { getVerificationFlowStatus } from "@/app/lib/auth/verification-flows";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
