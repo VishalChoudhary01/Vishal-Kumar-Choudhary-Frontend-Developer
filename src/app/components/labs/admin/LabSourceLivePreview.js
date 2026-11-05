@@ -81,7 +81,7 @@ export default function LabSourceLivePreview({ slug, files }) {
 
       setRun(payload.data);
       setStatus("starting");
-      showToast("success", "React preview compiled. Starting the isolated runtime.");
+      showToast("success", "Experiment compiled. Starting the isolated runtime.");
     } catch (reason) {
       setError(reason.message || "The preview could not be started.");
       setStatus("failed");
@@ -104,7 +104,7 @@ export default function LabSourceLivePreview({ slug, files }) {
             </span>
           </div>
           <p className="mt-1 text-[10px] text-text-tertiary">
-            React · JSX/TSX · Motion · Tailwind v4 · Lucide + React Icons
+            HTML/CSS/JS · React JSX/TSX · Motion · Tailwind v4 · Lucide + React Icons
           </p>
         </div>
         <div className="flex items-center gap-1">
@@ -149,7 +149,7 @@ export default function LabSourceLivePreview({ slug, files }) {
           <iframe
             key={run.runId}
             ref={frameRef}
-            title="Isolated React experiment preview"
+            title="Isolated Labs experiment preview"
             src={run.previewUrl}
             sandbox="allow-scripts allow-same-origin"
             referrerPolicy="no-referrer"
