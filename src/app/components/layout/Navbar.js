@@ -376,7 +376,7 @@ export default function Navbar({ context = "site", showLabsAccount = false }) {
             {/* SOCIAL LINKS — always visible in project context (incl. mobile, no
                 hamburger); portfolio landing keeps desktop-only */}
 
-            <div className={cn("items-center", isProjectContext ? "flex " : "hidden lg:flex  ")}>
+            <div className={cn("items-center", isProjectContext ? "hidden sm:flex" : "hidden lg:flex")}>
               {socialLinks.map((link) => (
                 <SocialIcon
                   key={link.href}
