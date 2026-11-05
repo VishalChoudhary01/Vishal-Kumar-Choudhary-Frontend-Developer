@@ -81,6 +81,22 @@ function validateDraftFiles(files) {
   return "";
 }
 
+function formatTimestamp(value, fallback) {
+  if (!value) return fallback;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return fallback;
+  return new Intl.DateTimeFormat("en-IN", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "UTC",
+    timeZoneName: "short",
+  }).format(date);
+}
+
 export default function LabSourceEditor({ initialSource, initialVersions, initialAudit }) {
   const router = useRouter();
   const { showToast } = useActionToast();
@@ -1004,7 +1020,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                     ) : null}
                   </div>
                   <p className="mt-1 text-[11px] text-text-tertiary">
-                    {version.fileCount} files · {version.changeSummary || "No summary"} · {version.createdAt ? new Date(version.createdAt).toLocaleString() : "Unknown date"}
+                    {version.fileCount} files · {version.changeSummary || "No summary"} · {formatTimestamp(version.createdAt, "Unknown date")}
                   </p>
                   <details className="mt-1 text-[10px] text-text-tertiary">
                     <summary className="w-fit cursor-pointer select-none hover:text-text-secondary">View content hash</summary>
@@ -1064,7 +1080,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                   </p>
                 </div>
                 <time className="text-[11px] text-text-tertiary">
-                  {event.createdAt ? new Date(event.createdAt).toLocaleString() : "Unknown time"}
+                  {formatTimestamp(event.createdAt, "Unknown time")}
                 </time>
               </div>
             ))}
