@@ -11,7 +11,6 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function SignupForm({
   returnTo,
-  legal,
   registrationEnabled,
   readiness,
   googleEnabled = false,
@@ -20,8 +19,6 @@ export default function SignupForm({
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [accepted, setAccepted] = useState(false);
-  const [consentError, setConsentError] = useState("");
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -53,16 +50,10 @@ export default function SignupForm({
     };
 
     setErrors(nextErrors);
-    setConsentError(accepted ? "" : "Please accept the Terms of Service and Privacy Policy to continue.");
 
     const firstInvalid = Object.keys(nextErrors).find((key) => nextErrors[key]);
     if (firstInvalid) {
       document.getElementById(firstInvalid)?.focus();
-      return;
-    }
-
-    if (!accepted) {
-      document.getElementById("legal-consent")?.focus();
       return;
     }
 
@@ -82,7 +73,6 @@ export default function SignupForm({
         body: JSON.stringify({
           email: email.trim().toLowerCase(),
           password,
-          acceptedTerms: accepted,
           returnTo,
         }),
       });
@@ -95,7 +85,7 @@ export default function SignupForm({
       }
 
       if (response.status === 422) {
-        setGlobalError("Check the form fields and accept both legal documents.");
+        setGlobalError("Check the email address and password, then try again.");
         return;
       }
 
@@ -183,55 +173,6 @@ export default function SignupForm({
           disabled={loading}
         />
 
-        <div className="pt-1">
-          <div className="flex items-start gap-2.5">
-            <input
-              id="legal-consent"
-              type="checkbox"
-              aria-label="I confirm I am 18 or older and agree to the Terms of Service and Privacy Policy."
-              checked={accepted}
-              disabled={loading || !registrationEnabled}
-              onChange={(event) => {
-                setAccepted(event.target.checked);
-                if (event.target.checked) setConsentError("");
-              }}
-              aria-invalid={Boolean(consentError)}
-              aria-describedby={consentError ? "legal-consent-error" : undefined}
-              className="mt-1 h-4 w-4 shrink-0 rounded-sm border-border accent-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-            />
-            <div className="text-sm leading-6 text-text-secondary">
-              <label htmlFor="legal-consent">
-                I confirm I am 18 or older and agree to the{" "}
-              </label>
-              <a
-                href={legal.termsUrl || undefined}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(event) => event.stopPropagation()}
-                className="text-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-              >
-                Terms of Service
-              </a>
-              {" "}and{" "}
-              <a
-                href={legal.privacyUrl || undefined}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(event) => event.stopPropagation()}
-                className="text-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-              >
-                Privacy Policy
-              </a>
-              .
-            </div>
-          </div>
-          {consentError ? (
-            <p id="legal-consent-error" className="mt-1.5 text-xs leading-5 text-error">
-              {consentError}
-            </p>
-          ) : null}
-        </div>
-
         {!registrationEnabled ? (
           <AuthMessage title="Account registration is not ready">
             Complete the remaining server setup before new accounts can be created.
@@ -241,9 +182,6 @@ export default function SignupForm({
               ) : null}
               {!readiness?.emailDelivery ? (
                 <li>Email delivery for verification and password recovery is not configured.</li>
-              ) : null}
-              {!readiness?.legalDocuments ? (
-                <li>First-party Terms of Service and Privacy Policy URLs are not valid.</li>
               ) : null}
             </ul>
             Your form data is not submitted until all requirements are ready.
@@ -263,7 +201,7 @@ export default function SignupForm({
         returnTo={returnTo}
         googleEnabled={googleEnabled}
         githubEnabled={githubEnabled}
-        disabled={loading || !registrationEnabled}
+        disabled={loading}
         onPendingChange={setLoading}
       />
 
