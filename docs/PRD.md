@@ -103,11 +103,13 @@ Extend the existing developer portfolio into a maintainable platform where the o
 - No curated collections are required in this baseline.
 
 ### FR-04 Authentication and authorization
-- Email/password and Google sign-in.
+- Email/password, Google OAuth and GitHub OAuth registration/sign-in. Email/password remains supported alongside both providers.
 - Email verification, password reset, secure session handling, sign-out, profile management and account deletion.
 - Better Auth with the MongoDB adapter is selected for the Labs authentication implementation. Production session-lifetime/concurrency policy remains an architecture decision.
 - Enforce authorization on the server for every protected read and mutation.
 - Validate post-authentication return destinations against allowed local paths; prevent open redirects.
+- Keep login intent separate from account-creation intent: OAuth login must not silently create accounts; OAuth registration is explicitly initiated from the signup route.
+- Link an OAuth identity to an existing account only when the provider returns the same verified email; do not bypass verification or merge by display name.
 - Restore intended navigation/action where safe, but do not automatically repeat unsafe or unintended operations.
 
 ### FR-05 Likes and user dashboard
