@@ -65,8 +65,8 @@ export default function FooterOutlinedWord({
                 initial={false}
                 animate={{
                     clipPath: fillActive
-                        ? "inset(-2px 0 -2px 0)"
-                        : "inset(-2px 100% -2px 0)",
+                        ? "inset(-2px 0% -2px 0%)"
+                        : "inset(-2px 100% -2px 0%)",
                 }}
                 transition={{
                     duration: reduced ? 0 : 0.85,
