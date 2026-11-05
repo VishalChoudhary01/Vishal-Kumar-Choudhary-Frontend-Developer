@@ -367,3 +367,24 @@ The application-owned Magnetic Interaction and owner-authored React experiments 
 Owner Run validates and uses the current unsaved code + unsaved config only. It never saves or publishes. Save stores the complete file list. Restore creates a new draft containing the restored code and config. Publish revalidates and rebuilds the exact saved version; config schema/hash is attached to that artifact/release. Failed validation/build leaves the previous published release untouched. The runtime controls panel loads from the same exact published release as the iframe artifact.
 
 The detailed source schema, message-security contract, owner builder, rollback and acceptance matrix are specified in Section 41 of `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`.
+
+## 15. MagneticButton source-managed extraction — implementation status (5 November 2026)
+
+The reusable MagneticButton Phase 1 is implemented in the application and packaged for the existing Source Management Lab.
+
+- App component: `src/app/components/labs/ui/MagneticButton.js`
+- Pure physics helper: `src/app/components/labs/ui/magnetic-physics.mjs`
+- Public app-local export barrel: `src/app/components/labs/ui/index.js`
+- TypeScript prop declaration: `src/app/components/labs/ui/MagneticButton.d.ts`
+- Built-in Magnetic Interaction now composes this component while retaining its field decoration, status, counter and instructions.
+
+The owner import action is at `/admin/labs/sources/import`, in the MagneticButton Component panel. It calls `POST /api/v1/admin/labs/sources/import-magnetic-button` and creates a separate private custom experiment/source workspace with editable files:
+`index.html`, `src/main.jsx`, `src/App.jsx`, `src/components/MagneticButton.jsx`, `src/components/MagneticButton.d.ts`, `src/components/magnetic-physics.mjs`, and `src/index.css`.
+
+The import is idempotent with respect to drafts: if a draft already exists, it is preserved and the workspace is returned. It never publishes. The imported project uses only React, `motion/react` and relative component/physics files, so it can run in the current isolated compiler without an app alias or new package.
+
+Compiler mode detection was also corrected so a declaration-only `.d.ts` file does not accidentally force a JavaScript/JSX project into the TypeScript entry path. Actual `.ts`/`.tsx` source continues to invoke strict TypeScript validation.
+
+Validation passed: generated source project compiled with Labs compiler; Labs compiler smoke suite; targeted ESLint; Next.js SEO validation, production build, and TypeScript.
+
+Not yet implemented: publishing `@labs/ui` as an owner-importable fixed compiler SDK package; generic `lab.config.json` controls builder; runtime settings bridge; TSX version of the imported starter. Until the SDK phase, reuse in a second source workspace requires copying both `MagneticButton.jsx` and `magnetic-physics.mjs`.
