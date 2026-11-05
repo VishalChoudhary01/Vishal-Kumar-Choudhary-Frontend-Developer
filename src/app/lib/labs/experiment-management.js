@@ -8,6 +8,16 @@ import { isLabsOwner } from "./owner-access";
 import LabExperiment from "./models/LabExperiment";
 import LabSource from "./models/LabSource";
 import LabSourceAuditEvent from "./models/LabSourceAuditEvent";
+import LabSourceVersion from "./models/LabSourceVersion";
+import LabMediaAsset from "./models/LabMediaAsset";
+import LabBuildArtifact from "./models/LabBuildArtifact";
+import LabPreviewRun from "./models/LabPreviewRun";
+import LabSourceGrant from "./models/LabSourceGrant";
+import LabAnalyticsEvent from "./models/LabAnalyticsEvent";
+import LabLike from "./models/LabLike";
+import LabGuestLike from "./models/LabGuestLike";
+import { del } from "@vercel/blob";
+import { deleteOwnerLabMediaAssetsForExperiment } from "./media-management";
 
 function fail(code, message) {
   const error = new Error(message);
@@ -137,4 +147,83 @@ export async function createOwnerLabExperiment({ user, input }) {
   } finally {
     await session.endSession();
   }
+}
+
+
+export async function deleteOwnerLabExperiment({ user, slug, confirmSlug }) {
+  if (!isLabsOwner(user)) fail("OWNER_ACCESS_DENIED", "Owner access is required.");
+  if (typeof slug !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+    fail("NOT_FOUND", "Experiment not found.");
+  }
+  if (confirmSlug !== slug) {
+    fail("VALIDATION_ERROR", "Type the exact experiment slug to confirm deletion.");
+  }
+  if (publishedLabExperiments.some((item) => item.slug === slug)) {
+    fail("FORBIDDEN", "Built-in Labs experiments cannot be deleted.");
+  }
+
+  await connectToDatabase();
+  const experiment = await LabExperiment.findOne({ slug, kind: "custom" }).lean();
+  if (!experiment) fail("NOT_FOUND", "Owner-created experiment not found.");
+
+  // Hide the experiment and revoke its source before touching external providers.
+  await Promise.all([
+    LabExperiment.updateOne(
+      { _id: experiment._id, kind: "custom" },
+      { $set: { status: "deleting", updatedBy: user.id } },
+    ),
+    LabSource.updateOne(
+      { slug },
+      { $set: { published: false, publishedVersionId: null, publishedArtifactId: null, updatedBy: user.id } },
+    ),
+  ]);
+
+  // Provider cleanup is idempotent. A failure leaves the record in deleting
+  // so the owner can retry rather than exposing a partially deleted release.
+  await deleteOwnerLabMediaAssetsForExperiment({ user, slug });
+
+  const artifacts = await LabBuildArtifact.find({ experimentSlug: slug })
+    .select("outputFiles")
+    .lean();
+  const blobUrls = [...new Set(
+    artifacts.flatMap((artifact) =>
+      (artifact.outputFiles || [])
+        .map((file) => file?.url)
+        .filter((url) => typeof url === "string" && /^https:\/\//.test(url)),
+    ),
+  )];
+
+  if (blobUrls.length) {
+    const token = process.env.BLOB_READ_WRITE_TOKEN;
+    if (!token) fail("ARTIFACT_STORAGE_NOT_CONFIGURED", "Published runtime storage is not configured; retry deletion after restoring BLOB_READ_WRITE_TOKEN.");
+    await del(blobUrls, { token });
+  }
+
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+      const filters = { experimentSlug: slug };
+      await Promise.all([
+        LabSourceVersion.deleteMany(filters, { session }),
+        LabMediaAsset.deleteMany({ experimentSlug: slug, ownerUserId: user.id }, { session }),
+        LabBuildArtifact.deleteMany(filters, { session }),
+        LabPreviewRun.deleteMany(filters, { session }),
+        LabSourceGrant.deleteMany(filters, { session }),
+        LabAnalyticsEvent.deleteMany(filters, { session }),
+        LabLike.deleteMany(filters, { session }),
+        LabGuestLike.deleteMany(filters, { session }),
+        LabSourceAuditEvent.deleteMany(filters, { session }),
+        LabSource.deleteOne({ slug }, { session }),
+        LabExperiment.deleteOne({ _id: experiment._id, kind: "custom" }, { session }),
+      ]);
+    });
+  } finally {
+    await session.endSession();
+  }
+
+  return {
+    deleted: true,
+    slug,
+    deletedArtifactFiles: blobUrls.length,
+  };
 }
