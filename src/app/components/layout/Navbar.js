@@ -22,6 +22,7 @@ const EMPTY_LINKS = [];
 export default function Navbar({
   context = "site",
   showLabsAccount = false,
+  hideSocialLinks = false,
   initialAuthUser = null,
   initialSessionResolved = false,
 }) {
@@ -375,14 +376,16 @@ export default function Navbar({
             {/* SOCIAL LINKS — always visible in project context (incl. mobile, no
                 hamburger); portfolio landing keeps desktop-only */}
 
-            <div className={cn("items-center", isProjectContext ? "hidden sm:flex" : "hidden lg:flex")}>
-              {socialLinks.map((link) => (
-                <SocialIcon
-                  key={link.href}
-                  link={link}
-                />
-              ))}
-            </div>
+            {!hideSocialLinks ? (
+              <div className={cn("items-center", isProjectContext ? "hidden sm:flex" : "hidden lg:flex")}>
+                {socialLinks.map((link) => (
+                  <SocialIcon
+                    key={link.href}
+                    link={link}
+                  />
+                ))}
+              </div>
+            ) : null}
 
             {/* DIVIDER — portfolio context only */}
 
@@ -397,6 +400,7 @@ export default function Navbar({
               <LabsAccountControl
                 initialUser={initialAuthUser}
                 initialSessionResolved={initialSessionResolved}
+                scrolled={scrolled}
               />
             ) : null}
 
