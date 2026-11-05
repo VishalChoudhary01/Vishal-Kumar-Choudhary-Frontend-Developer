@@ -161,6 +161,7 @@ async function ensureIndexes() {
       LabSource.createIndexes(),
       LabSourceVersion.createIndexes(),
       LabSourceAuditEvent.createIndexes(),
+      LabBuildArtifact.createIndexes(),
     ]).catch((error) => {
       sourceIndexesPromise = null;
       throw error;
@@ -576,6 +577,9 @@ export async function publishOwnerLabSource({
       const currentPublishedId = source.publishedVersionId || null;
       if (currentPublishedId !== (expectedPublishedVersionId || null)) {
         throwCode("CONFLICT", "The published source changed. Reload before publishing.");
+      }
+      if ((source.draftVersionId || null) !== versionId) {
+        throwCode("CONFLICT", "Only the current saved draft can be published. Reload the editor.");
       }
 
       const version = await LabSourceVersion.findOne({
