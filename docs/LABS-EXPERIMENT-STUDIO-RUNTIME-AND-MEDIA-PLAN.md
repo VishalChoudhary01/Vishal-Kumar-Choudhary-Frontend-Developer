@@ -1,7 +1,7 @@
 # Labs Experiment Studio — Runtime, Media and Publishing Plan
 
 **Status:** Product and engineering plan for the Labs Studio, published preview runtime, gallery, media and interaction UX. The branch contains the owner source editor, isolated compiler and artifact/runtime foundations, but deployed end-to-end Run and public detail rendering are **not release-verified**. The 5 November 2026 browser review shows custom gallery cards without intended visual previews and a blank white runtime canvas on `/labs/spotlight-dock`. Treat both as regressions to resolve before adding gallery features. Compiler smoke tests do not replace browser verification.
-**Branch:** `feat/labs-platform-integration` (repository HEAD at this planning update: `f3c79a159360b1d29c5fa06a2e2e2d00e64560ae`).
+**Branch:** `feat/labs-platform-integration` (functional repository baseline inspected before this documentation-only update: `f3c79a159360b1d29c5fa06a2e2e2d00e64560ae`; latest documentation commit in this planning sequence: `be766f510c6737f422afa092690187f2158f7d0f`).
 **Latest observed READY Preview:** [vishal-kumar-choudhary-frontend-developer-blo9pd425.vercel.app](https://vishal-kumar-choudhary-frontend-developer-blo9pd425.vercel.app/) on commit `b0ba9a977526c778b4faa377d3f545f4bd016229`. This deployment is behind the repository HEAD; the supplied screenshots show the gallery/runtime defects described above. READY deployment status is not proof that an experiment preview renders correctly.
 **Compiler baseline:** React JSX/TSX and static HTML/CSS/JS compiler smoke coverage exists; isolated static-HTML tests cover a single HTML file and a three-file HTML/CSS/classic-JS project. Re-run against the checked-in compiler and verify Run in a real authenticated browser before calling the workflow complete.
 **Applies to:** Owner-created experiments and the four existing code-owned experiments.
@@ -51,8 +51,14 @@ The uploaded entry was named `src/fluid_gradient_background-1-.html`, not root `
 - `npm run build` passes: SEO validation, Next.js compilation, TypeScript and all 18 static pages.
 - The specific Vercel build error `Expected ',', got 'ident'` came from an invalid escaped quote in generated `labs-root` markup; corrected to a single-quoted JavaScript string and verified by the clean build.
 
-### Deployment gate
-A fresh READY Preview is now deployed at commit `18e5ff9`, which includes the nested HTML entry and Vite local-asset fixes. The build has passed. The remaining operational check is an authenticated owner Run click using the deployed Studio, followed by confirmation that the iframe and its assets load and execute. Do not enable Production publishing until HTML/CSS, JSX and TSX Run have been verified in deployed Preview and the public detail page has been proven to render the matching immutable artifact.
+### Deployment and browser regression status — 5 November 2026
+The observed READY Preview is [vishal-kumar-choudhary-frontend-developer-blo9pd425.vercel.app](https://vishal-kumar-choudhary-frontend-developer-blo9pd425.vercel.app/) on commit `b0ba9a977526c778b4faa377d3f545f4bd016229`. The supplied screenshots show:
+- The public `/labs/spotlight-dock` detail page has a blank white runtime canvas instead of rendered output.
+- Custom experiment gallery cards do not consistently show their code-derived visual previews.
+
+Treat this as a failed browser verification despite the deployment being READY. The currently observed Preview is behind the branch's latest functional/docs state. The owner Run action must also be tested against the current deployed branch with unsaved HTML/CSS/JS, JSX and TSX projects. The earlier `18e5ff9` deployment note is historical and is not the latest browser evidence.
+
+Do not enable Production publishing until owner Run, the exact published artifact detail runtime, iframe ready/error bridge, media/poster delivery and the sandbox security gate have all passed in a deployed Preview.
 ## 1. Product outcome
 
 The Studio is an owner-only creative coding workspace. The owner must be able to create an original experiment, write/import code, run the actual current working copy, inspect bounded build/runtime errors, save immutable drafts and publish an exact successfully built version. **Run is core functionality and must remain available throughout all gallery/media work.** Image/GIF/video uploads are optional visual assets; they do not replace code execution.
