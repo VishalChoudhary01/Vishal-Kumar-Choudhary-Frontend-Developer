@@ -1,6 +1,6 @@
 # Labs Experiment Studio — Runtime, Media and Publishing Plan
 
-**Status:** Approved implementation source of truth. Media upload/owner preview and the isolated compiler prototype are implemented and smoke-tested; the public preview runtime and release pipeline remain disabled.  
+**Status:** Approved product/runtime source of truth. React JSX compiler adapters and owner preview/publish routes exist on the implementation branch, but deployed preview is blocked by a Vercel Sandbox snapshot HTTP 410 (expired/deleted). TypeScript/TSX type checking and the React Icons package allowlist are approved target capabilities but are not implemented or verified yet. Do not treat the custom runtime or publishing path as production-ready.  
 **Applies to:** Owner-created experiments in Labs, while preserving the four existing code-owned experiments.  
 **Primary implementation branch:** feat/labs-platform-integration  
 **Related source of truth:** LABS-SOURCE-MANAGEMENT-SPEC.md, DESIGN-LAB.md, ARCHITECTURE.md, LABS-EXPERIMENT-STUDIO-PHASE-1.md and LABS-EXPERIMENT-STUDIO-PHASE-2.md.
@@ -57,8 +57,9 @@ A valid Better Auth session with emailVerified === true can access the published
 The first complete custom runtime should support:
 - Standalone HTML/CSS/JavaScript projects.
 - React projects written in JavaScript and JSX.
+- React projects written in TypeScript and TSX, using a fixed generated TypeScript configuration and a separate `tsc --noEmit` validation stage before Vite bundling.
 
-TypeScript and TSX are not part of the first runtime contract. They may be added as a separate compilation target after JavaScript/JSX is stable and explicitly approved.
+The TS/TSX target is approved, but it is not complete until type-check diagnostics, nested TSX imports, React typings and exact-version publish tests pass. See `LABS-REACT-JSX-TSX-TAILWIND-MOTION-RUNTIME-PLAN.md` for the detailed contract.
 
 No server components, server actions, API route handlers, Node.js APIs, backend processes or server-side rendering are available inside an experiment. Experiments are browser-only static applications.
 
@@ -66,8 +67,9 @@ No server components, server actions, API route handlers, Node.js APIs, backend 
 
 Use a documented template rather than guessing an entry file from arbitrary names:
 - index.html — browser document shell and root element.
-- src/main.jsx — ReactDOM client entry.
-- src/App.jsx — default-exported experiment component.
+- src/main.jsx or src/main.tsx — ReactDOM client entry.
+- src/App.jsx or src/App.tsx — default-exported experiment component.
+- For TS/TSX, the platform generates a fixed `tsconfig` and any required Vite type declarations; owner-supplied compiler configuration is not trusted.
 - src/index.css — Tailwind v4 import and experiment-level styles.
 - Additional files under src/ for components, hooks and local utilities.
 
@@ -79,6 +81,8 @@ The first React/JSX template should provide a preinstalled, version-pinned set o
 - react and react-dom.
 - motion, imported from motion/react.
 - lucide-react for icons.
+- react-icons, using approved named imports from icon-pack subpaths.
+- typescript for isolated TS/TSX validation (`tsc --noEmit`).
 - clsx and tailwind-merge only if the template and bundle policy require them.
 
 These packages already appear in the main repository dependency manifest at the time of this plan, but the compiler environment must pin and independently validate its own approved versions. The browser project cannot choose arbitrary package versions.
@@ -91,13 +95,17 @@ Tailwind must be compiled as part of the build. The project stylesheet uses the 
 
 Requirements:
 - No Tailwind CDN or browser-time script compilation.
-- Scan all supported JSX/JS source files in the experiment snapshot so utility classes are generated before preview/publication.
+- Scan all supported JSX/TSX/JS/TS source files in the experiment snapshot so utility classes are generated before preview/publication.
 - Support normal Tailwind utilities, responsive/state variants, CSS custom properties, local CSS and approved Tailwind v4 theme customization.
 - Do not permit owner-supplied Tailwind plugins, PostCSS plugins, arbitrary build scripts or remote CSS imports in the initial release.
 - Dynamic class names must use complete statically discoverable class strings or a finite mapping. Constructing fragments such as bg- + color at runtime cannot be relied upon to generate a utility.
 - Build output must include the generated CSS in the immutable artifact.
 
-### 3.5 Motion contract
+### 3.5 TypeScript and TSX contract
+
+The target runtime accepts `.ts` and `.tsx`. Vite transpilation alone does not type-check the complete project. The isolated worker must run the pinned TypeScript compiler against a platform-generated fixed configuration with `noEmit` before Vite bundling. Type errors block preview readiness and publication and are reported with file, line and column. The owner cannot run custom build scripts or override compiler plugins, type roots or package resolution. The exact target and acceptance tests are specified in `LABS-REACT-JSX-TSX-TAILWIND-MOTION-RUNTIME-PLAN.md`.
+
+### 3.6 Motion contract
 
 Motion is available through the fixed motion/react dependency. Motion code runs in the browser preview, not in the portfolio application React tree or on the Next.js server.
 
@@ -140,7 +148,7 @@ The build worker must:
 - Emit structured diagnostics with file path and line/column where available. Logs are bounded and scrubbed; full source contents and secrets are never logged.
 - Be terminated after the run and leave no persistent credentials or user-controlled process running.
 
-Vercel Sandbox is a candidate execution provider because the current deployment platform already exposes sandbox capabilities. The final provider, resource ceilings and cost limits remain open until a dedicated architecture/security test proves the required controls and operational availability. Do not silently substitute a normal application server as the compiler.
+The current implementation uses Vercel Sandbox snapshots as the isolated build worker. This provider choice is implemented in the branch, but its snapshot lifecycle is not yet operationally verified: the deployed Preview has returned HTTP 410 because the configured snapshot was expired/deleted. Keep the compiler unavailable until a valid immutable image/snapshot or durable named worker is configured, health-checked and verified by a fresh Preview deployment. Do not silently substitute a normal application server as the compiler.
 
 ### 4.3 Deterministic compiler
 
@@ -151,8 +159,9 @@ The compiler performs:
 2. Resolve local project imports only inside the experiment root.
 3. Resolve bare package imports only from the fixed dependency allowlist.
 4. Reject remote imports, unknown packages, Node built-ins, dynamic external URLs and unsupported import mechanisms.
-5. Transform JSX for the pinned React runtime.
-6. Bundle React, ReactDOM, Motion and approved utilities into static browser output.
+5. For TS/TSX, run the pinned TypeScript compiler with a generated fixed config and `noEmit`; stop on type errors.
+6. Transform JSX/TSX for the pinned React runtime.
+7. Bundle React, ReactDOM, Motion, Lucide, approved React Icons subpaths and other allowlisted utilities into static browser output.
 7. Compile Tailwind v4 with the approved PostCSS adapter.
 8. Process local CSS and safe asset references.
 9. Create an immutable build manifest and SHA-256 content hash.
@@ -372,20 +381,23 @@ Do not send raw Cloudinary credentials, source content to public endpoints, comp
 - **Remaining:** configure the signed image/video presets and upload-size ceiling in Preview; verify every accepted file type and Cloudinary authenticated delivery; pin the optional fallback to a saved draft/release and verify privacy/cleanup.
 - Verify draft media privacy, public release delivery, deletion/reference integrity and orphan cleanup.
 
-### Phase 3 — React/JSX + Tailwind v4 + Motion compiler
-- **Compiler prototype implemented:** `tools/labs-compiler` contains a separate pinned toolchain (Vite 8.3.5, React/ReactDOM 19.2.8, Motion 13.2.0, Tailwind/PostCSS 4.3.3 and esbuild 0.28.2).
-- The compiler validates the documented React entry structure, file count/size/path rules, and a fixed package allowlist; it rejects unknown packages, remote/absolute imports, Node built-ins, require/eval/Function and app storage/parent access patterns.
-- **Smoke tests passed in an isolated Vercel Sandbox:** React JSX + Motion + Tailwind v4 produced the expected CSS utilities, and a forbidden package import was rejected.
-- **Remaining before this phase is complete:** build-worker orchestration from the application, immutable toolchain image/snapshot lifecycle, bounded diagnostics, deterministic artifact verification, security review and broader nested-import/hooks/reduced-motion tests. The compiler prototype is not yet connected to the owner preview button or public release.
+### Phase 3 — React/JSX/TSX + Tailwind v4 + Motion compiler
+- **JSX compiler prototype implemented:** `tools/labs-compiler` contains a separate pinned toolchain (Vite 8.3.5, React/ReactDOM 19.2.8, Motion 13.2.0, Tailwind/PostCSS 4.3.3 and esbuild 0.28.2).
+- The compiler validates the documented React entry structure, file count/size/path rules and a fixed package allowlist; it rejects unknown packages, remote/absolute imports, Node built-ins, `require`/`eval`/`Function` and app storage/parent access patterns.
+- **Verified locally in an isolated Vercel Sandbox:** JavaScript/JSX using React, Motion, Lucide and Tailwind v4 compiled and emitted expected output. The tested single-file `.js` marked JSX adapter generated entry files without mutating the saved source.
+- **Not implemented yet:** TypeScript dependency/type checker, fixed generated `tsconfig`, `.ts`/`.tsx` entry generation and `react-icons` dependency/allowlist. These are approved requirements, not currently available runtime capabilities.
+- **Current deployment blocker:** the Preview environment's configured Vercel Sandbox snapshot returns HTTP 410 (expired/deleted). The current deployment therefore cannot start the compiler, regardless of whether the user's source is valid.
+- **Remaining before this phase is complete:** durable compiler image/snapshot lifecycle, fresh Preview deployment, TS/TSX type checking, React Icons support, bounded diagnostics, deterministic artifact verification, security review and nested-import/hooks/reduced-motion tests.
 
 ### Phase 4 — Full live preview
-- **Not yet complete:** replace/adapt the current srcDoc prototype to the separate-origin artifact runtime.
+- **Adapter wired in the branch, deployed operation blocked:** the owner Run route and editor iframe are connected, but the deployed compiler cannot start because its configured Sandbox snapshot returns HTTP 410 (expired/deleted). A successful local compiler smoke test does not prove deployed preview availability.
+- The full separate-origin artifact runtime, status handling and browser-level QA remain incomplete.
 - Add build status, ready state, console, runtime errors, timeouts, stop/restart and desktop/mobile size controls.
 - Do not require an @labs/assets module for fallback media. Test image, animated GIF and video only as fallback presentation when code preview cannot run.
 - Ensure no network access, app cookies, parent DOM access or user-session leakage.
 
 ### Phase 5 — Immutable release and public Labs detail page
-- **Disabled:** create release manifest tying metadata, code snapshot, build artifact and optional fallback reference only after the preview/runtime gates pass.
+- **Publish adapter present but not deployment-verified:** the owner publish endpoint rebuilds the exact saved version and requires a matching immutable artifact before switching the public pointer. Keep custom publication gated until compiler health, exact-release verification, TS/TSX validation where applicable, iframe QA and security gates pass.
 - Publish only a successful exact build/release.
 - Render the actual interactive demo on the public experiment detail page.
 - Render the actual interactive code runtime as the primary detail-page experience. Show the optional fallback asset only when the runtime cannot run or is unsupported.
@@ -403,6 +415,9 @@ Do not send raw Cloudinary credentials, source content to public endpoints, comp
 
 ### Code and compiler
 - A starter React JSX project builds and mounts through ReactDOM.
+- A starter TSX project type-checks with `tsc --noEmit`, bundles and mounts; deliberately invalid types produce file/line/column errors and block Publish.
+- Nested TSX imports compile and Tailwind v4 scans classes inside nested TSX files.
+- `motion/react`, `lucide-react` and approved `react-icons` subpaths work in TSX.
 - Local imports within the project root build; traversal, remote imports, unknown packages and Node APIs fail.
 - Tailwind v4 responsive and state utilities compile from every supported JSX file.
 - Motion imports from motion/react work and respect reduced-motion.
@@ -445,7 +460,9 @@ These decisions must be resolved before the corresponding implementation phase. 
 5. Cloudinary upload limits, transformation quotas, draft access mode and public delivery mode.
 6. Exact max upload size, video duration, dimensions and per-owner storage quota, derived from the actual account plan.
 7. Whether additional browser capabilities such as Web Workers, WebGL/Three.js, WebAssembly and controlled outbound API access are added after the initial release.
-8. Whether TypeScript/TSX is added after JavaScript/JSX is stable.
+8. The TS/TSX target is approved; the exact TypeScript version and fixed compiler settings must be pinned in the compiler toolchain release.
 9. Whether a media-only experiment type is ever needed; the current baseline remains an interactive code experiment with optional fallback media only.
 
-No package installation, Production configuration change, media quota assumption, provider selection or release publication is authorized merely by this planning document.
+Detailed implementation requirements for TypeScript/TSX, React Icons, type diagnostics and the compiler snapshot blocker are in `LABS-REACT-JSX-TSX-TAILWIND-MOTION-RUNTIME-PLAN.md`.
+
+No package installation, Production configuration change, media quota assumption or release publication is authorized merely by this planning document.
