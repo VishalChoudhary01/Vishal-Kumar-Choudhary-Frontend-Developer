@@ -25,6 +25,7 @@ const FILTERS = [
 ];
 
 function getSourceState(item) {
+  if (item.lifecycleStatus === "deleting") return "deleting";
   if (!item.hasSource) return "missing";
   if (item.published) return "published";
   if (
@@ -65,6 +66,10 @@ function StateLabel({ state }) {
     published: {
       label: "Published",
       className: "border-brand/40 bg-brand-soft text-brand",
+    },
+    deleting: {
+      label: "Cleanup pending",
+      className: "border-warning/40 bg-warning/10 text-warning",
     },
   }[state];
 
