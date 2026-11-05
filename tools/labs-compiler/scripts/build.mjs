@@ -10,7 +10,7 @@ const OUTPUT = process.env.LABS_BUILD_OUTPUT || "/vercel/sandbox/output";
 const MAX_FILES = 40;
 const MAX_TOTAL_BYTES = 1_000_000;
 const MAX_FILE_BYTES = 500_000;
-const ALLOWED_EXTENSIONS = new Set(["html", "js", "jsx", "ts", "tsx", "mjs", "css", "json", "txt", "md"]);
+const ALLOWED_EXTENSIONS = new Set(["html", "htm", "js", "jsx", "ts", "tsx", "mjs", "css", "json", "txt", "md"]);
 const SAFE_PATH = /^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[A-Za-z0-9._/-]{1,180}$/;
 
 function fail(code, message) {
