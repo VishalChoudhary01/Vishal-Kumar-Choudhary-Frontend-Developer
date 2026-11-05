@@ -83,7 +83,7 @@ Support both repository-managed registered components and owner-created experime
 - Full source is fetched through a server-authorized endpoint for any user with a valid Better Auth session and `emailVerified === true`, provided the requested source version is published. No per-user grant or owner approval is required.
 - Do not embed the full source in guest HTML, static props, RSC payloads, hidden DOM, client bundles or public API responses.
 - Copy control is available only when the verified source viewer is authorized; code-copy actions are reported after successful Clipboard API writes.
-- Keep the source CTA visible to all detail-page visitors. An already verified session loads source directly without a redundant “Check source access” step. Guests see Sign in and Create account with a return path to the same experiment; signed-in unverified users see Verify email. Server authorization remains mandatory.
+- Resolve session state before showing source actions. Guests see Sign in and Create account in the source section and Labs navbar; signed-in unverified users see Verify email; verified users automatically load published source without any auth CTA or “Check source access” button. Signed-in navbar state shows the account menu instead of guest links. Server authorization remains mandatory.
 - Provide feedback for copy success/failure and a selectable fallback if clipboard permission is unavailable.
 - Instrument a copy action only when the supported client flow reports the action; do not imply that code was pasted or used.
 - Handle expired sessions and permission changes without leaking the source in errors or cached responses.
