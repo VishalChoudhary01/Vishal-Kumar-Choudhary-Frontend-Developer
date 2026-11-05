@@ -63,6 +63,7 @@ class RuntimeErrorBoundary extends Component {
 
 function LabRuntimeRenderer({
   runtimeKey,
+  runtimeUrl,
   settings,
   restartKey,
   isFullscreen,
@@ -72,6 +73,18 @@ function LabRuntimeRenderer({
     restartKey,
     isFullscreen,
   };
+
+  if (runtimeUrl) {
+    return (
+      <iframe
+        title="Published interactive experiment"
+        src={runtimeUrl}
+        sandbox="allow-scripts"
+        referrerPolicy="no-referrer"
+        className="absolute inset-0 h-full w-full border-0 bg-white"
+      />
+    );
+  }
 
   switch (runtimeKey) {
     case "magnetic-interaction":
@@ -89,6 +102,7 @@ function LabRuntimeRenderer({
 
 export default function LabRuntimeBoundary({
   runtimeKey,
+  runtimeUrl,
   settings,
   restartKey,
   isFullscreen,
@@ -98,6 +112,7 @@ export default function LabRuntimeBoundary({
       <Suspense fallback={<RuntimeLoadingState />}>
         <LabRuntimeRenderer
           runtimeKey={runtimeKey}
+          runtimeUrl={runtimeUrl}
           settings={settings}
           restartKey={restartKey}
           isFullscreen={isFullscreen}
