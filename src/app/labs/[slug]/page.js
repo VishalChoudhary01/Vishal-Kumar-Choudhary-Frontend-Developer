@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 
 import LabsPageShell from "@/app/components/labs/LabsPageShell";
 import LabDetailHeader from "@/app/components/labs/detail/LabDetailHeader";
@@ -16,6 +17,10 @@ import {
 } from "@/app/lib/seo/urls";
 import { getPublishedCustomLabExperimentBySlug } from "@/app/lib/labs/public-experiments";
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
+import {
+  getLabEngagementSnapshot,
+  LABS_GUEST_LIKE_COOKIE,
+} from "@/app/lib/labs/engagement";
 import { getAuthorizedLabSource } from "@/app/lib/labs/source-access";
 
 export const dynamic = "force-dynamic";
@@ -83,8 +88,11 @@ export default async function LabExperimentPage({ params }) {
   let initialSessionResolved = false;
   let initialAuthState = "guest";
   let initialSource = null;
+  let currentSession = null;
+  let initialEngagement = null;
   try {
     const session = await getCurrentAuthSession();
+    currentSession = session;
     initialSessionResolved = true;
     initialUserId = session?.user?.id || null;
     initialAuthUser = initialUserId
@@ -117,6 +125,18 @@ export default async function LabExperimentPage({ params }) {
     initialAuthState = initialUserId ? "error" : "guest";
   }
 
+  try {
+    const cookieStore = await cookies();
+    const snapshot = await getLabEngagementSnapshot({
+      slugs: [slug],
+      session: currentSession,
+      guestCookieValue: cookieStore.get(LABS_GUEST_LIKE_COOKIE)?.value || "",
+    });
+    initialEngagement = snapshot[slug] || null;
+  } catch (error) {
+    console.error("[labs-detail] engagement snapshot failed:", error?.code || "ENGAGEMENT_READ_ERROR");
+  }
+
   return (
     <LabsPageShell
       initialAuthUser={initialAuthUser}
@@ -133,7 +153,11 @@ export default async function LabExperimentPage({ params }) {
           initialAuthState={initialAuthState}
           initialSource={initialSource}
         />
-        <LabEngagement key={experiment.slug} slug={experiment.slug} />
+        <LabEngagement
+          key={experiment.slug}
+          slug={experiment.slug}
+          initialData={initialEngagement}
+        />
       </main>
     </LabsPageShell>
   );
