@@ -79,11 +79,21 @@ export default async function LabExperimentPage({ params }) {
   // Verified visitors receive the published source immediately; the guest
   // auth CTAs are never rendered for an already verified session.
   let initialUserId = null;
+  let initialAuthUser = null;
+  let initialSessionResolved = false;
   let initialAuthState = "guest";
   let initialSource = null;
   try {
     const session = await getCurrentAuthSession();
+    initialSessionResolved = true;
     initialUserId = session?.user?.id || null;
+    initialAuthUser = initialUserId
+      ? {
+          id: initialUserId,
+          email: session.user.email || "",
+          emailVerified: session.user.emailVerified === true,
+        }
+      : null;
 
     if (initialUserId && session.user.emailVerified === true) {
       initialAuthState = "verified";
@@ -108,7 +118,10 @@ export default async function LabExperimentPage({ params }) {
   }
 
   return (
-    <LabsPageShell>
+    <LabsPageShell
+      initialAuthUser={initialAuthUser}
+      initialSessionResolved={initialSessionResolved}
+    >
       <main className="min-h-screen bg-background pb-24 text-text-primary sm:pb-32">
         <LabDetailHeader experiment={experiment} />
         <LabWorkspace key={experiment.slug} experiment={experiment} />
