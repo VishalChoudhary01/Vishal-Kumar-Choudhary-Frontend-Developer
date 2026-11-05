@@ -322,6 +322,7 @@ try {
         '  <meta charset="UTF-8">',
         '  <meta name="viewport" content="width=device-width, initial-scale=1.0">',
         "  <title>Fluid Gradient Background</title>",
+        '  <link rel="stylesheet" href="fluid.css">',
         "  <style>",
         "    * { margin: 0; padding: 0; box-sizing: border-box; }",
         "    html, body { width: 100%; height: 100%; overflow: hidden; background: #0b0d19; }",
@@ -341,16 +342,28 @@ try {
         "    const orbs = [];",
         "    function resize() { width = canvas.width = innerWidth; height = canvas.height = innerHeight; }",
         "    function animate() { ctx.clearRect(0,0,width,height); ctx.globalCompositeOperation = 'screen'; requestAnimationFrame(animate); }",
+        '    <script src="fluid.js"></script>',
         "    addEventListener('resize', resize); resize(); animate();",
         "  </script>",
         "</body>",
         "</html>",
       ].join("\n"),
     },
+    {
+      path: "src/fluid.css",
+      language: "css",
+      content: ".glass-card { border-radius: 24px; color: #ffffff; }",
+    },
+    {
+      path: "src/fluid.js",
+      language: "javascript",
+      content: "window.__fluidExternalAssetLoaded = true;",
+    },
   ]);
   const fluidEntry = fluidGradientFiles.find((file) => file.path === "index.html");
   if (!fluidEntry || !fluidEntry.content.includes("<canvas id=\"gradient-canvas\">") ||
-      !fluidEntry.content.includes("<style>") || !fluidEntry.content.includes("requestAnimationFrame(animate)")) {
+      !fluidEntry.content.includes("<style>") || !fluidEntry.content.includes("requestAnimationFrame(animate)") ||
+      !fluidEntry.content.includes("./src/fluid.css") || !fluidEntry.content.includes("./src/fluid.js")) {
     throw new Error("The nested Fluid Gradient HTML entry lost its inline CSS, Canvas or JavaScript.");
   }
   const fluidInput = path.join(root, ".smoke-fluid-input");
