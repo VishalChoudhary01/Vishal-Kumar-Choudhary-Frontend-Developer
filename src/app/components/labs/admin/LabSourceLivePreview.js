@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useActionToast } from "@/app/providers/ActionToastProvider";
 import { AlertTriangle, Monitor, Play, RefreshCw, Smartphone, Terminal } from "lucide-react";
 
 export default function LabSourceLivePreview({ slug, files }) {
+  const { showToast } = useActionToast();
   const [run, setRun] = useState(null);
   const [viewport, setViewport] = useState("desktop");
   const [logs, setLogs] = useState([]);
@@ -79,9 +81,11 @@ export default function LabSourceLivePreview({ slug, files }) {
 
       setRun(payload.data);
       setStatus("starting");
+      showToast("success", "React preview compiled. Starting the isolated runtime.");
     } catch (reason) {
       setError(reason.message || "The preview could not be started.");
       setStatus("failed");
+      showToast("error", reason.message || "The preview could not be started.");
     } finally {
       setBusy(false);
     }
