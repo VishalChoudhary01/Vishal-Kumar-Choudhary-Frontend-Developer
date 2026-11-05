@@ -7,6 +7,12 @@ import {
   publishedLabExperiments,
 } from "@/app/data/labsExperiments";
 import { buildSiteUrl } from "@/app/lib/seo/urls";
+import { cookies } from "next/headers";
+import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
+import {
+  getLabEngagementSnapshot,
+  LABS_GUEST_LIKE_COOKIE,
+} from "@/app/lib/labs/engagement";
 import { getPublishedCustomLabExperiments } from "@/app/lib/labs/public-experiments";
 
 export const dynamic = "force-dynamic";
@@ -42,6 +48,21 @@ export default async function LabsPage() {
   const customExperiments = await getPublishedCustomLabExperiments();
   const experiments = [...publishedLabExperiments, ...customExperiments];
 
+  let engagementBySlug = {};
+  try {
+    const [session, cookieStore] = await Promise.all([
+      getCurrentAuthSession(),
+      cookies(),
+    ]);
+    engagementBySlug = await getLabEngagementSnapshot({
+      slugs: experiments.map((experiment) => experiment.slug),
+      session,
+      guestCookieValue: cookieStore.get(LABS_GUEST_LIKE_COOKIE)?.value || "",
+    });
+  } catch (error) {
+    console.error("[labs-page] engagement snapshot failed:", error?.code || "ENGAGEMENT_READ_ERROR");
+  }
+
   return (
     <LabsPageShell>
       <main className="min-h-screen bg-background text-text-primary">
@@ -54,7 +75,7 @@ export default async function LabsPage() {
         {featuredLabExperiment ? (
           <FeaturedExperiment experiment={featuredLabExperiment} />
         ) : null}
-        <LabsCollection experiments={experiments} />
+        <LabsCollection experiments={experiments} engagementBySlug={engagementBySlug} />
       </main>
     </LabsPageShell>
   );
