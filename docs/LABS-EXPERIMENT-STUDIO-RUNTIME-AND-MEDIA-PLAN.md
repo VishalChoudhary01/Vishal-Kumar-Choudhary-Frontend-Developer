@@ -1,6 +1,6 @@
 # Labs Experiment Studio — Runtime, Media and Publishing Plan
 
-**Status:** Approved product/runtime source of truth. React JSX compiler adapters and owner preview/publish routes exist on the implementation branch, but deployed preview is blocked by a Vercel Sandbox snapshot HTTP 410 (expired/deleted). TypeScript/TSX type checking and the React Icons package allowlist are approved target capabilities but are not implemented or verified yet. Do not treat the custom runtime or publishing path as production-ready.  
+**Status:** Approved product/runtime source of truth. The isolated compiler, TS/TSX validation, React Icons allowlist and preview HTTP server are implemented and pass compiler smoke tests. A clean Next.js production build also passes. The latest branch Preview deployment and browser-level owner/publish verification remain blocked by Vercel's 100 API-deployments-per-day limit (HTTP 402). An earlier READY deployment uses a commit from before the preview server fix. Keep Production publishing disabled until the latest branch passes deployed browser QA.  
 **Applies to:** Owner-created experiments in Labs, while preserving the four existing code-owned experiments.  
 **Primary implementation branch:** feat/labs-platform-integration  
 **Related source of truth:** LABS-SOURCE-MANAGEMENT-SPEC.md, DESIGN-LAB.md, ARCHITECTURE.md, LABS-EXPERIMENT-STUDIO-PHASE-1.md and LABS-EXPERIMENT-STUDIO-PHASE-2.md.
@@ -148,7 +148,7 @@ The build worker must:
 - Emit structured diagnostics with file path and line/column where available. Logs are bounded and scrubbed; full source contents and secrets are never logged.
 - Be terminated after the run and leave no persistent credentials or user-controlled process running.
 
-The current implementation uses Vercel Sandbox snapshots as the isolated build worker. This provider choice is implemented in the branch, but its snapshot lifecycle is not yet operationally verified: the deployed Preview has returned HTTP 410 because the configured snapshot was expired/deleted. Keep the compiler unavailable until a valid immutable image/snapshot or durable named worker is configured, health-checked and verified by a fresh Preview deployment. Do not silently substitute a normal application server as the compiler.
+The current implementation uses Vercel Sandbox snapshots as the isolated build worker. The expired snapshot blocker was addressed by rebuilding the named compiler base and adding its current snapshot to the `feat/labs-platform-integration` Preview environment only. The snapshot passed the compiler smoke suite with network access disabled before snapshot creation. Snapshot retention still uses the provider's default seven-day expiry, so refresh and revalidate it before expiry. The latest Preview deployment is still pending because Vercel rejected further API deployments after the daily limit was reached. Do not silently substitute a normal application server as the compiler.
 
 ### 4.3 Deterministic compiler
 
@@ -385,19 +385,20 @@ Do not send raw Cloudinary credentials, source content to public endpoints, comp
 - **JSX compiler prototype implemented:** `tools/labs-compiler` contains a separate pinned toolchain (Vite 8.3.5, React/ReactDOM 19.2.8, Motion 13.2.0, Tailwind/PostCSS 4.3.3 and esbuild 0.28.2).
 - The compiler validates the documented React entry structure, file count/size/path rules and a fixed package allowlist; it rejects unknown packages, remote/absolute imports, Node built-ins, `require`/`eval`/`Function` and app storage/parent access patterns.
 - **Verified locally in an isolated Vercel Sandbox:** JavaScript/JSX using React, Motion, Lucide and Tailwind v4 compiled and emitted expected output. The tested single-file `.js` marked JSX adapter generated entry files without mutating the saved source.
-- **Not implemented yet:** TypeScript dependency/type checker, fixed generated `tsconfig`, `.ts`/`.tsx` entry generation and `react-icons` dependency/allowlist. These are approved requirements, not currently available runtime capabilities.
-- **Current deployment blocker:** the Preview environment's configured Vercel Sandbox snapshot returns HTTP 410 (expired/deleted). The current deployment therefore cannot start the compiler, regardless of whether the user's source is valid.
-- **Remaining before this phase is complete:** durable compiler image/snapshot lifecycle, fresh Preview deployment, TS/TSX type checking, React Icons support, bounded diagnostics, deterministic artifact verification, security review and nested-import/hooks/reduced-motion tests.
+- **Implemented and smoke-tested:** TypeScript 5.9.3 with generated strict `tsconfig`, `tsc --noEmit` gating, `.ts`/`.tsx` entry support, React Icons 5.5.0 allowlist and JSX/TSX type-error regression coverage.
+- **Snapshot recovery:** rebuilt the Vercel Sandbox compiler base and configured the branch-specific Preview snapshot. The snapshot is subject to the provider's default seven-day expiry and must be refreshed before expiry.
+- **Remaining before this phase is complete:** deploy the latest branch, verify the actual owner Run route in a browser, confirm bounded diagnostics and concurrent-run isolation, complete security review, and cover nested-import/hooks/reduced-motion edge cases.
 
 ### Phase 4 — Full live preview
-- **Adapter wired in the branch, deployed operation blocked:** the owner Run route and editor iframe are connected, but the deployed compiler cannot start because its configured Sandbox snapshot returns HTTP 410 (expired/deleted). A successful local compiler smoke test does not prove deployed preview availability.
-- The full separate-origin artifact runtime, status handling and browser-level QA remain incomplete.
+- **Implemented in the branch and smoke-tested:** the isolated static server now serves the generated HTML/JS/CSS, exposes a health route, injects a parent-origin-scoped ready/console/error bridge, and blocks traversal paths. The owner preview iframe is isolated on the sandbox origin and allows its own origin so local assets load under the runtime CSP.
+- **Deployed browser QA pending:** the last READY deployment is from before the server fix. A fresh Preview deployment is blocked by Vercel's daily API-deployment limit (HTTP 402).
 - Add build status, ready state, console, runtime errors, timeouts, stop/restart and desktop/mobile size controls.
 - Do not require an @labs/assets module for fallback media. Test image, animated GIF and video only as fallback presentation when code preview cannot run.
 - Ensure no network access, app cookies, parent DOM access or user-session leakage.
 
 ### Phase 5 — Immutable release and public Labs detail page
-- **Publish adapter present but not deployment-verified:** the owner publish endpoint rebuilds the exact saved version and requires a matching immutable artifact before switching the public pointer. Keep custom publication gated until compiler health, exact-release verification, TS/TSX validation where applicable, iframe QA and security gates pass.
+- **Publish adapter present; full release remains gated:** the owner publish endpoint rebuilds the exact saved version and requires a matching immutable artifact before switching the public pointer. The public Labs route resolves only a ready artifact matching the exact published source version, and its runtime uses the artifact iframe.
+- **Not yet verified end to end:** after a fresh Preview deployment, run one custom JSX and one TSX experiment, explicitly publish a test release, and confirm the public Labs detail renders the same immutable artifact. Keep Production publication disabled until these checks and the security gate pass.
 - Publish only a successful exact build/release.
 - Render the actual interactive demo on the public experiment detail page.
 - Render the actual interactive code runtime as the primary detail-page experience. Show the optional fallback asset only when the runtime cannot run or is unsupported.
@@ -461,6 +462,6 @@ These decisions must be resolved before the corresponding implementation phase. 
 6. Whether additional browser capabilities such as Web Workers, WebGL/Three.js, WebAssembly and controlled outbound API access are added after the initial release.
 7. Whether a media-only experiment type is ever needed; the current baseline remains an interactive code experiment with optional fallback media only.
 
-Detailed implementation requirements for TypeScript/TSX, React Icons, type diagnostics and the compiler snapshot blocker are in `LABS-REACT-JSX-TSX-TAILWIND-MOTION-RUNTIME-PLAN.md`.
+Detailed implementation requirements and the current deployment-gate status for TypeScript/TSX, React Icons, compiler snapshots and the preview HTTP server are in `LABS-REACT-JSX-TSX-TAILWIND-MOTION-RUNTIME-PLAN.md`.
 
 No package installation, Production configuration change, media quota assumption or release publication is authorized merely by this planning document.
