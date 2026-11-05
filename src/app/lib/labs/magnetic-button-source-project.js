@@ -66,6 +66,26 @@ export async function getMagneticButtonSourceProjectFiles() {
     "",
   ].join("\n");
 
+  const declaration = [
+    'import type { MouseEventHandler, ReactNode, RefObject } from "react";',
+    "",
+    "export interface MagneticButtonProps {",
+    "  children?: ReactNode;",
+    "  fieldRef?: RefObject<HTMLElement | null> | null;",
+    "  strength?: number;",
+    "  radius?: number;",
+    "  onClick?: MouseEventHandler<HTMLButtonElement>;",
+    "  onEngagementChange?: (engaged: boolean) => void;",
+    "  className?: string;",
+    "  disabled?: boolean;",
+    '  "aria-label"?: string;',
+    "}",
+    "",
+    "export declare function MagneticButton(props: MagneticButtonProps): ReactNode;",
+    "export default MagneticButton;",
+    "",
+  ].join("\\n");
+
   const css = [
     '@import "tailwindcss";',
     "",
@@ -111,6 +131,7 @@ export async function getMagneticButtonSourceProjectFiles() {
     { path: "src/main.jsx", language: "jsx", content: main },
     { path: "src/App.jsx", language: "jsx", content: app },
     { path: "src/components/MagneticButton.jsx", language: "jsx", content: button },
+    { path: "src/components/MagneticButton.d.ts", language: "typescript", content: declaration },
     { path: "src/components/magnetic-physics.mjs", language: "javascript", content: physics },
     { path: "src/index.css", language: "css", content: css },
   ];
