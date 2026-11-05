@@ -853,3 +853,273 @@ Do not use a live per-card React renderer as a substitute for the poster pipelin
 - No browser interaction test has yet confirmed guest/verified like persistence and rollback, and no generated poster capture pipeline has been implemented by this update.
 - No original experiment has yet been migrated from the code-owned registry to the same immutable source/build release as its future gallery poster.
 
+---
+
+## 41. Optional dynamic controls and first-party component SDK — 5 November 2026
+
+### 41.1 Non-regression requirement: preserve the current authoring/runtime system
+
+This is an additive capability. Do not replace, narrow, or silently re-detect the current project modes.
+
+The existing source-management and compiler contract remains authoritative:
+
+| Existing capability | Must remain supported unchanged |
+|---|---|
+| Standalone HTML | Root or supported nested single HTML entry, inline markup/styles/scripts |
+| Standalone CSS | CSS-only starter and generated HTML entry |
+| Standalone JavaScript | Classic/module JS and current generated static entry behavior |
+| React JavaScript/JSX | Single-file convenience mode and multi-file React 19 project |
+| React TypeScript/TSX | Generated strict TypeScript config, `tsc --noEmit`, Vite build |
+| Tailwind CSS v4 | Existing fixed build-time compilation and source scanning |
+| Motion | Pinned `motion/react` package and existing animations/hooks |
+| Lucide | Existing fixed `lucide-react` imports |
+| React Icons | Existing fixed `react-icons/*` imports |
+| Owner Run | Compiles the exact current unsaved editor files; does not save/publish |
+| Source history | Immutable source versions, hashes, restore-as-new-version |
+| Publish | Rebuilds the exact saved version; atomic published pointer update |
+| Isolation | Per-run sandbox, fixed package allowlist, no outbound network/app secrets |
+| Media | Existing optional media workflow remains separate from executable source |
+
+The compiler's mode detector and current HTML/React entry-preparation paths remain unchanged unless a dedicated regression test proves a narrowly scoped adjustment is required. No component-controls feature may make an HTML/JS project require React or make a React project lose Tailwind/Motion/TypeScript support.
+
+### 41.2 Single source of truth: optional `lab.config.json`
+
+Use one optional root-level source file, `lab.config.json`, for public runtime settings and owner-defined controls.
+
+- It is an ordinary text JSON file in the existing source editor/file list.
+- It is saved, versioned, hashed, restored and audited with the rest of the source files through the existing `LabSourceVersion.files` contract.
+- It is not a second mutable MongoDB control record.
+- It must be parsed and validated by a platform-owned server module before Run or Publish.
+- The platform extracts this file before compilation and does not emit it as a public static asset or import it into the application bundle.
+- The full source hash includes the config file. Changing a control label, default or bound is a source change and requires a new saved version before Publish.
+- If the file is absent, has an empty `controls` array, or has no usable control definitions, the detail page has no controls panel and no empty sidebar.
+
+Only the exact root path `lab.config.json` is platform-recognized. Do not reserve all JSON files: ordinary JSON data imports/files must continue to work. Keep package manifests, lockfiles, Vite/PostCSS/TypeScript configs and other compiler-owned files reserved as they are today.
+
+### 41.3 Manifest contract and generic control model
+
+Initial schema (illustrative contract; the validator owns the definitive schema):
+
+```json
+{
+  "schemaVersion": 1,
+  "controls": [
+    {
+      "id": "magnetStrength",
+      "label": "Magnetic strength",
+      "group": "Magnetic button",
+      "type": "range",
+      "defaultValue": 28,
+      "min": 0,
+      "max": 42,
+      "step": 1
+    },
+    {
+      "id": "fieldRadius",
+      "label": "Field radius",
+      "group": "Magnetic button",
+      "type": "range",
+      "defaultValue": 180,
+      "min": 80,
+      "max": 300,
+      "step": 10
+    },
+    {
+      "id": "showField",
+      "label": "Show magnetic field",
+      "group": "Magnetic button",
+      "type": "toggle",
+      "defaultValue": true
+    }
+  ]
+}
+```
+
+The schema describes controls, not a particular React component. A different experiment can declare unrelated settings and groups—for example gradient color/intensity/spread, particle count/speed/distance, reveal progress, or multiple independently configured component instances.
+
+Supported first version reuses the control types already rendered by `LabControlsPanel`:
+- `range`
+- `number`
+- `toggle`
+- `select`
+- `color`
+
+Each descriptor has a stable unique ID, label, type, default value and type-specific constraints. Optional fields: group label/order, short helper description and control order. Select options are bounded and validated. Ranges/numbers require finite min/max/step/default values with valid bounds. Colors use the existing strict hex-color pattern. Do not accept executable expressions, callbacks, HTML, arbitrary selectors, package names, or source snippets in the manifest.
+
+Initial limits should be conservative and enforced server-side: one manifest only; bounded file size; at most 20 controls; unique safe IDs; bounded labels/groups/options; bounded numeric ranges; known schemaVersion only. Unknown types/versions and invalid defaults fail validation before compilation/publication. The control values sent at runtime are validated against the same descriptor on every update.
+
+Do not add speculative control types in the first release. Add a new type later only when it has all three pieces: schema validation, an accessible panel renderer, and a serialized runtime-value contract.
+
+### 41.4 Owner Controls Builder and source editing
+
+Add a dedicated **Controls** area in the owner Source Studio. It is a visual editor for `lab.config.json`, not a separate data store.
+
+Owner flow:
+1. Select **Add controls**; the studio creates root `lab.config.json` if absent.
+2. Add a control and choose one of the supported types.
+3. Configure stable ID, visible label, optional group, default and constraints/options.
+4. See a live rendering of the same `LabControlsPanel` used on the public detail page.
+5. Save the generated JSON as part of the current editor working copy.
+6. Run the current unsaved source + config together.
+7. Save a source version only when the owner chooses Save.
+8. Publish only after the exact saved version builds and passes validation.
+
+The source file remains the single source of truth. The visual builder reads/writes that file; the raw JSON file can also be opened in the existing editor. When raw JSON is edited, the builder must re-parse and show diagnostics instead of keeping an independent stale form state. Every builder change marks the editor dirty. Do not silently save, run or publish when a control is added.
+
+The Controls area is optional and can be empty. Owner-created experiments with no config continue to run exactly as they do now.
+
+### 41.5 Runtime settings API — component-agnostic
+
+The platform must not attempt to infer a component's props from a label or control ID. The author explicitly connects settings to source code. This makes the same panel usable by different components and compositions without one component's controls affecting another accidentally.
+
+For React/JSX/TSX, add the fixed, versioned first-party SDK import:
+
+```jsx
+import { useLabSettings, MagneticButton } from "@labs/ui";
+
+export default function App() {
+  const { values } = useLabSettings();
+
+  return (
+    <MagneticButton
+      strength={values.magnetStrength ?? 28}
+      radius={values.fieldRadius ?? 180}
+      showField={values.showField ?? true}
+    >
+      Magnetic button
+    </MagneticButton>
+  );
+}
+```
+
+`useLabSettings()` returns a typed read-only values object (and, if required, a stable revision/subscription state). It subscribes to the isolated runtime bridge. React source explicitly maps the keys it wants to component props. Multiple components can use separate IDs/groups in the same experiment. A component remains usable with ordinary explicit props when no Labs controls exist.
+
+For standalone HTML/JavaScript, expose a small bridge API inside the iframe (not the parent app):
+
+```js
+const current = window.Labs.getSettings();
+
+window.addEventListener("labs:settings-change", (event) => {
+  const settings = event.detail.values;
+  // Update this experiment's own DOM/canvas state.
+});
+```
+
+The event contains validated values, a revision and the run/artifact identity. It is dispatched inside the isolated document. No cookie, parent DOM, app session, server API or storage access is added.
+
+For CSS-only/HTML experiments, allow an explicit safe `css-variable` binding on supported scalar controls, e.g. map a range/color to a validated `--lab-*` custom property. The bridge writes only validated values and approved units. This gives CSS-only experiments a useful no-JavaScript control path; it does not require the platform to interpret arbitrary CSS or selectors.
+
+The component API, vanilla event API and CSS-variable binding all consume the same validated settings contract. They are adapters for the existing execution modes, not separate control databases.
+
+### 41.6 First-party `@labs/ui` SDK and exact MagneticButton extraction
+
+Create a versioned internal package/source unit, e.g. `packages/labs-ui`, with:
+- `MagneticButton`
+- `useLabSettings`
+- shared control value/type declarations
+- reduced-motion behavior compatible with the current Labs runtime
+- a minimal static/vanilla settings bridge contract where applicable
+
+The application-owned built-in experiment and isolated compiler must resolve the same reviewed SDK implementation/version. The compiler receives this package in its immutable prebuilt image/snapshot; it is not downloaded from the internet and is not an owner-installed dependency. Add only the exact `@labs/ui` import to the compiler allowlist/alias. Keep the current fixed package list intact: React/React DOM, Motion, Lucide, React Icons, clsx and tailwind-merge.
+
+Magnetic extraction must preserve the exact existing values and behavior:
+- Motion spring: stiffness 280, damping 24, mass 0.55.
+- Pointer displacement multiplier 0.24 and proximity exponent 1.25.
+- Default strength 28, valid maximum 42, default radius 180 and valid radius 80–300.
+- Same center-of-field measurement, distance clamp, touch bypass, reduced-motion bypass, pointer-leave spring reset and button interaction.
+- The existing radial background, dot grid, dashed field ring, engagement label, instructional copy and activation counter remain in the Magnetic Interaction experiment composition; they are not forced into every use of the button.
+- Default component markup/classes reproduce the current button's size, spacing, border, brand surface, shadow, icon/dot and arrow. Optional props such as className/onClick are additive and cannot change default behavior.
+
+First extract and regression-test the component inside the existing built-in Magnetic Interaction. Only after it is visually/behaviorally identical should the same SDK version become available to owner-authored React projects. Do not duplicate a second magnetic physics implementation in the compiler.
+
+### 41.7 Runtime bridge and execution-mode adapters
+
+The published detail page owns the control values and renders the existing accessible `LabControlsPanel` only when validated controls exist.
+
+- Initialize values from each descriptor's defaultValue.
+- Range/number/select/toggle/color changes update the parent state immediately.
+- Send the complete validated values object (or a bounded patch with monotonically increasing revision) to the active iframe.
+- When the iframe reports ready, send the latest values again; never assume the initial message arrived before its listener.
+- Reset returns values to manifest defaults and sends the resulting state to the iframe.
+- Keep values local to the current page session; do not persist visitor adjustments in MongoDB or mutate the published source.
+- On iframe restart/retry, replay the current state after the matching run/artifact handshake.
+- A stale iframe/run ID must not receive or apply another run's state.
+
+Messaging/security:
+- Version every message schema.
+- Correlate messages with exact experiment slug, runId/artifactId and a fresh handshake nonce.
+- Because the existing published iframe deliberately uses an opaque sandbox origin (`sandbox="allow-scripts"`, no `allow-same-origin`), do not depend on a non-opaque frame origin. Validate `event.source`, exact expected run/artifact ID, nonce and message schema; restrict which parent messages the runtime bridge will accept.
+- Bound message payload size, value count and update frequency. Throttle high-frequency slider messages to animation frames or a small bounded cadence.
+- Never expose parent cookies, app APIs, source-management credentials or arbitrary messaging to experiment code.
+
+Owner Run uses the same bridge but receives the current **unsaved editor files and unsaved config**. It must not read the saved draft or public release to build a Run preview. The preview returns the validated control schema for the current run; the owner preview panel uses the same control renderer/bridge so owner can test values before saving.
+
+### 41.8 Detail rendering and source parity
+
+The public detail resolver loads controls from the same immutable published source version/artifact used for the runtime. Do not read controls from a newer draft or a separate mutable experiment document.
+
+For custom experiments, the validated control schema is stored in the immutable build/release manifest (or an equally immutable version-bound record) and its hash/version is linked to:
+- experiment slug,
+- exact LabSourceVersion.versionId,
+- source contentHash (which includes lab.config.json),
+- exact LabBuildArtifact.artifactId/buildHash,
+- settings schema version.
+
+The public page receives only the public control descriptors, not owner source or draft files. The public controls panel and iframe must always reference the same release. A release with invalid/missing settings metadata is not publishable.
+
+Built-in experiments may continue reading their current code-owned `demo.controls` during migration. Do not break the four current demos while the new release format is added. Migrate one by one; after Magnetic Interaction passes, move its manifest to its managed version and use the same SDK/bridge path.
+
+### 41.9 Save, preview, publish and rollback semantics
+
+- **Edit:** update the in-memory `files` state, including optional `lab.config.json`; show dirty state.
+- **Run:** validate and compile the exact current unsaved files + config; preview is temporary and expires. Run does not save, increment a source version, or move a public pointer.
+- **Save draft:** existing `saveOwnerLabDraft` stores the full file array in an immutable LabSourceVersion. The existing contentHash naturally includes the config file. No separate control mutation.
+- **Restore:** existing `restoreOwnerLabVersion` copies an earlier version's entire files array into a new draft. The code and controls restore together as a new version.
+- **Publish:** validate config again, rebuild the exact saved version, store the controls schema with the exact ready artifact/release, then atomically update the published version/artifact pointer. No partial release.
+- **Failed validation/build:** retain the existing working editor state, prior draft and prior published release. Never replace the public pointer or delete old artifacts on failure.
+- **Rollback:** restore an earlier source version as a new draft and explicitly republish it. This restores its code and controls together. Do not mutate immutable history or silently switch only the controls.
+- **No controls:** valid and publishable. No controls panel/bridge UI is required beyond the runtime's lightweight capability handshake.
+
+### 41.10 Compatibility matrix — mandatory regression gate
+
+| Mode | Build/runtime | Controls adapter | Must remain working |
+|---|---|---|---|
+| Single HTML | Existing static HTML path | Vanilla event API / safe CSS variables | Inline HTML, CSS, JS, Canvas, media elements |
+| HTML + CSS + JS | Existing static entry and asset resolution | Vanilla event API / safe CSS variables | Linked styles/scripts and nested-entry behavior |
+| CSS-only | Existing generated HTML entry | Safe CSS custom-property binding | Tailwind is not imposed on static CSS |
+| React JS/JSX | Current generated or multi-file React entry | `@labs/ui` hook | React hooks/state, Tailwind v4, Motion, Lucide, React Icons |
+| React TS/TSX | Current strict typecheck + Vite | Typed `@labs/ui` hook and declarations | Type validation, JSX, Tailwind v4, Motion and icon imports |
+| Motion component | Existing pinned Motion package | Props sourced from useLabSettings | Motion springs, gestures, reduced motion |
+| Project with no config | Existing current runtime | None | No panel, no behavior change |
+
+Existing fixed dependencies must not be replaced or silently upgraded to add `@labs/ui`. SDK version changes require compiler snapshot regeneration and the full smoke suite.
+
+### 41.11 Implementation phases and acceptance
+
+| Phase | Work | Acceptance |
+|---|---|---|
+| 1. Freeze current behavior | Add interaction/visual fixtures for Magnetic Interaction; record exact DOM, classes, physics defaults, reduced-motion/touch/leave behavior | Baseline can be compared before extraction |
+| 2. Extract MagneticButton | Move only button physics/markup into shared source; preserve experiment decorations and copy | Built-in demo matches baseline; existing controls still work |
+| 3. Package SDK | Add versioned `@labs/ui` to app and immutable compiler image; type declarations for TSX | React JS and TSX smoke tests import it; old package imports remain |
+| 4. Settings contract | Implement strict `lab.config.json` validator and versioned values DTO | Valid/invalid schemas, defaults, bounds, unknown types tested |
+| 5. Owner Controls Builder | Add visual controls editor that writes the root JSON source file; raw JSON and visual builder remain synchronized | Add/edit/reorder/delete marks editor dirty; no hidden independent state |
+| 6. Runtime bridge | Parent settings state, ready/replay/reset and iframe-to-parent protocol for React and static modes | Run ID/nonce isolation; no lost initial settings; bounded high-frequency updates |
+| 7. Detail integration | Derive controls from the exact published artifact release; optional panel only | Code and panel always represent the same version |
+| 8. Magnetic migration | Move the original experiment to the same SDK/config/bridge path | Exact animation and visual parity; no duplicated physics |
+| 9. All-mode regression | Exercise all current execution modes with and without config | Existing Run behavior, source hash, save, restore and publish preserved |
+| 10. Release gate | Preview browser test before Production | No release until the full matrix passes |
+
+Required tests include:
+- Existing Fluid Gradient nested HTML entry with inline styles/Canvas and linked CSS/JS.
+- CSS-only generated document.
+- Single-file JS marked JSX, multi-file React JSX, valid/invalid TSX.
+- `motion/react`, `lucide-react`, multiple `react-icons` packs and Tailwind v4 utility generation.
+- All current compiler smoke tests and source security tests.
+- The same experiments with no `lab.config.json`, an empty manifest and a populated manifest.
+- Invalid JSON, duplicate IDs, unsupported types, invalid ranges/colors/options, too many controls and oversized config.
+- Range changes before iframe readiness, during iframe restart, rapid slider movement and reset.
+- Two MagneticButton instances with independent control IDs.
+- Unsaved Run vs saved draft vs previously published artifact.
+- Restore old version, failed publish and rollback preserving prior public code + controls.
+
+**Definition of done:** controls are optional source-managed configuration, different experiments can declare different control groups/types, React authors use `@labs/ui`/`useLabSettings()`, static authors use the in-frame settings event/CSS-variable contract, and every current HTML/CSS/JS, React JSX/TSX, Tailwind v4, Motion, Lucide and React Icons workflow keeps passing without regression.
