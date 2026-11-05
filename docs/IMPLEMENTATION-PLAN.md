@@ -72,7 +72,7 @@ Do not mark a row complete because a page renders. Each capability still needs i
 
 ## Phase 3 — Authentication and user account
 **Work**
-- Implement email/password and Google sign-in, verification, reset, session handling, logout, profile management and account deletion.
+- Preserve email/password and add Google/GitHub OAuth registration and login, verification, reset, session handling, logout, profile management and account deletion. Keep login intent separate from explicit OAuth account-creation intent. Remove the Terms checkbox/route/receipt gate while retaining the Privacy Policy and email-verification flow records. Follow docs/LABS-AUTHENTICATION-PROVIDERS-AND-LEGAL-CLEANUP-PLAN.md.
 - Validate return URLs and preserve safe post-login navigation.
 - Implement user dashboard shell and privacy boundaries.
 
@@ -343,3 +343,11 @@ Phase 0/1 must produce or reconcile these documents with the actual repository:
 | P3 | Responsive/performance/security release QA | Pending | No gallery execution; bounded detail runtime; metrics, auth/privacy and threat-model suite |
 
 This tracker reflects the 5 November screenshots and the subsequent CSP/readiness repair committed at `8d832832`. Targeted CSP tests and an isolated compiler smoke suite passed, but the READY Preview predates the repair. A new deployment could not be created because Vercel returned its daily deployment API quota limit. Authenticated owner Run and visual public-runtime browser QA remain open; do not mark Phase 0 release-complete until those tests pass.
+
+## Labs authentication provider expansion and Terms cleanup — 5 November 2026 (planning only)
+
+The user confirmed that email/password registration/login must remain, Google and GitHub registration/login must be added, and the unnecessary Terms checkbox, Terms page and related Terms-only registration conditionals/files should be removed. The Privacy Policy remains as an informational page; email verification remains mandatory for email/password accounts and its separate verification-flow records must be kept.
+
+Current implementation status: Google login-only exists; Google signup is disabled; GitHub is not configured. Terms consent receipt and signup checkbox remain in code. Nothing was deleted or migrated in this planning update.
+
+Follow docs/LABS-AUTHENTICATION-PROVIDERS-AND-LEGAL-CLEANUP-PLAN.md. Do not release until email/password, Google, GitHub, verified-email linking, provider errors and guest/unverified/verified source access all pass in a deployed browser.
