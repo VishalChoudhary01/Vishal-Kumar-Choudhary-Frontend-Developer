@@ -41,7 +41,13 @@ function labsSourcePolicy() {
       }
 
       if (source.startsWith("/")) {
-        this.error("Absolute file imports are not allowed.");
+        // Vite rewrites root-relative HTML asset references to absolute URLs
+        // such as /src/main.jsx. Resolve these only within the experiment root.
+        const resolved = path.resolve(root, "." + source);
+        if (!resolved.startsWith(root + path.sep)) {
+          this.error("Root-relative asset escapes the experiment root.");
+        }
+        return null;
       }
 
       const resolved = path.resolve(path.dirname(importer), source);
