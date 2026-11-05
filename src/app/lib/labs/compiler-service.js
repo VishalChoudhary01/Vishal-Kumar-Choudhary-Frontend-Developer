@@ -104,7 +104,7 @@ function validateFileNames(files) {
 
 function prepareReactProject(inputFiles) {
   const files = inputFiles.map((file) => {
-    if (file.language === "jsx" && /\.js$/i.test(file.path)) {
+    if (inputFiles.length === 1 && file.language === "jsx" && /\.js$/i.test(file.path)) {
       return { ...file, path: file.path.replace(/\.js$/i, ".jsx") };
     }
     return { ...file };
@@ -229,11 +229,11 @@ async function writeBuildInput(sandbox, files) {
   await sandbox.writeFiles([
     {
       path: "/vercel/sandbox/input/files.json",
-      content: JSON.stringify(files),
+      content: Buffer.from(JSON.stringify(files), "utf8"),
     },
     {
       path: "/vercel/sandbox/input/assets.json",
-      content: "{}",
+      content: Buffer.from("{}", "utf8"),
     },
   ]);
 }
