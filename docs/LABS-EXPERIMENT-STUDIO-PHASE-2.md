@@ -1,6 +1,6 @@
 # Labs Experiment Studio — Phase 2: HTML/CSS/JavaScript Preview Prototype
 
-**Status:** Prototype implemented on `feat/labs-platform-integration`; not production security approval and not the final Studio runtime. React/JSX compilation, Tailwind v4 build processing, Motion execution and media-manifest integration are not implemented by this prototype.
+**Status:** Historical Phase 2 `srcDoc` preview prototype implemented on `feat/labs-platform-integration`; not production security approval and not the final Studio runtime. Later work added an isolated compiler foundation with HTML/CSS/JavaScript and React JSX/TSX smoke coverage. The deployed owner Run workflow, public detail artifact rendering and complete security gate remain unverified. See `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md` for the current compiler/runtime status and next phases.
 
 ## What the prototype does today
 
@@ -23,7 +23,7 @@ The source content is assembled into a browser document. The adapter does not co
 ## Explicit limitations
 
 - External Tailwind CDN, Lucide CDN, Google Fonts imports, remote JS/CSS, package installation and remote module imports do not work under the prototype's default restrictive policy.
-- React, ReactDOM, JSX, Tailwind v4 build output and Motion from motion/react are not available in this adapter.
+- React, ReactDOM, JSX, Tailwind v4 build output and Motion from motion/react are not available in this specific `srcDoc` prototype adapter. The later isolated compiler supports React JSX/TSX and Tailwind/Motion smoke fixtures; this statement must not be generalized to the current compiler target.
 - This is a client-side preview prototype, not an isolated compiler worker or separate-origin static artifact host.
 - The iframe sandbox attribute alone is not sufficient evidence of a complete isolation boundary. The current implementation has not passed the required sandbox escape, CSP, origin, network, storage, resource-limit or abuse tests.
 - Media upload, Cloudinary asset privacy, immutable asset manifests and image/GIF/video playback from uploaded media are not implemented here.
@@ -31,7 +31,7 @@ The source content is assembled into a browser document. The adapter does not co
 
 ## Required target architecture
 
-The complete compiler, runtime, media and publishing requirements are defined in `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`. In summary:
+The current compiler, runtime, media and publishing requirements and release status are defined in `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`. This Phase 2 document remains a record of the earlier `srcDoc` prototype, not the source of truth for the current compiler.
 
 1. Build React/JSX using pinned React/ReactDOM and a fixed browser package allowlist.
 2. Compile Tailwind CSS v4 at build time through the approved PostCSS toolchain.
