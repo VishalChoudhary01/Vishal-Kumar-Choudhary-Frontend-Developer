@@ -2,6 +2,7 @@ import "server-only";
 
 import { connectToDatabase } from "@/app/lib/db/mongoose";
 import { getPublishedLabExperimentBySlug } from "@/app/data/labsExperiments";
+import { getPublishedCustomLabExperimentBySlug } from "./public-experiments";
 
 import LabSource from "./models/LabSource";
 import LabSourceVersion from "./models/LabSourceVersion";
@@ -37,7 +38,7 @@ export async function getAuthorizedLabSource({ user, slug }) {
 
   // Source snapshots may only belong to canonical public Labs experiments.
   // This keeps stale/orphaned database rows from becoming addressable.
-  if (!getPublishedLabExperimentBySlug(slug)) {
+  if (!getPublishedLabExperimentBySlug(slug) && !(await getPublishedCustomLabExperimentBySlug(slug))) {
     return { status: "not-found" };
   }
 
