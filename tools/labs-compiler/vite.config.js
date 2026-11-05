@@ -8,6 +8,7 @@ const allowedPackages = new Set([
   "react-dom",
   "motion",
   "lucide-react",
+  "react-icons",
   "clsx",
   "tailwind-merge",
 ]);
