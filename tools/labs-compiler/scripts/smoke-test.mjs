@@ -11,6 +11,12 @@ const output = path.join(root, ".smoke-output");
 const negativeInput = path.join(root, ".smoke-negative-input");
 const negativeRoot = path.join(root, ".smoke-negative-project");
 const negativeOutput = path.join(root, ".smoke-negative-output");
+const staticInput = path.join(root, ".smoke-static-input");
+const staticProject = path.join(root, ".smoke-static-project");
+const staticOutput = path.join(root, ".smoke-static-output");
+const cssOnlyInput = path.join(root, ".smoke-css-only-input");
+const cssOnlyProject = path.join(root, ".smoke-css-only-project");
+const cssOnlyOutput = path.join(root, ".smoke-css-only-output");
 
 const sandboxInputDirectory = "/vercel/sandbox/input";
 await fs.rm(sandboxInputDirectory, { recursive: true, force: true });
@@ -275,9 +281,6 @@ try {
   if (!staticHtmlEntry.includes("./styles.css") || !staticHtmlEntry.includes("./main.js")) {
     throw new Error("The static HTML adapter did not preserve/inject its CSS and JavaScript entry files.");
   }
-  const staticInput = path.join(root, ".smoke-static-input");
-  const staticProject = path.join(root, ".smoke-static-project");
-  const staticOutput = path.join(root, ".smoke-static-output");
   await writeInput(
     staticInput,
     staticHtmlFiles.map(({ path: filePath, content }) => ({ path: filePath, content })),
@@ -319,9 +322,6 @@ try {
   if (!cssOnlyHtml.includes("./styles.css") || !cssOnlyHtml.includes("labs-root")) {
     throw new Error("The CSS-only preview did not generate a linked HTML entry.");
   }
-  const cssOnlyInput = path.join(root, ".smoke-css-only-input");
-  const cssOnlyProject = path.join(root, ".smoke-css-only-project");
-  const cssOnlyOutput = path.join(root, ".smoke-css-only-output");
   await writeInput(cssOnlyInput, cssOnlyFiles.map(({ path: filePath, content }) => ({ path: filePath, content })));
   const cssOnlyBuild = runBuild(cssOnlyInput, cssOnlyProject, cssOnlyOutput);
   if (cssOnlyBuild.status !== 0) {
