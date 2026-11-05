@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import LabArtwork from "./landing/LabArtwork";
+import LabLikeButton from "./LabLikeButton";
 import useLabCategoryFilter from "@/app/hooks/labs/useLabCategoryFilter";
 import useLabLoadMore from "@/app/hooks/labs/useLabLoadMore";
 
@@ -45,75 +46,78 @@ function CategoryNavigation({ categories, activeCategory, onChange }) {
   );
 }
 
-function LabCard({ experiment, index, total }) {
+function LabCard({ experiment, index, total, engagement }) {
   const technologies = Array.isArray(experiment.technologies)
     ? experiment.technologies.filter(Boolean).slice(0, 3)
     : [];
 
   return (
-    <Link
-      href={`/labs/${experiment.slug}`}
-      aria-label={`Explore ${experiment.title}`}
-      className="group flex h-full min-w-0 flex-col rounded-[var(--radius-sm)] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4 focus-visible:ring-offset-background motion-reduce:transform-none motion-reduce:transition-none"
-    >
-      <div className="relative aspect-[4/3] overflow-hidden rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2">
-        {experiment.thumbnail?.src ? (
-          <Image
-            src={experiment.thumbnail.src}
-            alt={experiment.thumbnail.alt || ""}
-            width={900}
-            height={675}
-            sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
-            className={[
-              "h-full w-full transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.02] motion-reduce:transform-none motion-reduce:transition-none",
-              experiment.thumbnail.fit === "contain" ? "object-contain" : "object-cover",
-            ].join(" ")}
-          />
-        ) : (
-          <LabArtwork experiment={experiment} />
-        )}
+    <article className="flex h-full min-w-0 flex-col">
+      <Link
+        href={`/labs/${experiment.slug}`}
+        aria-label={`Explore ${experiment.title}`}
+        className="group flex h-full min-w-0 flex-col rounded-[var(--radius-sm)] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4 focus-visible:ring-offset-background motion-reduce:transform-none motion-reduce:transition-none"
+      >
+        <div className="relative aspect-[4/3] overflow-hidden rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2">
+          {experiment.thumbnail?.src ? (
+            <Image
+              src={experiment.thumbnail.src}
+              alt={experiment.thumbnail.alt || ""}
+              width={900}
+              height={675}
+              sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
+              className={[
+                "h-full w-full transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.02] motion-reduce:transform-none motion-reduce:transition-none",
+                experiment.thumbnail.fit === "contain" ? "object-contain" : "object-cover",
+              ].join(" ")}
+            />
+          ) : (
+            <LabArtwork experiment={experiment} />
+          )}
 
-        <span className="pointer-events-none absolute right-3 top-3 font-mono text-[8px] tabular-nums tracking-[0.14em] text-text-muted sm:right-4 sm:top-4">
-          {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
-        </span>
-      </div>
+          <span className="pointer-events-none absolute right-3 top-3 font-mono text-[8px] tabular-nums tracking-[0.14em] text-text-muted sm:right-4 sm:top-4">
+            {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
+          </span>
+        </div>
 
-      <div className="flex flex-1 flex-col pt-4 sm:pt-5">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-1 flex-col pt-4 sm:pt-5">
           {experiment.category ? (
             <p className="min-w-0 truncate font-mono text-[9px] uppercase tracking-[0.16em] text-brand">
               {experiment.category}
             </p>
-          ) : <span />}
+          ) : null}
 
-        </div>
+          <h3 className="mt-2 font-display text-[clamp(1.45rem,2vw,2rem)] font-normal leading-tight tracking-[-0.03em] text-text-primary transition-colors duration-200 group-hover:text-brand motion-reduce:transition-none">
+            {experiment.title}
+          </h3>
 
-        <h3 className="mt-2 font-display text-[clamp(1.45rem,2vw,2rem)] font-normal leading-tight tracking-[-0.03em] text-text-primary transition-colors duration-200 group-hover:text-brand motion-reduce:transition-none">
-          {experiment.title}
-        </h3>
-
-        {experiment.description ? (
-          <p className="mt-2 line-clamp-3 min-h-[4.5rem] text-xs leading-6 text-text-secondary sm:text-sm">
-            {experiment.description}
-          </p>
-        ) : null}
-
-        <div className="mt-auto flex items-end justify-between gap-4 pt-4">
-          {technologies.length ? (
-            <p className="min-w-0 text-[10px] leading-5 text-text-muted sm:text-[11px]">
-              {technologies.join(" · ")}
+          {experiment.description ? (
+            <p className="mt-2 line-clamp-3 min-h-[4.5rem] text-xs leading-6 text-text-secondary sm:text-sm">
+              {experiment.description}
             </p>
-          ) : <span />}
+          ) : null}
 
-          <span
-            aria-hidden="true"
-            className="inline-flex shrink-0 translate-x-0 text-sm text-text-secondary transition-transform duration-200 group-hover:translate-x-[3px] motion-reduce:transform-none motion-reduce:transition-none"
-          >
-            ↗
-          </span>
+          <div className="mt-auto flex items-end justify-between gap-4 pt-4">
+            {technologies.length ? (
+              <p className="min-w-0 text-[10px] leading-5 text-text-muted sm:text-[11px]">
+                {technologies.join(" · ")}
+              </p>
+            ) : <span />}
+
+            <span
+              aria-hidden="true"
+              className="inline-flex shrink-0 translate-x-0 text-sm text-text-secondary transition-transform duration-200 group-hover:translate-x-[3px] motion-reduce:transform-none motion-reduce:transition-none"
+            >
+              ↗
+            </span>
+          </div>
         </div>
+      </Link>
+
+      <div className="mt-3 flex justify-end border-t border-border-subtle pt-2">
+        <LabLikeButton slug={experiment.slug} initialData={engagement} compact />
       </div>
-    </Link>
+    </article>
   );
 }
 
@@ -139,6 +143,7 @@ function Gallery({
   totalCount,
   hasMore,
   onLoadMore,
+  engagementBySlug,
 }) {
   return (
     <div>
@@ -161,6 +166,7 @@ function Gallery({
             experiment={experiment}
             index={index}
             total={totalCount}
+            engagement={engagementBySlug?.[experiment.slug] || null}
           />
         ))}
       </div>
@@ -186,7 +192,7 @@ function Gallery({
   );
 }
 
-export default function LabsCollection({ experiments = [] }) {
+export default function LabsCollection({ experiments = [], engagementBySlug = {} }) {
   const {
     activeCategory,
     setActiveCategory,
@@ -243,6 +249,7 @@ export default function LabsCollection({ experiments = [] }) {
                 totalCount={totalCount}
                 hasMore={hasMore}
                 onLoadMore={loadMore}
+                engagementBySlug={engagementBySlug}
               />
             ) : (
               <p className="border-y border-border-subtle py-12 text-sm text-text-secondary">
