@@ -8,6 +8,81 @@ import {
   rewritePublishedRuntimeHtml,
   stripPublishedRuntimeCspMeta,
 } from "../../../src/app/lib/labs/runtime-html.mjs";
+import {
+  calculateMagneticOffset,
+  DEFAULT_MAGNETIC_RADIUS,
+  DEFAULT_MAGNETIC_STRENGTH,
+  MAGNETIC_SPRING,
+  normalizeMagneticRadius,
+  normalizeMagneticStrength,
+} from "../../../src/app/components/labs/ui/magnetic-physics.mjs";
+
+function assertNear(actual, expected, label) {
+  if (Math.abs(actual - expected) > 1e-9) {
+    throw new Error(label + ": expected " + expected + ", received " + actual);
+  }
+}
+
+if (
+  MAGNETIC_SPRING.stiffness !== 280 ||
+  MAGNETIC_SPRING.damping !== 24 ||
+  MAGNETIC_SPRING.mass !== 0.55 ||
+  DEFAULT_MAGNETIC_STRENGTH !== 28 ||
+  DEFAULT_MAGNETIC_RADIUS !== 180
+) {
+  throw new Error("MagneticButton defaults or Motion spring changed unexpectedly.");
+}
+
+const magneticCenter = calculateMagneticOffset({
+  offsetX: 0,
+  offsetY: 0,
+});
+if (!magneticCenter.engaged || magneticCenter.x !== 0 || magneticCenter.y !== 0) {
+  throw new Error("The magnetic field must engage at its center without moving the button.");
+}
+
+const magneticMidpoint = calculateMagneticOffset({
+  offsetX: 90,
+  offsetY: 0,
+  strength: 28,
+  radius: 180,
+});
+assertNear(magneticMidpoint.x, 90 * 0.24 * Math.pow(0.5, 1.25), "Magnetic midpoint displacement");
+assertNear(magneticMidpoint.y, 0, "Magnetic midpoint vertical displacement");
+if (!magneticMidpoint.engaged) {
+  throw new Error("The magnetic field must engage inside its configured radius.");
+}
+
+const magneticBoundary = calculateMagneticOffset({
+  offsetX: 180,
+  offsetY: 0,
+  strength: 28,
+  radius: 180,
+});
+if (magneticBoundary.engaged || magneticBoundary.x !== 0 || magneticBoundary.y !== 0) {
+  throw new Error("The magnetic field must reset at and beyond its radius.");
+}
+
+const disabledMagnet = calculateMagneticOffset({
+  offsetX: 40,
+  offsetY: -20,
+  strength: 0,
+  radius: 180,
+});
+if (disabledMagnet.engaged || disabledMagnet.x !== 0 || disabledMagnet.y !== 0) {
+  throw new Error("Zero strength must disable magnetic displacement.");
+}
+
+const clampedMagnet = calculateMagneticOffset({
+  offsetX: 300,
+  offsetY: 0,
+  strength: 999,
+  radius: 999,
+});
+assertNear(clampedMagnet.x, 42, "Magnetic strength maximum clamp");
+if (normalizeMagneticStrength(-1) !== 0 || normalizeMagneticRadius(999) !== 300) {
+  throw new Error("Magnetic component props must retain their documented bounds.");
+}
 
 const runtimeHtmlFixture = [
   "<!doctype html>",
