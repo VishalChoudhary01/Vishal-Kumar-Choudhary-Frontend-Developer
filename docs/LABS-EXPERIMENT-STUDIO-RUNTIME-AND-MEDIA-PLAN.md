@@ -1123,3 +1123,83 @@ Required tests include:
 - Restore old version, failed publish and rollback preserving prior public code + controls.
 
 **Definition of done:** controls are optional source-managed configuration, different experiments can declare different control groups/types, React authors use `@labs/ui`/`useLabSettings()`, static authors use the in-frame settings event/CSS-variable contract, and every current HTML/CSS/JS, React JSX/TSX, Tailwind v4, Motion, Lucide and React Icons workflow keeps passing without regression.
+
+---
+
+## 42. MagneticButton extracted into Source Management — Phase 1 implementation — 5 November 2026
+
+### 42.1 Clarified deliverable
+
+“Extract MagneticButton” means the owner must receive editable, runnable source files in the existing Source Management Lab. An app-internal import alone is not the deliverable.
+
+The implementation therefore provides a separate owner-created draft experiment named **MagneticButton Component** at slug `magnetic-button-component`. It is intentionally separate from the existing built-in `magnetic-interaction` experiment:
+- The built-in's public runtime remains the reviewed code-owned experiment.
+- The component workspace is a private owner draft and is not automatically published.
+- Importing it must not replace an existing owner draft; an existing draft is returned unchanged.
+- The owner can open the workspace, inspect/edit files, Run the unsaved copy, save versions, restore and explicitly publish later using the existing source-management flow.
+
+### 42.2 Owner entry point and import contract
+
+The owner entry point is `/admin/labs/sources/import`, in the existing Runtime source initialization area. A separate **MagneticButton Component** panel calls:
+
+`POST /api/v1/admin/labs/sources/import-magnetic-button`
+
+The route:
+1. Verifies the current Labs owner and same-origin mutation.
+2. Looks for the `magnetic-button-component` owner workspace.
+3. Creates a custom experiment/source record when no workspace exists.
+4. Gets the portable project files from `src/app/lib/labs/magnetic-button-source-project.js`.
+5. Saves them as the first immutable private draft only when no draft exists.
+6. Returns `/admin/labs/sources/magnetic-button-component` for the editor.
+7. Never publishes or changes the existing built-in's public pointer.
+
+### 42.3 Files imported into Source Management
+
+The template contains seven editable source files:
+- `index.html`
+- `src/main.jsx`
+- `src/App.jsx` — runnable MagneticButton composition/demo
+- `src/components/MagneticButton.jsx` — extracted reusable component
+- `src/components/MagneticButton.d.ts` — TypeScript-facing prop contract
+- `src/components/magnetic-physics.mjs` — pure pointer physics
+- `src/index.css` — minimal theme tokens and Tailwind v4 import
+
+The project uses only already-installed/allowed imports: React and `motion/react`, plus relative local files. It does not import `@/app/*`, Next.js, the portfolio's MotionProvider or any server-only application module. The generated project is an ordinary multi-file React JSX project; a declaration-only `.d.ts` file must not force the compiler into TypeScript entry mode.
+
+### 42.4 Reusable API and preserved behavior
+
+Current component API:
+- `children`
+- `fieldRef` (optional larger interaction area; otherwise the button itself is measured)
+- `strength` (default 28; normalized to 0–42)
+- `radius` (default 180px; normalized to 80–300px)
+- `onClick`
+- `onEngagementChange`
+- `className`
+- `disabled`
+- `aria-label`
+
+The generic controls mapping is straightforward and intentionally component-agnostic:
+- `magnetStrength` → `strength`
+- `fieldRadius` → `radius`
+- experiment-level `showField` remains the composition's responsibility; it controls the dashed visual radius, not MagneticButton's pointer math.
+
+The pure helper preserves the original spring (280 / 24 / 0.55), pointer multiplier (0.24), proximity exponent (1.25), radius boundary, strength clamp, pointer-leave reset, touch bypass and reduced-motion bypass. Decorative field/background/instructions and activation counter remain in the experiment composition.
+
+### 42.5 Compiler compatibility and verification
+
+The source project was generated from the actual component/helper files and compiled using the isolated Labs compiler. It contains no app-only alias imports. Verification completed:
+- Source template generated all seven expected files.
+- Isolated Labs compiler build succeeded and emitted a build hash.
+- Existing Labs compiler smoke suite passed (HTML/CSS/JS, JSX/TSX, React 19, Motion, Tailwind v4, icons, CSP and isolation regressions).
+- Focused ESLint passed for the extraction, source template, owner import route, import panel and compiler changes.
+- Next.js production build, SEO validation, TypeScript and all 17 static pages passed.
+
+### 42.6 Scope boundary — not yet delivered
+
+This is the **source-managed Phase 1 extraction**, not the complete generic reusable SDK:
+- `@labs/ui` is not yet an owner-importable compiler package.
+- There is not yet a generic `lab.config.json` visual controls builder/settings bridge.
+- The new workspace currently demonstrates strength/radius/showField through local React state, not through the future published-release controls manifest.
+- Copying the component into another independent experiment currently means copying `MagneticButton.jsx` and `magnetic-physics.mjs` together. A versioned first-party SDK export is a later phase.
+- No database experiment/draft was created automatically during this implementation; the owner must use the new Source Management import action after this commit is deployed.
