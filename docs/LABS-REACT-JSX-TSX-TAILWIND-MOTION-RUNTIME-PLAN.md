@@ -64,6 +64,27 @@ The clean app build on the latest branch completed Next.js compilation, TypeScri
 
 **Required next step:** deploy branch commit `e0fb16c` (or newer) after the quota resets or once the account owner resolves the deployment allowance. Then test Run in the actual owner Studio for Spotlight Dock, verify HTTP 201 with a preview URL, confirm the iframe loads/executes, and confirm a deliberate JSX/TSX error returns HTTP 400/422 diagnostics instead of 503. Do not enable Production publishing before that browser-level check.
 
+## Latest regression fixes — 5 November 2026
+
+**Latest verified branch commit:** `b7cae3729ba3ecded5d56a35f9c632e6e9dc6b78`
+
+The Labs code preview now has two first-class build modes:
+
+1. React: JavaScript/JSX and TypeScript/TSX, including Motion, Tailwind v4, Lucide and React Icons.
+2. Static: standalone HTML/CSS/JavaScript and CSS-only (generates an HTML entry). The authored HTML is kept as the page entry, while local CSS/JS references are bundled into the preview artifact.
+
+The following regression checks pass:
+- Static HTML/CSS/JS project compiles, serves authored HTML, and serves emitted CSS/JS assets over the isolated preview server with correct content types.
+- CSS-only source generates a valid HTML entry and stylesheet output.
+- React JSX and TypeScript TSX builds pass; invalid TypeScript is rejected.
+- Sandbox input directory initialization is safe when the directory is missing or already exists.
+- Preview server health, HTML/JS delivery, parent-origin ready/console bridge and traversal blocking pass.
+- Changed footer/hero `clipPath` inset keyframes use explicit percentage units to avoid Motion generating unitless fractional values.
+
+Targeted ESLint and a clean Next.js production build pass (SEO validation, TypeScript, 18 static pages, and Labs routes).
+
+**Important deployment limitation:** the latest READY Preview is still at commit `096e185`, which predates the compiler-service wiring fix, static mode and animation changes. Its Run endpoint can continue to return 503 until the latest branch is deployed. Vercel currently rejects new deployment creation with HTTP 402 because the project's 100 API deployments/day quota is exhausted. No Production configuration or published-release pointer was changed. The next gate is a fresh Preview deployment and authenticated browser verification of HTML/CSS, JSX and TSX Run; public publishing stays disabled until then.
+
 ## 1. Product decision
 
 The Labs manager must execute the code the owner inserts into the editor. It must not merely display source, show a static thumbnail, or render a screenshot as though it were running code.
