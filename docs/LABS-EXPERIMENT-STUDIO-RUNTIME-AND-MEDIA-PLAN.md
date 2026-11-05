@@ -677,3 +677,99 @@ Detailed implementation requirements and the current deployment-gate status for 
 11. Final route skeleton placement/shared component API after inspecting the actual App Router tree; do not create duplicate global/page-level loaders.
 
 No package installation, Production configuration change, media quota assumption or release publication is authorized merely by this planning document.
+## 39. Dual-mode experiment rendering architecture — 5 November 2026
+
+**Decision:** The published detail page must support two explicit execution modes. Do not force standalone HTML projects through the same assumptions as a React application. Both modes compile in the isolated Labs compiler, publish immutable output files and use the same artifact-delivery route and sandboxed detail iframe.
+
+### 39.1 Diagnosis from the deployed Preview
+
+The supplied screenshots show an iframe/runtime failure, not a Next.js route-build failure. The inspected Preview `oi4y9ygre` (commit `50ed563d04b840eac4058308728052ed4394f710`) reached `READY` and Vercel reported `Compiled successfully`. The route exists in its route manifest. The screenshots nevertheless show:
+- **Fluid Gradient Playground:** the HTML entry is visible in browser-default typography on a white surface. Its stylesheet and animation script are not being applied. This is consistent with broken/missing compiled asset references or assets not emitted/served at the paths referenced by the HTML.
+- **Spotlight Dock:** the React experiment surface remains blank and the generic runtime bridge reports no rendered output. The current smoke tests prove compiler output exists but do not prove that the published HTML entry loads every module/CSS asset and commits a React render in the browser.
+
+The previous HTTP CSP adjustment is necessary for the opaque-origin iframe, but it is not sufficient evidence that the actual asset graph is correct. Do not label these screenshots fixed until browser-level tests pass.
+
+### 39.2 Deterministic project classification
+
+Classify a validated source snapshot before building. Never guess based only on whether one file has a JSX-like extension.
+
+| Mode | Detection / required structure | Execution contract |
+|---|---|---|
+| `static-html` | Has one unambiguous HTML entry; may include CSS, classic JS, module JS and inline HTML/CSS/JS | Preserve authored document and local file relationships. Do not require React, JSX, Tailwind or Motion. |
+| `react-js` | Complete approved React JS entry structure, or an explicitly selected single-file JSX component adapted by the platform | Compile with the pinned React 19 + Vite toolchain; generate missing platform-owned entry files for the single-file adapter. |
+| `react-ts` | Complete approved React TSX entry structure, or an explicitly selected single-file TSX component adapted by the platform | Type-check first, then compile with the same pinned React/Vite toolchain. |
+
+Invalid/mixed structures return a clear actionable build error. A project must not silently fall back from React to static HTML when the React entry is incomplete.
+
+### 39.3 Static HTML/CSS/JavaScript build path
+
+The static path is a document-preserving static assembler, not a React build:
+1. Resolve the selected HTML entry. A single nested HTML file may become the output `index.html`; multiple HTML files require an explicit `index.html` entry.
+2. Build a normalized source-path map before rewriting anything. Resolve each relative `src`, `href`, `poster` and CSS `url(...)` reference relative to the original HTML/CSS file directory.
+3. If a reference is missing at its written path, resolve by basename only when exactly one safe source file matches. If zero or multiple candidates exist, fail with the exact missing/ambiguous path; never silently omit a stylesheet or script.
+4. Preserve authored inline `<style>`, inline `<script>`, classic `<script src>`, and `type="module"` scripts. Preserve `defer`, `async`, `type`, ordering and attributes. Do not place a script tag inside another script tag and do not convert classic scripts to module scripts implicitly.
+5. Copy all validated browser files into the immutable artifact using stable relative paths. Generate a root `index.html` only when the adapter is intentionally generating a missing entry; do not replace an authored HTML document with a generic shell.
+6. Emit an artifact manifest that lists every copied file, byte size and content type. Validate every referenced local CSS/JS file resolves to an emitted artifact file before the release is marked ready.
+
+The existing source-file policy remains in force: no user package installation, no Node/runtime server code, no environment/secret files, no unrestricted network access, and no source execution in the Next.js process. Binary media remains under the separately approved media attachment flow; do not pretend arbitrary image files are supported by the text-source pipeline.
+
+### 39.4 React JSX/TSX + Tailwind v4 + Motion build path
+
+The React path uses the pinned isolated Vite compiler:
+1. Validate the required React entry structure or generate platform-owned entries for a single-file JSX/TSX component.
+2. JSX projects use React/React DOM 19. TSX projects run the pinned TypeScript check before bundling.
+3. `src/index.css` must load Tailwind CSS v4 through the platform-approved PostCSS integration. Vite must emit the compiled CSS and JS module chunks referenced from the final HTML.
+4. Motion must be imported from `motion/react`. Keep React/React DOM deduped and package imports on the explicit allowlist.
+5. Validate the final HTML's module script, CSS links, modulepreload links and every emitted chunk against the output manifest. Missing or unreferenced bundles fail the build rather than producing a published blank canvas.
+6. The generated React entry must expose a positive mount-ready signal after the first React commit. For user-authored entry points, use a platform-owned root/mount adapter or an explicit validated ready contract; do not treat an empty `#root` as success.
+
+### 39.5 Shared immutable artifact contract
+
+Both build modes publish the same version-bound artifact shape:
+- `artifactId`, `sourceVersionId`, `sourceContentHash`, `buildHash`, `mode`, and `entryPath`.
+- `outputFiles[]`: normalized relative `path`, verified `contentType`, `byteSize`, and immutable Blob URL.
+- Build status becomes `ready` only after the manifest is complete, every output file is uploaded and verified, the entry exists, and the local reference graph is valid.
+- The current published source-version pointer must match the artifact's `sourceVersionId` on every public runtime delivery. Drafts and unpublished files are never served through the public route.
+
+### 39.6 One public detail renderer
+
+The detail page remains presentation-only and does not compile or evaluate project source. It reads the exact published artifact pointer and renders one sandboxed iframe:
+- `static-html`: the root HTML document is served as inline HTML; its original classic/module scripts and CSS load from the same artifact URL namespace.
+- `react-js` / `react-ts`: the root HTML document loads Vite's emitted CSS and module chunks from that same namespace, then reports React mount readiness.
+- The runtime route serves only paths present in the ready artifact manifest. It returns explicit MIME types, inline disposition, no-referrer, opaque-origin-compatible CSP and immutable cache headers. An asset lookup miss returns a real 404 and safe diagnostic event; never silently return the HTML entry for a missing JS/CSS path.
+- Keep `sandbox="allow-scripts"` without `allow-same-origin`. Do not relax it to hide asset bugs.
+- Static runtime readiness is sent after `load` plus a document/visual readiness check. React readiness is sent after the React root has committed. Runtime errors, rejected promises, CSP violations, asset 404s and readiness timeout are reported distinctly.
+- The parent accepts messages only from the current iframe and exact artifact ID. The iframe receives no cookies, source snapshot, owner token or database access.
+
+### 39.7 Owner Run and publishing parity
+
+Owner Studio Run and Publish call the same mode classifier, path normalizer and build implementation. The only difference is output destination:
+- Run builds the unsaved editor working copy into an expiring isolated preview session.
+- Publish builds the saved immutable source version and stores a ready artifact.
+- Do not maintain separate static/React behavior in Run and Publish. A project that passes Run must exercise the same generated HTML and asset graph that Publish later stores.
+
+### 39.8 Required regression matrix and release gates
+
+| Fixture | Required proof |
+|---|---|
+| Root `index.html` + root `style.css` + classic `script.js` | Styled page, script side-effect visible, all requests 200 with correct MIME |
+| Nested `src/index.html` + `src/index.css` + `src/script.js` | Normalized output paths work without basename guessing when paths are explicit |
+| Root `index.html` referencing unique nested `src/index.css` / `src/script.js` | Unique-basename fallback rewrites paths; ambiguous matches fail clearly |
+| Inline CSS + inline JS + Canvas animation | Background, layout and Canvas render; animation starts; no nested script markup |
+| React JSX + Tailwind v4 + Motion + state | CSS utilities load, React root commits, Motion animation runs, interaction changes state |
+| React TSX + Tailwind v4 + Motion | Type-check passes, bundles load, React root commits, interaction runs |
+| Missing CSS/JS chunk / wrong MIME / CSP rejection | Specific runtime diagnostic and retry state, not a silent blank/unstyled document |
+| Old artifact after a new publish | Old immutable URL remains internally consistent; public slug resolves only the current published pointer |
+
+Release acceptance requires a deployed browser test for every fixture, not only a Vite build or smoke test. Capture network status/content-type for each CSS/JS asset and confirm visible output. The current compiler smoke test must be extended to fetch the served artifact entry and all referenced assets; a future headless Chromium pass should additionally assert rendered styles, React mount signal, Canvas output and a working Motion/state interaction.
+
+### 39.9 Implementation phases
+
+1. **P0-A — Inventory and classify:** record the exact source paths and authored HTML references for the two failing published experiments; establish whether each is static or React and retain their immutable source versions.
+2. **P0-B — Static adapter:** implement path graph resolution, preserve classic/module scripts and CSS, copy static browser files and fail on missing/ambiguous references.
+3. **P0-C — React adapter:** make the React root/ready signal deterministic and validate the complete Vite CSS/module asset graph.
+4. **P0-D — Artifact route hardening:** serve only manifest-listed files with correct types, status codes, CSP and cache semantics; add per-file diagnostics.
+5. **P0-E — End-to-end verification:** Run and Publish each fixture, then test the published detail iframe and all built-in demos in browser.
+6. Only after P0 passes, resume skeletons, generated posters and optional media-role rendering.
+
+**Current status:** Architecture decision recorded. The shared iframe and immutable artifact route exist, but this dual-mode build contract and full browser-level asset verification are not yet complete. The previous CSP repair alone did not resolve the supplied screenshots.
