@@ -311,6 +311,67 @@ try {
     throw new Error("The static JavaScript file was not bundled into the static HTML preview.");
   }
 
+  const fluidGradientFiles = prepareReactProject([
+    {
+      path: "src/fluid_gradient_background-1-.html",
+      language: "html",
+      content: [
+        "<!DOCTYPE html>",
+        '<html lang="en">',
+        "<head>",
+        '  <meta charset="UTF-8">',
+        '  <meta name="viewport" content="width=device-width, initial-scale=1.0">',
+        "  <title>Fluid Gradient Background</title>",
+        "  <style>",
+        "    * { margin: 0; padding: 0; box-sizing: border-box; }",
+        "    html, body { width: 100%; height: 100%; overflow: hidden; background: #0b0d19; }",
+        "    #gradient-canvas { position: absolute; inset: 0; width: 100%; height: 100%; filter: blur(60px); }",
+        "    .content-overlay { position: relative; z-index: 10; display: grid; min-height: 100vh; place-items: center; pointer-events: none; }",
+        "    .glass-card { padding: 40px 48px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.07); color: white; pointer-events: auto; }",
+        "  </style>",
+        "</head>",
+        "<body>",
+        '  <canvas id="gradient-canvas"></canvas>',
+        '  <div class="content-overlay"><div class="glass-card"><h1>Fluid Canvas</h1><p>Canvas animation preview</p></div></div>',
+        "  <script>",
+        "    const canvas = document.getElementById('gradient-canvas');",
+        "    const ctx = canvas.getContext('2d');",
+        "    let width = 0, height = 0;",
+        "    const colors = [{r:79,g:70,b:229},{r:236,g:72,b:153},{r:6,g:182,b:212},{r:147,g:51,b:234}];",
+        "    const orbs = [];",
+        "    function resize() { width = canvas.width = innerWidth; height = canvas.height = innerHeight; }",
+        "    function animate() { ctx.clearRect(0,0,width,height); ctx.globalCompositeOperation = 'screen'; requestAnimationFrame(animate); }",
+        "    addEventListener('resize', resize); resize(); animate();",
+        "  </script>",
+        "</body>",
+        "</html>",
+      ].join("\n"),
+    },
+  ]);
+  const fluidEntry = fluidGradientFiles.find((file) => file.path === "index.html");
+  if (!fluidEntry || !fluidEntry.content.includes("<canvas id=\"gradient-canvas\">") ||
+      !fluidEntry.content.includes("<style>") || !fluidEntry.content.includes("requestAnimationFrame(animate)")) {
+    throw new Error("The nested Fluid Gradient HTML entry lost its inline CSS, Canvas or JavaScript.");
+  }
+  const fluidInput = path.join(root, ".smoke-fluid-input");
+  const fluidProject = path.join(root, ".smoke-fluid-project");
+  const fluidOutput = path.join(root, ".smoke-fluid-output");
+  await writeInput(fluidInput, fluidGradientFiles.map(({ path: filePath, content }) => ({ path: filePath, content })));
+  const fluidBuild = runBuild(fluidInput, fluidProject, fluidOutput);
+  if (fluidBuild.status !== 0) {
+    process.stderr.write(fluidBuild.stderr || fluidBuild.stdout || "The nested Fluid Gradient HTML build failed.\n");
+    process.exit(1);
+  }
+  const fluidHtml = await fs.readFile(path.join(fluidOutput, "index.html"), "utf8");
+  if (!fluidHtml.includes("Fluid Gradient Background") ||
+      !fluidHtml.includes("<canvas") ||
+      !fluidHtml.includes("requestAnimationFrame(animate)")) {
+    throw new Error("The built Fluid Gradient preview did not preserve its inline HTML/CSS/Canvas script.");
+  }
+  await fs.rm(fluidInput, { recursive: true, force: true });
+  await fs.rm(fluidProject, { recursive: true, force: true });
+  await fs.rm(fluidOutput, { recursive: true, force: true });
+
   const cssOnlyFiles = prepareReactProject([
     {
       path: "styles.css",
@@ -451,7 +512,7 @@ try {
   }
 
   process.stdout.write(
-    "PASS: idempotent sandbox input setup, static HTML/CSS/JS builds and static preview server asset delivery, CSS-only builds, JSX + TSX type checking, React 19, Motion, Lucide, React Icons, Tailwind v4, CSP, isolated preview HTTP server/bridge, traversal blocking and invalid-type rejection.\n",
+    "PASS: idempotent sandbox input setup, nested Fluid Gradient HTML with inline CSS/Canvas JavaScript, static HTML/CSS/JS builds and asset delivery, CSS-only builds, JSX + TSX type checking, React 19, Motion, Lucide, React Icons, Tailwind v4, CSP, isolated preview HTTP server/bridge, traversal blocking and invalid-type rejection.\n",
   );
 } finally {
   await Promise.all([
