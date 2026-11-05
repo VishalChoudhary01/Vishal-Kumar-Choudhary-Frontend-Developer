@@ -1,18 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
-import {
-  motion,
-  useMotionValue,
-  useSpring,
-} from "motion/react";
+import { useCallback, useRef, useState } from "react";
 import useReducedMotion from "@/app/hooks/useReducedMotion";
-
-const SPRING = {
-  stiffness: 280,
-  damping: 24,
-  mass: 0.55,
-};
+import MagneticButton from "@/app/components/labs/ui/MagneticButton";
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
@@ -20,13 +10,7 @@ function clamp(value, min, max) {
 
 export default function MagneticInteraction({ settings = {} }) {
   const fieldRef = useRef(null);
-  const isEngagedRef = useRef(false);
   const prefersReducedMotion = useReducedMotion();
-
-  const rawX = useMotionValue(0);
-  const rawY = useMotionValue(0);
-  const x = useSpring(rawX, SPRING);
-  const y = useSpring(rawY, SPRING);
 
   const [isEngaged, setIsEngaged] = useState(false);
   const [activationCount, setActivationCount] = useState(0);
@@ -35,56 +19,17 @@ export default function MagneticInteraction({ settings = {} }) {
   const radius = clamp(Number(settings.radius) || 180, 80, 300);
   const showField = settings.showField !== false;
 
-  const updateEngagedState = (nextValue) => {
-    if (isEngagedRef.current === nextValue) return;
-
-    isEngagedRef.current = nextValue;
+  const handleEngagementChange = useCallback((nextValue) => {
     setIsEngaged(nextValue);
-  };
+  }, []);
 
-  const resetMagnet = () => {
-    rawX.set(0);
-    rawY.set(0);
-    updateEngagedState(false);
-  };
-
-  const handlePointerMove = (event) => {
-    if (
-      prefersReducedMotion ||
-      event.pointerType === "touch" ||
-      strength <= 0
-    ) {
-      resetMagnet();
-      return;
-    }
-
-    const bounds = fieldRef.current?.getBoundingClientRect();
-    if (!bounds) return;
-
-    const centerX = bounds.left + bounds.width / 2;
-    const centerY = bounds.top + bounds.height / 2;
-    const offsetX = event.clientX - centerX;
-    const offsetY = event.clientY - centerY;
-    const distance = Math.hypot(offsetX, offsetY);
-
-    if (distance >= radius) {
-      resetMagnet();
-      return;
-    }
-
-    const proximity = 1 - distance / radius;
-    const influence = Math.pow(proximity, 1.25);
-
-    rawX.set(clamp(offsetX * 0.24 * influence, -strength, strength));
-    rawY.set(clamp(offsetY * 0.24 * influence, -strength, strength));
-    updateEngagedState(true);
-  };
+  const handleActivate = useCallback(() => {
+    setActivationCount((count) => count + 1);
+  }, []);
 
   return (
     <div
       ref={fieldRef}
-      onPointerMove={handlePointerMove}
-      onPointerLeave={resetMagnet}
       className="relative flex h-full w-full select-none items-center justify-center overflow-hidden bg-background"
     >
       <div
@@ -127,23 +72,13 @@ export default function MagneticInteraction({ settings = {} }) {
 
       <div className="pointer-events-none absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full border border-brand/10 sm:h-40 sm:w-40" />
 
-      <motion.button
-        type="button"
-        style={{ x, y }}
-        onClick={() => setActivationCount((count) => count + 1)}
-        className="group relative z-10 inline-flex min-h-14 items-center gap-3 rounded-[var(--radius-md)] border border-brand/30 bg-brand px-6 py-4 text-sm font-semibold text-brand-contrast shadow-[0_12px_36px_-18px_var(--brand)] transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4 focus-visible:ring-offset-background active:bg-brand-pressed motion-reduce:transition-none sm:px-8"
-      >
-        <span
-          aria-hidden="true"
-          className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] border border-brand-contrast/25 bg-brand-contrast/10"
-        >
-          <span className="h-2 w-2 rounded-full bg-brand-contrast" />
-        </span>
-        <span>Magnetic button</span>
-        <span aria-hidden="true" className="text-base opacity-75">
-          ↗
-        </span>
-      </motion.button>
+      <MagneticButton
+        fieldRef={fieldRef}
+        strength={strength}
+        radius={radius}
+        onClick={handleActivate}
+        onEngagementChange={handleEngagementChange}
+      />
 
       <div className="pointer-events-none absolute bottom-5 left-1/2 flex w-full -translate-x-1/2 flex-col items-center gap-1 px-4 text-center sm:bottom-7">
         <p className="text-xs font-medium text-text-secondary">
