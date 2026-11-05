@@ -33,7 +33,7 @@ const source = [
       '        <Sparkles aria-hidden="true" />',
       '        <h1 className="mt-4 text-3xl font-bold">Single-file JSX preview passed</h1>',
       '        <button type="button" className="mt-6 bg-teal-300 px-4 py-2 text-black" onClick={() => setCount((value) => value + 1)}>',
-      "          Count {count} <ArrowUpRight aria-hidden="true" />",
+      '          Count {count} <ArrowUpRight aria-hidden="true" />',
       "        </button>",
       "      </motion.section>",
       "    </main>",
