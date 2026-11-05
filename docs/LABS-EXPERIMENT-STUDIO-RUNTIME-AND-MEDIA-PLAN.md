@@ -456,11 +456,10 @@ These decisions must be resolved before the corresponding implementation phase. 
 1. Immutable artifact/object storage provider for compiled JS/CSS/HTML bundles. Cloudinary is for media delivery, not the default compiler artifact store.
 2. The compiler's exact React/TypeScript/React Icons package versions and generated TypeScript settings must be pinned in the next toolchain release.
 3. Final resource ceilings, cost controls, snapshot retention/refresh policy and browser runtime host/origin must be verified against the deployed Vercel Sandbox configuration.
-5. Cloudinary upload limits, transformation quotas, draft access mode and public delivery mode.
-6. Exact max upload size, video duration, dimensions and per-owner storage quota, derived from the actual account plan.
-7. Whether additional browser capabilities such as Web Workers, WebGL/Three.js, WebAssembly and controlled outbound API access are added after the initial release.
-8. The TS/TSX target is approved; the exact TypeScript version and fixed compiler settings must be pinned in the compiler toolchain release.
-9. Whether a media-only experiment type is ever needed; the current baseline remains an interactive code experiment with optional fallback media only.
+4. Cloudinary upload limits, transformation quotas, draft access mode and public delivery mode.
+5. Exact max upload size, video duration, dimensions and per-owner storage quota, derived from the actual account plan.
+6. Whether additional browser capabilities such as Web Workers, WebGL/Three.js, WebAssembly and controlled outbound API access are added after the initial release.
+7. Whether a media-only experiment type is ever needed; the current baseline remains an interactive code experiment with optional fallback media only.
 
 Detailed implementation requirements for TypeScript/TSX, React Icons, type diagnostics and the compiler snapshot blocker are in `LABS-REACT-JSX-TSX-TAILWIND-MOTION-RUNTIME-PLAN.md`.
 
