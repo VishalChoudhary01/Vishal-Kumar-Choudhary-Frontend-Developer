@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useActionToast } from "@/app/providers/ActionToastProvider";
 import Link from "next/link";
 import {
   ArrowUpRight,
@@ -13,6 +14,7 @@ import {
   RefreshCw,
   Search,
   SearchX,
+  Trash2,
 } from "lucide-react";
 
 const FILTERS = [
@@ -74,6 +76,7 @@ function StateLabel({ state }) {
 }
 
 export default function LabSourceInventory() {
+  const { showToast } = useActionToast();
   const [items, setItems] = useState([]);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
@@ -81,6 +84,9 @@ export default function LabSourceInventory() {
   const [refreshing, setRefreshing] = useState(false);
   const [creating, setCreating] = useState("");
   const [error, setError] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   async function loadInventory({ quiet = false } = {}) {
     if (quiet) setRefreshing(true);
@@ -206,6 +212,35 @@ export default function LabSourceInventory() {
     }
   }
 
+  async function deleteExperiment() {
+    if (!deleteTarget || deleteConfirmation.trim() !== deleteTarget.slug) {
+      showToast("error", "Enter the exact experiment slug to confirm deletion.");
+      return;
+    }
+    setDeleting(true);
+    try {
+      const response = await fetch("/api/v1/admin/labs/experiments/" + encodeURIComponent(deleteTarget.slug), {
+        method: "DELETE",
+        cache: "no-store",
+        credentials: "same-origin",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmSlug: deleteConfirmation.trim() }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || payload?.data?.deleted !== true) {
+        throw new Error(payload?.error?.message || "The experiment could not be deleted.");
+      }
+      setItems((current) => current.filter((item) => item.slug !== deleteTarget.slug));
+      showToast("success", "Experiment, source history and associated assets deleted.");
+      setDeleteTarget(null);
+      setDeleteConfirmation("");
+    } catch (reason) {
+      setError(reason.message || "The experiment could not be deleted.");
+      showToast("error", reason.message || "The experiment could not be deleted.");
+    } finally {
+      setDeleting(false);
+    }
+  }
   return (
     <section aria-labelledby="source-inventory-title" className="mt-10">
       <header className="flex flex-wrap items-end justify-between gap-4">
