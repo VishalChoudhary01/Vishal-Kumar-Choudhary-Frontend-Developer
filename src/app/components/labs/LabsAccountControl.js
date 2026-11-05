@@ -11,6 +11,7 @@ import { publishAuthEvent, subscribeAuthEvents } from "@/app/lib/auth/session-ev
 export default function LabsAccountControl({
   initialUser = null,
   initialSessionResolved = false,
+  scrolled = false,
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -171,7 +172,10 @@ export default function LabsAccountControl({
     return (
       <div
         aria-hidden="true"
-        className="h-8 w-[112px] animate-pulse bg-surface-2/70 motion-reduce:animate-none"
+        className={[
+          "h-8 w-[112px] animate-pulse bg-surface-2/70 motion-reduce:animate-none",
+          scrolled ? "rounded-full" : "rounded-sm",
+        ].join(" ")}
       />
     );
   }
@@ -185,7 +189,10 @@ export default function LabsAccountControl({
         {!isLoginPage ? (
           <Link
             href={signInHref}
-            className="inline-flex h-8 items-center px-2 text-[11px] font-medium text-text-secondary transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:px-2.5 sm:text-xs"
+            className={[
+              "inline-flex h-8 items-center px-2 text-[11px] font-medium text-text-secondary transition-[color,background-color,border-radius] duration-300 hover:bg-surface-2/70 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:px-2.5 sm:text-xs",
+              scrolled ? "rounded-full" : "rounded-sm",
+            ].join(" ")}
           >
             Sign in
           </Link>
@@ -193,7 +200,10 @@ export default function LabsAccountControl({
         {!isSignupPage ? (
           <Link
             href={signUpHref}
-            className="inline-flex h-8 items-center justify-center border border-brand bg-brand px-2.5 text-[11px] font-semibold text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:px-3 sm:text-xs"
+            className={[
+              "inline-flex h-8 items-center justify-center border border-brand bg-brand px-2.5 text-[11px] font-semibold text-brand-contrast transition-[background-color,border-radius,transform] duration-300 hover:-translate-y-px hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:px-3 sm:text-xs",
+              scrolled ? "rounded-full" : "rounded-sm",
+            ].join(" ")}
           >
             <span className="sm:hidden">Create</span>
             <span className="hidden sm:inline">Create account</span>
