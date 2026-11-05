@@ -1,9 +1,10 @@
 # Labs Experiment Studio — Runtime, Media and Publishing Plan
 
-**Status:** The isolated compiler now supports React JSX/TSX and standalone HTML/CSS/JavaScript preview. The current branch passes the expanded compiler smoke suite (including HTTP delivery of static HTML, CSS and JS), targeted ESLint, and a clean Next.js production build with all 18 static pages. The 503 root cause is confirmed: the live Preview calls non-idempotent `sandbox.mkDir("/vercel/sandbox/input")` against a snapshot where that directory already exists. The branch now uses idempotent `mkdir -p` through `ensureSandboxInputDirectory()`. However, the latest READY Preview is still commit `096e185` and does not include the wired fix or static preview support. Vercel is currently blocking a new deployment with HTTP 402 (100 API deployments/day). Do not claim the issue is live-fixed until a new Preview deployment is available and owner Run is verified in-browser. Production publishing remains disabled.  
-**Latest locally verified branch commit:** `b7cae3729ba3ecded5d56a35f9c632e6e9dc6b78`  
-**Applies to:** Owner-created experiments in Labs, while preserving the four existing code-owned experiments.  
-**Primary implementation branch:** `feat/labs-platform-integration`  
+**Status:** The isolated compiler supports React JSX/TSX and standalone HTML/CSS/JavaScript. The latest verified feature-branch source passes the expanded compiler smoke suite (including HTTP delivery of static HTML, CSS and JS), targeted ESLint, and a clean Next.js production build with all 18 static pages. The 503 root cause was confirmed as non-idempotent `sandbox.mkDir("/vercel/sandbox/input")` against a snapshot where the directory already exists; the branch now uses `mkdir -p` through `ensureSandboxInputDirectory()`. A fresh Git-connected Preview is READY at [mx029pt12.vercel.app](https://vishal-kumar-choudhary-frontend-developer-mx029pt12.vercel.app/) on commit `5c36673`, which includes the Sandbox wiring fix, static HTML/CSS path and `clipPath` percentage fixes. Its last 30-minute runtime-log query returned no errors, but a fresh authenticated Run click still needs owner browser verification. The current branch is ahead with additional smoke-test cleanup and `.htm` extension alignment. Keep Production publishing disabled until browser Run and public artifact checks pass.
+**Latest local branch commit:** `be8ddd83e72c81bbeab9848ae7c376d04f91db97`
+**Latest READY Preview:** `5c366730cafa6ba9300af0986aa5d379410e787d`
+**Applies to:** Owner-created experiments in Labs, while preserving the four existing code-owned experiments.
+**Primary implementation branch:** `feat/labs-platform-integration`
 ---
 
 ## Latest preview regression investigation — 5 November 2026
@@ -31,6 +32,15 @@ The browser warning `Invalid keyframe value for property clipPath` was caused by
 ### Deployment gate
 The latest READY Preview deployment remains commit `096e185`, before the compiler-service wiring fix, standalone HTML/CSS path and clip-path changes. Vercel rejected further API deployment creation with HTTP 402 (`api-deployments-free-per-day`, retry-after 24 hours). The 503 and browser warnings can therefore persist on that old deployment. Deploy the latest branch commit when the quota allows; then verify the owner Run route for HTML/CSS, JSX and TSX, confirm iframe asset requests return 200, and inspect the browser console for clip-path warnings. Do not enable Production publishing until this deployed browser QA and an immutable public artifact test pass.
 
+## Latest preview deployment — 5 November 2026
+
+- New Git-connected Preview READY: `https://vishal-kumar-choudhary-frontend-developer-mx029pt12.vercel.app/` (commit `5c36673`).
+- The deployed commit includes the idempotent Sandbox directory initialization, standalone HTML/CSS/JS preparation/build path, static preview asset server and footer/hero clip-path percentage fixes.
+- The last 30-minute runtime-log query for this deployment found no errors; it did not show a Run request. The owner must perform the first authenticated Run test on this deployment.
+- The current branch has later changes to smoke-test cleanup and `.htm` extension alignment; those are verified locally but are not part of this deployment.
+- Test URL for the existing owner experiment: `/admin/labs/sources/spotlight-dock`.
+- Test HTML/CSS, JSX and TSX. Confirm the Run API returns a preview URL, the iframe document and its CSS/JS assets return HTTP 200, and the browser console has no invalid `clipPath` keyframe warning.
+- Do not publish to Production until a saved test version is published in Preview and the public Labs detail page is confirmed to run the same immutable artifact.
 ## 1. Product outcome
 
 The Studio is an owner-only creative coding workspace. The owner must be able to create an original experiment, write or import its code, run the actual interactive experience, inspect errors and save immutable drafts. Image/GIF/video upload is optional and exists only as a fallback when the code preview cannot run or is unsupported.
