@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, Monitor, Play, RefreshCw, Smartphone, Terminal } from "lucide-react";
 
 export default function LabSourceLivePreview({ slug, files }) {
@@ -12,10 +12,10 @@ export default function LabSourceLivePreview({ slug, files }) {
   const [error, setError] = useState("");
   const frameRef = useRef(null);
 
-  const frameOrigin = useMemo(() => {
-    if (!run?.previewUrl) return "";
-    try { return new URL(run.previewUrl).origin; } catch { return ""; }
-  }, [run?.previewUrl]);
+  let frameOrigin = "";
+  if (run?.previewUrl) {
+    try { frameOrigin = new URL(run.previewUrl).origin; } catch { frameOrigin = ""; }
+  }
 
   useEffect(() => {
     const onMessage = (event) => {
