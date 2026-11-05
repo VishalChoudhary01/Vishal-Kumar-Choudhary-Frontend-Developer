@@ -4,7 +4,10 @@ import { connectToDatabase } from "@/app/lib/db/mongoose";
 import LabBuildArtifact from "@/app/lib/labs/models/LabBuildArtifact";
 import LabExperiment from "@/app/lib/labs/models/LabExperiment";
 import LabSource from "@/app/lib/labs/models/LabSource";
-import { stripPublishedRuntimeCspMeta } from "@/app/lib/labs/runtime-html.mjs";
+import {
+  buildPublishedRuntimeCsp,
+  stripPublishedRuntimeCspMeta,
+} from "@/app/lib/labs/runtime-html.mjs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -203,21 +206,10 @@ function getRuntimeHeaders({ contentType, fileName, isHtml, origin, assetBase })
   if (isHtml) {
     headers.set(
       "Content-Security-Policy",
-      [
-        "default-src 'none'",
-        `script-src 'unsafe-inline' ${assetBase}`,
-        `style-src 'unsafe-inline' ${assetBase}`,
-        `img-src ${assetBase} data: blob:`,
-        `font-src ${assetBase} data:`,
-        `media-src ${assetBase} data: blob:`,
-        "connect-src 'none'",
-        "worker-src 'none'",
-        "frame-src 'none'",
-        "object-src 'none'",
-        "form-action 'none'",
-        "base-uri 'none'",
-        `frame-ancestors ${origin}`,
-      ].join("; "),
+      buildPublishedRuntimeCsp({
+        assetBase,
+        parentOrigin: origin,
+      }),
     );
   }
 
