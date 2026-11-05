@@ -409,8 +409,8 @@ export default function LabSourceInventory() {
                       >
                         <Trash2 size={14} aria-hidden="true" />
                       </button>
-
-                    </>                    ) : null}
+                    ) : null}
+                    </>
                   ) : (
                     <button
                       type="button"
