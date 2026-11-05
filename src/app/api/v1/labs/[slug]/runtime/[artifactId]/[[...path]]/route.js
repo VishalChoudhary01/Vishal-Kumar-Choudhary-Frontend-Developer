@@ -325,9 +325,8 @@ export async function GET(request, { params }) {
       });
     }
 
-    const upstreamLength = upstream.headers.get("content-length");
-    if (upstreamLength) headers.set("Content-Length", upstreamLength);
-
+    // Do not forward the upstream Content-Length: fetch may transparently
+    // decompress a Blob response, so that length may no longer match the stream.
     return new Response(upstream.body, {
       status: 200,
       headers,
