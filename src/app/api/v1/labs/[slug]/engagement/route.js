@@ -9,6 +9,7 @@ import {
   setLabLike,
 } from "@/app/lib/labs/engagement";
 import { getPublishedLabExperimentBySlug } from "@/app/data/labsExperiments";
+import { isPublishedCustomLabSlug } from "@/app/lib/labs/public-experiments";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -49,10 +50,17 @@ async function readSession() {
   return getCurrentAuthSession();
 }
 
+async function isPublicExperiment(slug) {
+  return Boolean(
+    getPublishedLabExperimentBySlug(slug) ||
+    await isPublishedCustomLabSlug(slug)
+  );
+}
+
 export async function GET(request, { params }) {
   const { slug } = await params;
 
-  if (!SLUG_PATTERN.test(slug || "") || !getPublishedLabExperimentBySlug(slug)) {
+  if (!SLUG_PATTERN.test(slug || "") || !(await isPublicExperiment(slug))) {
     return json({ error: { code: "NOT_FOUND", message: "Experiment not found." } }, 404);
   }
 
@@ -94,7 +102,7 @@ export async function GET(request, { params }) {
 export async function POST(request, { params }) {
   const { slug } = await params;
 
-  if (!SLUG_PATTERN.test(slug || "") || !getPublishedLabExperimentBySlug(slug)) {
+  if (!SLUG_PATTERN.test(slug || "") || !(await isPublicExperiment(slug))) {
     return json({ error: { code: "NOT_FOUND", message: "Experiment not found." } }, 404);
   }
 
