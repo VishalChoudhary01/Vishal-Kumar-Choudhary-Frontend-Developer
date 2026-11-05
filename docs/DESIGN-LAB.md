@@ -1,6 +1,6 @@
 # Design Specification — Component Lab
 
-**Status:** Product/design requirements; implementation pending  
+**Status:** Product/design authority aligned with the Labs Runtime and Media Plan. Implementation status and release gates are tracked in that plan; this document defines target UX, not proof of deployment readiness.  
 **Related:** [PRD](./PRD.md), [Admin design](./DESIGN-ADMIN.md), [Analytics design](./DESIGN-ANALYTICS.md)
 
 ## 1. Purpose and constraints
@@ -17,7 +17,7 @@ The Lab is a public discovery surface for React components, Motion animations an
 
 ### Experiment cards
 Use a consistent content hierarchy:
-- Preview image or safe static thumbnail.
+- One visual preview: explicitly selected published `gallery-preview` media first, otherwise a generated static poster captured from the exact successfully rendered published artifact, otherwise existing LabArtwork/neutral artwork.
 - Title and concise description.
 - Technology/tag metadata.
 - Relevant engagement counts with clear meaning.
@@ -25,8 +25,15 @@ Use a consistent content hierarchy:
 - Link to a stable experiment detail URL.
 - Do not place full source or privileged configuration in card props or static payloads.
 
+Gallery cards are static-only and must never mount experiment React trees, create runtime iframes, invoke the compiler or start Canvas/animation loops. A generated poster lets a real code experiment appear in the card without running it in the listing or requiring the owner to upload GIF/video.
+
+If an explicitly selected GIF/video is used as a card visual, show a still/poster state by default and load animation only when visible/engaged, with reduced-motion support and a cap on simultaneous playback. Video must be muted, inline and `preload="none"`; never autoplay with sound. Use responsive image sizes, lazy loading, stable 4:3 layout and immutable caching. Never serve a poster from a different published source/artifact version.
+
+
+
 ### Loading, empty and error states
-- Skeleton/loading state that does not cause major layout shifts.
+- Skeleton/loading state that preserves listing header, category row, preview aspect ratio and card text rhythm without major layout shifts.
+- Use route-level skeletons for Labs listing/detail and owner inventory/editor; keep the existing global page loader distinct and avoid duplicate full-screen loaders.
 - Empty state for a genuinely empty Lab.
 - No-results state when search/filter returns nothing, with a reset path.
 - Error state with retry when safe.
@@ -46,10 +53,14 @@ Recommended content order, subject to existing project layout conventions:
 Maintain stable descriptive URLs, e.g. `/lab/animated-gradient-card`. Slugs must be unique, validated and safe. Published pages have appropriate metadata/canonical behavior; draft/private previews must not be indexed.
 
 ## 4. Preview model
-### Static media previews
-- Images, GIFs and supported video are rendered as media, not executable content.
-- Use responsive media sizing, appropriate loading priority and accessible alternative text/captions where applicable.
+### Static media previews and generated code posters
+- Images, GIFs and supported video are rendered as media, never executable content.
+- An uploaded `gallery-preview` asset is the first card-preview choice; otherwise use a generated static poster from the exact published code artifact; otherwise use LabArtwork/neutral artwork.
+- The code poster is generated only after a successful isolated runtime-ready signal and is bound to source-version/artifact IDs. It is not an upload requirement and not the detail-page runtime.
+- `detail-gallery` media is supporting content on the detail page. `runtime-fallback` is shown only after explicit runtime error/unsupported state.
+- Use responsive media sizing, accessible alternatives/captions, lazy loading and reserved aspect ratios. GIF/video animation is visibility/engagement-gated and reduced-motion-aware; video never autoplays with sound.
 - Validate media references and avoid layout shift.
+- The current backend supports only one legacy `fallback-preview` attachment; the three target roles require a reviewed schema/API migration before role controls ship.
 - Respect supported format/size limits once selected in architecture.
 
 ### Interactive previews
@@ -62,7 +73,9 @@ Support both repository-managed registered components and owner-created experime
 - Do not expose application cookies, privileged API endpoints, admin credentials, private source or user-session secrets to the preview runtime.
 - Do not permit arbitrary package installation or unrestricted network fetches.
 - Authenticate and authorize preview creation on the server; validate the exact source hash and asset manifest before publication.
-- Include queued/building, ready, build-error, runtime-error, timeout, stopped and unsupported states.
+- Include queued/building, iframe-starting, runtime-ready, build-error, runtime-error, timeout, stopped and unsupported states. The iframe load event alone is not a runtime-ready signal.
+- Keep a visible preview skeleton until the current run ID sends a validated ready message; never show a blank white canvas.
+- The owner Run action executes the current unsaved working copy and must remain functional while gallery posters/media are developed. The published detail page executes the exact published artifact.
 - The final build provider, artifact store and hosting boundary remain open until architecture/security validation.
 
 ## 5. Source access and code-copy behavior
@@ -70,6 +83,7 @@ Support both repository-managed registered components and owner-created experime
 - Full source is fetched through a server-authorized endpoint for any user with a valid Better Auth session and `emailVerified === true`, provided the requested source version is published. No per-user grant or owner approval is required.
 - Do not embed the full source in guest HTML, static props, RSC payloads, hidden DOM, client bundles or public API responses.
 - Copy control is available only when the verified source viewer is authorized; code-copy actions are reported after successful Clipboard API writes.
+- Keep the source CTA visible to all detail-page visitors. An already verified session loads source directly without a redundant “Check source access” step. Guests see Sign in and Create account with a return path to the same experiment; signed-in unverified users see Verify email. Server authorization remains mandatory.
 - Provide feedback for copy success/failure and a selectable fallback if clipboard permission is unavailable.
 - Instrument a copy action only when the supported client flow reports the action; do not imply that code was pasted or used.
 - Handle expired sessions and permission changes without leaking the source in errors or cached responses.
@@ -79,6 +93,7 @@ Support both repository-managed registered components and owner-created experime
 - Guest likes may use the existing best-effort browser-storage mechanism where available and are not guaranteed unique/cross-device. Verified accounts receive persistent likes with one active like per user/experiment.
 - Authenticated likes are persisted server-side and enforce one active like per user/experiment.
 - Like/unlike state must be clear and accessible.
+- Use React 19 `useOptimistic` for reversible like/unlike feedback; reconcile with the server and roll back on rejection.
 - Handle rapid repeated actions, pending states, server failure and retry without creating duplicate records.
 - Track guest and authenticated actions separately where measurable; document deduplication assumptions.
 - Do not present guest counts as verified unique people.
@@ -112,7 +127,7 @@ Lab editor supports:
 - Live preview of the actual code, not only a static thumbnail.
 - Tailwind v4 build validation and Motion runtime support through the fixed package allowlist.
 - Media upload for images, animated GIFs and videos.
-- Media selection for the card cover, detail gallery and in-experiment asset manifest.
+- Media assignment for card `gallery-preview`, detail `detail-gallery` and runtime `runtime-fallback` roles after schema/API migration. In-experiment asset manifests are outside the initial role migration.
 - Dependency/import policy validation, build diagnostics and runtime error feedback.
 - Version history, restore and explicit publication of an exact immutable release.
 - Publication state and scheduled-job state only if scheduling is separately approved.
@@ -130,7 +145,9 @@ Lab editor supports:
 ## 11. Performance and SEO
 - Do not load editor, syntax-highlighting, preview runtime or chart libraries in the public homepage bundle.
 - Lazy-load expensive detail-page modules and interactive previews.
-- Use static media as the default lightweight listing-card cover. On the experiment detail page, render the actual published interactive runtime as the primary experience; static media is supporting gallery content and never a substitute for the runnable experiment.
+- Use a selected published gallery-preview asset or generated static code-output poster as the lightweight listing-card visual. Never run experiment code, create iframes or compile code in gallery cards.
+- On the experiment detail page, render the actual published interactive runtime as the primary experience; detail-gallery media is supporting content and runtime-fallback media appears only after runtime failure/unsupported state.
+- Lazy-load the detail runtime near its canvas, show runtime skeleton/error/retry states and stop it on navigation away.
 - Optimize responsive images and reserve aspect ratio to reduce layout shift.
 - Published Lab pages have deliberate metadata and canonical behavior.
 - Draft/preview pages are private, non-indexable and excluded from public sitemap/search.
@@ -143,7 +160,11 @@ Lab editor supports:
 - [ ] Full source and restricted interactive previews require server-side authorization.
 - [ ] Untrusted source never executes in the main application context.
 - [ ] Isolation boundary and threat model are reviewed before interactive execution ships.
+- [ ] Gallery cards use selected media or source-version-matched generated posters and execute zero experiment runtimes.
 - [ ] Static previews are responsive, accessible and optimized.
+- [ ] Owner Run still executes current unsaved working copies and public detail pages execute the exact published artifact.
+- [ ] Runtime loading/error/retry/fallback states never leave a blank white canvas.
+- [ ] Route skeletons reserve layout space; optimistic actions reconcile and roll back on server errors.
 - [ ] Guests and signed-in-unverified users cannot view/copy source or use source engagement controls; verified users receive published source automatically.
 - [ ] Source opens, copies and like/unlike actions are counted once under the approved idempotency rules and appear as experiment-level aggregates in owner/admin analytics.
 - [ ] Preview/source failure states are clear and do not leak sensitive details.
@@ -166,7 +187,7 @@ The detailed source-management product and lifecycle contract is owned by `LABS-
 - The editor and syntax-highlighting code are lazy-loaded only inside the owner route. They must not load on `/`, `/labs` or ordinary experiment pages.
 - Reuse the existing portfolio tokens, typography, focus/keyboard conventions, restrained radius and responsive rules. Do not introduce a new UI system.
 - Owner-created experiments publish a full interactive runtime on their detail page. A card cover is a separate optional media asset; it must never be treated as the complete experiment.
-- The public detail page may show an optional image/GIF/video gallery in addition to the actual interactive runtime.
+- The public detail page may show optional `detail-gallery` media in addition to the actual interactive runtime. `runtime-fallback` is a separate failure-only role. Gallery-card posters are separately selected media or generated screenshots; neither role can replace the executable detail runtime.
 - Owner source management does not weaken the compact public source-access gate or change the four existing code-owned demo runtimes.
 
 
