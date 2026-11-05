@@ -51,7 +51,7 @@ This file records the product and UX decisions made for Labs and its authenticat
 - `docs/LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md` is the detailed engineering phase authority for preserving owner Run, isolated published runtime, static gallery posters, role-aware media migration, route skeletons, optimistic action behavior and deployed verification gates. Where older examples in this UX document conflict with its 2026-11-05 approved runtime/poster decision, the newer decision in Section 38 and ADR-017 controls.
 - If older examples use the singular /lab route while this document specifies /labs, use /labs as the approved public UX route. Update related API/PRD references before implementation rather than creating both routes.
 - The public-demo decision in this document is specific: guests may use experiments explicitly published as public demos. This does not authorize arbitrary stored/admin-authored JavaScript to execute in the main application. Any untrusted or restricted preview still requires the separately reviewed isolation boundary in docs/ARCHITECTURE.md and docs/THREAT-MODEL.md.
-- The PRD requirement for email/password and Google sign-in remains in force. Better Auth with its MongoDB adapter is now the selected authentication implementation. Google OAuth credentials remain deployment configuration; the Google action is shown only when configured. GitHub sign-in is not selected.
+- The authentication target is email/password plus Google and GitHub OAuth for both registration and login. Better Auth with its MongoDB adapter remains selected. Current code has Google login only and no GitHub provider; the staged provider expansion is documented in docs/LABS-AUTHENTICATION-PROVIDERS-AND-LEGAL-CLEANUP-PLAN.md.
 - The user explicitly changed the work order: **complete Labs design/implementation before beginning CMS work**. Any older roadmap ordering that puts Admin/CMS ahead of Labs must not override this priority.
 - An earlier decision proposed navigating directly from account creation to the Email Verification screen. That navigation was **superseded** when the user approved privacy-safe generic registration handling and a dedicated generic registration confirmation. The current Sign-up result is the generic confirmation state, not a visibly different state that reveals whether the email was already registered.
 - The user instructed that remaining recommendations should be finalized. Accordingly, the previously recommended treatments listed as **LOCKED — RECOMMENDATION ADOPTED** below are now part of this baseline. Items with no recommendation or insufficient information remain OPEN.
@@ -870,16 +870,20 @@ There is **no Remember me checkbox**. Session persistence is managed by the auth
 
 Use simple text-link styling: `Don't have an account? Create an account`.
 
-### 8.6 Google sign-in and provider UI
+### 8.6 Google and GitHub provider UI — target
 
-**PRODUCT REQUIREMENT — REQUIRED:** docs/PRD.md and docs/README.md require both email/password and Google sign-in.
+**PRODUCT REQUIREMENT — UPDATED 2026-11-05:** keep email/password and add Google and GitHub registration/login.
 
-- The Labs Login experience must support email/password and Google sign-in.
-- The actual authentication provider/service/library, Google OAuth app configuration, callback implementation, account-linking behavior and session implementation remain OPEN.
-- The visual placement, divider copy, button label, icon treatment and ordering of the Google sign-in action are OPEN. Do not invent a final treatment.
-- Do not silently replace Google with GitHub. GitHub sign-in is not required or selected in the current product baseline.
-- Provider authentication must be verified on the server. A client callback or visible signed-in state is not proof of a valid session.
-- The approved Login field/error/loading behavior continues to apply to email/password. Google-provider-specific pending, cancellation, callback failure and account-linking states must be designed when the provider is selected.
+- Show the existing email/password form on Login and Create account.
+- Add Continue with Google and Continue with GitHub on both screens when the corresponding server credentials are configured.
+- Reuse one shared social-auth component/handler; do not duplicate provider request logic.
+- Login OAuth requests are login-only. Signup OAuth requests explicitly request account creation. Do not allow login clicks to silently create an account.
+- Preserve validated local returnTo navigation.
+- Require a same verified email for safe linking to an existing account. Never merge based only on name, username, avatar or unverified email.
+- GitHub must supply a usable primary verified email; handle private email and missing/unverified email safely. Request identity/email scope only, not repository access.
+- Keep secrets server-only. Provider readiness is exposed to the UI as booleans only.
+- Server session and verified-email state remain authoritative. Handle cancellation, denial, missing email, duplicate identity, callback/configuration error and expired state.
+- The current implementation still has Google login only and no GitHub. Follow docs/LABS-AUTHENTICATION-PROVIDERS-AND-LEGAL-CLEANUP-PLAN.md for implementation phases.
 
 ---
 
@@ -901,8 +905,8 @@ Use the shared centered heading/description typography and spacing.
 1. Email address.
 2. Password with show/hide control.
 3. Short password helper text below the password field.
-4. Required Terms of Service and Privacy Policy consent checkbox.
-5. Primary button: `Create account`.
+4. Primary button: `Create account`.
+5. Optional Continue with Google and Continue with GitHub actions when configured.
 6. Secondary line: `Already have an account? Sign in`.
 
 Do not add a full name, username, confirm-password field, Remember me checkbox, or additional profile fields unless separately approved.
@@ -918,28 +922,18 @@ Do not add a full name, username, confirm-password field, Remember me checkbox, 
 
 **OPEN:** The actual password security policy (minimum length, maximum length, allowed characters, compromised-password checks, and any other rules) is not finalized. The example `8 characters` must not be treated as the final security policy unless the backend/security design confirms it. Helper text must match actual server-side enforcement.
 
-### 9.4 Required legal consent
+### 9.4 Terms/Conditions registration UI — removed by user decision 2026-11-05
 
-**LOCKED — USER SELECTED**
+- Do not render a Terms of Service / Terms and Conditions checkbox on signup.
+- Do not require a separate 18+ confirmation checkbox in the registration form.
+- Do not submit acceptedTerms or create a Terms/Privacy consent receipt.
+- Remove the standalone /terms page and its Terms-only footer/contact/sitemap/SEO references.
+- Keep /privacy as a public informational disclosure. It is not a required signup checkbox or an account-creation gate.
+- Keep email verification and the separate verification-flow record. Consent receipt code must be separated from verification-flow code before consent-only helpers/collections are removed.
+- Remove Terms-only configuration, readiness checks and validation conditionals. Registration readiness depends on required auth/database and email delivery, not a Terms document.
+- Update the Privacy Policy's account-registration and provider-data disclosures to reflect the resulting behavior.
 
-Label:
-
-`I agree to the Terms of Service and Privacy Policy.`
-
-- Checkbox is required and unchecked by default.
-- Place below password helper/validation text and above Create account.
-- Terms and Privacy Policy are separate links.
-- Each link opens in a new browser tab.
-- Use `noopener` and `noreferrer` (or equivalent safe link behavior).
-- Opening either legal page must not toggle the checkbox.
-- Preserve the original Sign-up tab and its input/checkbox state.
-- Use the existing restrained checkbox style and accessible focus behavior.
-- If unchecked on submit, block registration and show this inline message immediately below the checkbox: `Please accept the Terms of Service and Privacy Policy to continue.`
-- Clear the consent error after the user checks the checkbox.
-- Record the accepted Terms version, Privacy Policy version, and acceptance timestamp as part of the account-creation/audit design.
-
-**OPEN:** Actual legal document content, URLs, versioning procedure, and legal review are not supplied by this design discussion. Do not create fake legal documents or invented links.
-
+This supersedes the earlier locked checkbox requirement in this document.
 ### 9.5 Sign-up primary action
 
 - Label: `Create account`.
@@ -1419,7 +1413,7 @@ The following items were not finalized by the discussion. They require an explic
 
 ### 16.1 Authentication product and provider decisions
 
-1. **Resolved:** Better Auth with `@better-auth/mongo-adapter` is selected for email/password and Google sign-in. Google OAuth client credentials and production callback configuration remain deployment requirements. Google account linking uses Better Auth's verified same-email linking behavior; no force-trusted provider override is configured. Implicit Google sign-up remains disabled so Google cannot bypass the consent-aware registration route.
+1. **Resolved:** Better Auth with `@better-auth/mongo-adapter` remains selected. Target methods are email/password, Google and GitHub for both login and registration. Current code only exposes Google login and has no GitHub provider. Login OAuth must not create accounts implicitly; signup uses explicit account-creation intent. Linking requires the same verified email and no forced trusted-provider bypass.
 2. Email delivery provider/service, sending domain, templates, retry and bounce handling.
 3. Verification token format, token lifetime, single-use storage, resend/replay semantics and verification endpoint design.
 4. Password-reset token format, lifetime, single-use storage and endpoint contract.
@@ -1431,8 +1425,8 @@ The following items were not finalized by the discussion. They require an explic
 10. Exact masking algorithm for displayed email addresses.
 11. The current implementation enforces 8–128 characters, matching the visible helper text and Better Auth policy. Any breached-password screening or policy change remains open.
 12. Exact rate limits/cooldowns for sign-up, Login, reset requests, verification resends and failed attempts beyond the approved 30-second client resend cooldown.
-13. Google sign-in button placement and interaction states.
-14. Whether any additional provider beyond Google is desired in the future; GitHub is not currently selected.
+13. **Resolved 2026-11-05:** Google and GitHub actions appear on both Login and Create account screens when configured, using a shared component/handler.
+14. Provider setup and edge-case tests are tracked in docs/LABS-AUTHENTICATION-PROVIDERS-AND-LEGAL-CLEANUP-PLAN.md.
 
 ### 16.2 Authorization decisions
 
@@ -2246,16 +2240,16 @@ This section records the implementation baseline on `feat/labs-public-page`. It 
 - Authentication APIs are mounted at `/api/auth/[...all]`. The raw Better Auth email sign-up endpoint is blocked; public registration must use the consent-aware `POST /api/labs/register` route.
 - Email/password is enabled. Sign-up does not automatically establish a session; email verification is required before sign-in.
 - Passwords currently enforce 8–128 characters. Password reset revokes existing sessions.
-- Google sign-in is conditionally enabled when both `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` exist. The action is hidden if those credentials are absent. Implicit Google account creation is disabled; trusted Google account linking is enabled for existing accounts. Configure the provider callback URL as `/api/auth/callback/google` on the registered production origin.
-- No GitHub provider is enabled.
+- Google sign-in currently appears only when both `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` exist. It is currently login/linking only; Google account creation is disabled.
+- GitHub OAuth is not yet configured. The approved target adds Google and GitHub registration/login while preserving email/password. Do not treat this target as implemented until provider setup and browser tests pass.
 
 ### 36.2 Registration, email verification and privacy
 
-- Registration writes a server-managed receipt in the private `labs_registration_consents` collection. It stores the server-selected Terms/Privacy versions, server timestamp, a keyed email digest, linked Better Auth user ID and verified timestamp. Consent values are not editable from client profile input.
-- The Terms of Service and Privacy Policy are first-party pages at `/terms` and `/privacy`. Their canonical URLs derive from `NEXT_PUBLIC_SITE_URL`; server-side policy versions are maintained in `src/app/lib/legal/policies.js`.
-- Registration stays disabled unless MongoDB/auth secrets and SMTP delivery are configured. First-party Terms and Privacy pages are wired into the sign-up flow; current versions are selected by the server.
-- Consent receipts live in `labs_registration_consents`; verification-flow identifiers and status live separately in `labs_verification_flows`. Email values are stored only as keyed HMAC digests in these records, not in plaintext.
-- Public legal routes `/terms` and `/privacy` are included in the sitemap and linked from the footer, contact form and Labs sign-up page. Policy versions are server-owned (`2026-11-04` initially) and must be incremented alongside material text changes.
+- The previous implementation records Terms/Privacy consent receipts in `labs_registration_consents`. This receipt system and Terms-only registration gate are in the approved removal scope; split the verification-flow functions out of `registration-consent.js` before deleting consent-only helpers.
+- Keep `labs_verification_flows` for email verification. It is distinct from legal consent receipts and must not be removed.
+- Keep the public `/privacy` page and its footer/contact/sitemap links. Remove the standalone `/terms` route and Terms-only links/SEO references as part of the cleanup. The Privacy Policy is informational and is not a registration checkbox or gate.
+- Remove Terms-only readiness checks so registration depends on MongoDB/auth and email delivery configuration, not a Terms page.
+- Update Privacy wording to describe current email/password, Google and GitHub data flows and remove stale claims about recording Terms consent.
 - Duplicate and new-account submissions receive the same generic public response. Account-specific results are not returned to the browser.
 - A server-side HMAC rate limit allows at most five registration attempts per trusted proxy IP per minute. Configure `AUTH_TRUSTED_IP_HEADER` to the deployment's trusted proxy header; do not trust a browser-controlled forwarding header.
 - Better Auth rate limits additionally apply to sign-in, social sign-in, password-reset request/completion and verification resend routes. Registration HMAC IP-bucket records expire automatically after 24 hours.
