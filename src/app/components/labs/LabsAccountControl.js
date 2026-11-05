@@ -165,21 +165,28 @@ export default function LabsAccountControl() {
   }
 
   if (!session?.user) {
+    const isLoginPage = pathname === "/labs/login";
+    const isSignupPage = pathname === "/labs/signup";
+
     return (
       <div className="flex shrink-0 items-center gap-1.5">
-        <Link
-          href={signInHref}
-          className="inline-flex h-8 items-center px-2 text-[11px] font-medium text-text-secondary transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:px-2.5 sm:text-xs"
-        >
-          Sign in
-        </Link>
-        <Link
-          href={signUpHref}
-          className="inline-flex h-8 items-center justify-center border border-brand bg-brand px-2.5 text-[11px] font-semibold text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:px-3 sm:text-xs"
-        >
-          <span className="sm:hidden">Create</span>
-          <span className="hidden sm:inline">Create account</span>
-        </Link>
+        {!isLoginPage ? (
+          <Link
+            href={signInHref}
+            className="inline-flex h-8 items-center px-2 text-[11px] font-medium text-text-secondary transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:px-2.5 sm:text-xs"
+          >
+            Sign in
+          </Link>
+        ) : null}
+        {!isSignupPage ? (
+          <Link
+            href={signUpHref}
+            className="inline-flex h-8 items-center justify-center border border-brand bg-brand px-2.5 text-[11px] font-semibold text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:px-3 sm:text-xs"
+          >
+            <span className="sm:hidden">Create</span>
+            <span className="hidden sm:inline">Create account</span>
+          </Link>
+        ) : null}
       </div>
     );
   }
