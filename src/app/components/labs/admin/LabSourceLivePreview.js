@@ -12,6 +12,7 @@ export default function LabSourceLivePreview({ slug, files }) {
   const [status, setStatus] = useState("idle");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [runtimeError, setRuntimeError] = useState("");
   const frameRef = useRef(null);
 
   let frameOrigin = "";
@@ -27,6 +28,7 @@ export default function LabSourceLivePreview({ slug, files }) {
 
       if (event.data.type === "labs-preview-ready") {
         setStatus("ready");
+        setRuntimeError("");
         return;
       }
       if (event.data.type !== "labs-preview-console") return;
@@ -42,17 +44,33 @@ export default function LabSourceLivePreview({ slug, files }) {
         ...current.slice(-79),
         { id: current.length ? current[current.length - 1].id + 1 : 1, level, message },
       ]);
+      if (level === "error" && status !== "ready") {
+        setRuntimeError(message);
+        setStatus("failed");
+      }
     };
 
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [frameOrigin]);
+  }, [frameOrigin, status]);
+
+  useEffect(() => {
+    if (!run?.runId || (status !== "starting" && status !== "loading")) return undefined;
+
+    const timeout = window.setTimeout(() => {
+      setStatus("failed");
+      setRuntimeError("The preview did not become ready. Check the console and run the project again.");
+    }, 15000);
+
+    return () => window.clearTimeout(timeout);
+  }, [run?.runId, status]);
 
   async function runPreview() {
     setBusy(true);
     setStatus("building");
     setLogs([]);
     setError("");
+    setRuntimeError("");
 
     try {
       const response = await fetch(
@@ -144,7 +162,7 @@ export default function LabSourceLivePreview({ slug, files }) {
         </button>
       </div>
 
-      <div className="flex min-h-[420px] justify-center overflow-hidden bg-background p-2">
+      <div className="relative flex min-h-[420px] justify-center overflow-hidden bg-background p-2">
         {run?.previewUrl ? (
           <iframe
             key={run.runId}
@@ -155,6 +173,10 @@ export default function LabSourceLivePreview({ slug, files }) {
             referrerPolicy="no-referrer"
             allow="fullscreen"
             onLoad={() => setStatus((current) => current === "starting" ? "loading" : current)}
+            onError={() => {
+              setStatus("failed");
+              setRuntimeError("The isolated preview could not be loaded.");
+            }}
             className="h-[520px] border border-border bg-white"
             style={{ width: viewport === "mobile" ? "375px" : "100%", maxWidth: "100%" }}
           />
@@ -169,6 +191,26 @@ export default function LabSourceLivePreview({ slug, files }) {
             </div>
           </div>
         )}
+        {run?.previewUrl && (status === "starting" || status === "loading") ? (
+          <div className="pointer-events-none absolute inset-2 z-10 grid place-items-center bg-background/90" role="status" aria-live="polite">
+            <div className="flex items-center gap-2 text-xs text-text-secondary">
+              <RefreshCw size={14} className="animate-spin motion-reduce:animate-none" aria-hidden="true" />
+              {status === "loading" ? "Starting experiment…" : "Preparing preview…"}
+            </div>
+          </div>
+        ) : null}
+        {run?.previewUrl && status === "failed" ? (
+          <div className="absolute inset-2 z-10 grid place-items-center bg-background/95 px-5 text-center">
+            <div className="max-w-sm">
+              <AlertTriangle size={18} className="mx-auto text-warning" aria-hidden="true" />
+              <p className="mt-2 text-xs font-semibold">Preview did not start</p>
+              <p className="mt-1 text-[10px] leading-5 text-text-tertiary">{runtimeError || "Check the console and run again."}</p>
+              <button type="button" onClick={runPreview} disabled={busy} className="mt-3 inline-flex h-8 items-center gap-2 border border-border px-3 text-[11px] font-semibold hover:border-brand disabled:opacity-50">
+                <RefreshCw size={12} aria-hidden="true" /> Retry
+              </button>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {error ? (
@@ -192,7 +234,7 @@ export default function LabSourceLivePreview({ slug, files }) {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-[9px] text-text-tertiary">
-              {status === "ready" ? "Ready" : status === "building" ? "Building" : status === "starting" || status === "loading" ? "Starting" : status === "failed" ? "Build failed" : "Idle"}
+              {status === "ready" ? "Ready" : status === "building" ? "Building" : status === "starting" || status === "loading" ? "Starting" : status === "failed" ? "Preview failed" : "Idle"}
             </span>
             <button type="button" onClick={() => setLogs([])} className="text-[10px] text-text-tertiary hover:text-text-primary">Clear</button>
           </div>
