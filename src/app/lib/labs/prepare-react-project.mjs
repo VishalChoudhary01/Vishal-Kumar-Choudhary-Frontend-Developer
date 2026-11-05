@@ -157,6 +157,11 @@ function createStaticHtml(files) {
       content: rewriteNestedHtmlAssetPaths(existing.content, sourceDirectory),
     };
     files = files.map((file) => file === existing ? index : file);
+  } else if (!index && htmlFiles.length > 1) {
+    fail(
+      "MISSING_HTML_ENTRY",
+      "A static project with multiple HTML files must identify its main page as index.html.",
+    );
   }
 
   const styles = files.filter((file) => /\.css$/i.test(file.path));
@@ -194,7 +199,7 @@ function createStaticHtml(files) {
         "  " + styleLinks,
         "</head>",
         "<body>",
-        "  <main id=\\"labs-root\\"></main>",
+        '  <main id="labs-root"></main>',
         "  " + scriptTag,
         "</body>",
         "</html>",
