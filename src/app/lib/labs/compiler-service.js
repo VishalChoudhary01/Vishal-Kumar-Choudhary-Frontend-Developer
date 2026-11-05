@@ -4,6 +4,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { put } from "@vercel/blob";
 import { Sandbox } from "@vercel/sandbox";
 import { prepareReactProject } from "./prepare-react-project.mjs";
+import { ensureSandboxInputDirectory } from "./sandbox-directory.mjs";
 
 const COMPILER_TIMEOUT_MS = 45_000;
 const PREVIEW_TIMEOUT_MS = 10 * 60 * 1000;
@@ -146,7 +147,7 @@ async function createCompilerSandbox({ timeout, ports = [] }) {
 }
 
 async function writeBuildInput(sandbox, files) {
-  await sandbox.mkDir("/vercel/sandbox/input");
+  await ensureSandboxInputDirectory(sandbox);
   await sandbox.writeFiles([
     {
       path: "/vercel/sandbox/input/files.json",
