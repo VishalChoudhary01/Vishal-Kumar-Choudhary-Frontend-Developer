@@ -18,7 +18,7 @@ export async function getMagneticButtonSourceProjectFiles() {
 
   const app = runtime
     .replace(
-      'import MagneticButton from "@/app/components/labs/ui/MagneticButton";',
+      /import MagneticButton from ["'][^"']+["'];/,
       'import MagneticButton from "./components/MagneticButton.jsx";',
     )
     .replace(
