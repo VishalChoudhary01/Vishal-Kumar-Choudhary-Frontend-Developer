@@ -1,5 +1,5 @@
 import Link from "next/link";
-import LabArtwork from "./landing/LabArtwork";
+import LabExperimentPreview from "./LabExperimentPreview";
 
 export default function FeaturedExperiment({ experiment }) {
   if (!experiment?.slug || !experiment?.title) return null;
@@ -67,7 +67,7 @@ export default function FeaturedExperiment({ experiment }) {
         aria-label={`Explore featured experiment: ${experiment.title}`}
         className="group relative block aspect-[4/3] overflow-hidden rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4 focus-visible:ring-offset-background"
       >
-        <LabArtwork experiment={experiment} />
+        <LabExperimentPreview experiment={experiment} className="h-full w-full" />
       </Link>
     </section>
   );
