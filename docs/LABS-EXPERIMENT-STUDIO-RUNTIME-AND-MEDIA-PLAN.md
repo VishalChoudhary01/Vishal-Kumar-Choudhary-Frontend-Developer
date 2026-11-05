@@ -1,11 +1,35 @@
 # Labs Experiment Studio — Runtime, Media and Publishing Plan
 
-**Status:** Approved product/runtime source of truth. The isolated compiler, TS/TSX validation, React Icons allowlist and preview HTTP server are implemented and pass compiler smoke/integration tests. A clean Next.js production build and targeted ESLint pass at commit `f555bf3`. A newer READY Git-connected Preview deployment is available at `https://vishal-kumar-choudhary-frontend-developer-19traqbpy.vercel.app/` at commit `fa52eaa`, which includes the source-policy and hydration timestamp fixes. The current branch has one newer safe-error-response commit and the browser-level owner Run/publish test is still pending. Keep Production publishing disabled until the latest branch passes deployed browser QA and the public immutable artifact is verified.  
+**Status:** The isolated compiler now supports React JSX/TSX and standalone HTML/CSS/JavaScript preview. The current branch passes the expanded compiler smoke suite (including HTTP delivery of static HTML, CSS and JS), targeted ESLint, and a clean Next.js production build with all 18 static pages. The 503 root cause is confirmed: the live Preview calls non-idempotent `sandbox.mkDir("/vercel/sandbox/input")` against a snapshot where that directory already exists. The branch now uses idempotent `mkdir -p` through `ensureSandboxInputDirectory()`. However, the latest READY Preview is still commit `096e185` and does not include the wired fix or static preview support. Vercel is currently blocking a new deployment with HTTP 402 (100 API deployments/day). Do not claim the issue is live-fixed until a new Preview deployment is available and owner Run is verified in-browser. Production publishing remains disabled.  
+**Latest locally verified branch commit:** `b7cae3729ba3ecded5d56a35f9c632e6e9dc6b78`  
 **Applies to:** Owner-created experiments in Labs, while preserving the four existing code-owned experiments.  
-**Primary implementation branch:** feat/labs-platform-integration  
-**Related source of truth:** LABS-SOURCE-MANAGEMENT-SPEC.md, DESIGN-LAB.md, ARCHITECTURE.md, LABS-EXPERIMENT-STUDIO-PHASE-1.md and LABS-EXPERIMENT-STUDIO-PHASE-2.md.
-
+**Primary implementation branch:** `feat/labs-platform-integration`  
 ---
+
+## Latest preview regression investigation — 5 November 2026
+
+### Confirmed 503 cause and branch fix
+The current live Preview runtime logs show `POST /api/v1/admin/labs/sources/spotlight-dock/preview` failing with HTTP 400 from `sandbox.mkDir("/vercel/sandbox/input")` because the directory already exists in the restored snapshot. The owner API reports this as 503. The branch replaces that call with `ensureSandboxInputDirectory()`, which runs `mkdir -p`, and includes a repeated-initialization regression test.
+
+### HTML/CSS preview regression
+The previous project preparation helper accepted only a complete React project or one JSX/TSX component. Standalone HTML/CSS/JavaScript source therefore failed before Vite had a chance to compile it. The branch now detects React projects separately and otherwise prepares a static project:
+- Preserve a root `index.html` and link local CSS/JavaScript files.
+- If there is one root HTML file, normalize it to `index.html`.
+- Generate a minimal `index.html` for CSS-only and JavaScript-only experiments.
+- Use Vite's normal HTML build so linked styles and scripts become immutable, addressable output assets.
+- Keep React JSX/TSX entry validation and TypeScript checking unchanged.
+
+### Clip-path warnings
+The browser warning `Invalid keyframe value for property clipPath` was caused by Motion interpolating between percentage values and unitless zero values in `inset()`. Footer and hero reveal keyframes now use percentage units for both horizontal inset values (for example, `0%` instead of `0`). Other component clip-path declarations were reviewed.
+
+### Verification on latest branch
+- Expanded compiler smoke suite passes: idempotent Sandbox input setup; static HTML/CSS/JavaScript build and server delivery; CSS-only generated HTML; JSX and TSX builds; invalid TypeScript rejection; React 19, Motion, Lucide, React Icons, Tailwind v4; preview health, HTML/JS delivery, bridge and traversal protection.
+- Targeted ESLint passes for the changed preview/compiler/animation files.
+- Clean Next.js production build passes SEO validation, app compilation, TypeScript and 18 static pages.
+- Latest branch commit: `b7cae3729ba3ecded5d56a35f9c632e6e9dc6b78`.
+
+### Deployment gate
+The latest READY Preview deployment remains commit `096e185`, before the compiler-service wiring fix, standalone HTML/CSS path and clip-path changes. Vercel rejected further API deployment creation with HTTP 402 (`api-deployments-free-per-day`, retry-after 24 hours). The 503 and browser warnings can therefore persist on that old deployment. Deploy the latest branch commit when the quota allows; then verify the owner Run route for HTML/CSS, JSX and TSX, confirm iframe asset requests return 200, and inspect the browser console for clip-path warnings. Do not enable Production publishing until this deployed browser QA and an immutable public artifact test pass.
 
 ## 1. Product outcome
 
