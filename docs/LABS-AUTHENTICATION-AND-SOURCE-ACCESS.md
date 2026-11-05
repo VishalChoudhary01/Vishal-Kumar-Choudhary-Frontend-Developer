@@ -9,9 +9,8 @@
 - Better Auth `1.7.15` with `@better-auth/mongo-adapter` `1.7.15`.
 - Native MongoDB driver for Better Auth persistence; existing Mongoose module remains responsible for application models and repository queries.
 - Next.js App Router route handlers; no Express server.
-- Email/password with email verification and password reset remains supported.
-- Google OAuth is currently login-only when both credentials are configured; provider signup is not yet enabled.
-- GitHub OAuth is not yet configured. The approved target is Google and GitHub registration/login alongside email/password; see docs/LABS-AUTHENTICATION-PROVIDERS-AND-LEGAL-CLEANUP-PLAN.md.
+- Email/password registration/login, verification and password reset remain supported.
+- Google and GitHub are enabled independently when their server-only client ID/secret variables are present. Both support Login and explicit account creation from the signup route; neither provider silently creates users from Login.
 - Public Labs browsing and code-owned demos remain available without sign-in.
 - **Target policy (locked 2026-11-04):** any signed-in account with `emailVerified === true` can read all published source automatically. Guests and signed-in unverified accounts cannot read or copy source. Anonymous visitors and verified accounts can like/unlike; signed-in unverified accounts cannot. There is no per-user grant workflow. The legacy `LabSourceGrant` model remains for migration safety but is not queried by the integration-branch authorization service.
 
@@ -30,9 +29,9 @@ Copy the authentication variables from `.env.example` into the deployment enviro
 | `AUTH_SMTP_HOST`, `AUTH_SMTP_PORT`, `AUTH_SMTP_USER`, `AUTH_SMTP_PASSWORD`, `AUTH_EMAIL_FROM` | Yes for registration/recovery | Authenticated SMTP transport for verification and password reset messages. |
 | `AUTH_SMTP_SECURE` | Optional | Set true when SMTP uses implicit TLS (normally port 465). |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Optional | Enable Google OAuth after the provider expansion is implemented. |
-| `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | Optional | Planned; enable GitHub OAuth after implementation. |\n| `NEXT_PUBLIC_SITE_URL` | Yes for the canonical Privacy Policy link | The app derives `/privacy` from this site origin. |
+| `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | Optional | Enable GitHub OAuth; callback path is `/api/auth/callback/github`. |\n| `NEXT_PUBLIC_SITE_URL` | Yes for the canonical Privacy Policy link | The app derives `/privacy` from this site origin. |
 
-The Privacy Policy is a first-party informational page at `/privacy` and its URL derives from `NEXT_PUBLIC_SITE_URL`. The Terms route, Terms checkbox and legal-consent receipt gate are scheduled for removal. Registration readiness must depend on database/auth and SMTP configuration, not Terms content. Registration remains unavailable until MongoDB/auth secrets and SMTP delivery are configured. In Vercel, the five SMTP values must be available to the `feat/labs-platform-integration` Preview branch specifically; values scoped only to `feat/labs-public-page` are not inherited by this branch.
+The Privacy Policy is a first-party informational page at `/privacy` and its URL derives from `NEXT_PUBLIC_SITE_URL`. It is not a signup checkbox or registration gate. The Terms route and Terms-only consent code have been removed. Registration remains unavailable until MongoDB/auth secrets and SMTP delivery are configured. In Vercel, the five SMTP values must be available to the `feat/labs-platform-integration` Preview branch specifically; values scoped only to `feat/labs-public-page` are not inherited by this branch.
 
 ### Google OAuth callback
 
@@ -42,17 +41,17 @@ Register the deployed callback path:
 https://<your-auth-origin>/api/auth/callback/google
 ```
 
-Google is currently login-only and is hidden until both Google credentials are configured. The planned target adds explicit Google account creation from the signup route. Login and signup OAuth intents must remain separate and same-verified-email linking must remain enforced.
+Google is hidden until both Google credentials are configured. It supports Login and explicit Create account intent. Login and signup OAuth intents remain separate, and same-verified-email account linking is retained.
 
-### GitHub OAuth callback — planned
+### GitHub OAuth callback
 
-Register the deployed callback path after GitHub provider configuration is implemented:
+Register this callback path in the GitHub OAuth App for each approved environment:
 
 ```text
 https://<your-auth-origin>/api/auth/callback/github
 ```
 
-The GitHub app should request identity/email only, including the user:email scope needed to retrieve a primary verified email when the profile email is private. Do not request repository access. The login action must not create new users implicitly; account creation is explicit from the signup route. Confirm installed Better Auth 1.7.15 behavior before implementing the signup intent.
+The implementation requests `read:user` and `user:email` only; it does not request repository access. The server fetches the GitHub profile and email list, selects a verified email (preferring the primary verified address), and rejects the identity if no verified email is available. Login does not implicitly create users; signup explicitly requests account creation.
 
 ### SMTP verification
 
@@ -63,7 +62,7 @@ Before enabling account registration, send a verification message and a password
 | User flow | Route / handler | Behavior |
 | --- | --- | --- |
 | Login | `/labs/login` | Email/password; target Google and GitHub login actions when configured; validated local return destination. |
-| Registration | `/labs/signup` → `POST /api/labs/register` | Email/password remains; target explicit Google/GitHub account creation; generic response remains. No Terms checkbox or consent receipt. |
+| Registration | `/labs/signup` → `POST /api/labs/register` | Email/password without Terms checkbox/receipt; Google/GitHub OAuth account creation is initiated directly through Better Auth with explicit signup intent. |
 | Verification | `/labs/verify-email` | Verify-link callback confirmed against server-side flow state (Better Auth default token lifetime) and 30-second resend UX cooldown. |
 | Resend verification | `POST /api/labs/verification/resend` | Generic response; creates an opaque flow ID and invokes Better Auth's privacy-safe resend handler. |
 | Verification status | `GET /api/labs/verification/status?flow=:id` | No-store read of a random flow ID marked verified by the Better Auth post-verification hook. |
@@ -72,7 +71,7 @@ Before enabling account registration, send a verification message and a password
 | Auth transport | `/api/auth/[...all]` | Better Auth-owned handlers; direct `/sign-up/email` is blocked to prevent consent bypass. |
 | Session read | `GET /api/auth/get-session` | Server-backed session read; used by Labs account UI and protected-source revalidation. |
 
-The registration endpoint must keep generic account-creation responses and the trusted-proxy-IP rate limit. Remove the Terms acceptedTerms field and consent-receipt write during the approved cleanup; retain a separate server-side verification flow for email verification. Better Auth also applies the route-specific rate limits configured in `src/app/lib/auth/auth.js`.
+The email/password registration endpoint keeps generic responses and the trusted-proxy-IP rate limit. It no longer accepts acceptedTerms or writes consent receipts; it creates a standalone verification flow using `src/app/lib/auth/verification-flows.js`. OAuth registrations rely on provider-verified email and do not require SMTP. Better Auth also applies the route-specific rate limits configured in `src/app/lib/auth/auth.js`.
 
 Return destinations must be relative paths under `/labs`. External URLs, protocol-relative URLs, malformed paths and authentication routes are rejected.
 
@@ -159,13 +158,12 @@ The Atlas-backed source viewer protects separate source snapshots. Do not claim 
 No deployment secrets are committed to this repository. This runbook does not certify that any external provider, Atlas cluster or browser test has been configured or passed.
 
 
-## 9. Email-verification flow records and Terms cleanup
+## 9. Email-verification flow records and historical consent data
 
-- The current implementation still contains `labs_registration_consents`, which stores a Terms version, Privacy version, server timestamp and account linkage. This receipt system is scheduled for removal with the Terms signup checkbox and Terms route. Do not remove it until its code references and database indexes are inventoried and a reviewed backup/migration is completed.
-- `labs_verification_flows` stores a separate random flow ID, email digest, created/expiry timestamps and verified timestamp. It is required by email verification and must remain even after consent receipts are removed.
-- Before deleting `registration-consent.js`, move its verification-flow functions into a separate server-only module and update Better Auth hooks/imports to use that module.
-- The registration callback URL carries the flow ID. The Better Auth `afterEmailVerification` hook marks active flows for that email digest. The server-rendered verification page checks stored flow status; manually adding a query parameter cannot produce a verified state.
+- New registration flows use `src/app/lib/auth/verification-flows.js`, a server-only module independent of legal/Terms consent. It creates a random flow ID, keyed email digest, creation/expiry timestamps and verification status in `labs_verification_flows`.
+- The Better Auth `afterEmailVerification` hook marks active flows for the email digest. The server-rendered verification page checks the stored flow status; manually adding a query parameter cannot produce a verified state.
 - Resend goes through `POST /api/labs/verification/resend`. The client receives a generic response and does not learn whether the email exists. The client cooldown is 30 seconds; Better Auth's server-side rate limits are authoritative.
+- The old `registration-consent.js` module and all application references have been removed. New code no longer reads/writes `labs_registration_consents`; any existing MongoDB collection/records remain untouched pending backup, retention review and an approved migration.
 
 
 ## 10. Better Auth Dash ownership verification
@@ -196,15 +194,15 @@ A value had been committed in the tracked `.env.example` under `BETTER_AUTH_SECR
 The API key is not available to the repository integration; it must be copied from the user's Better Auth Dash project directly into Vercel. Do not attempt to infer or generate a Dash API key.
 
 
-## 11. Privacy Policy and Terms-page removal
+## 11. Privacy Policy and completed Terms cleanup
 
-The public Privacy Policy remains at `/privacy`. It is informational disclosure, not a mandatory checkbox or registration gate. Keep its footer/contact/sitemap links and update its provider disclosure to include Google and GitHub identity information when those providers are enabled.
+The public Privacy Policy remains at `/privacy`. It is informational disclosure, not a mandatory checkbox or registration gate. Its footer/contact/sitemap links remain, and its provider disclosure includes Google and GitHub identity information. The policy version is `2026-11-05.1`.
 
-The standalone Terms page at `/terms`, its 18+ signup acknowledgement, Terms-only footer/contact/sitemap/SEO links, Terms version configuration and consent-receipt gate are in the approved removal scope. Remove them together so no stale links or policy claims remain.
+The standalone Terms page, Terms signup checkbox, Terms-only footer link, sitemap entry, Terms version configuration and consent-receipt code have been removed. The Privacy Policy and email verification remain.
 
-The current `labs_registration_consents` receipt collection and helpers are legacy cleanup targets. The separate `labs_verification_flows` collection and verification callback must remain. Split verification-flow functions out of `registration-consent.js` before removing consent-only code or retiring its collection/indexes.
+The application no longer reads or writes `labs_registration_consents`. Existing collection data/indexes, if present, are untouched pending backup, retention review and a separately approved migration. The independent `labs_verification_flows` collection remains active.
 
-The Privacy Policy must accurately disclose email/password accounts, Google/GitHub provider data, sessions, verification, source opens/copies, likes, cookies, security logs and retention after the Terms cleanup. Do not leave claims about Terms acceptance receipts in its text. This runbook does not certify legal compliance; confirm the final privacy disclosure and any applicable policy requirements before launch.
+The Privacy Policy should accurately disclose email/password accounts, Google/GitHub provider data, sessions, verification, source opens/copies, likes, cookies, security logs and retention. It is an operational disclosure, not a certification of legal compliance.
 
 
 ## 12. Vercel Preview origins and Better Auth Dash onboarding
@@ -239,8 +237,12 @@ Follow `docs/LABS-SOURCE-MANAGEMENT-SPEC.md` for the target owner capability and
 6. Complete browser-based keyboard, responsive, focus, contrast and accessibility QA.
 7. Keep live source execution deferred until separately approved and threat-modelled.
 
-## 14. Provider expansion and Terms cleanup — plan status
+## 14. OAuth and Terms cleanup implementation status — 5 November 2026
 
-The user-approved target preserves email/password and adds Google and GitHub registration/login. The current implementation remains behind that target: Google is login-only and GitHub is not configured. The same user decision removes the Terms signup checkbox, Terms page and Terms-only registration receipt logic. The Privacy Policy stays available as informational disclosure. Email-verification flow records remain separate and must be preserved.
-
-Follow docs/LABS-AUTHENTICATION-PROVIDERS-AND-LEGAL-CLEANUP-PLAN.md for implementation, migration, file deletion, provider setup and release tests. Do not treat this runbook update as evidence that providers have been configured or that any code/data has been deleted.
+- Shared Google/GitHub social buttons are implemented on both `/labs/login` and `/labs/signup`.
+- OAuth uses the Better Auth `requestSignUp` flag only on the signup route and `disableImplicitSignUp: true` for configured providers.
+- Email/password remains unchanged. Email/password registration no longer requires Terms consent and continues using the seven-day verification flow.
+- `/terms`, the footer link, sitemap entry, Terms-only readiness/configuration and `registration-consent.js` have been removed.
+- `/privacy` remains informational and now lists Google/GitHub provider data. Privacy version: `2026-11-05.1`.
+- No provider secrets have been committed. Add `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` to the intended Vercel Preview/Production environments and register the matching callback URLs.
+- Live OAuth callback, account linking, GitHub private-email, build and browser regression tests remain required. Existing `labs_registration_consents` database records have not been deleted.
