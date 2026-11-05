@@ -1,14 +1,33 @@
 # Labs React / JSX / TSX Runtime — Practical Implementation Plan
 
-**Status:** Implementation and local verification are complete for JSX/TSX and standalone HTML/CSS/JavaScript preview. Latest branch: `be8ddd83e72c81bbeab9848ae7c376d04f91db97`. A READY Preview deployment is available at `https://vishal-kumar-choudhary-frontend-developer-mx029pt12.vercel.app/` on commit `5c36673`; it contains the Sandbox input-directory fix, static build/runtime path and clip-path corrections. The latest branch's complete smoke suite, targeted ESLint and Next.js production build pass. The owner must still verify Run in the deployed Studio and perform an end-to-end Preview publish test. Production publishing remains disabled.
+**Status:** React JS/JSX and React TypeScript/TSX are locked first-class starters. Standalone HTML/CSS/JavaScript remains a separate supported runtime mode. The latest branch has passed the expanded compiler suite (including the nested Fluid Gradient HTML fixture), targeted ESLint and the full Next.js build with all 18 static pages.
+**Latest validated source before this documentation update:** `e3fd60ac09fe072afd9f7025a414e842069ab7fd`
+**Last READY Preview:** `5c366730cafa6ba9300af0986aa5d379410e787d` (`mx029pt12.vercel.app`) predates the nested HTML/Vite asset-path corrections. A fresh READY Preview and owner-browser Run test are still required. Production publishing remains disabled.
 
 ## 1. Product decision
 
 The Labs manager must execute the code the owner inserts into the editor. It must not merely display source, show a static thumbnail, or render a screenshot as though it were running code.
 
-The first release must support React 19 with JavaScript/JSX and TypeScript/TSX, Tailwind CSS v4, Motion from motion/react, Lucide from lucide-react, and React Icons from react-icons. The same saved source and pinned compiler contract must be used for owner preview and public publication.
+**Locked default:** React 19 with JavaScript/JSX or TypeScript/TSX. The Studio presents separate `React JS` and `React TSX` starters so the author selects the intended language before adding code. The fixed runtime includes Tailwind CSS v4, Motion from `motion/react`, Lucide from `lucide-react`, and React Icons from `react-icons`. The same saved source and pinned compiler contract must be used for owner preview and public publication.
+
+Standalone HTML/CSS/JavaScript remains a separate supported project type for Canvas, Web APIs and non-React experiments. It must never be silently wrapped in React. The runtime chooses React only when a complete React entry structure is present or the editor uses the single-file JSX/TSX convenience adapter.
 
 Images, animated GIFs and videos are optional page-level fallback media only. They are not required when code preview works and are not imported into experiment source.
+
+## 1.1 Implementation phases and reasons
+
+| Phase | What was implemented | Why |
+|---|---|---|
+| 1. Lock React JS | A known React 19 JavaScript/JSX starter with `index.html`, `src/main.jsx`, `src/App.jsx` and `src/index.css` | The owner can run a predictable React application without manually wiring a Vite project |
+| 2. Lock React TSX | A separate TypeScript starter with `src/main.tsx`, `src/App.tsx`, generated strict `tsconfig.json`, React typings and `tsc --noEmit` | Vite transpiles TypeScript but does not type-check it; a type-check gate catches errors before preview/publish |
+| 3. Fixed dependencies | React, React DOM, TypeScript, Motion, Lucide, React Icons and Tailwind v4 are supplied by the compiler image | No arbitrary package installs, package manifests or build scripts execute from owner source |
+| 4. Preserve static mode | Separate HTML/CSS/JS pipeline, including nested HTML entry promotion, inline style/script preservation and relative asset path resolution | Canvas/Web APIs and vanilla experiments should run as authored, without React wrappers |
+| 5. Isolated build and preview | Vite builds the project in a per-run sandbox; a separate-origin iframe loads the output | Owner code cannot access the portfolio app's origin or server environment |
+| 6. Publish verification | Rebuild the exact saved version and store the immutable HTML/CSS/JS artifact | The public Labs page must render the same version the owner approved |
+
+**Why the Fluid Gradient file previously failed:** it was imported as `src/fluid_gradient_background-1-.html`. The old adapter rejected nested HTML because Vite expects a root `index.html`; after entry promotion was added, Vite's generated root-relative `/src/...` assets were still rejected by an over-broad source-policy rule. The current branch promotes the nested entry, rewrites its relative local asset URLs into the preserved `src/` folder, and permits Vite root-relative references only when they resolve inside the sandbox project root.
+
+The regression fixture uses a nested Fluid Gradient HTML entry with inline CSS, Canvas and animation code plus linked CSS/JS files. It passes the compiler smoke suite. Standalone HTML/CSS/JS and CSS-only projects are tested separately from React.
 
 ## 2. Supported source files
 
