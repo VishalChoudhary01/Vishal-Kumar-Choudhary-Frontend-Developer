@@ -410,3 +410,34 @@ export async function saveOwnerLabMediaAttachments({ user, slug, attachments: in
     assets: await listOwnerLabMediaAssets({ user, slug }),
   };
 }
+
+
+export async function deleteOwnerLabMediaAssetsForExperiment({ user, slug }) {
+  if (!isLabsOwner(user)) fail("OWNER_ACCESS_DENIED", "Owner access is required.");
+  await assertCustomExperiment(slug);
+  await LabMediaAsset.createIndexes();
+
+  const assets = await LabMediaAsset.find({
+    experimentSlug: slug,
+    ownerUserId: user.id,
+  }).lean();
+
+  if (!assets.length) return { deletedCount: 0 };
+
+  const { client } = getCloudinary();
+  const results = await Promise.all(
+    assets.map(async (asset) => {
+      const result = await client.uploader.destroy(asset.cloudinaryPublicId, {
+        resource_type: asset.resourceType,
+        type: asset.deliveryType,
+        invalidate: true,
+      });
+      if (!["ok", "not found"].includes(String(result?.result || "").toLowerCase())) {
+        fail("MEDIA_PROVIDER_ERROR", "Cloudinary could not remove " + asset.originalFilename + ".");
+      }
+      return asset;
+    }),
+  );
+
+  return { deletedCount: results.length };
+}
