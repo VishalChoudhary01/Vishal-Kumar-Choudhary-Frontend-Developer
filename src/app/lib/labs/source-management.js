@@ -136,7 +136,7 @@ export async function validateOwnerLabPreviewFiles({ user, slug, inputFiles }) {
   assertOwner(user);
   const experiment = await getExperiment(slug);
   if (experiment.isCustom !== true) {
-    throwCode("NOT_FOUND", "Only owner-created experiments can use the isolated React preview.");
+    throwCode("NOT_FOUND", "Only owner-created experiments can use the isolated Labs preview.");
   }
 
   const { files, totalBytes } = validateFiles(inputFiles);
@@ -148,7 +148,7 @@ export async function validateOwnerLabPreviewFiles({ user, slug, inputFiles }) {
   if (unsupported) {
     throwCode(
       "VALIDATION_ERROR",
-      "The React preview supports HTML, JavaScript, JSX, TypeScript, TSX, CSS, JSON, text and Markdown files. Unsupported file: " + unsupported.path,
+      "The Labs preview supports HTML, JavaScript, JSX, TypeScript, TSX, CSS, JSON, text and Markdown files. Unsupported file: " + unsupported.path,
     );
   }
 
