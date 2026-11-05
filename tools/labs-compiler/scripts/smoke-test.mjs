@@ -73,14 +73,12 @@ if (disabledMagnet.engaged || disabledMagnet.x !== 0 || disabledMagnet.y !== 0) 
   throw new Error("Zero strength must disable magnetic displacement.");
 }
 
-const clampedMagnet = calculateMagneticOffset({
-  offsetX: 300,
-  offsetY: 0,
-  strength: 999,
-  radius: 999,
-});
-assertNear(clampedMagnet.x, 42, "Magnetic strength maximum clamp");
-if (normalizeMagneticStrength(-1) !== 0 || normalizeMagneticRadius(999) !== 300) {
+if (
+  normalizeMagneticStrength(999) !== 42 ||
+  normalizeMagneticStrength(-1) !== 0 ||
+  normalizeMagneticRadius(999) !== 300 ||
+  normalizeMagneticRadius(0) !== DEFAULT_MAGNETIC_RADIUS
+) {
   throw new Error("Magnetic component props must retain their documented bounds.");
 }
 
