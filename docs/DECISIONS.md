@@ -1,7 +1,7 @@
 # Architecture Decision Records
 
 **Status:** Phase 1 decision register; choices marked OPEN are not approved.  
-**Branch:** `feat/labs-public-page`  
+**Branch:** `feat/labs-platform-integration`  
 **Related:** PRD.md, ARCHITECTURE.md, API-CONTRACTS.md, IMPLEMENTATION-PLAN.md, THREAT-MODEL.md
 
 This document records current decisions, known repository facts and unresolved choices separately. A proposed design is not an implemented capability. Update this register when a decision is approved; record its rationale, consequences and any required migration.
