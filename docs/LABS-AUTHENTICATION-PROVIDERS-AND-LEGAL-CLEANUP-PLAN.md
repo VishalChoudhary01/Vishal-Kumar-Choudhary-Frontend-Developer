@@ -1,6 +1,6 @@
 # Labs Authentication Providers and Legal Cleanup Plan
 
-**Status:** Planning only — no authentication implementation, provider credentials, database migration, or legal-page deletion has been performed by this plan.
+**Status:** Implementation committed on feat/labs-platform-integration; provider credential configuration and browser-level OAuth verification remain release gates. The Terms route and signup consent code have been removed. Existing historical consent records, if any, were not deleted.
 **Branch:** feat/labs-platform-integration
 **Date:** 2026-11-05
 **Related source of truth:** docs/PRD.md, docs/LABS-AND-AUTHENTICATION-DESIGN-SPEC.md, docs/LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md and docs/IMPLEMENTATION-PLAN.md.
@@ -21,11 +21,11 @@ The integration branch currently contains:
 - Better Auth 1.7.15 with @better-auth/mongo-adapter 1.7.15.
 - Email/password registration through POST /api/labs/register, email/password login, verification, forgot-password and reset-password routes.
 - Google OAuth credentials are read from GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET. The login page already has a Google button when configured.
-- Google provider configuration currently sets disableSignUp: true, so it is login/linking only; the signup page has no Google button.
-- GitHub OAuth is not configured and has no credential variables or UI.
+- Google and GitHub providers are independently enabled by server-only credentials and use disableImplicitSignUp: true; login uses no signup intent, while the signup route explicitly sends requestSignUp: true.
+- A shared SocialAuthButtons component renders configured providers on both login and signup. Email/password remains unchanged.
 - Better Auth account linking is enabled, disallows different emails, and does not use an explicit trusted-provider bypass.
-- Signup currently requires a combined Terms/Privacy checkbox and an 18+ confirmation. Server registration writes a receipt to labs_registration_consents.
-- src/app/lib/auth/registration-consent.js currently contains both consent-receipt functions and separate email-verification-flow functions. Those responsibilities must be separated before removing consent code.
+- The signup checkbox, acceptedTerms payload validation, Terms-only readiness gate, standalone /terms route, footer link and sitemap entry have been removed.
+- Verification-flow helpers now live in src/app/lib/auth/verification-flows.js; consent-only code was removed. New registrations no longer create consent receipts.
 - labs_verification_flows supports the email verification confirmation page and must remain even if legal consent receipts are retired.
 
 These are code observations, not proof that Google OAuth, GitHub OAuth, SMTP or production callbacks are configured and tested.
@@ -91,7 +91,7 @@ If an OAuth identity already belongs to an existing verified account, the same-e
 
 **User-approved direction:** remove the mandatory Terms/Conditions checkbox and Terms-only registration gate, remove the standalone Terms page and its related references/files, and keep the Privacy Policy as an informational disclosure rather than a required acceptance checkbox. The following files/data have mixed responsibilities, so deletion must be selective.
 
-### Remove from the registration flow
+### Removed from the registration flow
 
 - Remove the combined Terms/Privacy/18+ checkbox from SignupForm.
 - Remove client-only acceptedTerms, consentError, and checkbox-required validation.
@@ -99,20 +99,19 @@ If an OAuth identity already belongs to an existing verified account, the same-e
 - Remove Terms-specific registration readiness from getAuthRegistrationReadiness(); registration readiness should depend on required database/auth and email delivery, not a Terms page.
 - Do not keep a social-signup-only consent blocker if Terms acceptance is being removed from email/password registration. All account methods must follow the same approved registration policy.
 
-### Related code/data to retire only after the usage audit
+### Historical data and completed code cleanup
 
 - Terms-specific configuration in src/app/lib/legal/policies.js, including TERMS_VERSION.
-- Consent-only functions in src/app/lib/auth/registration-consent.js: recordRegistrationConsent, linkLatestRegistrationConsent, markRegistrationConsentVerified, and discardUnlinkedRegistrationConsent.
-- The labs_registration_consents collection and its indexes only after backup, reference removal and a reviewed migration.
-- Consent-only imports and hooks in src/app/lib/auth/auth.js and src/app/api/labs/register/route.js.
-- The standalone src/app/terms/page.js route, Terms-only UI links, footer/contact references, sitemap entry, SEO metadata and Terms policy version references.
+- Consent-only functions and src/app/lib/auth/registration-consent.js have been removed after verification-flow functions were moved to src/app/lib/auth/verification-flows.js.
+- Consent-only imports/hooks and the Terms page, footer link, sitemap entry and Terms-specific policy config have been removed.
+- The historical MongoDB labs_registration_consents collection is not automatically dropped by application code. Back up/assess existing records and indexes before a separately reviewed retention/migration decision.
 - Update the Privacy Policy so it no longer claims that a Terms page or Terms/Privacy consent receipt exists. Keep accurate disclosures about account creation, email/password, Google/GitHub identity data, verification, sessions, source engagement and retention.
 
 ### Must remain
 
 - /privacy and its public disclosure. Update it to name Google and GitHub as optional identity providers and accurately describe provider data received.
 - Email-verification behavior, generic registration response, rate limiting, password reset and secure session behavior.
-- The verification-flow collection and its functions. Move them out of registration-consent.js into a narrowly named module (for example registration-flows.js) before deleting consent-only code.
+- The verification-flow collection and functions remain in src/app/lib/auth/verification-flows.js; they are separate from Terms consent and must be preserved.
 - Privacy disclosures for account/session data, provider information, source opens/copies, likes, cookies, security logs and retention.
 - The shared LegalDocumentPage component while it is still used by the Privacy Policy.
 
@@ -154,12 +153,12 @@ The Terms page, Terms checkbox and 18+ acknowledgement are in the approved remov
 
 ### Phase D — Terms/consent cleanup
 
-- Remove the mandatory registration checkbox and acceptedTerms payload/validation.
-- Separate verification-flow functions from consent receipts.
-- Remove Terms-only readiness and unused imports.
-- Remove the Terms page and all references; update sitemap/footer/contact/SEO/legal copy together.
-- Back up and retire labs_registration_consents after splitting verification-flow helpers, removing all code references and completing a reviewed migration.
-- Retain and verify labs_verification_flows and the Privacy Policy.
+- [x] Remove the mandatory registration checkbox and acceptedTerms payload/validation.
+- [x] Separate verification-flow functions from consent receipts and preserve the seven-day flow.
+- [x] Remove Terms-only readiness and unused imports.
+- [x] Remove the Terms page, footer link, sitemap entry and Terms-specific configuration.
+- [ ] Back up/assess historical labs_registration_consents records and complete any approved data-retention migration; no collection was dropped.
+- [x] Retain the Privacy Policy and labs_verification_flows.
 
 **Gate:** no broken links, no stale policy claims, no orphaned imports/index creation, and email verification still works.
 
@@ -195,17 +194,17 @@ Test at minimum:
 
 | File / area | Planned change |
 |---|---|
-| src/app/lib/auth/auth.js | Add GitHub credentials/provider; explicit OAuth sign-up intent; preserve email/password and verification |
-| src/app/components/labs/auth/LoginForm.js | Keep email/password, replace single Google handler with shared social actions |
-| src/app/components/labs/auth/SignupForm.js | Keep email/password, add Google/GitHub; remove Terms checkbox only after approved |
+| src/app/lib/auth/auth.js | Google and GitHub server providers with verified-email handling and no implicit signup |
+| src/app/components/labs/auth/LoginForm.js | Keep email/password and use shared Google/GitHub login actions |
+| src/app/components/labs/auth/SignupForm.js | Keep email/password, add explicit Google/GitHub account creation; Terms checkbox removed |
 | New shared SocialAuthButtons.js / provider helper | Reuse provider buttons, pending state, callback and errors |
 | src/app/labs/(auth)/login/page.js | Pass Google/GitHub enabled flags |
 | src/app/labs/(auth)/signup/page.js | Pass Google/GitHub flags; remove Terms-only readiness/props if approved |
-| src/app/api/labs/register/route.js | Keep generic email/password registration; remove acceptedTerms/consent only after approved |
-| src/app/lib/auth/registration-consent.js | Split verification-flow responsibilities before removing consent-only helpers |
+| src/app/api/labs/register/route.js | Email/password registration without acceptedTerms or consent receipt; retains generic response and verification flow |
+| src/app/lib/auth/verification-flows.js | Dedicated seven-day email-verification flow; consent module removed |
 | src/app/lib/auth/auth.js | Remove consent hooks only after verification flow has its own module |
-| src/app/lib/legal/policies.js | Retain Privacy version/config; retire Terms-only parts only if /terms is deleted |
-| src/app/terms/page.js and global links | Delete the Terms route and all Terms-only footer/contact/sitemap/SEO references |
+| src/app/lib/legal/policies.js | Retains only the Privacy Policy version |
+| src/app/terms/page.js and global links | Terms route deleted; footer and sitemap references removed |
 | src/app/privacy/page.js | Update provider and registration-data disclosures; retain page |
 | .env.example and auth runbook | Document GitHub variable names and callback; no secrets |
 | Auth docs, PRD and implementation tracker | Update provider requirements and staged acceptance criteria |
@@ -232,4 +231,4 @@ Verify these against the installed Better Auth 1.7.15 version before coding; cur
 - Better Auth account linking: https://better-auth.com/docs/concepts/users-accounts
 - Better Auth GitHub provider notes: https://better-auth.com/docs/1.6/authentication/github
 
-**Completion status:** Planning document created. The OAuth providers are not yet added, the UI is not yet changed, and Terms/consent files or database records have not been removed.
+**Implementation status (2026-11-05):** Google/GitHub provider configuration, shared auth UI, explicit signup intent, email/password preservation, Terms route/checkbox/consent-code cleanup and Privacy Policy update are committed. Live OAuth credential setup, deployed callback tests, same-email linking tests and historical consent-record migration remain outstanding.
