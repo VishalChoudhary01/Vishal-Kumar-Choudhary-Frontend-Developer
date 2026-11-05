@@ -181,12 +181,6 @@ export default function Footer() {
 
                     <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-[11px] text-text-tertiary">
                         <Link
-                            href="/terms"
-                            className="transition-colors hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
-                        >
-                            Terms of Service
-                        </Link>
-                        <Link
                             href="/privacy"
                             className="transition-colors hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
                         >
