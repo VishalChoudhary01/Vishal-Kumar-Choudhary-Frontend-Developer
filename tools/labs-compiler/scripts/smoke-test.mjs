@@ -344,6 +344,62 @@ try {
     cssOnlyOutput,
   ].map((directory) => fs.rm(directory, { recursive: true, force: true })));
 
+  const staticPreviewServer = spawn(process.execPath, [path.join(root, "scripts/serve-preview.mjs")], {
+    cwd: root,
+    env: {
+      ...process.env,
+      LABS_BUILD_OUTPUT: staticOutput,
+      LABS_PREVIEW_PREFIX: "/preview/static-smoke-1234",
+      LABS_PARENT_ORIGIN: "https://example.test",
+      PORT: "41938",
+    },
+    stdio: "ignore",
+  });
+  try {
+    const staticBase = "http://127.0.0.1:41938/preview/static-smoke-1234/";
+    let staticReady = false;
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      try {
+        const health = await fetch(staticBase + "__health", { signal: AbortSignal.timeout(500) });
+        if (health.ok && (await health.json()).status === "ok") {
+          staticReady = true;
+          break;
+        }
+      } catch {}
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    if (!staticReady) throw new Error("The static HTML preview server did not become healthy.");
+
+    const staticPage = await fetch(staticBase);
+    const staticServedHtml = await staticPage.text();
+    if (!staticPage.ok || !staticServedHtml.includes("Static Labs preview")) {
+      throw new Error("The static preview server did not return the authored HTML.");
+    }
+    const cssPath = staticServedHtml.match(/href="([^"]+\.css)"/)?.[1];
+    const jsPath = staticServedHtml.match(/src="([^"]+\.js)"/)?.[1];
+    if (!cssPath || !jsPath) {
+      throw new Error("The static preview HTML is missing its compiled CSS or JavaScript asset reference.");
+    }
+    const [cssResponse, jsResponse] = await Promise.all([
+      fetch(new URL(cssPath, staticBase)),
+      fetch(new URL(jsPath, staticBase)),
+    ]);
+    if (
+      !cssResponse.ok ||
+      !(cssResponse.headers.get("content-type") || "").includes("text/css") ||
+      !jsResponse.ok ||
+      !(jsResponse.headers.get("content-type") || "").includes("javascript")
+    ) {
+      throw new Error("The static preview server did not serve its CSS and JavaScript assets.");
+    }
+  } finally {
+    staticPreviewServer.kill("SIGTERM");
+    await new Promise((resolve) => {
+      if (staticPreviewServer.exitCode !== null) resolve();
+      else staticPreviewServer.once("exit", resolve);
+    });
+  }
+
   const previewServer = spawn(process.execPath, [path.join(root, "scripts/serve-preview.mjs")], {
     cwd: root,
     env: {
@@ -399,7 +455,7 @@ try {
   }
 
   process.stdout.write(
-    "PASS: idempotent sandbox input setup, static HTML/CSS/JS and CSS-only builds, JSX + TSX type checking, React 19, Motion, Lucide, React Icons, Tailwind v4, CSP, isolated preview HTTP server/bridge, traversal blocking and invalid-type rejection.\n",
+    "PASS: idempotent sandbox input setup, static HTML/CSS/JS builds and static preview server asset delivery, CSS-only builds, JSX + TSX type checking, React 19, Motion, Lucide, React Icons, Tailwind v4, CSP, isolated preview HTTP server/bridge, traversal blocking and invalid-type rejection.\n",
   );
 } finally {
   await Promise.all([
