@@ -1,13 +1,8 @@
 "use client";
 
-import { authClient } from "@/app/lib/auth/client";
 import LabLikeButton from "@/app/components/labs/LabLikeButton";
 
 export default function LabEngagement({ slug, initialData = null }) {
-  const { data: session } = authClient.useSession();
-  const isUnverified =
-    Boolean(session?.user?.id) && session.user.emailVerified !== true;
-
   return (
     <section
       aria-label="Experiment appreciation"
@@ -23,12 +18,6 @@ export default function LabEngagement({ slug, initialData = null }) {
 
         <LabLikeButton slug={slug} initialData={initialData} />
       </div>
-
-      {isUnverified ? (
-        <p className="mt-2 text-xs text-text-tertiary">
-          Verify your email to like this experiment.
-        </p>
-      ) : null}
     </section>
   );
 }
