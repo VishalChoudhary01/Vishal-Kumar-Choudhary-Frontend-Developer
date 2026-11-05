@@ -100,7 +100,9 @@ async function main() {
 
   const javascriptEntries = ["index.html", "src/main.jsx", "src/App.jsx", "src/index.css"];
   const typescriptEntries = ["index.html", "src/main.tsx", "src/App.tsx", "src/index.css"];
-  const isTypeScript = [...files.keys()].some((filePath) => /\.(?:ts|tsx)$/i.test(filePath));
+  const isTypeScript = [...files.keys()].some(
+    (filePath) => !/\.d\.ts$/i.test(filePath) && /\.(?:ts|tsx)$/i.test(filePath),
+  );
   const entries = typescriptEntries.every((required) => files.has(required))
     ? typescriptEntries
     : javascriptEntries.every((required) => files.has(required))
