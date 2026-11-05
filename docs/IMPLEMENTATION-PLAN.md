@@ -1,6 +1,6 @@
 # Implementation Plan — Portfolio Platform
 
-**Status:** Living implementation plan. The `feat/labs-public-page` branch contains an initial public Labs, Better Auth and protected-source-read foundation. Owner-managed source creation/versioning, verified-account engagement analytics, grant-model retirement and complete release verification remain planned. Phase entries below are not evidence of completion unless explicitly recorded in the current-state section.
+**Status:** Living platform plan. Active Labs work is on `feat/labs-platform-integration`. The branch contains public Labs, Better Auth, owner source/editor and isolated compiler/runtime foundations. The 5 November 2026 browser screenshots identify an owner preview Run regression to re-verify, missing custom gallery visuals and a blank Spotlight Dock detail runtime. These are release-blocking recovery items, not completed features. The next Labs product phases are defined in `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`.
 
 ## Principles
 - Inspect first; change second.
@@ -10,21 +10,20 @@
 - Keep decisions open when they remain unselected; document alternatives and validation requirements.
 - Prefer small, reversible phases and isolated commits. No broad rewrites for convenience.
 
-## Current implementation baseline — 2026-11-04
+## Current implementation baseline — 2026-11-05
 
 The following is the inspected code baseline, not a production-readiness certificate:
 
 | Capability | Current state on `feat/labs-public-page` | Remaining work |
 |---|---|---|
-| Public Labs listing/detail and code-owned demos | Implemented | Regression verification and approved outstanding UX polish |
+| Public Labs listing/detail and four code-owned demos | Implemented in integration branch | Regress all four; custom published-artifact detail runtime currently has a blank-canvas defect in browser evidence and must be restored |
 | Better Auth + MongoDB adapter | Foundation implemented | Final session policy and security/release tests |
 | Email/password registration, verification, reset and SMTP transport | Implemented in branch and configured for Preview; email delivery observed | Validate real verification completion, duplicate behavior, reset, production deployment |
 | First-party Terms/Privacy pages and consent receipts | Implemented | Legal review and operational rights/deletion workflow review |
-| Protected source read endpoint with legacy per-user grant check | Implemented (transitional) | Remove grant lookup; automatically allow any verified account to read a published source; provision source snapshots and complete authorization tests |
-| Source record creation/file editor/versioning/publish/restore | Not implemented | Phase 8 source-management slice described in `LABS-SOURCE-MANAGEMENT-SPEC.md` |
-| Owner identity/authorization and owner management UI | Not implemented | Approve singleton owner identity, implement server guard and owner workspace |
-| Source audit, immutable source versions and engagement analytics storage | Not implemented | Add source-version/audit/likes/events collections, indexes, migration and analytics tests |
-| Isolated execution of stored/admin-authored source | Not implemented and not approved | Separate Phase 8B threat-model and infrastructure decision |
+| Protected source read endpoint | Verified-session + published-source policy implemented in integration branch; legacy grant model retained for migration safety | Verify guest/unverified denial, verified direct access, no-store responses and CTA/session UX in deployed browser |
+| Owner source inventory/editor and lifecycle routes | Implemented in the integration branch | Re-verify deployed create/add/edit/delete/save/version/restore/publish/unpublish flows, owner guard, stale-version and failure states |
+| Source audit, immutable versions, likes and engagement analytics | Implemented in integration-branch foundation | Re-verify Atlas bootstrap, migration/retention, idempotency, privacy disclosure and aggregate-only reporting |
+| Owner isolated preview compiler/runtime | Compiler and runtime foundation implemented and smoke-tested | Restore and prove deployed Run for unsaved HTML/CSS/JS, JSX and TSX; validate runtime bridge, public artifact delivery and threat model; browser QA is still open |
 | General CMS/Admin, media management, portfolio-wide analytics and scheduling | Deferred | Begin only after Labs work is complete and separately authorized; Labs source-engagement aggregates are included in Phase 8 |
 
 Do not mark a row complete because a page renders. Each capability still needs its required direct-request, authorization, failure, accessibility, privacy, performance and regression evidence.
@@ -124,18 +123,51 @@ Do not mark a row complete because a page renders. Each capability still needs i
 - Invalid slug collisions/links/media references are rejected.
 - Public home and project-detail regression suite passes.
 
-## Phase 7 — Lab public experience and discovery
-**Work**
-- Build listing/detail pages, metadata, static previews, source-access prompt (no guest source bytes), search/filter/sort and pagination/progressive loading.
-- Enforce published-only reads and guest restrictions on the server.
-- Create accessible loading, empty, error and no-results states.
-- Keep Lab-specific dependencies out of the public homepage bundle unless already needed.
+## Phase 7 — Lab public experience, runtime and gallery
 
-**Gate / done**
-- Public discovery functions across supported viewport sizes.
-- Drafts and full source are not present in guest-visible HTML/API/client bundles.
-- Search and filters compose predictably; pagination avoids duplicate/missing results.
-- Existing portfolio pages remain visually and behaviorally unchanged.
+**Detailed authority:** `docs/LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`. The sequence below is the immediate next Labs roadmap and takes precedence over the older generic order in this document.
+
+### Phase 7.0 — P0: restore and prove execution
+
+- Restore owner Studio Run for the current unsaved working copy in HTML/CSS/JS, React JSX and React TSX.
+- Preserve editor state, desktop/mobile viewport, console, diagnostics, stop/restart and run-ID-safe iframe bridge.
+- Restore custom published-artifact execution on detail pages. Fix the observed blank Spotlight Dock canvas with visible initializing/ready/error/retry/fallback states.
+- Regress all four existing code-owned demos.
+- **Gate:** deployed authenticated browser proof, not only compiler smoke tests.
+
+### Phase 7.1 — Skeleton and page-loading UX
+
+- Add route skeletons for Labs listing/detail and owner source inventory/editor.
+- Add a separate preview-canvas skeleton until runtime-ready; preserve the existing global PageLoader behavior without stacking full-screen loaders.
+- Reserve actual card/canvas/editor dimensions and test slow network, navigation, retry and layout shift.
+
+### Phase 7.2 — Source CTA and optimistic action UX
+
+- Keep the source CTA visible to all detail visitors; known verified users load source directly; guests see Sign in and Create account; signed-in unverified users see Verify email.
+- Use React 19 `useOptimistic` for reversible likes and safe inventory/media-role transitions with rollback on failure.
+- Treat editor file changes as local unsaved working-copy state; do not claim persistence before Save draft response.
+- Await server confirmation for publish/unpublish/delete. Show pending states. Copy success and copy analytics require successful Clipboard API acknowledgement.
+- Avoid adding TanStack Query solely for these actions.
+
+### Phase 7.3 — Code-output poster generation
+
+- Capture a static screenshot from successfully rendered published HTML/Canvas or React/Motion output after validated runtime-ready.
+- Tie poster to exact sourceVersionId/artifactId. Support explicit Generate/Regenerate and bounded publish-time generation only when no selected card preview/current poster exists.
+- Capture in the isolated browser boundary; failure falls back to LabArtwork and does not break Run or a valid release.
+
+### Phase 7.4 — Role-aware media and static card renderer
+
+- Migrate current one-item `fallback-preview` attachment into `gallery-preview`, ordered `detail-gallery` and `runtime-fallback` roles.
+- Card priority: selected published gallery media → matching generated code poster → artwork fallback. Never run code, create iframes or compile from gallery cards.
+- Constrain GIF/video animation with visibility/engagement, reduced motion and playback caps. Video is muted/inline/preload-none; no sound autoplay.
+- Detail-gallery is supplementary; runtime-fallback appears only after detail runtime error/unsupported state.
+
+### Phase 7.5 — Integrated QA and release gate
+
+- Confirm zero experiment runtime iframes/React roots/compiler jobs on `/labs`; one on-demand runtime at most on a detail page, stopped on navigation away.
+- Test guest/unverified/verified/owner source paths, poster version integrity, role-based media privacy and reference-safe deletion.
+- Record LCP, CLS, poster/media transfer, runtime startup, long tasks and memory; test mobile, reduced motion, keyboard and slow-network behavior.
+- Production remains separately gated by sandbox threat model, source privacy, environment/owner provisioning and explicit release approval.
 
 ## Phase 8 — Owner-managed source lifecycle and verified-user access
 **Work**
@@ -252,7 +284,7 @@ A requirement is done only when all applicable conditions are met:
 Every task should track: ID, requirement reference, phase, owner, dependencies, risk, status, decision links, test evidence, public-regression impact, security/privacy impact, performance impact, rollback/recovery note, and acceptance sign-off.
 
 ## Branching and release discipline
-- Current Labs implementation and this specification update are on `feat/labs-public-page`.
+- Current Labs implementation and this specification update are on `feat/labs-platform-integration`.
 - Keep each logical implementation phase isolated in commits/PRs; do not mix unrelated content, auth, source-management, execution-sandbox and analytics changes.
 - Do not merge into `main` or deploy Production without explicit user approval.
 - Preview deployments may be used for focused validation; do not expose previews broadly or disable deployment protection to simplify external integrations.
@@ -284,3 +316,18 @@ Phase 0/1 must produce or reconcile these documents with the actual repository:
 - Do not add Express unless a reviewed architecture decision justifies a separately deployed backend.
 - Avoid duplicate data-fetching/caching layers for the same use case; document cache ownership and invalidation.
 - Validate library versions and compatibility against the current package manifest during implementation; this planning branch does not claim current dependency installation.
+
+
+## Labs immediate execution tracker — 5 November 2026
+
+| Priority | Task | Status | Exit evidence |
+|---|---|---|---|
+| P0 | Restore owner Studio Run for current unsaved working copy | Regression must be re-verified in deployed Preview | HTML/CSS/JS, JSX and TSX authenticated Run screenshots plus build/console output |
+| P0 | Restore published-artifact detail runtime | Known blank Spotlight Dock canvas from browser screenshot | Actual output appears; ready/error/retry bridge works; no unexplained blank canvas |
+| P1 | Route/page and canvas skeletons | Planned | Listing/detail/inventory/editor/canvas loading states pass slow-network and CLS checks |
+| P1 | Source CTA + optimistic action UX | Planned/review against existing interactions | Verified direct access; guest CTAs; unverified verification path; like rollback; pending action and clipboard feedback tests |
+| P2 | Generated static code-output poster | Planned; capture provider/storage still open | HTML Canvas and React/Motion posters version-match exact published artifact |
+| P2 | First-class media attachment roles | Current code has legacy fallback-preview only | Migration tests, public/draft privacy, usage/reference integrity, image/GIF/video presentation |
+| P3 | Responsive/performance/security release QA | Pending | No gallery execution; bounded detail runtime; metrics, auth/privacy and threat-model suite |
+
+This tracker is updated from repository inspection and the user-supplied 5 November 2026 screenshots. It is not a test report. Do not mark a row done without the exit evidence.
