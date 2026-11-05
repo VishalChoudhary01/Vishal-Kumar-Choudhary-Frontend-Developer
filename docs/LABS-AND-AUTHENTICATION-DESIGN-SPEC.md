@@ -1,9 +1,9 @@
 # Labs & Authentication — Product and UX Design Specification
 
 **Document:** `docs/LABS-AND-AUTHENTICATION-DESIGN-SPEC.md`  
-**Version:** 2.0
-**Status:** Labs public experience and authentication/source-management implementation are on `feat/labs-platform-integration`; Atlas, Vercel environment, end-to-end and browser QA gates remain.
-**Updated on:** 2026-11-04  
+**Version:** 2.1
+**Status:** Labs public experience, source management and isolated runtime foundations are on `feat/labs-platform-integration`. The 5 November 2026 browser review found a blank Spotlight Dock runtime and missing custom gallery visuals. Recovery and rollout gates are defined in `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`; these requirements are not a claim of deployed verification.
+**Updated on:** 2026-11-05  
 **Scope:** Labs listing, experiment detail/workspace, protected source access, Labs authentication UX, repository-aligned stack, module boundaries, hooks, components and state ownership  
 **Companion repository documents:** `docs/PRD.md`, `docs/ARCHITECTURE.md`, `docs/API-CONTRACTS.md`, `docs/PROJECT-STRUCTURE.md`, `docs/IMPLEMENTATION-PLAN.md`, and `docs/THREAT-MODEL.md`
 
@@ -48,6 +48,7 @@ This file records the product and UX decisions made for Labs and its authenticat
 - docs/API-CONTRACTS.md owns the HTTP endpoint families, request/response contracts, validation and error conventions.
 - docs/PROJECT-STRUCTURE.md is the generic proposed module structure. Sections 22–29 of this document adapt those responsibilities to the actual repository tree inspected on 2026-11-02; they do not authorize a broad restructure.
 - This document owns the detailed Labs page composition, interaction treatment, authentication UX and Labs-specific implementation guidance. It does not silently replace PRD capabilities or architecture/security contracts.
+- `docs/LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md` is the detailed engineering phase authority for preserving owner Run, isolated published runtime, static gallery posters, role-aware media migration, route skeletons, optimistic action behavior and deployed verification gates. Where older examples in this UX document conflict with its 2026-11-05 approved runtime/poster decision, the newer decision in Section 38 and ADR-017 controls.
 - If older examples use the singular /lab route while this document specifies /labs, use /labs as the approved public UX route. Update related API/PRD references before implementation rather than creating both routes.
 - The public-demo decision in this document is specific: guests may use experiments explicitly published as public demos. This does not authorize arbitrary stored/admin-authored JavaScript to execute in the main application. Any untrusted or restricted preview still requires the separately reviewed isolation boundary in docs/ARCHITECTURE.md and docs/THREAT-MODEL.md.
 - The PRD requirement for email/password and Google sign-in remains in force. Better Auth with its MongoDB adapter is now the selected authentication implementation. Google OAuth credentials remain deployment configuration; the Google action is shown only when configured. GitHub sign-in is not selected.
@@ -205,8 +206,8 @@ The architecture reference identifies an endpoint concept such as `GET /api/v1/l
 - `/` must not load Monaco, Lab source, Lab runtime, Lab video, or unrelated Lab-heavy dependencies.
 - Existing project pages must not load Monaco or Lab-only dependencies.
 - `/labs` must not load Monaco, all source files, all experiment runtimes, all videos, or all GIFs.
-- `/labs` loads lightweight experiment metadata and optimized thumbnails/posters only.
-- `/labs/[slug]` loads only the selected experiment runtime.
+- `/labs` loads lightweight experiment metadata and one optimized static visual per card (selected published gallery-preview media, otherwise the version-matched generated code poster, otherwise LabArtwork/neutral artwork). It never loads/executes experiment source, editor/compiler bundles or per-card runtime iframes.
+- `/labs/[slug]` loads only the selected experiment's published runtime; initialize it near the canvas, not for every listing card.
 - Heavy dependencies are dynamically imported at the feature boundary.
 - The protected source viewer uses the lightweight text viewer/editor implementation. No Monaco/CodeMirror dependency is installed; do not add one without an approved dependency decision.
 - Media is lazy-loaded where appropriate. Videos should use a poster first, avoid unnecessary preload, and not autoplay unless the individual experiment explicitly requires it.
@@ -317,6 +318,9 @@ The sample experiment name `Scroll-driven Text Reveal`, sample category `MOTION 
 - No default shadow.
 - No inner padding around artwork.
 - Preview is a static optimized image/poster on the listing page; do not initialize the actual experiment runtime there.
+- Visual priority: explicitly selected published `gallery-preview` media → generated static poster captured from the exact successfully rendered published artifact → existing LabArtwork/neutral artwork.
+- A code-derived poster is automatic presentation output, not a required owner upload. Do not show a stale poster whose sourceVersionId/artifactId differs from the current published release.
+- The poster never substitutes for owner Studio Run or the interactive detail runtime.
 - Hover may scale media from `1` to `1.01` and subtly emphasize the frame border; frame dimensions must not change.
 - Clip overflow to the frame; no layout shift.
 - Do not independently animate the artwork on hover.
@@ -357,8 +361,9 @@ Visual rules:
 - No permanent outer card border/background panel.
 - Thumbnail may use a subtle boundary only where useful.
 - Thumbnail fit depends on artwork: `cover` when crop is intended; `contain` when the full artwork must remain visible.
-- Provide a designed fallback if a thumbnail is missing or fails.
-- Do not autoplay video, GIFs, or experiment runtimes in the gallery.
+- Provide a designed fallback if selected media/poster is missing or fails.
+- Cards never execute code, create iframe runtimes, mount experiment React roots, invoke the compiler or start Canvas/animation loops.
+- Do not autoplay video, GIFs, or experiment runtimes in the gallery. If a card explicitly uses GIF/video, keep a still preview by default; animate only when visible/engaged and page foregrounded, cap simultaneous playback, respect reduced motion; video is muted/inline with `preload="none"` and never autoplayed with sound.
 - No image overlay controls, nested cards, decorative controls, or nested interactive controls.
 - The entire card is one semantic link to `/labs/[slug]`.
 - Do not nest other buttons or links inside the card link.
@@ -454,7 +459,10 @@ The selected desktop workspace arrangement is **70:30**:
 - No browser chrome, toolbar, or decorative header.
 - The inner canvas background is experiment-specific; do not force one common background on every experiment.
 - Experiment controls that belong inside the actual creative interaction may remain inside the experiment's own canvas area.
-- Show a stable loading/placeholder state while the runtime initializes to prevent layout shift.
+- Show a themed stable loading/skeleton state while the runtime initializes to prevent layout shift; do not show an empty white canvas.
+- Keep the placeholder until the current iframe/run ID sends a validated runtime-ready message. An iframe load event alone does not prove the experiment rendered.
+- On build/runtime error, timeout or unsupported state, show an explicit retry/error state and show `runtime-fallback` media only if attached. If no fallback exists, keep the themed error state; never leave a blank canvas.
+- The public detail page runs the exact published immutable artifact. Owner Studio Run separately executes the current unsaved working copy; gallery posters must not replace or weaken that Run workflow.
 
 Supported aspect-ratio presets:
 
@@ -529,24 +537,25 @@ Authentication and authorization apply to protected source and any separately re
 - Theme-aware surface and subtle border.
 - Existing restrained radius.
 - Short heading and concise explanatory text.
-- Primary action: `Sign in to view source`.
-- Secondary action: `Create an account`.
+- Keep the source CTA visible in the detail-page source section to every visitor; do not hide the CTA based on client authentication state.
+- When a verified Better Auth session is already known, fetch and show the published source directly. Do not render a redundant “Check source access” action.
+- For a guest who chooses source access, show both `Sign in` and `Create an account` actions.
+- For a signed-in but unverified account, show the verification/resend action.
 - Preserve the current experiment/source destination through the authentication journey.
 - No large promotional panel or oversized illustration.
 
 ### 5.3 Source authorization flow
 
-1. User selects `Sign in to view source` or `Create an account`.
-2. Preserve a validated internal return destination identifying the current experiment/source target.
-3. If anonymous, complete the chosen authentication flow. If signed in but unverified, direct the user to the email-verification/resend flow.
-4. Email verification is required after registration before protected source can be requested.
-5. After verification, user manually signs in.
-6. After successful sign-in, return to the preserved destination.
-7. Server authenticates and separately authorizes the source request.
-8. If authorized, load the protected source viewer.
-9. If authenticated but unauthorized, show the Access Denied state below.
+1. The source CTA remains visible to every visitor; the user initiates source access only when choosing that section.
+2. If an already-known valid session has `emailVerified === true`, request the published source immediately and render the source viewer. No intermediate access-check button is shown.
+3. If anonymous, present both Sign in and Create an account; preserve a validated internal return destination for the current experiment/source section.
+4. If signed in but unverified, do not request source; direct the user to the email verification/resend flow and return to the same experiment afterward.
+5. The server always authenticates and authorizes the source request independently. Client session state controls presentation only and is never an authorization boundary.
+6. If authorized, load the protected source viewer. If denied/unpublished/session expired, show the appropriate safe state without source bytes.
 
 **Target policy (locked 2026-11-04):** a valid signed-in session with `emailVerified === true` automatically grants read access to every published experiment source. Email verification is the source-access gate; there is no owner-issued per-user grant. Anonymous visitors can like/unlike without source access; signed-in unverified users cannot like. This does not grant access to drafts or owner-management operations.
+
+
 
 ### 5.4 Protected source viewer and Monaco
 
@@ -1505,7 +1514,9 @@ Use this checklist before considering Labs design/implementation complete. A che
 - [ ] Load More appends six and updates count correctly.
 - [ ] Category change resets to first six matches.
 - [ ] Cards are one semantic link with no nested controls.
-- [ ] No gallery autoplay, live runtime, Monaco, or source payload.
+- [ ] No gallery autoplay, live runtime, Monaco, compiler bundle, iframe, or source payload.
+- [ ] Gallery card visual priority is selected published media → version-matched generated poster → artwork fallback.
+- [ ] Cards can display real code output without uploading a GIF/MP4/image; no experiment code executes in the listing.
 - [ ] Missing thumbnail fallback works.
 
 ### 18.3 Experiment detail
@@ -1516,7 +1527,9 @@ Use this checklist before considering Labs design/implementation complete. A che
 - [ ] No-control experiment hides the settings panel.
 - [ ] Mobile puts demo before controls.
 - [ ] Canvas uses an approved aspect preset and does not distort.
-- [ ] Loading placeholder prevents layout shift.
+- [ ] Loading placeholder prevents layout shift and remains until a valid runtime-ready message is received for the active run.
+- [ ] Error, timeout, retry and optional runtime-fallback states are explicit; no blank white canvas.
+- [ ] Public detail runtime matches the exact published artifact; owner Run remains capable of executing current unsaved working copies.
 - [ ] Restart preserves settings.
 - [ ] Fullscreen appears only when supported and exits with Escape.
 - [ ] Reset is separate from Restart and only shown for configurable experiments.
@@ -1533,6 +1546,9 @@ Use this checklist before considering Labs design/implementation complete. A che
 - [ ] Unauthorized users see Access not available and no source data.
 - [ ] Authorized source request is the first point where source is returned.
 - [ ] Monaco is dynamically imported only for an authorized source viewer.
+- [ ] Source CTA remains visible to all detail-page visitors.
+- [ ] Known verified sessions load published source directly without a redundant check action.
+- [ ] Guests choosing source access see both Sign in and Create an account; signed-in unverified users see verification.
 - [ ] Source access works correctly after the return-to-source authentication flow.
 
 ### 18.5 Authentication UX
@@ -1592,6 +1608,22 @@ Do not skip repository inspection. Do not assume the current filesystem matches 
 ---
 
 ## 20. Decision Log and Change History
+
+### 2026-11-05 — Runtime, poster, loading and optimistic-action decisions
+
+The following Labs behavior is now locked and detailed in `docs/LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md` and `docs/DECISIONS.md` (ADR-017):
+
+- Owner Studio **Run** remains a core regression-critical feature: it compiles and executes the current unsaved working copy in the isolated preview. Poster generation, media upload and publishing must never replace this behavior.
+- The public experiment detail page runs the exact published immutable artifact. It uses a themed loading state until a validated runtime-ready signal arrives and displays error/retry/optional fallback states rather than a blank white iframe.
+- Gallery cards never execute code or create experiment runtimes. Their visual is selected published `gallery-preview` media, otherwise a static code-output poster captured from the exact successfully rendered artifact, otherwise LabArtwork/neutral artwork. An upload is not required to produce a code-derived poster.
+- The existing backend's single `fallback-preview` attachment is the current implementation. Target `gallery-preview`, `detail-gallery` and `runtime-fallback` roles require a reviewed migration; do not present the target roles as implemented.
+- Use route-level skeletons for Labs listing/detail and owner inventory/editor; preserve space and do not stack them with the global PageLoader. The isolated canvas also owns its own runtime-ready/error state.
+- Use React 19 `useOptimistic` only for reversible server-backed transitions, with rollback on rejection. Local file add/delete/reorder remains unsaved working-copy state. Publish/unpublish/delete wait for server confirmation. Copy feedback and copy analytics follow successful Clipboard API acknowledgement.
+- Keep source CTA visible to everyone. Known verified users go directly to source; guests choosing source see Sign in and Create account; signed-in unverified users see verification. Server-side verified-session authorization remains mandatory.
+
+The next implementation order is: (0) restore/prove Run and public detail runtime, (1) page/canvas skeletons, (2) source CTA and optimistic interactions, (3) generated code-output posters, (4) first-class media roles/card rendering, (5) integrated responsive/performance/security regression. See the runtime/media plan for phase gates. This is planning approval only; it does not assert implementation completion or authorize Production release.
+
+
 
 ### 2026-11-02 — Consolidated baseline
 
