@@ -157,6 +157,7 @@ async function main() {
         forceConsistentCasingInFileNames: true,
         types: ["vite/client"],
         allowJs: true,
+        allowImportingTsExtensions: true,
         checkJs: false,
       },
       include: ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts"],
