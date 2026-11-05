@@ -550,7 +550,7 @@ Authentication and authorization apply to protected source and any separately re
 1. Resolve the client session before rendering source-access actions; use a loading state while pending to avoid guest-CTA flicker.
 2. For a guest, show Sign in and Create account in the source panel and Labs navbar. Preserve a validated internal return destination to the same experiment and source section.
 3. For a signed-in unverified account, hide guest actions and show Verify email/resend guidance. Do not request source bytes.
-4. For a verified session, automatically fetch the published source and render the viewer without a second click or guest CTA.
+4. For a verified session, the Server Component resolves Better Auth and authorizes the published source before rendering the detail page. It passes only the verified user ID, auth state and authorized snapshot to the client panel, so source renders in the first response without a guest-CTA flash. After hydration, the panel reconciles the client session and clears source on sign-out, user mismatch, verification loss or session expiry.
 5. Keep the navbar account control for signed-in users; show the account menu instead of Sign in/Create account. The menu exposes Verify email for unverified accounts and owner tools only when server-derived owner status is true.
 6. The server always authenticates and authorizes the source request independently. Client session state controls presentation only and is never an authorization boundary.
 7. If the request is unavailable, unpublished or the session no longer matches, show the appropriate recovery state without exposing source bytes.
