@@ -5,6 +5,7 @@ import { prepareReactProject } from "../../../src/app/lib/labs/prepare-react-pro
 import { ensureSandboxInputDirectory } from "../../../src/app/lib/labs/sandbox-directory.mjs";
 import {
   buildPublishedRuntimeCsp,
+  rewritePublishedRuntimeHtml,
   stripPublishedRuntimeCspMeta,
 } from "../../../src/app/lib/labs/runtime-html.mjs";
 
@@ -22,6 +23,37 @@ if (/http-equiv\s*=\s*["']content-security-policy["']/i.test(publishedHtml)) {
 }
 if (!publishedHtml.includes('<meta charset="UTF-8">') || !publishedHtml.includes("<main>Published experiment</main>")) {
   throw new Error("Removing the build-time CSP changed unrelated HTML content.");
+}
+
+const runtimeAssetBase = "https://portfolio.example/api/v1/labs/fluid-gradient-playground/runtime/25203ca3-d48c-4dd4-82b1-eee1ad81ae81/";
+const runtimeHtmlFixtureWithAssets = [
+  "<!doctype html>",
+  "<html><head>",
+  '<base href="/api/v1/labs/fluid-gradient-playground/runtime/">',
+  '<link rel="stylesheet" href="./assets/index-Zc0bh0At.css">',
+  '<script src="src/script.js"></script>',
+  '<img src="/images/orb.webp" srcset="/images/orb.webp 1x, images/orb@2x.webp 2x">',
+  "</head><body><main>Fluid Gradient</main></body></html>",
+].join("\n");
+const normalizedRuntimeHtml = rewritePublishedRuntimeHtml(runtimeHtmlFixtureWithAssets, {
+  assetBase: runtimeAssetBase,
+  entryPath: "index.html",
+});
+for (const reference of [
+  runtimeAssetBase + "assets/index-Zc0bh0At.css",
+  runtimeAssetBase + "src/script.js",
+  runtimeAssetBase + "images/orb.webp",
+  runtimeAssetBase + "images/orb@2x.webp",
+]) {
+  if (!normalizedRuntimeHtml.includes(reference)) {
+    throw new Error("Published HTML did not normalize an asset into its immutable artifact path: " + reference);
+  }
+}
+if (normalizedRuntimeHtml.includes('<base href=')) {
+  throw new Error("A source-authored base element can override the immutable artifact URL.");
+}
+if (normalizedRuntimeHtml.includes("/runtime/assets/") || normalizedRuntimeHtml.includes("/runtime/src/")) {
+  throw new Error("Published HTML still contains an asset path that omits the artifact ID.");
 }
 
 const publishedAssetBase = "https://portfolio.example/api/v1/labs/spotlight-dock/runtime/00000000-0000-4000-8000-000000000000/";
