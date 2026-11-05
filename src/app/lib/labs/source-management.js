@@ -95,6 +95,12 @@ function validateFiles(input) {
     }
 
     const pathKey = path.toLowerCase();
+    if (
+      RESERVED_COMPILER_FILES.has(pathKey) ||
+      path.split("/").some((segment) => segment.toLowerCase() === "node_modules")
+    ) {
+      throwCode("VALIDATION_ERROR", "Compiler configuration, package manifests, lockfiles and node_modules are managed by the Labs platform.");
+    }
     if (seenPaths.has(pathKey)) {
       throwCode("VALIDATION_ERROR", "Source file paths must be unique.");
     }
@@ -136,7 +142,7 @@ export async function validateOwnerLabPreviewFiles({ user, slug, inputFiles }) {
   }
 
   const { files, totalBytes } = validateFiles(inputFiles);
-  const allowedExtensions = new Set(["html", "js", "jsx", "mjs", "css", "json", "txt", "md"]);
+  const allowedExtensions = new Set(["html", "js", "jsx", "ts", "tsx", "mjs", "css", "json", "txt", "md"]);
   const unsupported = files.find((file) => {
     const extension = file.path.split(".").pop()?.toLowerCase() || "";
     return !allowedExtensions.has(extension);
@@ -144,7 +150,7 @@ export async function validateOwnerLabPreviewFiles({ user, slug, inputFiles }) {
   if (unsupported) {
     throwCode(
       "VALIDATION_ERROR",
-      "The React preview currently supports HTML, JavaScript, JSX, CSS, JSON, text and Markdown files. Unsupported file: " + unsupported.path,
+      "The React preview supports HTML, JavaScript, JSX, TypeScript, TSX, CSS, JSON, text and Markdown files. Unsupported file: " + unsupported.path,
     );
   }
 
