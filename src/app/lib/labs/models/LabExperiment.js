@@ -63,7 +63,7 @@ const labExperimentSchema = new mongoose.Schema(
         message: "An experiment can have at most one optional fallback preview.",
       },
     },
-    status: { type: String, required: true, enum: ["draft", "published"], default: "draft", index: true },
+    status: { type: String, required: true, enum: ["draft", "published", "deleting"], default: "draft", index: true },
     createdBy: { type: String, required: true, maxlength: 128 },
     updatedBy: { type: String, required: true, maxlength: 128 },
     publishedAt: { type: Date, default: null },
