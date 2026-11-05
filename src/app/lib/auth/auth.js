@@ -28,8 +28,74 @@ const trustedOrigins = [
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+const githubClientId = process.env.GITHUB_CLIENT_ID;
+const githubClientSecret = process.env.GITHUB_CLIENT_SECRET;
 
 export const isGoogleAuthConfigured = Boolean(googleClientId && googleClientSecret);
+export const isGitHubAuthConfigured = Boolean(githubClientId && githubClientSecret);
+
+async function getGitHubUserInfo(token) {
+  if (!token?.accessToken) {
+    throw new Error("GitHub did not return an access token.");
+  }
+
+  const headers = {
+    Accept: "application/vnd.github+json",
+    Authorization: "Bearer " + token.accessToken,
+    "X-GitHub-Api-Version": "2022-11-28",
+  };
+
+  const [profileResponse, emailsResponse] = await Promise.all([
+    fetch("https://api.github.com/user", {
+      headers,
+      cache: "no-store",
+      signal: AbortSignal.timeout(10000),
+    }),
+    fetch("https://api.github.com/user/emails?per_page=100", {
+      headers,
+      cache: "no-store",
+      signal: AbortSignal.timeout(10000),
+    }),
+  ]);
+
+  if (!profileResponse.ok || !emailsResponse.ok) {
+    throw new Error("GitHub identity could not be verified.");
+  }
+
+  const [profile, emailAddresses] = await Promise.all([
+    profileResponse.json(),
+    emailsResponse.json(),
+  ]);
+
+  if (!profile?.id || !Array.isArray(emailAddresses)) {
+    throw new Error("GitHub returned an incomplete identity.");
+  }
+
+  const verifiedEmail =
+    emailAddresses.find((entry) => entry?.primary === true && entry?.verified === true) ||
+    emailAddresses.find((entry) => entry?.verified === true);
+
+  if (!verifiedEmail?.email) {
+    throw new Error("GitHub must provide a verified email address.");
+  }
+
+  const user = {
+    id: String(profile.id),
+    name: profile.name || profile.login || "Labs member",
+    email: verifiedEmail.email.trim().toLowerCase(),
+    image: profile.avatar_url || undefined,
+    emailVerified: true,
+  };
+
+  return {
+    user,
+    data: {
+      ...profile,
+      email: user.email,
+      email_verified: true,
+    },
+  };
+}
 export const isAuthRuntimeConfigured = () => isDatabaseConfigured;
 export const isAuthDeliveryConfigured = () => isDatabaseConfigured && isAuthEmailConfigured();
 export const isLegalConsentConfigured = areLegalDocumentsConfigured;
@@ -204,17 +270,31 @@ export const auth = betterAuth({
       });
     },
   },
-  socialProviders: isGoogleAuthConfigured
-    ? {
-        google: {
-          clientId: googleClientId,
-          clientSecret: googleClientSecret,
-          requireEmailVerification: true,
-          disableSignUp: true,
-          prompt: "select_account",
-        },
-      }
-    : {},
+  socialProviders: {
+    ...(isGoogleAuthConfigured
+      ? {
+          google: {
+            clientId: googleClientId,
+            clientSecret: googleClientSecret,
+            requireEmailVerification: true,
+            disableImplicitSignUp: true,
+            prompt: "select_account",
+          },
+        }
+      : {}),
+    ...(isGitHubAuthConfigured
+      ? {
+          github: {
+            clientId: githubClientId,
+            clientSecret: githubClientSecret,
+            scope: ["read:user", "user:email"],
+            requireEmailVerification: true,
+            disableImplicitSignUp: true,
+            getUserInfo: getGitHubUserInfo,
+          },
+        }
+      : {}),
+  },
   rateLimit: {
     enabled: true,
     window: 60,
