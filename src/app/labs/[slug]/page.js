@@ -23,7 +23,9 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const experiment = getPublishedLabExperimentBySlug(slug);
+  const experiment =
+    getPublishedLabExperimentBySlug(slug) ||
+    await getPublishedCustomLabExperimentBySlug(slug);
 
   if (!experiment) return {};
 
@@ -59,7 +61,9 @@ export async function generateMetadata({ params }) {
 
 export default async function LabExperimentPage({ params }) {
   const { slug } = await params;
-  const experiment = getPublishedLabExperimentBySlug(slug);
+  const experiment =
+    getPublishedLabExperimentBySlug(slug) ||
+    await getPublishedCustomLabExperimentBySlug(slug);
 
   if (!experiment) {
     notFound();
