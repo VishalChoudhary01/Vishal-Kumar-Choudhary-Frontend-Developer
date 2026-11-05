@@ -14,6 +14,10 @@ import {
   buildAbsoluteAssetUrl,
   buildSiteUrl,
 } from "@/app/lib/seo/urls";
+import { getPublishedCustomLabExperimentBySlug } from "@/app/lib/labs/public-experiments";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function generateStaticParams() {
   return publishedLabExperiments.map((experiment) => ({
