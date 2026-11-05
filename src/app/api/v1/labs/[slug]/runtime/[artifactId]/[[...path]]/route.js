@@ -4,6 +4,7 @@ import { connectToDatabase } from "@/app/lib/db/mongoose";
 import LabBuildArtifact from "@/app/lib/labs/models/LabBuildArtifact";
 import LabExperiment from "@/app/lib/labs/models/LabExperiment";
 import LabSource from "@/app/lib/labs/models/LabSource";
+import { stripPublishedRuntimeCspMeta } from "@/app/lib/labs/runtime-html.mjs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -164,20 +165,25 @@ function createRuntimeBridge(artifactId) {
 }
 
 function injectRuntimeBridge(html, artifactId) {
+  // The browser iframe uses sandbox="allow-scripts", so its origin is opaque.
+  // A second build-time meta CSP using script-src 'self' / style-src 'self'
+  // blocks local artifact assets inside that iframe. The precise path-scoped
+  // HTTP CSP below is the single authoritative policy for published output.
+  const safeHtml = stripPublishedRuntimeCspMeta(html);
   const bridge = createRuntimeBridge(artifactId);
   const headMatch = /<head\b[^>]*>/i.exec(html);
 
   if (headMatch) {
     const insertAt = headMatch.index + headMatch[0].length;
-    return html.slice(0, insertAt) + bridge + html.slice(insertAt);
+    return safeHtml.slice(0, insertAt) + bridge + safeHtml.slice(insertAt);
   }
 
   const bodyMatch = /<body\b/i.exec(html);
   if (bodyMatch) {
-    return html.slice(0, bodyMatch.index) + bridge + html.slice(bodyMatch.index);
+    return safeHtml.slice(0, bodyMatch.index) + bridge + safeHtml.slice(bodyMatch.index);
   }
 
-  return bridge + html;
+  return bridge + safeHtml;
 }
 
 function getRuntimeHeaders({ contentType, fileName, isHtml, origin, assetBase }) {
