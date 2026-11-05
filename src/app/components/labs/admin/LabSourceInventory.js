@@ -205,8 +205,10 @@ export default function LabSourceInventory() {
             : item,
         ),
       );
+      showToast("success", "Source workspace created.");
     } catch (reason) {
       setError(reason.message || "Could not create source.");
+      showToast("error", reason.message || "Could not create source.");
     } finally {
       setCreating("");
     }
