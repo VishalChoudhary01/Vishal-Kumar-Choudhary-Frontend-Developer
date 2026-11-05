@@ -182,7 +182,9 @@ function injectRuntimeBridge(html, artifactId) {
 
 function getRuntimeHeaders({ contentType, fileName, isHtml, origin, assetBase }) {
   const headers = new Headers({
-    "Cache-Control": "private, no-store",
+    // Artifact IDs are immutable and contain only published browser output.
+    // Edge caching avoids one MongoDB lookup for every JS/CSS chunk.
+    "Cache-Control": "public, max-age=31536000, s-maxage=31536000, immutable",
     "Content-Disposition": `inline; filename="${fileName}"`,
     "Content-Type": contentType,
     "Cross-Origin-Resource-Policy": "cross-origin",
