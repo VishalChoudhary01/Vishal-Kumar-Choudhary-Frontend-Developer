@@ -20,7 +20,15 @@ function toPublicExperiment(experiment, artifact) {
     },
     demo: {
       runtimeKey: "published-artifact",
-      runtimeUrl: artifact.entryUrl,
+      // Vercel Blob serves HTML as an attachment. Route all published files
+      // through the Labs runtime handler so the isolated iframe gets inline
+      // content, strict CSP and an artifact-scoped readiness bridge.
+      runtimeUrl:
+        "/api/v1/labs/" +
+        encodeURIComponent(experiment.slug) +
+        "/runtime/" +
+        encodeURIComponent(artifact.artifactId) +
+        "/",
       artifactId: artifact.artifactId,
       aspectRatio: { mobile: "4:3", desktop: "16:9" },
       capabilities: { restart: false, fullscreen: true },
