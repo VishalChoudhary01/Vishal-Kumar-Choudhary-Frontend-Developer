@@ -225,6 +225,44 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
     setMessage(additions.length ? "React starter added. Edit src/App.jsx and press Run to execute it." : "The React starter entry files already exist.");
   }
 
+  function createReactTsStarter() {
+    const templates = [
+      {
+        path: "index.html",
+        language: "html",
+        content: "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Labs TypeScript experiment</title>\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"./src/main.tsx\"></script>\n  </body>\n</html>\n",
+      },
+      {
+        path: "src/main.tsx",
+        language: "tsx",
+        content: "import React from \"react\";\nimport { createRoot } from \"react-dom/client\";\nimport App from \"./App.tsx\";\nimport \"./index.css\";\n\ncreateRoot(document.getElementById(\"root\")!).render(\n  <React.StrictMode>\n    <App />\n  </React.StrictMode>,\n);\n",
+      },
+      {
+        path: "src/App.tsx",
+        language: "tsx",
+        content: "import { useState } from \"react\";\nimport { motion, useReducedMotion } from \"motion/react\";\nimport { Sparkles } from \"lucide-react\";\nimport { FiActivity, FiArrowUpRight } from \"react-icons/fi\";\n\nexport default function App() {\n  const [count, setCount] = useState<number>(0);\n  const reduceMotion = useReducedMotion();\n\n  return (\n    <main className=\"grid min-h-screen place-items-center bg-slate-950 px-6 py-16 text-white\">\n      <motion.section\n        initial={reduceMotion ? false : { opacity: 0, y: 24 }}\n        animate={{ opacity: 1, y: 0 }}\n        transition={{ duration: 0.5 }}\n        className=\"w-full max-w-xl border border-white/10 bg-white/[0.04] p-8 sm:p-10\"\n      >\n        <div className=\"flex items-center gap-2 text-teal-300\">\n          <Sparkles aria-hidden=\"true\" />\n          <FiActivity aria-hidden=\"true\" />\n          React + TypeScript + Motion + Tailwind v4\n        </div>\n        <h1 className=\"mt-6 text-3xl font-semibold\">Your TSX experiment is running.</h1>\n        <button type=\"button\" onClick={() => setCount((value) => value + 1)} className=\"mt-6 inline-flex items-center gap-2 bg-teal-300 px-4 py-3 font-semibold text-slate-950\">\n          Count: {count}\n          <FiArrowUpRight aria-hidden=\"true\" />\n        </button>\n      </motion.section>\n    </main>\n  );\n}\n",
+      },
+      {
+        path: "src/index.css",
+        language: "css",
+        content: "@import \"tailwindcss\";\n\n:root { color-scheme: dark; font-synthesis: none; text-rendering: optimizeLegibility; }\nhtml, body, #root { min-height: 100%; }\nbody { margin: 0; }\n",
+      },
+    ];
+
+    if (files.length + templates.filter((template) => !files.some((file) => file.path === template.path)).length > 40) {
+      setError("There is not enough room for the TypeScript starter files. Remove unused files and try again.");
+      return;
+    }
+
+    const additions = templates.filter((template) => !files.some((file) => file.path === template.path));
+    const nextFiles = [...files, ...additions];
+    setFiles(nextFiles);
+    setSelectedIndex(Math.max(0, nextFiles.findIndex((file) => file.path === "src/App.tsx")));
+    setError("");
+    setMessage(additions.length ? "React TypeScript starter added. Edit src/App.tsx and press Run to type-check and execute it." : "The React TypeScript starter entry files already exist.");
+    showToast("success", "React TypeScript starter added.");
+  }
+
   async function importFile(event) {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -656,9 +694,14 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                   />
                 </label>
                 {files.length === 0 ? (
-                  <button type="button" onClick={createReactStarter} className="inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft">
-                    React starter
-                  </button>
+                  <>
+                    <button type="button" onClick={createReactStarter} className="inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft">
+                      React JS
+                    </button>
+                    <button type="button" onClick={createReactTsStarter} className="inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft">
+                      React TSX
+                    </button>
+                  </>
                 ) : null}
                 <button
                   type="button"
@@ -877,7 +920,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                 <div className="mt-4 grid gap-2 sm:grid-cols-2">
                   <div className="border border-brand/30 bg-brand-soft/20 p-3">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-brand">Supported runtime</p>
-                    <p className="mt-1 text-[11px] leading-5 text-text-secondary">React 19 · JSX · Motion from motion/react · Tailwind CSS v4 · lucide-react</p>
+                    <p className="mt-1 text-[11px] leading-5 text-text-secondary">React 19 · JSX/TSX · Motion · Tailwind CSS v4 · Lucide + React Icons</p>
                   </div>
                   <div className="border border-border bg-background p-3">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-text-tertiary">Release safety</p>
