@@ -1,20 +1,18 @@
 /**
- * The published artifact response supplies a path-scoped HTTP CSP for its
- * opaque-origin iframe. A build-time meta CSP that uses 'self' conflicts with
- * that opaque origin and blocks the artifact's own JS/CSS bundles.
- *
- * Remove only that redundant policy meta element. The response-header CSP
- * remains the authoritative runtime policy; other metadata is preserved.
+ * Published runtime HTML is delivered from the application origin inside an
+ * opaque-origin iframe. The response-header CSP is the only runtime policy.
  */
 export function stripPublishedRuntimeCspMeta(html) {
   if (typeof html !== "string") {
     throw new TypeError("Published runtime HTML must be a string.");
   }
 
-  return html.replace(
-    /<meta\b(?=[^>]*\bhttp-equiv\s*=\s*(?:"content-security-policy"|'content-security-policy'|content-security-policy)(?=[\s/>]))[^>]*\/?>/gi,
-    "",
-  );
+  return html
+    .replace(
+      /<meta\b(?=[^>]*\bhttp-equiv\s*=\s*(?:"content-security-policy"|'content-security-policy'|content-security-policy)(?=[\s/>]))[^>]*\/?>/gi,
+      "",
+    )
+    .replace(/<base\b[^>]*\/?>/gi, "");
 }
 
 export function buildPublishedRuntimeCsp({ assetBase, parentOrigin }) {
@@ -57,4 +55,86 @@ export function buildPublishedRuntimeCsp({ assetBase, parentOrigin }) {
     "base-uri 'none'",
     "frame-ancestors " + parentUrl.origin,
   ].join("; ");
+}
+
+function resolveArtifactReference(value, { assetBase, entryPath }) {
+  const reference = String(value || "").trim();
+  if (
+    !reference ||
+    reference.startsWith("#") ||
+    /^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(reference)
+  ) {
+    return value;
+  }
+
+  let base;
+  let documentUrl;
+  try {
+    base = new URL(assetBase);
+    documentUrl = new URL(
+      entryPath.split("/").map((part) => encodeURIComponent(part)).join("/"),
+      base,
+    );
+  } catch {
+    throw new TypeError("The published artifact base or entry path is invalid.");
+  }
+
+  // A root-relative URL in an experiment belongs to that experiment, not to
+  // the portfolio application's origin root.
+  const localReference = reference.replace(/^\/+/, "");
+  let resolved;
+  try {
+    resolved = new URL(localReference, documentUrl);
+  } catch {
+    throw new TypeError("A published experiment contains an invalid local asset reference.");
+  }
+
+  if (
+    resolved.origin !== base.origin ||
+    !resolved.pathname.startsWith(base.pathname)
+  ) {
+    throw new TypeError("A published experiment asset reference escapes its immutable artifact.");
+  }
+
+  return resolved.href;
+}
+
+/**
+ * The compiler emits relative Vite URLs, while authored static HTML can use
+ * root-relative paths. Resolve both to the same immutable /runtime/:artifactId/
+ * namespace before sending HTML to the browser. This prevents the browser from
+ * requesting /runtime/assets/... without the artifact ID (the render bug).
+ */
+export function rewritePublishedRuntimeHtml(html, { assetBase, entryPath = "index.html" }) {
+  if (typeof html !== "string") {
+    throw new TypeError("Published runtime HTML must be a string.");
+  }
+  if (typeof assetBase !== "string" || typeof entryPath !== "string") {
+    throw new TypeError("Published runtime asset base and entry path are required.");
+  }
+
+  const safeHtml = stripPublishedRuntimeCspMeta(html);
+
+  let rewritten = safeHtml.replace(
+    /\b(src|href|poster)\s*=\s*(["'])(.*?)\2/gi,
+    (match, attribute, quote, value) =>
+      attribute + "=" + quote +
+      resolveArtifactReference(value, { assetBase, entryPath }) +
+      quote,
+  );
+
+  rewritten = rewritten.replace(
+    /\bsrcset\s*=\s*(["'])(.*?)\1/gi,
+    (match, quote, value) => {
+      if (/^\s*data:/i.test(value)) return match;
+      const candidates = value.split(",").map((candidate) => {
+        const parts = candidate.trim().split(/\s+/, 2);
+        parts[0] = resolveArtifactReference(parts[0], { assetBase, entryPath });
+        return parts.join(" ");
+      });
+      return "srcset=" + quote + candidates.join(", ") + quote;
+    },
+  );
+
+  return rewritten;
 }
