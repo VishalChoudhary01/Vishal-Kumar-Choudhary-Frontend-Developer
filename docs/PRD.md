@@ -1,6 +1,6 @@
 # Product Requirements Document — Portfolio Platform
 
-**Status:** Approved requirements baseline; Labs/authentication foundation implemented; owner source management and engagement analytics planned; CMS/Admin deferred  
+**Status:** Approved requirements baseline with a phased Labs runtime, gallery, media and interaction roadmap. Current Labs implementation has deployed preview/runtime regressions that must pass the documented recovery gate; CMS/Admin remains deferred.  
 **Version:** 1.1  
 **Scope:** Existing portfolio extension: CMS/admin, analytics, media library, user accounts, and Component Lab. The current Labs branch includes the initial auth and protected-source read foundation; owner-managed source authoring/versioning and engagement analytics remain planned.
 
@@ -85,7 +85,12 @@ Extend the existing developer portfolio into a maintainable platform where the o
 - Create source aggregates for existing experiment slugs, add/edit/rename/delete text files, validate file paths and size limits, and save draft snapshots.
 - Publish/unpublish an exact saved source version; preserve immutable history and restore by creating a new version.
 - Published source is automatically readable by every registered account whose email is verified. There is no per-user source grant/revoke workflow; the owner controls availability through publish/unpublish.
-- Support static previews (image, GIF, video) and interactive previews for repository-managed components or admin-managed source in a controlled isolated environment.
+- Owner Studio **Run** must compile and execute the current unsaved working copy in the isolated preview for supported HTML/CSS/JavaScript, React JS/JSX and React TSX modes. Run is core functionality and must remain available while gallery/media features are implemented.
+- A published experiment detail page runs the exact immutable published artifact in the isolated runtime; it must not leave a blank white canvas while loading or after failure.
+- Gallery cards are static-only: never run experiment code, mount React roots, create experiment iframes or start compiler jobs in the card grid.
+- Every card displays an explicitly selected published gallery-preview asset when configured; otherwise a generated static poster from the exact published artifact; otherwise existing LabArtwork/neutral artwork. Uploaded GIF/video is optional and is not required for a code-derived poster.
+- Generated posters are version-bound to the published source/build and captured only after a successful runtime-ready signal. Poster failure does not replace the working code runtime or block a valid release; it uses artwork fallback and exposes retry/regenerate.
+- Uploaded media supports explicit gallery-preview, detail-gallery and runtime-fallback roles. Runtime-fallback is shown only when the detail runtime fails or is unsupported; detail-gallery media supplements but never replaces the interactive runtime. The currently implemented fallback-only attachment model requires migration before these roles ship.
 - Preview before publication; publish/unpublish with explicit confirmation.
 - Validate source/configuration and dependency allowlists before an experiment becomes eligible for interactive preview.
 - Public pages never expose full source through HTML, client bundles, API responses or predictable asset URLs to guests.
@@ -151,14 +156,19 @@ Track, at minimum:
 - Track asset usage/references.
 - Replace assets without silently breaking references.
 - Warn/block deletion when an asset is referenced; removing an item from a gallery must not automatically delete the Cloudinary asset.
-- Support ordered galleries with captions/alt text and supported image/GIF/video media.
-- Use server-authorized signed upload flows; secrets remain server-side; validate MIME/type, size and ownership.
+- Support ordered detail galleries and one selected gallery-preview asset per experiment, with captions/alt text and supported image/GIF/video media.
+- Support a separate runtime-fallback asset shown only after code runtime failure/unsupported state.
+- Generated code-output posters are immutable optimized static image assets bound to the exact published source/artifact version; they are not source files or executable previews.
+- Use server-authorized signed upload flows; secrets remain server-side; validate MIME/type, size and ownership. Preserve asset references from drafts and historical releases.
 
 ### FR-10 Admin experience
 - Responsive dedicated admin area with shared navigation and reusable form/table/panel patterns.
 - Proposed routes: `/admin`, `/admin/lab`, `/admin/lab/new`, `/admin/projects`, `/admin/projects/new`, `/admin/experience`, `/admin/portfolio`, `/admin/analytics`, `/admin/settings`. Refine after inspecting the current repository.
-- Support loading, empty, success, validation and error states.
-- Lazy-load heavy editors and preview code.
+- Provide route-level skeleton/loading states for Labs listing, experiment detail, owner source inventory and owner source editor. Preserve layout/aspect ratios, avoid CLS and do not stack duplicate full-screen loaders over the existing global PageLoader behavior.
+- Provide action-specific pending/success/error/rollback feedback for add, delete, copy, like/unlike, save, restore, publish and unpublish.
+- Use React 19 `useOptimistic` only for reversible server-backed mutations; roll back on server rejection. Local unsaved editor operations remain working-copy state, not optimistic claims of persisted save.
+- Clipboard feedback and copy analytics occur only after successful Clipboard API acknowledgement. Publish/unpublish/delete success appears only after server confirmation.
+- Lazy-load heavy editors and preview code. Do not add compiler/editor dependencies or experiment runtime to the public listing bundle.
 - Admin and editor bundles must not enter the critical public-home-page bundle.
 
 
@@ -229,7 +239,13 @@ The platform is acceptable only when:
 4. Guests cannot retrieve full source, interactive-preview access or draft content by direct URL/API manipulation.
 5. Registered users can authenticate, manage their account and use the specified dashboard.
 6. Admin authorization is server-enforced and cannot be self-assigned through registration or client state.
-7. Lab search/filter/sort/pagination and permitted previews work with accessible loading/empty/error states.
+7. Lab search/filter/sort/pagination and permitted previews work with accessible loading/empty/error states; gallery cards remain static-only and public detail pages render the actual published isolated runtime.
+8. Owner Run executes the current unsaved working copy in the isolated preview for supported static HTML/CSS/JS and React JSX/TSX modes; failures preserve the working copy and prior published release.
+9. Gallery cards use an explicit published media preview, otherwise a version-matched generated code-output poster, otherwise artwork; no experiment runtime executes in the gallery.
+10. Poster generation is bound to the exact published source/artifact version and safely falls back without breaking an otherwise valid release.
+11. The detail runtime displays skeleton/ready/error/retry/fallback states and never leaves an unexplained blank white canvas.
+12. Verified source access is direct when a verified session is already known; guest source CTA shows Sign in and Create account; server-side verified-session authorization remains mandatory.
+13. Optimistic reversible actions roll back on rejection; destructive/publishing operations never report success before server confirmation; copy analytics follows successful clipboard acknowledgement.
 8. Analytics metrics match written definitions and separate guest/authenticated activity where possible.
 9. Version restore creates a new version; old snapshots remain immutable; schedules target exact versions.
 10. Media replacement/deletion checks all required references, including version-history references.
