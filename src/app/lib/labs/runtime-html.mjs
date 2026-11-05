@@ -12,7 +12,7 @@ export function stripPublishedRuntimeCspMeta(html) {
   }
 
   return html.replace(
-    /<meta\\b(?=[^>]*\\bhttp-equiv\\s*=\\s*(?:"content-security-policy"|'content-security-policy'|content-security-policy)(?=[\\s/>]))[^>]*\\/?>/gi,
+    /<meta\b(?=[^>]*\bhttp-equiv\s*=\s*("?content-security-policy"|'content-security-policy'|content-security-policy)(?=[\s/>]))[^>]*\/?>/gi,
     "",
   );
 }
@@ -43,17 +43,17 @@ export function buildPublishedRuntimeCsp({ assetBase, parentOrigin }) {
 
   return [
     "default-src 'none'",
-    `script-src 'unsafe-inline' ${assetUrl.origin}${assetUrl.pathname}`,
-    `style-src 'unsafe-inline' ${assetUrl.origin}${assetUrl.pathname}`,
-    `img-src ${assetUrl.origin}${assetUrl.pathname} data: blob:`,
-    `font-src ${assetUrl.origin}${assetUrl.pathname} data:`,
-    `media-src ${assetUrl.origin}${assetUrl.pathname} data: blob:`,
+    \`script-src 'unsafe-inline' \${assetUrl.origin}\${assetUrl.pathname}\`,
+    \`style-src 'unsafe-inline' \${assetUrl.origin}\${assetUrl.pathname}\`,
+    \`img-src \${assetUrl.origin}\${assetUrl.pathname} data: blob:\`,
+    \`font-src \${assetUrl.origin}\${assetUrl.pathname} data:\`,
+    \`media-src \${assetUrl.origin}\${assetUrl.pathname} data: blob:\`,
     "connect-src 'none'",
     "worker-src 'none'",
     "frame-src 'none'",
     "object-src 'none'",
     "form-action 'none'",
     "base-uri 'none'",
-    `frame-ancestors ${parentUrl.origin}`,
+    \`frame-ancestors \${parentUrl.origin}\`,
   ].join("; ");
 }
