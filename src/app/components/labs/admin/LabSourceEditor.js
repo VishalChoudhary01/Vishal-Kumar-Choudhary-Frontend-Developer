@@ -195,6 +195,39 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
     setError("");
   }
 
+  function createHtmlStarter() {
+    const templates = [
+      {
+        path: "index.html",
+        language: "html",
+        content: "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>HTML and CSS experiment</title>\n    <link rel=\"stylesheet\" href=\"./styles.css\" />\n  </head>\n  <body>\n    <main class=\"demo-card\">\n      <p class=\"eyebrow\">LABS · STATIC WEB</p>\n      <h1>Your HTML/CSS preview is ready.</h1>\n      <p>Edit index.html and styles.css, then press Run.</p>\n      <button id=\"demo-button\" type=\"button\">Test JavaScript</button>\n      <p id=\"demo-status\" aria-live=\"polite\"></p>\n    </main>\n    <script type=\"module\" src=\"./main.js\"></script>\n  </body>\n</html>\n",
+      },
+      {
+        path: "styles.css",
+        language: "css",
+        content: ":root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #0b0b0e; color: #f8fafc; }\n* { box-sizing: border-box; }\nbody { min-height: 100vh; margin: 0; display: grid; place-items: center; padding: 24px; }\n.demo-card { width: min(100%, 640px); padding: 40px; border: 1px solid #ffffff24; background: #ffffff08; }\n.eyebrow { color: #5eead4; font-size: 12px; letter-spacing: .16em; }\nh1 { margin: 20px 0 12px; font-size: clamp(2rem, 6vw, 3.5rem); }\np { color: #a1a1aa; line-height: 1.7; }\nbutton { margin-top: 18px; padding: 12px 16px; border: 0; background: #5eead4; color: #0b0b0e; font-weight: 700; cursor: pointer; }\n",
+      },
+      {
+        path: "main.js",
+        language: "javascript",
+        content: "const button = document.querySelector(\"#demo-button\");\nconst status = document.querySelector(\"#demo-status\");\nbutton?.addEventListener(\"click\", () => {\n  status.textContent = \"HTML, CSS and JavaScript are running.\";\n});\n",
+      },
+    ];
+
+    const additions = templates.filter((template) => !files.some((file) => file.path === template.path));
+    if (files.length + additions.length > 40) {
+      setError("There is not enough room for the HTML/CSS starter files. Remove unused files and try again.");
+      return;
+    }
+
+    const nextFiles = [...files, ...additions];
+    setFiles(nextFiles);
+    setSelectedIndex(Math.max(0, nextFiles.findIndex((file) => file.path === "index.html")));
+    setError("");
+    setMessage(additions.length ? "HTML/CSS starter added. Edit index.html and styles.css, then press Run." : "The HTML/CSS starter files already exist.");
+    showToast("success", "HTML/CSS starter added.");
+  }
+
   function createReactStarter() {
     const templates = [
       {
@@ -682,12 +715,12 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
             : "xl:grid-cols-[280px_minmax(0,1fr)]",
         ].join(" ")}>
           <aside className="rounded-sm border border-border bg-surface-1 p-4">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col items-stretch gap-3">
               <div>
                 <h2 className="text-sm font-semibold">Files</h2>
                 <p className="mt-1 text-[10px] text-text-tertiary">Drag to reorder or use the arrow controls.</p>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <label className="inline-flex h-8 cursor-pointer items-center gap-1 border border-border px-2 text-[11px] font-semibold hover:border-brand hover:text-brand">
                   <FileUp size={13} aria-hidden="true" />
                   Import
@@ -702,6 +735,9 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                 </label>
                 {files.length === 0 ? (
                   <>
+                    <button type="button" onClick={createHtmlStarter} className="inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft">
+                      HTML/CSS
+                    </button>
                     <button type="button" onClick={createReactStarter} className="inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft">
                       React JS
                     </button>
