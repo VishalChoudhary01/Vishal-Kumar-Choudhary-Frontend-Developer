@@ -102,11 +102,16 @@ function validateFileNames(files) {
   return safe;
 }
 
-function getParentOrigin() {
+function getParentOrigin(value) {
   try {
-    return new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://localhost").origin;
-  } catch {
-    return "https://localhost";
+    const url = new URL(value);
+    if (url.protocol !== "https:") {
+      fail("INVALID_PREVIEW_ORIGIN", "The preview requires an HTTPS parent origin.");
+    }
+    return url.origin;
+  } catch (error) {
+    if (error?.code === "INVALID_PREVIEW_ORIGIN") throw error;
+    fail("INVALID_PREVIEW_ORIGIN", "The preview parent origin is invalid.");
   }
 }
 
@@ -189,7 +194,7 @@ async function executeBuild(sandbox, files, { base = "./" } = {}) {
   return { ...result, outputFiles: visibleFiles };
 }
 
-export async function createOwnerLabPreview({ slug, user, inputFiles }) {
+export async function createOwnerLabPreview({ slug, user, inputFiles, parentOrigin }) {
   const files = validateFileNames(inputFiles);
   const runId = randomUUID();
   const sandbox = await createCompilerSandbox({
@@ -209,7 +214,7 @@ export async function createOwnerLabPreview({ slug, user, inputFiles }) {
       env: {
         LABS_BUILD_OUTPUT: "/vercel/sandbox/output",
         LABS_PREVIEW_PREFIX: "/preview/" + runId,
-        LABS_PARENT_ORIGIN: getParentOrigin(),
+        LABS_PARENT_ORIGIN: getParentOrigin(parentOrigin),
         PORT: "3000",
       },
       detached: true,
