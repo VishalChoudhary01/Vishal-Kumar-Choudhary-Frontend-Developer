@@ -138,12 +138,30 @@ function createRuntimeBridge(artifactId) {
     const startedAt = Date.now();
 
     const inspectOutput = () => {
-      const root = document.getElementById("root");
-      const rendered = root
-        ? root.children.length > 0 || Boolean(root.textContent.trim())
-        : Array.from(document.body?.children || []).some((element) =>
-            !["SCRIPT", "STYLE", "LINK"].includes(element.tagName)
-          );
+      const body = document.body;
+      const visibleText = String(body?.innerText || "").trim();
+      const hasVisibleElement = Array.from(body?.querySelectorAll("*") || []).some((element) => {
+        if (["SCRIPT", "STYLE", "LINK", "META", "TEMPLATE"].includes(element.tagName)) {
+          return false;
+        }
+
+        const style = window.getComputedStyle(element);
+        if (style.display === "none" || style.visibility === "hidden") return false;
+
+        const rect = element.getBoundingClientRect();
+        return rect.width > 1 && rect.height > 1;
+      });
+      const bodyStyle = body ? window.getComputedStyle(body) : null;
+      const bodyRect = body?.getBoundingClientRect();
+      const hasStyledBodyBackground = Boolean(
+        bodyStyle &&
+        bodyRect?.height > 1 &&
+        (
+          bodyStyle.backgroundImage !== "none" ||
+          (bodyStyle.backgroundColor !== "rgba(0, 0, 0, 0)" && bodyStyle.backgroundColor !== "transparent")
+        )
+      );
+      const rendered = Boolean(visibleText || hasVisibleElement || hasStyledBodyBackground);
 
       if (rendered) {
         documentReady = true;
