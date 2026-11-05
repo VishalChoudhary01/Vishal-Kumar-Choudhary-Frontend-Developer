@@ -383,7 +383,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
     setMessage("");
 
     try {
-      await requestJson(
+      const publishResult = await requestJson(
         "/api/v1/admin/labs/sources/" + encodeURIComponent(source.slug) + "/publish",
         "POST",
         {
@@ -396,9 +396,10 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
         ...current,
         published: true,
         publishedVersionId: versionId,
+        publishedArtifact: publishResult.artifact || null,
       }));
       setConfirmPublish(false);
-      setMessage("Source published. Every verified account can now access this version.");
+      setMessage(source.isCustom ? "React release built and published. The public Labs page now runs this immutable artifact." : "Source published. Every verified account can now access this version.");
       try {
         await refreshAudit();
       } catch {
@@ -429,6 +430,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
         ...current,
         published: false,
         publishedVersionId: null,
+        publishedArtifact: null,
       }));
       setConfirmUnpublish(false);
       setMessage("Source unpublished. New source requests are now blocked.");
@@ -793,15 +795,44 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="text-xs font-semibold">Release readiness</p>
-                    <p className="mt-1 max-w-2xl text-xs leading-5 text-text-tertiary">This experiment remains a private draft. The release workflow is prepared in the owner workspace, but public publishing stays server-blocked until the compiler, isolated runtime and immutable artifact checks are complete.</p>
+                    <p className="mt-1 max-w-2xl text-xs leading-5 text-text-tertiary">Run checks the current working copy. Publishing rebuilds the exact saved version, stores its immutable HTML/JS/CSS artifact and switches the public Labs page only after the build succeeds.</p>
+                    {source.published && source.publishedArtifact ? (
+                      <p className="mt-2 break-all text-[10px] text-brand">Live build · {source.publishedArtifact.buildHash}</p>
+                    ) : null}
                   </div>
-                  <span className="inline-flex h-8 items-center gap-1.5 border border-warning/40 bg-warning/10 px-2.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-warning"><Eye size={12} aria-hidden="true" /> Release blocked</span>
+                  <span className={[
+                    "inline-flex h-8 items-center gap-1.5 border px-2.5 text-[10px] font-semibold uppercase tracking-[0.08em]",
+                    source.published && source.publishedArtifact
+                      ? "border-brand/40 bg-brand-soft text-brand"
+                      : "border-warning/40 bg-warning/10 text-warning",
+                  ].join(" ")}>
+                    <Eye size={12} aria-hidden="true" />
+                    {source.published && source.publishedArtifact ? "Live release" : "Private draft"}
+                  </span>
                 </div>
                 <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                  <div className="border border-brand/30 bg-brand-soft/20 p-3"><p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-brand">Available in this phase</p><p className="mt-1 text-[11px] leading-5 text-text-secondary">Optional private fallback preview media (image/GIF/video), shown only when the code preview cannot run or is unsupported.</p></div>
-                  <div className="border border-border bg-background p-3"><p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-text-tertiary">Still required before release</p><p className="mt-1 text-[11px] leading-5 text-text-secondary">Isolated React/JSX + Tailwind v4 + Motion build, separate-origin runtime, immutable build artifact, security QA and atomic release pointer.</p></div>
+                  <div className="border border-brand/30 bg-brand-soft/20 p-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-brand">Supported runtime</p>
+                    <p className="mt-1 text-[11px] leading-5 text-text-secondary">React 19 · JSX · Motion from motion/react · Tailwind CSS v4 · lucide-react</p>
+                  </div>
+                  <div className="border border-border bg-background p-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-text-tertiary">Release safety</p>
+                    <p className="mt-1 text-[11px] leading-5 text-text-secondary">No user package installs or build scripts. The previous published release remains live if a build fails.</p>
+                  </div>
                 </div>
-                <button type="button" disabled className="mt-4 inline-flex h-9 cursor-not-allowed items-center gap-2 border border-border px-3 text-xs font-semibold text-text-tertiary opacity-60" title="Public publishing is disabled until all release gates pass">Publish release <span aria-hidden="true">—</span> Not ready</button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmPublish(true)}
+                  disabled={Boolean(busy) || hasUnsavedChanges || !source.draftVersionId}
+                  className="mt-4 inline-flex h-9 items-center gap-2 border border-brand px-3 text-xs font-semibold text-brand hover:bg-brand-soft disabled:cursor-not-allowed disabled:opacity-40"
+                  title={hasUnsavedChanges ? "Save the working copy before publishing." : "Build and publish the current saved draft."}
+                >
+                  <Upload size={13} aria-hidden="true" />
+                  Build &amp; publish release
+                </button>
+                {hasUnsavedChanges ? (
+                  <p className="mt-2 text-[10px] text-warning">Save your current edits before publishing. The public page can only use an immutable saved version.</p>
+                ) : null}
               </div>
             ) : null}
 
@@ -825,7 +856,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
               </div>
             ) : null}
 
-            {!source.isCustom && source.published ? (
+            {source.published ? (
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                 <p className="text-xs text-text-tertiary">Published source is available to verified accounts.</p>
                 <button
@@ -1012,12 +1043,12 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
           <section role="dialog" aria-modal="true" aria-labelledby="publish-title" className="w-full max-w-md border border-border bg-surface-1 p-5 shadow-2xl">
             <h2 id="publish-title" className="text-base font-semibold">Publish this source version?</h2>
             <p className="mt-2 text-sm leading-6 text-text-secondary">
-              This will make {source.draft?.version || "the saved draft"} available to every account with a verified email. Anonymous visitors will still not be able to view the code.
+              {source.isCustom ? "This will compile " + (source.draft?.version || "the saved draft") + " in the isolated React toolchain, upload an immutable public runtime artifact and switch the Labs page to it. If the build fails, the existing live release stays unchanged." : "This will make " + (source.draft?.version || "the saved draft") + " available to every account with a verified email. Anonymous visitors will still not be able to view the code."}
             </p>
             <div className="mt-5 flex justify-end gap-2">
               <button type="button" onClick={() => setConfirmPublish(false)} className="h-9 border border-border px-3 text-xs">Cancel</button>
               <button type="button" onClick={publishDraft} disabled={Boolean(busy)} className="h-9 bg-brand px-3 text-xs font-semibold text-brand-contrast disabled:opacity-50">
-                {busy === "publish" ? "Publishing…" : "Confirm publish"}
+                {busy === "publish" ? (source.isCustom ? "Building & publishing…" : "Publishing…") : (source.isCustom ? "Build & publish" : "Confirm publish")}
               </button>
             </div>
           </section>
