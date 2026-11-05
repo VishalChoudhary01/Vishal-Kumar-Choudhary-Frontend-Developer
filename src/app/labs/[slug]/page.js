@@ -6,7 +6,6 @@ import LabDetailHeader from "@/app/components/labs/detail/LabDetailHeader";
 import LabWorkspace from "@/app/components/labs/detail/LabWorkspace";
 import LabExplanation from "@/app/components/labs/detail/LabExplanation";
 import LabSourceAccess from "@/app/components/labs/detail/LabSourceAccess";
-import LabEngagement from "@/app/components/labs/detail/LabEngagement";
 import {
   getPublishedLabExperimentBySlug,
   publishedLabExperiments,
@@ -143,7 +142,10 @@ export default async function LabExperimentPage({ params }) {
       initialSessionResolved={initialSessionResolved}
     >
       <main className="min-h-screen bg-background pb-24 text-text-primary sm:pb-32">
-        <LabDetailHeader experiment={experiment} />
+        <LabDetailHeader
+          experiment={experiment}
+          initialEngagement={initialEngagement}
+        />
         <LabWorkspace key={experiment.slug} experiment={experiment} />
         <LabExplanation explanation={experiment.explanation} />
         <LabSourceAccess
@@ -152,11 +154,6 @@ export default async function LabExperimentPage({ params }) {
           initialUserId={initialUserId}
           initialAuthState={initialAuthState}
           initialSource={initialSource}
-        />
-        <LabEngagement
-          key={experiment.slug}
-          slug={experiment.slug}
-          initialData={initialEngagement}
         />
       </main>
     </LabsPageShell>
