@@ -78,7 +78,7 @@ function validateFileNames(files) {
     seen.add(key);
 
     const extension = path.split(".").pop()?.toLowerCase() || "";
-    if (!new Set(["html", "js", "jsx", "ts", "tsx", "mjs", "css", "json", "txt", "md"]).has(extension)) {
+    if (!new Set(["html", "htm", "js", "jsx", "ts", "tsx", "mjs", "css", "json", "txt", "md"]).has(extension)) {
       fail("UNSUPPORTED_FILE", "The React preview supports HTML, JavaScript, JSX, TypeScript, TSX, CSS, JSON, text and Markdown. Unsupported file: " + path);
     }
     if (!new Set(["javascript", "jsx", "typescript", "tsx", "css", "html", "json", "text", "markdown"]).has(language)) {
