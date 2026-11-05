@@ -1,6 +1,6 @@
 # API Contracts, Domain Schemas and Endpoint Ownership
 
-**Status:** Implemented Labs/auth/source routes are recorded below; portfolio CMS and future preview endpoints remain proposals.  
+**Status:** Implemented Labs/auth/source/editor/media/compiler routes are recorded only where verified in the repository. Generated poster capture, role-aware media attachments and public gallery preview metadata are target contracts/phases, not current endpoints. See `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md` for their release order.  
 **Related:** ARCHITECTURE.md, PROJECT-STRUCTURE.md, PRD.md
 
 ## 1. Contract rules
@@ -70,8 +70,8 @@ These paths are candidate REST endpoints; the same use cases may be Server Actio
 ### Labs public pages, engagement and protected source
 
 Public page routes:
-- `/labs` — statically rendered public experiment listing from the canonical Labs metadata module.
-- `/labs/:slug` — statically generated public experiment detail and code-owned demo runtime. Public page DTOs never include protected source contents.
+- `/labs` — published public experiment listing with lightweight public metadata and exactly one safe visual reference per card. Visual priority: published `gallery-preview` asset, otherwise generated poster matching the published source/artifact version, otherwise existing LabArtwork/neutral artwork. No executable preview is mounted in a card.
+- `/labs/:slug` — published experiment detail. Code-owned demos use the approved lazy runtime registry; owner-created experiments use only the exact published immutable artifact through the isolated runtime. Public page DTOs never include protected source contents.
 
 Public engagement routes:
 - `GET /api/v1/labs/:slug/engagement` — returns active anonymous/verified aggregate like counts and the current actor's like state. A guest identity is not created just by reading the count.
@@ -107,13 +107,12 @@ The owner guard uses server-only `LABS_OWNER_USER_ID` and requires a verified se
 - Source/configuration endpoints must not expose privileged environment values or permit unrestricted package/network execution.
 
 ### Media library
-- `GET /api/admin/media` — search/filter authorized asset metadata and usage.
-- `POST /api/admin/media/upload-signature` — authorize a constrained signed upload after admin checks.
-- `POST /api/admin/media/confirm-upload` — validate Cloudinary result and persist asset metadata.
-- `GET /api/admin/media/:id` — asset details and reference list.
-- `PUT /api/admin/media/:id` — update approved metadata or perform a reviewed replacement workflow.
-- `DELETE /api/admin/media/:id` — reject/block if live, draft or historical references make deletion unsafe.
-Gallery attach/detach/order changes may be content-draft mutations rather than independent asset deletion.
+- Existing owner media upload/inventory/short-lived private preview flows are implemented in the integration branch for currently supported media types; inspect the current route handlers before changing names or request shapes.
+- The current attachment contract supports one optional legacy `fallback-preview` role. Do not assume card cover, detail gallery or in-experiment roles are already supported.
+- **Target role migration:** `gallery-preview` (one active published card visual), `detail-gallery` (ordered supplementary detail media), and `runtime-fallback` (one failure-only media item). Attach/detach/order operations are draft mutations with server-side owner checks, concurrency and reference validation.
+- Public DTOs return only safe references belonging to the published release. Unattached uploads, draft assets, owner preview URLs, Cloudinary signatures and provider secrets never appear in public DTOs.
+- Asset deletion must block while referenced by a draft, published release, historical release, poster record or detail-gallery item. Removing an attachment never directly deletes the Cloudinary object.
+- Exact route/payload for role mutation must be added after the current fallback-only route is inspected; do not invent an endpoint and implement it without matching repository conventions.
 
 ### Analytics
 - `POST /api/analytics/events` — ingest allowlisted client-observable events with validation/rate limiting/deduplication.
@@ -168,11 +167,13 @@ The following are domain concepts, not finalized MongoDB documents. Field names 
 
 ### Lab experiment version payload
 - Title, slug, description, tags/category/technologies.
-- Preview mode and approved media references.
-- Partial-source configuration.
-- Full source/configuration protected by server policy.
+- Preview mode and published presentation references.
+- Optional gallery-preview asset, ordered detail-gallery references and optional runtime-fallback asset, after the role migration.
+- Optional generated poster reference bound to the exact source version and build artifact.
+- Full source/configuration remains protected by server policy.
 - Explicit dependency allowlist/runtime profile if interactive execution is enabled.
 - No privileged environment variables or arbitrary unrestricted network policy.
+- The current one-item fallback-preview attachment is a legacy implementation detail, not the target role schema.
 
 ### Media asset
 - Stable ID, Cloudinary public identifier, secure delivery URL/transform metadata as appropriate.
@@ -200,6 +201,20 @@ The following are domain concepts, not finalized MongoDB documents. Field names 
 - Scheduled timestamp and configured display timezone.
 - Status, attempt count, next attempt, safe failure code and timestamps.
 - Idempotency key/lease metadata appropriate to selected scheduler.
+
+
+### Labs isolated preview and static poster contracts — target, not yet release-verified
+
+These are domain contracts. Final Route Handler versus Server Action selection and concrete payload names must be reconciled with the existing implementation before code changes.
+
+- **Owner Run:** accepts the current unsaved working-copy snapshot and a request/run ID; server derives the owner, validates the file tree and limits, compiles in the isolated sandbox and returns bounded status/diagnostics plus a temporary preview URL. It must not save or publish implicitly. A failed Run preserves editor content and the previous published release.
+- **Run lifecycle:** `queued/building → artifact-ready → iframe-starting → runtime-ready`, or a bounded `build-error/runtime-error/timeout/stopped` state. Runtime-ready requires a validated bridge message correlated to the current run ID; iframe `load` alone is insufficient. Stale messages are ignored.
+- **Poster generation:** owner-only request bound to an exact successful run or immutable published sourceVersionId/artifactId. Capture only after validated runtime-ready. A poster record stores asset reference, source-version ID, artifact ID, capture viewport/configuration, format/dimensions, content hash and created timestamp. Never accept a client-supplied arbitrary page URL or source hash as authority.
+- **Poster timing:** capture on explicit owner Generate/Regenerate or as a bounded publish-time task only when no valid selected `gallery-preview` asset or current poster exists. Never capture on every keystroke, every visitor request or for every card during gallery render.
+- **Public card DTO:** one safe preview descriptor and published release version reference only; never source files, draft preview URLs, owner-only URLs or storage credentials. Poster must exactly match the current published source/artifact version.
+- **Published detail DTO:** immutable artifact reference and safe presentation-role references. The runtime is fetched only by the detail page on a separate origin and only after its canvas is near the viewport.
+- **Security:** poster capture occurs inside the approved isolated/headless-browser boundary. Do not weaken cross-origin isolation or read iframe pixels from the portfolio page. The exact capture worker/provider/storage method remains OPEN pending validation.
+- These target contracts do not authorize Production publication; complete the preview/runtime and threat-model gates in the Labs Runtime and Media Plan first.
 
 ## 5. Query, pagination and mutation contracts
 - Validate page size and clamp to a documented maximum.
