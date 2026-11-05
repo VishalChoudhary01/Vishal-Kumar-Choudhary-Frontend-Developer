@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { prepareReactProject } from "../../../src/app/lib/labs/prepare-react-project.mjs";
 
 const root = path.resolve(process.cwd());
@@ -210,13 +210,62 @@ try {
     invalidOutput,
   ].map((directory) => fs.rm(directory, { recursive: true, force: true })));
 
+  const previewServer = spawn(process.execPath, [path.join(root, "scripts/serve-preview.mjs")], {
+    cwd: root,
+    env: {
+      ...process.env,
+      LABS_BUILD_OUTPUT: output,
+      LABS_PREVIEW_PREFIX: "/preview/smoke-run-1234",
+      LABS_PARENT_ORIGIN: "https://example.test",
+      PORT: "41937",
+    },
+    stdio: "ignore",
+  });
+  try {
+    const previewBase = "http://127.0.0.1:41937/preview/smoke-run-1234/";
+    let serverReady = false;
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      try {
+        const health = await fetch(previewBase + "__health", { signal: AbortSignal.timeout(500) });
+        if (health.ok && (await health.json()).status === "ok") {
+          serverReady = true;
+          break;
+        }
+      } catch {}
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    if (!serverReady) throw new Error("The isolated preview server did not become healthy.");
+
+    const pageResponse = await fetch(previewBase);
+    const pageHtml = await pageResponse.text();
+    if (!pageResponse.ok || !pageHtml.includes("https://example.test") || !pageHtml.includes("labs-preview-ready")) {
+      throw new Error("The preview server did not serve the bridged React entry document.");
+    }
+
+    const scriptMatch = pageHtml.match(/src="([^"]+\\.js)"/);
+    if (!scriptMatch) throw new Error("The served preview HTML is missing its JavaScript bundle.");
+    const scriptResponse = await fetch(new URL(scriptMatch[1], previewBase));
+    if (!scriptResponse.ok || !(scriptResponse.headers.get("content-type") || "").includes("javascript")) {
+      throw new Error("The preview server did not serve the compiled JavaScript bundle.");
+    }
+
+    const traversal = await fetch(previewBase + "%2e%2e/labs-build-result.json");
+    if (traversal.status !== 404) throw new Error("The preview server did not block a traversal request.");
+  } finally {
+    previewServer.kill("SIGTERM");
+    await new Promise((resolve) => {
+      if (previewServer.exitCode !== null) resolve();
+      else previewServer.once("exit", resolve);
+    });
+  }
+
   const html = await fs.readFile(path.join(output, "index.html"), "utf8");
   if (!html.includes("Content-Security-Policy")) {
     throw new Error("The compiled HTML is missing its runtime Content Security Policy.");
   }
 
   process.stdout.write(
-    "PASS: JSX + TSX type checking, React 19, Motion, Lucide, React Icons, Tailwind v4, CSP, and invalid-type rejection.\n",
+    "PASS: JSX + TSX type checking, React 19, Motion, Lucide, React Icons, Tailwind v4, CSP, isolated preview HTTP server/bridge, traversal blocking and invalid-type rejection.\n",
   );
 } finally {
   await Promise.all([
