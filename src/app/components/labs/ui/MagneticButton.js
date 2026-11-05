@@ -1,56 +1,29 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { motion, useMotionValue, useSpring } from "motion/react";
+import {
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+} from "motion/react";
 
-import useReducedMotion from "@/app/hooks/useReducedMotion";
-
-const MAGNETIC_SPRING = Object.freeze({
-  stiffness: 280,
-  damping: 24,
-  mass: 0.55,
-});
-
-const DEFAULT_STRENGTH = 28;
-const DEFAULT_RADIUS = 180;
-const MAX_STRENGTH = 42;
-const MIN_RADIUS = 80;
-const MAX_RADIUS = 300;
-const POINTER_MULTIPLIER = 0.24;
-const PROXIMITY_EXPONENT = 1.25;
-
-function clamp(value, min, max) {
-  return Math.min(Math.max(value, min), max);
-}
-
-function normalizeStrength(value) {
-  if (value === undefined || value === null || value === "") {
-    return DEFAULT_STRENGTH;
-  }
-
-  const numeric = Number(value);
-  return clamp(Number.isFinite(numeric) ? numeric : DEFAULT_STRENGTH, 0, MAX_STRENGTH);
-}
-
-function normalizeRadius(value) {
-  if (value === undefined || value === null || value === "") {
-    return DEFAULT_RADIUS;
-  }
-
-  const numeric = Number(value);
-  return clamp(
-    Number.isFinite(numeric) && numeric !== 0 ? numeric : DEFAULT_RADIUS,
-    MIN_RADIUS,
-    MAX_RADIUS,
-  );
-}
+import {
+  calculateMagneticOffset,
+  DEFAULT_MAGNETIC_RADIUS,
+  DEFAULT_MAGNETIC_STRENGTH,
+  MAGNETIC_SPRING,
+  normalizeMagneticRadius,
+  normalizeMagneticStrength,
+} from "./magnetic-physics.mjs";
 
 /**
  * A reusable magnetic button.
  *
- * `strength`, `radius`, and `showField`-adjacent composition state are
- * deliberately ordinary props. A future source-managed settings manifest can
- * map stable setting IDs directly to these props without changing this API.
+ * `strength` and `radius` are deliberately ordinary numeric props. A future
+ * source-managed settings manifest can map stable setting IDs directly to
+ * these props without changing the component API. Decorative field visibility
+ * belongs to the experiment composition, not to this button primitive.
  *
  * Pass `fieldRef` to measure pointer distance from a larger experiment
  * canvas. Without it, the component uses its own button wrapper as the field.
@@ -58,8 +31,8 @@ function normalizeRadius(value) {
 export default function MagneticButton({
   children = "Magnetic button",
   fieldRef = null,
-  strength = DEFAULT_STRENGTH,
-  radius = DEFAULT_RADIUS,
+  strength = DEFAULT_MAGNETIC_STRENGTH,
+  radius = DEFAULT_MAGNETIC_RADIUS,
   onClick,
   onEngagementChange,
   className = "",
@@ -75,8 +48,8 @@ export default function MagneticButton({
   const x = useSpring(rawX, MAGNETIC_SPRING);
   const y = useSpring(rawY, MAGNETIC_SPRING);
 
-  const safeStrength = normalizeStrength(strength);
-  const safeRadius = normalizeRadius(radius);
+  const safeStrength = normalizeMagneticStrength(strength);
+  const safeRadius = normalizeMagneticRadius(radius);
   const targetRef = fieldRef || localFieldRef;
 
   useEffect(() => {
@@ -112,25 +85,16 @@ export default function MagneticButton({
 
       const centerX = bounds.left + bounds.width / 2;
       const centerY = bounds.top + bounds.height / 2;
-      const offsetX = event.clientX - centerX;
-      const offsetY = event.clientY - centerY;
-      const distance = Math.hypot(offsetX, offsetY);
+      const displacement = calculateMagneticOffset({
+        offsetX: event.clientX - centerX,
+        offsetY: event.clientY - centerY,
+        strength: safeStrength,
+        radius: safeRadius,
+      });
 
-      if (distance >= safeRadius) {
-        resetMagnet();
-        return;
-      }
-
-      const proximity = 1 - distance / safeRadius;
-      const influence = Math.pow(proximity, PROXIMITY_EXPONENT);
-
-      rawX.set(
-        clamp(offsetX * POINTER_MULTIPLIER * influence, -safeStrength, safeStrength),
-      );
-      rawY.set(
-        clamp(offsetY * POINTER_MULTIPLIER * influence, -safeStrength, safeStrength),
-      );
-      updateEngagedState(true);
+      rawX.set(displacement.x);
+      rawY.set(displacement.y);
+      updateEngagedState(displacement.engaged);
     };
 
     target.addEventListener("pointermove", handlePointerMove);
@@ -158,8 +122,8 @@ export default function MagneticButton({
   ]);
 
   return (
-    <div ref={localFieldRef} className="inline-flex">
       <motion.button
+        ref={!fieldRef ? localFieldRef : undefined}
         type="button"
         style={{ x, y }}
         onClick={onClick}
@@ -181,14 +145,13 @@ export default function MagneticButton({
           ↗
         </span>
       </motion.button>
-    </div>
   );
 }
 
 export {
-  DEFAULT_RADIUS,
-  DEFAULT_STRENGTH,
-  MAX_RADIUS,
-  MAX_STRENGTH,
-  MIN_RADIUS,
-};
+  DEFAULT_MAGNETIC_RADIUS,
+  DEFAULT_MAGNETIC_STRENGTH,
+  MAX_MAGNETIC_RADIUS,
+  MAX_MAGNETIC_STRENGTH,
+  MIN_MAGNETIC_RADIUS,
+} from "./magnetic-physics.mjs";
