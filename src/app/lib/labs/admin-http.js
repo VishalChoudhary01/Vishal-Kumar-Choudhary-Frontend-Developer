@@ -44,6 +44,7 @@ export async function getLabsOwnerUser() {
 export function adminError(error) {
   const statusByCode = {
     OWNER_ACCESS_DENIED: 403,
+    FORBIDDEN: 403,
     NOT_FOUND: 404,
     CONFLICT: 409,
     VALIDATION_ERROR: 400,
@@ -54,6 +55,9 @@ export function adminError(error) {
     MEDIA_CONFIG_MISSING: 503,
     MEDIA_PROVIDER_ERROR: 503,
     COMPILER_NOT_CONFIGURED: 503,
+    COMPILER_SNAPSHOT_EXPIRED: 503,
+    COMPILER_START_FAILED: 503,
+    COMPILER_BUSY: 503,
     ARTIFACT_STORAGE_NOT_CONFIGURED: 503,
     PREVIEW_START_FAILED: 503,
     REQUEST_TOO_LARGE: 413,
@@ -80,10 +84,11 @@ export function adminError(error) {
     ARTIFACT_READ_FAILED: 503,
     ARTIFACT_ENTRY_MISSING: 422,
     SOURCE_HASH_MISMATCH: 409,
+    EXPERIMENT_DELETE_IN_PROGRESS: 409,
   };
   const status = statusByCode[error?.code] || 503;
   const message =
-    status === 503
+    status === 503 && error?.code !== "COMPILER_SNAPSHOT_EXPIRED" && error?.code !== "COMPILER_BUSY"
       ? "The requested owner operation is temporarily unavailable."
       : error.message;
 
