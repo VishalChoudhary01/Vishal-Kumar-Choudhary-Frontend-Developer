@@ -773,3 +773,83 @@ Release acceptance requires a deployed browser test for every fixture, not only 
 6. Only after P0 passes, resume skeletons, generated posters and optional media-role rendering.
 
 **Current status:** Architecture decision recorded. The shared iframe and immutable artifact route exist, but this dual-mode build contract and full browser-level asset verification are not yet complete. The previous CSP repair alone did not resolve the supplied screenshots.
+
+---
+
+## 40. Gallery/detail source-parity audit and shared engagement implementation — 5 November 2026
+
+### 40.1 What the code actually did before this update
+
+The public gallery and detail page were **not** rendering the same source implementation:
+
+- `src/app/components/labs/LabsCollection.js` rendered `experiment.thumbnail` when present, otherwise it called `LabArtwork`.
+- `src/app/components/labs/landing/LabArtwork.js` selected four hand-authored visual compositions by slug. These were separate visual approximations; they were not generated from the protected source snapshots or the running experiment.
+- `src/app/components/labs/detail/LabWorkspace.js` selected a detail runtime through `LabRuntimeBoundary`.
+- The four original experiments used literal lazy imports in `runtime/registry.js`.
+- Owner-created custom experiments used the exact published `LabBuildArtifact` behind the isolated artifact iframe.
+- `LabSource` / `LabSourceVersion` stored protected source snapshots. For the four original registry experiments, a saved source snapshot was not automatically the code used by the public runtime. Editing that snapshot alone could not update the live demo.
+- The custom public DTO in `public-experiments.js` returned `thumbnail: null` and empty controls. The current `LabExperiment` media schema supported only one `fallback-preview` attachment, not a gallery cover or detail gallery.
+
+This distinction matters: a protected source copy, a code-owned runtime component, an owner working copy and a published artifact are not interchangeable sources of truth.
+
+### 40.2 Rendering decision — one published source, two presentation outputs
+
+The gallery must not execute every experiment. Doing so would mount multiple React trees/iframes, start Canvas/Motion loops and recreate the performance problem raised in the product discussion.
+
+Instead, the target parity contract is:
+
+`immutable source version` → `one validated build artifact`
+
+That same exact artifact produces two outputs:
+
+1. **Gallery:** a static poster captured from the successfully rendered artifact, tied to the exact source version and artifact ID. An explicitly selected published gallery image/GIF/video may be preferred as the card cover. The gallery never executes code.
+2. **Detail:** the actual interactive artifact served through the existing sandboxed runtime iframe. This is the source-derived live experience.
+
+Both outputs must resolve from the same published release pointer. A poster from another artifact/version is stale and must be rejected. Metadata, poster, source and runtime must never be selected independently from different releases.
+
+The four code-owned experiments must migrate through the owner source/compiler workflow before this parity can be claimed for them. Until each migration is verified, their existing registry runtime and `LabArtwork` remain compatibility fallbacks—not proof of source parity.
+
+### 40.3 Shared preview presentation component
+
+Implemented on this branch:
+
+- New `src/app/components/labs/LabExperimentPreview.js` centralizes static preview selection for discovery surfaces.
+- The card gallery and featured experiment both use this component.
+- It checks the selected `galleryPreview`, legacy `thumbnail`, and future `generatedPoster` references, then falls back to `LabArtwork`.
+- It renders only a static image/artwork. It does not import the runtime registry, mount React experiment components, create iframes or compile source.
+
+This unifies the **static preview presentation**, but it does not itself generate a code poster. Generated poster capture and release-bound poster metadata remain a separate implementation phase below.
+
+### 40.4 Shared optimistic Like control
+
+Implemented on this branch:
+
+- New `src/app/components/labs/LabLikeButton.js` is shared by gallery cards and the detail-page appreciation section.
+- The button uses React `useOptimistic` and `useTransition`: it updates heart state and the visible count immediately, then sends the desired state to the existing engagement endpoint.
+- The last confirmed server state is retained. A network failure or non-success response (including 403, 404, 429 or 503) ends the optimistic action without replacing confirmed state, so React rolls the visual state back and the component shows an error message.
+- Duplicate clicks are disabled while the mutation is pending.
+- The Labs listing gets visitor-specific counts and liked state through one server-side batch read rather than issuing one GET for every card. If the batch is unavailable, gallery like buttons are disabled instead of creating an N+1 request burst.
+- The detail page supplies its server-rendered snapshot to the same control; it can make one detail-scoped GET fallback if the snapshot is unavailable.
+- The engagement API now accepts both the original code-owned experiments and published custom experiments whose exact current published artifact is ready.
+- Existing verified-user and signed-guest persistence, transaction-backed state transitions, rate limiting and analytics event recording remain server-owned. Unverified sessions cannot write likes.
+
+### 40.5 Remaining source-parity phases
+
+| Phase | Work | Acceptance |
+|---|---|---|
+| A — Release source contract | Add/finish an immutable published release descriptor binding metadata, exact LabSourceVersion, LabBuildArtifact, poster and media references | A public slug resolves one internally consistent release |
+| B — Poster generation | Capture a static image from the exact artifact only after the isolated runtime is ready; bind sourceVersionId, artifactId, dimensions and hash | HTML/Canvas and React/Motion artifact fixtures produce correct posters; failed/blank runs do not replace a valid poster |
+| C — Public DTO | Return safe gallery-preview/poster references and the matching runtime descriptor from the same release resolver | Gallery and detail resolve identical release IDs/hashes |
+| D — Built-in migration | Move Magnetic Interaction, Scroll-driven Text Reveal, Gradient Bloom and Generative Particle Field into the owner source/compiler/publish flow one by one | Each built-in's detail runs the artifact built from its managed source; its gallery poster is captured from that same artifact |
+| E — Retire legacy artwork/runtime | Only after each experiment passes parity QA, remove its slug-specific artwork and old registry entry | No public experiment relies on a separately maintained artwork/runtime implementation |
+
+Do not use a live per-card React renderer as a substitute for the poster pipeline. Do not remove existing working built-in runtimes before each artifact replacement has passed visual, interaction, responsive and reduced-motion regression tests.
+
+### 40.6 Validation status
+
+- The shared Like component, batch snapshot service, gallery/detail integrations and custom-experiment engagement route passed targeted ESLint.
+- The production Next.js build passed, including SEO validation, TypeScript and static-page generation.
+- The shared static preview component is now used by both the gallery card and featured card; its latest refactor still requires the final targeted lint/build run.
+- No browser interaction test has yet confirmed guest/verified like persistence and rollback, and no generated poster capture pipeline has been implemented by this update.
+- No original experiment has yet been migrated from the code-owned registry to the same immutable source/build release as its future gallery poster.
+
