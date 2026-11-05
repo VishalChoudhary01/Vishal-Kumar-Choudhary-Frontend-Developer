@@ -10,6 +10,7 @@ import LabArtwork from "./landing/LabArtwork";
 export default function LabExperimentPreview({
   experiment,
   sizes = "(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw",
+  className = "h-full w-full",
 }) {
   const preview =
     experiment?.galleryPreview ||
@@ -27,7 +28,7 @@ export default function LabExperimentPreview({
         sizes={sizes}
         priority={preview.priority === true}
         className={[
-          "h-full w-full",
+          className,
           preview.fit === "contain" ? "object-contain" : "object-cover",
         ].join(" ")}
       />
