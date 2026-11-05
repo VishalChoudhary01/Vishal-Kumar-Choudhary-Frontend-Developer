@@ -191,36 +191,51 @@ export default function LabSourceAccess({
     } finally {
       if (sourceRequestRef.current === requestId) setLoading(false);
     }
-  }, [initialUserId, loading, recordSourceOpen, session?.user?.emailVerified, session?.user?.id, sessionPending, slug]);
+  }, [initialUserId, loading, recordSourceOpen, session, sessionPending, slug]);
 
   // The server-rendered session is authoritative for the first paint. After
   // hydration, reconcile it with the current client session and auto-fetch if
   // the session became verified after the page was opened.
   useEffect(() => {
-    if (sessionPending) return;
+    if (sessionPending) return undefined;
+
+    let active = true;
+
+    const clearSourceForSessionState = (nextState, nextError) => {
+      sourceRequestRef.current += 1;
+      const requestId = sourceRequestRef.current;
+      sourceRef.current = null;
+      autoLoadKeyRef.current = null;
+
+      // Defer the UI reset out of the effect body. The source ref and request
+      // generation are invalidated immediately, so stale code cannot be copied
+      // while React applies the corresponding visual state on the next task.
+      queueMicrotask(() => {
+        if (!active || sourceRequestRef.current !== requestId) return;
+        setSource(null);
+        setLoading(false);
+        setState(nextState);
+        setError(nextError);
+      });
+    };
 
     if (!session?.user?.id) {
-      sourceRequestRef.current += 1;
-      sourceRef.current = null;
-      setSource(null);
-      setLoading(false);
-      setState(initialUserId ? "session-mismatch" : "unauthenticated");
-      setError(initialUserId
-        ? "The verified session used to render this page is no longer available. Sign in again to continue."
-        : "");
-      autoLoadKeyRef.current = null;
-      return;
+      clearSourceForSessionState(
+        initialUserId ? "session-mismatch" : "unauthenticated",
+        initialUserId
+          ? "The verified session used to render this page is no longer available. Sign in again to continue."
+          : "",
+      );
+      return () => {
+        active = false;
+      };
     }
 
     if (session.user.emailVerified !== true) {
-      sourceRequestRef.current += 1;
-      sourceRef.current = null;
-      setSource(null);
-      setLoading(false);
-      setState("verification");
-      setError("");
-      autoLoadKeyRef.current = null;
-      return;
+      clearSourceForSessionState("verification", "");
+      return () => {
+        active = false;
+      };
     }
 
     const userKey = pathname + ":" + slug + ":" + session.user.id;
@@ -229,18 +244,27 @@ export default function LabSourceAccess({
       sourceRef.current?.userId === session.user.id
     ) {
       autoLoadKeyRef.current = userKey;
-      return;
+      return () => {
+        active = false;
+      };
     }
-    if (autoLoadKeyRef.current === userKey) return;
+    if (autoLoadKeyRef.current === userKey) {
+      return () => {
+        active = false;
+      };
+    }
 
     autoLoadKeyRef.current = userKey;
     loadSource();
+
+    return () => {
+      active = false;
+    };
   }, [
     initialUserId,
     loadSource,
     pathname,
-    session?.user?.emailVerified,
-    session?.user?.id,
+    session,
     sessionPending,
     slug,
   ]);
