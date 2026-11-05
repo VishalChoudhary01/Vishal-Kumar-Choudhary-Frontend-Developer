@@ -390,6 +390,18 @@ export default function LabSourceInventory() {
                       Open workspace
                       <ArrowUpRight size={13} aria-hidden="true" />
                     </Link>
+                    {item.isCustom ? (
+                      <button
+                        type="button"
+                        onClick={() => { setDeleteTarget(item); setDeleteConfirmation(""); }}
+                        disabled={Boolean(creating) || deleting}
+                        aria-label={"Delete " + item.title}
+                        title="Delete custom experiment"
+                        className="grid h-9 w-9 place-items-center border border-warning/40 text-warning transition-colors hover:bg-warning/10 disabled:opacity-40"
+                      >
+                        <Trash2 size={14} aria-hidden="true" />
+                      </button>
+                    ) : null}
                   ) : (
                     <button
                       type="button"
@@ -427,6 +439,28 @@ export default function LabSourceInventory() {
           </button>
         </div>
       )}
+      {deleteTarget ? (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-black/70 p-4" role="presentation">
+          <section role="dialog" aria-modal="true" aria-labelledby="inventory-delete-title" className="w-full max-w-md border border-warning/40 bg-surface-1 p-5 shadow-2xl">
+            <div className="flex items-center gap-2 text-warning">
+              <Trash2 size={16} aria-hidden="true" />
+              <h2 id="inventory-delete-title" className="text-base font-semibold">Delete {deleteTarget.title}?</h2>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-text-secondary">This permanently removes the custom experiment, source versions, private media, release artifacts and engagement data. Built-in experiments cannot be deleted.</p>
+            <label className="mt-4 block text-xs font-medium text-text-secondary">
+              Type <span className="font-mono text-text-primary">{deleteTarget.slug}</span> to confirm
+              <input value={deleteConfirmation} onChange={(event) => setDeleteConfirmation(event.target.value)} autoComplete="off" spellCheck={false} className="mt-2 h-10 w-full border border-border bg-background px-3 font-mono text-xs text-text-primary outline-none focus:border-warning" placeholder={deleteTarget.slug} />
+            </label>
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" onClick={() => setDeleteTarget(null)} disabled={deleting} className="h-9 border border-border px-3 text-xs">Cancel</button>
+              <button type="button" onClick={deleteExperiment} disabled={deleting || deleteConfirmation.trim() !== deleteTarget.slug} className="inline-flex h-9 items-center gap-2 border border-warning bg-warning/10 px-3 text-xs font-semibold text-warning disabled:cursor-not-allowed disabled:opacity-40">
+                {deleting ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <Trash2 size={13} aria-hidden="true" />}
+                {deleting ? "Deleting…" : "Delete permanently"}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </section>
   );
 }
