@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useActionToast } from "@/app/providers/ActionToastProvider";
 import LabSourceLivePreview from "./LabSourceLivePreview";
 import LabMediaLibrary from "./LabMediaLibrary";
 import Link from "next/link";
@@ -15,6 +17,7 @@ import {
   Save,
   Upload,
   X,
+  Trash2,
 } from "lucide-react";
 
 const LANGUAGES = [
@@ -79,6 +82,8 @@ function validateDraftFiles(files) {
 }
 
 export default function LabSourceEditor({ initialSource, initialVersions, initialAudit }) {
+  const router = useRouter();
+  const { showToast } = useActionToast();
   const [source, setSource] = useState(initialSource);
   const [files, setFiles] = useState(initialSource.files || []);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -90,6 +95,8 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
   const [error, setError] = useState("");
   const [confirmPublish, setConfirmPublish] = useState(false);
   const [confirmUnpublish, setConfirmUnpublish] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [previewVersion, setPreviewVersion] = useState(null);
   const [previewFileIndex, setPreviewFileIndex] = useState(0);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -323,6 +330,44 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
     setAudit(nextAudit || []);
   }
 
+  async function deleteProject() {
+    if (deleteConfirmation.trim() !== source.slug) {
+      showToast("error", "Enter the exact project slug to confirm deletion.");
+      return;
+    }
+
+    setBusy("delete");
+    try {
+      const response = await fetch(
+        "/api/v1/admin/labs/experiments/" + encodeURIComponent(source.slug),
+        {
+          method: "DELETE",
+          cache: "no-store",
+          credentials: "same-origin",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ confirmSlug: deleteConfirmation.trim() }),
+        },
+      );
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || payload?.data?.deleted !== true) {
+        throw new Error(payload?.error?.message || "The experiment could not be deleted.");
+      }
+
+      setConfirmDelete(false);
+      showToast("success", "Experiment and its private assets were deleted.");
+      router.push("/admin/labs/sources");
+      router.refresh();
+    } catch (reason) {
+      showToast("error", reason.message || "The experiment could not be deleted.");
+      setError(reason.message || "The experiment could not be deleted.");
+    } finally {
+      setBusy("");
+    }
+  }
+
   async function saveDraft() {
     const validationError = validateDraftFiles(files);
     if (validationError) {
@@ -358,6 +403,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
       }));
       setChangeSummary("");
       setMessage(data.version + " saved as a private draft.");
+      showToast("success", data.version + " saved as a private draft.");
       try {
         const [nextVersions] = await Promise.all([
           requestJson("/api/v1/admin/labs/sources/" + encodeURIComponent(source.slug) + "/versions"),
@@ -369,6 +415,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
       }
     } catch (reason) {
       setError(reason.message || "The draft could not be saved.");
+      showToast("error", reason.message || "The draft could not be saved.");
     } finally {
       setBusy("");
     }
@@ -400,6 +447,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
       }));
       setConfirmPublish(false);
       setMessage(source.isCustom ? "React release built and published. The public Labs page now runs this immutable artifact." : "Source published. Every verified account can now access this version.");
+      showToast("success", source.isCustom ? "Release built and published successfully." : "Source published successfully.");
       try {
         await refreshAudit();
       } catch {
@@ -407,6 +455,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
       }
     } catch (reason) {
       setError(reason.message || "Source could not be published.");
+      showToast("error", reason.message || "Source could not be published.");
     } finally {
       setBusy("");
     }
@@ -434,6 +483,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
       }));
       setConfirmUnpublish(false);
       setMessage("Source unpublished. New source requests are now blocked.");
+      showToast("success", "Source unpublished. New source requests are blocked.");
       try {
         await refreshAudit();
       } catch {
@@ -441,6 +491,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
       }
     } catch (reason) {
       setError(reason.message || "Source could not be unpublished.");
+      showToast("error", reason.message || "Source could not be unpublished.");
     } finally {
       setBusy("");
     }
@@ -485,6 +536,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
         },
       );
       setMessage(versionLabel + " restored as a new draft.");
+      showToast("success", versionLabel + " restored as a new draft.");
       try {
         await refreshSource();
       } catch {
@@ -492,6 +544,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
       }
     } catch (reason) {
       setError(reason.message || "The selected version could not be restored.");
+      showToast("error", reason.message || "The selected version could not be restored.");
     } finally {
       setBusy("");
     }
@@ -534,9 +587,20 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {source.isCustom ? (
-              <span className="inline-flex h-9 items-center border border-border px-3 text-xs text-text-tertiary">
-                Private experiment draft
-              </span>
+              <>
+                <span className="inline-flex h-9 items-center border border-border px-3 text-xs text-text-tertiary">
+                  Private experiment draft
+                </span>
+                <button
+                  type="button"
+                  onClick={() => { setDeleteConfirmation(""); setConfirmDelete(true); }}
+                  disabled={Boolean(busy)}
+                  className="inline-flex h-9 items-center gap-2 border border-warning/50 px-3 text-xs font-semibold text-warning transition-colors hover:bg-warning/10 disabled:opacity-40"
+                >
+                  <Trash2 size={13} aria-hidden="true" />
+                  Delete project
+                </button>
+              </>
             ) : (
               <Link
                 href={"/labs/" + encodeURIComponent(source.slug)}
@@ -1071,6 +1135,43 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
           </section>
         </div>
       ) : null}
+      {confirmDelete ? (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-black/70 p-4" role="presentation">
+          <section role="dialog" aria-modal="true" aria-labelledby="delete-project-title" className="w-full max-w-md border border-warning/40 bg-surface-1 p-5 shadow-2xl">
+            <div className="flex items-center gap-2 text-warning">
+              <Trash2 size={16} aria-hidden="true" />
+              <h2 id="delete-project-title" className="text-base font-semibold">Delete this experiment?</h2>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-text-secondary">
+              This permanently deletes the custom experiment, source versions, private media, release artifacts and engagement records. Its public page is hidden before cleanup begins. This action cannot be undone.
+            </p>
+            <label className="mt-4 block text-xs font-medium text-text-secondary">
+              Type <span className="font-mono text-text-primary">{source.slug}</span> to confirm
+              <input
+                value={deleteConfirmation}
+                onChange={(event) => setDeleteConfirmation(event.target.value)}
+                autoComplete="off"
+                spellCheck={false}
+                className="mt-2 h-10 w-full border border-border bg-background px-3 font-mono text-xs text-text-primary outline-none focus:border-warning"
+                placeholder={source.slug}
+              />
+            </label>
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" onClick={() => setConfirmDelete(false)} disabled={busy === "delete"} className="h-9 border border-border px-3 text-xs">Cancel</button>
+              <button
+                type="button"
+                onClick={deleteProject}
+                disabled={busy === "delete" || deleteConfirmation.trim() !== source.slug}
+                className="inline-flex h-9 items-center gap-2 border border-warning bg-warning/10 px-3 text-xs font-semibold text-warning disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {busy === "delete" ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <Trash2 size={13} aria-hidden="true" />}
+                {busy === "delete" ? "Deleting…" : "Delete permanently"}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
     </main>
   );
 }
