@@ -12,7 +12,48 @@ export function stripPublishedRuntimeCspMeta(html) {
   }
 
   return html.replace(
-    /<meta\b(?=[^>]*\bhttp-equiv\s*=\s*(?:"content-security-policy"|'content-security-policy'|content-security-policy)(?=[\s/>]))[^>]*\/?>/gi,
+    /<meta\\b(?=[^>]*\\bhttp-equiv\\s*=\\s*(?:"content-security-policy"|'content-security-policy'|content-security-policy)(?=[\\s/>]))[^>]*\\/?>/gi,
     "",
   );
+}
+
+export function buildPublishedRuntimeCsp({ assetBase, parentOrigin }) {
+  let assetUrl;
+  let parentUrl;
+
+  try {
+    assetUrl = new URL(assetBase);
+    parentUrl = new URL(parentOrigin);
+  } catch {
+    throw new TypeError("Published runtime asset and parent origins must be valid URLs.");
+  }
+
+  if (
+    assetUrl.protocol !== "https:" ||
+    parentUrl.protocol !== "https:" ||
+    assetUrl.origin !== parentUrl.origin ||
+    !assetUrl.pathname.endsWith("/") ||
+    assetUrl.username ||
+    assetUrl.password ||
+    parentUrl.username ||
+    parentUrl.password
+  ) {
+    throw new TypeError("Published runtime assets must share the trusted HTTPS parent origin.");
+  }
+
+  return [
+    "default-src 'none'",
+    `script-src 'unsafe-inline' ${assetUrl.origin}${assetUrl.pathname}`,
+    `style-src 'unsafe-inline' ${assetUrl.origin}${assetUrl.pathname}`,
+    `img-src ${assetUrl.origin}${assetUrl.pathname} data: blob:`,
+    `font-src ${assetUrl.origin}${assetUrl.pathname} data:`,
+    `media-src ${assetUrl.origin}${assetUrl.pathname} data: blob:`,
+    "connect-src 'none'",
+    "worker-src 'none'",
+    "frame-src 'none'",
+    "object-src 'none'",
+    "form-action 'none'",
+    "base-uri 'none'",
+    `frame-ancestors ${parentUrl.origin}`,
+  ].join("; ");
 }
