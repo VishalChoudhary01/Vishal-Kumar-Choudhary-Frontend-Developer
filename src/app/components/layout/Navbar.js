@@ -49,31 +49,23 @@ export default function Navbar({
     setScrolled(latest > 24);
   });
 
-  useEffect(() => {
-    setScrolled(scrollY.get() > 24);
-  }, [scrollY]);
-
   // ---------------------------------------------------------------------------
   // INITIAL ACTIVE SECTION
   // ---------------------------------------------------------------------------
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
     const flat = flattenNavLinks(navLinks);
     const hash = window.location.hash;
+    const match = hash ? flat.find((entry) => entry.href === hash) : null;
+    const nextActiveHref = hash
+      ? match?.activeHref || hash
+      : flat[0]?.activeHref || "";
 
-    if (hash) {
-      const match = flat.find((entry) => entry.href === hash);
+    const frame = window.requestAnimationFrame(() => {
+      setActiveHref(nextActiveHref);
+    });
 
-      setActiveHref(match ? match.activeHref : hash);
-
-      return;
-    }
-
-    if (flat.length > 0) {
-      setActiveHref(flat[0].activeHref);
-    }
+    return () => window.cancelAnimationFrame(frame);
   }, [navLinks]);
 
   // ---------------------------------------------------------------------------
