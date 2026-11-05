@@ -79,7 +79,7 @@ function validateFileNames(files) {
 
     const extension = path.split(".").pop()?.toLowerCase() || "";
     if (!new Set(["html", "htm", "js", "jsx", "ts", "tsx", "mjs", "css", "json", "txt", "md"]).has(extension)) {
-      fail("UNSUPPORTED_FILE", "The React preview supports HTML, JavaScript, JSX, TypeScript, TSX, CSS, JSON, text and Markdown. Unsupported file: " + path);
+      fail("UNSUPPORTED_FILE", "The Labs preview supports HTML, JavaScript, JSX, TypeScript, TSX, CSS, JSON, text and Markdown. Unsupported file: " + path);
     }
     if (!new Set(["javascript", "jsx", "typescript", "tsx", "css", "html", "json", "text", "markdown"]).has(language)) {
       fail("UNSUPPORTED_FILE", "Use JavaScript/JSX, TypeScript/TSX, HTML, CSS, JSON, text or Markdown for this preview.");
@@ -142,7 +142,7 @@ async function createCompilerSandbox({ timeout, ports = [] }) {
       name: error?.name || "Error",
       message: detail.slice(0, 400),
     });
-    fail("COMPILER_START_FAILED", "The isolated React compiler could not start. Check the Vercel Sandbox configuration and retry.");
+    fail("COMPILER_START_FAILED", "The isolated Labs compiler could not start. Check the Vercel Sandbox configuration and retry.");
   }
 }
 
