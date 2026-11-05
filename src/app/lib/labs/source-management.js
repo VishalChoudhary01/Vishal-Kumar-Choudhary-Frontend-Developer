@@ -11,6 +11,7 @@ import LabSourceVersion from "./models/LabSourceVersion";
 import LabSourceAuditEvent from "./models/LabSourceAuditEvent";
 import LabBuildArtifact from "./models/LabBuildArtifact";
 import { isLabsOwner } from "./owner-access";
+import { isReservedCompilerFilePath } from "./source-file-policy.mjs";
 
 const SAFE_SOURCE_PATH =
   /^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[A-Za-z0-9._/-]{1,180}$/;
@@ -95,10 +96,7 @@ function validateFiles(input) {
     }
 
     const pathKey = path.toLowerCase();
-    if (
-      RESERVED_COMPILER_FILES.has(pathKey) ||
-      path.split("/").some((segment) => segment.toLowerCase() === "node_modules")
-    ) {
+    if (isReservedCompilerFilePath(path)) {
       throwCode("VALIDATION_ERROR", "Compiler configuration, package manifests, lockfiles and node_modules are managed by the Labs platform.");
     }
     if (seenPaths.has(pathKey)) {
