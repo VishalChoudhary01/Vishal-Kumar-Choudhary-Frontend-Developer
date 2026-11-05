@@ -77,6 +77,7 @@ export default function LabWorkspace({ experiment }) {
             <LabRuntimeBoundary
               runtimeKey={runtimeKey}
               runtimeUrl={runtimeUrl}
+              artifactId={demo.artifactId}
               settings={values}
               restartKey={restartKey}
               isFullscreen={isFullscreen}
