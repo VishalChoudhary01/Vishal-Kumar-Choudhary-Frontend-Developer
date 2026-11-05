@@ -104,7 +104,7 @@ export default function LabSourceLivePreview({ slug, files }) {
             </span>
           </div>
           <p className="mt-1 text-[10px] text-text-tertiary">
-            React · JSX · Motion · Tailwind CSS v4
+            React · JSX/TSX · Motion · Tailwind v4 · Lucide + React Icons
           </p>
         </div>
         <div className="flex items-center gap-1">
@@ -151,7 +151,7 @@ export default function LabSourceLivePreview({ slug, files }) {
             ref={frameRef}
             title="Isolated React experiment preview"
             src={run.previewUrl}
-            sandbox="allow-scripts"
+            sandbox="allow-scripts allow-same-origin"
             referrerPolicy="no-referrer"
             allow="fullscreen"
             onLoad={() => setStatus((current) => current === "starting" ? "loading" : current)}
