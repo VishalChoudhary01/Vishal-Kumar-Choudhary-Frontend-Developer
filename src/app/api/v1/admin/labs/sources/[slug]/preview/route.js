@@ -40,7 +40,7 @@ export async function POST(request, { params }) {
       slug,
       inputFiles: body?.files,
     });
-    const preview = await createOwnerLabPreview({ slug, user, inputFiles: files });
+    const preview = await createOwnerLabPreview({ slug, user, inputFiles: files, parentOrigin: request.nextUrl.origin });
 
     await LabPreviewRun.createIndexes();
     await LabPreviewRun.create({
