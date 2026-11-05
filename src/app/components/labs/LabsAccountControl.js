@@ -8,15 +8,21 @@ import { Code2, LogOut, MailCheck, UserRound } from "lucide-react";
 import { authClient } from "@/app/lib/auth/client";
 import { publishAuthEvent, subscribeAuthEvents } from "@/app/lib/auth/session-events";
 
-export default function LabsAccountControl() {
+export default function LabsAccountControl({
+  initialUser = null,
+  initialSessionResolved = false,
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const triggerRef = useRef(null);
   const menuRef = useRef(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [session, setSession] = useState(null);
-  const [isPending, setIsPending] = useState(true);
+  const [session, setSession] = useState(() =>
+    initialSessionResolved && initialUser ? { user: initialUser } : null
+  );
+  const [isPending, setIsPending] = useState(!initialSessionResolved);
+  const initialSessionKnownRef = useRef(initialSessionResolved);
   const [ownerStatus, setOwnerStatus] = useState({ userId: null, isOwner: false });
   const [logoutError, setLogoutError] = useState("");
 
@@ -24,6 +30,19 @@ export default function LabsAccountControl() {
   const signInHref = "/labs/login?returnTo=" + encodeURIComponent(returnTo);
   const signUpHref = "/labs/signup?returnTo=" + encodeURIComponent(returnTo);
   const verifyHref = "/labs/verify-email?returnTo=" + encodeURIComponent(returnTo);
+
+  useEffect(() => {
+    if (!initialSessionResolved) return;
+
+    initialSessionKnownRef.current = true;
+    setSession(initialUser ? { user: initialUser } : null);
+    setIsPending(false);
+  }, [
+    initialSessionResolved,
+    initialUser?.id,
+    initialUser?.email,
+    initialUser?.emailVerified,
+  ]);
 
   useEffect(() => {
     let mounted = true;
@@ -39,11 +58,18 @@ export default function LabsAccountControl() {
         const result = await response.json().catch(() => null);
 
         if (mounted) {
-          setSession(response.ok && result?.user?.id ? result : null);
+          if (response.ok) {
+            setSession(result?.user?.id ? result : null);
+          } else if (!initialSessionKnownRef.current) {
+            setSession(null);
+          }
         }
       } catch {
-        if (mounted) setSession(null);
+        if (mounted && !initialSessionKnownRef.current) {
+          setSession(null);
+        }
       } finally {
+        initialSessionKnownRef.current = false;
         if (mounted) setIsPending(false);
       }
     };
