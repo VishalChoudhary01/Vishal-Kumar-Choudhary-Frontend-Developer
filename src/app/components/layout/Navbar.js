@@ -17,6 +17,8 @@ import { cn } from "@/app/lib/utils";
 import SocialIcon from "../ui/SocialIcon";
 import LabsAccountControl from "@/app/components/labs/LabsAccountControl";
 
+const EMPTY_LINKS = [];
+
 export default function Navbar({
   context = "site",
   showLabsAccount = false,
@@ -34,8 +36,8 @@ export default function Navbar({
   const headerRef = useRef(null);
   const previousMenuOpen = useRef(false);
 
-  const navLinks = portfolio.navigation || [];
-  const socialLinks = portfolio.socialLinks || [];
+  const navLinks = portfolio.navigation || EMPTY_LINKS;
+  const socialLinks = portfolio.socialLinks || EMPTY_LINKS;
 
   const isProjectContext = context === "project";
 
