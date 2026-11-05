@@ -57,6 +57,7 @@ export function adminError(error) {
     COMPILER_NOT_CONFIGURED: 503,
     COMPILER_SNAPSHOT_EXPIRED: 503,
     COMPILER_START_FAILED: 503,
+    TYPECHECK_UNAVAILABLE: 503,
     COMPILER_BUSY: 503,
     ARTIFACT_STORAGE_NOT_CONFIGURED: 503,
     PREVIEW_START_FAILED: 503,
@@ -65,6 +66,7 @@ export function adminError(error) {
     SNAPSHOT_TOO_LARGE: 400,
     BUILD_OUTPUT_TOO_LARGE: 422,
     BUILD_FAILED: 422,
+    TYPECHECK_FAILED: 422,
     BUILD_ENTRY_MISSING: 422,
     BUILD_OUTPUT_INVALID: 422,
     BUILD_RESULT_INVALID: 422,
@@ -77,6 +79,7 @@ export function adminError(error) {
     INVALID_TAILWIND_ENTRY: 400,
     UNRESOLVED_IMPORT: 422,
     MISSING_DEFAULT_EXPORT: 400,
+    RESERVED_FILE: 400,
     DUPLICATE_PATH: 400,
     UNSUPPORTED_ASSETS: 400,
     INVALID_PREVIEW_ORIGIN: 400,
@@ -87,10 +90,21 @@ export function adminError(error) {
     EXPERIMENT_DELETE_IN_PROGRESS: 409,
   };
   const status = statusByCode[error?.code] || 503;
+  const actionableOperationalCodes = new Set([
+    "COMPILER_SNAPSHOT_EXPIRED",
+    "COMPILER_BUSY",
+    "COMPILER_START_FAILED",
+    "TYPECHECK_UNAVAILABLE",
+    "PREVIEW_START_FAILED",
+    "ARTIFACT_STORAGE_NOT_CONFIGURED",
+    "ARTIFACT_READ_FAILED",
+    "MEDIA_CONFIG_MISSING",
+    "MEDIA_PROVIDER_ERROR",
+  ]);
   const message =
-    status === 503 && error?.code !== "COMPILER_SNAPSHOT_EXPIRED" && error?.code !== "COMPILER_BUSY"
+    status === 503 && !actionableOperationalCodes.has(error?.code)
       ? "The requested owner operation is temporarily unavailable."
-      : error.message;
+      : String(error?.message || "The requested owner operation could not be completed.").slice(0, 500);
 
   if (status === 503) {
     const diagnostic = String(error?.message || "Owner operation failed.")
