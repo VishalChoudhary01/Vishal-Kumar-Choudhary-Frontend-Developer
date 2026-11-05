@@ -85,16 +85,7 @@ function formatTimestamp(value, fallback) {
   if (!value) return fallback;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return fallback;
-  return new Intl.DateTimeFormat("en-IN", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone: "UTC",
-    timeZoneName: "short",
-  }).format(date);
+  return date.toISOString().slice(0, 19).replace("T", " ") + " UTC";
 }
 
 export default function LabSourceEditor({ initialSource, initialVersions, initialAudit }) {
@@ -851,7 +842,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                   <span className="mb-1 flex flex-wrap items-center justify-between gap-2 text-[11px] font-medium uppercase tracking-[0.1em] text-text-tertiary">
                     <span>Source content</span>
                     <span className="font-mono normal-case tracking-normal">
-                      {new TextEncoder().encode(selectedFile.content || "").length.toLocaleString("en-IN")} bytes · {(selectedFile.content || "").split("\n").length} lines
+                      {String(new TextEncoder().encode(selectedFile.content || "").length)} bytes · {(selectedFile.content || "").split("\n").length} lines
                     </span>
                   </span>
                   <textarea
