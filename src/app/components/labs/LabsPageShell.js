@@ -21,6 +21,7 @@ export default function LabsPageShell({
         <Navbar
           context="project"
           showLabsAccount
+          hideSocialLinks
           initialAuthUser={initialAuthUser}
           initialSessionResolved={initialSessionResolved}
         />
