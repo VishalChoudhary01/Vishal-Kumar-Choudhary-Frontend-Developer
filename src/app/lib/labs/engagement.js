@@ -301,3 +301,84 @@ export async function recordVerifiedSourceEvent({
     throw error;
   }
 }
+
+/**
+ * Read engagement for a gallery in a small number of indexed queries.
+ * This avoids one GET request per card while keeping each visitor's liked
+ * state private to the response that is rendered for that visitor.
+ */
+export async function getLabEngagementBatch({ slugs, actor = null }) {
+  const uniqueSlugs = [...new Set(
+    (Array.isArray(slugs) ? slugs : [])
+      .filter((slug) => typeof slug === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)),
+  )].slice(0, 100);
+
+  if (!uniqueSlugs.length) return {};
+
+  await connectToDatabase();
+  await ensureEngagementIndexes();
+
+  const now = new Date();
+  const matchSlugs = { $in: uniqueSlugs };
+
+  if (actor?.type === "guest") {
+    await LabGuestLike.updateMany(
+      {
+        guestKeyHash: actor.guestKeyHash,
+        experimentSlug: matchSlugs,
+        active: true,
+      },
+      { $set: { expiresAt: new Date(now.getTime() + COOKIE_MAX_AGE_MS) } },
+    );
+  }
+
+  const [verifiedCounts, guestCounts, actorRows] = await Promise.all([
+    LabLike.aggregate([
+      { $match: { experimentSlug: matchSlugs, active: true } },
+      { $group: { _id: "$experimentSlug", count: { $sum: 1 } } },
+    ]),
+    LabGuestLike.aggregate([
+      {
+        $match: {
+          experimentSlug: matchSlugs,
+          active: true,
+          expiresAt: { $gt: now },
+        },
+      },
+      { $group: { _id: "$experimentSlug", count: { $sum: 1 } } },
+    ]),
+    actor?.type === "verified"
+      ? LabLike.find({
+          userId: actor.userId,
+          experimentSlug: matchSlugs,
+          active: true,
+        }).select("experimentSlug").lean()
+      : actor?.type === "guest"
+        ? LabGuestLike.find({
+            guestKeyHash: actor.guestKeyHash,
+            experimentSlug: matchSlugs,
+            active: true,
+            expiresAt: { $gt: now },
+          }).select("experimentSlug").lean()
+        : Promise.resolve([]),
+  ]);
+
+  const verifiedBySlug = new Map(verifiedCounts.map((item) => [item._id, item.count]));
+  const guestBySlug = new Map(guestCounts.map((item) => [item._id, item.count]));
+  const likedSlugs = new Set(actorRows.map((item) => item.experimentSlug));
+
+  return Object.fromEntries(uniqueSlugs.map((slug) => {
+    const verifiedLikes = verifiedBySlug.get(slug) || 0;
+    const anonymousLikes = guestBySlug.get(slug) || 0;
+
+    return [
+      slug,
+      {
+        verifiedLikes,
+        anonymousLikes,
+        totalLikes: verifiedLikes + anonymousLikes,
+        liked: likedSlugs.has(slug),
+      },
+    ];
+  }));
+}
