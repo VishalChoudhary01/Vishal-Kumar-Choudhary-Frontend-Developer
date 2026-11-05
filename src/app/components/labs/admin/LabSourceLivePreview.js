@@ -20,7 +20,7 @@ export default function LabSourceLivePreview({ slug, files }) {
   useEffect(() => {
     const onMessage = (event) => {
       if (!frameRef.current || event.source !== frameRef.current.contentWindow) return;
-      if (frameOrigin && event.origin !== frameOrigin) return;
+      if (frameOrigin && event.origin !== frameOrigin && event.origin !== "null") return;
       if (!event.data || typeof event.data !== "object") return;
 
       if (event.data.type === "labs-preview-ready") {
