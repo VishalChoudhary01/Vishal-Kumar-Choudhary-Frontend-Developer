@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import useReducedMotion from "@/app/hooks/useReducedMotion";
-import MagneticButton from "@/app/components/labs/ui/MagneticButton";
+import { useReducedMotion } from "motion/react";
+import MagneticButton from "../../../ui/MagneticButton";
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
