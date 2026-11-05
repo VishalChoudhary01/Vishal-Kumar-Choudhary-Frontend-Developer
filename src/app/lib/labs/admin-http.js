@@ -72,6 +72,13 @@ export function adminError(error) {
     INVALID_REACT_ENTRY: 400,
     INVALID_TAILWIND_ENTRY: 400,
     UNRESOLVED_IMPORT: 422,
+    MISSING_DEFAULT_EXPORT: 400,
+    DUPLICATE_PATH: 400,
+    UNSUPPORTED_ASSETS: 400,
+    INVALID_PREVIEW_ORIGIN: 400,
+    INVALID_HTML_OUTPUT: 422,
+    ARTIFACT_READ_FAILED: 503,
+    ARTIFACT_ENTRY_MISSING: 422,
     SOURCE_HASH_MISMATCH: 409,
   };
   const status = statusByCode[error?.code] || 503;
@@ -81,7 +88,14 @@ export function adminError(error) {
       : error.message;
 
   if (status === 503) {
-    console.error("[labs-owner] operation failed:", error?.code || "OWNER_OPERATION_ERROR");
+    const diagnostic = String(error?.message || "Owner operation failed.")
+      .replace(/(token|authorization|secret|password|api[_-]?key)\s*[:=]\s*[^\s,;]+/gi, "$1=[redacted]")
+      .slice(0, 500);
+    console.error("[labs-owner] operation failed:", {
+      code: error?.code || "OWNER_OPERATION_ERROR",
+      name: error?.name || "Error",
+      message: diagnostic,
+    });
   }
 
   return adminJson(
