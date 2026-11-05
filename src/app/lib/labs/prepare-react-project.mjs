@@ -81,31 +81,6 @@ function createEntryFiles(component, mode) {
       ? []
       : [
           {
-            path: "tsconfig.json",
-            language: "json",
-            generated: true,
-            content: JSON.stringify({
-              compilerOptions: {
-                target: "ES2022",
-                lib: ["ES2022", "DOM", "DOM.Iterable"],
-                module: "ESNext",
-                moduleResolution: "Bundler",
-                jsx: "react-jsx",
-                strict: true,
-                noEmit: true,
-                isolatedModules: true,
-                verbatimModuleSyntax: true,
-                skipLibCheck: true,
-                forceConsistentCasingInFileNames: true,
-                types: ["vite/client"],
-                allowJs: true,
-                checkJs: false,
-              },
-              include: ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts"],
-              exclude: ["node_modules", "dist"],
-            }, null, 2),
-          },
-          {
             path: "src/vite-env.d.ts",
             language: "typescript",
             content: '/// <reference types="vite/client" />\n',
