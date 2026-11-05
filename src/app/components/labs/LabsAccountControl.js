@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Code2, LogOut, UserRound } from "lucide-react";
+import { Code2, LogOut, MailCheck, UserRound } from "lucide-react";
 
 import { authClient } from "@/app/lib/auth/client";
 import { publishAuthEvent, subscribeAuthEvents } from "@/app/lib/auth/session-events";
 
 export default function LabsAccountControl() {
   const router = useRouter();
+  const pathname = usePathname();
   const triggerRef = useRef(null);
   const menuRef = useRef(null);
   const [open, setOpen] = useState(false);
@@ -18,6 +19,11 @@ export default function LabsAccountControl() {
   const [isPending, setIsPending] = useState(true);
   const [ownerStatus, setOwnerStatus] = useState({ userId: null, isOwner: false });
   const [logoutError, setLogoutError] = useState("");
+
+  const returnTo = pathname?.startsWith("/labs") ? pathname : "/labs";
+  const signInHref = "/labs/login?returnTo=" + encodeURIComponent(returnTo);
+  const signUpHref = "/labs/signup?returnTo=" + encodeURIComponent(returnTo);
+  const verifyHref = "/labs/verify-email?returnTo=" + encodeURIComponent(returnTo);
 
   useEffect(() => {
     let mounted = true;
@@ -56,7 +62,10 @@ export default function LabsAccountControl() {
 
   useEffect(() => {
     const userId = session?.user?.id;
-    if (!userId || session?.user?.emailVerified !== true) return undefined;
+    if (!userId || session?.user?.emailVerified !== true) {
+      setOwnerStatus({ userId: null, isOwner: false });
+      return undefined;
+    }
 
     let active = true;
 
@@ -135,6 +144,7 @@ export default function LabsAccountControl() {
       }
 
       publishAuthEvent("sign-out");
+      setSession(null);
       router.replace("/labs");
       router.refresh();
     } catch {
@@ -145,10 +155,39 @@ export default function LabsAccountControl() {
     }
   };
 
-  if (isPending || !session?.user) return null;
+  if (isPending) {
+    return (
+      <div
+        aria-hidden="true"
+        className="h-8 w-[112px] animate-pulse bg-surface-2/70 motion-reduce:animate-none"
+      />
+    );
+  }
+
+  if (!session?.user) {
+    return (
+      <div className="flex shrink-0 items-center gap-1.5">
+        <Link
+          href={signInHref}
+          className="inline-flex h-8 items-center px-2 text-[11px] font-medium text-text-secondary transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:px-2.5 sm:text-xs"
+        >
+          Sign in
+        </Link>
+        <Link
+          href={signUpHref}
+          className="inline-flex h-8 items-center justify-center border border-brand bg-brand px-2.5 text-[11px] font-semibold text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:px-3 sm:text-xs"
+        >
+          <span className="sm:hidden">Create</span>
+          <span className="hidden sm:inline">Create account</span>
+        </Link>
+      </div>
+    );
+  }
+
+  const isVerified = session.user.emailVerified === true;
 
   return (
-    <div className="relative flex h-10 w-10 items-center justify-center">
+    <div className="relative flex h-10 w-10 shrink-0 items-center justify-center">
       <button
         ref={triggerRef}
         type="button"
@@ -166,17 +205,28 @@ export default function LabsAccountControl() {
           ref={menuRef}
           role="menu"
           aria-label="Account"
-          className="absolute right-0 top-full z-[70] mt-2 w-[232px] rounded-sm border border-border bg-surface-elevated p-2 text-text-primary shadow-[var(--shadow-md)]"
+          className="absolute right-0 top-full z-[70] mt-2 w-[248px] rounded-sm border border-border bg-surface-elevated p-2 text-text-primary shadow-[var(--shadow-md)]"
         >
           <p className="truncate px-3 py-2 text-xs text-text-secondary" title={session.user.email}>
             {session.user.email}
           </p>
+          {!isVerified ? (
+            <Link
+              href={verifyHref}
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="flex min-h-10 w-full items-center gap-2 px-3 text-left text-sm text-warning transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand"
+            >
+              <MailCheck size={15} aria-hidden="true" />
+              Verify email
+            </Link>
+          ) : null}
           {isOwner ? (
             <Link
               href="/admin/labs/sources"
               role="menuitem"
               onClick={() => setOpen(false)}
-              className="flex min-h-10 w-full items-center gap-2 rounded-sm px-3 text-left text-sm transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand"
+              className="flex min-h-10 w-full items-center gap-2 px-3 text-left text-sm transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand"
             >
               <Code2 size={15} aria-hidden="true" />
               Manage Labs sources
@@ -193,10 +243,10 @@ export default function LabsAccountControl() {
             role="menuitem"
             onClick={signOut}
             disabled={loading}
-            className="flex min-h-10 w-full items-center gap-2 rounded-sm px-3 text-left text-sm transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand disabled:opacity-50"
+            className="flex min-h-10 w-full items-center gap-2 px-3 text-left text-sm transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand disabled:opacity-50"
           >
             <LogOut size={15} aria-hidden="true" />
-            Sign out
+            {loading ? "Signing out…" : "Sign out"}
           </button>
         </div>
       ) : null}
