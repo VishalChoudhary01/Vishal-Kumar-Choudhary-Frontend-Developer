@@ -1,7 +1,7 @@
 # Product Requirements Document — Portfolio Platform
 
 **Status:** Approved requirements baseline with a phased Labs runtime, gallery, media and interaction roadmap. Current Labs implementation has deployed preview/runtime regressions that must pass the documented recovery gate; CMS/Admin remains deferred.  
-**Version:** 1.1  
+**Version:** 1.2  
 **Scope:** Existing portfolio extension: CMS/admin, analytics, media library, user accounts, and Component Lab. The current Labs branch includes the initial auth and protected-source read foundation; owner-managed source authoring/versioning and engagement analytics remain planned.
 
 ## 1. Product vision
