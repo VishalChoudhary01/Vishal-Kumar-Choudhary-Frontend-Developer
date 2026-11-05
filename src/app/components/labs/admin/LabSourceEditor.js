@@ -598,7 +598,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                 ) : null}
                 <button
                   type="button"
-                  onClick={addFile
+                  onClick={addFile}
                   disabled={files.length >= 40}
                   className="inline-flex h-8 items-center gap-1 border border-border px-2 text-[11px] font-semibold hover:border-brand hover:text-brand disabled:opacity-40"
                 >
