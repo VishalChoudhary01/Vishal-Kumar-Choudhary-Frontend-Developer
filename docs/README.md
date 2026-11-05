@@ -1,7 +1,7 @@
 # Portfolio Platform — Documentation Index
 
-**Status:** Labs/authentication foundation implemented; owner-managed source lifecycle planned; CMS/Admin implementation deferred.  
-**Branch:** `feat/labs-public-page` (current Labs implementation branch)
+**Status:** Labs integration branch contains owner source/editor, isolated compiler and publishing foundations. Deployed preview/runtime behavior remains under regression recovery; gallery posters, role-aware media and responsive UX phases are planned in the runtime/media plan. CMS/Admin remains deferred.  
+**Primary Labs branch:** `feat/labs-platform-integration`
 
 This documentation defines the proposed portfolio platform extension. It is not proof that any feature has been implemented or that infrastructure decisions have been validated against the current repository.
 
@@ -11,9 +11,10 @@ This documentation defines the proposed portfolio platform extension. It is not 
 3. `DESIGN-ADMIN.md` — admin and portfolio CMS experience.
 4. `DESIGN-ANALYTICS.md` — analytics dashboard, event definitions, interpretation.
 5. LABS-AND-AUTHENTICATION-DESIGN-SPEC.md — detailed Labs page/auth UX and repository-aligned implementation guide. This is the detailed UX authority for the public Labs route and authentication screen decisions.
-6. LABS-SOURCE-MANAGEMENT-SPEC.md — owner-only protected source lifecycle, automatic verified-account access, source versions, likes, engagement analytics, audit and migration plan. This is the detailed implementation-planning authority for owner-managed Labs source; it does not authorize live source execution.
-7. DESIGN-LAB.md — broader Lab product capabilities (search, sorting, likes, source/preview policy, engagement and publishing). Apply unless a detailed page UX decision in LABS-AND-AUTHENTICATION-DESIGN-SPEC.md explicitly supersedes it.
-8. Existing project-level source-of-truth documents and current implementation — authoritative for current behavior and technical conventions. Inspect before changing code.
+6. `LABS-SOURCE-MANAGEMENT-SPEC.md` — owner-only protected source lifecycle, automatic verified-account access, source versions, likes, engagement analytics, audit and migration plan.
+7. `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md` — source of truth for owner Run, isolated compiler/runtime, immutable published artifacts, static code-output posters, media roles, loading/optimistic UX phases and release gates.
+8. `DESIGN-LAB.md` — public Labs UX requirements, gallery card hierarchy, runtime/source interactions, accessibility and performance expectations.
+9. Existing project-level source-of-truth documents and current implementation — authoritative for current behavior and technical conventions. Inspect before changing code.
 
 ## Locked baseline
 - Preserve the current public portfolio home page, project detail pages, education section, design, responsive behavior, animation, SEO, accessibility, and functionality.
@@ -36,6 +37,7 @@ This documentation defines the proposed portfolio platform extension. It is not 
 
 - [Labs and authentication UX + implementation guide](./LABS-AND-AUTHENTICATION-DESIGN-SPEC.md) — detailed Labs page design, auth flows, current stack/repository baseline, proposed components/hooks/state ownership and feature implementation guidance.
 - [Labs owner-managed source lifecycle](./LABS-SOURCE-MANAGEMENT-SPEC.md) — protected owner workspace, source snapshots/versions, automatic verified-user access, likes/copy/open analytics, auditing, migration and rollout phases.
+- [Labs Experiment Studio runtime and media plan](./LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md) — owner Run regression gates, isolated HTML/React runtime, immutable artifacts, static gallery posters, media-role migration, skeletons, optimistic interactions and phased rollout.
 - [Database and media setup plan](./DATABASE-AND-MEDIA-SETUP-PLAN.md) — MongoDB Atlas, Mongoose, Cloudinary, environment variables, security, testing and deployment setup.
 
 ## Change control
@@ -57,7 +59,7 @@ A new requirement must be added to the PRD, with affected design/implementation 
 
 ## Current Labs implementation status
 
-The `feat/labs-public-page` branch contains the Labs listing/detail implementation and the initial Better Auth + MongoDB adapter authentication and protected-source foundation. See:
+The `feat/labs-platform-integration` branch is the active Labs implementation branch. The owner source/editor and isolated compiler foundations exist, but the 5 November 2026 browser review surfaced a blank detail runtime and missing custom gallery visuals; see the runtime/media plan for mandatory recovery and verification gates. See:
 - [Labs and authentication UX/implementation baseline](./LABS-AND-AUTHENTICATION-DESIGN-SPEC.md), especially Section 36.
 - [Labs authentication and protected-source setup/provisioning runbook](./LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md).
 - [Labs owner-managed source lifecycle specification](./LABS-SOURCE-MANAGEMENT-SPEC.md) — owner identity, source file editor, immutable snapshots, draft/publish/restore, automatic verified-user access, source engagement metrics, audit, migration and implementation phases.
