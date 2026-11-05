@@ -5,6 +5,7 @@ import AuthField from "./AuthField";
 import AuthSubmit from "./AuthSubmit";
 import AuthMessage from "./AuthMessage";
 import AuthLink from "./AuthLink";
+import SocialAuthButtons from "./SocialAuthButtons";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -13,6 +14,9 @@ export default function SignupForm({
   legal,
   registrationEnabled,
   readiness,
+  googleEnabled = false,
+  githubEnabled = false,
+  initialError = "",
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,7 +25,7 @@ export default function SignupForm({
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [globalError, setGlobalError] = useState("");
+  const [globalError, setGlobalError] = useState(initialError);
   const [complete, setComplete] = useState(false);
 
   const validate = (name, value) => {
@@ -253,6 +257,15 @@ export default function SignupForm({
           Create account
         </AuthSubmit>
       </form>
+
+      <SocialAuthButtons
+        intent="sign-up"
+        returnTo={returnTo}
+        googleEnabled={googleEnabled}
+        githubEnabled={githubEnabled}
+        disabled={loading || !registrationEnabled}
+        onPendingChange={setLoading}
+      />
 
       <p className="mt-6 text-center text-sm text-text-secondary">
         Already have an account?{" "}
