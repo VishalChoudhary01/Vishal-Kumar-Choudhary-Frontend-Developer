@@ -335,14 +335,7 @@ try {
     throw new Error("The CSS-only preview did not emit its stylesheet.");
   }
 
-  await Promise.all([
-    staticInput,
-    staticProject,
-    staticOutput,
-    cssOnlyInput,
-    cssOnlyProject,
-    cssOnlyOutput,
-  ].map((directory) => fs.rm(directory, { recursive: true, force: true })));
+  // Keep the static build output until its HTTP preview test completes.
 
   const staticPreviewServer = spawn(process.execPath, [path.join(root, "scripts/serve-preview.mjs")], {
     cwd: root,
@@ -468,5 +461,11 @@ try {
     negativeInput,
     negativeRoot,
     negativeOutput,
+    staticInput,
+    staticProject,
+    staticOutput,
+    cssOnlyInput,
+    cssOnlyProject,
+    cssOnlyOutput,
   ].map((directory) => fs.rm(directory, { recursive: true, force: true })));
 }
