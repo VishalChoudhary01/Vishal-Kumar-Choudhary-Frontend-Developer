@@ -79,13 +79,13 @@ export default function PrivacyPage() {
       <Section id="information" title="2. Information handled">
         <div className="space-y-5">
           <DataItem title="Account and sign-in information">
-            When you create a Labs account, the service handles your email address, a default account name, account identifiers, password authentication data (passwords are handled by Better Auth and are not stored as readable plain text), verification state, and timestamps. If Google sign-in is enabled and you choose it, Google may provide identity and profile information needed to authenticate or link the account.
+            When you create a Labs account, the service handles your email address, a default account name, account identifiers, password authentication data (passwords are handled by Better Auth and are not stored as readable plain text), verification state, and timestamps. If you choose Google or GitHub sign-in, the selected provider may provide identity and profile information, including the verified email address used to authenticate or link your Labs account.
           </DataItem>
           <DataItem title="Sessions and account security">
             The service creates session records and authentication cookies to keep you signed in, protect account routes, and manage sign-out, verification, and password resets. Authentication and security systems may also process request details needed to detect abuse and protect the service.
           </DataItem>
-          <DataItem title="Registration consent and verification records">
-            When you register, the server records the versions of the Terms of Service and Privacy Policy you accepted, the acceptance time, a keyed digest of your email address, and the account identifier once linked. Verification flows use a random flow identifier, a keyed email digest, creation/expiry times, and a verification status.
+          <DataItem title="Email verification records">
+            Email/password registration creates a short-lived verification flow with a random identifier, a keyed digest of the email address, creation and expiry timestamps, and a verification status. The flow is used to confirm email verification and expires automatically after seven days. The service does not create a Terms/Conditions acceptance receipt during registration.
           </DataItem>
           <DataItem title="Abuse-prevention records and technical logs">
             Registration rate limiting stores a keyed digest derived from the trusted proxy IP address, a request count, and an update time. The rate-limit record is configured to expire after approximately 24 hours. Hosting, proxy, database, and security providers may separately create technical logs such as IP address, request time, browser/device information, and error metadata under their own retention settings.
@@ -112,7 +112,7 @@ export default function PrivacyPage() {
         <ul className="list-disc space-y-2 pl-5 marker:text-brand">
           <li>To display the portfolio, operate interactive Labs experiments, and respond to contact messages.</li>
           <li>To create and maintain accounts, verify email addresses, authenticate sign-ins, and deliver password-reset messages.</li>
-          <li>To record the policy versions accepted during registration and maintain the associated verification record.</li>
+          <li>To verify email addresses, maintain secure account sessions, and recover accounts when a password reset is requested.</li>
           <li>To provide verified-account access to published source, remember likes, and measure aggregate experiment engagement.</li>
           <li>To detect abusive registration activity, protect the service, diagnose errors, and maintain reliability.</li>
           <li>To remember interface preferences and provide a consistent experience.</li>
@@ -127,10 +127,11 @@ export default function PrivacyPage() {
         </p>
         <ul className="list-disc space-y-2 pl-5 marker:text-brand">
           <li><strong className="font-semibold text-text-primary">Vercel:</strong> website hosting, deployment, server execution, and associated platform logs.</li>
-          <li><strong className="font-semibold text-text-primary">MongoDB Atlas / MongoDB:</strong> database storage for account, session, consent, verification, rate-limit, protected source, like-state, audit, and engagement-event records.</li>
+          <li><strong className="font-semibold text-text-primary">MongoDB Atlas / MongoDB:</strong> database storage for account, session, verification, rate-limit, protected source, like-state, audit, and engagement-event records.</li>
           <li><strong className="font-semibold text-text-primary">Better Auth:</strong> authentication libraries and, when configured, the Better Auth Dash infrastructure integration.</li>
           <li><strong className="font-semibold text-text-primary">Email providers:</strong> the configured SMTP provider for authentication messages; the portfolio contact endpoint uses Gmail SMTP.</li>
           <li><strong className="font-semibold text-text-primary">Google:</strong> only if Google sign-in is configured and you choose that sign-in method.</li>
+          <li><strong className="font-semibold text-text-primary">GitHub:</strong> only if GitHub sign-in is configured and you choose that sign-in method. Labs requests identity and email information only; it does not request access to your repositories.</li>
         </ul>
         <p>
           These providers process information under their own terms and privacy notices. I do not author their independent policies. Information may also be disclosed to professional advisers, authorities, or other parties where required by law or necessary to protect rights, safety, and the service.
@@ -150,7 +151,7 @@ export default function PrivacyPage() {
         <ul className="list-disc space-y-2 pl-5 marker:text-brand">
           <li>Account and session records are kept while needed to operate the account, protect the service, and meet applicable obligations. Sessions may expire or be revoked by sign-out or password reset.</li>
           <li>Verification-flow records have a seven-day expiry. Registration rate-limit records are configured for approximately 24-hour expiry.</li>
-          <li>Consent receipts are retained separately from short-lived verification records so the policy versions and acceptance time can be referenced. They are not automatically removed by verification-flow expiry.</li>
+
           <li>Verified likes remain active until you unlike the experiment or the account is deleted. Anonymous like identities and their active like state expire after 180 days without a visit that refreshes the identity. Engagement event records are retained for service measurement and integrity; a fixed automatic expiry period is not currently configured.</li>
           <li>Contact messages remain in the receiving email mailbox and associated provider systems until deleted under mailbox retention practices or no longer needed for a legitimate purpose.</li>
           <li>Hosting and provider logs follow the relevant provider&apos;s retention controls and may remain in backups for a limited period.</li>
@@ -195,7 +196,7 @@ export default function PrivacyPage() {
 
       <Section id="changes" title="11. Changes and contact">
         <p>
-          This policy may be updated when the service, data practices, providers, or applicable law changes. The effective date and version at the top identify the current text. For material changes to the information collected or the purposes for which it is used, the relevant notice and consent flow will be updated where required.
+          This policy may be updated when the service, data practices, providers, or applicable law changes. The effective date and version at the top identify the current text. For material changes to the information collected or the purposes for which it is used, this notice will be updated and any legally required notice or consent step will be provided.
         </p>
         <p>
           This notice is prepared with reference to India&apos;s Digital Personal Data Protection Act, 2023 and Digital Personal Data Protection Rules, 2025. Those instruments have phased commencement. Applicability depends on the relevant provision and its notified commencement date; publication of this policy is not a certification that the service has completed every compliance requirement.
