@@ -1,11 +1,10 @@
 # Labs Experiment Studio — Runtime, Media and Publishing Plan
 
-**Status:** React JS/JSX and React TS/TSX are the locked primary authoring starters and pass the compiler suite. Standalone HTML/CSS/JavaScript is a separate supported static mode, not a replacement for React. The latest branch also runs the nested Fluid Gradient HTML fixture, preserves inline CSS/Canvas JavaScript, rewrites nested local asset URLs, and passes the expanded smoke suite. Targeted ESLint and a clean Next.js production build pass with all 18 static pages.
-**Latest validated branch commit:** `e3fd60ac09fe072afd9f7025a414e842069ab7fd`
-**Last READY Preview deployment:** `5c366730cafa6ba9300af0986aa5d379410e787d` at [mx029pt12.vercel.app](https://vishal-kumar-choudhary-frontend-developer-mx029pt12.vercel.app/). This deployment predates the nested HTML entry and Vite root-relative asset fixes. The latest branch has passed local compiler and app builds, but does not yet have a READY Preview deployment.
+**Status:** React JS/JSX and React TS/TSX are locked first-class authoring starters. Standalone HTML/CSS/JavaScript is a separate supported static mode. The latest branch passes the expanded compiler smoke suite (including the nested Fluid Gradient file with inline CSS/Canvas and linked local CSS/JS), targeted ESLint and a clean Next.js production build with all 18 static pages.
+**Latest validated source:** `e3fd60ac09fe072afd9f7025a414e842069ab7fd` (latest functional code; subsequent commit updates documentation only).
+**Latest READY Preview:** [vishal-kumar-choudhary-frontend-developer-12tkvcm9s.vercel.app](https://vishal-kumar-choudhary-frontend-developer-12tkvcm9s.vercel.app/) on commit `18e5ff96d20a7abc75ec19437e3ee6160b96eea2`. It includes the nested HTML entry, relative asset rewrite, Vite root-relative asset policy, React/TSX starters and responsive Files panel.
 **Applies to:** Owner-created experiments in Labs, while preserving the four existing code-owned experiments.
 **Primary implementation branch:** `feat/labs-platform-integration`
-
 ---
 
 ## Runtime decision locked — React first, static HTML/CSS retained
@@ -49,7 +48,7 @@ The uploaded entry was named `src/fluid_gradient_background-1-.html`, not root `
 - The specific Vercel build error `Expected ',', got 'ident'` came from an invalid escaped quote in generated `labs-root` markup; corrected to a single-quoted JavaScript string and verified by the clean build.
 
 ### Deployment gate
-The last READY deployment is still commit `5c36673`, before the nested HTML and Vite root-relative asset fixes. Vercel deployments for intermediate commits failed while the quote and path-policy regressions were being corrected. The latest branch commit `e3fd60a` now passes the local build and smoke suite, but must receive a fresh READY Preview deployment before the owner Run button can be confirmed in a browser. Do not enable Production publishing until HTML/CSS, JSX and TSX Run have been verified in deployed Preview and the public detail page has been proven to render the matching immutable artifact.
+A fresh READY Preview is now deployed at commit `18e5ff9`, which includes the nested HTML entry and Vite local-asset fixes. The build has passed. The remaining operational check is an authenticated owner Run click using the deployed Studio, followed by confirmation that the iframe and its assets load and execute. Do not enable Production publishing until HTML/CSS, JSX and TSX Run have been verified in deployed Preview and the public detail page has been proven to render the matching immutable artifact.
 ## 1. Product outcome
 
 The Studio is an owner-only creative coding workspace. The owner must be able to create an original experiment, write or import its code, run the actual interactive experience, inspect errors and save immutable drafts. Image/GIF/video upload is optional and exists only as a fallback when the code preview cannot run or is unsupported.
