@@ -122,13 +122,101 @@ try {
     process.exit(1);
   }
 
+  const tsSource = [
+    {
+      path: "src/experiment.ts",
+      language: "tsx",
+      content: [
+        'import { useState } from "react";',
+        'import { motion, useReducedMotion } from "motion/react";',
+        'import { Sparkles } from "lucide-react";',
+        'import { FiActivity } from "react-icons/fi";',
+        "type CardProps = { title: string; count: number };",
+        "function Card({ title, count }: CardProps) {",
+        '  return <p className="mt-2 text-sm text-slate-300">{title}: {count}</p>;',
+        "}",
+        "export default function Experiment() {",
+        "  const [count, setCount] = useState<number>(0);",
+        "  const reduceMotion = useReducedMotion();",
+        "  return (",
+        '    <main className="grid min-h-screen place-items-center bg-slate-950 p-8 text-white">',
+        "      <motion.section initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} className=\"border border-white/10 p-8\">",
+        '        <Sparkles aria-hidden="true" />',
+        '        <FiActivity aria-hidden="true" />',
+        '        <h1 className="text-3xl font-bold">TypeScript TSX preview passed</h1>',
+        "        <Card title=\"Typed state\" count={count} />",
+        '        <button className="mt-4 bg-teal-300 px-4 py-2 text-slate-950" onClick={() => setCount((value) => value + 1)}>Count {count}</button>',
+        "      </motion.section>",
+        "    </main>",
+        "  );",
+        "}",
+      ].join("\n"),
+    },
+  ];
+  const tsFiles = prepareReactProject(tsSource);
+  for (const required of ["src/experiment.tsx", "src/main.tsx", "src/App.tsx", "src/index.css", "src/vite-env.d.ts", "index.html"]) {
+    if (!tsFiles.some((file) => file.path === required)) {
+      throw new Error("The TSX adapter did not generate " + required + ".");
+    }
+  }
+  const tsInput = path.join(root, ".smoke-ts-input");
+  const tsRoot = path.join(root, ".smoke-ts-project");
+  const tsOutput = path.join(root, ".smoke-ts-output");
+  const invalidInput = path.join(root, ".smoke-ts-invalid-input");
+  const invalidRoot = path.join(root, ".smoke-ts-invalid-project");
+  const invalidOutput = path.join(root, ".smoke-ts-invalid-output");
+
+  await writeInput(tsInput, tsFiles.map(({ path: filePath, content }) => ({ path: filePath, content })));
+  const tsPositive = runBuild(tsInput, tsRoot, tsOutput);
+  if (tsPositive.status !== 0) {
+    process.stderr.write(tsPositive.stderr || tsPositive.stdout || "The valid TSX project failed.\n");
+    process.exit(1);
+  }
+  const tsManifest = JSON.parse(await fs.readFile(path.join(tsOutput, "labs-build-result.json"), "utf8"));
+  const tsCssFile = tsManifest.outputFiles.find((file) => file.path.endsWith(".css"));
+  if (!tsCssFile) throw new Error("The TSX build did not emit a Tailwind CSS bundle.");
+  const tsCss = await fs.readFile(path.join(tsOutput, tsCssFile.path), "utf8");
+  for (const token of [".bg-slate-950", ".text-3xl", ".font-bold"]) {
+    if (!tsCss.includes(token)) throw new Error("Tailwind v4 did not emit TSX utility: " + token);
+  }
+  const tsJsFile = tsManifest.outputFiles.find((file) => file.path.endsWith(".js") && file.path.includes("assets/"));
+  if (!tsJsFile) throw new Error("The TSX build did not emit a JavaScript bundle.");
+  const tsJs = await fs.readFile(path.join(tsOutput, tsJsFile.path), "utf8");
+  if (!tsJs.includes("TypeScript TSX preview passed")) {
+    throw new Error("The TSX component is missing from the compiled JavaScript bundle.");
+  }
+
+  const invalidTsSource = [
+    {
+      path: "src/invalid.tsx",
+      language: "tsx",
+      content: 'export default function Invalid() { const count: number = "not a number"; return <div>{count}</div>; }',
+    },
+  ];
+  const invalidTsFiles = prepareReactProject(invalidTsSource);
+  await writeInput(invalidInput, invalidTsFiles.map(({ path: filePath, content }) => ({ path: filePath, content })));
+  const tsNegative = runBuild(invalidInput, invalidRoot, invalidOutput);
+  if (tsNegative.status === 0 || !String(tsNegative.stderr).includes("TYPECHECK_FAILED")) {
+    process.stderr.write(tsNegative.stderr || "The compiler did not reject an invalid TSX type.\n");
+    process.exit(1);
+  }
+
+  await Promise.all([
+    tsInput,
+    tsRoot,
+    tsOutput,
+    invalidInput,
+    invalidRoot,
+    invalidOutput,
+  ].map((directory) => fs.rm(directory, { recursive: true, force: true })));
+
   const html = await fs.readFile(path.join(output, "index.html"), "utf8");
   if (!html.includes("Content-Security-Policy")) {
     throw new Error("The compiled HTML is missing its runtime Content Security Policy.");
   }
 
   process.stdout.write(
-    "PASS: single-file .js + JSX language adapter, React 19, Motion, lucide-react, Tailwind v4, CSP and package allowlist.\n",
+    "PASS: JSX + TSX type checking, React 19, Motion, Lucide, React Icons, Tailwind v4, CSP, and invalid-type rejection.\n",
   );
 } finally {
   await Promise.all([
