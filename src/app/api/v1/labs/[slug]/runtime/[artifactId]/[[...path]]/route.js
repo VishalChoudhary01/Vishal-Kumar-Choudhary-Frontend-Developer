@@ -6,7 +6,7 @@ import LabExperiment from "@/app/lib/labs/models/LabExperiment";
 import LabSource from "@/app/lib/labs/models/LabSource";
 import {
   buildPublishedRuntimeCsp,
-  stripPublishedRuntimeCspMeta,
+  rewritePublishedRuntimeHtml,
 } from "@/app/lib/labs/runtime-html.mjs";
 
 export const runtime = "nodejs";
@@ -185,12 +185,14 @@ function createRuntimeBridge(artifactId) {
 </script>`;
 }
 
-function injectRuntimeBridge(html, artifactId) {
-  // The browser iframe uses sandbox="allow-scripts", so its origin is opaque.
-  // A second build-time meta CSP using script-src 'self' / style-src 'self'
-  // blocks local artifact assets inside that iframe. The precise path-scoped
-  // HTTP CSP below is the single authoritative policy for published output.
-  const safeHtml = stripPublishedRuntimeCspMeta(html);
+function injectRuntimeBridge(html, artifactId, { assetBase, artifactPath }) {
+  // Resolve every local HTML asset against the immutable artifact URL before
+  // the browser sees it. This guarantees that /runtime/:artifactId/:path is
+  // used consistently by HTML, the route matcher and the path-scoped CSP.
+  const safeHtml = rewritePublishedRuntimeHtml(html, {
+    assetBase,
+    entryPath: artifactPath,
+  });
   const bridge = createRuntimeBridge(artifactId);
   const headMatch = /<head\b[^>]*>/i.exec(safeHtml);
 
@@ -337,7 +339,10 @@ export async function GET(request, { params }) {
         return safeError(413, "The published HTML entry exceeds the runtime limit.");
       }
 
-      return new Response(injectRuntimeBridge(html, artifactId), {
+      return new Response(injectRuntimeBridge(html, artifactId, {
+        assetBase,
+        artifactPath,
+      }), {
         status: 200,
         headers,
       });
