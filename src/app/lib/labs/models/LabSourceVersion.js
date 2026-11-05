@@ -70,6 +70,8 @@ const labSourceVersionSchema = new mongoose.Schema(
       required: true,
       match: /^[a-f0-9]{64}$/,
     },
+    buildArtifactId: { type: String, default: null, maxlength: 64 },
+    buildHash: { type: String, default: null, match: /^[a-f0-9]{64}$/ },
     basedOnVersionId: {
       type: String,
       default: null,
