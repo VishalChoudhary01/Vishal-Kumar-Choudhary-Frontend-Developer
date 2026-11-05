@@ -2280,8 +2280,8 @@ This section records the implementation baseline on `feat/labs-public-page`. It 
 ### 36.4 Protected source endpoint and authorization
 
 - Full source is served only by `GET /api/v1/labs/:slug/source`.
-- **Current legacy behavior:** every request verifies the server-side Better Auth session, requires a verified email, checks an active grant for the current user and experiment, then loads a published source snapshot from the private `lab_sources` collection. Remove the grant lookup as part of the approved migration; target requests require only verified session + published source.
-- **Legacy only:** grants are currently stored in `lab_source_grants`. The target policy retires this collection from authorization. No per-user grant is created, queried or required.
+- **Current integration-branch behavior:** every request verifies the server-side Better Auth session, requires `emailVerified === true`, resolves the canonical experiment slug and loads only a published source snapshot from the private `lab_sources` collection. No active per-user grant lookup is performed by the current authorization service.
+- **Legacy migration state:** the `LabSourceGrant` model/`lab_source_grants` collection is retained for migration safety, but it is not an authorization dependency in the integration branch. Preserve/inspect existing records before retiring the model and collection; do not create new grants or migrate them as active entitlements.
 - Responses use `private, no-store` / `no-cache` headers and are not included in public page data, metadata or static generation.
 - Source file paths are validated; snapshots are bounded to 40 files, 500 KB per file and 1 MB total response content.
 - No source snapshot is seeded by the current implementation. A verified account can read source automatically only after the source snapshot is provisioned and published; no source grant is needed.
@@ -2300,7 +2300,7 @@ Do not copy code that must remain confidential into the public repository or exp
 - Publish the actual Terms of Service and Privacy Policy, then set their HTTPS URLs and version identifiers. Until then, sign-up remains disabled by design.
 - Configure Google OAuth credentials and an approved callback origin to enable Google sign-in.
 - Provision and publish a private source snapshot. Verify guests/unverified accounts are denied and any verified test account can read it without a grant.
-- Run the full responsive/light-dark/authentication/accessibility regression suite and production build. This branch has not been locally built or browser-tested in the connected GitHub-only environment.
+- Run the full responsive/light-dark/authentication/accessibility regression suite and production build. Browser evidence on 2026-11-05 showed that custom experiment gallery visuals are still missing and the Spotlight Dock published runtime renders a blank white canvas. These are open regressions. Owner Run for unsaved HTML/CSS/JS and React JSX/TSX must also be verified in the deployed browser before the preview workflow is called complete.
 - Do not begin CMS work as part of this implementation slice.
 ## 37. Owner-managed Labs source lifecycle — 2026-11-04
 
@@ -2309,11 +2309,11 @@ This section resolves the gap between the public source-access panel and the own
 ### 37.1 Current baseline and missing capability
 
 - Better Auth + MongoDB adapter authentication is implemented on the Labs branch.
-- Current `LabSource` stores one mutable record per slug with embedded files, version string and published flag.
-- Current `LabSourceGrant` stores one grant per user/experiment and has a unique index.
-- Current `GET /api/v1/labs/:slug/source` requires a verified session, matching active grant and published source record.
-- Owner source create/edit/save/publish/unpublish/version/restore and audit UI/APIs are not implemented; source-engagement analytics is also not implemented.
-- Existing Atlas database setup did not yet show source collections or actual source snapshots. Empty collection creation is not equivalent to provisioning the source.
+- The integration branch contains the source aggregate/version model direction, owner inventory/editor UI and owner-only create/save/version/restore/publish/unpublish/audit routes. Verify the concrete schema/migration state against the current models before modifying it.
+- The `LabSourceGrant` model/collection remains legacy transition data; the current `source-access.js` authorization path does not query a grant. Retire legacy data only after backup/reference checks and an idempotent migration.
+- Current `GET /api/v1/labs/:slug/source` requires a verified Better Auth session and a published source snapshot; every verified account can read any published source without a per-user grant.
+- Owner source inventory/editor and engagement APIs exist in the integration branch. Their deployed browser behavior, Atlas persistence, duplicate/idempotent actions, aggregate analytics and failure handling still require verification.
+- Do not assume a private source snapshot has already been provisioned for every canonical experiment. Empty collections or a source-head record without a published immutable file version do not make source available.
 
 ### 37.2 Owner policy
 
@@ -2345,7 +2345,7 @@ This section resolves the gap between the public source-access panel and the own
 - Lazy-load the chosen editor only within the protected owner workspace. Monaco is not installed in the inspected package manifest; editor choice and exact layout remain OPEN until reviewed.
 - Owner-only routes/APIs are private/no-store and must not load editor dependencies on the homepage, Labs listing or normal experiment pages.
 - A discoverable owner-only entry point may appear in the account menu and/or the experiment source section, but owner capability must be server-derived; a client flag is not authorization.
-- Editing/publishing the protected Atlas snapshot does not modify the code-owned public demo. Live demo changes remain in the canonical source repository and normal deployment workflow; running stored source requires the separately approved isolated-preview boundary.
+- Editing/publishing the protected source snapshot does not change the live public demo until the exact saved version is successfully built and explicitly published through the isolated runtime/release pipeline. The owner Studio Run action is a separate unsaved-working-copy preview and must remain functional. The public detail page serves only the exact published artifact.
 
 ### 37.5 Security and execution boundary
 
@@ -2368,3 +2368,67 @@ The existence of this specification does not authorize code changes. Owner ident
 - Verified `like` and `unlike` events are counted only when a unique per-user/experiment like-state record changes on the server. Best-effort guest-like actions may be counted separately where measurable, without a unique-person claim.
 - The Owner/Admin dashboard presents aggregate rows by experiment: detail views, source opens, unique verified accounts, copies, current active verified likes, verified like/unlike counts, and guest-like action counts separately where measurable, with date-range trends/rankings.
 - The first release does not show individual account names/emails or user-level source-view/copy/like history. Analytics retention, deduplication and account-deletion handling must be approved and included in the Privacy Policy before production event writes.
+
+
+## 38. Labs Runtime, Gallery Posters and Responsive Interaction Plan — 2026-11-05
+
+This section records the approved UX decisions that connect the public gallery, actual experiment runtime and protected source experience. Detailed technical phases, service boundaries, security constraints and acceptance tests live in `docs/LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`.
+
+### 38.1 Core execution invariant
+
+- Owner Studio **Run** is core functionality. It executes the current unsaved working copy in the isolated preview for supported standalone HTML/CSS/JavaScript, React JS/JSX and React TSX projects.
+- Poster capture, card rendering, media upload, draft saving and publishing must never replace the Run action or change its current-working-copy behavior.
+- The public detail page runs the exact published immutable artifact. It does not run an arbitrary draft or the latest unsaved editor content.
+- Compiler smoke success is not proof of browser readiness. The 5 November 2026 screenshots show a blank Spotlight Dock detail runtime; deployed owner Run and public detail runtime remain release gates.
+
+### 38.2 Gallery visual and execution policy
+
+- Gallery cards are static-only. They never mount experiment React roots, create runtime iframes, start Canvas loops, compile code or execute project JavaScript.
+- Card visual priority: (1) explicitly selected published `gallery-preview` asset; (2) generated static screenshot of the exact successfully rendered published artifact; (3) existing LabArtwork/neutral artwork.
+- A code-output poster is generated from the real experiment output and is not an uploaded-media requirement. Experiments can therefore have useful gallery visuals without GIF, MP4 or image uploads.
+- Poster records must match the exact published source-version and artifact IDs; never show a stale poster after publish changes.
+- Responsive still images are lazy-loaded and reserve their 4:3 frame. Optional GIF/video motion is visibility/engagement-gated, reduced-motion-aware and capped; video is muted, inline and `preload="none"` by default.
+
+### 38.3 Runtime and media role separation
+
+- The public detail page always attempts the actual published executable runtime as its primary experience.
+- `detail-gallery` media is supplementary content. `runtime-fallback` media appears only after an explicit runtime error or unsupported state; it must not hide a working runtime.
+- Target media roles are `gallery-preview`, `detail-gallery` and `runtime-fallback`. The current integration branch implements only the legacy single `fallback-preview` attachment; role-aware controls require a migration.
+- Poster capture happens only after the isolated runtime reports ready for the exact run/artifact. It must occur inside the approved isolated/headless-browser boundary; never weaken iframe isolation or capture cross-origin pixels from the portfolio page.
+
+### 38.4 Loading and skeleton behavior
+
+- Add route-segment skeletons for Labs listing, experiment detail, owner source inventory and owner source editor.
+- Listing skeleton reserves the hero/category/card layout and 4:3 image frames. Detail skeleton reserves title/metadata/preview/engagement/source space. Owner inventory/editor skeletons preserve filters, file rail, code editor and preview panel geometry.
+- The preview canvas has its own themed “Preparing preview” state until the current run sends a validated runtime-ready message. An iframe load event alone is insufficient.
+- Every runtime has visible ready/error/timeout/retry/unsupported behavior. Never leave a blank white canvas.
+- Route skeletons must not stack on top of the existing global PageLoaderProvider or hide already rendered content during quiet refresh. Use reduced-motion-safe placeholders and `aria-busy`/status semantics.
+
+### 38.5 Optimistic action behavior
+
+- Use React 19 `useOptimistic` for reversible server-backed state transitions when immediate feedback materially helps: likes/unlikes, safe inventory add/remove, and role attach/detach/reorder after that media model exists.
+- On server rejection, restore the last confirmed state and show an actionable error. Guard duplicate submissions and reconcile with server-confirmed counts/state.
+- Owner file add/delete/reorder inside the editor is local unsaved working-copy state. Update the editor immediately, preserve the unsaved marker, and persist only through Save draft; never label a local edit as server-saved.
+- A confirmed delete may optimistically remove an inventory row after the user completes the destructive confirmation, but keep the row/action pending and restore it if the server fails. Do not show final success before server completion.
+- Publish, unpublish and restore may have pending UI but must not optimistically claim a new published version before the server commits the exact pointer.
+- Copy is not an optimistic state mutation: show a pending “Copying…” state while Clipboard API resolves; show “Copied” only after a successful write. Record analytics only after that acknowledgement, never send clipboard contents.
+- Do not add TanStack Query solely to implement these interactions. Use the current local/server state approach and React 19 optimistic state unless a measured data-cache requirement is approved.
+
+### 38.6 Source CTA and authentication behavior
+
+- Source CTA is visible on the experiment detail page to guests, unverified users and verified users. Do not hide it based on client session checks.
+- If a verified session is already known, load the published source directly; there is no redundant “Check source access” step.
+- If a guest selects source access, show both Sign in and Create account CTAs and preserve the validated return path to that experiment.
+- If signed in but unverified, show Verify email/resend guidance. Never request source bytes before server authorization.
+- Every source request continues to require server-derived Better Auth session with `emailVerified === true` and a published source version. Client state only chooses the user experience; it is never the security boundary.
+
+### 38.7 Implementation order
+
+1. P0: restore and prove owner Run plus public published-artifact detail runtime.
+2. P1: add route-level and preview-canvas skeleton/loading/error states.
+3. P1: complete source CTA and optimistic action behavior.
+4. P2: implement version-bound generated static poster capture.
+5. P2: migrate role-aware media attachments and render gallery cards from static visuals.
+6. P3: complete responsive, accessibility, security, privacy and performance regression QA.
+
+This is an approved planning order, not evidence that any phase is complete. Do not begin CMS/Admin work until Labs passes its release gates.
