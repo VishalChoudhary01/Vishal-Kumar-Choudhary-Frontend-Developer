@@ -84,7 +84,7 @@ export async function getMagneticButtonSourceProjectFiles() {
     "export declare function MagneticButton(props: MagneticButtonProps): ReactNode;",
     "export default MagneticButton;",
     "",
-  ].join("\\n");
+  ].join("\n");
 
   const css = [
     '@import "tailwindcss";',
