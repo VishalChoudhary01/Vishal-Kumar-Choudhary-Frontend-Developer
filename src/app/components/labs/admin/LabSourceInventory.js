@@ -390,6 +390,7 @@ export default function LabSourceInventory() {
 
                 <div className="flex shrink-0 items-center gap-2 pl-12 sm:pl-0">
                   {hasWorkspace ? (
+                    <>
                     <Link
                       href={"/admin/labs/sources/" + encodeURIComponent(item.slug)}
                       className="inline-flex h-9 items-center gap-2 border border-border px-3 text-xs font-semibold text-text-secondary transition-colors hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
@@ -408,7 +409,8 @@ export default function LabSourceInventory() {
                       >
                         <Trash2 size={14} aria-hidden="true" />
                       </button>
-                    ) : null}
+
+                    </>                    ) : null}
                   ) : (
                     <button
                       type="button"
