@@ -19,7 +19,7 @@ The following is the inspected code baseline, not a production-readiness certifi
 | Public Labs listing/detail and four code-owned demos | Implemented in integration branch | Regress all four; custom published-artifact detail runtime currently has a blank-canvas defect in browser evidence and must be restored |
 | Better Auth + MongoDB adapter | Foundation implemented | Final session policy and security/release tests |
 | Email/password registration, verification, reset and SMTP transport | Implemented in branch and configured for Preview; email delivery observed | Validate real verification completion, duplicate behavior, reset, production deployment |
-| First-party Terms/Privacy pages and consent receipts | Implemented | Legal review and operational rights/deletion workflow review |
+| Privacy Policy | Implemented and retained | Update Google/GitHub provider disclosures; remove stale Terms/consent claims. Standalone Terms route and consent receipts are approved cleanup targets but not yet removed |
 | Protected source read endpoint | Verified-session + published-source policy implemented in integration branch; legacy grant model retained for migration safety | Verify guest/unverified denial, verified direct access, no-store responses and CTA/session UX in deployed browser |
 | Owner source inventory/editor and lifecycle routes | Implemented in the integration branch | Re-verify deployed create/add/edit/delete/save/version/restore/publish/unpublish flows, owner guard, stale-version and failure states |
 | Source audit, immutable versions, likes and engagement analytics | Implemented in integration-branch foundation | Re-verify Atlas bootstrap, migration/retention, idempotency, privacy disclosure and aggregate-only reporting |
