@@ -4,6 +4,9 @@ import SignupForm from "@/app/components/labs/auth/SignupForm";
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
 import {
   getAuthRegistrationReadiness,
+  isAuthRuntimeConfigured,
+  isGoogleAuthConfigured,
+  isGitHubAuthConfigured,
 } from "@/app/lib/auth/auth";
 import { getSafeReturnTo } from "@/app/lib/auth/return-to";
 import { getLegalDocumentConfig } from "@/app/lib/legal/policies";
@@ -31,6 +34,8 @@ export default async function LabsSignupPage({ searchParams }) {
 
   const readiness = getAuthRegistrationReadiness();
   const registrationEnabled = Object.values(readiness).every(Boolean);
+  const googleEnabled = isAuthRuntimeConfigured() && isGoogleAuthConfigured;
+  const githubEnabled = isAuthRuntimeConfigured() && isGitHubAuthConfigured;
 
   return (
     <SignupForm
@@ -38,6 +43,15 @@ export default async function LabsSignupPage({ searchParams }) {
       legal={legal}
       registrationEnabled={registrationEnabled}
       readiness={readiness}
+      googleEnabled={googleEnabled}
+      githubEnabled={githubEnabled}
+      initialError={
+        query?.error === "google"
+          ? "Google account creation could not be completed. Please try again."
+          : query?.error === "github"
+            ? "GitHub account creation could not be completed. Make sure your account has a verified email address, then try again."
+            : ""
+      }
     />
   );
 }
