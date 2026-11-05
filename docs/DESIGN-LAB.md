@@ -194,10 +194,11 @@ The detailed source-management product and lifecycle contract is owned by `LABS-
 ### 13.4 Media library and public media presentation
 
 - The owner can upload still images, animated GIFs and video clips to the Labs media library.
-- An uploaded asset can be selected as a card cover, a detail-page gallery item or an in-experiment asset.
-- Each gallery asset supports accessible alt text, optional caption, ordering and (for video) a poster image.
-- Card covers use lightweight responsive media; video uses a poster by default. Autoplay is opt-in, muted and subject to reduced-motion preferences.
-- Detail pages show the actual interactive experiment first/primary, with the media gallery as supporting content.
+- An uploaded asset can be assigned to card `gallery-preview`, ordered detail-page `detail-gallery` or failure-only `runtime-fallback` roles after the schema/API migration.
+- Each role reference supports accessible alt text, optional caption and ordering where relevant; video uses a poster image.
+- Card visuals use lightweight responsive media or a generated version-bound code poster; GIF/video animation is visibility/engagement-gated, muted/inline, reduced-motion-aware and capped.
+- In-experiment asset imports are not part of this initial role migration and require a separate compiler/API contract.
+- Detail pages show the actual interactive experiment first/primary, with detail-gallery media as supporting content and runtime-fallback only after a runtime failure/unsupported state.
 - Media remains separate from source code and compiler artifacts. Do not serialize draft media references or unpublished media URLs into public payloads.
 - The exact upload limits and Cloudinary delivery mode are defined by the Runtime and Media Plan after checking the actual account plan.
 
