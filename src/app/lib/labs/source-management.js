@@ -140,7 +140,7 @@ export async function validateOwnerLabPreviewFiles({ user, slug, inputFiles }) {
   }
 
   const { files, totalBytes } = validateFiles(inputFiles);
-  const allowedExtensions = new Set(["html", "js", "jsx", "ts", "tsx", "mjs", "css", "json", "txt", "md"]);
+  const allowedExtensions = new Set(["html", "htm", "js", "jsx", "ts", "tsx", "mjs", "css", "json", "txt", "md"]);
   const unsupported = files.find((file) => {
     const extension = file.path.split(".").pop()?.toLowerCase() || "";
     return !allowedExtensions.has(extension);
