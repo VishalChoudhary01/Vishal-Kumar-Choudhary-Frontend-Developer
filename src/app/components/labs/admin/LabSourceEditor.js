@@ -181,6 +181,43 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
     setError("");
   }
 
+  function createReactStarter() {
+    const templates = [
+      {
+        path: "index.html",
+        language: "html",
+        content: "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <meta name=\"theme-color\" content=\"#0b0b0e\" />\n    <title>Labs experiment</title>\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"./src/main.jsx\"></script>\n  </body>\n</html>\n",
+      },
+      {
+        path: "src/main.jsx",
+        language: "jsx",
+        content: "import React from \"react\";\nimport { createRoot } from \"react-dom/client\";\nimport App from \"./App.jsx\";\nimport \"./index.css\";\n\ncreateRoot(document.getElementById(\"root\")).render(\n  <React.StrictMode>\n    <App />\n  </React.StrictMode>,\n);\n",
+      },
+      {
+        path: "src/App.jsx",
+        language: "jsx",
+        content: "import { useState } from \"react\";\nimport { motion, useReducedMotion } from \"motion/react\";\nimport { ArrowUpRight, Sparkles } from \"lucide-react\";\n\nexport default function App() {\n  const [count, setCount] = useState(0);\n  const reduceMotion = useReducedMotion();\n\n  return (\n    <main className=\"relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0b0b0e] px-6 py-16 text-white\">\n      <div aria-hidden=\"true\" className=\"pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(7,162,144,0.22),transparent_55%)]\" />\n      <motion.section\n        initial={reduceMotion ? false : { opacity: 0, y: 24, scale: 0.98 }}\n        animate={{ opacity: 1, y: 0, scale: 1 }}\n        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}\n        className=\"relative w-full max-w-xl border border-white/10 bg-white/[0.04] p-8 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-10\"\n      >\n        <div className=\"flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-teal-300\">\n          <Sparkles size={15} aria-hidden=\"true\" />\n          React + Motion + Tailwind v4\n        </div>\n        <h1 className=\"mt-6 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl\">Your experiment starts here.</h1>\n        <p className=\"mt-4 max-w-lg text-sm leading-7 text-white/60\">Edit this component, add files and animations, then press Run to compile your current working copy in an isolated preview.</p>\n        <div className=\"mt-8 flex flex-wrap items-center gap-3\">\n          <button type=\"button\" onClick={() => setCount((value) => value + 1)} className=\"inline-flex h-11 items-center gap-2 bg-teal-300 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-teal-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-300\">\n            Count: {count}\n            <ArrowUpRight size={15} aria-hidden=\"true\" />\n          </button>\n          <span className=\"text-xs text-white/40\">A working React state example</span>\n        </div>\n      </motion.section>\n    </main>\n  );\n}\n",
+      },
+      {
+        path: "src/index.css",
+        language: "css",
+        content: "@import \"tailwindcss\";\n\n:root {\n  color-scheme: dark;\n  font-synthesis: none;\n  text-rendering: optimizeLegibility;\n  -webkit-font-smoothing: antialiased;\n}\n\nhtml, body, #root { min-height: 100%; }\nbody { margin: 0; }\n",
+      },
+    ];
+
+    if (files.length + templates.filter((template) => !files.some((file) => file.path === template.path)).length > 40) {
+      setError("There is not enough room for the React starter files. Remove unused files and try again.");
+      return;
+    }
+
+    const additions = templates.filter((template) => !files.some((file) => file.path === template.path));
+    const nextFiles = [...files, ...additions];
+    setFiles(nextFiles);
+    setSelectedIndex(Math.max(0, nextFiles.findIndex((file) => file.path === "src/App.jsx")));
+    setError("");
+    setMessage(additions.length ? "React starter added. Edit src/App.jsx and press Run to execute it." : "The React starter entry files already exist.");
+  }
+
   async function importFile(event) {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -552,9 +589,14 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                     aria-label="Import a source file"
                   />
                 </label>
+                {files.length === 0 ? (
+                  <button type="button" onClick={createReactStarter} className="inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft">
+                    React starter
+                  </button>
+                ) : null}
                 <button
                   type="button"
-                  onClick={addFile}
+                  onClick={addFile
                   disabled={files.length >= 40}
                   className="inline-flex h-8 items-center gap-1 border border-border px-2 text-[11px] font-semibold hover:border-brand hover:text-brand disabled:opacity-40"
                 >
@@ -797,7 +839,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
               </div>
             ) : null}
           </div>
-          {source.isCustom ? <LabSourceLivePreview files={files} /> : null}
+          {source.isCustom ? <LabSourceLivePreview slug={source.slug} files={files} /> : null}
         </section>
 
         {source.isCustom ? <LabMediaLibrary slug={source.slug} /> : null}
