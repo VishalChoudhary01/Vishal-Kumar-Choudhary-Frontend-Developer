@@ -5,6 +5,7 @@ import AuthMessage from "@/app/components/labs/auth/AuthMessage";
 import {
   isAuthRuntimeConfigured,
   isGoogleAuthConfigured,
+  isGitHubAuthConfigured,
 } from "@/app/lib/auth/auth";
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
 import { getSafeOwnerReturnTo, getSafeReturnTo } from "@/app/lib/auth/return-to";
@@ -29,7 +30,9 @@ export default async function LabsLoginPage({ searchParams }) {
       ? "Your session has expired. Please sign in again to continue."
       : query?.error === "google"
         ? "Google sign-in could not be completed. Please try again."
-        : !isAuthRuntimeConfigured()
+        : query?.error === "github"
+          ? "GitHub sign-in could not be completed. Check that your GitHub account has a verified email address and try again."
+          : !isAuthRuntimeConfigured()
           ? "Authentication is not configured yet."
           : "";
 
@@ -43,6 +46,7 @@ export default async function LabsLoginPage({ searchParams }) {
       <LoginForm
         returnTo={returnTo}
         googleEnabled={isAuthRuntimeConfigured() && isGoogleAuthConfigured}
+        githubEnabled={isAuthRuntimeConfigured() && isGitHubAuthConfigured}
       />
     </>
   );
