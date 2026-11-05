@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, LoaderCircle, Plus } from "lucide-react";
 import Link from "next/link";
 import { LAB_CATEGORIES } from "@/app/data/labsExperiments";
+import { useActionToast } from "@/app/providers/ActionToastProvider";
 
 const inputClass = "mt-1 h-10 w-full border border-border bg-background px-3 text-sm text-text-primary outline-none transition-colors placeholder:text-text-tertiary focus:border-brand";
 const labelClass = "block text-xs font-medium text-text-secondary";
 
 export default function LabExperimentCreateForm() {
+  const { showToast } = useActionToast();
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
@@ -44,10 +46,12 @@ export default function LabExperimentCreateForm() {
       if (!response.ok || !payload?.data?.slug) {
         throw new Error(payload?.error?.message || "The experiment could not be created.");
       }
+      showToast("success", "Experiment workspace created.");
       router.push(payload.data.workspaceUrl);
       router.refresh();
     } catch (reason) {
       setError(reason.message || "The experiment could not be created.");
+      showToast("error", reason.message || "The experiment could not be created.");
     } finally {
       setBusy(false);
     }
