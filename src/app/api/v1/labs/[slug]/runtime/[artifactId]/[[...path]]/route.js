@@ -174,14 +174,14 @@ function injectRuntimeBridge(html, artifactId) {
   // HTTP CSP below is the single authoritative policy for published output.
   const safeHtml = stripPublishedRuntimeCspMeta(html);
   const bridge = createRuntimeBridge(artifactId);
-  const headMatch = /<head\b[^>]*>/i.exec(html);
+  const headMatch = /<head\b[^>]*>/i.exec(safeHtml);
 
   if (headMatch) {
     const insertAt = headMatch.index + headMatch[0].length;
     return safeHtml.slice(0, insertAt) + bridge + safeHtml.slice(insertAt);
   }
 
-  const bodyMatch = /<body\b/i.exec(html);
+  const bodyMatch = /<body\b/i.exec(safeHtml);
   if (bodyMatch) {
     return safeHtml.slice(0, bodyMatch.index) + bridge + safeHtml.slice(bodyMatch.index);
   }
