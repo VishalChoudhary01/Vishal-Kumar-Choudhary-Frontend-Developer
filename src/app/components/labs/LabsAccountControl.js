@@ -76,7 +76,6 @@ export default function LabsAccountControl({
   useEffect(() => {
     const userId = session?.user?.id;
     if (!userId || session?.user?.emailVerified !== true) {
-      setOwnerStatus({ userId: null, isOwner: false });
       return undefined;
     }
 
