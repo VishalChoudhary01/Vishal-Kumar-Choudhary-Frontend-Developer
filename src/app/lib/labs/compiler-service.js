@@ -5,7 +5,7 @@ import { put } from "@vercel/blob";
 import { Sandbox } from "@vercel/sandbox";
 import { prepareReactProject } from "./prepare-react-project.mjs";
 
-const COMPILER_TIMEOUT_MS = 120_000;
+const COMPILER_TIMEOUT_MS = 45_000;
 const PREVIEW_TIMEOUT_MS = 10 * 60 * 1000;
 const MAX_OUTPUT_BYTES = 15 * 1024 * 1024;
 const MAX_OUTPUT_FILES = 80;
@@ -117,14 +117,32 @@ function getParentOrigin(value) {
 }
 
 async function createCompilerSandbox({ timeout, ports = [] }) {
-  return Sandbox.create({
-    source: { type: "snapshot", snapshotId: getCompilerSnapshotId() },
-    region: "bom1",
-    resources: { vcpus: 2 },
-    timeout,
-    ports,
-    networkPolicy: "deny-all",
-  });
+  try {
+    return await Sandbox.create({
+      source: { type: "snapshot", snapshotId: getCompilerSnapshotId() },
+      region: "bom1",
+      resources: { vcpus: 2 },
+      timeout,
+      ports,
+      networkPolicy: "deny-all",
+    });
+  } catch (error) {
+    const detail = String(error?.message || "");
+    if (/snapshot.*(?:expired|deleted)|status code 410/i.test(detail)) {
+      fail(
+        "COMPILER_SNAPSHOT_EXPIRED",
+        "The Labs compiler snapshot has expired. Refresh LABS_COMPILER_SNAPSHOT_ID and redeploy this Preview environment before running or publishing.",
+      );
+    }
+    if (/status code 429|rate limit|too many requests/i.test(detail)) {
+      fail("COMPILER_BUSY", "The isolated compiler is temporarily busy. Wait briefly and retry.");
+    }
+    console.error("[labs-compiler] sandbox creation failed:", {
+      name: error?.name || "Error",
+      message: detail.slice(0, 400),
+    });
+    fail("COMPILER_START_FAILED", "The isolated React compiler could not start. Check the Vercel Sandbox configuration and retry.");
+  }
 }
 
 async function writeBuildInput(sandbox, files) {
