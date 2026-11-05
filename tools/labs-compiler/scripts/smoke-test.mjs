@@ -373,7 +373,10 @@ try {
     const staticPage = await fetch(staticBase);
     const staticServedHtml = await staticPage.text();
     if (!staticPage.ok || !staticServedHtml.includes("Static Labs preview")) {
-      throw new Error("The static preview server did not return the authored HTML.");
+      throw new Error(
+        "The static preview server did not return the authored HTML. HTTP " +
+        staticPage.status + "; body: " + staticServedHtml.slice(0, 500),
+      );
     }
     const cssPath = staticServedHtml.match(/href="([^"]+\.css)"/)?.[1];
     const jsPath = staticServedHtml.match(/src="([^"]+\.js)"/)?.[1];
