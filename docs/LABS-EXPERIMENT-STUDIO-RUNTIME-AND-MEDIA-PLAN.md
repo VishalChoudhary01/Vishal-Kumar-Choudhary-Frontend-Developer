@@ -1,10 +1,14 @@
 # Labs Experiment Studio — Runtime, Media and Publishing Plan
 
-**Status:** React JS/JSX and React TS/TSX are locked first-class authoring starters. Standalone HTML/CSS/JavaScript is a separate supported static mode. The latest branch passes the expanded compiler smoke suite (including the nested Fluid Gradient file with inline CSS/Canvas and linked local CSS/JS), targeted ESLint and a clean Next.js production build with all 18 static pages.
-**Latest validated source:** `e3fd60ac09fe072afd9f7025a414e842069ab7fd` (latest functional code; subsequent commit updates documentation only).
-**Latest READY Preview:** [vishal-kumar-choudhary-frontend-developer-12tkvcm9s.vercel.app](https://vishal-kumar-choudhary-frontend-developer-12tkvcm9s.vercel.app/) on commit `18e5ff96d20a7abc75ec19437e3ee6160b96eea2`. It includes the nested HTML entry, relative asset rewrite, Vite root-relative asset policy, React/TSX starters and responsive Files panel.
-**Applies to:** Owner-created experiments in Labs, while preserving the four existing code-owned experiments.
+**Status:** Product and engineering plan for the Labs Studio, published preview runtime, gallery, media and interaction UX. The branch contains the owner source editor, isolated compiler and artifact/runtime foundations, but deployed end-to-end Run and public detail rendering are **not release-verified**. The 5 November 2026 browser review shows custom gallery cards without intended visual previews and a blank white runtime canvas on `/labs/spotlight-dock`. Treat both as regressions to resolve before adding gallery features. Compiler smoke tests do not replace browser verification.
+**Branch:** `feat/labs-platform-integration` (repository HEAD at this planning update: `f3c79a159360b1d29c5fa06a2e2e2d00e64560ae`).
+**Latest observed READY Preview:** [vishal-kumar-choudhary-frontend-developer-blo9pd425.vercel.app](https://vishal-kumar-choudhary-frontend-developer-blo9pd425.vercel.app/) on commit `b0ba9a977526c778b4faa377d3f545f4bd016229`. This deployment is behind the repository HEAD; the supplied screenshots show the gallery/runtime defects described above. READY deployment status is not proof that an experiment preview renders correctly.
+**Compiler baseline:** React JSX/TSX and static HTML/CSS/JS compiler smoke coverage exists; isolated static-HTML tests cover a single HTML file and a three-file HTML/CSS/classic-JS project. Re-run against the checked-in compiler and verify Run in a real authenticated browser before calling the workflow complete.
+**Applies to:** Owner-created experiments and the four existing code-owned experiments.
 **Primary implementation branch:** `feat/labs-platform-integration`
+
+**Non-negotiable regression rule:** Keep the existing owner Studio Run capability. Run must compile and execute the current unsaved working copy in the isolated preview; it must not be replaced by screenshots, a static card preview or a publish-only build. Keep the public detail-page runtime as the actual interactive experiment. A screenshot is only a gallery poster.
+
 ---
 
 ## Runtime decision locked — React first, static HTML/CSS retained
@@ -13,7 +17,7 @@
 2. **React TypeScript/TSX is a first-class mode.** The `React TSX` starter creates `src/main.tsx`, `src/App.tsx` and a generated strict TypeScript configuration. `tsc --noEmit` must pass before Vite builds the browser bundle. Invalid types block the preview with diagnostics.
 3. **Static HTML/CSS/JavaScript is a separate mode.** It preserves the HTML document, inline `<style>` and `<script>` blocks, and compiles linked CSS/JS assets. CSS-only experiments receive a generated HTML entry. Static projects are not wrapped in React.
 4. **Mode detection is deterministic.** A valid React entry structure or a single JSX/TSX component selects React mode. Otherwise the compiler selects static mode. Ambiguous multi-HTML projects must provide an explicit root `index.html`.
-5. **Run and publish use the same toolchain contract.** Owner preview compiles the current working copy in an isolated sandbox. Publish rebuilds the exact saved source version and stores the resulting immutable artifact. Fallback media is optional and is not used when code runs.
+5. **Run, publish and poster capture use one versioned build contract.** Owner Run compiles and executes the current working copy in an isolated sandbox. Publish rebuilds the exact saved source version and stores its immutable artifact. A static gallery poster is captured from a successfully rendered artifact and tied to that release. Uploaded media may be selected as the card preview; media never replaces the owner Run workflow or a working public detail runtime.
 
 ---
 
@@ -51,9 +55,11 @@ The uploaded entry was named `src/fluid_gradient_background-1-.html`, not root `
 A fresh READY Preview is now deployed at commit `18e5ff9`, which includes the nested HTML entry and Vite local-asset fixes. The build has passed. The remaining operational check is an authenticated owner Run click using the deployed Studio, followed by confirmation that the iframe and its assets load and execute. Do not enable Production publishing until HTML/CSS, JSX and TSX Run have been verified in deployed Preview and the public detail page has been proven to render the matching immutable artifact.
 ## 1. Product outcome
 
-The Studio is an owner-only creative coding workspace. The owner must be able to create an original experiment, write or import its code, run the actual interactive experience, inspect errors and save immutable drafts. Image/GIF/video upload is optional and exists only as a fallback when the code preview cannot run or is unsupported.
+The Studio is an owner-only creative coding workspace. The owner must be able to create an original experiment, write/import code, run the actual current working copy, inspect bounded build/runtime errors, save immutable drafts and publish an exact successfully built version. **Run is core functionality and must remain available throughout all gallery/media work.** Image/GIF/video uploads are optional visual assets; they do not replace code execution.
 
-The public experience is an actual interactive code runtime. A published experiment detail page must render that runtime at its intended size. Optional image/GIF/video fallback media appears only when the runtime cannot run or is unsupported; it is never a substitute for a working code preview.
+The public detail page is the actual interactive experiment and must load the exact published artifact. A static poster is a separate derivative for the gallery only. It must never be mistaken for the executable preview. Optional runtime-fallback media is shown only if the detail runtime fails or is unsupported; it must not hide a working runtime. Optional detail-gallery media is supplementary and does not replace the runtime.
+
+Gallery cards never execute experiment source, mount experiment React trees, start iframes or compile code. A card displays, in priority order: (1) an explicitly selected published gallery-preview asset; (2) a generated static poster captured from the exact successfully rendered published artifact; or (3) the existing lightweight LabArtwork/neutral placeholder. Therefore, experiments do not need uploaded GIF/video files just to have a meaningful card image.
 
 The four existing code-owned experiments remain supported by the existing literal runtime registry. Owner-created experiments use database-backed metadata and versioned source/build records. Creating or publishing a custom experiment must not require editing the repository runtime registry.
 
@@ -64,33 +70,45 @@ The four existing code-owned experiments remain supported by the existing litera
 The owner workspace contains:
 - Experiment metadata: title, slug, summary, full explanation, category, technologies and publication state.
 - File explorer and editor for HTML, CSS, JavaScript and React/JSX source.
-- Media library for images, animated GIFs and video clips.
-- One optional fallback-media attachment for an unsupported or unavailable code preview.
-- Run/Restart controls, desktop/mobile preview sizes, build status, console output and runtime errors.
+- Media library for optional gallery-preview, detail-gallery and runtime-fallback roles (after the role migration is implemented).
+- Poster capture from the current successful isolated preview, with an explicit Generate/Regenerate poster action and a publish-time capture fallback.
+- Run/Restart controls for the current unsaved working copy, desktop/mobile preview sizes, build/iframe-ready status, console output and runtime errors.
 - Draft save, immutable version history, validation results and explicit publish/unpublish actions.
+- Clear pending, success, failure and retry feedback for every owner mutation; never mark a draft or release saved/published before the server confirms it.
 
 The editor and compiler dependencies remain lazy-loaded from owner-only routes. They must not enter the homepage or ordinary public Labs listing bundle.
 
 ### 2.2 Public Labs listing
 
-Each listing card shows experiment metadata and links to the stable detail route. Do not show fallback media in the listing and do not boot every experiment runtime inside the listing; doing so would create unnecessary CPU, memory and network work.
+Each listing card shows experiment metadata and one visual preview. Preview selection is deterministic: an explicitly attached `gallery-preview` asset wins; otherwise use the generated static poster for the currently published source/artifact version; if neither exists, use the existing LabArtwork or a neutral placeholder. Never show a stale poster from a different published source version.
 
-The interactive code runtime is the experiment. Fallback media is not a listing thumbnail, card cover, gallery or in-experiment asset.
+A gallery card is **always non-executable**. It must not mount the experiment React component, create a runtime iframe, invoke the compiler, or start a canvas/animation loop. A static generated poster lets HTML/CSS/JS and React experiments display their real output without running code in the gallery. A manually uploaded image/GIF/video can be selected as the gallery visual instead, but it remains media, not executable source.
+
+Images use responsive dimensions and lazy loading. Animated GIF/video behavior is deliberately constrained: retain a still poster as the default, load animation only when a card is actively visible/engaged, respect reduced-motion and page visibility, and cap simultaneous animated/video previews. Video uses muted/inline playback, `preload="none"` and no sound. Do not autoplay every video in a long grid.
+
+
 
 ### 2.3 Public experiment detail page
 
 A published detail page provides:
 1. Experiment title, description and metadata.
-2. The actual interactive runtime, in a responsive preview frame that can expand or use the available detail-page canvas.
-3. Optional fallback media, shown only when the code runtime cannot run or is unsupported, with alt text and an optional caption.
-4. Like/engagement controls.
-5. Protected source viewer for verified logged-in users.
+2. The actual interactive runtime, in a responsive preview frame with explicit loading, ready, runtime-error, timeout, retry and fallback states.
+3. Optional detail-gallery media as supplementary content, with alt text/captions and lazy loading.
+4. Optional runtime-fallback media only when the interactive runtime reports failure or is unsupported.
+5. Like/engagement controls.
+6. A visible source-code CTA/section with permission-aware rendering.
+
+The runtime must never remain an unexplained blank white rectangle. Keep a themed canvas placeholder visible until the isolated iframe sends a valid ready message for the current run. An iframe load event by itself is not proof that the experiment rendered. If execution fails and runtime-fallback media exists, show it with an explicit unavailable/fallback state; otherwise show a useful error and retry action.
 
 The page loads only the published release. Draft source, preview output, unpublished assets and owner audit data are never serialized into public page payloads.
 
+
+
 ### 2.4 Protected source viewer
 
-A valid Better Auth session with emailVerified === true can access the published source automatically. Guests and signed-in unverified accounts cannot. The source viewer exposes the text files belonging to the exact published release and offers copy controls. It does not expose unpublished drafts, temporary build logs, secrets or upload credentials.
+The source CTA remains visible to every visitor on the experiment detail page. When a valid Better Auth session with `emailVerified === true` is already available, load the published source directly; do not require a second “Check source access” action and do not hide the source CTA. Guests who choose the source CTA see both Sign in and Create account paths returning to the same experiment. Signed-in unverified accounts see the verification action. Server authorization remains mandatory in every case. The source viewer exposes only text files belonging to the exact published release and offers copy controls. It does not expose unpublished drafts, temporary build logs, secrets or upload credentials.
+
+
 
 ## 3. Supported authored project contract
 
@@ -163,16 +181,15 @@ Motion is available through the fixed motion/react dependency. Motion code runs 
 
 Owner working copy  
 → validate file tree and package/import policy  
-→ attach an optional single fallback reference when selected  
-→ create preview run request  
-→ build in an isolated ephemeral build environment  
-→ compile JSX/React and local modules  
-→ compile Tailwind v4 CSS  
-→ emit static HTML, JS chunks and CSS  
-→ run artifact in a separate-origin browser sandbox  
-→ collect bounded build/runtime diagnostics  
+→ Run current unsaved working copy in the isolated build/runtime  
+→ serve the compiled artifact on the separate runtime origin and confirm iframe-ready/runtime status  
+→ inspect output and bounded build/runtime diagnostics  
 → save an immutable draft version  
-→ publish an immutable experiment release after all gates pass.
+→ rebuild the exact saved version for publish  
+→ publish the immutable release after all code/security gates pass  
+→ capture a static poster from the exact successfully rendered published artifact when no current gallery asset/poster exists  
+→ store the version-bound poster/media references in the release manifest  
+→ serve static poster/media in gallery cards; serve the actual compiled artifact only on the detail page.
 
 Preview and publication use the same deterministic build contract. A successful preview is not sufficient if the published build is produced by a different compiler or dependency version. The optional fallback reference is tracked separately from the code bundle.
 
@@ -236,9 +253,20 @@ The first release should focus on DOM, CSS, pointer/keyboard events, Canvas 2D, 
 
 ## 5. Media upload and media library
 
-### Media fallback rule — locked product behavior
+### Media and poster roles — locked product behavior
 
-The actual interactive code preview is always the primary experiment experience. Images, animated GIFs and videos are optional fallback media only; they are not required when the live code preview builds and runs successfully. The owner may attach at most one fallback item, and it is considered only when the selected runtime is unsupported, a build fails, or the runtime cannot start. A fallback must never replace a working React/JSX or HTML/CSS/JavaScript preview. It is not a card cover, gallery, or in-experiment asset role. Public detail pages should show the working runtime first and display the fallback only in a clearly labelled unavailable/unsupported state. If no fallback is supplied, the normal code-preview error/unsupported state is shown.
+Uploaded media and generated code posters are separate presentation assets; neither is the experiment source or compiled runtime. The approved target attachment roles are:
+
+- `gallery-preview`: at most one owner-selected image/GIF/video preview displayed by a collection card. It takes precedence over the generated poster. It never starts code execution.
+- `detail-gallery`: optional ordered supporting media shown separately from the interactive canvas on the public detail page. Exact item limit/order controls remain subject to the media migration.
+- `runtime-fallback`: at most one optional image/GIF/video shown only when the detail runtime fails or is unsupported.
+
+When no `gallery-preview` is selected, the card uses a generated static screenshot from the exact published code artifact. If poster capture is unavailable, the card uses existing LabArtwork/neutral artwork. This means every custom experiment can have a code-derived visual even when no GIF, MP4 or image has been uploaded.
+
+The public detail page always attempts the actual published code runtime as its primary experience. A working runtime must not be hidden by a media attachment. Detail-gallery media is supplementary; runtime-fallback media is used only after an explicit failure/unsupported state. If no fallback exists, show a themed error/unsupported state—not a blank white rectangle.
+
+The currently implemented data model/API supports only one `fallback-preview` attachment. The new roles above require a reviewed schema/API migration; do not pretend the current fallback-only model already supports them.
+
 
 
 ### 5.1 Supported user media
@@ -262,22 +290,26 @@ Exact file-size, video-duration, dimension, per-experiment and per-owner quotas 
 4. The browser uploads directly to Cloudinary; the Cloudinary API secret never reaches the browser.
 5. A server callback or verified finalize request checks the uploaded asset against the upload intent and provider response.
 6. The application records a LabMediaAsset metadata row and marks the asset ready only after validation/processing completes.
-7. The owner may optionally attach this single asset as a fallback when the live code preview cannot run or is unsupported, and add alt text/caption. This is not needed for a working code preview.
+7. After validation, the owner can assign the asset to an approved presentation role (gallery-preview, detail-gallery or runtime-fallback) once the role migration is deployed. An attachment does not replace the code source or owner Run action.
 
 Never accept a client-supplied Cloudinary public ID as proof of ownership. Verify the upload signature/intent, asset ownership, resource type and allowed folder/prefix on the server.
 
 ### 5.3 Media roles
 
-One asset may be attached for one or more explicitly selected roles:
-- Fallback preview: one optional image, animated GIF or video shown only when the code runtime cannot run or is unsupported.
+The target role-aware attachment model is:
+- `gallery-preview`: one active card preview asset per experiment.
+- `detail-gallery`: ordered supplementary media references on the detail page; exact maximum remains OPEN until quota and layout are validated.
+- `runtime-fallback`: one optional asset used only after an unsupported/runtime-failure signal.
 
-The owner can select or clear the single fallback asset and edit its alt text/caption. No gallery, card-cover or in-experiment attachment roles are part of this scope. Clearing an attachment must not delete the underlying asset if a draft or historical release still references it.
+An asset may be referenced by more than one role when explicitly selected. Each reference carries role, ordering where relevant, alt text and optional caption. The current one-item `fallback-preview` schema must be migrated; retain historical release references and do not delete an asset while any draft, published release or historical version references it.
 
-Fallback video players use controls and do not autoplay with sound. A video poster may be generated if the selected delivery mode requires one. Animated GIF motion must respect reduced-motion preferences and must not be the only way to communicate essential information.
+Card rendering uses a still visual by default. An explicitly selected GIF/video may animate only when its card is visible/engaged and the page is foregrounded; cap simultaneous playback and respect reduced-motion. Video must be muted, inline and `preload="none"`; never autoplay with sound. Detail-gallery video uses a poster and explicit playback controls.
+
+
 
 ### 5.4 Runtime media boundary
 
-Fallback media is not imported by experiment source and is not exposed through a virtual asset module. It is resolved by the Labs page only after the code runtime reports a build failure, unsupported template or startup failure. A successful runtime always wins. The compiler's default network policy remains deny-all.
+Gallery-preview and detail-gallery media are resolved by the Labs presentation layer from safe published release references; they are not executable imports. Runtime-fallback media is resolved only after the detail runtime reports build failure, unsupported template or startup failure. A successful runtime always wins. The compiler's default network policy remains deny-all. In-experiment asset imports remain outside this first role migration and require a separate explicit compiler/API contract.
 
 ### 5.5 Media privacy and publication
 
@@ -287,7 +319,7 @@ Do not store original media binary payloads in MongoDB. MongoDB stores provider 
 
 ## 6. Versioned data and immutable release model
 
-The existing LabSourceVersion remains the code snapshot record. The complete published experience must pin its metadata and build. If a fallback is attached, that single fallback reference is pinned in the release manifest. No other media manifest is required.
+The existing LabSourceVersion remains the immutable code snapshot record. The published release pins its metadata, exact build, optional uploaded preview roles and generated poster metadata. A generated poster must record the source-version ID and artifact ID from which it was captured. No card may serve a poster whose source/artifact version does not match the current published release.
 
 ### 6.1 LabExperiment
 
@@ -327,7 +359,9 @@ Proposed immutable release manifest tying together:
 - Experiment slug and a snapshot of public metadata.
 - Exact LabSourceVersion ID.
 - Exact successful LabBuildArtifact ID.
-- Optional single fallback LabMediaAsset ID with role `fallback-preview`, alt text and caption.
+- Optional gallery-preview asset and ordered detail-gallery references with roles, alt text and captions.
+- Optional runtime-fallback asset reference, shown only after runtime failure/unsupported state.
+- Optional generated static poster reference with sourceVersionId, artifactId, capture dimensions/configuration, format and content hash.
 - Runtime/toolchain/dependency manifest.
 - Server-created content hash, validation result, actor and timestamp.
 
@@ -340,13 +374,13 @@ Preview-run status and short-lived artifacts/logs may use a separate LabPreviewR
 ## 7. Draft, preview and publication lifecycle
 
 1. Create experiment metadata. The record remains private.
-2. Add/edit code. Upload image/GIF/video only when the code preview cannot run or is unsupported, then optionally attach one fallback.
-3. Run the current working copy. The build/run uses an exact source content hash. A fallback does not change the code build result.
-4. Inspect the live result, build output, console and responsive layout. Fix errors and run again.
-5. Save draft. This creates an immutable code snapshot and, only when selected, pins the single optional fallback reference.
-6. Build/validate the saved version using the production-equivalent compiler contract. The successful build artifact is tied to that exact source hash and dependency set.
-7. Review the release summary: metadata, source version, runtime type, media, validation and preview result.
-8. Publish exact release. The server rechecks owner identity, immutable version pointers, successful build status, hash match, asset readiness, asset references and publication policy.
+2. Add/edit code. Run the current unsaved working copy in the isolated preview; this Run action must remain functional independently of poster/media features.
+3. Inspect the live result, build output, console and responsive layout. Fix errors and Run again. A failed Run preserves the working copy and previous published release.
+4. Save draft. This creates an immutable code snapshot. Upload/attach optional media only for the explicitly selected presentation roles.
+5. Build/validate the exact saved version using the production-equivalent compiler contract. The successful build artifact is tied to that exact source hash and dependency set.
+6. Capture a static poster from the successful artifact if no current gallery-preview asset/poster exists. Poster capture is a derivative and does not replace compiler/runtime validation.
+7. Review the release summary: metadata, source version, runtime type, build result, gallery media, generated poster status and fallback behavior.
+8. Publish exact release. The server rechecks owner identity, immutable version pointers, successful build status, hash match, asset readiness/references and publication policy. Poster capture failure does not break a working runtime; use existing artwork and expose a retry/regenerate action.
 9. Commit the published release pointer atomically. Revalidate public Labs listing, detail route, sitemap and relevant metadata/cache only after the pointer transition succeeds.
 10. Verified users can fetch the exact release source. Guests can run the published public demo and see public media but cannot fetch source.
 11. A later save/preview does not change the public release. Publish the new exact release to replace it.
@@ -360,7 +394,8 @@ These are planning contracts, not assertions that the routes are already impleme
 
 - Owner creates/updates experiment metadata through owner-only experiment routes.
 - Owner requests a constrained media-upload intent; browser uploads directly to Cloudinary; server verifies/finalizes the asset.
-- Owner lists private media and may attach or clear one optional fallback; there is no gallery ordering, cover selection or runtime-asset role.
+- Owner lists private media and assigns/clears explicit gallery-preview, detail-gallery and runtime-fallback roles. The current fallback-only API/schema must be migrated before these role controls ship.
+- Owner requests poster capture/regeneration for the exact successful run or published artifact; the server validates owner, source/artifact identity and capture policy. Public card DTOs expose only a safe published poster/media reference and version metadata, never source files or Cloudinary secrets.
 - Owner requests a preview run with a working-copy source snapshot. The optional fallback is a separate page-level reference and is not required by the compiler.
 - The server creates a bounded preview job and returns status/run identifier.
 - Owner polls/subscribes to build and runtime diagnostics through a private owner endpoint.
@@ -391,15 +426,18 @@ Do not send raw Cloudinary credentials, source content to public endpoints, comp
 
 ## 10. Public performance and media behavior
 
-- Keep the Labs listing lightweight and metadata-only; do not load fallback media in cards.
-- Do not start interactive runtime builds/iframes in card lists.
-- Load the published detail-page runtime on demand, with clear loading/error/retry states and a responsive preview canvas.
-- Keep optional fallback media separate from code bundles; load it only when the runtime is unavailable or unsupported.
-- Use a generated poster and appropriate responsive transform only if an optional fallback video is selected.
-- Pause/stop offscreen previews when practical, and stop the runtime when navigating away.
-- Respect reduced motion for Motion animations, animated GIF behavior and any video auto-preview.
+- Keep the Labs listing lightweight: cards receive only public metadata plus one safe static visual reference. Never load/execute the editor, compiler, React experiment tree or runtime iframe in gallery cards.
+- Use an explicitly selected gallery-preview asset first, then the generated poster tied to the exact published source/artifact version, then existing LabArtwork/neutral artwork.
+- Use responsive image sizes, known aspect ratios, lazy loading and immutable caching for poster assets. Keep card dimensions reserved to prevent CLS.
+- GIF/video card animation is opt-in/engagement-gated, intersection-aware and capped; keep a still poster as the default. Video uses muted inline playback, `preload="none"`, reduced-motion support and no sound. Do not play every media card simultaneously.
+- Load the actual published detail-page runtime only when its preview canvas is near the viewport. Show a themed skeleton while it starts, confirm the current run through the bridge, and show an explicit runtime error/retry/fallback state rather than an empty white iframe.
+- Stop the iframe/runtime on navigation away and avoid multiple runtime instances on the same page.
+- Add route-level skeletons for Labs listing, experiment detail, owner source inventory and owner source editor. Skeletons reserve real layout space; keep the site-wide PageLoader behavior separate and avoid duplicate full-screen loaders.
+- Use React 19 `useOptimistic` for reversible server-backed mutations where it materially improves feedback. Local unsaved editor changes remain local working-copy state, not falsely “saved” optimistic server state. Roll back optimistic state and show an error when the server rejects a mutation.
+- Copy feedback is not speculative: show pending while Clipboard API resolves, show “Copied” only after successful write, then send the idempotent analytics event. Publish/unpublish and destructive deletion use action-specific pending UI and become successful only after server confirmation.
+- Do not add TanStack Query solely for this work; use existing server/API patterns and React 19 optimistic state unless a separately approved data-cache requirement is demonstrated.
 - Do not use the full source, editor or compiler package on public pages.
-- Measure LCP, CLS, JS transfer, media bytes and preview startup before tuning or making performance claims.
+- Measure LCP, CLS, JS transfer, media bytes, poster transfer, detail runtime startup and long tasks before tuning or making performance claims.
 
 ## 11. Implementation phases and gates
 
@@ -454,6 +492,70 @@ Do not send raw Cloudinary credentials, source content to public endpoints, comp
 - Confirm the homepage and four code-owned experiments are unchanged.
 - Complete operational cost, media-retention, asset-deletion and privacy reviews before Production.
 
+## 11.1 Prioritized public experience and Studio recovery roadmap — 5 November 2026
+
+This is the **next implementation sequence**. It supersedes the earlier broad phase ordering for the next Labs UX/rendering work. The compiler and security contracts above remain in force. This plan does not authorize Production publishing or weakening owner/source gates.
+
+### Phase 0 — Restore and prove code execution (P0 / regression gate)
+
+- Restore the owner Studio **Run** action so it builds and executes the current unsaved working copy in the isolated preview for standalone HTML/CSS/JavaScript, React JS/JSX and React TSX.
+- Preserve Run/Restart controls, desktop/mobile viewport switching, console, build diagnostics, runtime errors, stop/timeout and current working-copy state. A Run failure must not erase editor content or mutate the published release.
+- Verify the bridge lifecycle: build started, iframe starting, ready for current run ID, console/error messages, timeout, stop/restart and stale-message rejection.
+- Restore public published-artifact execution on `/labs/[slug]`. The 5 November screenshot shows `/labs/spotlight-dock` with a blank white iframe; this is a release-blocking runtime failure, not a poster problem. Keep a themed placeholder until a valid ready message arrives. On failure, show a diagnostic-safe error/retry and runtime-fallback media when present.
+- Verify all four built-in experiments continue to run through their existing registry and custom published artifacts run through the isolated artifact URL.
+- **Gate:** authenticated browser QA proves Run works for HTML/CSS/JS and JSX/TSX, and the public detail page renders the matching immutable artifact. Local smoke tests alone do not pass this gate.
+
+### Phase 1 — Route loading and skeleton system
+
+- Add route-segment loading UI for `/labs`, `/labs/[slug]`, `/admin/labs/sources` and `/admin/labs/sources/[slug]` using the App Router loading boundary where appropriate.
+- Listing skeleton: introduction geometry, category row and 3/2/1-column card placeholders with the same 4:3 preview ratio and text rhythm as actual cards.
+- Detail skeleton: header lines, fixed preview canvas ratio, engagement row and source-section placeholders. The preview canvas has its own “Preparing preview” state after the page skeleton resolves.
+- Owner inventory skeleton: experiment rows/cards, filters and action-column geometry. Editor skeleton: file rail, editor panel and preview panel with expected widths/heights.
+- Use `aria-busy`, `role="status"` where appropriate, restrained shimmer/pulse and reduced-motion-safe static placeholders. Reserve space to prevent CLS.
+- Keep the existing site-wide PageLoaderProvider/intro behavior distinct. Do not stack a full-screen loader on route skeletons or hide already rendered content for a quiet refresh.
+- **Gate:** direct URL entry, client navigation, browser back/forward, slow network and failed requests show the correct skeleton/empty/error/retry state without layout jumps.
+
+### Phase 2 — Source CTA, optimistic interactions and action feedback
+
+- Keep the source CTA visible to every visitor on the experiment detail page. Ordinary gallery/detail browsing does not depend on authentication checks.
+- If a valid verified Better Auth session is already known, load published source directly; do not require a second “Check source access” action and do not hide the source CTA. Guests who choose the source CTA see both Sign in and Create account paths returning to the same experiment. Signed-in unverified accounts see Verify email. Server authorization remains mandatory.
+- Use React 19 `useOptimistic` for reversible server-backed UI transitions: like/unlike state and count, owner inventory additions/removals where safe, and media-role attach/detach/reorder state. On rejection, roll back to the last confirmed server state and show an actionable toast/message.
+- Source editor add/delete/reorder operations edit the local unsaved working copy. Update that working-copy state immediately, retain its unsaved indicator, and persist only through Save draft; do not label local changes as saved.
+- Irreversible operations remain confirmation-gated. Project deletion shows “Deleting…” until the server completes hide/cleanup. Publish/unpublish and restore show pending states but must not optimistically claim a new published version before the server commits the exact release pointer.
+- Copy is not speculative: show “Copying…” while Clipboard API resolves and “Copied” only after it succeeds. Record source-copy analytics only after successful clipboard acknowledgement; never send clipboard text.
+- Prevent duplicate submissions, use request IDs/idempotency keys, disable only the relevant action while pending, and preserve unrelated interactions.
+- Do not add TanStack Query solely for this work; use existing API patterns and React 19 optimistic state unless a separately approved data-cache requirement is demonstrated.
+- **Gate:** success, pending, rejection/rollback, timeout, duplicate-click, stale-version and clipboard-denied cases are tested.
+
+### Phase 3 — Generated code-output poster pipeline
+
+- Generate a **static screenshot of the actual rendered experiment output** so an experiment needs no uploaded GIF/MP4/image to have a meaningful gallery card.
+- Capture only after a successful isolated build and a valid runtime-ready signal. Bind poster metadata to the exact sourceVersionId and artifactId; never serve a poster from a different release.
+- Use a fixed documented viewport/aspect ratio, bounded capture timeout and capture metadata. Provide an owner “Generate/Regenerate poster” action from a successfully running preview.
+- Generate automatically on publish only when the release has no current manually selected gallery-preview asset or valid poster. Do not capture on every keystroke or every Run.
+- Capture inside the approved isolated/headless-browser boundary. Do not attempt to read pixels from a cross-origin iframe in the portfolio page, weaken iframe isolation or expose source to a public screenshot endpoint.
+- Store the poster as an immutable optimized image asset alongside release media references (not in MongoDB as binary and not in source-file snapshots). Capture provider/tool and exact artifact-storage integration remain OPEN until tested against deployed sandbox constraints.
+- Poster failure does not replace or break a working runtime or erase a previous release. For a new release with no valid poster, use LabArtwork/neutral artwork and expose retry/regenerate.
+- **Gate:** a real HTML Canvas/animation demo and React/Motion demo produce correct static WebP posters; version mismatch, timeout, blank runtime and capture failure select safe fallbacks.
+
+### Phase 4 — First-class media roles and gallery card renderer
+
+- Migrate the current one-item `fallback-preview` schema/API to explicit `gallery-preview`, `detail-gallery` and `runtime-fallback` roles. Validate role cardinality, order, alt/caption, ownership and historical-release references server-side.
+- Card priority: selected published `gallery-preview` asset → version-matched generated code poster → existing LabArtwork/neutral artwork.
+- A selected image renders as a static responsive image. A selected GIF may animate only when its card is visible/engaged and the page is foregrounded, with a still poster as its inactive state. Video uses a still poster by default and is muted/inline/preload-none; cap playback and never start it across every card.
+- Detail-gallery media is supporting content. The actual interactive code canvas remains the primary detail experience. Runtime-fallback media appears only after an explicit failure/unsupported state.
+- Publish only public-safe references for attached assets. Unattached uploads, draft assets, owner preview URLs and provider credentials stay private. Deletion must preserve references from drafts and historical releases.
+- **Gate:** gallery tests cover image/GIF/video/poster priorities, lazy loading, reduced motion, keyboard/touch access, broken URLs and reference-safe deletion; no experiment code executes in the listing.
+
+### Phase 5 — Integrated performance, accessibility and release QA
+
+- Verify `/labs` transfers no compiler/editor bundle and creates zero experiment runtime iframes/React roots.
+- Verify one detail page starts at most one experiment runtime, only after its canvas approaches the viewport; navigation away stops it.
+- Measure poster/media bytes, responsive sizes, image caching, LCP, CLS, runtime startup, long tasks and memory on desktop/mobile.
+- Test guest, signed-in-unverified, verified and owner paths. Guest payloads/caches never contain source bytes, drafts, owner previews or secrets.
+- Run compiler/build/browser tests, reduced-motion and keyboard tests, slow-network/timeout tests and regressions for existing portfolio routes and four built-in experiments.
+- **Release gate:** all Phase 0–5 checks pass on the same deployed Preview commit. Production publishing remains separately gated by existing security, owner, storage and source-access requirements.
+
 ## 12. Required acceptance tests
 
 ### Code and compiler
@@ -493,6 +595,17 @@ Do not send raw Cloudinary credentials, source content to public endpoints, comp
 - Unpublish stops new public demo/source access; republishing a prior immutable release works.
 - A working code preview always takes precedence over optional fallback media.
 
+
+### Gallery posters and page UX
+- Gallery cards render a selected published gallery-preview asset, otherwise a generated poster matched to the published source/artifact version, otherwise LabArtwork/neutral artwork.
+- The Labs listing starts zero experiment runtime iframes, compiler jobs or experiment React roots; scrolling/loading more cards does not execute code.
+- An experiment with no uploaded media can receive a poster from its actual successfully rendered HTML/Canvas or React/Motion output.
+- Card image/GIF/video behavior is lazy, bounded and reduced-motion-aware. Video does not autoplay with sound; offscreen media is not continuously active.
+- The public detail page runs the exact published artifact and never leaves a blank white canvas while loading or after failure.
+- Route skeletons exist for Labs listing/detail and owner inventory/editor; they reserve layout space and do not duplicate the global page loader.
+- Verified source access is direct when the verified session is already known; guests see sign-in and create-account paths when choosing the source CTA.
+- Optimistic reversible actions reconcile with the server and roll back on failure. Publish/unpublish/delete never report success before server confirmation. Copy feedback/analytics require successful Clipboard API acknowledgement.
+
 ## 13. Decisions still open
 
 These decisions must be resolved before the corresponding implementation phase. Do not silently guess:
@@ -505,5 +618,10 @@ These decisions must be resolved before the corresponding implementation phase. 
 7. Whether a media-only experiment type is ever needed; the current baseline remains an interactive code experiment with optional fallback media only.
 
 Detailed implementation requirements and the current deployment-gate status for TypeScript/TSX, React Icons, compiler snapshots and the preview HTTP server are in `LABS-REACT-JSX-TSX-TAILWIND-MOTION-RUNTIME-PLAN.md`.
+
+8. Headless-browser screenshot capture provider/tool and execution location for generated posters; it must operate inside the approved isolation boundary without reading cross-origin iframe pixels from the portfolio origin.
+9. Schema migration/cardinality and public delivery strategy for gallery-preview, detail-gallery and runtime-fallback roles. The currently implemented API supports only the legacy single fallback-preview attachment.
+10. Poster viewport, image format/quality/byte budget and regeneration rules, validated through real Canvas and Motion examples.
+11. Final route skeleton placement/shared component API after inspecting the actual App Router tree; do not create duplicate global/page-level loaders.
 
 No package installation, Production configuration change, media quota assumption or release publication is authorized merely by this planning document.
