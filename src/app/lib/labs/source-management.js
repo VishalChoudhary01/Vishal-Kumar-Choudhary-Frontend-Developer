@@ -617,6 +617,14 @@ export async function publishOwnerLabSource({
       source.updatedBy = user.id;
       await source.save({ session });
 
+      if (experiment.isCustom) {
+        await LabExperiment.updateOne(
+          { slug, kind: "custom" },
+          { $set: { status: "published", publishedAt: new Date(), updatedBy: user.id } },
+          { session },
+        );
+      }
+
       await LabSourceAuditEvent.create(
         [{
           actorUserId: user.id,
@@ -662,6 +670,14 @@ export async function unpublishOwnerLabSource({
       source.publishedArtifactId = null;
       source.updatedBy = user.id;
       await source.save({ session });
+
+      const experiment = await LabExperiment.findOne({ slug, kind: "custom" }).session(session);
+      if (experiment) {
+        experiment.status = "draft";
+        experiment.publishedAt = null;
+        experiment.updatedBy = user.id;
+        await experiment.save({ session });
+      }
 
       await LabSourceAuditEvent.create(
         [{
