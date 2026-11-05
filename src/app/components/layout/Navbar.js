@@ -17,7 +17,12 @@ import { cn } from "@/app/lib/utils";
 import SocialIcon from "../ui/SocialIcon";
 import LabsAccountControl from "@/app/components/labs/LabsAccountControl";
 
-export default function Navbar({ context = "site", showLabsAccount = false }) {
+export default function Navbar({
+  context = "site",
+  showLabsAccount = false,
+  initialAuthUser = null,
+  initialSessionResolved = false,
+}) {
   const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [activeHref, setActiveHref] = useState("");
@@ -394,7 +399,12 @@ export default function Navbar({ context = "site", showLabsAccount = false }) {
               />
             )}
 
-            {showLabsAccount ? <LabsAccountControl /> : null}
+            {showLabsAccount ? (
+              <LabsAccountControl
+                initialUser={initialAuthUser}
+                initialSessionResolved={initialSessionResolved}
+              />
+            ) : null}
 
             {/* THEME */}
 
