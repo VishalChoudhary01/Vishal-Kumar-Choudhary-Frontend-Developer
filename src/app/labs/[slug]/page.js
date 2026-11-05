@@ -15,6 +15,8 @@ import {
   buildSiteUrl,
 } from "@/app/lib/seo/urls";
 import { getPublishedCustomLabExperimentBySlug } from "@/app/lib/labs/public-experiments";
+import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
+import { getAuthorizedLabSource } from "@/app/lib/labs/source-access";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -73,13 +75,51 @@ export default async function LabExperimentPage({ params }) {
     notFound();
   }
 
+  // Resolve source access on the server before rendering the client panel.
+  // Verified visitors receive the published source immediately; the guest
+  // auth CTAs are never rendered for an already verified session.
+  let initialUserId = null;
+  let initialAuthState = "guest";
+  let initialSource = null;
+  try {
+    const session = await getCurrentAuthSession();
+    initialUserId = session?.user?.id || null;
+
+    if (initialUserId && session.user.emailVerified === true) {
+      initialAuthState = "verified";
+      const result = await getAuthorizedLabSource({
+        user: session.user,
+        slug,
+      });
+
+      if (result.status === "ok") {
+        initialSource = result.data;
+      } else if (result.status === "not-found") {
+        initialAuthState = "unpublished";
+      } else {
+        initialAuthState = "error";
+      }
+    } else if (initialUserId) {
+      initialAuthState = "verification";
+    }
+  } catch (error) {
+    console.error("[labs-detail] initial source lookup failed:", error?.code || "SOURCE_LOOKUP_ERROR");
+    initialAuthState = initialUserId ? "error" : "guest";
+  }
+
   return (
     <LabsPageShell>
       <main className="min-h-screen bg-background pb-24 text-text-primary sm:pb-32">
         <LabDetailHeader experiment={experiment} />
         <LabWorkspace key={experiment.slug} experiment={experiment} />
         <LabExplanation explanation={experiment.explanation} />
-        <LabSourceAccess key={experiment.slug} slug={experiment.slug} />
+        <LabSourceAccess
+          key={experiment.slug}
+          slug={experiment.slug}
+          initialUserId={initialUserId}
+          initialAuthState={initialAuthState}
+          initialSource={initialSource}
+        />
         <LabEngagement key={experiment.slug} slug={experiment.slug} />
       </main>
     </LabsPageShell>
