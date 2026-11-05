@@ -337,7 +337,7 @@ Proposed collection for provider-backed assets:
 - Cloudinary asset/public identifiers and resource type.
 - Verified format, byte size, dimensions and video duration where applicable.
 - Processing state: pending, ready, failed or blocked.
-- Safe alt text and caption for the optional fallback; a poster may be generated for a fallback video if required.
+- Safe metadata for role-based published references: gallery-preview, detail-gallery, runtime-fallback and generated poster. Keep owner/draft metadata private; role attachment references carry alt text/caption and ordering as appropriate.
 - Created/updated timestamps and usage/reference metadata.
 
 Provider credentials and upload signatures are never stored in public DTOs. Asset deletion/cleanup checks references before removing the provider object.
@@ -386,7 +386,7 @@ Preview-run status and short-lived artifacts/logs may use a separate LabPreviewR
 11. A later save/preview does not change the public release. Publish the new exact release to replace it.
 12. Unpublish prevents new public runtime/source access; historical releases remain available to the owner for rollback/restore under the approved retention policy.
 
-A successful preview of unsaved code is not publishable by itself. A fallback asset is not a substitute for a successful production-equivalent compiler/runtime validation and cannot make a failed build publishable. Publication requires a successful build for the exact saved source version and, if selected, the exact optional fallback reference. Any code, metadata, dependency or fallback-reference change invalidates the prior release validation.
+A successful preview of unsaved code is not publishable by itself. Uploaded media or a generated poster is not a substitute for successful production-equivalent compiler/runtime validation and cannot make a failed build publishable. Publication requires a successful build for the exact saved source version and validation of every selected published media/poster reference. Any code, metadata, dependency or presentation-reference change invalidates the corresponding release validation. Poster capture failure may use artwork fallback; it must not convert a valid interactive build into a runtime failure.
 
 ## 8. Proposed API/service boundaries
 
@@ -457,8 +457,8 @@ Do not send raw Cloudinary credentials, source content to public endpoints, comp
 ### Phase 2 — Media asset pipeline
 - **Initial upload foundation implemented:** signed direct-upload intent, Cloudinary Admin API preset-mode verification, upload finalization/resource verification, `LabMediaAsset` persistence, owner media inventory and audit events.
 - **Remaining:** configure the signed image/video presets and `LABS_MEDIA_MAX_UPLOAD_BYTES` in the actual Preview environment; complete format-by-format upload and authenticated-delivery tests.
-- **Implemented in the branch:** owner-only short-lived private media preview URLs, a single optional `fallback-preview` attachment role, alt text/caption and UI controls to select or clear the fallback. The data model and API reject cover, gallery and in-experiment roles.
-- **Remaining:** configure the signed image/video presets and upload-size ceiling in Preview; verify every accepted file type and Cloudinary authenticated delivery; pin the optional fallback to a saved draft/release and verify privacy/cleanup.
+- **Implemented in the branch:** owner-only short-lived private media preview URLs, a single optional legacy `fallback-preview` attachment role, alt text/caption and UI controls to select or clear that fallback. The current data model/API reject card-cover, gallery and in-experiment roles.
+- **Remaining:** configure the signed image/video presets and upload-size ceiling in Preview; verify every accepted file type and Cloudinary authenticated delivery; design and migrate the role-aware attachment schema/API for `gallery-preview`, `detail-gallery` and `runtime-fallback`; pin references to immutable releases and verify privacy/cleanup. This media-role migration is a future phase, not current functionality.
 - Verify draft media privacy, public release delivery, deletion/reference integrity and orphan cleanup.
 
 ### Phase 3 — React/JSX/TSX + Tailwind v4 + Motion compiler
@@ -472,8 +472,9 @@ Do not send raw Cloudinary credentials, source content to public endpoints, comp
 ### Phase 4 — Full live preview
 - **Implemented in the branch and smoke-tested:** the isolated static server now serves the generated HTML/JS/CSS, exposes a health route, injects a parent-origin-scoped ready/console/error bridge, and blocks traversal paths. The owner preview iframe is isolated on the sandbox origin and allows its own origin so local assets load under the runtime CSP.
 - **Deployed browser QA pending:** the last READY deployment is from before the server fix. A fresh Preview deployment is blocked by Vercel's daily API-deployment limit (HTTP 402).
-- Add build status, ready state, console, runtime errors, timeouts, stop/restart and desktop/mobile size controls.
-- Do not require an @labs/assets module for fallback media. Test image, animated GIF and video only as fallback presentation when code preview cannot run.
+- Preserve and verify build status, ready state, console, runtime errors, timeouts, stop/restart and desktop/mobile size controls in the owner Run workflow.
+- Verify the current unsaved working copy executes for HTML/CSS/JS, JSX and TSX; a static poster is not a replacement.
+- Test image, animated GIF and video only through approved presentation roles after the media-role migration. Do not require an @labs/assets module for card/detail/fallback media.
 - Ensure no network access, app cookies, parent DOM access or user-session leakage.
 
 ### Phase 5 — Immutable release and public Labs detail page
@@ -615,7 +616,7 @@ These decisions must be resolved before the corresponding implementation phase. 
 4. Cloudinary upload limits, transformation quotas, draft access mode and public delivery mode.
 5. Exact max upload size, video duration, dimensions and per-owner storage quota, derived from the actual account plan.
 6. Whether additional browser capabilities such as Web Workers, WebGL/Three.js, WebAssembly and controlled outbound API access are added after the initial release.
-7. Whether a media-only experiment type is ever needed; the current baseline remains an interactive code experiment with optional fallback media only.
+7. Whether a media-only experiment type is ever needed; the current baseline remains an interactive code experiment. Uploaded media and generated posters are presentation assets, not substitutes for the executable experiment.
 
 Detailed implementation requirements and the current deployment-gate status for TypeScript/TSX, React Icons, compiler snapshots and the preview HTTP server are in `LABS-REACT-JSX-TSX-TAILWIND-MOTION-RUNTIME-PLAN.md`.
 
