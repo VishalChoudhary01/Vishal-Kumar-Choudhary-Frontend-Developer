@@ -29,6 +29,24 @@ export default function LabSourceAccess({ slug }) {
   const signUpHref = "/labs/signup?returnTo=" + encodeURIComponent(returnTo);
 
   async function loadSource() {
+    if (sessionPending) return;
+
+    if (!session?.user?.id) {
+      sourceRef.current = null;
+      setSource(null);
+      setState("unauthenticated");
+      setError("Sign in on this Labs address before requesting protected source.");
+      return;
+    }
+
+    if (session.user.emailVerified !== true) {
+      sourceRef.current = null;
+      setSource(null);
+      setState("verification");
+      setError("Verify your email before requesting protected source.");
+      return;
+    }
+
     const requestId = sourceRequestRef.current + 1;
     sourceRequestRef.current = requestId;
     const requestedSlug = slug;
