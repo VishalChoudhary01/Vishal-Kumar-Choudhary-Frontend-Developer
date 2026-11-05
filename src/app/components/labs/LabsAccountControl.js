@@ -32,19 +32,6 @@ export default function LabsAccountControl({
   const verifyHref = "/labs/verify-email?returnTo=" + encodeURIComponent(returnTo);
 
   useEffect(() => {
-    if (!initialSessionResolved) return;
-
-    initialSessionKnownRef.current = true;
-    setSession(initialUser ? { user: initialUser } : null);
-    setIsPending(false);
-  }, [
-    initialSessionResolved,
-    initialUser?.id,
-    initialUser?.email,
-    initialUser?.emailVerified,
-  ]);
-
-  useEffect(() => {
     let mounted = true;
 
     const refreshSession = async () => {
