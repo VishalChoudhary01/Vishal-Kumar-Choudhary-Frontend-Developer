@@ -4,6 +4,31 @@
 **Branch:** feat/labs-platform-integration  
 **Parent source of truth:** LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md
 
+**Status:** Implementation phase 1–3 complete in the feature branch; clean app build and compiler smoke suite pass. Latest branch Preview deployment and browser-level owner/publish verification are still blocked by the Vercel API deployment quota (100 API deployments/day; HTTP 402). Do not treat the public release path as production-ready.  
+**Last locally verified branch commit:** `380434a3e9b9b86dcf91aed81a3662e5584bdb08`  
+**Parent source of truth:** `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`
+
+## Implementation status — 5 November 2026
+
+| Phase | Status | Verification / remaining gate |
+|---|---|---|
+| 1. Compiler environment recovery | Implemented | Rebuilt the Vercel Sandbox compiler base from the pinned compiler package; created a branch-specific Preview-only snapshot variable. Snapshot lifecycle still uses the provider's default seven-day expiry and must be monitored/refreshed. |
+| 2. JSX/TSX compiler | Implemented | Pinned TypeScript 5.9.3, React typings and React Icons 5.5.0; platform-generated strict tsconfig; `tsc --noEmit` before Vite; invalid types correctly block the build. |
+| 3. Runtime HTTP server and iframe bridge | Implemented | Added `serve-preview.mjs`; health, HTML, JS bundle, parent-origin console/ready bridge and traversal protections pass smoke tests. Preview and public artifact iframes use a separate origin and allow same-origin only within their own sandboxed origin. |
+| 4. Application build and UI wiring | Build verified | Latest branch source passes the clean Next.js production build; targeted ESLint has zero errors and one existing `<img>` optimization warning in `LabMediaLibrary.js`. |
+| 5. Deployed owner preview and public publish E2E | Pending | The latest branch requires a new Vercel Preview deployment. Vercel rejected further deployment creation with HTTP 402 after the project reached its 100 API-deployment daily quota. The earlier READY Preview uses an older commit from before the static preview server was added. Production remains unchanged. |
+
+The compiler smoke suite was run from the pinned lockfile and passed all of these checks:
+- Single-file JSX and generated React entry files.
+- TypeScript/TSX type-check success and an intentionally invalid type rejected as `TYPECHECK_FAILED`.
+- React 19, `motion/react`, `lucide-react`, and `react-icons/fi`.
+- Tailwind CSS v4 utilities emitted from TSX.
+- Isolated preview HTTP health endpoint, HTML bridge injection, JavaScript asset delivery and traversal rejection.
+
+The clean app build on the latest branch completed Next.js compilation, TypeScript, all 18 static pages and route collection, including the Labs preview and publish APIs.
+
+**Next required gate:** once the Vercel Preview deployment quota is available again (or the project plan's API deployment allowance is increased by the account owner), deploy this exact branch commit, use the branch-scoped Preview compiler snapshot, test Run for both JS/JSX and TS/TSX in the browser, then publish a test experiment and verify the public `/labs/[slug]` iframe reads only the immutable published artifact. Keep public publishing disabled until that test and the security review pass.
+
 ## 1. Product decision
 
 The Labs manager must execute the code the owner inserts into the editor. It must not merely display source, show a static thumbnail, or render a screenshot as though it were running code.
