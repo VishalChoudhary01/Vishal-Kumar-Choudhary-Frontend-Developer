@@ -12,9 +12,10 @@ import useLabFullscreen from "@/app/hooks/labs/useLabFullscreen";
 export default function LabWorkspace({ experiment }) {
   const demo = experiment.demo || {};
   const runtimeKey = demo.runtimeKey || experiment.slug;
-  const runtimeAvailable = hasLabRuntime(runtimeKey);
+  const runtimeUrl = typeof demo.runtimeUrl === "string" ? demo.runtimeUrl : null;
+  const runtimeAvailable = Boolean(runtimeUrl) || hasLabRuntime(runtimeKey);
   const configuredControls = Array.isArray(demo.controls) ? demo.controls : [];
-  const controls = runtimeAvailable ? configuredControls : [];
+  const controls = !runtimeUrl && runtimeAvailable ? configuredControls : [];
 
   const canvasRef = useRef(null);
   const [restartKey, setRestartKey] = useState(0);
@@ -75,6 +76,7 @@ export default function LabWorkspace({ experiment }) {
           >
             <LabRuntimeBoundary
               runtimeKey={runtimeKey}
+              runtimeUrl={runtimeUrl}
               settings={values}
               restartKey={restartKey}
               isFullscreen={isFullscreen}
