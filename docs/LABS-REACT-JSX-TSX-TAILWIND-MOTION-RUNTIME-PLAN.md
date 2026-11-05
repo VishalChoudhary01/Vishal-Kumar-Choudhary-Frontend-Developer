@@ -29,6 +29,21 @@ The clean app build on the latest branch completed Next.js compilation, TypeScri
 
 **Next required gate:** once the Vercel Preview deployment quota is available again (or the project plan's API deployment allowance is increased by the account owner), deploy this exact branch commit, use the branch-scoped Preview compiler snapshot, test Run for both JS/JSX and TS/TSX in the browser, then publish a test experiment and verify the public `/labs/[slug]` iframe reads only the immutable published artifact. Keep public publishing disabled until that test and the security review pass.
 
+**Latest code commit:** `f555bf3b2815fad349ad227c56059876b2ab0735`  
+**Latest READY Preview deployment verified:** [`vishal-kumar-choudhary-frontend-developer-19traqbpy.vercel.app`](https://vishal-kumar-choudhary-frontend-developer-19traqbpy.vercel.app/) at commit `fa52eaa1f78ed57c9e01aa61dfd78e2c1fb8b76d`. The final compiler-error mapping commit is newer than that deployment.
+
+## Latest implementation and verification — 5 November 2026
+
+- Fixed the Run API's undefined compiler-file-policy reference by using a dedicated `source-file-policy.mjs` helper. The previous `RESERVED_COMPILER_FILES is not defined` exception is removed from the current source.
+- Replaced locale-sensitive Studio version/audit timestamps with deterministic UTC ISO display strings to address a likely source of React hydration error #418. This is a targeted mitigation; browser hydration QA is still required before claiming #418 is fully resolved.
+- Protected source UI now checks session/verification state before making the source request. The source API's 401 for signed-out users and 404 for an experiment without a published source snapshot are intentional access states, not compiler errors.
+- A fresh sandbox restored from the configured Preview compiler snapshot successfully started with `deny-all` networking.
+- The compiler smoke suite passed from the repository's expected path: JSX, TSX, valid/invalid TypeScript, React 19, Motion, Lucide, React Icons, Tailwind v4, HTTP preview health, HTML/JS serving, iframe bridge, and traversal rejection.
+- The exact owner-preview compiler path was exercised directly from the restored snapshot: a single-file JSX project and a single-file TSX project both built; the static preview server returned HTTP 200 for the page and generated JavaScript bundle.
+- A clean Next.js build and targeted ESLint passed at commit `f555bf3`; all 18 static pages and the Labs preview/publish routes were generated.
+- The latest READY Preview deployment is at commit `fa52eaa`, which contains the source-policy and hydration timestamp fixes. The subsequent `f555bf3` commit improves safe/actionable compiler error responses and still needs a deployment.
+- Browser verification using the owner's authenticated session is still pending. Run JS and TSX from the new Preview deployment, check there are no hydration errors, publish one test artifact, and verify the public Labs detail page loads that immutable artifact before enabling Production publishing.
+
 ## 1. Product decision
 
 The Labs manager must execute the code the owner inserts into the editor. It must not merely display source, show a static thumbnail, or render a screenshot as though it were running code.
