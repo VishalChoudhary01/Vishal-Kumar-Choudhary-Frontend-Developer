@@ -64,10 +64,11 @@ This document records current decisions, known repository facts and unresolved c
 
 ## ADR-009 — Interactive Lab execution
 
-- **Status:** BLOCKED pending dedicated security review
-- **Decision:** Never execute arbitrary user/admin-supplied JavaScript in the main application process/origin with privileged app context.
-- **Still OPEN:** Runtime provider, origin model, network policy, dependency allowlist, resource limits, message protocol and cost/abuse controls.
-- **Gate:** No implementation or enabling interactive execution until the sandbox threat model is approved and escape tests exist.
+- **Status:** Isolated compiler/runtime prototype implemented in `feat/labs-platform-integration`; Production release remains gated by deployed browser QA and security review.
+- **Decision:** Never execute arbitrary user/admin-supplied JavaScript in the main application process/origin with privileged app context. Owner Studio Run executes the current unsaved working copy only through the isolated preview boundary. Public experiment detail runs only an exact successfully published artifact through the separate runtime boundary.
+- **Implemented foundation:** Static HTML/CSS/JavaScript and React JS/JSX/TSX compiler modes, Vercel Sandbox build execution, artifact publishing path, isolated iframe server/bridge and compiler smoke tests exist in the integration branch. This does not prove deployed browser readiness; the 5 November 2026 screenshot shows a blank public Spotlight Dock runtime and owner Run must be re-verified.
+- **Still OPEN:** Final runtime origin/CSP/network model, artifact storage provider, resource/cost limits, snapshot refresh operations, complete escape tests and full deployed browser QA.
+- **Gate:** Do not enable Production publishing until owner Run, the published artifact detail runtime, source-access behavior and sandbox escape/security tests pass on a deployed Preview.
 
 ## ADR-010 — Scheduled publishing
 
@@ -126,3 +127,17 @@ No new infrastructure provider or runtime has been selected by this register. Th
 - **Owner identity:** RESOLVED / LOCKED. **Source access and engagement:** RESOLVED / LOCKED. **Still OPEN:** final route naming, editor dependency, exact byte/file/language limits, source import strategy, analytics retention/deduplication and account-deletion handling, and version retention/storage implications.
 - **Security gate:** Live execution of owner-authored source remains blocked until a separate isolated-preview architecture and threat-model review are approved.
 - **Source of detail:** `docs/LABS-SOURCE-MANAGEMENT-SPEC.md`.
+
+## ADR-017 — Separate gallery posters from executable experiment previews
+
+- **Status:** Product/architecture decision ACCEPTED (2026-11-05); implementation phases pending.
+- **Context:** Running every experiment inside gallery cards would create multiple React roots/iframes, compiler/runtime work, animation loops and media requests. The gallery must remain lightweight while still showing each experiment's actual visual output.
+- **Decision:** Gallery cards never execute experiment code. They display, in priority order: an explicitly selected published `gallery-preview` media asset; otherwise a generated static poster captured from the exact successfully rendered published artifact; otherwise existing LabArtwork/neutral artwork. The generated poster is a static screenshot of the experiment output and does not require uploaded GIF/MP4/image media.
+- **Detail runtime:** The experiment detail page runs the exact published immutable artifact in the isolated runtime. A working runtime always takes precedence over optional media. Detail-gallery media is supplementary; runtime-fallback media appears only after an explicit runtime error/unsupported state.
+- **Owner Run:** The owner Studio Run action remains a core capability that compiles/executes the current unsaved working copy in isolation. Poster capture must never replace Run, alter the working copy or be required to inspect an unsaved change.
+- **Poster lifecycle:** Capture only after a successful runtime-ready signal. Pin poster metadata to sourceVersionId and artifactId. Do not generate on every keystroke or gallery request. Poster failure falls back to artwork and does not erase a valid release or break a working runtime.
+- **Media migration:** Current implementation supports only one `fallback-preview` attachment. Target `gallery-preview`, `detail-gallery` and `runtime-fallback` roles require an explicit schema/API/data migration. Preserve private draft and historical release references; do not expose unattached Cloudinary assets.
+- **Performance:** No experiment React root, iframe or compiler job in gallery cards. Images/posters are responsive and lazy-loaded. GIF/video animation is visibility/engagement-gated, reduced-motion-aware and capped; video is muted, inline and `preload="none"`.
+- **Loading and interactions:** Add route-level skeletons for Labs listing/detail and owner inventory/editor without stacking duplicate global loaders. Use React 19 `useOptimistic` only for reversible server-backed actions with rollback; destructive/publish actions await server confirmation, and copy success/analytics follow successful Clipboard API acknowledgement.
+- **Consequences:** Runtime recovery is P0 before poster/media-role implementation. The 5 November 2026 blank Spotlight Dock detail canvas and missing custom gallery visuals are tracked in `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`. Do not claim this ADR is implemented until its phase gates pass.
+- **Source of detail:** `docs/LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md` and `docs/DESIGN-LAB.md`.
