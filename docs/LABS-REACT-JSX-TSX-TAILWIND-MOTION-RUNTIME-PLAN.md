@@ -44,6 +44,26 @@ The clean app build on the latest branch completed Next.js compilation, TypeScri
 - The latest READY Preview deployment is at commit `fa52eaa`, which contains the source-policy and hydration timestamp fixes. The subsequent `f555bf3` commit improves safe/actionable compiler error responses and still needs a deployment.
 - Browser verification using the owner's authenticated session is still pending. Run JS and TSX from the new Preview deployment, check there are no hydration errors, publish one test artifact, and verify the public Labs detail page loads that immutable artifact before enabling Production publishing.
 
+## Latest Run API 503 incident — 5 November 2026
+
+**Root cause confirmed from Preview runtime logs:** Vercel Sandbox rejected `sandbox.mkDir("/vercel/sandbox/input")` with HTTP 400 because the restored compiler snapshot already contains that directory. The owner route wrapped the exception as a generic HTTP 503.
+
+**Fix committed to the feature branch:**
+- Added `src/app/lib/labs/sandbox-directory.mjs` with `ensureSandboxInputDirectory()`, which uses `sandbox.runCommand({ cmd: "mkdir", args: ["-p", "/vercel/sandbox/input"] })`.
+- Replaced the non-idempotent `sandbox.mkDir()` call in `writeBuildInput()` with the helper.
+- Added `SANDBOX_INPUT_INIT_FAILED` mapping and a safe actionable operational message.
+- Added a regression test that calls initialization twice and checks both missing-directory and already-existing-directory behavior.
+
+**Verification on branch commit `e0fb16c1ad4e7a9a1c54eb0f3261ec46c3286dcd`:**
+- Compiler smoke tests pass, including the new repeated-directory regression, JSX/TSX, invalid TypeScript rejection, Tailwind v4, Motion, Lucide, React Icons and preview HTTP serving.
+- The restored Sandbox successfully ran `mkdir -p /vercel/sandbox/input` twice.
+- Targeted ESLint passed with no errors.
+- Clean Next.js build passed: SEO validation, app compilation, TypeScript, 18 static pages, and Labs preview/publish route collection.
+
+**Deployment status:** Vercel's current Preview deployment quota rejected a new deployment with HTTP 402 (`api-deployments-free-per-day`, retry after 24 hours). The latest READY deployment is commit `096e185`, which contains the helper file but not the later wiring commit `d3e7f557`; it still runs the old `sandbox.mkDir()` code. The fixed Run path is therefore not live in that deployment yet. The sandbox has neither a Vercel CLI executable nor a Vercel token/project link, so the CLI fallback is unavailable.
+
+**Required next step:** deploy branch commit `e0fb16c` (or newer) after the quota resets or once the account owner resolves the deployment allowance. Then test Run in the actual owner Studio for Spotlight Dock, verify HTTP 201 with a preview URL, confirm the iframe loads/executes, and confirm a deliberate JSX/TSX error returns HTTP 400/422 diagnostics instead of 503. Do not enable Production publishing before that browser-level check.
+
 ## 1. Product decision
 
 The Labs manager must execute the code the owner inserts into the editor. It must not merely display source, show a static thumbnail, or render a screenshot as though it were running code.
