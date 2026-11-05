@@ -41,19 +41,20 @@ export function buildPublishedRuntimeCsp({ assetBase, parentOrigin }) {
     throw new TypeError("Published runtime assets must share the trusted HTTPS parent origin.");
   }
 
+  const assetSource = assetUrl.origin + assetUrl.pathname;
   return [
     "default-src 'none'",
-    \`script-src 'unsafe-inline' \${assetUrl.origin}\${assetUrl.pathname}\`,
-    \`style-src 'unsafe-inline' \${assetUrl.origin}\${assetUrl.pathname}\`,
-    \`img-src \${assetUrl.origin}\${assetUrl.pathname} data: blob:\`,
-    \`font-src \${assetUrl.origin}\${assetUrl.pathname} data:\`,
-    \`media-src \${assetUrl.origin}\${assetUrl.pathname} data: blob:\`,
+    "script-src 'unsafe-inline' " + assetSource,
+    "style-src 'unsafe-inline' " + assetSource,
+    "img-src " + assetSource + " data: blob:",
+    "font-src " + assetSource + " data:",
+    "media-src " + assetSource + " data: blob:",
     "connect-src 'none'",
     "worker-src 'none'",
     "frame-src 'none'",
     "object-src 'none'",
     "form-action 'none'",
     "base-uri 'none'",
-    \`frame-ancestors \${parentUrl.origin}\`,
+    "frame-ancestors " + parentUrl.origin,
   ].join("; ");
 }
