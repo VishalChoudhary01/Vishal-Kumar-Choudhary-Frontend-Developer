@@ -392,7 +392,8 @@ export default function LabSourceAccess({
               <button
                 type="button"
                 onClick={copyCurrentFile}
-                className="inline-flex h-9 items-center gap-2 border border-border px-3 text-xs font-medium text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                disabled={sessionPending || session?.user?.id !== source.userId}
+                className="inline-flex h-9 items-center gap-2 border border-border px-3 text-xs font-medium text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
                 {copied ? "Copied" : "Copy file"}
