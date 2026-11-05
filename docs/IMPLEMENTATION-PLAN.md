@@ -322,12 +322,12 @@ Phase 0/1 must produce or reconcile these documents with the actual repository:
 
 | Priority | Task | Status | Exit evidence |
 |---|---|---|---|
-| P0 | Restore owner Studio Run for current unsaved working copy | Regression must be re-verified in deployed Preview | HTML/CSS/JS, JSX and TSX authenticated Run screenshots plus build/console output |
-| P0 | Restore published-artifact detail runtime | Known blank Spotlight Dock canvas from browser screenshot | Actual output appears; ready/error/retry bridge works; no unexplained blank canvas |
+| P0 | Restore owner Studio Run for current unsaved working copy | Run request path preserved; timeout/error/retry UI implemented; deployed authenticated browser click still pending | HTML/CSS/JS, JSX and TSX authenticated Run screenshots plus build/console output |
+| P0 | Restore published-artifact detail runtime | Controlled artifact route + inline delivery + CSP + opaque-origin iframe + ready/error/timeout/retry implemented; deployment `48d7585e` READY | Browser must confirm actual custom artifact output, readiness bridge and all four built-in experiment regressions; no unexplained blank canvas |
 | P1 | Route/page and canvas skeletons | Planned | Listing/detail/inventory/editor/canvas loading states pass slow-network and CLS checks |
 | P1 | Source CTA + optimistic action UX | Planned/review against existing interactions | Verified direct access; guest CTAs; unverified verification path; like rollback; pending action and clipboard feedback tests |
 | P2 | Generated static code-output poster | Planned; capture provider/storage still open | HTML Canvas and React/Motion posters version-match exact published artifact |
 | P2 | First-class media attachment roles | Current code has legacy fallback-preview only | Migration tests, public/draft privacy, usage/reference integrity, image/GIF/video presentation |
 | P3 | Responsive/performance/security release QA | Pending | No gallery execution; bounded detail runtime; metrics, auth/privacy and threat-model suite |
 
-This tracker is updated from repository inspection and the user-supplied 5 November 2026 screenshots. It is not a test report. Do not mark a row done without the exit evidence.
+This tracker is updated from branch commits, a READY Vercel Preview build and a passing isolated compiler smoke suite. Authenticated owner Run and visual browser confirmation remain untested. The latest cache-only commit `143a04d` is not deployed because Vercel returned its daily deployment API quota limit. This tracker is not a browser test report. Do not mark Phase 0 release-complete without the exit evidence.
