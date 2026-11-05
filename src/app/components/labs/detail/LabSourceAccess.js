@@ -15,47 +15,107 @@ import {
 } from "lucide-react";
 
 import { subscribeAuthEvents } from "@/app/lib/auth/session-events";
-import AuthMessage from "@/app/components/labs/auth/AuthMessage";
 import { authClient } from "@/app/lib/auth/client";
 
-export default function LabSourceAccess({ slug }) {
+function getInitialSource(source, slug, userId) {
+  if (!source || !userId || !Array.isArray(source.files)) return null;
+  return { ...source, slug, userId };
+}
+
+function getInitialState(authState, source) {
+  if (source) return "loaded";
+  if (authState === "verification") return "verification";
+  if (authState === "unpublished") return "unpublished";
+  if (authState === "error") return "error";
+  if (authState === "verified") return "loading";
+  return "unauthenticated";
+}
+
+export default function LabSourceAccess({
+  slug,
+  initialUserId = null,
+  initialAuthState = "guest",
+  initialSource = null,
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const returnTo = pathname + "?source=1";
 
-  const [loading, setLoading] = useState(false);
-  const [source, setSource] = useState(null);
+  const firstSource = getInitialSource(initialSource, slug, initialUserId);
+  const [loading, setLoading] = useState(initialAuthState === "verified" && !firstSource);
+  const [source, setSource] = useState(firstSource);
   const [selectedFile, setSelectedFile] = useState(0);
-  const [state, setState] = useState("idle");
-  const [error, setError] = useState("");
+  const [state, setState] = useState(getInitialState(initialAuthState, firstSource));
+  const [error, setError] = useState(
+    initialAuthState === "error" ? "We could not load the published source. Please try again." : "",
+  );
   const [copied, setCopied] = useState(false);
   const { data: session, isPending: sessionPending } = authClient.useSession();
 
-  const sourceRef = useRef(null);
+  const sourceRef = useRef(firstSource);
   const sourceRequestRef = useRef(0);
+  const autoLoadKeyRef = useRef(firstSource ? pathname + ":" + slug + ":" + initialUserId : null);
   const autoOpenKeyRef = useRef(null);
-  const autoLoadKeyRef = useRef(null);
 
   const signInHref = "/labs/login?returnTo=" + encodeURIComponent(returnTo);
   const signUpHref = "/labs/signup?returnTo=" + encodeURIComponent(returnTo);
   const verifyHref = "/labs/verify-email?returnTo=" + encodeURIComponent(returnTo);
 
+  const recordSourceOpen = useCallback((requestedSlug, version) => {
+    fetch("/api/v1/labs/" + encodeURIComponent(requestedSlug) + "/source/events", {
+      method: "POST",
+      cache: "no-store",
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        eventType: "source_open",
+        sourceVersion: version,
+        eventId: globalThis.crypto?.randomUUID?.() || "open_" + Date.now() + "_" + Math.random().toString(36).slice(2),
+      }),
+    }).catch(() => {});
+  }, []);
+
+  // Initial source is fetched and authorized in the Server Component. Record
+  // its open event after hydration without putting source content in analytics.
+  const initialOpenRecordedRef = useRef(false);
+  useEffect(() => {
+    if (
+      !initialOpenRecordedRef.current &&
+      firstSource &&
+      !sessionPending &&
+      session?.user?.id === firstSource.userId &&
+      session.user.emailVerified === true
+    ) {
+      initialOpenRecordedRef.current = true;
+      recordSourceOpen(slug, firstSource.version);
+    }
+  }, [firstSource, recordSourceOpen, session?.user?.emailVerified, session?.user?.id, sessionPending, slug]);
+
   const loadSource = useCallback(async () => {
     if (sessionPending || loading) return;
 
     if (!session?.user?.id) {
+      sourceRequestRef.current += 1;
       sourceRef.current = null;
       setSource(null);
-      setState("unauthenticated");
-      setError("");
+      setState(initialUserId ? "session-mismatch" : "unauthenticated");
+      setError(initialUserId
+        ? "The verified session used to render this page is no longer available. Sign in again to continue."
+        : "");
+      setLoading(false);
       return;
     }
 
     if (session.user.emailVerified !== true) {
+      sourceRequestRef.current += 1;
       sourceRef.current = null;
       setSource(null);
       setState("verification");
       setError("");
+      setLoading(false);
       return;
     }
 
@@ -89,19 +149,11 @@ export default function LabSourceAccess({ slug }) {
         return;
       }
 
-      if (response.status === 403 && payload?.error?.code === "SOURCE_ACCESS_DENIED") {
-        sourceRef.current = null;
-        setSource(null);
-        setState("denied");
-        setError("This published source is not available for the current account.");
-        return;
-      }
-
       if (response.status === 403) {
         sourceRef.current = null;
         setSource(null);
-        setState("verification");
-        setError("");
+        setState(payload?.error?.code === "SOURCE_ACCESS_DENIED" ? "denied" : "verification");
+        setError(payload?.error?.message || "");
         return;
       }
 
@@ -130,21 +182,7 @@ export default function LabSourceAccess({ slug }) {
       setSource(nextSource);
       setSelectedFile(0);
       setState("loaded");
-
-      fetch("/api/v1/labs/" + encodeURIComponent(requestedSlug) + "/source/events", {
-        method: "POST",
-        cache: "no-store",
-        credentials: "same-origin",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          eventType: "source_open",
-          sourceVersion: payload.data.version,
-          eventId: globalThis.crypto?.randomUUID?.() || "open_" + Date.now() + "_" + Math.random().toString(36).slice(2),
-        }),
-      }).catch(() => {});
+      recordSourceOpen(requestedSlug, payload.data.version);
     } catch {
       if (sourceRequestRef.current === requestId) {
         setError("Unable to load source right now. Please try again.");
@@ -153,10 +191,11 @@ export default function LabSourceAccess({ slug }) {
     } finally {
       if (sourceRequestRef.current === requestId) setLoading(false);
     }
-  }, [loading, session?.user?.emailVerified, session?.user?.id, sessionPending, slug]);
+  }, [initialUserId, loading, recordSourceOpen, session?.user?.emailVerified, session?.user?.id, sessionPending, slug]);
 
-  // Verified sessions load the published source automatically. Guests are
-  // shown authentication links; unverified accounts are shown verification.
+  // The server-rendered session is authoritative for the first paint. After
+  // hydration, reconcile it with the current client session and auto-fetch if
+  // the session became verified after the page was opened.
   useEffect(() => {
     if (sessionPending) return;
 
@@ -165,8 +204,10 @@ export default function LabSourceAccess({ slug }) {
       sourceRef.current = null;
       setSource(null);
       setLoading(false);
-      setState("unauthenticated");
-      setError("");
+      setState(initialUserId ? "session-mismatch" : "unauthenticated");
+      setError(initialUserId
+        ? "The verified session used to render this page is no longer available. Sign in again to continue."
+        : "");
       autoLoadKeyRef.current = null;
       return;
     }
@@ -185,9 +226,9 @@ export default function LabSourceAccess({ slug }) {
     const userKey = pathname + ":" + slug + ":" + session.user.id;
     if (
       sourceRef.current?.slug === slug &&
-      sourceRef.current?.userId === session.user.id &&
-      state === "loaded"
+      sourceRef.current?.userId === session.user.id
     ) {
+      autoLoadKeyRef.current = userKey;
       return;
     }
     if (autoLoadKeyRef.current === userKey) return;
@@ -195,22 +236,22 @@ export default function LabSourceAccess({ slug }) {
     autoLoadKeyRef.current = userKey;
     loadSource();
   }, [
+    initialUserId,
     loadSource,
     pathname,
     session?.user?.emailVerified,
     session?.user?.id,
     sessionPending,
     slug,
-    state,
   ]);
 
-  // A returnTo URL containing ?source=1 opens the source section after login.
-  // Verified users are already auto-loaded; the query is only a scroll hint.
+  // Restore the source section after login/signup without adding another
+  // access-check click. The server/client session has already loaded the code.
   useEffect(() => {
     if (sessionPending) return;
-
     const shouldOpen = new URLSearchParams(window.location.search).get("source") === "1";
-    const autoOpenKey = pathname + ":" + slug + ":" + (session?.user?.id || "guest");
+    const userId = session?.user?.id || "guest";
+    const autoOpenKey = pathname + ":" + slug + ":" + userId;
     if (!shouldOpen || autoOpenKeyRef.current === autoOpenKey) return;
 
     autoOpenKeyRef.current = autoOpenKey;
@@ -268,10 +309,8 @@ export default function LabSourceAccess({ slug }) {
     const onVisibilityChange = () => {
       if (document.visibilityState === "visible") revalidateSourceSession();
     };
-
     const timer = window.setInterval(revalidateSourceSession, 60_000);
     document.addEventListener("visibilitychange", onVisibilityChange);
-
     const unsubscribe = subscribeAuthEvents((event) => {
       if (
         sourceRef.current &&
@@ -331,7 +370,7 @@ export default function LabSourceAccess({ slug }) {
       className="mx-auto mt-12 w-full max-w-[1440px] scroll-mt-28 px-6 sm:px-8 lg:px-20"
     >
       <div className="border border-border bg-surface-1 p-5 sm:p-6">
-        {sessionPending || (session?.user?.emailVerified === true && state === "loading") ? (
+        {sessionPending && !firstSource || (state === "loading" && !source) ? (
           <div className="flex min-h-24 items-center gap-3" role="status" aria-live="polite">
             <LoaderCircle size={18} className="animate-spin text-brand motion-reduce:animate-none" aria-hidden="true" />
             <div>
@@ -359,7 +398,6 @@ export default function LabSourceAccess({ slug }) {
                 {copied ? "Copied" : "Copy file"}
               </button>
             </div>
-
             {source.files.length > 1 ? (
               <div className="mt-5 flex flex-wrap gap-2" aria-label="Source files">
                 {source.files.map((file, index) => (
@@ -380,7 +418,6 @@ export default function LabSourceAccess({ slug }) {
                 ))}
               </div>
             ) : null}
-
             <div className="mt-4 overflow-hidden border border-border bg-surface-inset">
               <div className="border-b border-border px-4 py-2 text-xs text-text-tertiary">
                 {source.files[selectedFile]?.path}
@@ -390,7 +427,7 @@ export default function LabSourceAccess({ slug }) {
               </pre>
             </div>
           </>
-        ) : !session?.user?.id ? (
+        ) : !session?.user?.id && !initialUserId ? (
           <div className="flex items-start gap-3">
             <LockKeyhole size={19} className="mt-0.5 shrink-0 text-brand" aria-hidden="true" />
             <div className="min-w-0">
@@ -400,23 +437,16 @@ export default function LabSourceAccess({ slug }) {
                 Sign in or create an account to explore the files.
               </p>
               <div className="mt-4 flex flex-wrap items-center gap-3">
-                <Link
-                  href={signInHref}
-                  className="inline-flex h-10 items-center gap-2 bg-brand px-4 text-sm font-semibold text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-                >
-                  Sign in
-                  <ArrowUpRight size={14} aria-hidden="true" />
+                <Link href={signInHref} className="inline-flex h-10 items-center gap-2 bg-brand px-4 text-sm font-semibold text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
+                  Sign in <ArrowUpRight size={14} aria-hidden="true" />
                 </Link>
-                <Link
-                  href={signUpHref}
-                  className="inline-flex h-10 items-center border border-brand px-4 text-sm font-semibold text-brand transition-colors hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-                >
+                <Link href={signUpHref} className="inline-flex h-10 items-center border border-brand px-4 text-sm font-semibold text-brand transition-colors hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
                   Create account
                 </Link>
               </div>
             </div>
           </div>
-        ) : session.user.emailVerified !== true || state === "verification" ? (
+        ) : session?.user?.emailVerified !== true && state !== "session-mismatch" ? (
           <div className="flex items-start gap-3">
             <LockKeyhole size={19} className="mt-0.5 shrink-0 text-warning" aria-hidden="true" />
             <div>
@@ -424,12 +454,8 @@ export default function LabSourceAccess({ slug }) {
               <p className="mt-1 max-w-2xl text-sm leading-6 text-text-secondary">
                 Your account is signed in, but source access becomes available after email verification.
               </p>
-              <Link
-                href={verifyHref}
-                className="mt-4 inline-flex h-10 items-center gap-2 bg-brand px-4 text-sm font-semibold text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-              >
-                Verify email
-                <ArrowUpRight size={14} aria-hidden="true" />
+              <Link href={verifyHref} className="mt-4 inline-flex h-10 items-center gap-2 bg-brand px-4 text-sm font-semibold text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
+                Verify email <ArrowUpRight size={14} aria-hidden="true" />
               </Link>
             </div>
           </div>
@@ -441,37 +467,19 @@ export default function LabSourceAccess({ slug }) {
               <p className="mt-1 max-w-2xl text-sm leading-6 text-text-secondary">{error}</p>
             </div>
           </div>
-        ) : state === "session-mismatch" ? (
-          <div className="flex items-start gap-3">
-            <AlertTriangle size={19} className="mt-0.5 shrink-0 text-warning" aria-hidden="true" />
-            <div>
-              <h2 className="text-base font-semibold">Sign in again on this address</h2>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-text-secondary">{error}</p>
-              <Link href={signInHref} className="mt-4 inline-flex h-10 items-center bg-brand px-4 text-sm font-semibold text-brand-contrast">
-                Sign in again
-              </Link>
-            </div>
-          </div>
         ) : (
           <div className="flex items-start gap-3">
             <AlertTriangle size={19} className="mt-0.5 shrink-0 text-warning" aria-hidden="true" />
             <div>
-              <h2 className="text-base font-semibold">Source temporarily unavailable</h2>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-text-secondary">
-                {error || "We could not load this published source. Your account remains signed in."}
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  autoLoadKeyRef.current = null;
-                  loadSource();
-                }}
-                disabled={loading}
-                className="mt-4 inline-flex h-9 items-center gap-2 border border-border px-3 text-xs font-semibold transition-colors hover:border-brand disabled:opacity-50"
-              >
-                <RefreshCw size={13} aria-hidden="true" />
-                Try again
-              </button>
+              <h2 className="text-base font-semibold">{state === "session-mismatch" ? "Sign in again on this address" : "Source temporarily unavailable"}</h2>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-text-secondary">{error || "We could not load this published source. Your account remains signed in."}</p>
+              {state === "session-mismatch" ? (
+                <Link href={signInHref} className="mt-4 inline-flex h-10 items-center bg-brand px-4 text-sm font-semibold text-brand-contrast">Sign in again</Link>
+              ) : (
+                <button type="button" onClick={() => { autoLoadKeyRef.current = null; loadSource(); }} disabled={loading} className="mt-4 inline-flex h-9 items-center gap-2 border border-border px-3 text-xs font-semibold transition-colors hover:border-brand disabled:opacity-50">
+                  <RefreshCw size={13} aria-hidden="true" /> Try again
+                </button>
+              )}
             </div>
           </div>
         )}
