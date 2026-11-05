@@ -89,12 +89,120 @@ function createEntryFiles(component, mode) {
   ];
 }
 
-export function prepareReactProject(inputFiles) {
-  if (!Array.isArray(inputFiles) || inputFiles.length < 1) {
-    fail("INVALID_FILE_COUNT", "Add at least one source file.");
+function isReactProject(files) {
+  return (
+    hasReactEntries(files, PROJECT_ENTRIES.javascript) ||
+    hasReactEntries(files, PROJECT_ENTRIES.typescript)
+  );
+}
+
+function createStaticHtml(files) {
+  const htmlFiles = files.filter((file) => /\.html?$/i.test(file.path));
+  let index = files.find((file) => file.path === "index.html");
+
+  if (!index && htmlFiles.length === 1) {
+    const existing = htmlFiles[0];
+    if (existing.path.includes("/")) {
+      fail(
+        "MISSING_HTML_ENTRY",
+        "Move the HTML entry to the project root and name it index.html so local asset paths resolve consistently.",
+      );
+    }
+    index = { ...existing, path: "index.html" };
+    files = files.map((file) => file === existing ? index : file);
   }
 
-  const files = inputFiles.map((file) => {
+  const styles = files.filter((file) => /\.css$/i.test(file.path));
+  const scripts = files.filter((file) => /\.(?:js|mjs)$/i.test(file.path));
+
+  if (!index) {
+    if (!styles.length && !scripts.length) {
+      fail(
+        "MISSING_HTML_ENTRY",
+        "Add an index.html file or a CSS/JavaScript file to create a runnable page.",
+      );
+    }
+
+    const styleLinks = styles
+      .map((file) => '<link rel="stylesheet" href="./' + file.path + '" />')
+      .join("\n  ");
+    const scriptEntry = scripts.find((file) =>
+      /(?:^|\/)(?:main|index|app)\.(?:mjs|js)$/i.test(file.path),
+    ) || scripts[0];
+    const scriptTag = scriptEntry
+      ? '<script type="module" src="./' + scriptEntry.path + '"></script>'
+      : "";
+
+    index = {
+      path: "index.html",
+      language: "html",
+      generated: true,
+      content: [
+        "<!doctype html>",
+        '<html lang="en">',
+        "<head>",
+        '  <meta charset="UTF-8" />',
+        '  <meta name="viewport" content="width=device-width, initial-scale=1.0" />',
+        "  <title>Labs HTML/CSS experiment</title>",
+        "  " + styleLinks,
+        "</head>",
+        "<body>",
+        "  <main id=\"labs-root\"></main>",
+        "  " + scriptTag,
+        "</body>",
+        "</html>",
+        "",
+      ].join("\n"),
+    };
+    files = files.concat(index);
+    return files;
+  }
+
+  let html = index.content;
+  const lowerHtml = html.toLowerCase();
+  const missingStyleLinks = styles.filter((file) => {
+    const normalized = file.path.replace(/^\.\//, "");
+    return !lowerHtml.includes(normalized.toLowerCase()) &&
+      !lowerHtml.includes(file.path.split("/").pop().toLowerCase());
+  });
+
+  if (missingStyleLinks.length) {
+    const links = missingStyleLinks
+      .map((file) => '<link rel="stylesheet" href="./' + file.path + '" />')
+      .join("\n");
+    if (/<\/head\s*>/i.test(html)) {
+      html = html.replace(/<\/head\s*>/i, links + "\n</head>");
+    } else {
+      html = "<head>\n" + links + "\n</head>\n" + html;
+    }
+  }
+
+  const hasScriptReference = /<script\b[^>]*\bsrc\s*=/i.test(html);
+  if (!hasScriptReference && scripts.length) {
+    const scriptEntry = scripts.find((file) =>
+      /(?:^|\/)(?:main|index|app)\.(?:mjs|js)$/i.test(file.path),
+    ) || scripts[0];
+    const scriptTag = '<script type="module" src="./' + scriptEntry.path + '"></script>';
+    if (/<\/body\s*>/i.test(html)) {
+      html = html.replace(/<\/body\s*>/i, scriptTag + "\n</body>");
+    } else {
+      html += "\n" + scriptTag + "\n";
+    }
+  }
+
+  return files.map((file) =>
+    file.path === index.path
+      ? { ...file, path: "index.html", language: "html", content: html }
+      : file,
+  );
+}
+
+export function prepareReactProject(inputFiles) {
+  if (!Array.isArray(inputFiles) || inputFiles.length < 1 || inputFiles.length > 40) {
+    fail("INVALID_FILE_COUNT", "Add between 1 and 40 source files.");
+  }
+
+  let files = inputFiles.map((file) => {
     const language = String(file.language || "").toLowerCase();
     if (inputFiles.length === 1 && language === "jsx" && /\.js$/i.test(file.path)) {
       return { ...file, path: file.path.replace(/\.js$/i, ".jsx") };
@@ -105,48 +213,60 @@ export function prepareReactProject(inputFiles) {
     return { ...file };
   });
 
-  const javascript = PROJECT_ENTRIES.javascript;
-  const typescript = PROJECT_ENTRIES.typescript;
-  if (hasReactEntries(files, javascript) || hasReactEntries(files, typescript)) {
+  if (isReactProject(files)) {
     return files;
   }
 
-  if (files.length !== 1) {
-    fail(
-      "MISSING_ENTRY",
-      "This project needs index.html, a React entry, an App component and src/index.css. Add the React starter files or use a single component file.",
-    );
-  }
-
-  const component = files[0];
-  const extension = component.path.split(".").pop()?.toLowerCase();
-  const language = String(component.language || "").toLowerCase();
-  let mode;
-
-  if (["jsx", "javascript"].includes(language) && ["js", "jsx"].includes(extension)) {
-    mode = "javascript";
-  } else if (["tsx", "typescript"].includes(language) && ["ts", "tsx"].includes(extension)) {
-    mode = "typescript";
-  } else {
-    fail(
-      "MISSING_ENTRY",
-      "A single-file React preview must be a JavaScript/JSX or TypeScript/TSX component. Select the matching language.",
-    );
-  }
-
-  const generated = createEntryFiles(component, mode);
-  const existingPaths = new Set(files.filter((file) => file.path !== component.path).map((file) => file.path.toLowerCase()));
-  for (const file of generated) {
-    const key = file.path.toLowerCase();
-    if (existingPaths.has(key) && key !== component.path.toLowerCase()) {
-      fail("DUPLICATE_PATH", "The generated React entry conflicts with an existing file: " + file.path);
+  const reactSource = files.some((file) =>
+    /\.(?:jsx|tsx)$/i.test(file.path) ||
+    ["jsx", "tsx"].includes(String(file.language || "").toLowerCase()),
+  );
+  if (reactSource) {
+    if (files.length !== 1) {
+      fail(
+        "MISSING_ENTRY",
+        "A multi-file React project needs index.html, a React main entry, an App component and a Tailwind CSS entry.",
+      );
     }
-    existingPaths.add(key);
+    const component = files[0];
+    const extension = component.path.split(".").pop()?.toLowerCase();
+    const language = String(component.language || "").toLowerCase();
+    let mode;
+
+    if (["jsx", "javascript"].includes(language) && ["js", "jsx"].includes(extension)) {
+      mode = "javascript";
+    } else if (["tsx", "typescript"].includes(language) && ["ts", "tsx"].includes(extension)) {
+      mode = "typescript";
+    } else {
+      fail(
+        "MISSING_ENTRY",
+        "A single-file React preview must be a JavaScript/JSX or TypeScript/TSX component. Select the matching language.",
+      );
+    }
+
+    const generated = createEntryFiles(component, mode);
+    const existingPaths = new Set(files.filter((file) => file.path !== component.path).map((file) => file.path.toLowerCase()));
+    for (const file of generated) {
+      const key = file.path.toLowerCase();
+      if (existingPaths.has(key) && key !== component.path.toLowerCase()) {
+        fail("DUPLICATE_PATH", "The generated React entry conflicts with an existing file: " + file.path);
+      }
+      existingPaths.add(key);
+    }
+
+    files = files.filter((file) => file.path !== component.path).concat(generated);
+  } else {
+    files = createStaticHtml(files);
   }
 
-  const normalized = files.filter((file) => file.path !== component.path).concat(generated);
-  if (normalized.length > 40) {
-    fail("INVALID_FILE_COUNT", "The React starter exceeds the source file limit.");
+  if (files.length > 40) {
+    fail("INVALID_FILE_COUNT", "The prepared experiment exceeds the 40-file source limit.");
   }
-  return normalized;
+  const unique = new Set();
+  for (const file of files) {
+    const key = file.path.toLowerCase();
+    if (unique.has(key)) fail("DUPLICATE_PATH", "Duplicate source path after entry generation: " + file.path);
+    unique.add(key);
+  }
+  return files;
 }
