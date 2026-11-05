@@ -333,3 +333,37 @@ Do not convert the portfolio application itself to TypeScript to enable TSX expe
 - [TypeScript — CLI options](https://www.typescriptlang.org/docs/handbook/compiler-options): JSX, module resolution, isolated modules and noEmit.
 - [Tailwind CSS — detecting classes](https://tailwindcss.com/docs/detecting-classes-in-source-files): source scanning and complete static class names.
 - [React Icons](https://react-icons.github.io/react-icons/): named imports from supported icon packs.
+
+## 14. Optional Controls SDK without reducing the existing execution modes
+
+Controls are an additive feature, not a new runtime mode. The following must remain unchanged and covered by the existing smoke suite: standalone HTML/CSS/JavaScript; single-file JSX; multi-file React JS/JSX; React TS/TSX with strict `tsc --noEmit`; Tailwind CSS v4; Motion from `motion/react`; Lucide; React Icons; isolated Run of the current unsaved source; saved immutable versions; exact-version rebuild/publish; sandbox and compiler package restrictions.
+
+### 14.1 Optional source contract
+
+A root `lab.config.json` file is an optional JSON member of the same source file array as HTML/JS/JSX/TS/TSX/CSS. The existing source-version content hash therefore includes it; save, restore, diff and version history automatically keep code and controls together.
+
+The platform parses this exact file before compilation, validates it and removes it from the generated browser bundle. It must not reserve every JSON file or change normal JSON imports. When absent or empty, there is no controls panel and current projects run with no extra author work.
+
+### 14.2 Control API by execution mode
+
+- **React JS/JSX and TSX:** import the preinstalled, versioned `@labs/ui` SDK. `useLabSettings()` returns typed values from the current runtime bridge; source explicitly maps its stable control IDs to the props/state of whichever components the experiment uses.
+- **Standalone HTML/JavaScript:** read `window.Labs.getSettings()` and subscribe to `labs:settings-change` inside the isolated document.
+- **CSS-only/HTML:** validated scalar controls may be mapped to whitelisted `--lab-*` CSS custom properties so the stylesheet responds without adding JavaScript.
+
+No execution mode is wrapped in another. The existing static adapter remains static; the existing React adapter remains React. The source author decides which settings affect which component.
+
+### 14.3 Generic control schema
+
+First release reuses the accessible control renderers already present in `LabControlsPanel`: range, number, toggle, select and color. Each descriptor has a unique stable ID, label, default value, type-specific bounds/options and optional grouping/order/helper copy. The manifest cannot contain executable code, component import paths or arbitrary selectors. New control types require validation + UI renderer + bridge serialization.
+
+### 14.4 First-party SDK
+
+The internal `@labs/ui` module is preinstalled/allowlisted in the immutable compiler environment and versioned with the compiler snapshot. It does not replace or upgrade React, Motion, Tailwind or icon packages. `MagneticButton` and `useLabSettings` are the first exports; corresponding TS declarations are required.
+
+The application-owned Magnetic Interaction and owner-authored React experiments consume the same reviewed SDK implementation. The exact existing spring (280/24/0.55), pointer multiplier (0.24), proximity exponent (1.25), strength/radius bounds, touch bypass, reduced-motion bypass and pointer-leave reset are preserved.
+
+### 14.5 Run/publish safety
+
+Owner Run validates and uses the current unsaved code + unsaved config only. It never saves or publishes. Save stores the complete file list. Restore creates a new draft containing the restored code and config. Publish revalidates and rebuilds the exact saved version; config schema/hash is attached to that artifact/release. Failed validation/build leaves the previous published release untouched. The runtime controls panel loads from the same exact published release as the iframe artifact.
+
+The detailed source schema, message-security contract, owner builder, rollback and acceptance matrix are specified in Section 41 of `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`.
