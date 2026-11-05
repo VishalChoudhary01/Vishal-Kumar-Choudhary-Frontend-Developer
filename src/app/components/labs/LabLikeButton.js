@@ -2,6 +2,7 @@
 
 import { useEffect, useOptimistic, useState, useTransition } from "react";
 import { Heart, LoaderCircle } from "lucide-react";
+import { motion } from "motion/react";
 
 function normalizeEngagement(value) {
   if (!value || typeof value !== "object") return null;
@@ -144,9 +145,11 @@ export default function LabLikeButton({
 
   return (
     <div className={compact ? "inline-flex min-w-0 items-center gap-2" : "flex flex-wrap items-center gap-3"}>
-      <button
+      <motion.button
         type="button"
         onClick={toggleLike}
+        whileTap={data?.likeAllowed && !isPending ? { scale: 0.96 } : undefined}
+        transition={{ type: "spring", stiffness: 520, damping: 28 }}
         disabled={isDisabled}
         aria-pressed={data?.liked === true}
         aria-label={data?.liked ? "Unlike this experiment" : "Like this experiment"}
@@ -163,15 +166,23 @@ export default function LabLikeButton({
         {isPending ? (
           <LoaderCircle size={14} className="animate-spin" aria-hidden="true" />
         ) : (
-          <Heart
-            size={14}
-            fill={data?.liked ? "currentColor" : "none"}
-            aria-hidden="true"
-          />
+          <motion.span
+            key={data?.liked ? "liked" : "unliked"}
+            initial={{ scale: 0.72, rotate: data?.liked ? -10 : 8, opacity: 0.65 }}
+            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 520, damping: 20 }}
+            className="inline-flex"
+          >
+            <Heart
+              size={14}
+              fill={data?.liked ? "currentColor" : "none"}
+              aria-hidden="true"
+            />
+          </motion.span>
         )}
         <span>{data?.liked ? "Liked" : "Like"}</span>
         <span className="tabular-nums text-text-tertiary" aria-live="polite">{count}</span>
-      </button>
+      </motion.button>
       {message ? (
         <span role="status" className="max-w-52 text-[10px] leading-4 text-warning">
           {message}
