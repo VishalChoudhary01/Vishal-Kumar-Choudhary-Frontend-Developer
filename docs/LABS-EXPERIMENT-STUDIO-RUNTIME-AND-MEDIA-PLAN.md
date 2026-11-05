@@ -155,7 +155,7 @@ The page loads only the published release. Draft source, preview output, unpubli
 
 ### 2.4 Protected source viewer
 
-The source CTA remains visible to every visitor on the experiment detail page. When a valid Better Auth session with `emailVerified === true` is already available, load the published source directly; do not require a second “Check source access” action and do not hide the source CTA. Guests who choose the source CTA see both Sign in and Create account paths returning to the same experiment. Signed-in unverified accounts see the verification action. Server authorization remains mandatory in every case. The source viewer exposes only text files belonging to the exact published release and offers copy controls. It does not expose unpublished drafts, temporary build logs, secrets or upload credentials.
+The protected source section is rendered conditionally by session state. Resolve the session before showing actions so guests do not flash during auth loading. Guests see Sign in and Create account in the source section and Labs navbar, with a validated return path to the same experiment; hide the redundant navbar action on its matching login/signup page. Signed-in unverified accounts see Verify email and no guest auth links. A valid verified session automatically loads the published source without a source-access button or guest CTA. Signed-in users see the account menu instead of guest links. Server authorization remains mandatory in every case. The source viewer exposes only text files belonging to the exact published release and offers copy controls. It does not expose unpublished drafts, temporary build logs, secrets or upload credentials.
 
 
 
@@ -569,8 +569,8 @@ This is the **next implementation sequence**. It supersedes the earlier broad ph
 
 ### Phase 2 — Source CTA, optimistic interactions and action feedback
 
-- Keep the source CTA visible to every visitor on the experiment detail page. Ordinary gallery/detail browsing does not depend on authentication checks.
-- If a valid verified Better Auth session is already known, load published source directly; do not require a second “Check source access” action and do not hide the source CTA. Guests who choose the source CTA see both Sign in and Create account paths returning to the same experiment. Signed-in unverified accounts see Verify email. Server authorization remains mandatory.
+- Resolve the session before showing source actions; ordinary gallery/detail browsing stays public and does not block on authentication.
+- Guests see Sign in/Create account in the source panel and Labs navbar, returning to the same experiment. Signed-in unverified users see Verify email. Verified users automatically load published source and see no guest/auth CTA or “Check source access” action. Signed-in users see the account menu instead of guest links. Server authorization remains mandatory.
 - Use React 19 `useOptimistic` for reversible server-backed UI transitions: like/unlike state and count, owner inventory additions/removals where safe, and media-role attach/detach/reorder state. On rejection, roll back to the last confirmed server state and show an actionable toast/message.
 - Source editor add/delete/reorder operations edit the local unsaved working copy. Update that working-copy state immediately, retain its unsaved indicator, and persist only through Save draft; do not label local changes as saved.
 - Irreversible operations remain confirmation-gated. Project deletion shows “Deleting…” until the server completes hide/cleanup. Publish/unpublish and restore show pending states but must not optimistically claim a new published version before the server commits the exact release pointer.
@@ -655,7 +655,7 @@ This is the **next implementation sequence**. It supersedes the earlier broad ph
 - Card image/GIF/video behavior is lazy, bounded and reduced-motion-aware. Video does not autoplay with sound; offscreen media is not continuously active.
 - The public detail page runs the exact published artifact and never leaves a blank white canvas while loading or after failure.
 - Route skeletons exist for Labs listing/detail and owner inventory/editor; they reserve layout space and do not duplicate the global page loader.
-- Verified source access is direct when the verified session is already known; guests see sign-in and create-account paths when choosing the source CTA.
+- Guest source panel: Sign in and Create account. Signed-in unverified source panel: Verify email. Verified source panel: automatically load and render published source with no auth CTA. Guest navbar: Sign in/Create account (one relevant action omitted on the matching auth form); signed-in navbar: account menu.
 - Optimistic reversible actions reconcile with the server and roll back on failure. Publish/unpublish/delete never report success before server confirmation. Copy feedback/analytics require successful Clipboard API acknowledgement.
 
 ## 13. Decisions still open
