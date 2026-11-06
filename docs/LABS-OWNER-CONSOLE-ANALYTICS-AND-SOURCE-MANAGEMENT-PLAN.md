@@ -1,6 +1,6 @@
 # Labs Owner Console — Analytics and Source Management Plan
 
-**Status:** Active execution plan. Phase 0 baseline re-audit is complete. Phase 1 Analytics/Source Library route separation is committed and its Vercel Preview build is READY; anonymous protected-route smoke tests pass. Authenticated owner-browser/accessibility QA remains pending. Phases 2–6 remain outstanding.  
+**Status:** Active execution plan. Phase 0 baseline re-audit is complete. Phase 1 Analytics/Source Library route separation, Phase 2 initial custom-experiment analytics correctness, and Phase 3 metadata-only edit workflow are committed and Preview build-verified. Anonymous protected-route smoke tests pass; authenticated owner-browser, metadata save/conflict/audit and Atlas-backed event checks remain pending. Phase 4–6 and live refresh/richer analytics remain outstanding.  
 **Audited branch:** `feat/labs-platform-integration`  
 **Audited commit:** `3cfacf96ec6847e78fa2fc8f83b9bd18cd573fad`  
 **Audit date:** 2026-11-06  
@@ -82,7 +82,7 @@ The current `LabSourceEditor` already supports:
 - `GET/POST /api/v1/admin/labs/sources` exist for inventory and source-head creation.
 - Owner source read, versions, restore, publish, unpublish and audit endpoints exist.
 - `POST /api/v1/admin/labs/experiments` creates an owner-created experiment; `DELETE /api/v1/admin/labs/experiments/:slug` deletes an eligible custom experiment.
-- There is no current `PATCH /api/v1/admin/labs/experiments/:slug` metadata-update operation.
+- `PATCH /api/v1/admin/labs/experiments/:slug` now updates only custom experiment catalogue metadata. It uses the existing owner/same-origin guards, server validation, expected-`updatedAt` concurrency, immutable slug/system fields and an append-only metadata-update audit event. It does not touch source files or publication pointers.
 - The current `LabAnalyticsEvent` schema accepts `source_open`, `code_copy`, `like`, `unlike`, `guest_like` and `guest_unlike`.
 - The existing `MotionNumber` component uses `motion/react` and respects reduced motion. Reuse it for dashboard counts.
 - The existing theme exposes semantic `brand`, `info`, `success`, `warning` and `error` tokens in light and dark themes.
@@ -260,14 +260,16 @@ Work in small phases with separate reviewable commits. Do not begin a later phas
 ### Phase 3 — Add experiment metadata editing
 
 **Work**
-- Add a metadata-only edit route for owner-created experiments.
-- Add same-origin owner-guarded `PATCH /api/v1/admin/labs/experiments/:slug` alongside the existing DELETE behavior.
+**Code committed / Preview build-verified:** the metadata-only route, editor, owner PATCH, shared validation, expected-`updatedAt` concurrency, slug/system-field exclusion and audit action are present. Remaining work is authenticated owner verification, stale-conflict testing and persisted audit confirmation.
+
+- Metadata route: `/admin/labs/experiments/[slug]/edit`.
+- Mutation: same-origin owner-guarded `PATCH /api/v1/admin/labs/experiments/:slug`, preserving the existing DELETE method.
 - Reuse `experiment-management.js` and current `LabExperiment` validators; do not call Mongoose from UI components.
-- Allow only approved editable fields: title, description, explanation, category and technologies.
-- Keep slug, kind, status, publication timestamp, creator identity and media attachment internals out of the normal metadata patch.
-- Add optimistic concurrency using the persisted update/version token selected during detailed API design.
-- Record a safe metadata-update audit event.
-- Provide field validation, save/cancel, pending/success/error states and unsaved-change protection.
+- Editable fields: title, description, explanation, category and technologies only.
+- Slug, kind, status, publication timestamp, creator identity and media attachment internals are not editable through this form.
+- The client sends the last-seen `updatedAt`; stale updates return 409 rather than overwrite newer metadata.
+- A successful metadata change appends `experiment_metadata_updated` to the owner audit collection.
+- The edit form has validation feedback, save/cancel, pending/success/error states and unsaved-change protection.
 
 **Gate**
 - Existing custom experiment creation and deletion continue to work.
@@ -338,7 +340,7 @@ Work in small phases with separate reviewable commits. Do not begin a later phas
 | Owner verification return path | Build-verified / partly smoke-tested | Notice validates exact allowed owner return paths; source editor and import pass their own destination. Verification completion itself still needs an authenticated browser test |
 | Source creation-to-editor handoff | Not started | Remains Phase 4; current inventory create behavior is intentionally unchanged |
 | Custom experiment analytics + source event coverage | Code committed / build-verified | Owner aggregation now combines code-owned experiments with published custom experiments whose source version matches a ready artifact; source-open/copy event validation accepts the same published custom catalogue. Atlas-backed reconciliation and verified event round-trip are still pending |
-| Custom experiment metadata editor/PATCH | Not started | Remains Phase 3 |
+| Custom experiment metadata editor/PATCH | Code committed / build-verified | Preview route manifest contains `/admin/labs/experiments/[slug]/edit`; anonymous request returns login with the exact edit destination. Authenticated save, stale conflict and Atlas audit verification remain pending |
 | Complete daily date buckets | Code committed / build-verified | Analytics now emits a complete UTC date series with zero-activity days; zero-value days render zero-height bars and the empty state checks actual activity | 
 | Live polling, MotionNumber and richer chart | Not started | Remains Phase 5; the current page still uses its original server-loaded chart and static count treatment |
 | Build and protected-route smoke test | Passed | Vercel deployment `dpl_4smAhYYqvrcgr5YpEnDUCDjoym69` for the application changes reached READY; route manifest includes both new owner routes and existing editor/import routes. Anonymous route checks confirm login return destinations for Analytics, Source Library and Import, and legacy `?days=30` forwarding |
@@ -356,6 +358,29 @@ Work in small phases with separate reviewable commits. Do not begin a later phas
 | Experiment detail views and preview events | Not started | Keep unavailable until qualifying-view/deduplication rules and successful runtime-start signals are approved and implemented |
 
 The READY Preview deployment used commit `782d276d0a44dde14bbcf0c9fae5d4a5615afc0e`. Next verification requires provisioned Atlas data and an authenticated verified test account; do not infer production data correctness from compilation.
+
+### Phase 3 metadata editor progress — 2026-11-06
+
+| Item | Status | Evidence / remaining check |
+|---|---|---|
+| Metadata-only owner edit page | Code committed / build-verified | `/admin/labs/experiments/[slug]/edit` is in the READY Preview route manifest; anonymous smoke test redirects to login with the exact edit path in `returnTo` |
+| Source Library entry point | Code committed / build-verified | Custom experiment rows expose **Edit details**; deleting experiments do not expose the edit action |
+| Metadata PATCH | Code committed / build-verified | Existing `DELETE /api/v1/admin/labs/experiments/:slug` remains; `PATCH` is added to the same route with owner and same-origin checks |
+| Editable field boundary | Code committed / build-verified | Only title, description, explanation, category and technologies are accepted; slug, kind/status, publication time, creator and media internals are not passed to the update service |
+| Shared validation | Code committed / build-verified | Create and edit share `validateExperimentMetadata`; metadata update additionally requires a well-formed technology array |
+| Stale-update protection | Code committed / build-verified | Client supplies expected `updatedAt`; server compares within a transaction and returns conflict for stale tokens; the next timestamp advances monotonically |
+| Audit | Code committed / build-verified | `experiment_metadata_updated` is an allowed append-only source audit action written in the same MongoDB transaction as the metadata update |
+| Owner auth return paths | Code committed / build-verified | Exact metadata edit path is accepted by owner return-path validation through login, verification and password recovery pages |
+| Authenticated end-to-end edit | Pending | Use a provisioned owner account and actual custom experiment; verify successful edit, reload persistence, concurrent stale save rejection, audit entry and unchanged source/published artifact pointers |
+
+The metadata-edit Preview deployment reached READY:
+- Deployment: `dpl_6EbiWW3bPgpuih2exTZwWNBndscK`
+- Commit: `d2c6ce5724f57ad6809ab6b24a6fa26ed4325509`
+- Build: Next.js compile succeeded in 4.4s; SEO validation passed with zero warnings; deployment reached READY.
+- Route manifest: `/admin/labs/experiments/[slug]/edit` and the existing `/api/v1/admin/labs/experiments/[slug]` route are present.
+- Anonymous smoke test: `/admin/labs/experiments/fluid-gradient-playground/edit` resolves to the sign-in screen with the exact edit destination in `returnTo`.
+
+This does not prove an authenticated owner save, conflict response or MongoDB audit transaction. Those tests remain required before Phase 3 is considered fully accepted.
 
 ### Additional authorization discrepancy found during audit
 
