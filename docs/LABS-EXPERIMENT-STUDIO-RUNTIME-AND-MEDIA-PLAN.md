@@ -898,42 +898,7 @@ Only the exact root path `lab.config.json` is platform-recognized. Do not reserv
 
 ### 41.3 Manifest contract and generic control model
 
-Initial schema (illustrative contract; the validator owns the definitive schema):
-
-```json
-{
-  "schemaVersion": 1,
-  "controls": [
-    {
-      "id": "magnetStrength",
-      "label": "Magnetic strength",
-      "group": "Magnetic button",
-      "type": "range",
-      "defaultValue": 28,
-      "min": 0,
-      "max": 42,
-      "step": 1
-    },
-    {
-      "id": "fieldRadius",
-      "label": "Field radius",
-      "group": "Magnetic button",
-      "type": "range",
-      "defaultValue": 180,
-      "min": 80,
-      "max": 300,
-      "step": 10
-    },
-    {
-      "id": "showField",
-      "label": "Show magnetic field",
-      "group": "Magnetic button",
-      "type": "toggle",
-      "defaultValue": true
-    }
-  ]
-}
-```
+The optional root manifest contains a schema version and an ordered list of control descriptors. Each descriptor has a stable ID, label, supported type, default value and type-specific bounds or options. The platform validator owns the definitive schema. This architecture document intentionally does not duplicate component-specific configuration examples or executable component source.
 
 The schema describes controls, not a particular React component. A different experiment can declare unrelated settings and groups—for example gradient color/intensity/spread, particle count/speed/distance, reveal progress, or multiple independently configured component instances.
 
