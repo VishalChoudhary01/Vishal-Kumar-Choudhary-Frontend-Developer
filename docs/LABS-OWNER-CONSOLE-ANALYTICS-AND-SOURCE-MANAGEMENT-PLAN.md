@@ -1,6 +1,6 @@
 # Labs Owner Console — Analytics and Source Management Plan
 
-**Status:** Approved planning baseline; documentation only. No implementation changes are authorized by this document alone.  
+**Status:** Active execution plan. Phase 0 baseline re-audit is complete. Phase 1 route/navigation separation has been committed to `feat/labs-platform-integration`; Vercel Preview build is queued and verification remains pending. Phases 2–6 remain outstanding.  
 **Audited branch:** `feat/labs-platform-integration`  
 **Audited commit:** `3cfacf96ec6847e78fa2fc8f83b9bd18cd573fad`  
 **Audit date:** 2026-11-06  
@@ -326,6 +326,26 @@ Work in small phases with separate reviewable commits. Do not begin a later phas
 - New metadata edit, separated routes and analytics polling pass their tests.
 - All unresolved deployment/Atlas/SMTP/Cloudinary/runtime items remain visible as release blockers; documentation completion is not production approval.
 
+## 7A. Execution log — 2026-11-06
+
+| Item | Status | Evidence / remaining check |
+|---|---|---|
+| Phase 0 repository/route/API/component audit | Complete | Re-audited branch head `db4691163fd0a98d39b4f81fb391996dad45f82c`; source page, inventory, source editor/import, analytics API/service, owner menu, theme tokens and MotionNumber inspected |
+| Dedicated Analytics route | Code committed | `src/app/admin/labs/analytics/page.js` reuses the existing server owner guard and the existing analytics aggregation/UI; Vercel Preview build still queued |
+| Source Library route | Code committed | `src/app/admin/labs/sources/page.js` now renders the existing `LabSourceInventory` without analytics |
+| Shared owner navigation | Code committed | `LabsOwnerNavigation` provides Analytics and Source Library destinations; account menu exposes both |
+| Legacy reporting-period bookmarks | Code committed | Valid `?days=7|30|90|365` requests on the Sources route forward to Analytics |
+| Owner verification return path | Code committed | Notice validates exact allowed owner return paths; source editor and import pass their own return destination |
+| Source creation-to-editor handoff | Not started | Remains Phase 4; current inventory create behavior is intentionally unchanged |
+| Custom experiment analytics + source event coverage | Not started | Remains Phase 2 |
+| Custom experiment metadata editor/PATCH | Not started | Remains Phase 3 |
+| Live polling, MotionNumber and richer chart | Not started | Remains Phase 5; current page still has the original non-live chart/static count treatment |
+| Build/browser/accessibility verification | Pending | Deployment `dpl_GrdoHvuZox1VFSpEHvNYXmDu6oEp` is queued; no successful build or browser QA is claimed |
+
+### Additional authorization discrepancy found during audit
+
+The current `src/app/lib/labs/owner-access.js` accepts either `LABS_OWNER_USER_ID` **or** `LABS_OWNER_EMAIL`, while the locked owner-identity decision in the source-management specification says `LABS_OWNER_USER_ID` only. This route-split slice deliberately does not remove the email fallback because doing so without checking the configured Preview environment could lock out the current owner. Reconcile the code and deployment configuration in the authorization verification phase before treating the owner-identity decision as enforced.
+
 ## 8. Preservation contract — non-negotiable
 
 Every implementation PR in this plan must explicitly confirm:
@@ -371,4 +391,4 @@ Resolve these decisions in the owning specification/API contract before implemen
 
 The owner can move between Analytics and Source Library without losing route context; the Source Library opens the existing source editor; experiment metadata has its own safe edit workflow; and Analytics displays only correctly instrumented, aggregate data that refreshes while visible. Existing public Labs, source access, source editing/versioning/publication, runtime/media foundations and owner security remain intact.
 
-This document records the plan only. It does not claim that any phase above has been implemented or that production release has been approved.
+This plan's execution log distinguishes committed code from verified behavior. A code commit, successful page render or queued deployment does not prove build, Atlas, browser, accessibility or production readiness. Production release still requires the explicit gates in this document and the linked source/runtime/security authorities.
