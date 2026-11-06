@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useActionToast } from "@/app/providers/ActionToastProvider";
 import Link from "next/link";
 import {
+  AlertTriangle,
   ArrowUpRight,
   CheckCircle2,
   Plus,
@@ -24,6 +25,7 @@ const FILTERS = [
   { value: "missing", label: "No source" },
   { value: "draft", label: "Draft" },
   { value: "published", label: "Published" },
+  { value: "notGallery", label: "Not in gallery" },
 ];
 
 function getSourceState(item) {
@@ -68,6 +70,10 @@ function StateLabel({ state }) {
     },
     deleting: {
       label: "Cleanup pending",
+      className: "border-warning/40 bg-warning/10 text-warning",
+    },
+    "not-in-gallery": {
+      label: "Not in gallery",
       className: "border-warning/40 bg-warning/10 text-warning",
     },
   }[state];
@@ -152,9 +158,12 @@ export default function LabSourceInventory() {
       (result, item) => {
         result.total += 1;
         result[getSourceState(item)] += 1;
+        if (item.isCustom && item.publicationReadiness?.eligible !== true) {
+          result.notInGallery += 1;
+        }
         return result;
       },
-      { total: 0, missing: 0, setup: 0, draft: 0, published: 0 },
+      { total: 0, missing: 0, setup: 0, draft: 0, published: 0, notInGallery: 0 },
     );
   }, [items]);
 
@@ -166,7 +175,8 @@ export default function LabSourceInventory() {
         filter === "all" ||
         (filter === "missing" && state === "missing") ||
         (filter === "draft" && (state === "draft" || state === "setup")) ||
-        (filter === "published" && state === "published");
+        (filter === "published" && state === "published") ||
+        (filter === "notGallery" && item.isCustom && item.publicationReadiness?.eligible !== true);
       const matchesQuery =
         !normalizedQuery ||
         [item.title, item.slug, item.description].some((value) =>
@@ -256,7 +266,7 @@ export default function LabSourceInventory() {
             Experiment workspace
           </h2>
           <p className="mt-1 max-w-2xl text-xs leading-5 text-text-tertiary">
-            Manage the four built-in demos and create original experiments with private source workspaces.
+            Use New gallery experiment to create a new public card. Create source on a built-in row only adds protected code to that existing card. New custom cards stay private until their exact saved version is successfully built and published.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -265,7 +275,7 @@ export default function LabSourceInventory() {
             className="inline-flex h-9 items-center gap-2 bg-brand px-3 text-xs font-semibold text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           >
             <Plus size={14} aria-hidden="true" />
-            New experiment
+            New gallery experiment
           </Link>
           <button
           type="button"
@@ -283,12 +293,13 @@ export default function LabSourceInventory() {
         </div>
       </header>
 
-      <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
         {[
           { label: "Experiments", value: counts.total },
           { label: "No source", value: counts.missing },
           { label: "Drafts", value: counts.draft + counts.setup },
           { label: "Published", value: counts.published },
+          { label: "Custom not in gallery", value: counts.notInGallery },
         ].map((metric) => (
           <div key={metric.label} className="border border-border bg-surface-1 px-3 py-3">
             <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-text-tertiary">
@@ -354,7 +365,9 @@ export default function LabSourceInventory() {
               <article key={item.slug} className="flex flex-col gap-4 p-4 transition-colors hover:bg-surface-2/50 sm:flex-row sm:items-center sm:justify-between sm:px-5">
                 <div className="flex min-w-0 items-start gap-3">
                   <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center border border-border bg-background text-text-tertiary">
-                    {state === "published" ? (
+                    {item.isCustom && item.publicationReadiness?.eligible !== true ? (
+                      <AlertTriangle size={16} className="text-warning" aria-hidden="true" />
+                    ) : state === "published" ? (
                       <CheckCircle2 size={16} className="text-brand" aria-hidden="true" />
                     ) : state === "missing" ? (
                       <FolderPlus size={16} aria-hidden="true" />
