@@ -20,15 +20,16 @@ const ICONS = {
 };
 
 const STYLES = {
-  success: "border-brand/40 bg-surface-1 text-text-primary",
-  error: "border-warning/50 bg-surface-1 text-text-primary",
-  info: "border-border bg-surface-1 text-text-primary",
+  success: "border-success/40 bg-surface-1 text-text-primary",
+  error: "border-error/50 bg-surface-1 text-text-primary",
+  info: "border-info/40 bg-surface-1 text-text-primary",
 };
 
 const MAX_VISIBLE_TOASTS = 3;
 const MAX_PENDING_TOASTS = 20;
 const DEFAULT_DURATION = 4200;
 const MAX_DURATION = 10_000;
+const MIN_DURATION = 2500;
 const DEDUPE_WINDOW = 1600;
 
 function normalizeToast(type, message, options) {
@@ -42,23 +43,35 @@ function normalizeToast(type, message, options) {
     message: safeMessage,
     duration: Math.min(
       MAX_DURATION,
-      Math.max(2500, Number.isFinite(duration) && duration > 0 ? duration : DEFAULT_DURATION),
+      Math.max(
+        MIN_DURATION,
+        Number.isFinite(duration) && duration > 0 ? duration : DEFAULT_DURATION,
+      ),
     ),
   };
 }
 
 function ToastItem({ toast, onDismiss, reducedMotion }) {
-  const [paused, setPaused] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
   const timerRef = useRef(null);
   const startedAtRef = useRef(0);
   const remainingRef = useRef(toast.duration);
+  const onDismissRef = useRef(onDismiss);
   const Icon = ICONS[toast.type];
+  const paused = hovered || focused;
+
+  // Keep the timer callback fresh without restarting the timeout whenever the
+  // parent renders (for example, when another toast is added to the queue).
+  onDismissRef.current = onDismiss;
 
   useEffect(() => {
     if (paused) return undefined;
 
     startedAtRef.current = Date.now();
-    timerRef.current = window.setTimeout(onDismiss, remainingRef.current);
+    timerRef.current = window.setTimeout(() => {
+      onDismissRef.current?.();
+    }, remainingRef.current);
 
     return () => {
       if (timerRef.current !== null) {
@@ -70,14 +83,11 @@ function ToastItem({ toast, onDismiss, reducedMotion }) {
         );
       }
     };
-  }, [paused, onDismiss]);
-
-  const pauseTimer = () => setPaused(true);
-  const resumeTimer = () => setPaused(false);
+  }, [paused, toast.id]);
 
   return (
     <motion.li
-      layout
+      layout={!reducedMotion}
       initial={reducedMotion ? { opacity: 0 } : { opacity: 0, x: 26, scale: 0.97 }}
       animate={{ opacity: 1, x: 0, scale: 1 }}
       exit={reducedMotion
@@ -91,13 +101,14 @@ function ToastItem({ toast, onDismiss, reducedMotion }) {
       transition={reducedMotion
         ? { duration: 0.08 }
         : { layout: { type: "spring", stiffness: 420, damping: 34 }, duration: 0.22 }}
-      onMouseEnter={pauseTimer}
-      onMouseLeave={resumeTimer}
-      onFocusCapture={pauseTimer}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocusCapture={() => setFocused(true)}
       onBlurCapture={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) resumeTimer();
+        if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false);
       }}
-      role={toast.type === "error" ? "alert" : "status"}
+      role="group"
+      aria-label={toast.type + " notification"}
       className={
         "pointer-events-auto relative flex w-full items-start gap-3 overflow-hidden border px-3 py-3 shadow-xl shadow-black/15 " +
         STYLES[toast.type]
@@ -107,10 +118,10 @@ function ToastItem({ toast, onDismiss, reducedMotion }) {
         size={16}
         className={
           toast.type === "error"
-            ? "mt-0.5 shrink-0 text-warning"
+            ? "mt-0.5 shrink-0 text-error"
             : toast.type === "success"
-              ? "mt-0.5 shrink-0 text-brand"
-              : "mt-0.5 shrink-0 text-text-tertiary"
+              ? "mt-0.5 shrink-0 text-success"
+              : "mt-0.5 shrink-0 text-info"
         }
         aria-hidden="true"
       />
@@ -119,7 +130,7 @@ function ToastItem({ toast, onDismiss, reducedMotion }) {
         type="button"
         onClick={onDismiss}
         aria-label="Dismiss notification"
-        className="-mr-1 -mt-1 grid h-7 w-7 shrink-0 place-items-center text-text-tertiary transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand"
+        className="-mr-1 -mt-1 grid h-7 w-7 shrink-0 place-items-center text-text-tertiary transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand motion-reduce:transition-none"
       >
         <X size={14} aria-hidden="true" />
       </button>
@@ -129,7 +140,9 @@ function ToastItem({ toast, onDismiss, reducedMotion }) {
 
 export function ActionToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
+  const [announcement, setAnnouncement] = useState({ polite: "", assertive: "" });
   const sequence = useRef(0);
+  const announcementSequence = useRef(0);
   const recentMessages = useRef(new Map());
   const reducedMotion = useReducedMotion();
 
@@ -156,15 +169,22 @@ export function ActionToastProvider({ children }) {
     }
 
     sequence.current += 1;
+    announcementSequence.current += 1;
     const id = "lab-action-" + sequence.current;
     const toast = { ...normalized, id };
+    const messageForAnnouncement =
+      normalized.message + " Notification " + announcementSequence.current + ".";
+
+    setAnnouncement(normalized.type === "error"
+      ? { polite: "", assertive: messageForAnnouncement }
+      : { polite: messageForAnnouncement, assertive: "" });
 
     setToasts((current) => {
       const maxTotal = MAX_VISIBLE_TOASTS + MAX_PENDING_TOASTS;
       if (current.length < maxTotal) return [...current, toast];
 
-      // Preserve every visible notification. At capacity, discard only the
-      // oldest pending item so a new message can enter the FIFO queue.
+      // Keep currently visible messages; drop only the oldest queued message
+      // when the bounded FIFO queue reaches capacity.
       const pendingIndex = current.findIndex((item, index) => index >= MAX_VISIBLE_TOASTS);
       if (pendingIndex < 0) return current;
 
@@ -189,26 +209,28 @@ export function ActionToastProvider({ children }) {
     <ActionToastContext.Provider value={{ showToast, dismissToast }}>
       {children}
       <div
-        className="pointer-events-none fixed inset-x-3 bottom-3 z-[120] sm:inset-x-auto sm:right-5 sm:bottom-5 sm:w-[min(26rem,calc(100vw-2.5rem))]"
+        role="region"
         aria-label="Notifications"
+        className="pointer-events-none fixed inset-x-3 bottom-3 z-[120] sm:inset-x-auto sm:right-5 sm:bottom-5 sm:w-[min(26rem,calc(100vw-2.5rem))]"
       >
-        <ol
-          className="flex flex-col items-stretch gap-2"
-          aria-live="polite"
-          aria-relevant="additions"
-          aria-atomic="false"
-        >
-          <AnimatePresence initial={false} mode="popLayout">
+        <ol className="flex flex-col items-stretch gap-2" aria-live="off">
+          <AnimatePresence initial={false}>
             {visibleToasts.map((toast) => (
               <ToastItem
                 key={toast.id}
                 toast={toast}
                 onDismiss={() => dismissToast(toast.id)}
-                reducedMotion={reducedMotion}
+                reducedMotion={Boolean(reducedMotion)}
               />
             ))}
           </AnimatePresence>
         </ol>
+        <p className="sr-only" aria-live="polite" aria-atomic="true">
+          {announcement.polite}
+        </p>
+        <p className="sr-only" aria-live="assertive" aria-atomic="true">
+          {announcement.assertive}
+        </p>
         {queuedCount > 0 ? (
           <p className="sr-only" role="status">
             {queuedCount} additional notifications waiting.
