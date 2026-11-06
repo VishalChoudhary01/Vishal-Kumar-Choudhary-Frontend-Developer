@@ -1,6 +1,6 @@
 # Labs Owner Console — Analytics and Source Management Plan
 
-**Status:** Active execution plan. Phase 0 baseline re-audit is complete. Phase 1 route/navigation separation has been committed to `feat/labs-platform-integration`; Vercel Preview build is queued and verification remains pending. Phases 2–6 remain outstanding.  
+**Status:** Active execution plan. Phase 0 baseline re-audit is complete. Phase 1 Analytics/Source Library route separation is committed and its Vercel Preview build is READY; anonymous protected-route smoke tests pass. Authenticated owner-browser/accessibility QA remains pending. Phases 2–6 remain outstanding.  
 **Audited branch:** `feat/labs-platform-integration`  
 **Audited commit:** `3cfacf96ec6847e78fa2fc8f83b9bd18cd573fad`  
 **Audit date:** 2026-11-06  
@@ -331,16 +331,16 @@ Work in small phases with separate reviewable commits. Do not begin a later phas
 | Item | Status | Evidence / remaining check |
 |---|---|---|
 | Phase 0 repository/route/API/component audit | Complete | Re-audited branch head `db4691163fd0a98d39b4f81fb391996dad45f82c`; source page, inventory, source editor/import, analytics API/service, owner menu, theme tokens and MotionNumber inspected |
-| Dedicated Analytics route | Code committed | `src/app/admin/labs/analytics/page.js` reuses the existing server owner guard and the existing analytics aggregation/UI; Vercel Preview build still queued |
-| Source Library route | Code committed | `src/app/admin/labs/sources/page.js` now renders the existing `LabSourceInventory` without analytics |
-| Shared owner navigation | Code committed | `LabsOwnerNavigation` provides Analytics and Source Library destinations; account menu exposes both |
-| Legacy reporting-period bookmarks | Code committed | Valid `?days=7|30|90|365` requests on the Sources route forward to Analytics |
-| Owner verification return path | Code committed | Notice validates exact allowed owner return paths; source editor and import pass their own return destination |
+| Dedicated Analytics route | Build-verified | `src/app/admin/labs/analytics/page.js` reuses the existing server owner guard and analytics aggregation/UI; Preview deployment reached READY and its route manifest includes this route |
+| Source Library route | Build-verified | `src/app/admin/labs/sources/page.js` renders the existing `LabSourceInventory` without analytics; route manifest includes it |
+| Shared owner navigation | Build-verified | `LabsOwnerNavigation` provides Analytics and Source Library destinations; account menu contains both links. Authenticated owner-menu interaction still needs browser QA |
+| Legacy reporting-period bookmarks | Route smoke-tested | Anonymous request to a valid `?days=30` bookmark returns the login page with `returnTo=/admin/labs/analytics`; code forwards valid 7/30/90/365 values |
+| Owner verification return path | Build-verified / partly smoke-tested | Notice validates exact allowed owner return paths; source editor and import pass their own destination. Verification completion itself still needs an authenticated browser test |
 | Source creation-to-editor handoff | Not started | Remains Phase 4; current inventory create behavior is intentionally unchanged |
 | Custom experiment analytics + source event coverage | Not started | Remains Phase 2 |
 | Custom experiment metadata editor/PATCH | Not started | Remains Phase 3 |
 | Live polling, MotionNumber and richer chart | Not started | Remains Phase 5; current page still has the original non-live chart/static count treatment |
-| Build/browser/accessibility verification | Pending | Deployment `dpl_GrdoHvuZox1VFSpEHvNYXmDu6oEp` is queued; no successful build or browser QA is claimed |
+| Build and protected-route smoke test | Passed | Vercel deployment `dpl_4smAhYYqvrcgr5YpEnDUCDjoym69` for the application changes reached READY; route manifest includes both new owner routes and existing editor/import routes. Anonymous route checks confirm login return destinations for Analytics, Source Library and Import, and legacy `?days=30` forwarding |
 
 ### Additional authorization discrepancy found during audit
 
@@ -391,4 +391,4 @@ Resolve these decisions in the owning specification/API contract before implemen
 
 The owner can move between Analytics and Source Library without losing route context; the Source Library opens the existing source editor; experiment metadata has its own safe edit workflow; and Analytics displays only correctly instrumented, aggregate data that refreshes while visible. Existing public Labs, source access, source editing/versioning/publication, runtime/media foundations and owner security remain intact.
 
-This plan's execution log distinguishes committed code from verified behavior. A code commit, successful page render or queued deployment does not prove build, Atlas, browser, accessibility or production readiness. Production release still requires the explicit gates in this document and the linked source/runtime/security authorities.
+This plan's execution log distinguishes committed code from verified behavior. A successful build and anonymous protected-route smoke test do not prove authenticated owner browser behavior, Atlas correctness, accessibility or production readiness. Production release still requires the explicit gates in this document and the linked source/runtime/security authorities.
