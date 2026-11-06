@@ -1,6 +1,6 @@
 # Labs Public Page Redesign — Phased Plan
 
-**Status:** Phases 1–3 implementation committed; automated, build and visual verification remain pending. Phases 4–5 remain planned. Hero Motion, statistics count-up and authentication-aware CTAs are included in scope.  
+**Status:** Phases 1–4 implementation committed; automated, database-index, build and visual verification remain pending. Phase 5 remains planned. Hero Motion, statistics count-up and authentication-aware CTAs are included in scope.  
 **Branch:** `feat/labs-platform-integration`  
 **Updated:** 7 November 2026  
 **Scope:** Public `/labs` discovery page.  
@@ -311,14 +311,31 @@ Still pending:
 
 ### Phase 4 — Catalogue scaling and discovery behavior
 
-- Measure the route payload and card-rendering cost with the expected catalogue size.
-- Keep the category navigation unvirtualized.
-- If the catalogue has grown enough, introduce bounded server pagination with stable ordering and validated filters/search.
-- Evaluate virtualization only after pagination and only if profiling demonstrates a real remaining rendering bottleneck.
-- Add URL-backed filter/search state only with clear reset and back-navigation behavior.
-- Do not introduce sort options that depend on unavailable or misleading engagement values.
+<badge>Implementation committed — verification pending</badge>
 
-**Exit gate:** Large catalogues remain bounded, ordered, accessible and free of duplicates/skipped entries.
+Implemented:
+- Replaced the public route's unbounded custom experiment list query with an initial page of at most 18 eligible custom experiments plus the four code-owned built-ins.
+- Added `GET /api/v1/labs` with a fixed 18-item page size, category allow-list, validated cursor, and no client-controlled page-size override.
+- Added a server aggregation that first filters published custom experiment records by the validated category and stable keyset cursor, then joins the currently published source and the exact ready build artifact/version. Only eligible entries count toward the page limit or appear in the response.
+- Kept the listing projection limited to public display metadata and approved preview/artifact fields. Source file contents, drafts and owner-private fields are not serialized by the public list endpoint.
+- Added a stable keyset order of `publishedAt DESC, _id DESC`; `updatedAt` is intentionally not part of the cursor because it can change while a visitor paginates.
+- Added cursor validation for encoded payload shape, ISO publication date, ObjectId and maximum length. Empty, malformed and oversized cursors are rejected.
+- Applied the cursor match before source/artifact lookups to reduce work on subsequent pages. Added matching global and category compound indexes.
+- Added an explicit `npm run db:ensure-labs-public-indexes` provisioning script so the production MongoDB indexes can be deliberately created and verified.
+- Added full eligible custom category-count aggregation and merged those counts with built-in experiment counts. The hero count, collection total and category controls represent the full published collection—not only the first page.
+- Added `useLabPublicCollection` to cache the initial/all page and category-specific pages, fetch the next cursor only when the local loaded items have been revealed, and preserve the six-card reveal cadence.
+- Category navigation remains a small horizontally scrollable control and is not virtualized. Search, URL-backed filter state, speculative sort modes and a virtualization dependency were not added.
+- Added `tests/labs-public-pagination.test.mjs` for cursor validation/order, server eligibility-before-limit, route bounds, initial-page wiring, client page fetching and index alignment. Updated collection tests for the paginated data hook and complete server counts; all new suites are included in the production build chain.
+
+Still pending:
+- Run `npm run test:labs-public-pagination`, `npm run test:labs-public-collection` and the full existing Labs test suite.
+- Run `npm run db:ensure-labs-public-indexes` against the intended MongoDB environment and verify the indexes exist with the expected key order.
+- Run an Atlas/MongoDB integration check with more than 18 custom records, same-timestamp records, null publication dates, multiple categories, stale/missing source versions and missing/not-ready artifacts. Confirm page boundaries have no duplicates or omissions and ineligible records do not consume page slots.
+- Run `npm run lint`, SEO validation and the clean production build.
+- Inspect the initial route payload and successive pages in a Preview deployment; validate category switching, repeated navigation/cache, failed page retry, Like loading for subsequent cards, mobile keyboard access and screen-reader result announcements.
+- Profile a realistically large catalogue before considering any virtualization. The initial 18-item server page is a bounded query/payload target, not a guarantee that MongoDB aggregate latency has been measured.
+
+**Exit gate:** Large catalogues remain bounded, ordered, eligible, accessible and free of duplicates/skipped entries; deployed indexes and database boundary cases are verified.
 
 ### Phase 5 — Visual QA, accessibility and release verification
 
@@ -461,3 +478,23 @@ Changed:
 Preserved: experiment slug identity, real data only, shared preview renderer, existing LikeButton/API/engagement data, category filter semantics, six-item progressive reveal, non-executable public previews and the unchanged navbar.
 
 **Verification is not claimed:** The new tests, ESLint, production build, deployed Preview and browser visual/accessibility checks have not been run in this editing session.
+
+## 14. Phase 4 implementation progress — 7 November 2026
+
+**Status:** Code committed to feat/labs-platform-integration; automated tests, MongoDB index provisioning, integration checks, build and browser QA pending.
+
+Changed:
+- src/app/lib/labs/public-experiments.js — bounded eligibility aggregation and keyset page query.
+- src/app/lib/labs/public-experiment-cursor.mjs — validated publication-date/ObjectId cursor.
+- src/app/api/v1/labs/route.js — fixed-size public listing endpoint.
+- src/app/labs/page.js — initial bounded page, full eligible counts and server summary props.
+- src/app/hooks/labs/useLabPublicCollection.js — category page cache, server fetch, cursor continuation and six-card reveal.
+- src/app/components/labs/LabsCollection.js — paginated collection state, category loading and retry feedback.
+- src/app/lib/labs/category-options.mjs and src/app/hooks/labs/useLabCategoryFilter.js — server-complete counts in the category filter summary.
+- src/app/lib/labs/models/LabExperiment.js — compound page/cursor indexes.
+- scripts/ensure-labs-public-pagination-indexes.mjs and package.json — explicit DB index provisioning command.
+- tests/labs-public-pagination.test.mjs and updates to tests/labs-public-collection.test.mjs — cursor, query, route and UI contract coverage.
+
+Behavior preserved: built-in experiments remain code-owned and always included; custom records must match a current published source and exact ready artifact/version; page size is fixed server-side; category counts include the complete eligible collection; six cards are revealed per action; Like remains on its existing API; no category virtualization is introduced.
+
+**Verification is not claimed:** No pagination test, DB index creation, Atlas integration test, production build, or browser Preview was executed by these commits. The explicit index provisioning command must be run in the intended DB environment before production release.
