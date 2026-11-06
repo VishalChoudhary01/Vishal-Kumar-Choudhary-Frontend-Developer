@@ -1,5 +1,5 @@
 const SAFE_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const SAFE_ID = /^[a-f0-9-]{36}$/i;
+const SAFE_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SAFE_HASH = /^[a-f0-9]{64}$/;
 
 function isSafeArtifactFilePath(value) {
