@@ -36,23 +36,29 @@ function slugify(value) {
     .replace(/-+$/g, "");
 }
 
-function validateInput(input, user) {
+function validateExperimentMetadata(input, { strictTechnologies = false } = {}) {
   const title = typeof input?.title === "string" ? input.title.trim() : "";
   const description = typeof input?.description === "string" ? input.description.trim() : "";
   const explanation = typeof input?.explanation === "string" ? input.explanation.trim() : "";
   const category = typeof input?.category === "string" ? input.category.trim() : "";
 
-  if (!title || title.length > 100) fail("VALIDATION_ERROR", "Enter a title between 1 and 100 characters.");
-  if (!description || description.length > 500) fail("VALIDATION_ERROR", "Enter a description between 1 and 500 characters.");
-  if (explanation.length > 2000) fail("VALIDATION_ERROR", "The explanation must be 2,000 characters or fewer.");
+  if (!title || title.length > 100) {
+    fail("VALIDATION_ERROR", "Enter a title between 1 and 100 characters.");
+  }
+  if (!description || description.length > 500) {
+    fail("VALIDATION_ERROR", "Enter a description between 1 and 500 characters.");
+  }
+  if (explanation.length > 2000) {
+    fail("VALIDATION_ERROR", "The explanation must be 2,000 characters or fewer.");
+  }
   if (!LAB_CATEGORIES.some((item) => item.name === category)) {
     fail("VALIDATION_ERROR", "Choose one of the available Labs categories.");
   }
-
-  const requestedSlug = typeof input?.slug === "string" ? input.slug.trim().toLowerCase() : "";
-  const slug = requestedSlug || slugify(title);
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 80) {
-    fail("VALIDATION_ERROR", "Use a slug with lowercase letters, numbers and single hyphens.");
+  if (
+    strictTechnologies &&
+    (!Array.isArray(input?.technologies) || input.technologies.some((item) => typeof item !== "string"))
+  ) {
+    fail("VALIDATION_ERROR", "Technologies must be provided as a list of text values.");
   }
 
   const technologies = Array.isArray(input?.technologies)
@@ -66,17 +72,30 @@ function validateInput(input, user) {
     fail("VALIDATION_ERROR", "Add up to eight technologies, each 32 characters or fewer.");
   }
 
+  return {
+    title,
+    description,
+    explanation,
+    category,
+    technologies: uniqueTechnologies,
+  };
+}
+
+function validateInput(input, user) {
+  const metadata = validateExperimentMetadata(input);
+  const requestedSlug = typeof input?.slug === "string" ? input.slug.trim().toLowerCase() : "";
+  const slug = requestedSlug || slugify(metadata.title);
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 80) {
+    fail("VALIDATION_ERROR", "Use a slug with lowercase letters, numbers and single hyphens.");
+  }
+
   if (publishedLabExperiments.some((item) => item.slug === slug)) {
     fail("CONFLICT", "That slug is reserved by an existing Labs experiment.");
   }
 
   return {
     slug,
-    title,
-    description,
-    explanation,
-    category,
-    technologies: uniqueTechnologies,
+    ...metadata,
     kind: "custom",
     status: "draft",
     createdBy: user.id,
@@ -149,38 +168,6 @@ export async function createOwnerLabExperiment({ user, input }) {
   }
 }
 
-function validateMetadataInput(input) {
-  const title = typeof input?.title === "string" ? input.title.trim() : "";
-  const description = typeof input?.description === "string" ? input.description.trim() : "";
-  const explanation = typeof input?.explanation === "string" ? input.explanation.trim() : "";
-  const category = typeof input?.category === "string" ? input.category.trim() : "";
-
-  if (!title || title.length > 100) {
-    fail("VALIDATION_ERROR", "Enter a title between 1 and 100 characters.");
-  }
-  if (!description || description.length > 500) {
-    fail("VALIDATION_ERROR", "Enter a description between 1 and 500 characters.");
-  }
-  if (explanation.length > 2000) {
-    fail("VALIDATION_ERROR", "The explanation must be 2,000 characters or fewer.");
-  }
-  if (!LAB_CATEGORIES.some((item) => item.name === category)) {
-    fail("VALIDATION_ERROR", "Choose one of the available Labs categories.");
-  }
-  if (!Array.isArray(input?.technologies) || input.technologies.some((item) => typeof item !== "string")) {
-    fail("VALIDATION_ERROR", "Technologies must be provided as a list of text values.");
-  }
-
-  const technologies = [...new Set(
-    input.technologies.map((item) => item.trim()).filter(Boolean),
-  )];
-  if (technologies.length > 8 || technologies.some((item) => item.length > 32)) {
-    fail("VALIDATION_ERROR", "Add up to eight technologies, each 32 characters or fewer.");
-  }
-
-  return { title, description, explanation, category, technologies };
-}
-
 function serializeOwnerExperiment(experiment) {
   return {
     slug: experiment.slug,
@@ -239,7 +226,7 @@ export async function updateOwnerLabExperimentMetadata({
     fail("VALIDATION_ERROR", "The experiment update token is invalid.");
   }
 
-  const metadata = validateMetadataInput(input);
+  const metadata = validateExperimentMetadata(input, { strictTechnologies: true });
   const safeRequestId =
     typeof requestId === "string" && /^[A-Za-z0-9_-]{8,100}$/.test(requestId)
       ? requestId
