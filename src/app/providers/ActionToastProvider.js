@@ -147,9 +147,11 @@ export function ActionToastProvider({ children }) {
     if (previousAt && now - previousAt < DEDUPE_WINDOW) return null;
     recentMessages.current.set(dedupeKey, now);
 
-    if (recentMessages.current.size > 80) {
+    if (recentMessages.current.size > 100) {
       for (const [key, timestamp] of recentMessages.current) {
-        if (now - timestamp > DEDUPE_WINDOW) recentMessages.current.delete(key);
+        if (now - timestamp > DEDUPE_WINDOW || recentMessages.current.size > 100) {
+          recentMessages.current.delete(key);
+        }
       }
     }
 
