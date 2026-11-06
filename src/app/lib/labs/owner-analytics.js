@@ -159,10 +159,7 @@ export async function getLabsOwnerAnalytics({ user, days = 30 }) {
     throw error;
   }
 
-  const allowedDays = new Set([7, 30, 90, 365]);
-  const periodDays = allowedDays.has(Number(days)) ? Number(days) : 30;
-  const generatedAt = new Date();
-  const since = new Date(generatedAt.getTime() - periodDays * 24 * 60 * 60 * 1000);
+  const { periodDays, generatedAt, since } = normalizePeriod(days);
 
   await connectToDatabase();
   await ensureIndexes();
