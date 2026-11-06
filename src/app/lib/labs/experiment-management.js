@@ -343,13 +343,17 @@ export async function deleteOwnerLabExperiment({ user, slug, confirmSlug }) {
   const artifacts = await LabBuildArtifact.find({ experimentSlug: slug })
     .select("outputFiles")
     .lean();
-  const blobUrls = [...new Set(
-    artifacts.flatMap((artifact) =>
+  const blobUrls = [...new Set([
+    ...artifacts.flatMap((artifact) =>
       (artifact.outputFiles || [])
         .map((file) => file?.url)
         .filter((url) => typeof url === "string" && /^https:\/\//.test(url)),
     ),
-  )];
+    ...(typeof experiment.galleryPreview?.src === "string" &&
+    /^https:\/\//.test(experiment.galleryPreview.src)
+      ? [experiment.galleryPreview.src]
+      : []),
+  ])];
 
   if (blobUrls.length) {
     const token = process.env.BLOB_READ_WRITE_TOKEN;
