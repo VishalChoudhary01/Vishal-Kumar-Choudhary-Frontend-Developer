@@ -337,10 +337,25 @@ Work in small phases with separate reviewable commits. Do not begin a later phas
 | Legacy reporting-period bookmarks | Route smoke-tested | Anonymous request to a valid `?days=30` bookmark returns the login page with `returnTo=/admin/labs/analytics`; code forwards valid 7/30/90/365 values |
 | Owner verification return path | Build-verified / partly smoke-tested | Notice validates exact allowed owner return paths; source editor and import pass their own destination. Verification completion itself still needs an authenticated browser test |
 | Source creation-to-editor handoff | Not started | Remains Phase 4; current inventory create behavior is intentionally unchanged |
-| Custom experiment analytics + source event coverage | Not started | Remains Phase 2 |
+| Custom experiment analytics + source event coverage | Code committed / build-verified | Owner aggregation now combines code-owned experiments with published custom experiments whose source version matches a ready artifact; source-open/copy event validation accepts the same published custom catalogue. Atlas-backed reconciliation and verified event round-trip are still pending |
 | Custom experiment metadata editor/PATCH | Not started | Remains Phase 3 |
-| Live polling, MotionNumber and richer chart | Not started | Remains Phase 5; current page still has the original non-live chart/static count treatment |
+| Complete daily date buckets | Code committed / build-verified | Analytics now emits a complete UTC date series with zero-activity days; zero-value days render zero-height bars and the empty state checks actual activity | 
+| Live polling, MotionNumber and richer chart | Not started | Remains Phase 5; the current page still uses its original server-loaded chart and static count treatment |
 | Build and protected-route smoke test | Passed | Vercel deployment `dpl_4smAhYYqvrcgr5YpEnDUCDjoym69` for the application changes reached READY; route manifest includes both new owner routes and existing editor/import routes. Anonymous route checks confirm login return destinations for Analytics, Source Library and Import, and legacy `?days=30` forwarding |
+
+### Phase 2 initial code progress — 2026-11-06
+
+| Item | Status | Evidence / remaining check |
+|---|---|---|
+| Built-in + custom analytics catalogue | Code committed / build-verified | Owner analytics now combines the static built-in catalogue with `getPublishedCustomLabExperiments()`, which includes only published custom experiments whose current source pointer matches a ready artifact |
+| Custom source-open/copy event validation | Code committed / build-verified | Source-event route uses the same published custom experiment resolver; the existing verified-session, same-origin, source-version/file validation and event-id deduplication remain in place |
+| Complete UTC daily series | Code committed / build-verified | Server aggregation emits each UTC calendar date across the rolling period; missing dates contain zero values |
+| Zero-data chart behavior | Code committed / build-verified | Chart distinguishes no activity from an empty date array and renders zero-height bars for zero activity |
+| Atlas reconciliation | Pending | Verify real custom experiment documents, source heads, immutable versions, ready artifacts, likes and event counts against expected aggregates |
+| Verified custom event round-trip | Pending | Use an actual published custom experiment and verified test account; verify source-open after successful source response, clipboard-success copy, exact source version and replayed event IDs |
+| Experiment detail views and preview events | Not started | Keep unavailable until qualifying-view/deduplication rules and successful runtime-start signals are approved and implemented |
+
+The READY Preview deployment used commit `782d276d0a44dde14bbcf0c9fae5d4a5615afc0e`. Next verification requires provisioned Atlas data and an authenticated verified test account; do not infer production data correctness from compilation.
 
 ### Additional authorization discrepancy found during audit
 
