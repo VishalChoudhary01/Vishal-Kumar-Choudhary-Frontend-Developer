@@ -201,7 +201,7 @@ The collection event query bounds both ends of the selected reporting window (`s
 
 **Interaction and accessibility**
 - The six metric controls are native buttons with aria-pressed, visible focus and keyboard access.
-- Give the canvas an accessible name/description identifying selected metric and period. Retain an equivalent HTML table behind a labelled disclosure; it contains the same daily/weekly values and totals.
+- Give the canvas an accessible name/description identifying selected metric and period. Chart.js notes its canvas pixels are not inherently accessible to screen readers, so retain an equivalent HTML table behind a labelled disclosure; it contains the same daily/weekly values and totals. See [Chart.js accessibility guidance](https://www.chartjs.org/docs/latest/general/accessibility.html).
 - The selected-point date/value readout is regular DOM text, not canvas-only text.
 - Hover and touch inspection are optional. The table and metric controls remain usable without a pointer.
 - Respect reduced motion, light/dark theme, 200% zoom and narrow mobile widths without page-level horizontal scrolling.
@@ -210,9 +210,9 @@ The collection event query bounds both ends of the selected reporting window (`s
 
 | Candidate | Assessment for this dashboard | Decision |
 |---|---|---|
-| Chart.js 4.6.1 | MIT; canvas renderer; standard categorical bar charts, zero-based axes, tooltips and responsive sizing; appropriate for daily/weekly historical counts | **Selected for implementation spike** |
-| Liveline 0.0.7 | MIT canvas renderer, crosshair scrubbing, `onHover`, and points shaped as `{ time: unixSeconds, value }`; it can receive historical points, but its UX and time-window controls are real-time oriented, its current version remains 0.x, and a canvas still needs an external accessible table/controls | Keep as an option for a future true streaming/tick chart, not this daily/weekly historical count chart |
-| ApexCharts | Rich line/bar/time-series features. Its current license distinguishes free Community use, paid Commercial use, and OEM/redistribution when interactive charts are embedded in a product/platform used by others; this owner-only dashboard does not need that licensing uncertainty | Do not select; use MIT-licensed Chart.js instead |
+| [Chart.js 4.6.1](https://www.npmjs.com/package/chart.js) | MIT; canvas renderer; standard categorical bar charts, zero-based axes, tooltips and responsive sizing; appropriate for daily/weekly historical counts | **Selected for implementation spike** |
+| [Liveline 0.0.7](https://github.com/benjitaylor/liveline) | MIT canvas renderer, crosshair scrubbing, `onHover`, and points shaped as `{ time: unixSeconds, value }`; it can receive historical points, but its line/interpolation and seconds-window controls are optimized for real-time feeds, its version remains 0.x, and a canvas still needs external accessible table/controls | Strong future choice for streaming ticks; not selected for these discrete daily/weekly counts |
+| [ApexCharts](https://apexcharts.com/license/) | Rich line/bar/time-series features. Its current model has a free Community tier only for qualifying organisations below the stated USD 2M resource threshold, paid Commercial licensing for larger organisations, and OEM/redistribution licensing for interactive charts embedded in products/platforms used by others | Not selected; Chart.js MIT terms are simpler for this project and avoid a future distribution-tier ambiguity |
 | Hand-built Canvas 2D | Full visual control, but we would own axis ticks, date scales, hit testing, tooltips, resizing, high-DPI rendering, touch and accessibility fallback | Only fallback if Chart.js fails the spike; do not rebuild a chart engine prematurely |
 
 **Implementation spike before package adoption**
