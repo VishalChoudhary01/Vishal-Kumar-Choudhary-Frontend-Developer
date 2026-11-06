@@ -1,6 +1,6 @@
 # Design Specification — Analytics Dashboard
 
-**Status:** Product/design authority. Dedicated Analytics/Source Library routes, custom published-experiment aggregation/source-event validation, metadata editor, create-to-workspace handoff and the first live Analytics dashboard are committed. A READY Preview build verifies the server-first dashboard, 10-second visible-tab polling, MotionNumber counters and four-series motion chart; anonymous protected-route smoke checks pass. Authenticated owner refresh, Atlas event reconciliation and visual/accessibility QA remain pending. Experiment-view/preview instrumentation, rankings and experiment-specific analytics remain incomplete. This document defines the analytics experience and metric semantics; delivery order is in [the Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md).  
+**Status:** Product/design authority. Dedicated Analytics/Source Library routes, custom published-experiment aggregation/source-event validation, metadata editor, create-to-workspace handoff and the first live Analytics dashboard are committed. A READY Preview build verifies the server-first dashboard, 10-second visible-tab polling, MotionNumber counters and four-series motion chart; anonymous protected-route smoke checks pass. Authenticated owner refresh, Atlas event reconciliation and visual/accessibility QA remain pending. Deterministic rankings for instrumented source opens, code copies and current active likes, plus a slug-scoped experiment analytics detail page/API, are now implemented in code; the latest Preview build is pending. Public experiment-view/preview instrumentation and global ranking by views remain incomplete. This document defines the analytics experience and metric semantics; delivery order is in [the Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md).  
 **Related:** [PRD](./PRD.md), [Admin design](./DESIGN-ADMIN.md), [Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md)
 
 ## 1. Purpose
@@ -142,14 +142,16 @@ This section maps the analytics design to the current Labs code. Metric meanings
 - `GET /api/v1/admin/labs/analytics?days=7|30|90|365` returns owner-only aggregate source engagement.
 - The current model records source opens, successful code-copy reports, verified like/unlike state transitions and anonymous guest-like actions.
 - The current page renders metric cards, a sparse daily bar chart, an experiment summary table and like activity. It is server-loaded and does not automatically refresh.
-- The owner analytics aggregation now combines the code-owned published catalogue with `getPublishedCustomLabExperiments()`. A custom row is included only when its experiment is published and its published source pointer matches a ready artifact. This code is Preview build-verified; reconcile against real Atlas records before trusting production totals.
+- The owner analytics aggregation now combines the code-owned published catalogue with `getPublishedCustomLabExperiments()`. A custom row is included only when its experiment is published and its published source pointer matches a ready artifact. Reconcile against real Atlas records before trusting production totals.
+- Collection analytics now returns deterministic top-five rankings for source opens and copies in the selected period, plus current active likes. Ties are ordered by title and then slug; zero-value entries are omitted. Active-like ranking is current state, not period activity.
+- `/admin/labs/analytics/[slug]` and `GET /api/v1/admin/labs/analytics/:slug` provide a private aggregate detail view for one published built-in or eligible custom experiment. It reports only measured source opens, per-experiment distinct verified accounts, copies, verified/anonymous like actions, current active likes and UTC daily trends. Preview build verification and authenticated Atlas reconciliation are pending.
 - Experiment detail views, preview starts and preview interactions are requirements, not currently instrumented event types. They must not be represented as zero-valued live metrics.
 - The project's `MotionNumber` component and `motion/react` are the existing count-animation foundation. Reuse them; do not add a second counter system.
 
 ### Target page ownership
 
 - `/admin/labs/analytics` owns collection-wide metrics, trends and rankings.
-- `/admin/labs/analytics/[slug]` owns the selected experiment's aggregate analytics.
+- `/admin/labs/analytics/[slug]` owns the selected experiment's aggregate analytics (code implemented; latest Preview build verification pending).
 - `/admin/labs/sources` owns the source inventory only; it links to the existing source workspace and the metadata editor where appropriate.
 - `/admin/labs/sources/[slug]` remains the source-code editing/version/publication workspace.
 
@@ -189,6 +191,8 @@ Use existing semantic theme tokens and the admin design system. Keep series iden
 - [x] Add visible-tab 10-second polling, no-overlap/abort/backoff and truthful stale/error state (Preview build verified; authenticated refresh round-trip remains pending).
 - [x] Add complete UTC date buckets including zero-activity days.
 - [x] Add four-series trends for currently instrumented events, MotionNumber counters and an accessible daily table (Preview build verified).
-- [ ] Add aggregate rankings and experiment-specific analytics detail route.
+- [x] Add deterministic rankings for currently instrumented source opens, copies and current active likes (code committed; Preview build verification pending).
+- [x] Add owner-only aggregate experiment analytics API and `/admin/labs/analytics/[slug]` detail page (code committed; Preview build verification pending).
+- [ ] Add public experiment-view and preview-event instrumentation before ranking by views or showing those metrics.
 - [ ] Verify chart accessibility, responsive layout, reduced motion and light/dark semantic contrast in an authenticated browser.
 - [ ] Approve retention/account-deletion policy before production analytics release.
