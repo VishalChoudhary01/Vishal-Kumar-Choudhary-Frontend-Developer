@@ -299,6 +299,9 @@ export async function GET(request, { params }) {
     const assetUrl = isPosterRequest
       ? poster?.status === "ready" &&
         poster.path === "__preview/gallery-poster.png" &&
+        poster.captureVersion === "playwright-chromium-v1" &&
+        poster.playwrightVersion === "1.65.0" &&
+        poster.browserVersion === "158.0.8127.18" &&
         poster.contentType === "image/png" &&
         poster.byteSize > 0 && poster.byteSize <= 8 * 1024 * 1024 &&
         poster.width === 1200 && poster.height === 900 &&
