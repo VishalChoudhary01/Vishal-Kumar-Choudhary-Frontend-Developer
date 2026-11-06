@@ -387,7 +387,7 @@ export default function LabSourceInventory() {
                 </div>
 
                 <div className="flex shrink-0 items-center gap-2 pl-12 sm:pl-0">
-                  {item.isCustom ? (
+                  {item.isCustom && item.lifecycleStatus !== "deleting" ? (
                     <Link
                       href={"/admin/labs/experiments/" + encodeURIComponent(item.slug) + "/edit"}
                       aria-label={"Edit details for " + item.title}
