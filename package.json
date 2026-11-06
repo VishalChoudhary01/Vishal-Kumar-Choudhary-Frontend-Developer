@@ -7,7 +7,8 @@
     "build": "node scripts/validate-seo.cjs && next build",
     "start": "next start",
     "lint": "eslint",
-    "validate:seo": "node scripts/validate-seo.cjs"
+    "validate:seo": "node scripts/validate-seo.cjs",
+    "test:labs-analytics": "node --test tests/labs-owner-analytics.test.mjs"
   },
   "dependencies": {
     "@better-auth/infra": "^0.4.26",
