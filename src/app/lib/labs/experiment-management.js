@@ -270,6 +270,9 @@ export async function updateOwnerLabExperimentMetadata({
         fail("CONFLICT", "This experiment was updated elsewhere. Reload before saving your changes.");
       }
 
+      const nextUpdatedAt = new Date(
+        Math.max(Date.now(), new Date(current.updatedAt).getTime() + 1),
+      );
       const result = await LabExperiment.updateOne(
         {
           _id: current._id,
@@ -277,8 +280,14 @@ export async function updateOwnerLabExperimentMetadata({
           status: { $ne: "deleting" },
           updatedAt: current.updatedAt,
         },
-        { $set: { ...metadata, updatedBy: user.id } },
-        { session, runValidators: true },
+        {
+          $set: {
+            ...metadata,
+            updatedBy: user.id,
+            updatedAt: nextUpdatedAt,
+          },
+        },
+        { session, runValidators: true, timestamps: false },
       );
 
       if (result.modifiedCount !== 1) {
