@@ -630,7 +630,7 @@ export async function saveOwnerLabGalleryPreview({ user, slug, assetId, altText 
       type: "authenticated",
     });
   } catch {
-    fail("MEDIA_PROVIDER_ERROR", "The private preview image could not be verified with Cloudinary.");
+    fail("MEDIA_PROVIDER_ERROR", "The private media asset could not be verified with Cloudinary.");
   }
 
   const format = String(remote?.format || "").toLowerCase();
@@ -669,26 +669,26 @@ export async function saveOwnerLabGalleryPreview({ user, slug, assetId, altText 
       signal: AbortSignal.timeout(15000),
     });
   } catch {
-    fail("MEDIA_PROVIDER_ERROR", "Cloudinary could not deliver the private image for safe promotion.");
+    fail("MEDIA_PROVIDER_ERROR", "Cloudinary could not deliver the private media asset for safe promotion.");
   }
   if (!download.ok) {
     fail("MEDIA_PROVIDER_ERROR", "Cloudinary could not deliver the private image for safe promotion.");
   }
 
   const contentLength = Number(download.headers.get("content-length") || 0);
-  if (contentLength > GALLERY_PREVIEW_MAX_BYTES) {
-    fail("MEDIA_INVALID", "The gallery preview image exceeds the 5 MB size limit.");
+  if (contentLength > configuredMaxBytes) {
+    fail("MEDIA_INVALID", "The selected gallery media exceeds the configured Labs upload limit.");
   }
 
   let bytes;
   try {
     bytes = Buffer.from(await download.arrayBuffer());
   } catch {
-    fail("MEDIA_PROVIDER_ERROR", "The private image could not be read.");
+    fail("MEDIA_PROVIDER_ERROR", "The private media asset could not be read.");
   }
   if (
     bytes.length === 0 ||
-    bytes.length > GALLERY_PREVIEW_MAX_BYTES ||
+    bytes.length > configuredMaxBytes ||
     bytes.length !== remoteBytes ||
     !matchesGalleryMediaSignature(bytes, format)
   ) {
@@ -714,20 +714,20 @@ export async function saveOwnerLabGalleryPreview({ user, slug, assetId, altText 
       },
     );
   } catch {
-    fail("ARTIFACT_STORAGE_ERROR", "The public gallery image could not be stored.");
+    fail("ARTIFACT_STORAGE_ERROR", "The public gallery media could not be stored.");
   }
 
   let publicUrl;
   try {
     publicUrl = new URL(stored.url);
   } catch {
-    fail("ARTIFACT_STORAGE_ERROR", "The gallery image provider returned an invalid public URL.");
+    fail("ARTIFACT_STORAGE_ERROR", "The gallery media provider returned an invalid public URL.");
   }
   if (
     publicUrl.protocol !== "https:" ||
     !publicUrl.hostname.endsWith(".public.blob.vercel-storage.com")
   ) {
-    fail("ARTIFACT_STORAGE_ERROR", "The gallery image provider returned an unsupported public URL.");
+    fail("ARTIFACT_STORAGE_ERROR", "The gallery media provider returned an unsupported public URL.");
   }
 
   const galleryPreview = {
