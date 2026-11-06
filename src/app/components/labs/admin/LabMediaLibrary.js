@@ -148,7 +148,7 @@ export default function LabMediaLibrary({ slug }) {
         body: JSON.stringify({
           assetId,
           altText: galleryPreviewAlt,
-          fit: "cover",
+          fit: "contain",
         }),
       });
       const data = await readJson(response);
