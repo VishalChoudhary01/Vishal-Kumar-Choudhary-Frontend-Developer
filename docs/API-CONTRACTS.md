@@ -1,6 +1,6 @@
 # API Contracts, Domain Schemas and Endpoint Ownership
 
-**Status:** Labs auth, public source/engagement, owner source/editor lifecycle, initial owner analytics, media and compiler endpoints are recorded as implemented only where verified in `feat/labs-platform-integration`. Dedicated `/admin/labs/analytics` and `/admin/labs/sources` pages, shared owner navigation and account-menu links are committed and Preview build-verified; authenticated owner-browser QA remains pending. Custom published experiment aggregation and source-open/copy event validation are also committed and Preview build-verified; Atlas-backed reconciliation remains pending. Metadata-edit PATCH remains planned. Generated poster capture, role-aware media attachments and public gallery preview metadata remain target contracts, not completed behavior. See `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md` and `LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md`.  
+**Status:** Labs auth, public source/engagement, owner source/editor lifecycle, initial owner analytics, media and compiler endpoints are recorded as implemented only where verified in `feat/labs-platform-integration`. Dedicated `/admin/labs/analytics` and `/admin/labs/sources` pages, shared owner navigation and account-menu links are committed and Preview build-verified; authenticated owner-browser QA remains pending. Custom published experiment aggregation/source-event validation and the owner-only custom experiment metadata PATCH/editor are also committed and Preview build-verified. Atlas-backed analytics reconciliation and authenticated metadata save/conflict tests remain pending. Generated poster capture, role-aware media attachments and public gallery preview metadata remain target contracts, not completed behavior. See `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md` and `LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md`.  
 **Related:** ARCHITECTURE.md, PROJECT-STRUCTURE.md, PRD.md
 
 ## 1. Contract rules
@@ -271,7 +271,7 @@ For each endpoint/action, test:
 
 ## 9. Owner-only Labs source-management contracts
 
-**Status:** The owner-only source-management routes below are present on `feat/labs-platform-integration`. The owner Analytics GET endpoint and initial source-engagement aggregation are also present. The new metadata-update PATCH contract and separated owner Analytics UI routes are planned additions, not implemented endpoints. Route/page delivery order is defined in `LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md`.
+**Status:** The owner-only source-management routes, separated Analytics/Source Library pages and custom experiment metadata edit page are present on `feat/labs-platform-integration`. The owner Analytics GET endpoint and initial source-engagement aggregation are also present. The metadata PATCH route is implemented and Preview build-verified; authenticated owner save/stale-conflict and Atlas audit verification remain pending. Route/page delivery order is defined in `LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md`.
 
 ### Owner authorization prerequisite
 
@@ -295,9 +295,11 @@ For each endpoint/action, test:
 | Unpublish source | `POST /api/v1/admin/labs/sources/:slug/unpublish` | Clears published pointer; preserves immutable versions, audit and engagement events |
 | Read source audit | `GET /api/v1/admin/labs/sources/:slug/audit` — implemented | Owner-only paginated append-only audit metadata |
 | Owner source analytics | `GET /api/v1/admin/labs/analytics?days=7|30|90|365` — implemented | Owner-only aggregate source opens, unique verified accounts per experiment, copy actions, active likes and like/unlike actions |
-| Update custom experiment metadata | `PATCH /api/v1/admin/labs/experiments/:slug` — planned | Owner-only, same-origin update of title, description, explanation, category and technologies only; slug and system/publication/source fields are immutable in this operation |
+| Read custom experiment metadata | Server Component calls `getOwnerLabExperiment({ user, slug })` — implemented | Owner-only metadata DTO; custom experiments only; excludes source contents, media internals and private release data |
+| Update custom experiment metadata | `PATCH /api/v1/admin/labs/experiments/:slug` — implemented | Owner-only, same-origin update of title, description, explanation, category and technologies only; slug and system/publication/source fields are excluded; optimistic concurrency via expected `updatedAt`; appends `experiment_metadata_updated` audit event |
+| Delete custom experiment | `DELETE /api/v1/admin/labs/experiments/:slug` — existing | Retains the existing guarded custom-experiment deletion and associated cleanup workflow |
 
-The listed source endpoints are part of the existing Labs implementation on the audited branch. The PATCH row is a target addition, not an existing route. These Labs operations do not authorize a general portfolio CMS. Keep mutations in the server-side experiment/source domain services; do not let client components call Mongoose directly.
+The listed Labs endpoints are part of the implementation on the audited branch. Metadata reads use the server-side experiment-management domain service; metadata mutation and existing deletion share the dynamic experiment route while preserving separate HTTP methods. The metadata PATCH is not a source-version mutation and does not advance a source or release pointer. These Labs operations do not authorize a general portfolio CMS. Keep mutations in the server-side experiment/source domain services; do not let client components call Mongoose directly.
 
 ### Domain invariants
 
