@@ -23,8 +23,9 @@ export default function LabSourceLivePreview({ slug, files }) {
   useEffect(() => {
     const onMessage = (event) => {
       if (!frameRef.current || event.source !== frameRef.current.contentWindow) return;
-      if (frameOrigin && event.origin !== frameOrigin && event.origin !== "null") return;
+      if (!frameOrigin || event.origin !== frameOrigin) return;
       if (!event.data || typeof event.data !== "object") return;
+      if (!run?.runId || event.data.runId !== run.runId) return;
 
       if (event.data.type === "labs-preview-ready") {
         setStatus("ready");
@@ -52,7 +53,7 @@ export default function LabSourceLivePreview({ slug, files }) {
 
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [frameOrigin, status]);
+  }, [frameOrigin, run?.runId, status]);
 
   useEffect(() => {
     if (!run?.runId || (status !== "starting" && status !== "loading")) return undefined;
@@ -60,7 +61,7 @@ export default function LabSourceLivePreview({ slug, files }) {
     const timeout = window.setTimeout(() => {
       setStatus("failed");
       setRuntimeError("The preview did not become ready. Check the console and run the project again.");
-    }, 15000);
+    }, 30000);
 
     return () => window.clearTimeout(timeout);
   }, [run?.runId, status]);
@@ -68,6 +69,9 @@ export default function LabSourceLivePreview({ slug, files }) {
   async function runPreview() {
     setBusy(true);
     setStatus("building");
+    // Unmount the previous iframe before compiling. A late message from that
+    // run must never mark the next source revision as ready.
+    setRun(null);
     setLogs([]);
     setError("");
     setRuntimeError("");
