@@ -412,7 +412,9 @@ export async function buildAndStoreOwnerLabRelease({ slug, user, version }) {
     fail("SOURCE_HASH_MISMATCH", "The saved source changed. Reload the editor before publishing.");
   }
 
-  const sandbox = await createCompilerSandbox({ timeout: 5 * 60 * 1000 });
+  // Leave time for the route to validate and commit the published pointer.
+  // The API handler is capped at 300s; this worker is capped at 240s.
+  const sandbox = await createCompilerSandbox({ timeout: 4 * 60 * 1000 });
   let uploaded = [];
   try {
     const result = await executeBuild(sandbox, files, { base: "./" });
