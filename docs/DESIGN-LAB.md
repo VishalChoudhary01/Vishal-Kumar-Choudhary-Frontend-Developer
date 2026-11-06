@@ -235,3 +235,10 @@ Do not invent these items as locked decisions. The source-management specificati
 The phased public discovery-page redesign is tracked in **[Labs Public Page Redesign — Phased Plan](./LABS-PUBLIC-PAGE-REDESIGN-PLAN.md)**. It defines the hero, featured experiment, collection/card hierarchy, authentication-aware hero actions, reduced-motion statistics animation, category navigation and catalogue scaling.
 
 The existing Labs navbar is explicitly out of scope. The public route must continue to show only eligible published experiments, with the shared preview-media precedence and no executable source in gallery cards. The redesign plan does not replace this document's runtime, source-access, publication, engagement, privacy or media contracts.
+
+
+## 15. Phase 1 public Labs hero implementation record
+
+The hero implementation is now present on `feat/labs-platform-integration`. It adds the animated connected-node illustration, responsive hero layout, one-time real-data statistics count-up and server-resolved auth-state CTAs. The detailed behavior, file list and pending acceptance checks are recorded in **[Labs Public Page Redesign — Phased Plan](./LABS-PUBLIC-PAGE-REDESIGN-PLAN.md)**.
+
+This implementation does not modify the shared navbar or any experiment, detail-page, source-access, publishing, media, Like or owner-workspace behavior. It is not considered accepted/release-ready until the automated, build and browser verification gates in the phased plan pass.
