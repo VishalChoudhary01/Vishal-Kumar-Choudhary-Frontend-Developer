@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run test:labs-monaco && npm run test:labs-media && npm run test:labs-analytics && node scripts/validate-seo.cjs && next build",
+    "build": "npm run test:labs-monaco && npm run test:labs-source-reader && npm run test:labs-media && npm run test:labs-analytics && node scripts/validate-seo.cjs && next build",
     "start": "next start",
     "lint": "eslint",
     "validate:seo": "node scripts/validate-seo.cjs",
@@ -12,7 +12,8 @@
     "test:labs-media": "node --test tests/labs-preview-media.test.mjs",
     "predev": "node scripts/copy-monaco-assets.mjs",
     "prebuild": "node scripts/copy-monaco-assets.mjs",
-    "test:labs-monaco": "node --test tests/labs-monaco-config.test.mjs"
+    "test:labs-monaco": "node --test tests/labs-monaco-config.test.mjs",
+    "test:labs-source-reader": "node --test tests/labs-protected-source-reader.test.mjs"
   },
   "dependencies": {
     "@better-auth/infra": "^0.4.26",
