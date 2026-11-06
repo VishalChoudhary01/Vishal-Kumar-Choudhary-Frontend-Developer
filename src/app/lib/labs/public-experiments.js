@@ -48,6 +48,9 @@ function toPublicExperiment(experiment, artifact) {
   }
 
   const generatedPosterReady = artifact.previewPoster?.status === "ready" &&
+    artifact.previewPoster?.captureVersion === "playwright-chromium-v1" &&
+    artifact.previewPoster?.playwrightVersion === "1.65.0" &&
+    artifact.previewPoster?.browserVersion === "158.0.8127.18" &&
     artifact.previewPoster?.path === "__preview/gallery-poster.png" &&
     artifact.previewPoster?.contentType === "image/png" &&
     artifact.previewPoster?.width === 1200 &&
