@@ -15,7 +15,7 @@
 2. **React TypeScript/TSX is a first-class mode.** The `React TSX` starter creates `src/main.tsx`, `src/App.tsx` and a generated strict TypeScript configuration. `tsc --noEmit` must pass before Vite builds the browser bundle. Invalid types block the preview with diagnostics.
 3. **Static HTML/CSS/JavaScript is a separate mode.** It preserves the HTML document, inline `<style>` and `<script>` blocks, and compiles linked CSS/JS assets. CSS-only experiments receive a generated HTML entry. Static projects are not wrapped in React.
 4. **Mode detection is deterministic.** A valid React entry structure or a single JSX/TSX component selects React mode. Otherwise the compiler selects static mode. Ambiguous multi-HTML projects must provide an explicit root `index.html`.
-5. **Run, publish and poster capture use one versioned build contract.** Owner Run compiles and executes the current working copy in an isolated sandbox. Publish rebuilds the exact saved source version and stores its immutable artifact. A static gallery poster is captured from a successfully rendered artifact and tied to that release. Uploaded media may be selected as the card preview; media never replaces the owner Run workflow or a working public detail runtime.
+5. **Run and publish use one versioned build contract.** Owner Run compiles and executes the current working copy in an isolated sandbox. Publish rebuilds the exact saved source version and stores its immutable artifact. The currently implemented gallery poster is an owner-selected still image promoted to public storage and tied to that exact release; automatic capture from a successfully rendered artifact is a deferred phase. Media never replaces the owner Run workflow or a working public detail runtime.
 
 ---
 
@@ -133,7 +133,7 @@ The editor and compiler dependencies remain lazy-loaded from owner-only routes. 
 
 ### 2.2 Public Labs listing
 
-Each listing card shows experiment metadata and one visual preview. Preview selection is deterministic: an explicitly attached `gallery-preview` asset wins; otherwise use the generated static poster for the currently published source/artifact version; if neither exists, use the existing LabArtwork or a neutral placeholder. Never show a stale poster from a different published source version.
+Each listing card shows experiment metadata and one visual preview. For a custom published experiment the current implementation uses an owner-promoted `galleryPreview` only when its artifact and source-version IDs match the currently published release; otherwise it uses existing LabArtwork/neutral artwork. Automatic generated screenshot posters and public GIF/video gallery delivery are not implemented. Never show a stale poster from a different published source version.
 
 A gallery card is **always non-executable**. It must not mount the experiment React component, create a runtime iframe, invoke the compiler, or start a canvas/animation loop. A static generated poster lets HTML/CSS/JS and React experiments display their real output without running code in the gallery. A manually uploaded image/GIF/video can be selected as the gallery visual instead, but it remains media, not executable source.
 
@@ -314,7 +314,7 @@ Uploaded media and generated code posters are separate presentation assets; neit
 - `detail-gallery`: optional ordered supporting media shown separately from the interactive canvas on the public detail page. Exact item limit/order controls remain subject to the media migration.
 - `runtime-fallback`: at most one optional image/GIF/video shown only when the detail runtime fails or is unsupported.
 
-When no `gallery-preview` is selected, the card uses a generated static screenshot from the exact published code artifact. If poster capture is unavailable, the card uses existing LabArtwork/neutral artwork. This means every custom experiment can have a code-derived visual even when no GIF, MP4 or image has been uploaded.
+When no current owner-promoted `galleryPreview` matches the published artifact/version, the card uses existing LabArtwork/neutral artwork. Automatic static screenshot capture from the published code artifact remains planned, not implemented.
 
 The public detail page always attempts the actual published code runtime as its primary experience. A working runtime must not be hidden by a media attachment. Detail-gallery media is supplementary; runtime-fallback media is used only after an explicit failure/unsupported state. If no fallback exists, show a themed error/unsupported state—not a blank white rectangle.
 
@@ -819,7 +819,7 @@ Implemented on this branch:
 
 - New `src/app/components/labs/LabExperimentPreview.js` centralizes static preview selection for discovery surfaces.
 - The card gallery and featured experiment both use this component.
-- It checks the selected `galleryPreview`, legacy `thumbnail`, and future `generatedPoster` references, then falls back to `LabArtwork`.
+- It checks the selected public `galleryPreview` (which is accepted only for the exact published artifact/version), legacy `thumbnail`, and any future `generatedPoster` reference, then falls back to `LabArtwork`.
 - It renders only a static image/artwork. It does not import the runtime registry, mount React experiment components, create iframes or compile source.
 
 This unifies the **static preview presentation**, but it does not itself generate a code poster. Generated poster capture and release-bound poster metadata remain a separate implementation phase below.
@@ -1187,7 +1187,7 @@ The code confirms there is no capture stage today:
 - `tools/labs-compiler/scripts/build.mjs` runs Vite (and TypeScript where applicable), emits HTML/JS/CSS and build metadata; it does not render a browser page.
 - `tools/labs-compiler/scripts/serve-preview.mjs` is a bounded static preview server plus console/readiness message bridge. It does not capture images.
 - The compiler sandbox is created with `networkPolicy: "deny-all"`. A capture implementation must use preinstalled browser binaries and local loopback only; it must not enable outbound internet or install arbitrary owner dependencies at run time.
-- The existing `LabMediaLibrary` supports optional image/GIF/video upload and a single `fallback-preview` attachment. Its UI explicitly calls that media a fallback when code preview cannot run. The current public custom-experiment DTO selects no media attachment and does not turn it into `galleryPreview` or `thumbnail`.
+- The existing `LabMediaLibrary` supports optional private image/GIF/video uploads and a single `fallback-preview` attachment. Separately, it now allows an owner to promote a verified JPEG/PNG/WebP/AVIF still as a public release-bound `galleryPreview`. The public DTO exposes only that public Blob poster when the artifact/version matches; it never exposes a private fallback attachment or Cloudinary preview URL.
 
 ### 43.3 Required rendering contract
 
@@ -1195,11 +1195,11 @@ Use the exact successfully published release as the common source of truth:
 
 `LabSource.publishedVersionId` + `LabSource.publishedArtifactId`
 → exact `LabBuildArtifact`
-→ compiled interactive detail runtime + static gallery poster captured from that compiled artifact.
+→ compiled interactive detail runtime + (when selected) an owner-promoted public still poster bound to the same artifact/version.
 
-The detail page continues running the compiled artifact in its existing isolated iframe. A gallery card never runs the experiment, mounts a React tree, starts Motion/canvas loops, creates an iframe or makes a screenshot request. It displays only the already-generated static poster.
+The detail page continues running the compiled artifact in its existing isolated iframe. A gallery card never runs the experiment, mounts a React tree, starts Motion/canvas loops, creates an iframe or makes a screenshot request. It displays only the already-promoted static public still image when its release binding matches, or existing LabArtwork/neutral artwork otherwise.
 
-The public gallery poster must be served from the same `artifactId` and verified against the same `sourceVersionId` as the detail iframe. Never resolve a poster independently by slug, use a poster from the latest draft, or reuse the previous release's poster for a new release.
+The public gallery poster is served only when its `artifactId` and `sourceVersionId` match the same release as the detail iframe. The owner-promoted poster path implements this check. Never resolve a poster independently by slug, use a poster from the latest draft, or reuse the previous release's poster for a new release.
 
 ### 43.4 Poster generation — publish-time, not request-time
 
@@ -1230,13 +1230,13 @@ Recommended storage contract:
 
 ### 43.6 Public DTO and gallery component behavior
 
-For custom published experiments, `getPublishedCustomLabExperimentBySlug()` and `getPublishedCustomLabExperiments()` should derive `galleryPreview` from the poster on the exact artifact already resolved by the published pointers. The DTO should expose only the public poster URL, safe alt text, dimensions/aspect ratio, fit and the matching artifact/release identity. It must not expose source contents, storage tokens, owner metadata or private media URLs.
+For custom published experiments, `getPublishedCustomLabExperimentBySlug()` and `getPublishedCustomLabExperiments()` should derive `galleryPreview` from the poster on the exact artifact already resolved by the published pointers. The DTO currently exposes only the public poster URL, safe alt text and fit after validating the exact artifact/version pair and the approved public Blob host. Source contents, storage tokens, owner metadata and private media URLs are not exposed. The proposed dimensions/aspect ratio additions remain future work.
 
 `LabExperimentPreview` should use a deliberate precedence:
-1. Exact-release generated artifact poster (`galleryPreview`).
-2. Owner-selected and publicly deliverable optional fallback-preview media when no artifact poster is available.
-3. Existing code-owned `thumbnail` where present.
-4. Existing `LabArtwork` / generic artwork fallback.
+1. Owner-promoted public still `galleryPreview` for the exact published artifact/version.
+2. Existing code-owned `thumbnail` where present.
+3. Existing `LabArtwork` / generic artwork fallback.
+Private `fallback-preview` media is never a gallery image; it remains a detail-runtime failure fallback.
 
 Do not autoplay GIF/video inside every gallery card. For an uploaded GIF/video fallback, generate/use a static representative poster frame for the card; interactive or moving media remains a detail/fallback experience. Keep the card's current aspect ratio, responsive image sizes, lazy loading and existing hover effect. Prioritize only the actual featured/above-the-fold image; do not eagerly load every poster.
 
@@ -1299,4 +1299,4 @@ Keep the working built-in registry/artwork until each experiment passes interact
 | 7. Built-in migration | Migrate each code-owned built-in through the artifact lifecycle sequentially | Registry/artwork removed only after parity QA |
 | 8. Release regression | Test new publish, failed capture/build, restore and republish | No mixed poster/runtime releases; old release remains safe |
 
-**Current status:** the gallery is not yet using compiled-artifact screenshots. This section is a plan only; no poster capture, artifact schema, public DTO, route or gallery behavior was changed by this audit.
+**Current implementation:** explicit owner-selected still poster promotion, artifact/version-bound public DTO selection, and stale poster invalidation/cleanup hooks are committed on `feat/labs-platform-integration`. Automatic compiled-artifact screenshot capture, generated-poster metadata and a capture worker remain future work. Full build/test, Atlas/provider validation, owner browser QA and a new Preview deployment are still pending.
