@@ -99,13 +99,19 @@ async function assertCustomExperiment(slug) {
   }
   await connectToDatabase();
   const experiment = await LabExperiment.findOne({ slug, kind: "custom" })
-    .select("slug mediaAttachments")
+    .select("slug mediaAttachments galleryPreview")
     .lean();
   if (!experiment) fail("NOT_FOUND", "Experiment not found.");
   return experiment;
 }
 
-function serializeAsset(asset, attachment = null, previewUrl = null) {
+function serializeAsset(
+  asset,
+  attachment = null,
+  previewUrl = null,
+  isGalleryPreview = false,
+  isGalleryPreviewCurrent = false,
+) {
   return {
     id: String(asset._id),
     uploadIntentId: asset.uploadIntentId,
@@ -121,6 +127,8 @@ function serializeAsset(asset, attachment = null, previewUrl = null) {
     altText: attachment?.altText || asset.altText || "",
     caption: attachment?.caption || asset.caption || "",
     roles: attachment?.roles || [],
+    isGalleryPreview,
+    isGalleryPreviewCurrent,
     previewUrl,
     createdAt: asset.createdAt ? new Date(asset.createdAt).toISOString() : null,
   };
@@ -320,14 +328,31 @@ export async function listOwnerLabMediaAssets({ user, slug }) {
   const experiment = await assertCustomExperiment(slug);
   await LabMediaAsset.createIndexes();
 
-  const assets = await LabMediaAsset.find({
-    experimentSlug: slug,
-    ownerUserId: user.id,
-    status: "ready",
-  })
-    .sort({ createdAt: -1, _id: -1 })
-    .limit(100)
-    .lean();
+  const [assets, source] = await Promise.all([
+    LabMediaAsset.find({
+      experimentSlug: slug,
+      ownerUserId: user.id,
+      status: "ready",
+    })
+      .sort({ createdAt: -1, _id: -1 })
+      .limit(100)
+      .lean(),
+    LabSource.findOne({
+      slug,
+      published: true,
+      publishedVersionId: { $ne: null },
+      publishedArtifactId: { $ne: null },
+    })
+      .select("publishedVersionId publishedArtifactId")
+      .lean(),
+  ]);
+
+  const galleryPreviewCurrent = Boolean(
+    experiment.galleryPreview?.artifactId &&
+    experiment.galleryPreview?.sourceVersionId &&
+    source?.publishedArtifactId === experiment.galleryPreview.artifactId &&
+    source?.publishedVersionId === experiment.galleryPreview.sourceVersionId
+  );
 
   const attachments = new Map(
     (experiment.mediaAttachments || []).map((attachment) => [String(attachment.assetId), attachment]),
@@ -345,6 +370,9 @@ export async function listOwnerLabMediaAssets({ user, slug }) {
     asset,
     attachments.get(String(asset._id)) || null,
     client ? createOwnerPreviewUrl(client, asset) : null,
+    String(experiment.galleryPreview?.assetId || "") === String(asset._id),
+    galleryPreviewCurrent &&
+      String(experiment.galleryPreview?.assetId || "") === String(asset._id),
   ));
 }
 
