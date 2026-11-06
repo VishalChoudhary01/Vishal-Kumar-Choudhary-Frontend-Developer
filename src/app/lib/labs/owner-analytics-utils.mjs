@@ -96,6 +96,15 @@ export function buildCompleteDailySeries({ since, generatedAt, dailyGroups = [] 
       Number(group?.verifiedLikeActions) || verifiedLikes + verifiedUnlikes;
     const anonymousLikeActions =
       Number(group?.anonymousLikeActions) || anonymousLikes + anonymousUnlikes;
+    const hasSeparatedLikeCounts = Boolean(group) && [
+      "verifiedLikes",
+      "verifiedUnlikes",
+      "anonymousLikes",
+      "anonymousUnlikes",
+    ].some((key) => Object.prototype.hasOwnProperty.call(group, key));
+    const totalLikeActions = hasSeparatedLikeCounts
+      ? verifiedLikes + verifiedUnlikes + anonymousLikes + anonymousUnlikes
+      : verifiedLikeActions + anonymousLikeActions;
 
     days.push({
       date,
@@ -107,13 +116,7 @@ export function buildCompleteDailySeries({ since, generatedAt, dailyGroups = [] 
       anonymousUnlikes,
       verifiedLikeActions,
       anonymousLikeActions,
-      totalActions:
-        sourceOpens +
-        codeCopies +
-        verifiedLikes +
-        verifiedUnlikes +
-        anonymousLikes +
-        anonymousUnlikes,
+      totalActions: sourceOpens + codeCopies + totalLikeActions,
     });
   }
 
