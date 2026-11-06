@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { ThemeToggle } from "@/app/components/ui/ThemeToggle";
 
 import LabsLiveAnalyticsDashboard from "@/app/components/labs/admin/LabsLiveAnalyticsDashboard";
 import LabsOwnerAccessNotice from "@/app/components/labs/admin/LabsOwnerAccessNotice";
@@ -47,8 +48,8 @@ export default async function LabsAnalyticsPage({ searchParams }) {
 
         <LabsOwnerNavigation active="analytics" />
 
-        <header className="mt-8 flex flex-wrap items-end justify-between gap-5 border-b border-border pb-6">
-          <div>
+        <header className="mt-8 flex flex-wrap items-start justify-between gap-5 border-b border-border pb-6">
+          <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
               PRIVATE OWNER AREA
             </p>
@@ -58,6 +59,10 @@ export default async function LabsAnalyticsPage({ searchParams }) {
             <p className="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">
               Monitor published experiment source opens, successful code copies and like activity. Anonymous and verified engagement remain separately identified.
             </p>
+          </div>
+
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center">
+            <ThemeToggle />
           </div>
         </header>
 
