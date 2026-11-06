@@ -25,7 +25,7 @@ This file is the concise source of truth for Labs runtime, release and media beh
 | Likes | Implemented | Existing LabLikeButton and engagement API |
 | Protected source access | Implemented | Verified-email authorization, session checks, file selection and copy action |
 | Media sizing polish | Phase 1 code committed; QA pending | DTO carries intrinsic dimensions; all shared media uses contain; detail stage uses natural height and a bounded responsive maximum |
-| Monaco reader/editor | Planned | Shared lazy-loaded wrapper with read-only and editable modes |
+| Monaco foundation | Implemented; UI integrations pending | Stable React 19 wrapper, self-hosted assets, read-only default, editable callback contract, plain-text fallback and 6 tests |
 | Detail layout polish | Planned | Improve section order and spacing while preserving Like and source access |
 
 ## 2. Run, Save Draft and Build & Publish must remain separate
@@ -156,3 +156,32 @@ Regression tests were added for the generated poster, portrait image, GIF, video
 
 
 Phase 1 regression update (6 November 2026): the new media suite passed all 9 test cases, and the existing Labs analytics test suite also passed in a fresh disposable validation sandbox. JSX/JavaScript syntax checks passed for all changed app modules. Latest Vercel READY deployment observed was built from earlier commit e0177880; current branch code still requires a Preview build and real browser verification before Phase 1 is accepted.
+
+
+## 11. Phase 1 and Phase 2 implementation status — 6 November 2026
+
+### Phase 1 — media sizing and detail layout
+
+Implemented in source:
+- Uploaded media dimensions are stored and exposed in the public preview DTO; generated posters carry 1200×900 dimensions.
+- Shared Labs preview renderer uses non-cropping contain fit, browser-measured intrinsic dimensions for legacy assets and upload → screenshot → artwork failure fallback.
+- Public detail page uses a natural-height media stage with a responsive maximum instead of forcing all media into 4:3/16:9.
+- Detail header and explanation spacing adjusted.
+- Existing Like, explanation and protected source sections preserved.
+- Nine media regression tests and 15 Labs analytics tests pass.
+
+Still pending: deployed Preview build from the current branch and visual QA of portrait/landscape/square/GIF/MP4/WebM, Like, source access and static detail behavior. Production remains untouched.
+
+### Phase 2 — shared Monaco foundation
+
+Implemented:
+- Stable versions `@monaco-editor/react@4.7.0` and `monaco-editor@0.57.0`; React/React DOM remain 19.2.8.
+- Client-only shared `LabCodeEditor` component with read-only default, editable mode requiring `onChange`, theme definitions, line numbers, folding, model IDs scoped by source/file/version, options and plain-text fallback.
+- Language mapping for existing Labs file types in `code-editor-config.mjs`.
+- Local Monaco assets copied from the pinned package to `public/monaco/vs` by `predev` and `prebuild`; loader configured to the local path.
+- Six Monaco configuration tests pass; ESLint passes for the new component/config/asset script/tests.
+- Full clean-checkout Next.js production build passed, including media/analytics/SEO checks. Local Next.js server returned HTTP 200 for the Monaco AMD loader, editor entrypoint and TypeScript worker files.
+
+Not yet implemented: replacing the public source reader, owner textarea or version-history viewer with Monaco. Those remain Phases 3–5 in the separate [Detail Presentation and Monaco Editor plan](./LABS-DETAIL-PRESENTATION-AND-MONACO-EDITOR-IMPLEMENTATION-PLAN.md).
+
+**Non-regression:** Phase 1/2 did not change compiler, temporary Run, draft APIs, version history, restore, publish, poster capture, protected source authorization, Like API or public detail executable policy.
