@@ -92,6 +92,21 @@ export function setGuestIdentityCookie(response, token) {
   return response;
 }
 
+export function clearGuestIdentityCookie(response) {
+  response.cookies.set({
+    name: LABS_GUEST_LIKE_COOKIE,
+    value: "",
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+    expires: new Date(0),
+  });
+
+  return response;
+}
+
 let engagementIndexesPromise;
 
 async function ensureEngagementIndexes() {
@@ -610,6 +625,9 @@ export async function getLabEngagementSnapshot({
       liked: engagementBySlug[slug]?.liked === true,
       likeAllowed: !session?.user?.id || isVerified,
       actorType: isVerified ? "verified_user" : isUnverified ? "unverified" : "guest",
+      // A verified page can clear the consumed browser cookie through the
+      // engagement GET route after this server snapshot has migrated state.
+      guestCookieCleanupRequired: isVerified && Boolean(guestCookieValue),
     },
   ]));
 }
