@@ -6,6 +6,18 @@ import LabSource from "./models/LabSource";
 import LabBuildArtifact from "./models/LabBuildArtifact";
 import { selectEligiblePublishedCustomExperiments } from "./owner-analytics-utils.mjs";
 
+function isPublicBlobUrl(value) {
+  if (typeof value !== "string") return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" &&
+      url.hostname.endsWith(".public.blob.vercel-storage.com") &&
+      !url.username && !url.password && !url.port && !url.search && !url.hash;
+  } catch {
+    return false;
+  }
+}
+
 function toPublicExperiment(experiment, artifact) {
   const storedPreview = experiment.galleryPreview;
   let galleryPreview = null;
@@ -13,24 +25,62 @@ function toPublicExperiment(experiment, artifact) {
   if (
     storedPreview?.artifactId === artifact.artifactId &&
     storedPreview?.sourceVersionId === artifact.sourceVersionId &&
-    typeof storedPreview.src === "string"
+    isPublicBlobUrl(storedPreview.src)
   ) {
-    try {
-      const previewUrl = new URL(storedPreview.src);
-      if (
-        previewUrl.protocol === "https:" &&
-        previewUrl.hostname.endsWith(".public.blob.vercel-storage.com")
-      ) {
-        galleryPreview = {
-          src: previewUrl.toString(),
-          alt: typeof storedPreview.alt === "string" ? storedPreview.alt : "",
-          fit: storedPreview.fit === "contain" ? "contain" : "cover",
-        };
-      }
-    } catch {
-      galleryPreview = null;
+    const mediaKind = storedPreview.mediaKind === "video" ? "video" : "image";
+    const contentType = typeof storedPreview.contentType === "string"
+      ? storedPreview.contentType
+      : "image/jpeg";
+    const allowedContentTypes = mediaKind === "video"
+      ? new Set(["video/mp4", "video/webm"])
+      : new Set(["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"]);
+    if (allowedContentTypes.has(contentType)) {
+      galleryPreview = {
+        src: storedPreview.src,
+        alt: typeof storedPreview.alt === "string" ? storedPreview.alt : "",
+        mediaKind,
+        contentType,
+        format: contentType === "image/gif" ? "gif" : "",
+        fit: storedPreview.fit === "contain" ? "contain" : "cover",
+      };
     }
   }
+
+  const generatedPosterReady = artifact.previewPoster?.status === "ready" &&
+    artifact.previewPoster?.path === "__preview/gallery-poster.png" &&
+    artifact.previewPoster?.contentType === "image/png" &&
+    artifact.previewPoster?.width === 1200 &&
+    artifact.previewPoster?.height === 900 &&
+    Number.isSafeInteger(artifact.previewPoster?.byteSize) &&
+    artifact.previewPoster.byteSize > 0 &&
+    artifact.previewPoster.byteSize <= 8 * 1024 * 1024 &&
+    typeof artifact.previewPoster?.contentHash === "string" &&
+    /^[a-f0-9]{64}$/.test(artifact.previewPoster.contentHash);
+
+  const generatedPoster = generatedPosterReady
+    ? {
+        src:
+          "/api/v1/labs/" +
+          encodeURIComponent(experiment.slug) +
+          "/runtime/" +
+          encodeURIComponent(artifact.artifactId) +
+          "/__preview/gallery-poster.png",
+        alt: "Screenshot preview of " + experiment.title,
+        fit: "cover",
+        mediaKind: "image",
+        contentType: "image/png",
+        generated: true,
+      }
+    : null;
+
+  // Uploaded media is the selected visual. The exact build's generated
+  // poster is used only if the owner has not selected an uploaded asset.
+  const galleryVisual = galleryPreview || generatedPoster;
+  // Video is useful as an interactive gallery/detail visual, but social
+  // preview metadata requires a still image. Use the screenshot for OG tags.
+  const thumbnail = galleryPreview?.mediaKind === "video"
+    ? generatedPoster
+    : galleryVisual;
 
   return {
     slug: experiment.slug,
@@ -40,16 +90,14 @@ function toPublicExperiment(experiment, artifact) {
     category: experiment.category,
     technologies: Array.isArray(experiment.technologies) ? experiment.technologies : [],
     galleryPreview,
-    thumbnail: galleryPreview,
+    generatedPoster,
+    thumbnail,
     seo: {
       title: experiment.title + " — Labs",
       description: experiment.description,
     },
     demo: {
       runtimeKey: "published-artifact",
-      // Vercel Blob serves HTML as an attachment. Route all published files
-      // through the Labs runtime handler so the isolated iframe gets inline
-      // content, strict CSP and an artifact-scoped readiness bridge.
       runtimeUrl:
         "/api/v1/labs/" +
         encodeURIComponent(experiment.slug) +
