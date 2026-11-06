@@ -416,9 +416,9 @@ The READY live-dashboard Preview was `dpl_2q1CRakZTVJw2QLMNUsDFL6EBThQ` at `e267
 
 | Item | Status | Evidence / remaining check |
 |---|---|---|
-| Collection rankings | Code committed / Preview build pending | Deterministic top-five source-open and code-copy rankings use the selected period; active-like ranking uses current state. Zero-value entries are omitted; ties resolve by title then slug |
-| Experiment detail route | Code committed / Preview build pending | `/admin/labs/analytics/[slug]` reuses the existing owner authorization and only resolves rows included in the published experiment catalogue |
-| Detail API | Code committed / Preview build pending | `GET /api/v1/admin/labs/analytics/:slug?days=7|30|90|365` returns aggregate experiment metrics, current active likes and UTC daily series; private/no-store and no event/user payloads |
+| Collection rankings | Code committed / Preview build-verified | Deterministic top-five source-open and code-copy rankings use the selected period; active-like ranking uses current state. Zero-value entries are omitted; ties resolve by title then slug |
+| Experiment detail route | Code committed / Preview build-verified | `/admin/labs/analytics/[slug]` reuses the existing owner authorization and only resolves rows included in the published experiment catalogue |
+| Detail API | Code committed / Preview build-verified | `GET /api/v1/admin/labs/analytics/:slug?days=7|30|90|365` returns aggregate experiment metrics, current active likes and UTC daily series; private/no-store and no event/user payloads |
 | Metric boundaries | Code committed | Public experiment detail views and preview starts remain intentionally absent because those event types are not instrumented. Source opens are not labelled as views; active likes are labelled current state |
 | Authenticated detail and ranking reconciliation | Pending | Verify with the owner account against real Atlas records; compare rankings to fixtures and confirm built-in/custom published experiments only |
 | Detail page visual/accessibility QA | Pending | Test small/large screens, table alternatives, focus order, screen reader labels, contrast and zoom |
