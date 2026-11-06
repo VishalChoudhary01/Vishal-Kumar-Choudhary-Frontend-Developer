@@ -66,6 +66,7 @@ export function getSafeOwnerReturnTo(value) {
       !parsed.hash &&
       (
         parsed.pathname === "/admin/labs/analytics" ||
+        /^\/admin\/labs\/analytics\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(parsed.pathname) ||
         parsed.pathname === "/admin/labs/sources" ||
         parsed.pathname === "/admin/labs/sources/import" ||
         /^\/admin\/labs\/sources\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(parsed.pathname) ||
