@@ -2,7 +2,7 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 import mongoose from "mongoose";
-import { put } from "@vercel/blob";
+import { del, put } from "@vercel/blob";
 import { v2 as cloudinary } from "cloudinary";
 
 import { connectToDatabase } from "@/app/lib/db/mongoose";
@@ -544,16 +544,29 @@ export async function saveOwnerLabGalleryPreview({ user, slug, assetId, altText 
       { _id: experiment._id, kind: "custom" },
       { $set: { galleryPreview: null, updatedBy: user.id } },
     );
+
+    let cleanupPending = false;
+    const previousUrl = experiment.galleryPreview?.src;
+    if (typeof previousUrl === "string" && previousUrl.startsWith("https://")) {
+      try {
+        const token = process.env.BLOB_READ_WRITE_TOKEN;
+        if (!token) throw new Error("Blob storage token is unavailable.");
+        await del(previousUrl, { token });
+      } catch {
+        cleanupPending = true;
+      }
+    }
+
     await LabSourceAuditEvent.create({
       actorUserId: user.id,
       action: "gallery_preview_updated",
       experimentSlug: slug,
       versionId: experiment.galleryPreview?.sourceVersionId || null,
       requestId: randomUUID(),
-      resultCode: "removed",
+      resultCode: cleanupPending ? "removed_cleanup_pending" : "removed",
       createdAt: new Date(),
     });
-    return { galleryPreview: null };
+    return { galleryPreview: null, cleanupPending };
   }
 
   if (typeof assetId !== "string" || !mongoose.isValidObjectId(assetId)) {
@@ -720,17 +733,30 @@ export async function saveOwnerLabGalleryPreview({ user, slug, assetId, altText 
     { $set: { galleryPreview, updatedBy: user.id } },
   );
 
+  let previousCleanupPending = false;
+  const previousUrl = experiment.galleryPreview?.src;
+  if (typeof previousUrl === "string" && previousUrl !== galleryPreview.src) {
+    try {
+      const token = process.env.BLOB_READ_WRITE_TOKEN;
+      if (!token) throw new Error("Blob storage token is unavailable.");
+      await del(previousUrl, { token });
+    } catch {
+      previousCleanupPending = true;
+    }
+  }
+
   await LabSourceAuditEvent.create({
     actorUserId: user.id,
     action: "gallery_preview_updated",
     experimentSlug: slug,
     versionId: artifact.sourceVersionId,
     requestId: randomUUID(),
-    resultCode: "ok",
+    resultCode: previousCleanupPending ? "replaced_cleanup_pending" : "ok",
     createdAt: new Date(),
   });
 
   return {
+    cleanupPending: previousCleanupPending,
     galleryPreview: {
       src: galleryPreview.src,
       alt: galleryPreview.alt,
