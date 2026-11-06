@@ -146,12 +146,19 @@ export default function LabMediaLibrary({ slug }) {
           fit: "cover",
         }),
       });
-      await readJson(response);
+      const data = await readJson(response);
       await loadAssets();
-      setMessage(assetId
-        ? "Public gallery poster saved for the exact published build. A later published version will require a new poster."
-        : "Public gallery poster removed.");
-      showToast("success", assetId ? "Gallery poster published." : "Gallery poster removed.");
+      if (data?.cleanupPending) {
+        setMessage(assetId
+          ? "The new public poster is active. Cleanup of the previous public image is still pending."
+          : "The poster is no longer shown in the gallery, but provider cleanup is still pending.");
+        showToast("info", "Gallery poster saved; old image cleanup is pending.");
+      } else {
+        setMessage(assetId
+          ? "Public gallery poster saved for the exact published build. A later published version will require a new poster."
+          : "Public gallery poster removed.");
+        showToast("success", assetId ? "Gallery poster published." : "Gallery poster removed.");
+      }
     } catch (reason) {
       setError(reason.message || "The public gallery poster could not be saved.");
       showToast("error", reason.message || "The public gallery poster could not be saved.");
