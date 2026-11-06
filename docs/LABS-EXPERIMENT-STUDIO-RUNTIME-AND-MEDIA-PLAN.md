@@ -25,7 +25,7 @@ This file is the concise source of truth for Labs runtime, release and media beh
 | Likes | Implemented | Existing LabLikeButton and engagement API |
 | Protected source access | Implemented | Verified-email authorization, session checks, file selection and copy action |
 | Media sizing polish | Phase 1 code committed; QA pending | DTO carries intrinsic dimensions; all shared media uses contain; detail stage uses natural height and a bounded responsive maximum |
-| Monaco foundation | Implemented | Stable React 19 wrapper, self-hosted assets, read-only default, editable callback contract, plain-text fallback and 6 tests |
+| Monaco foundation | Implemented | Stable React 19 wrapper, self-hosted assets, read-only public reader and editable creator modes, plain-text fallback and regression tests |
 | Detail layout polish | Planned | Improve section order and spacing while preserving Like and source access |
 
 ## 2. Run, Save Draft and Build & Publish must remain separate
@@ -204,3 +204,18 @@ Remaining acceptance is authenticated Preview browser QA for reader rendering, g
 
 
 Phase 3 Preview deployment: Vercel deployment `dpl_332fozxc8GV3xKgNnVH3Jc2LYcgH` is `READY` from code commit `bfb87df8b394a04293d7894b9f0d1289887f2dfd` and includes the protected read-only Monaco source reader. Authenticated browser interaction QA remains pending because the Preview is protected by Vercel Authentication. The owner should verify signed-in file switching, exact full-file Copy, source events, session invalidation, guest/unverified denial and theme behavior on that Preview. Production remains unchanged.
+
+
+## 13. Phase 4 — owner Source Creator editable Monaco migration — 6 November 2026
+
+The owner source creator now renders the shared `LabCodeEditor` in editable mode instead of the source textarea. React `files` state remains authoritative. All state writes pass through a single `commitFiles` function that updates React state and a synchronous ref mirror. The ref is used to capture the newest working-copy snapshot synchronously for Save Draft, Run and Build & Publish; it is not a second persistence store.
+
+Monaco changes update the file by stable path via `updateFileContent`, avoiding index-based stale updates when switching tabs rapidly. The editor uses the existing source language selector, experiment/file-scoped working-copy model, and resolved app theme. The existing file list, add/import/rename/remove/reorder, templates, validation, size limits, unsaved state, discard, history, restore, audit, media library, console and isolated preview remain in place.
+
+Run now calls the existing preview API with the current ref snapshot taken when Run is clicked, including unsaved content. It remains independent from Save Draft and Build & Publish. Save Draft captures one immutable files snapshot and persists that exact snapshot. Build & Publish captures the current snapshot, checks dirty state against the saved source, creates a private draft when needed, then publishes the exact returned version ID. The editor and file path/language controls lock during Save, Restore and Publish so later edits cannot race the in-flight snapshot. Run leaves editing enabled and compiles its click-time snapshot.
+
+Added `src/app/lib/labs/source-editor-state.mjs`, 8 creator contract tests and 4 path-update helper tests. The production build now includes the `test:labs-source-creator` suite.
+
+Phase 4 validation passed: Monaco 6/6; protected source-reader 5/5; creator contract/state 12/12; media 9/9; Labs analytics 15/15; ESLint; SEO (zero warnings); and a clean Next.js 16.4.3 production build with all Labs routes compiled.
+
+Owner browser QA is still required on the Vercel-protected Preview: editing across supported languages and multiple files, Run with unsaved latest keystroke, Save Draft exact content hash, Build & Publish exact saved version ID, in-flight locks, Discard/Restore synchronization, theme/keyboard behavior, large files and fallback. The version-history viewer remains a plain read-only content view and is Phase 5. The compiler, temporary Run runtime, save/publish APIs, poster capture timing and artifact pipeline were not rewritten in Phase 4.
