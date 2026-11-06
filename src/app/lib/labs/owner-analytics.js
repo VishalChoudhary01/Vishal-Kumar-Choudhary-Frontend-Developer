@@ -11,7 +11,7 @@ import {
   buildCompleteDailySeries,
   createRankings,
   normalizePeriod,
-} from "./owner-analytics-utils";
+} from "./owner-analytics-utils.mjs";
 
 let indexPromise;
 
