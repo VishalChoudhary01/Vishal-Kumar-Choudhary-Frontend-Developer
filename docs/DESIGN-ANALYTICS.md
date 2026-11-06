@@ -1,7 +1,7 @@
 # Design Specification — Analytics Dashboard
 
-**Status:** Product/design requirements; implementation pending  
-**Related:** [PRD](./PRD.md), [Admin design](./DESIGN-ADMIN.md)
+**Status:** Product/design authority. Initial owner source-engagement aggregation exists on `feat/labs-platform-integration`; dedicated Analytics routing, complete custom-experiment/event coverage, live refresh and the full dashboard design remain incomplete. This document defines the analytics experience and metric semantics; delivery order is in [the Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md).  
+**Related:** [PRD](./PRD.md), [Admin design](./DESIGN-ADMIN.md), [Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md)
 
 ## 1. Purpose
 Give the portfolio owner reliable insight into Lab discovery and engagement, without presenting estimates as exact people counts or implying actions prove downstream outcomes. Analytics are private to the singleton owner/admin. For the first source-engagement release, reporting is aggregate per experiment and reporting period; it does not expose individual users' source-view/copy/like histories.
@@ -132,41 +132,62 @@ Metric names and formulas must be displayed or discoverable in the UI. Avoid com
 - [ ] Analytics code does not affect the public homepage bundle.
 
 
-## 10. Labs source-engagement dashboard requirements
+## 10. Labs implementation mapping
 
-### Per-experiment metrics
+This section maps the analytics design to the current Labs code. Metric meanings, event rules, privacy limits, visualization accessibility and metric interpretation are defined above; do not restate or redefine them in another document.
 
-For each experiment/source page, the owner/admin must be able to see:
-- **Experiment detail views:** public experiment-page views (reported separately from source opens).
-- **Source opens:** successful verified-user source-viewer opens.
-- **Unique verified accounts:** distinct verified Better Auth accounts that opened the source during the selected period.
-- **Code copies:** successful Clipboard API copy actions accepted by the server.
-- **Current likes:** active verified-account likes at query time.
-- **Like actions / unlike actions:** server-confirmed verified-account like-state transitions during the selected period; any measurable guest like actions are a separate best-effort action count.
-- **Copies per source open:** copy actions divided by source opens for the same experiment and period. Show no rate when the denominator is zero.
+### Current owner Analytics baseline
 
-### Collection-wide overview and rankings
+- The current owner page is `/admin/labs/sources`, where an analytics overview is rendered above the source inventory. This is a temporary combined presentation, not the target information architecture.
+- `GET /api/v1/admin/labs/analytics?days=7|30|90|365` returns owner-only aggregate source engagement.
+- The current model records source opens, successful code-copy reports, verified like/unlike state transitions and anonymous guest-like actions.
+- The current page renders metric cards, a sparse daily bar chart, an experiment summary table and like activity. It is server-loaded and does not automatically refresh.
+- The current analytics aggregation is based on the code-owned published experiment catalogue. Custom database-backed published experiments are not yet consistently included in the aggregate and source-event validation paths.
+- Experiment detail views, preview starts and preview interactions are requirements, not currently instrumented event types. They must not be represented as zero-valued live metrics.
+- The project's `MotionNumber` component and `motion/react` are the existing count-animation foundation. Reuse them; do not add a second counter system.
 
-- Total source opens, unique verified accounts, copy actions and current active likes across published experiments.
-- Most-opened source pages, most-copied source pages and most-liked experiments.
-- Daily/monthly trends based on the selected date range and configured timezone.
-- Per-experiment rows link to that experiment's analytics detail.
-- A date range selector applies consistently to all period-based metrics. Current active likes are labelled as a current-state count, not a period action count.
+### Target page ownership
 
-### Event correctness
+- `/admin/labs/analytics` owns collection-wide metrics, trends and rankings.
+- `/admin/labs/analytics/[slug]` owns the selected experiment's aggregate analytics.
+- `/admin/labs/sources` owns the source inventory only; it links to the existing source workspace and the metadata editor where appropriate.
+- `/admin/labs/sources/[slug]` remains the source-code editing/version/publication workspace.
 
-- Source open is counted after the protected source API returns a successful response to a verified account. A public detail-page view or click on "View source" is not a source open.
-- The viewer generates an idempotency key per intentional open; network retries of the same action must not increase the count. A later deliberate reopen/refresh is a new open according to the event deduplication policy.
-- Copy is counted only after the browser reports a successful Clipboard API write and the server accepts the event. Never send clipboard contents or source code in the event request.
-- A like/unlike is counted only when the server changes the unique like-state record. A duplicate request with no state change is not counted again.
-- Every event is attributed to the verified user ID derived from the server session; ignore client-supplied actor IDs.
-- Admin views are aggregates only in the first release. Do not show a user-level event timeline or email address attached to source activity.
-- Event retention, deduplication window, account deletion handling and Privacy Policy disclosure must be approved before production analytics is enabled.
+The inventory and source workspace must not become alternate analytics dashboards. See the [Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md) for route ownership and phase gates.
 
-### Required dashboard states
+### Live refresh interaction contract
 
-- Distinguish no events from query failure and loading.
-- Show the selected date range, timezone, metric definition and last-updated time only when the backend can provide them accurately.
-- Provide accessible table equivalents to charts and rankings.
-- Do not fabricate zeroes while data is loading or unavailable.
+For the first live release, use the existing owner analytics GET endpoint with visible-tab polling. Target a 10-second interval while the Analytics route is visible. Pause when hidden, resume on focus/visibility, prevent overlapping requests, abort on unmount, preserve the last successful snapshot on failure, use bounded backoff and show a truthful last-updated/stale state. Provide manual refresh. The same reporting period and filters must remain applied to each request.
 
+The refresh transport must return the same normalized aggregate shape so a later push transport can be evaluated without rewriting charts. WebSockets are not required for the first release; any future upgrade must document hosting, cross-instance fanout, reconnect/replay, authorization and fallback behavior before adding infrastructure.
+
+### Custom experiment and instrumentation gaps
+
+Before the richer chart and rankings are trusted:
+
+1. Include both code-owned and eligible database-backed custom experiments in the same server-side catalogue/aggregation path, without duplicate slugs.
+2. Allow valid published custom experiments through the protected source-event route only after rechecking verified identity, published status and the exact source version.
+3. Add qualifying experiment-detail view instrumentation and a documented deduplication policy before showing view counts.
+4. Add preview-start and preview-interaction events only after the isolated runtime exposes a reliable successful-start signal and a bounded interaction allowlist.
+5. Return complete date buckets for the selected interval, including zero-activity days; label timezone and bucket boundaries.
+6. Label collection-wide unique-account totals correctly: summing per-experiment unique verified accounts counts experiment-account pairs, not globally unique accounts.
+7. Keep current active-like state separate from period like/unlike actions; report anonymous activity separately and do not call it people.
+
+Do not fabricate/backfill events from page loads, historical deployment logs or existing source records. Newly instrumented metrics begin when the corresponding event path ships; communicate any coverage boundary in the dashboard.
+
+### Visual and motion integration
+
+Use existing semantic theme tokens and the admin design system. Keep series identities clear in both light and dark modes, use labels/markers in addition to colour, preserve tabular number formatting and provide a chart-equivalent table. Use `MotionNumber` for changed metrics and restrained `motion/react` transitions for actual chart data changes; do not replay full entrance animation on each refresh. Respect reduced motion and avoid layout shifts.
+
+### Readiness status
+
+- [x] Server-side owner aggregate endpoint exists for the initial source-engagement metrics.
+- [x] Initial source-open, copy and like/unlike event records exist.
+- [ ] Include custom database-backed published experiments in analytics and source-event validation.
+- [ ] Instrument experiment detail views with a documented qualifying-view rule.
+- [ ] Instrument preview start/interactions after runtime lifecycle approval.
+- [ ] Separate Analytics and Source Library routes.
+- [ ] Add visible-tab polling and truthful stale/error state.
+- [ ] Add complete date buckets, multi-series trends, rankings and experiment detail reporting.
+- [ ] Verify MotionNumber, chart accessibility, responsive layout, reduced motion and light/dark semantic contrast.
+- [ ] Approve retention/account-deletion policy before production analytics release.
