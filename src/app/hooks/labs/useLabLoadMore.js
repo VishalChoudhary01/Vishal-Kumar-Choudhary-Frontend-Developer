@@ -21,6 +21,7 @@ export default function useLabLoadMore(items = [], resetKey = "all") {
   );
 
   const hasMore = visibleCount < items.length;
+  const nextPageCount = hasMore ? Math.min(PAGE_SIZE, items.length - visibleCount) : 0;
 
   const loadMore = useCallback(() => {
     setVisibleState((current) => {
@@ -39,6 +40,7 @@ export default function useLabLoadMore(items = [], resetKey = "all") {
     visibleCount,
     totalCount: items.length,
     hasMore,
+    nextPageCount,
     loadMore,
   };
 }
