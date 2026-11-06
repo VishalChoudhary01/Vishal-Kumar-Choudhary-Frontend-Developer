@@ -208,7 +208,7 @@ flowchart TD
 
 ### 7.2 Compiler snapshot lifecycle — current known blocker
 
-The deployed Preview currently fails because Sandbox creation returns HTTP 410 (snapshot expired/deleted). Changing a project environment variable does not update an already-created deployment.
+The deployed Preview previously failed because a legacy environment reference pointed to a deleted snapshot (HTTP 410), then repeated disposable Run workers exhausted Hobby snapshot storage (HTTP 402). The active `feat/labs-platform-integration` Preview environment uses a verified compiler snapshot. Disposable Run/release workers now use `persistent: false`, avoiding automatic snapshots on stop. Twenty-two unused automatic snapshots were removed after preserving the active compiler snapshot and its base chain. See `docs/LABS-PREVIEW-RUN-RECOVERY-AND-SNAPSHOT-LIFECYCLE.md` for the incident, recovery procedure and QA matrix.
 
 The permanent fix requires:
 
@@ -220,7 +220,7 @@ The permanent fix requires:
 6. A new Preview deployment after changing the environment reference.
 7. Specific errors for missing, expired, deleted, rate-limited and unavailable resources.
 
-Never turn HTTP 410 into only "The requested owner operation is temporarily unavailable." Show a safe actionable diagnostic. Scheduled snapshot refresh may be used when required, but must not silently update Production or publish an experiment.
+Never turn HTTP 402/410/429 into only "The requested owner operation is temporarily unavailable." Show a safe actionable diagnostic. Scheduled snapshot refresh may be used when required, but must not silently update Production or publish an experiment.
 
 ### 7.3 Asynchronous Run API
 
