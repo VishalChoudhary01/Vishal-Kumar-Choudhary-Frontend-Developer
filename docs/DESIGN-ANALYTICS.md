@@ -1,10 +1,12 @@
-# Design Specification — Analytics Dashboard
+**Status:** Product/design authority. Dedicated Analytics/Source Library routes, custom published-experiment aggregation/source-event validation, metadata editor, create-to-workspace handoff, live polling dashboard, rankings and experiment detail route are implemented in code. The trend chart is now a lazy-loaded single-metric Chart.js canvas column chart with metric selection, semantic colors, UTC daily/weekly buckets, hover/selection readouts, a data-table equivalent, reduced-motion handling and a retryable load-error state. This code has not yet received a fresh full build, Atlas reconciliation, authenticated browser QA or a new Preview deployment. Experiment-view/preview instrumentation and global ranking by views remain incomplete.
 
-**Status:** Product/design authority. Dedicated Analytics/Source Library routes, custom published-experiment aggregation/source-event validation, metadata editor, create-to-workspace handoff, live polling dashboard, rankings and experiment detail route are implemented in code. The current four-series SVG chart is temporary and explicitly rejected as the final UX because it overlays unlike metrics on a shared scale and offers insufficient inspection. This document specifies its replacement: a lazy-loaded, single-metric Chart.js canvas column chart; compatibility and visual QA are pending. Authenticated owner refresh, Atlas reconciliation and visual/accessibility QA remain pending. Public experiment-view/preview instrumentation and global ranking by views remain incomplete. This document defines the analytics experience and metric semantics; delivery order is in [the Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md).  
-**Related:** [PRD](./PRD.md), [Admin design](./DESIGN-ADMIN.md), [Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md)
+**Owner privacy boundary:** Public like responses expose only the combined active count and the current visitor's state. The owner experiment page may additionally show the current active verified accounts for that one experiment (name, masked email and like timestamp); it does not expose raw user IDs or historical per-user source/copy/like events. Anonymous likes remain aggregate-only.
+
+This document defines the analytics experience and metric semantics; delivery order is in [the Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md).  
+**Related:** [PRD](./PRD.md), [Admin design](./DESIGN-ADMIN.md), [Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md), [Labs Gallery/Engagement implementation](./LABS-GALLERY-ENGAGEMENT-AND-LIVE-UI-IMPLEMENTATION.md)
 
 ## 1. Purpose
-Give the portfolio owner reliable insight into Lab discovery and engagement, without presenting estimates as exact people counts or implying actions prove downstream outcomes. Analytics are private to the singleton owner/admin. For the first source-engagement release, reporting is aggregate per experiment and reporting period; it does not expose individual users' source-view/copy/like histories.
+Give the portfolio owner reliable insight into Lab discovery and engagement, without presenting estimates as exact people counts or implying actions prove downstream outcomes. Analytics are private to the singleton owner/admin. For the first source-engagement release, reporting is aggregate per experiment and reporting period. The sole current-state identity exception is the owner-only active verified-liker drilldown per experiment; there is no individual historical source-view/copy/like timeline. Anonymous browser identities are aggregate-only.
 
 ## 2. Dashboard structure
 ### Header and global controls
@@ -97,9 +99,11 @@ Metric names and formulas must be displayed or discoverable in the UI. Avoid com
 - Use idempotency/deduplication keys where appropriate.
 - **Implemented:** source-open and code-copy ingestion applies an atomic MongoDB fixed-window quota per verified account and event type: 30 source opens/minute and 20 code copies/minute across experiments. HMAC-derived limiter keys avoid persisting raw user IDs in the quota collection; TTL cleanup removes the limiter record after 24 hours. A rejected request returns 429 with `Retry-After`; duplicate accepted event IDs do not consume quota.
 - Avoid logging full source code, tokens, passwords, raw request headers or unnecessary personal identifiers.
-- Public guest likes retain the existing best-effort browser-storage behavior where supported; they are not guaranteed unique or cross-device.
-- Verified-account likes enforce one active like per user/experiment, using a unique state record. Repeated like/unlike retries do not inflate event counts. Guest-like events remain separate anonymous action counts.
-- Restrict analytics endpoints to the singleton owner/admin. Return aggregate counts/trends by experiment and date range; do not expose raw event rows, user IDs or emails in the dashboard.
+- Anonymous likes use a signed HTTP-only browser cookie with an HMAC-derived database key and a unique active state per browser-cookie identity/experiment. This is not a real-person identity: separate devices, browsers, private sessions or cleared cookies can count separately. Do not use IP addresses or browser fingerprinting to imply person-level identity.
+- Verified-account likes enforce one active like per account/experiment, using a unique state record. Repeated like/unlike retries do not inflate event counts. Unlike reverses current state; it is not a negative rating. Guest-like events remain separate anonymous action counts.
+- When a verified session is seen with the same guest cookie, the active guest likes are transactionally claimed by the account. An already-active account like wins; the guest state is deactivated to avoid double-counting. Historical events are not rewritten and no synthetic account like event is emitted.
+- Public engagement DTOs expose only the combined active count and the current actor's like state/permission. Do not expose the verified/anonymous breakdown publicly.
+- Restrict analytics endpoints to the singleton owner/admin. Aggregate counts/trends are reported by experiment and date range. The owner-only experiment detail page additionally shows current active verified likers (name, masked email, timestamp) with pagination/search; it does not expose raw user IDs or historical user event rows. Anonymous identities remain aggregate-only.
 - Define analytics retention and deletion policy before production. Content version retention is unlimited, but that does not imply unlimited analytics/user-activity retention.
 - Account deletion must follow the documented treatment of account-linked analytics and likes.
 
@@ -269,3 +273,10 @@ Use existing semantic theme tokens and the admin design system. Keep series iden
 - [ ] Add public experiment-view and preview-event instrumentation before ranking by views or showing those metrics.
 - [ ] Verify chart accessibility, responsive layout, reduced motion and light/dark semantic contrast in an authenticated browser.
 - [ ] Approve retention/account-deletion policy before production analytics release.
+
+
+## 8. Implemented chart and current-state liker view
+
+The detail page's activity chart uses one selected measure at a time. Its data table is the accessible text equivalent and remains available when Chart.js fails to load. Shorter periods use UTC daily buckets; longer periods use deterministic UTC weekly buckets. Chart colors distinguish semantic activity categories but labels and values remain present so color is not the only signal. Motion is disabled or reduced under the user's reduced-motion preference.
+
+The owner-only verified-liker panel reads active `LabLike` state, resolves account metadata through Better Auth's MongoDB `user` collection, masks email addresses in the UI, and paginates/searches by name or email. It is intentionally a current-state list: an unlike removes that account from the active list. Historical like/unlike counts remain aggregate event metrics. Anonymous guests are never enumerated.
