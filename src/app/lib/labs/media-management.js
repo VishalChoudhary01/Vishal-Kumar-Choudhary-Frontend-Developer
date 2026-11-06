@@ -634,7 +634,7 @@ function matchesGalleryMediaSignature(bytes, format) {
  * gallery media reference. It is bound to the exact currently published
  * artifact and source version; a later publish makes it ineligible.
  */
-export async function saveOwnerLabGalleryPreview({ user, slug, assetId, altText = "", fit = "cover" }) {
+export async function saveOwnerLabGalleryPreview({ user, slug, assetId, altText = "" }) {
   if (!isLabsOwner(user)) fail("OWNER_ACCESS_DENIED", "Owner access is required.");
   if (typeof slug !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
     fail("NOT_FOUND", "Experiment not found.");
