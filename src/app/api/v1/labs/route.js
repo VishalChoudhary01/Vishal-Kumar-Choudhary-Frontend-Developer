@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { LAB_CATEGORIES } from "@/app/data/labsExperiments";
 import { getPublishedCustomLabExperimentPage } from "@/app/lib/labs/public-experiments";
+import { decodePublicExperimentCursor } from "@/app/lib/labs/public-experiment-cursor.mjs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,6 +44,17 @@ export async function GET(request) {
     );
   }
 
+  if (params.has("cursor")) {
+    try {
+      decodePublicExperimentCursor(cursor);
+    } catch {
+      return json(
+        { error: { code: "INVALID_CURSOR", message: "The experiment page cursor is invalid." } },
+        400,
+      );
+    }
+  }
+
   try {
     const page = await getPublishedCustomLabExperimentPage({
       category,
@@ -57,13 +69,6 @@ export async function GET(request) {
       },
     });
   } catch (error) {
-    if (error instanceof TypeError) {
-      return json(
-        { error: { code: "INVALID_CURSOR", message: "The experiment page cursor is invalid." } },
-        400,
-      );
-    }
-
     console.error("[labs-public-list] page failed:", error?.code || "PUBLIC_LABS_LIST_ERROR");
     return json(
       { error: { code: "PUBLIC_LABS_UNAVAILABLE", message: "The experiment collection is temporarily unavailable." } },
