@@ -20,7 +20,7 @@ const artworkSource = await readFile(
   "utf8",
 );
 const loadMoreSource = await readFile(
-  new URL("../src/app/hooks/labs/useLabLoadMore.js", import.meta.url),
+  new URL("../src/app/hooks/labs/useLabPublicCollection.js", import.meta.url),
   "utf8",
 );
 const filterHookSource = await readFile(
@@ -99,6 +99,7 @@ test("card artwork uses container-query sizing to prevent title clipping", () =>
 });
 
 test("progressive loading remains bounded to six items per action", () => {
-  assert.match(loadMoreSource, /const PAGE_SIZE = 6/);
+  assert.match(loadMoreSource, /const REVEAL_BATCH_SIZE = 6/);
   assert.match(loadMoreSource, /nextPageCount/);
+  assert.match(loadMoreSource, /requestPublicPage/);
 });
