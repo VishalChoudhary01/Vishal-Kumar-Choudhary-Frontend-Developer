@@ -1203,3 +1203,149 @@ This is the **source-managed Phase 1 extraction**, not the complete generic reus
 - The new workspace currently demonstrates strength/radius/showField through local React state, not through the future published-release controls manifest.
 - Copying the component into another independent experiment currently means copying `MagneticButton.jsx` and `magnetic-physics.mjs` together. A versioned first-party SDK export is a later phase.
 - No database experiment/draft was created automatically during this implementation; the owner must use the new Source Management import action after this commit is deployed.
+
+---
+
+## 43. Gallery thumbnail vs published artifact audit and plan — 6 November 2026
+
+### 43.1 Audit result: the gallery does not currently render the compiled artifact as its thumbnail
+
+The current code has two separate paths.
+
+**Gallery / featured preview path**
+1. `src/app/labs/page.js` combines `publishedLabExperiments` with `getPublishedCustomLabExperiments()`.
+2. `LabsCollection.js` and `FeaturedExperiment.js` both render `LabExperimentPreview`.
+3. `LabExperimentPreview.js` checks, in order: `experiment.galleryPreview`, `experiment.thumbnail`, `experiment.generatedPoster`. If none contains a `src`, it falls back to `LabArtwork`.
+4. `LabArtwork.js` draws four hand-authored static compositions for the four original code-owned built-ins. Unknown/custom experiment slugs receive a generic category label—not an image of their app.
+
+**Custom experiment detail path**
+1. `src/app/labs/[slug]/page.js` calls `getPublishedCustomLabExperimentBySlug(slug)`.
+2. `public-experiments.js` resolves `LabSource.publishedArtifactId` and `publishedVersionId`, then verifies a ready `LabBuildArtifact` has the exact same `experimentSlug` and `sourceVersionId`.
+3. The public DTO receives that artifact's `artifactId` and an artifact-scoped `demo.runtimeUrl`.
+4. `LabWorkspace.js` passes that URL and artifact ID to `LabRuntimeBoundary.js`.
+5. `PublishedArtifactFrame` renders the artifact URL inside the isolated iframe. The runtime route verifies that the requested artifact is still the current published pointer, matches the published source version and serves its compiled files.
+
+**Therefore:** the custom detail page runs the actual published artifact, but the custom gallery card does not show a screenshot of it. It currently receives `thumbnail: null` from the public custom-experiment DTO and falls back to generic `LabArtwork`. The featured experiment is currently one of the code-owned built-ins and uses the same static preview renderer/fallback artwork.
+
+### 43.2 No current artifact screenshot/poster generation path
+
+The code confirms there is no capture stage today:
+
+- `LabBuildArtifact` stores artifact/source IDs, source/build hashes, entry URL, compiler metadata and compiled `outputFiles`. It has no preview-poster field.
+- `buildAndStoreOwnerLabRelease()` compiles the saved source and uploads the compiler output files to Vercel Blob. It does not launch a browser or capture a screenshot.
+- `tools/labs-compiler/scripts/build.mjs` runs Vite (and TypeScript where applicable), emits HTML/JS/CSS and build metadata; it does not render a browser page.
+- `tools/labs-compiler/scripts/serve-preview.mjs` is a bounded static preview server plus console/readiness message bridge. It does not capture images.
+- The compiler sandbox is created with `networkPolicy: "deny-all"`. A capture implementation must use preinstalled browser binaries and local loopback only; it must not enable outbound internet or install arbitrary owner dependencies at run time.
+- The existing `LabMediaLibrary` supports optional image/GIF/video upload and a single `fallback-preview` attachment. Its UI explicitly calls that media a fallback when code preview cannot run. The current public custom-experiment DTO selects no media attachment and does not turn it into `galleryPreview` or `thumbnail`.
+
+### 43.3 Required rendering contract
+
+Use the exact successfully published release as the common source of truth:
+
+`LabSource.publishedVersionId` + `LabSource.publishedArtifactId`
+→ exact `LabBuildArtifact`
+→ compiled interactive detail runtime + static gallery poster captured from that compiled artifact.
+
+The detail page continues running the compiled artifact in its existing isolated iframe. A gallery card never runs the experiment, mounts a React tree, starts Motion/canvas loops, creates an iframe or makes a screenshot request. It displays only the already-generated static poster.
+
+The public gallery poster must be served from the same `artifactId` and verified against the same `sourceVersionId` as the detail iframe. Never resolve a poster independently by slug, use a poster from the latest draft, or reuse the previous release's poster for a new release.
+
+### 43.4 Poster generation — publish-time, not request-time
+
+Add an optional, bounded browser-capture stage to the existing immutable release build:
+
+1. Load the exact saved `LabSourceVersion` and verify its content hash (existing behavior).
+2. Compile the exact source through the existing pinned isolated compiler (existing behavior).
+3. Before stopping the same isolated compiler sandbox, serve the compiled output on local loopback and load its `index.html` in a pinned headless Chromium/Playwright runtime baked into the compiler snapshot.
+4. Keep the sandbox's `networkPolicy: "deny-all"`. No remote navigation, remote assets, arbitrary package installation or main-app browser execution is allowed.
+5. Capture one deterministic, static card frame at a fixed 4:3 viewport (recommended 1200×900), with no simulated pointer interaction, no autoplay and reduced-motion emulation. Wait for DOM readiness, fonts and a bounded first-render/layout-stability window. Use a hard timeout and screenshot byte-size limit.
+6. Capture a still image (recommended optimized JPEG or WebP) and upload it to the same version/build-scoped Blob path namespace as the artifact.
+7. Persist poster metadata with the immutable `LabBuildArtifact` record. Metadata should include the poster path, content type, byte size, dimensions, poster content hash and capture implementation version. The artifact itself already carries `artifactId`, `sourceVersionId`, `sourceContentHash` and `buildHash`; the poster must belong to that exact record.
+8. Only after the artifact and its poster metadata are complete should the existing publish transaction move the published pointer.
+
+The capture browser is part of the platform's fixed compiler snapshot, not an owner dependency. Pin the Playwright and Chromium versions in that snapshot and include them in compiler metadata. If browser binaries or capture support are unavailable, do not fetch/install them from the network at publish time.
+
+Capture is best-effort after a successful compile: a poster failure must not silently corrupt or invalidate a successful code build. Record a non-sensitive capture status/reason and use the configured fallback preview or artwork. Do not copy a previous version's poster. If the product later decides every experiment must have a poster, that can become an explicit publish validation rule after capture reliability is proven.
+
+### 43.5 Artifact poster storage and delivery
+
+Recommended storage contract:
+
+- Add an optional strict `previewPoster` subdocument to `LabBuildArtifact`: `path`, `contentType`, `byteSize`, `width`, `height`, `contentHash`, `captureVersion`; add a bounded capture status such as `ready` / `unavailable` separately.
+- Store the image under the same immutable slug/sourceVersionId/buildHash namespace as compiled files.
+- Extend the existing artifact runtime route with one reserved artifact-scoped path such as `/__preview/gallery-poster.jpg`. It must require the currently published `artifactId`, verify the artifact sourceVersionId equals the source's publishedVersionId, validate content type/size and serve the poster inline with immutable cache headers. It must not accept arbitrary Blob URLs or user-supplied paths to external hosts.
+- Do not expose the raw source or draft files as part of poster delivery. Existing source authorization and iframe isolation remain unchanged.
+- The existing artifact `outputFiles` validator has a maximum of 80 compiled files; do not append a poster blindly and risk exceeding that limit. Keep poster metadata separate or explicitly reserve capacity if a later design chooses to store it as an output file.
+
+### 43.6 Public DTO and gallery component behavior
+
+For custom published experiments, `getPublishedCustomLabExperimentBySlug()` and `getPublishedCustomLabExperiments()` should derive `galleryPreview` from the poster on the exact artifact already resolved by the published pointers. The DTO should expose only the public poster URL, safe alt text, dimensions/aspect ratio, fit and the matching artifact/release identity. It must not expose source contents, storage tokens, owner metadata or private media URLs.
+
+`LabExperimentPreview` should use a deliberate precedence:
+1. Exact-release generated artifact poster (`galleryPreview`).
+2. Owner-selected and publicly deliverable optional fallback-preview media when no artifact poster is available.
+3. Existing code-owned `thumbnail` where present.
+4. Existing `LabArtwork` / generic artwork fallback.
+
+Do not autoplay GIF/video inside every gallery card. For an uploaded GIF/video fallback, generate/use a static representative poster frame for the card; interactive or moving media remains a detail/fallback experience. Keep the card's current aspect ratio, responsive image sizes, lazy loading and existing hover effect. Prioritize only the actual featured/above-the-fold image; do not eagerly load every poster.
+
+The featured experiment currently comes from the built-in metadata in `labsExperiments.js`. When it is migrated to a published artifact, it should receive the exact same `galleryPreview` contract; do not create a separate screenshot implementation for the featured card.
+
+### 43.7 Built-in experiment parity
+
+The original four built-ins currently render from `runtime/registry.js` on their detail pages and use slug-specific hand-authored artwork in the gallery. They are not yet published compiled artifacts, even if their source is separately imported into Source Management.
+
+To claim true artifact/poster parity for these built-ins:
+1. Migrate one built-in at a time through the approved owner source/compiler/publish lifecycle.
+2. Verify its published detail page executes that immutable artifact.
+3. Generate its gallery poster from that same compiled artifact.
+4. Verify sourceVersionId, artifactId and poster hash match across DTO/detail/gallery.
+5. Only then remove that experiment's old registry runtime and hand-authored gallery artwork fallback.
+
+Keep the working built-in registry/artwork until each experiment passes interaction, visual, reduced-motion, responsive, browser-capture and rollback tests. Do not make the new MagneticButton Component utility workspace a substitute for migrating the existing Magnetic Interaction experiment.
+
+### 43.8 Performance and regression acceptance
+
+**Gallery**
+- Zero experiment iframes and zero runtime mounts per card.
+- Zero screenshot generation on gallery page requests.
+- One static poster image per eligible card, loaded lazily with responsive sizing.
+- No autoplay of uploaded media.
+- Image error, absent poster or unsupported capture falls back to existing artwork without breaking card layout.
+
+**Detail**
+- Keep the current published artifact iframe and readiness/error/retry behavior.
+- Keep its artifactId/source-version pointer validation.
+- Gallery poster never replaces the interactive detail experience.
+
+**Release**
+- Capture the exact compiled artifact in the isolated environment, with bounded CPU, memory, timeout and image size.
+- A failed compile never updates the public pointer (existing behavior).
+- A failed poster capture never attaches a stale poster from another artifact.
+- A successful poster is immutable and cacheable.
+- Old artifacts/posters remain available only according to the existing published/rollback retention policy; never delete the previous release before a successful new publish.
+
+**Fixtures**
+- React JSX and TSX + Tailwind v4 + Motion + Lucide + React Icons.
+- Standalone HTML/CSS/JavaScript, including Canvas.
+- CSS-only generated entry.
+- Experiments with delayed fonts/render and with no visible output.
+- Motion/Canvas animations under reduced-motion capture.
+- Very large images, oversized screenshot, blank app, runtime exception and browser timeout.
+- Publish v1, publish v2, then verify gallery v2 poster and detail v2 runtime both use the v2 artifact; restore and republish v1 and verify both switch back to v1.
+- Capture failure on v2 must never display v1's poster beside v2's detail runtime.
+
+### 43.9 Implementation phases
+
+| Phase | Work | Acceptance |
+|---|---|---|
+| 1. Artifact poster contract | Add strict optional poster metadata/status to the immutable artifact and document the artifact-scoped poster route | Poster cannot be detached from artifact/source version |
+| 2. Capture runtime | Bake pinned Playwright/Chromium into the isolated compiler snapshot; add a local-only capture script | No internet access; bounded, deterministic screenshot |
+| 3. Publish integration | Capture from the exact build output before sandbox shutdown; upload poster and persist metadata | Poster hash/build/source/artifact identity verified |
+| 4. Runtime delivery | Extend the existing artifact route for the poster path with immutable caching and pointer validation | Poster delivered only for the active matching artifact |
+| 5. Public DTO | Derive `galleryPreview` from the resolved artifact poster | DTO poster and detail iframe share artifactId/sourceVersionId |
+| 6. Gallery integration | Use generated poster first, media fallback second, artwork last | Cards remain static, lazy and lightweight |
+| 7. Built-in migration | Migrate each code-owned built-in through the artifact lifecycle sequentially | Registry/artwork removed only after parity QA |
+| 8. Release regression | Test new publish, failed capture/build, restore and republish | No mixed poster/runtime releases; old release remains safe |
+
+**Current status:** the gallery is not yet using compiled-artifact screenshots. This section is a plan only; no poster capture, artifact schema, public DTO, route or gallery behavior was changed by this audit.
