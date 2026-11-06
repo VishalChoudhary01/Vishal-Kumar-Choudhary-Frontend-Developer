@@ -149,14 +149,14 @@ export default function LabMediaLibrary({ slug }) {
       await loadAssets();
       if (data?.cleanupPending) {
         setMessage(assetId
-          ? "The new public poster is active. Cleanup of the previous public image is still pending."
-          : "The poster is no longer shown in the gallery, but provider cleanup is still pending.");
-        showToast("info", "Gallery poster saved; old image cleanup is pending.");
+          ? "The new public media is active. Cleanup of the previous public asset is still pending."
+          : "The uploaded media is no longer shown in the gallery, but provider cleanup is still pending.");
+        showToast("info", "Gallery media saved; old asset cleanup is pending.");
       } else {
         setMessage(assetId
-          ? "Public gallery media saved for the exact published build. A later published version will require a new poster."
-          : "Public gallery poster removed.");
-        showToast("success", assetId ? "Gallery poster published." : "Gallery poster removed.");
+          ? "Public gallery media saved for the exact published build. A later published version invalidates this uploaded media selection; re-publish an upload if you want it on the new version."
+          : "Public gallery media removed.");
+        showToast("success", assetId ? "Gallery media published." : "Uploaded gallery media removed.");
       }
     } catch (reason) {
       setError(reason.message || "The public gallery poster could not be saved.");
@@ -245,10 +245,10 @@ export default function LabMediaLibrary({ slug }) {
     <section aria-labelledby="labs-media-library-title" className="mt-8 border border-border bg-surface-1 p-4 sm:p-5">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-brand">OPTIONAL FALLBACK MEDIA</p>
-          <h2 id="labs-media-library-title" className="mt-1 text-base font-semibold">Fallback preview media</h2>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-brand">OPTIONAL EXPERIMENT MEDIA</p>
+          <h2 id="labs-media-library-title" className="mt-1 text-base font-semibold">Gallery and fallback media</h2>
           <p className="mt-1 max-w-2xl text-xs leading-5 text-text-tertiary">
-            The interactive code preview is always primary. Private fallback media is used only when code preview cannot run. An uploaded image, GIF or video can be explicitly promoted as the public gallery/detail visual. Otherwise the published code build receives an automatic screenshot when capture support is available.
+            The interactive code preview remains the main experiment. Uploads stay private until you explicitly publish one as gallery media. A published image, GIF or video replaces the automatically generated screenshot; without a published upload, the screenshot from the exact released code is used.
           </p>
         </div>
         <label className={[
@@ -404,7 +404,7 @@ export default function LabMediaLibrary({ slug }) {
         </div>
       )}
       <p className="mt-3 text-[10px] leading-5 text-text-tertiary">
-        Supported upload formats: JPEG, PNG, WebP, AVIF, GIF, MP4 and WebM. Select any ready upload to show it in the public gallery and detail preview. Uploaded gallery media takes priority over the automatically generated screenshot; neither replaces the interactive code runtime.
+        Supported upload formats: JPEG, PNG, WebP, AVIF, GIF, MP4 and WebM. Publish a ready upload to show it in the public gallery and detail preview. Uploaded images, GIFs and videos take priority over the automatically generated screenshot; neither replaces the interactive code runtime.
       </p>
     </section>
   );
