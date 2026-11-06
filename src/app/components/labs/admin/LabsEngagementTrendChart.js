@@ -42,13 +42,36 @@ function readTheme(canvas) {
   const read = (name, fallback) => styles.getPropertyValue(name).trim() || fallback;
 
   return {
-    brand: read("--brand", "#337CA0"),
-    brandSoft: read("--brand-soft", "rgba(51,124,160,.18)"),
+    brand: read("--brand", "#176b68"),
+    brandSoft: read("--brand-soft", "rgba(23,107,104,.18)"),
+    success: read("--success", "#177452"),
+    warning: read("--warning", "#8a6115"),
+    error: read("--error", "#a33e38"),
+    info: read("--info", "#35627f"),
     grid: read("--border", "rgba(127,127,127,.18)"),
     text: read("--text-tertiary", "#888888"),
     surface: read("--surface-1", "#ffffff"),
     border: read("--border-strong", "#888888"),
+    fontFamily: styles.fontFamily || "sans-serif",
   };
+}
+
+function getMetricColor(theme, metricKey) {
+  switch (metricKey) {
+    case "sourceOpens":
+      return theme.info;
+    case "codeCopies":
+      return theme.brand;
+    case "verifiedLikes":
+      return theme.success;
+    case "verifiedUnlikes":
+    case "anonymousUnlikes":
+      return theme.warning;
+    case "anonymousLikes":
+      return theme.brand;
+    default:
+      return theme.brand;
+  }
 }
 
 export default function LabsEngagementTrendChart({
@@ -66,6 +89,7 @@ export default function LabsEngagementTrendChart({
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [chartReady, setChartReady] = useState(false);
   const [chartError, setChartError] = useState("");
+  const [retryNonce, setRetryNonce] = useState(0);
 
   const metric = LABS_ACTIVITY_METRICS.find((item) => item.key === metricKey) || LABS_ACTIVITY_METRICS[0];
   const buckets = useMemo(
@@ -94,6 +118,7 @@ export default function LabsEngagementTrendChart({
     metric,
     periodDays,
     reducedMotion,
+    dataSignature,
   };
 
   useEffect(() => {
@@ -105,6 +130,8 @@ export default function LabsEngagementTrendChart({
     }
 
     let cancelled = false;
+    setChartReady(false);
+    setChartError("");
 
     async function mountChart() {
       try {
@@ -131,6 +158,7 @@ export default function LabsEngagementTrendChart({
         const current = latestDataRef.current;
         const theme = readTheme(canvasRef.current);
         const reduced = current.reducedMotion;
+        const datasetColor = getMetricColor(theme, current.metric.key);
 
         chartRef.current = new Chart(canvasRef.current, {
           type: "bar",
@@ -139,9 +167,9 @@ export default function LabsEngagementTrendChart({
             datasets: [{
               label: current.metric.label,
               data: current.buckets.map((bucket) => bucket.value),
-              backgroundColor: theme.brand,
-              hoverBackgroundColor: theme.brand,
-              borderColor: theme.brand,
+              backgroundColor: datasetColor,
+              hoverBackgroundColor: datasetColor,
+              borderColor: datasetColor,
               borderWidth: 0,
               borderRadius: 5,
               borderSkipped: false,
@@ -225,7 +253,7 @@ export default function LabsEngagementTrendChart({
                   maxTicksLimit: current.periodDays >= 90 ? 9 : current.periodDays === 30 ? 8 : 7,
                   maxRotation: 0,
                   minRotation: 0,
-                  font: { size: 10, family: "inherit" },
+                  font: { size: 10, family: theme.fontFamily },
                 },
               },
               y: {
@@ -240,7 +268,7 @@ export default function LabsEngagementTrendChart({
                   color: theme.text,
                   precision: 0,
                   padding: 10,
-                  font: { size: 10, family: "inherit" },
+                  font: { size: 10, family: theme.fontFamily },
                   callback(value) {
                     return Number.isInteger(Number(value)) ? formatNumber(value) : "";
                   },
@@ -249,9 +277,14 @@ export default function LabsEngagementTrendChart({
             },
           },
         });
+        lastDataSignatureRef.current = current.dataSignature;
+        chartThemeRef.current = resolvedTheme;
         setChartReady(true);
       } catch (error) {
         if (!cancelled) {
+          chartRef.current?.destroy();
+          chartRef.current = null;
+          setChartReady(false);
           setChartError("The activity chart could not be loaded. The data table remains available.");
           console.error("[labs-analytics-chart] Chart.js failed to load:", error?.message || error);
         }
@@ -264,10 +297,8 @@ export default function LabsEngagementTrendChart({
       cancelled = true;
       chartRef.current?.destroy();
       chartRef.current = null;
-      chartModuleRef.current = null;
-      setChartReady(false);
     };
-  }, [hasBuckets]);
+  }, [hasBuckets, retryNonce]);
 
   useEffect(() => {
     const chart = chartRef.current;
@@ -280,9 +311,10 @@ export default function LabsEngagementTrendChart({
     chart.data.labels = buckets.map((bucket) => bucket.label);
     chart.data.datasets[0].label = metric.label;
     chart.data.datasets[0].data = buckets.map((bucket) => bucket.value);
-    chart.data.datasets[0].backgroundColor = theme.brand;
-    chart.data.datasets[0].hoverBackgroundColor = theme.brand;
-    chart.data.datasets[0].borderColor = theme.brand;
+    const datasetColor = getMetricColor(theme, metric.key);
+    chart.data.datasets[0].backgroundColor = datasetColor;
+    chart.data.datasets[0].hoverBackgroundColor = datasetColor;
+    chart.data.datasets[0].borderColor = datasetColor;
 
     chart.options.animation = reducedMotion
       ? false
@@ -301,7 +333,7 @@ export default function LabsEngagementTrendChart({
     if (safeIndex !== selectedIndex && selectedIndex !== null) {
       setSelectedIndex(safeIndex >= 0 ? safeIndex : null);
     }
-    chart.update(reducedMotion ? "none" : "active");
+    chart.update(reducedMotion ? "none" : "default");
     lastDataSignatureRef.current = dataSignature;
     chartThemeRef.current = resolvedTheme;
   }, [buckets, metric.key, metric.label, periodDays, reducedMotion, resolvedTheme, dataSignature]);
@@ -419,7 +451,16 @@ export default function LabsEngagementTrendChart({
       )}
 
       {chartError ? (
-        <p role="status" className="mt-3 text-xs text-warning">{chartError}</p>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3" role="status">
+          <p className="text-xs text-warning">{chartError}</p>
+          <button
+            type="button"
+            onClick={() => setRetryNonce((value) => value + 1)}
+            className="text-xs font-semibold text-brand underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          >
+            Retry chart
+          </button>
+        </div>
       ) : null}
       {hasBuckets && !hasActivity ? (
         <p className="mt-3 text-xs text-text-tertiary">No {metric.label.toLowerCase()} were recorded in this period. The zero values below are valid data, not a loading state.</p>
