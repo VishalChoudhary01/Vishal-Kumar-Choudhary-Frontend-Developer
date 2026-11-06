@@ -317,7 +317,7 @@ export const LABS_ACTIVITY_METRICS = Object.freeze([
 ]);
 
 function parseUtcDay(value) {
-  if (typeof value !== "string" || !/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     throw new TypeError("Activity dates must use YYYY-MM-DD.");
   }
   const parsed = new Date(value + "T00:00:00.000Z");
