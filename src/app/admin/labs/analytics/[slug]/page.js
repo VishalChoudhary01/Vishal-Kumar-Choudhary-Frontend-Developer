@@ -72,17 +72,26 @@ export default async function LabsExperimentAnalyticsPage({ params, searchParams
 
   let analytics = null;
   let activeVerifiedLikes = null;
+  let activeVerifiedLikesError = "";
   try {
     analytics = await getLabsOwnerExperimentAnalytics({ user: session.user, slug, days });
-    activeVerifiedLikes = await getLabsOwnerActiveVerifiedLikes({
-      user: session.user,
-      slug,
-      page: requestedLikerPage,
-      search: likerSearch,
-    });
   } catch (error) {
     if (error?.code === "NOT_FOUND") notFound();
     console.error("[labs-owner] experiment analytics unavailable:", error?.code || "ANALYTICS_UNAVAILABLE");
+  }
+
+  if (analytics) {
+    try {
+      activeVerifiedLikes = await getLabsOwnerActiveVerifiedLikes({
+        user: session.user,
+        slug,
+        page: requestedLikerPage,
+        search: likerSearch,
+      });
+    } catch (error) {
+      activeVerifiedLikesError = "The current verified-like list could not be loaded. Aggregate like totals above remain available.";
+      console.error("[labs-owner] active verified liker list unavailable:", error?.code || "LIKER_LIST_UNAVAILABLE");
+    }
   }
 
   return (
@@ -146,9 +155,11 @@ export default async function LabsExperimentAnalyticsPage({ params, searchParams
                     Current active account likes, not a history of every click. Anonymous visitors are intentionally shown only in the aggregate count above.
                   </p>
                 </div>
-                <p className="text-sm font-semibold tabular-nums text-text-primary">
-                  {number(activeVerifiedLikes?.total || 0)} accounts
-                </p>
+                {activeVerifiedLikes ? (
+                  <p className="text-sm font-semibold tabular-nums text-text-primary">
+                    {number(activeVerifiedLikes.total)} accounts
+                  </p>
+                ) : null}
               </div>
 
               <form method="GET" action={returnTo} className="mt-4 flex flex-wrap items-center gap-2">
@@ -172,7 +183,11 @@ export default async function LabsExperimentAnalyticsPage({ params, searchParams
                 ) : null}
               </form>
 
-              {activeVerifiedLikes?.items?.length ? (
+              {activeVerifiedLikesError ? (
+                <p role="alert" className="mt-4 border border-warning/40 bg-warning/10 px-4 py-4 text-xs text-warning">
+                  {activeVerifiedLikesError}
+                </p>
+              ) : activeVerifiedLikes?.items?.length ? (
                 <div className="mt-4 overflow-x-auto">
                   <table className="w-full min-w-[560px] text-left text-xs">
                     <thead className="border-y border-border text-[10px] uppercase tracking-[0.1em] text-text-tertiary">
@@ -193,13 +208,13 @@ export default async function LabsExperimentAnalyticsPage({ params, searchParams
                     </tbody>
                   </table>
                 </div>
-              ) : (
+              ) : activeVerifiedLikes ? (
                 <p className="mt-4 border border-dashed border-border px-4 py-6 text-center text-xs text-text-tertiary">
                   {likerSearch
                     ? "No active verified likes match this search."
                     : "No verified accounts currently like this experiment."}
                 </p>
-              )}
+              ) : null}
 
               {activeVerifiedLikes && activeVerifiedLikes.pages > 1 ? (
                 <nav aria-label="Verified liker pages" className="mt-4 flex items-center justify-between border-t border-border pt-3">
