@@ -2,6 +2,7 @@ import "server-only";
 
 import { connectToDatabase } from "@/app/lib/db/mongoose";
 import { publishedLabExperiments } from "@/app/data/labsExperiments";
+import { getPublishedCustomLabExperiments } from "./public-experiments";
 import LabAnalyticsEvent from "./models/LabAnalyticsEvent";
 import LabLike from "./models/LabLike";
 import LabGuestLike from "./models/LabGuestLike";
@@ -24,6 +25,92 @@ async function ensureIndexes() {
   await indexPromise;
 }
 
+function createExperimentRows(experiments) {
+  const uniqueExperiments = new Map();
+
+  for (const experiment of experiments) {
+    if (
+      typeof experiment?.slug !== "string" ||
+      typeof experiment?.title !== "string" ||
+      !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(experiment.slug)
+    ) {
+      continue;
+    }
+
+    // Keep one row per canonical slug. Static, code-owned Labs entries take
+    // precedence if a custom record ever collides with a reserved slug.
+    if (!uniqueExperiments.has(experiment.slug)) {
+      uniqueExperiments.set(experiment.slug, {
+        slug: experiment.slug,
+        title: experiment.title,
+        sourceOpens: 0,
+        uniqueVerifiedAccounts: 0,
+        codeCopies: 0,
+        verifiedLikeActions: 0,
+        verifiedUnlikeActions: 0,
+        anonymousLikeActions: 0,
+        anonymousUnlikeActions: 0,
+        activeVerifiedLikes: 0,
+        activeAnonymousLikes: 0,
+      });
+    }
+  }
+
+  return [...uniqueExperiments.values()];
+}
+
+function toUtcDateKey(date) {
+  return [
+    date.getUTCFullYear(),
+    String(date.getUTCMonth() + 1).padStart(2, "0"),
+    String(date.getUTCDate()).padStart(2, "0"),
+  ].join("-");
+}
+
+function buildCompleteDailySeries({ since, generatedAt, dailyGroups }) {
+  const groupsByDate = new Map(dailyGroups.map((day) => [day._id, day]));
+  const firstDay = new Date(Date.UTC(
+    since.getUTCFullYear(),
+    since.getUTCMonth(),
+    since.getUTCDate(),
+  ));
+  const lastDay = new Date(Date.UTC(
+    generatedAt.getUTCFullYear(),
+    generatedAt.getUTCMonth(),
+    generatedAt.getUTCDate(),
+  ));
+  const days = [];
+
+  for (
+    const cursor = new Date(firstDay);
+    cursor <= lastDay;
+    cursor.setUTCDate(cursor.getUTCDate() + 1)
+  ) {
+    const date = toUtcDateKey(cursor);
+    const group = groupsByDate.get(date);
+
+    const sourceOpens = group?.sourceOpens || 0;
+    const codeCopies = group?.codeCopies || 0;
+    const verifiedLikeActions = group?.verifiedLikeActions || 0;
+    const anonymousLikeActions = group?.anonymousLikeActions || 0;
+
+    days.push({
+      date,
+      sourceOpens,
+      codeCopies,
+      verifiedLikeActions,
+      anonymousLikeActions,
+      totalActions:
+        sourceOpens +
+        codeCopies +
+        verifiedLikeActions +
+        anonymousLikeActions,
+    });
+  }
+
+  return days;
+}
+
 export async function getLabsOwnerAnalytics({ user, days = 30 }) {
   if (!isLabsOwner(user)) {
     const error = new Error("Owner access is required.");
@@ -33,89 +120,82 @@ export async function getLabsOwnerAnalytics({ user, days = 30 }) {
 
   const allowedDays = new Set([7, 30, 90, 365]);
   const periodDays = allowedDays.has(Number(days)) ? Number(days) : 30;
-  const since = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000);
+  const generatedAt = new Date();
+  const since = new Date(generatedAt.getTime() - periodDays * 24 * 60 * 60 * 1000);
 
   await connectToDatabase();
   await ensureIndexes();
 
-  const [eventGroups, verifiedLikeGroups, guestLikeGroups, dailyGroups] = await Promise.all([
-    LabAnalyticsEvent.aggregate([
-      { $match: { occurredAt: { $gte: since } } },
-      {
-        $group: {
-          _id: {
-            slug: "$experimentSlug",
-            eventType: "$eventType",
-            actorCategory: "$actorCategory",
-          },
-          count: { $sum: 1 },
-          actorIds: { $addToSet: "$actorUserId" },
-        },
-      },
-    ]),
-    LabLike.aggregate([
-      { $match: { active: true } },
-      { $group: { _id: "$experimentSlug", count: { $sum: 1 } } },
-    ]),
-    LabGuestLike.aggregate([
-      { $match: { active: true, expiresAt: { $gt: new Date() } } },
-      { $group: { _id: "$experimentSlug", count: { $sum: 1 } } },
-    ]),
-    LabAnalyticsEvent.aggregate([
-      { $match: { occurredAt: { $gte: since } } },
-      {
-        $group: {
-          _id: {
-            $dateToString: {
-              format: "%Y-%m-%d",
-              date: "$occurredAt",
-              timezone: "UTC",
+  const [eventGroups, verifiedLikeGroups, guestLikeGroups, dailyGroups, customExperiments] =
+    await Promise.all([
+      LabAnalyticsEvent.aggregate([
+        { $match: { occurredAt: { $gte: since } } },
+        {
+          $group: {
+            _id: {
+              slug: "$experimentSlug",
+              eventType: "$eventType",
+              actorCategory: "$actorCategory",
             },
-          },
-          sourceOpens: {
-            $sum: { $cond: [{ $eq: ["$eventType", "source_open"] }, 1, 0] },
-          },
-          codeCopies: {
-            $sum: { $cond: [{ $eq: ["$eventType", "code_copy"] }, 1, 0] },
-          },
-          verifiedLikeActions: {
-            $sum: {
-              $cond: [
-                { $in: ["$eventType", ["like", "unlike"]] },
-                1,
-                0,
-              ],
-            },
-          },
-          anonymousLikeActions: {
-            $sum: {
-              $cond: [
-                { $in: ["$eventType", ["guest_like", "guest_unlike"]] },
-                1,
-                0,
-              ],
-            },
+            count: { $sum: 1 },
+            actorIds: { $addToSet: "$actorUserId" },
           },
         },
-      },
-      { $sort: { _id: 1 } },
-    ]),
+      ]),
+      LabLike.aggregate([
+        { $match: { active: true } },
+        { $group: { _id: "$experimentSlug", count: { $sum: 1 } } },
+      ]),
+      LabGuestLike.aggregate([
+        { $match: { active: true, expiresAt: { $gt: generatedAt } } },
+        { $group: { _id: "$experimentSlug", count: { $sum: 1 } } },
+      ]),
+      LabAnalyticsEvent.aggregate([
+        { $match: { occurredAt: { $gte: since, $lte: generatedAt } } },
+        {
+          $group: {
+            _id: {
+              $dateToString: {
+                format: "%Y-%m-%d",
+                date: "$occurredAt",
+                timezone: "UTC",
+              },
+            },
+            sourceOpens: {
+              $sum: { $cond: [{ $eq: ["$eventType", "source_open"] }, 1, 0] },
+            },
+            codeCopies: {
+              $sum: { $cond: [{ $eq: ["$eventType", "code_copy"] }, 1, 0] },
+            },
+            verifiedLikeActions: {
+              $sum: {
+                $cond: [
+                  { $in: ["$eventType", ["like", "unlike"]] },
+                  1,
+                  0,
+                ],
+              },
+            },
+            anonymousLikeActions: {
+              $sum: {
+                $cond: [
+                  { $in: ["$eventType", ["guest_like", "guest_unlike"]] },
+                  1,
+                  0,
+                ],
+              },
+            },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+      getPublishedCustomLabExperiments(),
+    ]);
+
+  const rows = createExperimentRows([
+    ...publishedLabExperiments,
+    ...customExperiments,
   ]);
-
-  const rows = publishedLabExperiments.map((experiment) => ({
-    slug: experiment.slug,
-    title: experiment.title,
-    sourceOpens: 0,
-    uniqueVerifiedAccounts: 0,
-    codeCopies: 0,
-    verifiedLikeActions: 0,
-    verifiedUnlikeActions: 0,
-    anonymousLikeActions: 0,
-    anonymousUnlikeActions: 0,
-    activeVerifiedLikes: 0,
-    activeAnonymousLikes: 0,
-  }));
-
   const bySlug = new Map(rows.map((row) => [row.slug, row]));
 
   for (const group of eventGroups) {
@@ -156,6 +236,8 @@ export async function getLabsOwnerAnalytics({ user, days = 30 }) {
   const totals = rows.reduce(
     (total, row) => {
       total.sourceOpens += row.sourceOpens;
+      // This is the sum of distinct accounts per experiment, not a globally
+      // deduplicated count of accounts across every experiment.
       total.uniqueVerifiedAccounts += row.uniqueVerifiedAccounts;
       total.codeCopies += row.codeCopies;
       total.verifiedLikeActions += row.verifiedLikeActions;
@@ -184,20 +266,9 @@ export async function getLabsOwnerAnalytics({ user, days = 30 }) {
   return {
     periodDays,
     since: since.toISOString(),
-    generatedAt: new Date().toISOString(),
+    generatedAt: generatedAt.toISOString(),
     totals,
-    daily: dailyGroups.map((day) => ({
-      date: day._id,
-      sourceOpens: day.sourceOpens,
-      codeCopies: day.codeCopies,
-      verifiedLikeActions: day.verifiedLikeActions,
-      anonymousLikeActions: day.anonymousLikeActions,
-      totalActions:
-        day.sourceOpens +
-        day.codeCopies +
-        day.verifiedLikeActions +
-        day.anonymousLikeActions,
-    })),
+    daily: buildCompleteDailySeries({ since, generatedAt, dailyGroups }),
     experiments: rows,
   };
 }
