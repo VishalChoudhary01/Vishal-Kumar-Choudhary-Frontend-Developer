@@ -22,7 +22,23 @@ const COPY = {
   },
 };
 
-export default function LabsOwnerAccessNotice({ status }) {
+function getSafeOwnerReturnTo(value) {
+  if (value === "/admin/labs/analytics" || value === "/admin/labs/sources" || value === "/admin/labs/sources/import") {
+    return value;
+  }
+
+  if (typeof value === "string" && /^\/admin\/labs\/sources\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) {
+    return value;
+  }
+
+  return "/admin/labs/sources";
+}
+
+export default function LabsOwnerAccessNotice({
+  status,
+  returnTo = "/admin/labs/sources",
+}) {
+  const safeReturnTo = getSafeOwnerReturnTo(returnTo);
   const config = COPY[status] || COPY["account-mismatch"];
   const Icon = config.icon;
 
@@ -40,7 +56,7 @@ export default function LabsOwnerAccessNotice({ status }) {
 
         {status === "email-unverified" ? (
           <Link
-            href={"/labs/verify-email?returnTo=" + encodeURIComponent("/admin/labs/sources")}
+            href={"/labs/verify-email?returnTo=" + encodeURIComponent(safeReturnTo)}
             className="mt-6 inline-flex h-10 items-center justify-center bg-brand px-4 text-xs font-semibold text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           >
             Verify email
