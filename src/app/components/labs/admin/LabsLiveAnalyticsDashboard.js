@@ -53,7 +53,7 @@ function MetricCard({ icon: Icon, label, value, detail }) {
   );
 }
 
-function RankingCard({ title, description, items, valueLabel, valueSuffix = "" }) {
+function RankingCard({ title, description, items, valueSuffix = "" }) {
   return (
     <article className="border border-border bg-surface-1 p-5">
       <h3 className="text-sm font-semibold">{title}</h3>
@@ -325,19 +325,16 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
             title="Most source opens"
             description="Successful verified source loads during this period."
             items={analytics.rankings?.mostSourceOpens || []}
-            valueLabel="opens"
           />
           <RankingCard
             title="Most code copies"
             description="Clipboard-success reports accepted during this period."
             items={analytics.rankings?.mostCodeCopies || []}
-            valueLabel="copies"
           />
           <RankingCard
             title="Most active likes"
             description="Current active likes; not limited to the reporting period."
             items={analytics.rankings?.mostActiveLikes || []}
-            valueLabel="active likes"
           />
         </div>
       </section>
