@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import LabArtwork from "./landing/LabArtwork";
+import { selectActiveGalleryPreview } from "@/app/lib/labs/gallery-preview-policy.mjs";
 
 /**
  * Shared non-executable renderer for gallery, featured and detail previews.
@@ -15,25 +16,38 @@ export default function LabExperimentPreview({
   sizes = "(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw",
   className = "h-full w-full",
 }) {
-  const preview =
-    experiment?.galleryPreview ||
-    experiment?.generatedPoster ||
-    experiment?.thumbnail ||
-    null;
+  const uploadedPreview = experiment?.galleryPreview || null;
   const generatedPoster = experiment?.generatedPoster || null;
-  const [failedSrc, setFailedSrc] = useState("");
+  const thumbnail = experiment?.thumbnail || null;
+  const [failedSources, setFailedSources] = useState(() => new Set());
   const [measuredDimensions, setMeasuredDimensions] = useState(null);
+  const previewSourcesKey = [
+    uploadedPreview?.src || "",
+    generatedPoster?.src || "",
+    thumbnail?.src || "",
+  ].join("|");
 
   useEffect(() => {
-    setFailedSrc("");
+    setFailedSources(new Set());
     setMeasuredDimensions(null);
-  }, [experiment?.slug, preview?.src, generatedPoster?.src]);
+  }, [experiment?.slug, previewSourcesKey]);
 
-  const activePreview = preview?.src === failedSrc
-    ? generatedPoster?.src && generatedPoster.src !== failedSrc
-      ? generatedPoster
-      : null
-    : preview;
+  const activePreview = selectActiveGalleryPreview({
+    uploadedPreview,
+    generatedPoster,
+    thumbnail,
+    failedSources,
+  });
+
+  function markPreviewFailed(src) {
+    if (!src) return;
+    setFailedSources((current) => {
+      if (current.has(src)) return current;
+      const next = new Set(current);
+      next.add(src);
+      return next;
+    });
+  }
   // Uploaded and generated media must preserve their intrinsic proportions.
   // The stage may letterbox portrait/square assets; it must never crop or stretch them.
   const fitClass = "object-contain object-center";
@@ -55,7 +69,7 @@ export default function LabExperimentPreview({
     return (
       <video
         src={activePreview.src}
-        poster={generatedPoster?.src || undefined}
+        poster={generatedPoster?.src && !failedSources.has(generatedPoster.src) ? generatedPoster.src : undefined}
         aria-label={activePreview.alt || experiment?.title || "Experiment video preview"}
         width={intrinsicWidth}
         height={intrinsicHeight}
@@ -69,7 +83,7 @@ export default function LabExperimentPreview({
           const height = event.currentTarget.videoHeight;
           if (width > 0 && height > 0) setMeasuredDimensions({ src: activePreview.src, width, height });
         }}
-        onError={() => setFailedSrc(activePreview.src)}
+        onError={() => markPreviewFailed(activePreview.src)}
         className={[`pointer-events-none block ${className}`, fitClass].join(" ")}
       />
     );
@@ -115,7 +129,7 @@ export default function LabExperimentPreview({
               const height = event.currentTarget.naturalHeight;
               if (width > 0 && height > 0) setMeasuredDimensions({ src: generatedPoster.src, width, height });
             }}
-            onError={() => setFailedSrc(generatedPoster.src)}
+            onError={() => markPreviewFailed(generatedPoster.src)}
             className={[`hidden motion-reduce:block ${className}`, fitClass].join(" ")}
           />
         ) : null}
