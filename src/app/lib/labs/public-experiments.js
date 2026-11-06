@@ -5,6 +5,7 @@ import LabExperiment from "./models/LabExperiment";
 import LabSource from "./models/LabSource";
 import LabBuildArtifact from "./models/LabBuildArtifact";
 import { selectEligiblePublishedCustomExperiments } from "./owner-analytics-utils.mjs";
+import { resolveGalleryPreviewSelection } from "./gallery-preview-policy.mjs";
 
 function isPublicBlobUrl(value) {
   if (typeof value !== "string") return false;
@@ -73,14 +74,10 @@ function toPublicExperiment(experiment, artifact) {
       }
     : null;
 
-  // Uploaded media is the selected visual. The exact build's generated
-  // poster is used only if the owner has not selected an uploaded asset.
-  const galleryVisual = galleryPreview || generatedPoster;
-  // Video is useful as an interactive gallery/detail visual, but social
-  // preview metadata requires a still image. Use the screenshot for OG tags.
-  const thumbnail = galleryPreview?.mediaKind === "video"
-    ? generatedPoster
-    : galleryVisual;
+  const { galleryVisual, thumbnail } = resolveGalleryPreviewSelection({
+    uploadedPreview: galleryPreview,
+    generatedPoster,
+  });
 
   return {
     slug: experiment.slug,
@@ -89,7 +86,8 @@ function toPublicExperiment(experiment, artifact) {
     explanation: experiment.explanation || "",
     category: experiment.category,
     technologies: Array.isArray(experiment.technologies) ? experiment.technologies : [],
-    galleryPreview,
+    galleryPreview: galleryVisual,
+    uploadedGalleryPreview: galleryPreview,
     generatedPoster,
     thumbnail,
     seo: {
