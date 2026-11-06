@@ -2,7 +2,7 @@
 
 **Status:** Code paths for this slice are committed to `feat/labs-platform-integration`. This is a repository implementation record, not deployed-release confirmation. A clean dependency install, automated tests, Next.js production build, Atlas-backed integration checks, authenticated browser QA and a new Preview deployment are still required before release.  
 **Updated:** 2026-11-06  
-**Related authorities:** [PRD](./PRD.md), [Analytics Design](./DESIGN-ANALYTICS.md), [API Contracts](./API-CONTRACTS.md), [Labs Source Management](./LABS-SOURCE-MANAGEMENT-SPEC.md), [Studio Runtime and Media Plan](./LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md), [Media Pipeline Phase 1](./LABS-MEDIA-PIPELINE-PHASE-1.md)
+**Related authorities:** [PRD](./PRD.md), [Analytics Design](./DESIGN-ANALYTICS.md), [API Contracts](./API-CONTRACTS.md), [Labs Source Management](./LABS-SOURCE-MANAGEMENT-SPEC.md), [Studio Runtime and Media Plan](./LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md), [Media Pipeline Phase 1](./LABS-MEDIA-PIPELINE-PHASE-1.md), [Public Labs page redesign plan](./LABS-PUBLIC-PAGE-REDESIGN-PLAN.md)
 
 This document records the current implementation decisions for public Labs gallery cards, their likes, owner engagement analytics, public gallery posters, Chart.js activity trends and action toasts. It does not replace the detailed metric, source-lifecycle, runtime-isolation or media security authorities linked above.
 
@@ -89,3 +89,15 @@ Code changes are present on `feat/labs-platform-integration`; do not infer build
 - build and test a new Vercel Preview for the exact branch commit. Older Preview deployments do not verify these changes.
 
 No automatic generated poster, public GIF/video poster delivery, public runtime-fallback media delivery, WebSocket analytics transport or person-level anonymous identity is included in this implementation slice. Existing dashboard refresh/polling remains the transport until a measured requirement justifies a different approach.
+
+
+## 7. Public Labs visual redesign tracking
+
+The public `/labs` hero, featured spotlight and collection redesign is planned in **[Labs Public Page Redesign — Phased Plan](./LABS-PUBLIC-PAGE-REDESIGN-PLAN.md)**.
+
+The planned hero behavior includes:
+- Coordinated `motion/react` reveal with a reduced-motion path.
+- One-time animated statistics driven by the real published experiment/category counts. Shared `MotionNumber` behavior for existing consumers, including likes, must remain unchanged unless an explicit opt-in mode is added.
+- Authentication-aware hero actions: guests receive Create account and Sign in; signed-in unverified users receive Verify email and Explore experiments; verified users receive discovery actions rather than guest auth actions. Unknown session state uses a neutral Explore action.
+
+This is a design/implementation plan only. It does not mark the public page redesign as implemented or verified. The navbar remains unchanged and all current Labs route, media, likes, source-access and publication contracts remain authoritative.
