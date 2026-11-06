@@ -1,6 +1,4 @@
-# Labs Owner Console — Analytics and Source Management Plan
-
-**Status:** Active execution plan. Phases 0–5 have implementation code committed; the route split, custom analytics correction, metadata editor, source creation handoff and initial live Analytics dashboard have Preview build coverage. Anonymous protected-route smoke tests pass. Authenticated owner actions, Atlas-backed reconciliation and visual/accessibility QA remain pending. Deterministic instrumented-event rankings and per-experiment aggregate analytics are committed and included in READY Preview deployment `dpl_ADaqDDWRKP2WjESBaKA2dqgBuv7a`; anonymous detail-page protection/return-path smoke test passes. Authenticated Atlas reconciliation and visual/accessibility QA remain pending. Phase 6 regression/release verification and further analytics instrumentation remain outstanding.  
+**Status:** Phases 0–5 of the owner-console route split, source inventory/editor, source lifecycle, aggregate analytics and live refresh are implemented in code; the prior Preview build coverage described in the audit remains tied to older commits. The current branch also contains the single-metric Chart.js trend chart, public combined-like response, transactional guest-like claim on verified sign-in, owner-only current active verified-liker panel, gallery publication-readiness diagnostics and the owner-selected release-bound public poster workflow. These additions are code-committed but have not yet passed a fresh full test/build, Atlas reconciliation, authenticated owner browser QA or a new Preview deployment. Detailed behavior and explicit deferred scope are recorded in [Labs Gallery, Engagement and Live UI Implementation](./LABS-GALLERY-ENGAGEMENT-AND-LIVE-UI-IMPLEMENTATION.md). Phase 6 release verification and remaining instrumentation are still outstanding.
 **Audited branch:** `feat/labs-platform-integration`  
 **Audited commit:** `3cfacf96ec6847e78fa2fc8f83b9bd18cd573fad`  
 **Audit date:** 2026-11-06  
@@ -23,6 +21,7 @@ This is a Labs-specific owner console, not authorization to build the deferred g
 
 ### Out of scope for this plan
 
+- Gallery-card poster promotion, public like identity/DTO, current verified-liker attribution and the shared Chart.js/toast behavior are tracked in `LABS-GALLERY-ENGAGEMENT-AND-LIVE-UI-IMPLEMENTATION.md`; this owner-console coordination plan does not redefine those contracts.
 - Replacing the public Labs listing, its four code-owned demos or their existing detail-page interactions.
 - Replacing the current source editor or changing its storage/version model for visual convenience.
 - Changing the locked owner identity or verified-account source-access policy.
