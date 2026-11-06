@@ -141,6 +141,7 @@ export default function LabCodeEditor({
   theme = "labs-dark",
   wordWrap = "off",
   minimap = false,
+  keepCurrentModel = true,
   className = "h-[420px]",
   ariaLabel = "Source code editor",
   onEditorReady,
@@ -231,7 +232,7 @@ export default function LabCodeEditor({
           }}
           onChange={safeReadOnly ? undefined : (nextValue) => onChange?.(nextValue ?? "")}
           saveViewState
-          keepCurrentModel
+          keepCurrentModel={keepCurrentModel}
           options={options}
         />
       </MonacoErrorBoundary>
