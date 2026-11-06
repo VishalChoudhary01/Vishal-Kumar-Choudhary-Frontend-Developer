@@ -1,6 +1,6 @@
 # Labs Detail Presentation and Monaco Editor — Phased Implementation Plan
 
-**Status:** Phase 1 implementation committed; deployed/browser verification pending. Monaco phases remain planned.
+**Status:** Phase 1 code implemented and tests/build passed; deployed visual QA pending. Phase 2 shared Monaco foundation implemented and tests/build passed. Phases 3–5 integrations remain planned.
 **Branch:** `feat/labs-platform-integration`
 **Last reconciled:** 6 November 2026
 **Scope:** Public Labs detail page media/layout, protected read-only source viewer, and the admin source creator's code editor.
@@ -374,10 +374,10 @@ Do not add a second unsynchronized `editorFiles` persistence state. Do not read 
 |---|---|---|
 | 0 | Baseline, dependency pin and regression contract | Existing Run/save/publish/source/like/media checks recorded |
 | 1 | Media aspect ratio and detail layout | Code/tests committed; complete Preview/browser media matrix and Like/static-detail QA |
-| 2 | Shared Monaco wrapper and local workers | Next.js production build and worker/CSP check pass |
-| 3 | Public read-only source viewer | Auth, file tabs, copy and analytics unchanged |
-| 4 | Editable Studio source creator | File operations and state synchronization pass |
-| 5 | Read-only version-history viewer | Restore and immutable versions unchanged |
+| 2 | Shared Monaco wrapper and self-hosted assets | Implemented; 6 config tests, ESLint, production build and local asset HTTP checks pass |
+| 3 | Public read-only source viewer | Pending integration using shared LabCodeEditor |
+| 4 | Editable Studio source creator | Pending integration using existing files state as authority |
+| 5 | Read-only version-history viewer | Pending integration with immutable version-scoped models |
 | 6 | Responsive/accessibility/performance polish | No page bundle regression or keyboard/focus issue |
 | 7 | Full Preview regression and owner QA | Run, Save Draft, Build & Publish, poster capture and gallery checks all pass |
 
@@ -442,3 +442,35 @@ Do not start Monaco integration until this Phase 1 gate is green.
 A new Vercel Preview deployment was requested for the latest branch after the source and regression checks passed. Vercel rejected deployment creation with HTTP 402 `api-deployments-free-per-day` and a 24-hour retry window (more than 100 deployments). The most recent READY deployment currently listed was built from commit `e0177880`, which predates the final Phase 1 implementation commits. Therefore the current source changes are **not yet deployed** and no deployed browser/media matrix has been claimed. Production has not been touched.
 
 After the Vercel quota resets, create a Preview from the current `feat/labs-platform-integration` HEAD, verify the full Next.js build, then run the real portrait/landscape/square/GIF/MP4/WebM browser matrix and Like/source-access/static-detail checks. Do not begin Monaco phases until this Preview gate is green.
+
+
+## Phase 2 implementation progress — 6 November 2026
+
+**Shared Monaco foundation implemented; source reader/creator integration intentionally not started.**
+
+Implemented:
+- Pinned `@monaco-editor/react@4.7.0` and `monaco-editor@0.57.0`. The wrapper package's published peer dependency range includes React 19; the app's React/React DOM remain pinned at 19.2.8.
+- Added `src/app/components/labs/code/LabCodeEditor.js`: client-only dynamic Monaco surface, explicit read-only/editable contract, theme tokens, line numbers, folding, 2-space indentation, 13px editor font, 22px line-height, word-wrap/minimap options, stable model path, and a plain-text fallback for failed loader/component initialization.
+- The wrapper is read-only by default. It only enables editing when `readOnly={false}` and a real `onChange` callback are both supplied.
+- Added `src/app/lib/labs/code-editor-config.mjs` for the existing source-language → Monaco-language map, URI/model-path identity and editor option defaults. Existing server-side source-file validation was not modified.
+- Added `scripts/copy-monaco-assets.mjs`. It self-hosts the pinned Monaco AMD `min/vs` assets at `public/monaco/vs`; `predev` and `prebuild` run the copy before Next.js starts/builds. The editor loader is configured to `/monaco/vs`; no public CDN is used.
+- Added `tests/labs-monaco-config.test.mjs` with six tests for all current Labs languages, fallback language, stable version/file/scope model URIs, safe path encoding and read-only/editable option behavior.
+- Added `test:labs-monaco` to `npm run build` before the existing media, analytics, SEO and Next.js build checks.
+
+Validation in a clean, non-persistent Vercel Sandbox:
+- `npm install` completed after reconciling the repository's existing incomplete lockfile.
+- Monaco foundation tests: 6/6 passed.
+- Media tests: 9/9 passed.
+- Existing Labs analytics tests: 15/15 passed.
+- ESLint passed for the new editor component, language/model helper, asset-copy script and Monaco tests.
+- SEO validation passed with zero warnings.
+- Next.js 16.4.3 production build passed; static page generation completed and the `/labs`, `/labs/[slug]`, admin source, publish and poster API routes compiled.
+- `prebuild` copied self-hosted Monaco assets successfully. Local Next server returned HTTP 200 for `/monaco/vs/loader.js`, `/monaco/vs/editor/editor.main.js` and `/monaco/vs/language/typescript/ts.worker.js`.
+
+**Still intentionally pending:**
+1. Phase 3: replace the public `pre/code` source rendering with `LabCodeEditor readOnly` only after server authorization succeeds; keep current file tabs, full-file Copy and source event calls.
+2. Phase 4: replace the Studio textarea with `LabCodeEditor editable` while keeping the existing React `files` state and `updateSelected()` flow authoritative. Run must continue to execute unsaved content, Save Draft and Build & Publish must use the exact final text.
+3. Phase 5: migrate historical code rendering to read-only Monaco with immutable version/file model IDs; restore continues to create a new draft.
+4. Browser-test an actual mounted Monaco editor and workers with CSP in the deployed Preview. The local asset HTTP checks confirm file serving, not yet keyboard/editing behavior in a real browser session.
+
+**Non-regression:** this phase did not import Monaco into `LabSourceAccess` or `LabSourceEditor`. Existing textarea/file management, protected source authorization, copy tracking, Run, Save Draft, version restore, Build & Publish, artifact capture, Like behavior and public detail non-executable contract are unchanged.
