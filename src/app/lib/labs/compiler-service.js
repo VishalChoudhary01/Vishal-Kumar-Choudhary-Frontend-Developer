@@ -230,6 +230,7 @@ async function captureReleasePoster(sandbox, { slug, versionId, buildHash, token
         LABS_CAPTURE_SCREENSHOT_PATH: screenshotPath,
         LABS_CAPTURE_RESULT_PATH: resultPath,
         LABS_CHROMIUM_EXECUTABLE_PATH: process.env.LABS_CHROMIUM_EXECUTABLE_PATH || "",
+        LABS_CHROMIUM_EXPECTED_VERSION: process.env.LABS_CHROMIUM_EXPECTED_VERSION || "",
       },
       timeoutMs: 40_000,
     });
@@ -244,6 +245,7 @@ async function captureReleasePoster(sandbox, { slug, versionId, buildHash, token
         "browser_unavailable",
         "capture_timeout",
         "capture_failed",
+        "browser_unpinned",
         "no_visible_output",
         "invalid_output",
       ]);
@@ -322,6 +324,7 @@ async function captureReleasePoster(sandbox, { slug, versionId, buildHash, token
       status: "unavailable",
       reasonCode: "capture_failed",
       captureVersion: POSTER_CAPTURE_VERSION,
+      browserVersion: typeof capture.browserVersion === "string" ? capture.browserVersion.slice(0, 160) : null,
     };
   }
 }
