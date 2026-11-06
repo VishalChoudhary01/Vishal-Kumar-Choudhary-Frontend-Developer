@@ -655,7 +655,8 @@ export async function saveOwnerLabGalleryPreview({ user, slug, assetId, altText 
   }
 
   const safeAltText = typeof altText === "string" ? altText.trim().slice(0, 300) : "";
-  const safeFit = fit === "contain" ? "contain" : "cover";
+  // Public gallery media always preserves intrinsic proportions; do not crop.
+  const safeFit = "contain";
 
   if (assetId === null || assetId === "") {
     await LabExperiment.updateOne(
