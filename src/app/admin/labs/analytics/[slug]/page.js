@@ -6,7 +6,10 @@ import LabsOwnerAccessNotice from "@/app/components/labs/admin/LabsOwnerAccessNo
 import LabsOwnerNavigation from "@/app/components/labs/admin/LabsOwnerNavigation";
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
 import { getLabsOwnerAccessStatus } from "@/app/lib/labs/owner-access";
-import { getLabsOwnerExperimentAnalytics } from "@/app/lib/labs/owner-analytics";
+import {
+  getLabsOwnerActiveVerifiedLikes,
+  getLabsOwnerExperimentAnalytics,
+} from "@/app/lib/labs/owner-analytics";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -28,11 +31,33 @@ function Metric({ icon: Icon, label, value, detail }) {
   );
 }
 
+function maskEmail(value) {
+  if (typeof value !== "string" || !value.includes("@")) return "Email unavailable";
+  const [local, ...domainParts] = value.split("@");
+  const domain = domainParts.join("@");
+  if (!local || !domain) return "Email unavailable";
+  const visible = local.length <= 2 ? local.slice(0, 1) : local.slice(0, 2);
+  return visible + "•••@" + domain;
+}
+
+function formatLikedAt(value) {
+  if (!value) return "Date unavailable";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Date unavailable";
+  return new Intl.DateTimeFormat("en-IN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Asia/Kolkata",
+  }).format(date);
+}
+
 export default async function LabsExperimentAnalyticsPage({ params, searchParams }) {
   const { slug } = await params;
   const query = await searchParams;
   const requestedDays = Number(query?.days || 30);
   const days = [7, 30, 90, 365].includes(requestedDays) ? requestedDays : 30;
+  const likerSearch = typeof query?.userSearch === "string" ? query.userSearch.slice(0, 80) : "";
+  const requestedLikerPage = Number(query?.likerPage || 1);
   const returnTo = "/admin/labs/analytics/" + encodeURIComponent(slug);
   const session = await getCurrentAuthSession();
 
@@ -46,8 +71,15 @@ export default async function LabsExperimentAnalyticsPage({ params, searchParams
   }
 
   let analytics = null;
+  let activeVerifiedLikes = null;
   try {
     analytics = await getLabsOwnerExperimentAnalytics({ user: session.user, slug, days });
+    activeVerifiedLikes = await getLabsOwnerActiveVerifiedLikes({
+      user: session.user,
+      slug,
+      page: requestedLikerPage,
+      search: likerSearch,
+    });
   } catch (error) {
     if (error?.code === "NOT_FOUND") notFound();
     console.error("[labs-owner] experiment analytics unavailable:", error?.code || "ANALYTICS_UNAVAILABLE");
@@ -104,6 +136,96 @@ export default async function LabsExperimentAnalyticsPage({ params, searchParams
                 <p className="mt-3 text-2xl font-semibold tabular-nums">{number(analytics.experiment.anonymousLikeActions)} / {number(analytics.experiment.anonymousUnlikeActions)}</p>
                 <p className="mt-1 text-xs text-text-tertiary">Best-effort anonymous actions, not unique people</p>
               </article>
+            </section>
+
+            <section className="mt-8 border border-border bg-surface-1 p-5">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-sm font-semibold">Verified accounts currently liking this experiment</h2>
+                  <p className="mt-1 max-w-2xl text-xs leading-5 text-text-tertiary">
+                    Current active account likes, not a history of every click. Anonymous visitors are intentionally shown only in the aggregate count above.
+                  </p>
+                </div>
+                <p className="text-sm font-semibold tabular-nums text-text-primary">
+                  {number(activeVerifiedLikes?.total || 0)} accounts
+                </p>
+              </div>
+
+              <form method="GET" action={returnTo} className="mt-4 flex flex-wrap items-center gap-2">
+                <input type="hidden" name="days" value={days} />
+                <input
+                  type="search"
+                  name="userSearch"
+                  defaultValue={activeVerifiedLikes?.search || likerSearch}
+                  maxLength={80}
+                  placeholder="Search name or email"
+                  aria-label="Search verified likers by name or email"
+                  className="h-9 min-w-0 flex-1 border border-border bg-background px-3 text-xs text-text-primary outline-none focus:border-brand sm:max-w-sm"
+                />
+                <button type="submit" className="h-9 border border-border px-3 text-xs font-semibold text-text-secondary hover:border-brand hover:text-brand">
+                  Search
+                </button>
+                {likerSearch ? (
+                  <Link href={returnTo + "?days=" + days} className="text-xs text-text-tertiary hover:text-text-primary">
+                    Clear
+                  </Link>
+                ) : null}
+              </form>
+
+              {activeVerifiedLikes?.items?.length ? (
+                <div className="mt-4 overflow-x-auto">
+                  <table className="w-full min-w-[560px] text-left text-xs">
+                    <thead className="border-y border-border text-[10px] uppercase tracking-[0.1em] text-text-tertiary">
+                      <tr>
+                        <th scope="col" className="py-3 pr-4 font-medium">Account</th>
+                        <th scope="col" className="py-3 pr-4 font-medium">Email</th>
+                        <th scope="col" className="py-3 font-medium">Liked at</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {activeVerifiedLikes.items.map((item, index) => (
+                        <tr key={item.email + "-" + item.likedAt + "-" + index}>
+                          <td className="py-3 pr-4 font-medium text-text-primary">{item.name}</td>
+                          <td className="py-3 pr-4 text-text-secondary">{maskEmail(item.email)}</td>
+                          <td className="py-3 tabular-nums text-text-secondary">{formatLikedAt(item.likedAt)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="mt-4 border border-dashed border-border px-4 py-6 text-center text-xs text-text-tertiary">
+                  {likerSearch
+                    ? "No active verified likes match this search."
+                    : "No verified accounts currently like this experiment."}
+                </p>
+              )}
+
+              {activeVerifiedLikes && activeVerifiedLikes.pages > 1 ? (
+                <nav aria-label="Verified liker pages" className="mt-4 flex items-center justify-between border-t border-border pt-3">
+                  <p className="text-[10px] text-text-tertiary">
+                    Page {activeVerifiedLikes.page} of {activeVerifiedLikes.pages}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    {activeVerifiedLikes.page > 1 ? (
+                      <Link
+                        href={returnTo + "?days=" + days + "&userSearch=" + encodeURIComponent(likerSearch) + "&likerPage=" + (activeVerifiedLikes.page - 1)}
+                        className="inline-flex h-8 items-center border border-border px-3 text-[10px] font-medium hover:border-brand hover:text-brand"
+                      >
+                        Previous
+                      </Link>
+                    ) : null}
+                    {activeVerifiedLikes.page < activeVerifiedLikes.pages ? (
+                      <Link
+                        href={returnTo + "?days=" + days + "&userSearch=" + encodeURIComponent(likerSearch) + "&likerPage=" + (activeVerifiedLikes.page + 1)}
+                        className="inline-flex h-8 items-center border border-border px-3 text-[10px] font-medium hover:border-brand hover:text-brand"
+                      >
+                        Next
+                      </Link>
+                    ) : null}
+                  </div>
+                </nav>
+              ) : null}
             </section>
 
             <section className="mt-8 border border-border bg-surface-1 p-5">
