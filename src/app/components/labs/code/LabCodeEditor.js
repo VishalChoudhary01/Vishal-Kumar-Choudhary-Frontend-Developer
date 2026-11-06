@@ -1,6 +1,6 @@
 "use client";
 
-import { Component, useMemo, useState } from "react";
+import { Component, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { loader } from "@monaco-editor/react";
 
@@ -147,6 +147,31 @@ export default function LabCodeEditor({
   onEditorError,
 }) {
   const [editorFailed, setEditorFailed] = useState(false);
+  const [loaderReady, setLoaderReady] = useState(false);
+  useEffect(() => {
+    let active = true;
+
+    // Initialize the AMD loader from the local public asset path before
+    // mounting the editor. A failed request switches to the working textarea.
+    loader.init()
+      .then(() => {
+        if (active) {
+          setLoaderReady(true);
+          setEditorFailed(false);
+        }
+      })
+      .catch((error) => {
+        if (active) {
+          setEditorFailed(true);
+          onEditorError?.(error);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [onEditorError]);
+
   const safeValue = typeof value === "string" ? value : "";
   const safeReadOnly = readOnly === true || typeof onChange !== "function";
   const monacoLanguage = resolveLabEditorLanguage(language);
@@ -171,6 +196,18 @@ export default function LabCodeEditor({
     />
   );
 
+  if (!loaderReady) {
+    return (
+      <div className={["min-h-48 overflow-hidden border border-border bg-surface-1", className].join(" ")}>
+        {editorFailed ? fallback : (
+          <div className="flex h-full min-h-48 items-center justify-center bg-surface-1 px-4 text-xs text-text-tertiary" role="status" aria-live="polite">
+            Loading code editor…
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className={["min-h-48 overflow-hidden border border-border bg-surface-1", className].join(" ")}>
       <MonacoErrorBoundary
@@ -193,10 +230,6 @@ export default function LabCodeEditor({
             onEditorReady?.({ editor, monaco });
           }}
           onChange={safeReadOnly ? undefined : (nextValue) => onChange?.(nextValue ?? "")}
-          onError={(error) => {
-            setEditorFailed(true);
-            onEditorError?.(error);
-          }}
           saveViewState
           keepCurrentModel
           options={options}
