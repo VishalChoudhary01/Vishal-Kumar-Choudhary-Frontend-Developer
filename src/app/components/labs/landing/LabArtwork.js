@@ -62,7 +62,7 @@ function GradientBloomArtwork() {
   return (
     <div
       aria-hidden="true"
-      className="relative flex h-full w-full items-center justify-center overflow-hidden bg-background"
+      className="relative flex h-full w-full @container items-center justify-center overflow-hidden bg-background"
       style={{
         backgroundImage:
           "radial-gradient(ellipse 56% 64% at 22% 28%, color-mix(in srgb, #07A290 58%, transparent), transparent 74%), radial-gradient(ellipse 58% 64% at 78% 72%, color-mix(in srgb, #07A290 36%, transparent), transparent 64%), conic-gradient(from 215deg at 52% 48%, transparent 0deg, color-mix(in srgb, #07A290 14%, transparent) 118deg, transparent 236deg, color-mix(in srgb, #07A290 20%, transparent) 310deg, transparent 360deg)",
