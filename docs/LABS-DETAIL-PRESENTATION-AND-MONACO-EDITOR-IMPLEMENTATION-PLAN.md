@@ -1,0 +1,406 @@
+# Labs Detail Presentation and Monaco Editor — Phased Implementation Plan
+
+**Status:** Planning / implementation not started for the visual-sizing and Monaco phases.
+**Branch:** `feat/labs-platform-integration`
+**Last reconciled:** 6 November 2026
+**Scope:** Public Labs detail page media/layout, protected read-only source viewer, and the admin source creator's code editor.
+**Change policy:** This document is the phase plan and acceptance contract. Do not replace source-management, runtime, publishing, media or authentication behavior as part of a code-editor/UI migration.
+
+---
+
+## 1. Product decisions locked
+
+These decisions are the baseline for all phases unless the owner explicitly changes them.
+
+1. **Public detail pages are non-executable.** They show project information, selected media, explanation and (for verified users) protected read-only source code. Do not mount `LabWorkspace`, a published artifact iframe, a React experiment runtime or a built-in live demo on the public detail page.
+2. **The public media precedence is locked:** explicitly promoted uploaded image/GIF/video for the current release → automatically generated poster from the exact published artifact → existing Labs artwork fallback.
+3. **Media must never be stretched or unintentionally cropped.** Preserve the uploaded/generated asset's intrinsic aspect ratio. A gallery card may have a consistent visual stage, but its media content must use a non-distorting fit and letterbox/background space when necessary.
+4. **Keep the existing Like component and engagement system.** Rearranging its position must not replace its API, cookie/session behavior, optimistic update, count, analytics or accessibility behavior.
+5. **Use Monaco Editor for both the public source reader and the owner source creator.** Reuse one Labs editor wrapper with explicit read-only and editable modes. Do not create two unrelated editor integrations.
+6. **The existing React `files` state remains authoritative** in the owner source creator. Monaco is an editing/viewing surface, not a new persistence layer.
+7. **Run, Save Draft and Build & Publish remain three distinct actions.** Monaco must not merge or change their semantics:
+   - Run executes the current working copy in a temporary isolated preview.
+   - Save Draft creates a private immutable source version.
+   - Build & Publish saves dirty working files first, builds the exact saved version, stores an immutable release, captures the optional poster and switches the public pointer only after a successful release.
+8. **The previous published release stays live if a new build fails.** Poster capture is best-effort and non-blocking after a successful build; poster failure must not turn a valid release into a failed build.
+9. **No public source leakage.** Monaco must not weaken current server-side verified-email authorization, session revalidation, source endpoints, guest states or source event rules.
+10. **Tailwind CSS v4 remains the layout/styling system.** Keep the existing restrained radius, token and responsive conventions. Do not introduce custom CSS for ordinary layout or rewrite the page design system.
+
+## 2. Current implementation inventory
+
+This section records what already exists. It is not a request to rebuild these capabilities.
+
+| Area | Current state | Evidence / behavior to preserve |
+|---|---|---|
+| React experiment compiler | Implemented | Pinned isolated React 19 toolchain with JSX/TSX, Motion, Tailwind CSS v4, Lucide and React Icons support |
+| Owner Run preview | Implemented | Run uses current working-copy files, a disposable isolated sandbox, a separate preview origin/iframe, run-scoped messages, console diagnostics and an expiring preview |
+| Compiler worker lifecycle | Implemented | Disposable Run/release workers are non-persistent; compiler snapshot is immutable and environment-configured |
+| Draft save | Implemented | Validates files and creates a private immutable source version with change summary and content hash |
+| Build & Publish | Implemented | If the working copy is dirty, saves it as a private draft first; publishes the exact saved version ID |
+| Release artifact | Implemented | Rebuilds the exact source version, stores immutable output files under a unique artifact namespace and updates the published pointer only after the release build succeeds |
+| Automatic poster capture | Implemented | Runs during the release build against the exact compiled output in the same isolated compiler sandbox; uses pinned Playwright/Chromium and a local-only capture server |
+| Poster validation/storage | Implemented | Validates PNG signature, dimensions, size, browser/capture versions and hash; stores under the exact artifact ID namespace |
+| Poster failure policy | Implemented | Capture is optional/non-blocking; unavailable status/reason is persisted; never reuses an older artifact's poster for a new release |
+| Owner poster status | Implemented | Owner media API returns current published artifact poster status; media panel has an Automatic screenshot status/preview area |
+| Private media upload | Implemented | Cloudinary authenticated uploads, server-side resource verification and owner-only media inventory |
+| Public gallery media promotion | Implemented | Owner explicitly promotes a verified image/GIF/video; promotion is copied to public Blob and bound to the exact current published artifact/source version |
+| Public media selection | Implemented | Shared selection policy: promoted upload → generated poster → existing artwork; stale release-bound uploads are not public for a new artifact |
+| Public listing eligibility | Implemented | Custom published source query includes the `published` field and requires exact matching ready artifact/version |
+| Shared preview renderer | Implemented | `LabExperimentPreview` is used for gallery/featured/detail visuals and handles media failure fallback |
+| Public detail executable workspace | Removed | `src/app/labs/[slug]/page.js` no longer mounts `LabWorkspace`; keep it absent |
+| Like/engagement | Implemented | Existing `LabLikeButton`, optimistic count, guest/signed-in behavior and server snapshot remain intact |
+| Protected source access | Implemented | Server resolves authorization before passing source to `LabSourceAccess`; verified-email/session checks and copy events remain in place |
+| Detail source code presentation | Not upgraded yet | Currently file tabs + plain `pre/code` rendering; planned read-only Monaco mode |
+| Owner editable source presentation | Not upgraded yet | Currently a controlled `textarea`; planned editable Monaco mode |
+| Version-history code viewer | Not upgraded yet | Currently plain `pre/code`; planned read-only Monaco mode |
+| Detail media aspect-ratio presentation | Needs improvement | Detail wrapper currently forces responsive 4:3/16:9 stages and preview defaults to cover for some assets; fix without changing media precedence |
+| Detail section arrangement | Needs improvement | Current header/like, media, explanation and source sections exist; reorder/refine spacing while preserving each function |
+
+### 2.1 Critical current code boundaries
+
+- Public detail route: `src/app/labs/[slug]/page.js`
+- Detail heading/category/description/technologies/Like: `src/app/components/labs/detail/LabDetailHeader.js`
+- Explanation: `src/app/components/labs/detail/LabExplanation.js`
+- Shared public media renderer: `src/app/components/labs/LabExperimentPreview.js`
+- Like and engagement behavior: `src/app/components/labs/LabLikeButton.js`
+- Protected source reader: `src/app/components/labs/detail/LabSourceAccess.js`
+- Owner source creator and release controls: `src/app/components/labs/admin/LabSourceEditor.js`
+- Owner media inventory/promotion/poster status: `src/app/components/labs/admin/LabMediaLibrary.js`
+- Publish/build/poster pipeline: `src/app/lib/labs/compiler-service.js`
+- Poster capture worker: `tools/labs-compiler/scripts/capture-poster.mjs`
+- Public selection/DTO: `src/app/lib/labs/public-experiments.js` and `src/app/lib/labs/gallery-preview-policy.mjs`
+
+## 3. Phase 0 — Baseline, dependency and regression contract
+
+**Goal:** Freeze the working application behavior before changing the visual editor.
+
+### Work
+- Record current package lock, React 19 / Next.js version, compiler snapshot ID, source API contracts and the latest successful Preview deployment.
+- Evaluate the exact `@monaco-editor/react` and Monaco package versions for the installed React 19 and Next.js versions before pinning them. Do not install a floating version or update unrelated packages.
+- Decide how Monaco's worker assets will be served locally from the application origin. Do not rely on a public CDN for editor workers.
+- Confirm dynamic client-only loading and graceful loading/error states. Monaco must not be evaluated during server rendering.
+- Capture baseline behavior for the existing Run, save, restore, publish, source access, likes and gallery media flows.
+- Add component/adapter-level test seams before swapping the text controls.
+
+### Exit criteria
+- Exact dependency versions and lockfile changes are reviewed and pinned.
+- No source-management or compiler API contract changes are required just to introduce Monaco.
+- Baseline regression cases are documented and runnable.
+
+## 4. Phase 1 — Correct media sizing and detail-page visual layout
+
+**Goal:** Make the project media look correct for landscape, portrait, square, animated and video sources. Keep content and interaction behavior.
+
+### 4.1 Media sizing rules
+
+- Remove the assumption that every detail asset must fill a fixed 4:3 mobile / 16:9 desktop crop.
+- Generated poster dimensions are 1200×900 (4:3). Preserve that ratio by default.
+- Use `object-contain` for uploaded image, GIF and generated screenshot media. Use `video { width: 100%; height: 100%; object-fit: contain; }` equivalent Tailwind utility behavior for video.
+- Preserve intrinsic dimensions where they are known. If dimensions are not known until load, allow the media element to report them and update the visual stage without stretching.
+- The outer stage may use a restrained background and a bounded responsive height. Empty space around portrait or square media is expected; it is preferable to distorting the media.
+- Do not use `object-cover` as a universal default. Any intentional crop must be explicit, owner-selected and consistent in card and detail.
+- Keep `width: 100%` and `height: auto` where a natural-height image is used. If a bounded stage is required, size the stage, not the intrinsic image.
+- Video remains muted, inline and looping for visual preview. Respect reduced-motion preferences; do not make audio autoplay.
+- GIF remains animated unless reduced motion is requested; when reduced motion is active, use the generated still if available.
+- Add a loading skeleton or stable background so the page does not jump while dimensions resolve.
+- A broken uploaded asset falls back to the generated poster, then existing artwork. A broken generated poster falls back to artwork.
+- Use the same renderer and ratio policy for card, featured and detail contexts, but allow an intentional per-context max-height.
+
+### 4.2 Detail page section order
+
+1. Back to Labs / breadcrumb.
+2. Category eyebrow.
+3. Project title.
+4. Project description.
+5. Technologies/stack metadata.
+6. Like row (same existing `LabLikeButton` and count).
+7. Project preview (selected uploaded media or generated poster).
+8. About the experiment / explanation.
+9. Protected source section.
+
+### 4.3 Detail layout contract
+
+- Retain the current max-width and responsive page gutters unless a clear breakpoint issue is found.
+- Use a readable content width for title and description; avoid forcing text across the full media width.
+- Keep the preview prominent, but cap its desktop height so portrait images do not dominate the whole page.
+- Do not let the media stage cause horizontal scrolling.
+- Keep the Like row close to project metadata. Do not duplicate the button in another section.
+- Keep the section headings semantically ordered and maintain a single page H1.
+- No executable preview/runtime returns to the public detail page.
+
+### Exit criteria
+- Test portrait, landscape, square, 4:3 generated PNG, GIF, MP4 and WebM at mobile/tablet/desktop.
+- No stretched or unintentionally cropped content.
+- Like remains functional for guest, signed-in and unverified users.
+- Public detail stays static and non-executable.
+
+## 5. Phase 2 — Shared Monaco component foundation
+
+**Goal:** Build one reusable Monaco adapter that can be used in three places without owning source persistence.
+
+### Planned component
+Create a shared client-only component, for example `src/app/components/labs/code/LabCodeEditor.js`, with explicit props:
+
+- `value`: current file content string.
+- `language`: normalized language ID from the existing source-file language.
+- `readOnly`: explicit boolean.
+- `onChange`: required only for editable mode.
+- `theme`: Labs theme mapped from existing design tokens.
+- `path/modelId`: stable URI based on experiment slug + file path + immutable version context when applicable.
+- `height/minHeight` and bounded editor container options.
+- `loadingFallback` and `errorFallback`.
+- Optional `onCopy` / editor-ready callbacks that do not own business logic.
+
+### Editor configuration
+- Line numbers enabled.
+- JetBrains Mono preferred, with local monospace fallback.
+- Font size around 13–14 px and line-height tuned for readable source.
+- Two-space tab sizing; preserve tabs/spaces already in content.
+- Word wrap off by default, with an explicit toggle.
+- Minimap disabled for the compact embedded reader/editor unless a viewport-sized desktop editor benefits from it.
+- Bracket pair colorization/matching, selection, find, keyboard navigation and accessible focus states.
+- Read-only mode prevents edits but allows text selection, find, copy and file switching.
+- No automatic source formatting or file mutation on mount.
+- Keep clipboard writes in the existing owning component so audit events continue to fire.
+- Disable Monaco features that require external language servers or package downloads; use local editor workers only.
+- Editor models must be disposed when no longer referenced; switching files must not leak models or duplicate workers.
+
+### Worker and loading strategy
+- Dynamic import with `ssr: false` in a client wrapper.
+- Self-host Monaco editor assets/workers under the application deployment.
+- Verify worker MIME type, CSP, cross-origin isolation assumptions and production asset paths.
+- Lazy-load only when the source section or editor panel is opened/visible.
+- Provide a lightweight loading placeholder; if Monaco fails to load, preserve a functional plain-text fallback rather than hiding source or making the editor unusable.
+- Keep the initial public Labs gallery/detail route from eagerly downloading Monaco for guests who never open the source section.
+
+### Exit criteria
+- Monaco loads in production Preview without external CDN access.
+- No hydration error or worker/CSP failure.
+- Plain-text fallback remains usable.
+- No source or editor business logic has moved into the Monaco wrapper.
+
+## 6. Phase 3 — Public detail source reader (read-only Monaco)
+
+**Goal:** Replace only the current protected `pre/code` visual with a read-only Monaco source reader.
+
+### Preserve current behavior
+- Server-side initial authorization through `getAuthorizedLabSource`.
+- Existing source endpoint and ownership/email verification.
+- Guest sign-in and sign-up prompts.
+- Unverified-email verification state.
+- Session mismatch, revalidation, expiry and retry behavior.
+- Source file tabs and selected-file state.
+- Copy-current-file action and copied feedback.
+- `source_open` and `code_copy` event requests (including file path/version metadata).
+- No code source sent to guests/unverified accounts.
+- No source content added to metadata, gallery DTO, public media APIs or analytics.
+- Existing file version and protected-source section anchor/return-to behavior.
+
+### Reader behavior
+- File tabs remain outside Monaco and continue to select the same file index/path.
+- Monaco runs with `readOnly: true`.
+- Language comes from the existing per-file language metadata; normalize values to Monaco's supported IDs.
+- Copy file continues to copy the selected file's exact complete content, not formatted or visible-only text.
+- Find/selection/line numbers are viewer conveniences; they must not modify source.
+- Show file path and source version above the editor.
+- On small screens, make the editor horizontally/vertically scrollable inside its own bounded panel.
+- Avoid auto-scrolling the entire page when the selected file changes.
+- Lazy-load Monaco only after the authorized source state is loaded; guests should not load Monaco.
+
+### Exit criteria
+- Guest, unverified, verified, expired-session and session-mismatch cases behave exactly as before.
+- Every file displays the correct content and language.
+- Copy file still copies the original complete content and emits the existing event once.
+- No write or draft API is called by the public source reader.
+
+## 7. Phase 4 — Owner source creator (editable Monaco)
+
+**Goal:** Replace the existing controlled textarea with the shared Monaco editor while keeping the existing source creator state and actions authoritative.
+
+### State ownership — mandatory
+
+The current `files` React state remains the one source of truth. Monaco models are a view/editor buffer only.
+
+On a user edit:
+1. Monaco emits the new text.
+2. Adapter calls the existing `updateSelected({ content: nextValue })` path (or a narrowly scoped equivalent).
+3. Existing `files` state updates.
+4. Existing byte counters, edited/new file indicators and `hasUnsavedChanges` update.
+5. Save, Run and Build & Publish consume the same `files` state.
+
+Do not add a second unsynchronized `editorFiles` persistence state. Do not read visible text back from Monaco to construct a publish request. Before save/run/publish, flush any pending editor change into the authoritative React state to prevent a last-keystroke race.
+
+### File management to preserve
+- Add file.
+- Remove file, including existing minimum-file rule.
+- Rename path.
+- Change language.
+- Import text files and preserve file type mapping.
+- Reorder files by drag/drop and arrow controls.
+- Select files and preserve correct selection after reorder/removal.
+- Starter templates (HTML/CSS, React JS and React TSX).
+- File count, per-file byte and total snapshot-size validation.
+- Restricted path and secret-file validation.
+- Unsaved-change detection, before-unload protection and edited/new badges.
+- Save private draft with change summary and request ID.
+- Discard edits.
+- Version list, immutable content hash and Live badge.
+- View historical version in read-only mode.
+- Restore historical version as a new draft.
+- Audit timeline.
+- Build & Publish confirmation/progress/errors.
+- Unpublish and delete confirmation.
+- Existing action toasts and retry/error messages.
+
+### Run behavior — do not regress
+- Run continues to submit the current unsaved working-copy files.
+- Monaco edits must be visible in the preview after Run without requiring Save Draft.
+- Run remains a temporary, isolated, separate-origin preview.
+- Existing React/JSX/TSX, Tailwind v4, Motion, icons, console relay, iframe readiness, run ID, expiry, retry and stop behavior remain unchanged.
+- Do not invoke poster capture during Run.
+- Do not add Monaco packages or browser workers to the compiler sandbox; Monaco belongs to the parent Studio UI only.
+- Run failures must remain independent from draft persistence and public release status.
+
+### Save Draft behavior — do not regress
+- Save validates the current `files` state and creates the same private immutable source version.
+- The content hash is generated from the exact files saved by React state.
+- Save remains private; it must not publish or generate a release poster.
+- Discard rehydrates the editor from the saved `source.files`; Monaco models must be synchronized to those contents.
+
+### Build & Publish behavior — do not regress
+- If editor content is dirty, Build & Publish first saves that exact content as a private draft.
+- Publish then uses the returned exact `versionId`; it must not use an older draft ID or stale Monaco model.
+- Compiler revalidates source hash, runs the existing isolated React/TSX/Tailwind/Motion build and uploads artifact-specific immutable files.
+- Automatic screenshot capture runs during this publish build against the exact built output (never against the editor UI or unsaved Run iframe).
+- Poster capture remains optional and non-blocking; capture failure records a reason and uses artwork/upload fallback.
+- The published pointer changes only after the artifact is complete and accepted.
+- Previous published artifact remains live on compilation, upload or publish failure.
+- Unique artifact Blob namespaces and `allowOverwrite: false` remain unchanged.
+- Unpublish, source audit, version history and cleanup behavior remain unchanged.
+
+### Exit criteria
+- Editing through Monaco produces the same `files` state as editing the old textarea.
+- Save, discard, Run and Build & Publish use the current text with no stale-content race.
+- Every file operation listed above passes regression tests.
+- A failed Run does not mutate the saved draft or live release.
+- A failed Publish does not switch the live release.
+- No new source upload or package install occurs inside the sandbox.
+
+## 8. Phase 5 — Version-history viewer
+
+**Goal:** Replace historical version `pre/code` rendering with the same shared Monaco component in read-only mode.
+
+- Keep version metadata, immutable content hash and file tabs.
+- Read-only Monaco must use a model identity that includes the immutable version ID and file path; it must not reuse the editable draft model.
+- Restoring a historical version still calls the existing restore API and creates a new draft. It must not edit the historical version in place.
+- Closing the version modal disposes unused models.
+- The historical file content remains exactly as stored; no reformat or mutation.
+
+### Exit criteria
+- Historical versions remain read-only.
+- Restore creates a new draft and current editor state refreshes.
+- Editing the current draft cannot alter the historical viewer model.
+
+## 9. Phase 6 — Detail and Studio layout polish
+
+- Apply the approved detail section order from Phase 1.
+- Keep the Like button and its current behavior, only reposition the existing component.
+- Align source reader header, file tabs and Monaco editor into one cohesive section.
+- In the Studio, preserve the existing Files / Editor / Live Preview three-column workflow.
+- Monaco replaces only the textarea; it does not replace Files sidebar, path/language controls, live preview, console, draft controls or release controls.
+- Keep responsive stack behavior and minimum usable editor/preview widths.
+- Do not introduce excessive rounding or custom CSS; use Tailwind v4 and current token conventions.
+- Respect reduced motion and focus-visible behavior.
+
+## 10. Phase 7 — Verification matrix
+
+### Media sizing
+- 1200×900 generated screenshot.
+- Wide landscape image (e.g. 16:9).
+- Portrait image.
+- Square image.
+- Animated GIF.
+- MP4 video.
+- WebM video.
+- Broken uploaded asset → generated poster.
+- Broken generated poster → existing artwork.
+- Check mobile, tablet and desktop; no stretch, unexpected crop or horizontal overflow.
+
+### Public detail
+- Back to Labs navigation.
+- Category/title/description/technologies.
+- Like as guest, signed-in, unverified and unavailable.
+- Like count and optimistic rollback after failed request.
+- Explanation display and absent explanation.
+- Static media only; no iframe, sandbox or executable runtime request.
+- Guest and verified source states.
+
+### Protected source reader
+- Guest receives no source content.
+- Unverified account receives verification UI and no source content.
+- Verified account loads source and all files.
+- File switching, language mode, line numbers and selection.
+- Copy selected file exactly once and source event once.
+- Session expiry/revalidation clears source as before.
+- Monaco unavailable falls back to plain text without exposing source to unauthorized users.
+
+### Owner source creator
+- Type into JS, JSX, TS, TSX, HTML, CSS, JSON, SVG, Markdown and text files.
+- Add/import/rename/remove/reorder files.
+- Change language and switch files rapidly.
+- Unsaved indicator updates correctly.
+- Save draft includes final keystroke.
+- Discard resets editor model and file state.
+- Run uses unsaved contents and refreshes only temporary preview.
+- Console and run-scoped iframe handshake still work.
+- Historical version opens read-only and restore creates a new draft.
+- Build & Publish saves dirty content first and uses exact saved version.
+- Poster capture occurs during publish only.
+- Release failure preserves previous live artifact.
+- Monaco load/worker failure has a usable text fallback.
+
+### Performance and security
+- Monaco not loaded on initial gallery route.
+- Monaco not loaded for guest until the authorized source reader is opened.
+- Editor workers are self-hosted and pass CSP/production build checks.
+- No source content in guest HTML, metadata or public API.
+- No source/editor data sent to the compiler beyond the exact Run/Save/Publish payloads already allowed.
+- No external package install or network access added to compiler jobs.
+- No new global state/store unless a concrete requirement is proven.
+
+## 11. Implementation order and release gates
+
+| Phase | Work | Gate |
+|---|---|---|
+| 0 | Baseline, dependency pin and regression contract | Existing Run/save/publish/source/like/media checks recorded |
+| 1 | Media aspect ratio and detail layout | All media types preserve proportions; Like and static detail verified |
+| 2 | Shared Monaco wrapper and local workers | Next.js production build and worker/CSP check pass |
+| 3 | Public read-only source viewer | Auth, file tabs, copy and analytics unchanged |
+| 4 | Editable Studio source creator | File operations and state synchronization pass |
+| 5 | Read-only version-history viewer | Restore and immutable versions unchanged |
+| 6 | Responsive/accessibility/performance polish | No page bundle regression or keyboard/focus issue |
+| 7 | Full Preview regression and owner QA | Run, Save Draft, Build & Publish, poster capture and gallery checks all pass |
+
+Do not ship a phase that weakens a gate from an earlier phase. Use a Preview deployment first; Production remains unchanged until explicit release approval.
+
+## 12. Explicit non-goals
+
+- Do not restore executable code to the public Labs detail page.
+- Do not delete `LabWorkspace` or compiler/runtime infrastructure; the admin Run action still depends on it.
+- Do not change React/Next/Tailwind/Motion runtime versions as part of Monaco.
+- Do not replace existing source version APIs, MongoDB models or Blob artifact layout.
+- Do not change automatic poster capture timing or make it run on every page visit.
+- Do not automatically publish uploaded media; owner promotion remains explicit.
+- Do not change Like business logic, engagement model or API.
+- Do not convert the portfolio application to TypeScript just to support TSX source files.
+- Do not lose or simplify any existing admin controls, access restrictions, diagnostics or error handling.
+
+## 13. Current implementation status summary
+
+**Already implemented:** isolated React code Run preview; private draft/version workflow; exact-version Build & Publish; immutable artifact upload; poster capture during publish; artifact-bound public poster delivery; uploaded image/GIF/video promotion and media precedence; public custom listing query; owner poster status display; static public detail page; Like/engagement; protected source access/copy.
+
+**Planned in this document:** fix the media's no-distortion sizing/layout, rearrange detail sections, introduce shared Monaco component, replace public source `pre/code` with read-only Monaco, replace owner textarea and history `pre/code` with editable/read-only Monaco modes, and complete all regression/performance/accessibility checks.
+
+**Not yet implemented by this plan:** Monaco package installation, local worker delivery, Monaco wrapper, any Monaco integration, and the new detail layout/media sizing changes.
+
+This plan is the acceptance contract for the next implementation work. Update its status table after each phase is completed; do not mark a phase complete from a source-only change without its stated verification.
