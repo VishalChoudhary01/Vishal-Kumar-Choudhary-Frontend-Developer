@@ -15,6 +15,7 @@ const labSourceAuditEventSchema = new mongoose.Schema(
         "media_upload_intent_created",
         "media_uploaded",
         "media_attachments_updated",
+        "gallery_preview_updated",
         "draft_saved",
         "source_published",
         "source_unpublished",
