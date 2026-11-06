@@ -24,8 +24,12 @@ function isValidGeneratedPoster(poster) {
  * Video still uses the generated PNG as its social/metadata thumbnail.
  */
 export function resolveGalleryPreviewSelection({ uploadedPreview = null, generatedPoster = null } = {}) {
-  const uploaded = isValidUploadedPreview(uploadedPreview) ? uploadedPreview : null;
-  const generated = isValidGeneratedPoster(generatedPoster) ? generatedPoster : null;
+  const uploaded = isValidUploadedPreview(uploadedPreview)
+    ? { ...uploadedPreview, fit: "contain" }
+    : null;
+  const generated = isValidGeneratedPoster(generatedPoster)
+    ? { ...generatedPoster, fit: "contain" }
+    : null;
   return {
     galleryVisual: uploaded || generated,
     thumbnail: uploaded?.mediaKind === "image" ? uploaded : generated,
