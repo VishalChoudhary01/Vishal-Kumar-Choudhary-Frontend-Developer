@@ -192,7 +192,7 @@ export async function getPublishedCustomLabExperiments() {
 }
 
 
-function buildPublishedEligibilityStages({ category } = {}) {
+function buildPublishedEligibilityStages({ category, cursorMatch = null } = {}) {
   const experimentMatch = {
     kind: "custom",
     status: "published",
@@ -204,6 +204,7 @@ function buildPublishedEligibilityStages({ category } = {}) {
 
   return [
     { $match: experimentMatch },
+    ...(cursorMatch ? [{ $match: cursorMatch }] : []),
     {
       $lookup: {
         from: LabSource.collection.name,
@@ -288,8 +289,7 @@ export async function getPublishedCustomLabExperimentPage({
     : null;
 
   const pagePipeline = [
-    ...buildPublishedEligibilityStages({ category }),
-    ...(cursorMatch ? [{ $match: cursorMatch }] : []),
+    ...buildPublishedEligibilityStages({ category, cursorMatch }),
     { $sort: { publishedAt: -1, updatedAt: -1, _id: -1 } },
     { $limit: pageSize + 1 },
     {
