@@ -109,6 +109,98 @@ async function ensureEngagementIndexes() {
   await engagementIndexesPromise;
 }
 
+/**
+ * Migrate active anonymous likes into the verified account when the visitor
+ * signs in on the same browser profile. The historical event remains
+ * attributed to the guest; this operation changes current state only and
+ * deliberately does not synthesize a verified "like" event.
+ *
+ * Anonymous identity is browser-cookie based, not a claim about a natural
+ * person. Cookie-cleared/private sessions remain separate anonymous actors.
+ */
+export async function mergeGuestLikesIntoVerifiedAccount({ guestKeyHash, userId }) {
+  if (
+    typeof guestKeyHash !== "string" ||
+    !/^[a-f0-9]{64}$/i.test(guestKeyHash) ||
+    typeof userId !== "string" ||
+    !userId.trim() ||
+    userId.length > 128
+  ) {
+    return { migratedCount: 0 };
+  }
+
+  await connectToDatabase();
+  await ensureEngagementIndexes();
+
+  const now = new Date();
+  const session = await mongoose.startSession();
+  let migratedCount = 0;
+
+  try {
+    await session.withTransaction(async () => {
+      const guestLikes = await LabGuestLike.find({
+        guestKeyHash,
+        active: true,
+        expiresAt: { $gt: now },
+      })
+        .select("experimentSlug lastTransitionAt createdAt")
+        .session(session)
+        .lean();
+
+      for (const guestLike of guestLikes) {
+        const existing = await LabLike.findOne({
+          userId,
+          experimentSlug: guestLike.experimentSlug,
+        })
+          .session(session)
+          .lean();
+
+        if (!existing) {
+          await LabLike.create(
+            [{
+              userId,
+              experimentSlug: guestLike.experimentSlug,
+              active: true,
+              lastTransitionAt: guestLike.lastTransitionAt || now,
+              createdAt: guestLike.createdAt || now,
+              updatedAt: now,
+            }],
+            { session },
+          );
+        } else if (existing.active !== true) {
+          await LabLike.updateOne(
+            { _id: existing._id, active: false },
+            {
+              $set: {
+                active: true,
+                lastTransitionAt: guestLike.lastTransitionAt || now,
+              },
+            },
+            { session },
+          );
+        }
+
+        const deactivated = await LabGuestLike.updateOne(
+          { _id: guestLike._id, active: true },
+          {
+            $set: {
+              active: false,
+              lastTransitionAt: now,
+              expiresAt: now,
+            },
+          },
+          { session },
+        );
+        migratedCount += deactivated.modifiedCount;
+      }
+    });
+  } finally {
+    await session.endSession();
+  }
+
+  return { migratedCount };
+}
+
 export async function getLabEngagement({ slug, actor }) {
   await connectToDatabase();
   await ensureEngagementIndexes();
@@ -482,6 +574,18 @@ export async function getLabEngagementSnapshot({
   const isUnverified = Boolean(session?.user?.id && session.user.emailVerified !== true);
   let actor = isVerified ? { type: "verified", userId: session.user.id } : null;
 
+  if (isVerified && typeof guestCookieValue === "string" && guestCookieValue) {
+    const guestIdentity = resolveGuestIdentity({
+      cookies: {
+        get: (name) => name === LABS_GUEST_LIKE_COOKIE ? { value: guestCookieValue } : undefined,
+      },
+    });
+    await mergeGuestLikesIntoVerifiedAccount({
+      guestKeyHash: guestIdentity.guestKeyHash,
+      userId: session.user.id,
+    });
+  }
+
   if (!session?.user?.id && typeof guestCookieValue === "string" && guestCookieValue) {
     const identity = resolveGuestIdentity({
       cookies: {
@@ -500,12 +604,10 @@ export async function getLabEngagementSnapshot({
   return Object.fromEntries(uniqueSlugs.map((slug) => [
     slug,
     {
-      ...(engagementBySlug[slug] || {
-        verifiedLikes: 0,
-        anonymousLikes: 0,
-        totalLikes: 0,
-        liked: false,
-      }),
+      // Public surfaces receive only the combined count. Actor breakdown is
+      // deliberately kept inside the owner-only analytics repository.
+      totalLikes: engagementBySlug[slug]?.totalLikes || 0,
+      liked: engagementBySlug[slug]?.liked === true,
       likeAllowed: !session?.user?.id || isVerified,
       actorType: isVerified ? "verified_user" : isUnverified ? "unverified" : "guest",
     },
