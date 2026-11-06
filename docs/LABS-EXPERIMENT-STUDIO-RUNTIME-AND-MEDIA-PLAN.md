@@ -1462,3 +1462,10 @@ LabExperimentPreview is shared by the gallery cards, featured experiment and det
 - The publish Route Handler maxDuration is set to 60, which is the Hobby plan maximum. A prior value of 300 caused Vercel to reject deployments with invalid_max_duration; this was corrected.
 
 Deployment verification: the latest Preview deployment for commit 08865f6c5603dcd3a5a35e79bb9a053dde7e266f is being built after the 60-second limit correction. The application source, compiler smoke tests and local artifact capture are verified, but public HTTP gallery response, owner media API response against the live database, and signed-in publish-to-gallery browser journey must still be checked against the resulting READY deployment. Production environment and deployment remain untouched.
+### 45.5 Preview deployment result — 6 November 2026
+
+The application code for the listing projection, owner release-poster status UI/API, shared preview resilience and screenshot route was built successfully in Vercel Preview deployment `dpl_7C1ecFh5RvNWE9UJfFeZYvVJCVb3` from commit `08865f6c5603dcd3a5a35e79bb9a053dde7e266f`. Deployment state: READY. The Next.js production build completed in 26 seconds, all 15 app test cases passed, and Vercel returned no runtime-error clusters for this deployment during the verification window.
+
+The same preview deployment includes the `maxDuration = 60` correction for Hobby. The later documentation-only commit `7243a5d109a60a67771b0cf9cffb99b3da207b5f` is the current branch HEAD; it does not change the deployed application code.
+
+Still outstanding: make an authenticated request to the owner media endpoint for a real custom experiment, confirm its live artifact `previewPoster` status, and inspect `/labs` plus `/labs/{slug}` in a signed-in/anonymous browser session. The deployment log query contains no runtime requests yet, and the available page inspection client could not fetch this Preview URL, so the final database-backed gallery/owner browser journey is not represented as tested. Production remains untouched.
