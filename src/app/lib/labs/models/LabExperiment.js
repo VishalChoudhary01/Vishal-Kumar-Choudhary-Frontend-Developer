@@ -97,6 +97,16 @@ labExperimentSchema.index(
   { name: "lab_experiments_status_updated" },
 );
 
+labExperimentSchema.index(
+  { kind: 1, status: 1, publishedAt: -1, updatedAt: -1, _id: -1 },
+  { name: "lab_experiments_publication_cursor" },
+);
+
+labExperimentSchema.index(
+  { kind: 1, status: 1, category: 1, publishedAt: -1, updatedAt: -1, _id: -1 },
+  { name: "lab_experiments_category_publication_cursor" },
+);
+
 const LabExperiment =
   mongoose.models.LabExperiment ||
   mongoose.model("LabExperiment", labExperimentSchema);
