@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Activity,
   Copy,
   Eye,
   Heart,
