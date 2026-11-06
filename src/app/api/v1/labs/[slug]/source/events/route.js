@@ -15,7 +15,7 @@ export const revalidate = 0;
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const EVENT_ID_PATTERN = /^[A-Za-z0-9_-]{8,100}$/;
 
-function json(body, status = 200) {
+function json(body, status = 200, extraHeaders = {}) {
   return NextResponse.json(body, {
     status,
     headers: {
@@ -23,6 +23,7 @@ function json(body, status = 200) {
       Pragma: "no-cache",
       Vary: "Cookie, Authorization",
       "X-Content-Type-Options": "nosniff",
+      ...extraHeaders,
     },
   });
 }
@@ -149,6 +150,21 @@ export async function POST(request, { params }) {
       filePath,
       eventId,
     });
+
+    if (result.rateLimited) {
+      const retryAfterSeconds = Math.max(1, Number(result.retryAfterSeconds) || 1);
+      return json(
+        {
+          error: {
+            code: "RATE_LIMITED",
+            message: "Too many source events. Please wait before trying again.",
+            retryAfterSeconds,
+          },
+        },
+        429,
+        { "Retry-After": String(retryAfterSeconds) },
+      );
+    }
 
     return json({ data: result });
   } catch (error) {
