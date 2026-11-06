@@ -1,8 +1,8 @@
 # Labs Source Management — Owner Console and Protected Code Lifecycle
 
-**Status:** Source storage/editor foundation, owner-created experiment catalogue, source-access/engagement routes, initial signed Cloudinary upload/verification path, isolated compiler and runtime foundations are implemented on `feat/labs-platform-integration`. Static HTML/CSS/JavaScript and React JSX/TSX compiler smoke coverage exists. Deployed owner Run, public custom-experiment detail rendering, immutable release verification, generated poster capture and first-class media-role migration remain unverified or planned. The 5 November 2026 browser evidence shows a blank Spotlight Dock detail runtime and missing custom gallery visuals; see `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md` for P0 recovery and phased gates. Production release remains gated by owner/SMTP configuration, Atlas provisioning/migration, Cloudinary preset/quota setup, sandbox/security validation and privacy review.  
-**Version:** 0.2  
-**Updated:** 2026-11-05  
+**Status:** Source inventory/editor, owner-created experiment catalogue, owner-only source lifecycle APIs, immutable source versions, audit and initial aggregate engagement analytics are present on `feat/labs-platform-integration`. This is a code-baseline statement, not deployed end-to-end verification. The combined Analytics + Source Library page, create-to-editor handoff and missing metadata-update workflow are being separated/extended under `LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md`. Custom-experiment analytics coverage and live Analytics refresh remain incomplete. Deployed owner Run, public custom-experiment detail rendering, immutable release verification, generated poster capture and first-class media-role migration remain unverified or planned; see `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`. Production release remains gated by owner/SMTP configuration, Atlas provisioning/migration, Cloudinary preset/quota setup, sandbox/security validation and privacy review.  
+**Version:** 0.3  
+**Updated:** 2026-11-06  
 **Related:** `PRD.md`, `ARCHITECTURE.md`, `API-CONTRACTS.md`, `THREAT-MODEL.md`, `IMPLEMENTATION-PLAN.md`, `DESIGN-LAB.md`, `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`, `LABS-AND-AUTHENTICATION-DESIGN-SPEC.md`, `LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md`
 
 ---
@@ -101,7 +101,7 @@ The product's existing Guest / Registered User / Admin taxonomy remains. For thi
 
 ## 5. Owner source-management experience
 
-Proposed route family: an owner-only Labs source workspace under the existing admin route convention, for example `/admin/labs/sources`. Exact route naming is **OPEN** until the API/UI implementation slice is approved.
+The current route family is implemented on the audited integration branch: `/admin/labs/sources` is the Source Library, `/admin/labs/sources/[slug]` is the source-code workspace, and `/admin/labs/sources/import` is the existing import entry point. The target separate owner Analytics routes are `/admin/labs/analytics` and `/admin/labs/analytics/[slug]`. The owner-console navigation and delivery sequence are defined in `LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md`. These routes remain owner protected and are not a general portfolio CMS.
 
 
 Owner navigation/authentication requirements:
@@ -119,7 +119,7 @@ Owner can see:
 - File count and total UTF-8 size.
 - Source validation status.
 - Whether source is currently published and available to all verified accounts.
-- Source opens, unique verified accounts, code-copy actions, current likes, like/unlike actions and latest aggregate activity (not raw source content or user-level browsing history).
+- Source presence, draft/published status, latest version and update time, file count/size and validation state. Link to Analytics for engagement reports; do not repeat full metric cards, charts or rankings inside the inventory.
 
 The inventory must not change public Labs cards or expose private metadata to guests.
 
@@ -216,12 +216,16 @@ Source-open events are recorded only after the source endpoint successfully auth
 Analytics event records use the server-derived Better Auth user ID for abuse control/deduplication, never a client-supplied identity. Avoid storing email, raw IP, full source contents, clipboard text or unnecessary device data. Retention and account-deletion handling must be approved and disclosed before production analytics launch.
 
 
-### 5.8 Owner entry point
+### 5.8 Owner entry point and navigation
 
-- The owner must have a discoverable, authenticated entry into source management and the source-engagement dashboard. Candidate entry points are owner-only Labs account-menu/dashboard items and/or a `Manage source` action in the experiment's source section.
-- The server determines whether the current actor is the owner and passes only the safe UI capability state. The client must never infer owner access from email text or browser state.
-- The final navigation placement and wording remain an owner UX review item. Direct navigation to the owner route must still run the owner guard and return 403 for non-owners.
+- The target owner account-menu entry opens `/admin/labs/analytics`.
+- The owner navigation provides separate Analytics and Source Library destinations. The Source Library remains `/admin/labs/sources`; it does not redirect to Analytics.
+- Existing deep links to `/admin/labs/sources/[slug]` and `/admin/labs/sources/import` remain valid.
+- The owner may enter a source workspace from the library or its experiment details. A source open is not an Analytics action and does not create a second editor.
+- The server determines whether the current actor is the owner and passes only safe UI capability state. The client must never infer owner access from email text or browser state.
+- Direct navigation to every owner page and every owner API must still run the owner guard and deny non-owners.
 - The public experiment demo and ordinary user source-access panel remain unchanged for guests and regular users.
+- Analytics page structure and live-update behavior are defined by `DESIGN-ANALYTICS.md`; do not duplicate chart or metric requirements here.
 
 ## 6. Recommended data model evolution
 
@@ -298,7 +302,7 @@ The following route contracts are implemented on `feat/labs-platform-integration
 | Source analytics | `GET /api/v1/admin/labs/analytics?days=30` | Owner-only aggregate analytics across experiments; supports 7, 30, 90 or 365 days |
 | Owner status | `GET /api/v1/admin/labs/owner-status` | Safe boolean capability response for the owner navigation link |
 
-The source-management service writes append-only owner audit records; `GET /api/v1/admin/labs/sources/:slug/audit` and the editor's recent audit timeline are implemented. Owner analytics are aggregate-only and do not expose visitor-level event histories.
+The source-management service writes append-only owner audit records; `GET /api/v1/admin/labs/sources/:slug/audit` and the editor's recent audit timeline are implemented. The experiment create and delete endpoints exist; an owner-only experiment metadata `PATCH` endpoint is not yet implemented. Its target contract belongs in the experiment-management section of the API contract and must remain separate from source-version writes. Owner analytics are aggregate-only and do not expose visitor-level event histories.
 
 Keep the existing user-facing endpoint `GET /api/v1/labs/:slug/source` as the only regular-user source read. Target policy requires a valid verified Better Auth session + published pointer; no grant lookup is performed. The response remains private/no-store.
 
@@ -371,9 +375,11 @@ All mutations call server-only domain use cases and repositories. Never let UI c
 - **Remaining:** run Atlas-backed integration tests for Guest, unverified, verified, Owner, expired session, stale pointers, unique-index races and replayed mutations.
 
 ### Phase D — Owner source workspace UI
-- **Code complete:** owner inventory, file add/import/edit/rename/delete, save/discard, validation, immutable version history and read-only version preview, restore-as-new-draft, publish/unpublish confirmations, audit timeline, engagement period controls and daily activity chart.
-- **Validation:** targeted lint passes and the production build confirms all owner/API routes. Visual keyboard, responsive, contrast and accessibility QA remains to be performed in a browser.
-- **Remaining:** complete browser-based QA; owner UI/editor is isolated from the public Labs listing and public detail rendering.
+- **Code present:** owner inventory, file add/import/edit/rename/delete, save/discard, validation, immutable version history and read-only version preview, restore-as-new-draft, publish/unpublish confirmations, audit timeline, engagement period controls and daily activity chart.
+- **Known workflow gap:** after creating a source head from the inventory, the current UI updates the row but does not automatically navigate into the new workspace. The owner must click Open workspace separately. The owner-console plan makes successful creation navigate directly to the confirmed workspace URL.
+- **Known page separation gap:** analytics is currently rendered above the inventory on `/admin/labs/sources`. The target moves analytics to its own owner route and leaves the Source Library responsible for inventory/search/actions.
+- **Known metadata gap:** source files can be edited, but custom experiment title/description/explanation/category/technologies have no update UI/API yet. Add a separate metadata editor and PATCH operation; do not mix catalogue metadata with source file editing.
+- **Validation:** code presence and route builds do not prove deployed Atlas/browser behavior. Visual keyboard, responsive, contrast, animation, polling and accessibility QA remains to be performed.
 
 ### Phase E — First real source snapshot and end-to-end validation
 - Import the audited `magnetic-interaction` source files into a draft version.
@@ -401,6 +407,10 @@ All mutations call server-only domain use cases and repositories. Never let UI c
 - [ ] Every verified registered user can access all published source without per-user grants.
 - [ ] Guests and signed-in unverified users are denied; verified accounts are allowed when source is published.
 - [ ] The owner can manage drafts/versions and view analytics without a per-experiment grant.
+- [ ] Source Library creation opens the newly created workspace only after the server confirms source-head creation; an existing source opens the existing workspace without duplicate creation.
+- [ ] Analytics and Source Library are separate owner routes; the Sources route is not redirected to Analytics.
+- [ ] Custom experiment metadata has a distinct owner-only edit workflow and cannot mutate source files, source versions, published pointers or immutable artifacts.
+- [ ] The existing source editor operations (file add/import/edit/rename/delete/reorder, validation, save, version view/restore, preview, publish/unpublish and audit) remain available and pass regression tests.
 - [ ] Source files never appear in guest HTML, RSC payloads, public DTOs, source maps or public caches.
 - [ ] All private responses use no-store/private cache headers.
 - [ ] Failed or stale mutations do not overwrite newer draft/published state.
