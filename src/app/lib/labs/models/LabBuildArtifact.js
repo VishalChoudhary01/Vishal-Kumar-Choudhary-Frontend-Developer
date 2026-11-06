@@ -24,7 +24,8 @@ const labPreviewPosterSchema = new mongoose.Schema(
     contentHash: { type: String, default: null, match: /^[a-f0-9]{64}$/ },
     captureVersion: { type: String, required: true, maxlength: 40 },
     browserVersion: { type: String, default: null, maxlength: 160 },
-    reasonCode: { type: String, default: null, enum: [null, "browser_unavailable", "capture_timeout", "capture_failed", "no_visible_output", "invalid_output", "browser_unpinned"] },
+    playwrightVersion: { type: String, default: null, maxlength: 40 },
+    reasonCode: { type: String, default: null, enum: [null, "browser_unavailable", "capture_timeout", "capture_failed", "no_visible_output", "invalid_output", "browser_unpinned", "browser_version_mismatch", "navigation_failed", "runtime_error"] },
   },
   { _id: false, strict: "throw" },
 );
