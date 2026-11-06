@@ -1,8 +1,8 @@
 # Product Requirements Document — Portfolio Platform
 
-**Status:** Approved requirements baseline with a phased Labs runtime, gallery, media and interaction roadmap. Current Labs implementation has deployed preview/runtime regressions that must pass the documented recovery gate; CMS/Admin remains deferred.  
-**Version:** 1.2  
-**Scope:** Existing portfolio extension: CMS/admin, analytics, media library, user accounts, and Component Lab. The current Labs branch includes the initial auth and protected-source read foundation; owner-managed source authoring/versioning and engagement analytics remain planned.
+**Status:** Approved product requirements baseline. The `feat/labs-platform-integration` branch contains the public Labs/auth foundation, owner source inventory/editor, source lifecycle APIs, immutable version/audit foundations and initial aggregate source-engagement analytics. The owner console is currently combined under the Sources route; dedicated Analytics/Source Library separation, custom-experiment analytics coverage, metadata editing and live refresh remain planned. Preview/runtime and media release gates remain governed by the Runtime and Media Plan.  
+**Version:** 1.3  
+**Scope:** Existing portfolio extension: Labs, authentication, owner-managed source lifecycle, analytics, media and the separately deferred general portfolio CMS/Admin. This PRD records target requirements; branch code or a rendered page alone does not establish production readiness.
 
 ## 1. Product vision
 Extend the existing developer portfolio into a maintainable platform where the owner can manage selected portfolio content and publish React component/animation experiments through a controlled Lab. Provide useful engagement analytics without compromising the public portfolio's performance, design, security, SEO, or behavior.
@@ -81,7 +81,7 @@ Extend the existing developer portfolio into a maintainable platform where the o
 - A save action must not automatically publish.
 
 ### FR-02 Lab management
-- Create and edit experiment metadata and source/configuration through an owner-only management workflow.
+- Create and edit custom experiment metadata through a dedicated owner-only metadata workflow, separately from the source-code editor. The current branch implements experiment creation and deletion; a metadata-update API/UI remains to be added.
 - Create source aggregates for existing experiment slugs, add/edit/rename/delete text files, validate file paths and size limits, and save draft snapshots.
 - Publish/unpublish an exact saved source version; preserve immutable history and restore by creating a new version.
 - Published source is automatically readable by every registered account whose email is verified. There is no per-user source grant/revoke workflow; the owner controls availability through publish/unpublish.
@@ -166,7 +166,7 @@ Track, at minimum:
 
 ### FR-10 Admin experience
 - Responsive dedicated admin area with shared navigation and reusable form/table/panel patterns.
-- Proposed routes: `/admin`, `/admin/lab`, `/admin/lab/new`, `/admin/projects`, `/admin/projects/new`, `/admin/experience`, `/admin/portfolio`, `/admin/analytics`, `/admin/settings`. Refine after inspecting the current repository.
+- Existing Labs owner routes are `/admin/labs/sources` (Source Library), `/admin/labs/sources/[slug]` (source-code workspace), `/admin/labs/sources/import`, and `/admin/labs/experiments/new`. The target dedicated analytics routes are `/admin/labs/analytics` and `/admin/labs/analytics/[slug]`; the target metadata editor route is `/admin/labs/experiments/[slug]/edit`. These Labs routes are separate from the future general portfolio CMS/Admin routes, which remain deferred.
 - Provide route-level skeleton/loading states for Labs listing, experiment detail, owner source inventory and owner source editor. Preserve layout/aspect ratios, avoid CLS and do not stack duplicate full-screen loaders over the existing global PageLoader behavior.
 - Provide action-specific pending/success/error/rollback feedback for add, delete, copy, like/unlike, save, restore, publish and unpublish.
 - Use React 19 `useOptimistic` only for reversible server-backed mutations; roll back on server rejection. Local unsaved editor operations remain working-copy state, not optimistic claims of persisted save.
@@ -179,8 +179,8 @@ Track, at minimum:
 - Record a successful source open only when a verified account successfully receives the published source from the protected source endpoint. A public experiment detail-page view is a separate event.
 - Record code-copy actions only after the client confirms a successful Clipboard API write and the server validates the current verified session and published source version.
 - Record likes/unlikes only when the server confirms an actual state transition. Enforce one current like per verified user and experiment.
-- The owner/admin dashboard must show each experiment's source-open count, unique verified accounts opening source, code-copy count, current active verified-account likes, verified like/unlike actions, and guest like actions separately where measurable, with trends over a selected period.
-- Provide aggregate rankings by source opens, copies and active verified-account likes, plus daily/monthly trends and a transparent copies-per-source-open formula.
+- The owner/admin dashboard must show each eligible experiment's source-open count, unique verified accounts opening source, code-copy count, current active verified-account likes, verified like/unlike actions, and guest like actions separately where measurable, with trends over a selected period. Until event instrumentation is implemented, detail views, preview starts and preview interactions must be marked unavailable rather than shown as zero.
+- Provide aggregate rankings by source opens, copies and active verified-account likes, plus daily/monthly trends and a transparent copies-per-source-open formula. The selected date period and filters must apply consistently to cards, charts, rankings and experiment detail. While Analytics is open, refresh aggregates using visible-tab polling; pause when hidden, prevent overlapping requests, use bounded backoff and keep the last successful snapshot visibly marked stale on refresh errors. Reuse the existing MotionNumber/motion/react system for restrained value transitions and respect reduced motion.
 - Admin analytics must not expose individual users' source browsing/copy/like history or email addresses in the first release. Use aggregate reporting and server-derived actor IDs for abuse control/deduplication.
 - Analytics events must be idempotent, rate-limited, server-validated and privacy-minimized. Never store clipboard contents, full source payloads, passwords, verification tokens or raw email in analytics events.
 - Define and disclose analytics retention, account deletion treatment and event deduplication before production analytics is enabled.
@@ -292,6 +292,9 @@ Requirements are not complete merely because UI exists. Each capability must pas
 - Better Auth with the MongoDB adapter is selected for Labs authentication; the final session-lifetime/concurrency policy remains open. MongoDB host controls, scheduler and isolated preview runtime still require validation/decisions.
 
 ### FR-11 Owner-managed protected source lifecycle
+
+The current source workspace is a distinct code-authoring task. Keep source file operations, draft/version history, preview, restore, publication and audit in the existing owner source workspace; do not duplicate them in Analytics or the Source Library. The Source Library initializes a missing workspace and links into it. Experiment metadata editing is a separate operation and must not alter the source snapshot or publication pointers.
+
 - The manually provisioned singleton portfolio owner is the sole privileged administrator for the first source-management release and can create and maintain private source snapshots for existing Labs experiments through a protected owner-only workspace and inspect aggregate source-engagement analytics.
 - Owner identity is derived exclusively from the locked server-only `LABS_OWNER_USER_ID` environment variable, matching the stable Better Auth user ID of the verified owner account; it is never supplied by the browser or created by public registration.
 - Source editing is text-only. Saved code is not executed by the source-management workflow or in the main portfolio application runtime.
