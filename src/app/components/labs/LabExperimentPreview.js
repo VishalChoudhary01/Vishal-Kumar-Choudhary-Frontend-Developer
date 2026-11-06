@@ -28,11 +28,13 @@ export default function LabExperimentPreview({
         src={preview.src}
         poster={generatedPoster?.src || undefined}
         aria-label={preview.alt || "Uploaded experiment video"}
-        controls
+        autoPlay
         muted
+        loop
         playsInline
-        preload="none"
-        className={[`block ${className}`, fitClass].join(" ")}
+        preload="metadata"
+        aria-hidden="true"
+        className={[`pointer-events-none block ${className}`, fitClass].join(" ")}
       />
     );
   }
