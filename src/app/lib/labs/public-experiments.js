@@ -1,11 +1,18 @@
 import "server-only";
 
+import mongoose from "mongoose";
+
 import { connectToDatabase } from "@/app/lib/db/mongoose";
 import LabExperiment from "./models/LabExperiment";
 import LabSource from "./models/LabSource";
 import LabBuildArtifact from "./models/LabBuildArtifact";
 import { PUBLISHED_LAB_SOURCE_PROJECTION, selectEligiblePublishedCustomExperiments } from "./owner-analytics-utils.mjs";
 import { resolveGalleryPreviewSelection } from "./gallery-preview-policy.mjs";
+import {
+  buildPublicExperimentCursorMatch,
+  decodePublicExperimentCursor,
+  encodePublicExperimentCursor,
+} from "./public-experiment-cursor.mjs";
 
 function isPublicBlobUrl(value) {
   if (typeof value !== "string") return false;
@@ -182,6 +189,173 @@ export async function getPublishedCustomLabExperiments() {
     sources,
     artifacts,
   }).map(({ experiment, artifact }) => toPublicExperiment(experiment, artifact));
+}
+
+
+function buildPublishedEligibilityStages({ category } = {}) {
+  const experimentMatch = {
+    kind: "custom",
+    status: "published",
+  };
+
+  if (typeof category === "string" && category.trim()) {
+    experimentMatch.category = category;
+  }
+
+  return [
+    { $match: experimentMatch },
+    {
+      $lookup: {
+        from: LabSource.collection.name,
+        localField: "slug",
+        foreignField: "slug",
+        pipeline: [
+          {
+            $match: {
+              published: true,
+              publishedVersionId: { $type: "string", $ne: "" },
+              publishedArtifactId: { $type: "string", $ne: "" },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              publishedVersionId: 1,
+              publishedArtifactId: 1,
+            },
+          },
+        ],
+        as: "publishedSource",
+      },
+    },
+    { $unwind: "$publishedSource" },
+    {
+      $lookup: {
+        from: LabBuildArtifact.collection.name,
+        localField: "publishedSource.publishedArtifactId",
+        foreignField: "artifactId",
+        pipeline: [
+          { $match: { status: "ready" } },
+          {
+            $project: {
+              _id: 0,
+              artifactId: 1,
+              experimentSlug: 1,
+              sourceVersionId: 1,
+              previewPoster: 1,
+            },
+          },
+        ],
+        as: "readyArtifact",
+      },
+    },
+    { $unwind: "$readyArtifact" },
+    {
+      $match: {
+        $expr: {
+          $and: [
+            { $eq: ["$readyArtifact.experimentSlug", "$slug"] },
+            {
+              $eq: [
+                "$readyArtifact.sourceVersionId",
+                "$publishedSource.publishedVersionId",
+              ],
+            },
+          ],
+        },
+      },
+    },
+  ];
+}
+
+/**
+ * Return a bounded page of eligible public custom experiments. Eligibility is
+ * enforced in MongoDB by joining the published source and its exact ready
+ * artifact/version before applying the page limit.
+ */
+export async function getPublishedCustomLabExperimentPage({
+  cursor = null,
+  category = null,
+  limit = 18,
+  includeCategoryCounts = false,
+} = {}) {
+  const pageSize = Number.isInteger(limit) ? Math.min(24, Math.max(1, limit)) : 18;
+  await connectToDatabase();
+
+  const decodedCursor = cursor ? decodePublicExperimentCursor(cursor) : null;
+  const cursorMatch = decodedCursor
+    ? buildPublicExperimentCursorMatch(decodedCursor, mongoose.Types.ObjectId)
+    : null;
+
+  const pagePipeline = [
+    ...buildPublishedEligibilityStages({ category }),
+    ...(cursorMatch ? [{ $match: cursorMatch }] : []),
+    { $sort: { publishedAt: -1, updatedAt: -1, _id: -1 } },
+    { $limit: pageSize + 1 },
+    {
+      $project: {
+        _id: 1,
+        slug: 1,
+        title: 1,
+        description: 1,
+        explanation: 1,
+        category: 1,
+        technologies: 1,
+        galleryPreview: 1,
+        publishedAt: 1,
+        updatedAt: 1,
+        readyArtifact: 1,
+      },
+    },
+  ];
+
+  const pagePromise = LabExperiment.aggregate(pagePipeline).exec();
+  const categoryCountsPromise = includeCategoryCounts
+    ? LabExperiment.aggregate([
+        ...buildPublishedEligibilityStages(),
+        { $group: { _id: "$category", count: { $sum: 1 } } },
+      ]).exec()
+    : Promise.resolve(null);
+
+  const [records, categoryGroups] = await Promise.all([
+    pagePromise,
+    categoryCountsPromise,
+  ]);
+
+  const hasMore = records.length > pageSize;
+  const pageRecords = hasMore ? records.slice(0, pageSize) : records;
+  const experiments = pageRecords.map((record) =>
+    toPublicExperiment(record, record.readyArtifact),
+  );
+  const lastRecord = pageRecords.at(-1);
+  const nextCursor = hasMore && lastRecord
+    ? encodePublicExperimentCursor({
+        publishedAt: lastRecord.publishedAt,
+        updatedAt: lastRecord.updatedAt,
+        id: String(lastRecord._id),
+      })
+    : null;
+
+  if (!includeCategoryCounts) {
+    return { experiments, nextCursor };
+  }
+
+  const categoryCounts = Object.fromEntries(
+    (categoryGroups || [])
+      .filter((group) => typeof group?._id === "string" && Number(group.count) > 0)
+      .map((group) => [group._id, Number(group.count)]),
+  );
+  const totalCount = Object.values(categoryCounts).reduce(
+    (total, count) => total + count,
+    0,
+  );
+
+  return {
+    experiments,
+    nextCursor,
+    totalCount,
+    categoryCounts,
+  };
 }
 
 export async function isPublishedCustomLabSlug(slug) {
