@@ -202,7 +202,7 @@ Do not add Redis, a hosted WebSocket provider or a second backend simply because
 - Preserve tabular number alignment and locale-aware formatting. Define units, timezone, chart interval and missing-day behavior.
 - Every chart must have an accessible textual/table equivalent, keyboard/focus support for interactive details and responsive behavior without page-level horizontal overflow.
 - Respect reduced-motion settings. Avoid looping/decorative animation and do not make animated movement necessary to understand a value.
-- Chart rendering decision: use the direct `chart.js` MIT package for the private Analytics canvas chart, after the fixture/SSR/accessibility spike in `DESIGN-ANALYTICS.md`. The current SVG remains only as a temporary build-verified baseline until its replacement passes the chart acceptance gate; do not add ApexCharts or Liveline in parallel.
+- Chart rendering decision: use the direct `chart.js` MIT package for the private Analytics canvas chart, after the fixture/SSR/accessibility spike in `DESIGN-ANALYTICS.md`. The current SVG remains only as a temporary build-verified baseline until its replacement passes the chart acceptance gate; do not add ApexCharts or Liveline in parallel. See the official [Chart.js package/license](https://www.npmjs.com/package/chart.js), [Chart.js accessibility guidance](https://www.chartjs.org/docs/latest/general/accessibility.html), [Liveline repository](https://github.com/benjitaylor/liveline), and [ApexCharts license options](https://apexcharts.com/license/).
 
 ## 7. Implementation sequence
 
@@ -313,7 +313,7 @@ Work in small phases with separate reviewable commits. Do not begin a later phas
 - Reduced-motion users receive accurate static updates.
 - The selected chart metric uses exactly one correct daily field; no unlike measures share a Y-axis.
 - Six separate like/unlike measures reconcile with event fixtures; active likes remain current-state cards only.
-- 7/30/90 daily and 365 weekly buckets reconcile to API totals and the HTML table, including partial weeks and zero dates.
+- 7/30 daily and 90/365 weekly buckets reconcile to API totals and the HTML table, including first/last partial weeks and zero dates.
 - Tooltips/HTML readout show exact UTC bucket and en-IN integer value; empty, all-zero, stale and failed states remain distinct.
 - Responsive, keyboard, screen-reader, touch, reduced-motion, contrast, light/dark and 200% zoom verification passes.
 - The chart library is absent from public Labs/homepage bundles.
@@ -527,7 +527,7 @@ A feature is not complete merely because its new screen renders. It is complete 
 
 ### Open; do not silently assume
 
-1. Exact Chart.js patch version and bundle budget at implementation time; the library choice is Chart.js, but package adoption is gated on daily/weekly fixture, Next.js client-only loading, accessibility and performance verification.
+1. Exact Chart.js 4.6.1 package pin and bundle budget; selected package is MIT-licensed, but installation/replacement remains gated on daily/weekly fixtures, Next.js client-only loading, accessibility and performance verification.
 2. Exact event definition and deduplication window for experiment detail views.
 3. Preview-start success threshold and explicitly instrumented interaction allowlist; dependent on runtime lifecycle readiness.
 4. Analytics retention, account-deletion treatment and production Privacy Policy review.
