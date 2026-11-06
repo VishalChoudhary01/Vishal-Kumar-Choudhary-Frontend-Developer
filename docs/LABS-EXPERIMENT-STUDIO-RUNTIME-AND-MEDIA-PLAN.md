@@ -201,3 +201,6 @@ The existing Copy action still copies the full original `file.content` via the C
 Five protected-source reader contract tests were added and are included in every production build. Phase 3 validation passed: Monaco 6/6, source-reader contracts 5/5, media 9/9, Labs analytics 15/15, ESLint and the full clean-checkout Next.js production build.
 
 Remaining acceptance is authenticated Preview browser QA for reader rendering, guest/unverified no-source behavior, actual clipboard/event behavior, themes, mobile sizing and keyboard navigation. No source creator textarea, Run, Save Draft, version restore, Build & Publish or compiler flow was changed. See the [Phased Detail and Monaco plan](./LABS-DETAIL-PRESENTATION-AND-MONACO-EDITOR-IMPLEMENTATION-PLAN.md) for Phases 4–7.
+
+
+Phase 3 Preview deployment: Vercel deployment `dpl_332fozxc8GV3xKgNnVH3Jc2LYcgH` is `READY` from code commit `bfb87df8b394a04293d7894b9f0d1289887f2dfd` and includes the protected read-only Monaco source reader. Authenticated browser interaction QA remains pending because the Preview is protected by Vercel Authentication. The owner should verify signed-in file switching, exact full-file Copy, source events, session invalidation, guest/unverified denial and theme behavior on that Preview. Production remains unchanged.
