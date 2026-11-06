@@ -6,6 +6,9 @@ import {
   createRankings,
   normalizePeriod,
   selectEligiblePublishedCustomExperiments,
+  applyActiveLikeGroups,
+  applyAnalyticsEventGroups,
+  summarizeAnalyticsRows,
 } from "../src/app/lib/labs/owner-analytics-utils.mjs";
 
 test("rankings omit zero-value rows, use stable tie-breaks and cap each list", () => {
@@ -178,4 +181,195 @@ test("custom published experiments require a published source and an exact ready
   ]);
   assert.equal(result[0].experiment.title, "Valid");
   assert.equal(result[1].experiment.title, "Duplicate First");
+});
+
+
+test("event attribution counts only supported actor/event combinations", () => {
+  const baseRows = [
+    {
+      slug: "alpha",
+      title: "Alpha",
+      sourceOpens: 0,
+      uniqueVerifiedAccounts: 0,
+      codeCopies: 0,
+      verifiedLikeActions: 0,
+      verifiedUnlikeActions: 0,
+      anonymousLikeActions: 0,
+      anonymousUnlikeActions: 0,
+      activeVerifiedLikes: 0,
+      activeAnonymousLikes: 0,
+      totalActiveLikes: 0,
+    },
+    {
+      slug: "beta",
+      title: "Beta",
+      sourceOpens: 0,
+      uniqueVerifiedAccounts: 0,
+      codeCopies: 0,
+      verifiedLikeActions: 0,
+      verifiedUnlikeActions: 0,
+      anonymousLikeActions: 0,
+      anonymousUnlikeActions: 0,
+      activeVerifiedLikes: 0,
+      activeAnonymousLikes: 0,
+      totalActiveLikes: 0,
+    },
+  ];
+
+  const eventGroups = [
+    {
+      _id: { slug: "alpha", eventType: "source_open", actorCategory: "verified_user" },
+      count: 5,
+      actorIds: ["user-1", "user-2", "user-1", null, ""],
+    },
+    {
+      _id: { slug: "alpha", eventType: "code_copy", actorCategory: "verified_user" },
+      count: 3,
+      actorIds: ["user-1", "user-2"],
+    },
+    {
+      _id: { slug: "alpha", eventType: "like", actorCategory: "verified_user" },
+      count: 4,
+      actorIds: ["user-1"],
+    },
+    {
+      _id: { slug: "alpha", eventType: "unlike", actorCategory: "verified_user" },
+      count: 2,
+      actorIds: ["user-2"],
+    },
+    {
+      _id: { slug: "alpha", eventType: "guest_like", actorCategory: "guest" },
+      count: 7,
+    },
+    {
+      _id: { slug: "alpha", eventType: "guest_unlike", actorCategory: "guest" },
+      count: 1,
+    },
+    // Guest source opens/copies are intentionally ignored by the current
+    // protected-source metric contract.
+    {
+      _id: { slug: "alpha", eventType: "source_open", actorCategory: "guest" },
+      count: 50,
+      actorIds: ["guest-1"],
+    },
+    {
+      _id: { slug: "alpha", eventType: "code_copy", actorCategory: "guest" },
+      count: 50,
+    },
+    // A group with an invalid actor category must not be attributed.
+    {
+      _id: { slug: "alpha", eventType: "like", actorCategory: "unknown" },
+      count: 50,
+    },
+    // Events for slugs outside the published catalogue are ignored.
+    {
+      _id: { slug: "not-published", eventType: "source_open", actorCategory: "verified_user" },
+      count: 99,
+      actorIds: ["user-3"],
+    },
+    {
+      _id: { slug: "beta", eventType: "source_open", actorCategory: "verified_user" },
+      count: 1,
+      actorIds: ["user-1"],
+    },
+  ];
+
+  const result = applyAnalyticsEventGroups(baseRows, eventGroups);
+  const alpha = result.find((row) => row.slug === "alpha");
+  const beta = result.find((row) => row.slug === "beta");
+
+  assert.deepEqual(
+    {
+      sourceOpens: alpha.sourceOpens,
+      uniqueVerifiedAccounts: alpha.uniqueVerifiedAccounts,
+      codeCopies: alpha.codeCopies,
+      verifiedLikeActions: alpha.verifiedLikeActions,
+      verifiedUnlikeActions: alpha.verifiedUnlikeActions,
+      anonymousLikeActions: alpha.anonymousLikeActions,
+      anonymousUnlikeActions: alpha.anonymousUnlikeActions,
+    },
+    {
+      sourceOpens: 5,
+      uniqueVerifiedAccounts: 2,
+      codeCopies: 3,
+      verifiedLikeActions: 4,
+      verifiedUnlikeActions: 2,
+      anonymousLikeActions: 7,
+      anonymousUnlikeActions: 1,
+    },
+  );
+  assert.equal(beta.sourceOpens, 1);
+  assert.equal(beta.uniqueVerifiedAccounts, 1);
+  assert.equal(baseRows[0].sourceOpens, 0, "helper must not mutate the input rows");
+});
+
+test("active-like attribution keeps verified and anonymous states separate", () => {
+  const rows = [
+    { slug: "alpha", activeVerifiedLikes: 0, activeAnonymousLikes: 0, totalActiveLikes: 0 },
+    { slug: "beta", activeVerifiedLikes: 0, activeAnonymousLikes: 0, totalActiveLikes: 0 },
+  ];
+
+  const result = applyActiveLikeGroups(
+    rows,
+    [
+      { _id: "alpha", count: 4 },
+      { _id: "not-published", count: 100 },
+      { _id: "beta", count: 0 },
+    ],
+    [
+      { _id: "alpha", count: 3 },
+      { _id: "beta", count: 2 },
+    ],
+  );
+
+  assert.deepEqual(result, [
+    { slug: "alpha", activeVerifiedLikes: 4, activeAnonymousLikes: 3, totalActiveLikes: 7 },
+    { slug: "beta", activeVerifiedLikes: 0, activeAnonymousLikes: 2, totalActiveLikes: 2 },
+  ]);
+  assert.deepEqual(rows, [
+    { slug: "alpha", activeVerifiedLikes: 0, activeAnonymousLikes: 0, totalActiveLikes: 0 },
+    { slug: "beta", activeVerifiedLikes: 0, activeAnonymousLikes: 0, totalActiveLikes: 0 },
+  ]);
+});
+
+test("collection totals equal the sum of per-experiment aggregate values", () => {
+  const rows = [
+    {
+      sourceOpens: 5,
+      uniqueVerifiedAccounts: 2,
+      codeCopies: 3,
+      verifiedLikeActions: 4,
+      verifiedUnlikeActions: 2,
+      anonymousLikeActions: 7,
+      anonymousUnlikeActions: 1,
+      activeVerifiedLikes: 4,
+      activeAnonymousLikes: 3,
+      totalActiveLikes: 7,
+    },
+    {
+      sourceOpens: 1,
+      uniqueVerifiedAccounts: 1,
+      codeCopies: 2,
+      verifiedLikeActions: 1,
+      verifiedUnlikeActions: 0,
+      anonymousLikeActions: 0,
+      anonymousUnlikeActions: 1,
+      activeVerifiedLikes: 0,
+      activeAnonymousLikes: 2,
+      totalActiveLikes: 2,
+    },
+  ];
+
+  assert.deepEqual(summarizeAnalyticsRows(rows), {
+    sourceOpens: 6,
+    uniqueVerifiedAccounts: 3,
+    codeCopies: 5,
+    verifiedLikeActions: 5,
+    verifiedUnlikeActions: 2,
+    anonymousLikeActions: 7,
+    anonymousUnlikeActions: 2,
+    activeVerifiedLikes: 4,
+    activeAnonymousLikes: 5,
+    totalActiveLikes: 9,
+  });
 });
