@@ -937,25 +937,7 @@ The Controls area is optional and can be empty. Owner-created experiments with n
 
 The platform must not attempt to infer a component's props from a label or control ID. The author explicitly connects settings to source code. This makes the same panel usable by different components and compositions without one component's controls affecting another accidentally.
 
-For React/JSX/TSX, add the fixed, versioned first-party SDK import:
-
-```jsx
-import { useLabSettings, MagneticButton } from "@labs/ui";
-
-export default function App() {
-  const { values } = useLabSettings();
-
-  return (
-    <MagneticButton
-      strength={values.magnetStrength ?? 28}
-      radius={values.fieldRadius ?? 180}
-      showField={values.showField ?? true}
-    >
-      Magnetic button
-    </MagneticButton>
-  );
-}
-```
+For React/JSX/TSX, source code will consume validated settings through the versioned first-party SDK and map stable setting IDs to component props. The complete MagneticButton component source is provided separately in the companion ZIP package; executable component examples are intentionally kept out of this architecture document.
 
 `useLabSettings()` returns a typed read-only values object (and, if required, a stable revision/subscription state). It subscribes to the isolated runtime bridge. React source explicitly maps the keys it wants to component props. Multiple components can use separate IDs/groups in the same experiment. A component remains usable with ordinary explicit props when no Labs controls exist.
 
