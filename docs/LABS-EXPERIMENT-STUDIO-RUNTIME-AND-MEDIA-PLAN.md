@@ -1388,3 +1388,19 @@ Private unpromoted media is treated as no public upload. It does not override th
 7. Verify the source/artifact pointer, poster hash and runtime URL in the active release. Confirm no automatic snapshots are created by disposable workers.
 
 Production is not modified during this Preview rollout. Do not call this end-to-end complete until the deployed owner publish/restore/browser tests pass.
+
+
+### 44.6 Compiler snapshot and capture verification — 6 November 2026
+
+The capture runtime was installed into and verified within the Preview compiler environment:
+
+- Snapshot ID: `snap_1Ep7fqKr9Q4MMSKWALnzZ9nQumBt` (manual snapshot, approximately 1.01 GB; parent compiler base `snap_omIEA5ojBEPFVArzYUUn7RE9Mpqj`).
+- Playwright package: `1.65.0`.
+- Browser: Chromium `158.0.8127.18`, Playwright browser build `chromium-1254`.
+- Browser binary and its Linux shared-library dependencies were installed before snapshot creation; no runtime browser download is required.
+- `npm run test:smoke` passed inside the compiler sandbox. It includes uploaded image/GIF/video precedence, no-upload screenshot fallback, JSX/TSX, Motion, Tailwind v4, isolated server, CSP and traversal tests.
+- An actual compiled React 19 + Motion + Tailwind v4 fixture was built and captured by the new script. Result: `status=ready`, PNG 1200×900, 29,445 bytes, SHA-256 `0a195217ca22f5e68c0be284e468b02f5d6af13901f77e130a1969626b0d90a4`.
+- The `feat/labs-platform-integration` Preview-only `LABS_COMPILER_SNAPSHOT_ID` environment value now references the new snapshot. Production's environment value was not changed.
+- The setup sandbox was stopped with `persistent: false`; its verified manual snapshot is the only retained result of this maintenance operation.
+
+**Not yet verified:** a new Git-connected Vercel Preview deployment using the latest branch commit and refreshed snapshot, followed by the signed-in owner publish flow against a real Atlas experiment. The previous listed Preview deployment was created before the final snapshot environment refresh. Do not call deployed end-to-end capture complete until that new deployment and owner-flow test pass.
