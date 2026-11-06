@@ -22,9 +22,11 @@ export default function LabExperimentPreview({
     null;
   const generatedPoster = experiment?.generatedPoster || null;
   const [failedSrc, setFailedSrc] = useState("");
+  const [measuredDimensions, setMeasuredDimensions] = useState(null);
 
   useEffect(() => {
     setFailedSrc("");
+    setMeasuredDimensions(null);
   }, [experiment?.slug, preview?.src, generatedPoster?.src]);
 
   const activePreview = preview?.src === failedSrc
@@ -35,11 +37,18 @@ export default function LabExperimentPreview({
   // Uploaded and generated media must preserve their intrinsic proportions.
   // The stage may letterbox portrait/square assets; it must never crop or stretch them.
   const fitClass = "object-contain object-center";
-  const intrinsicWidth = Number.isSafeInteger(activePreview?.width) && activePreview.width > 0
-    ? activePreview.width
+  const activeMeasured = measuredDimensions?.src === activePreview?.src ? measuredDimensions : null;
+  const intrinsicWidth = activeMeasured?.width || (
+    Number.isSafeInteger(activePreview?.width) && activePreview.width > 0 ? activePreview.width : 1200
+  );
+  const intrinsicHeight = activeMeasured?.height || (
+    Number.isSafeInteger(activePreview?.height) && activePreview.height > 0 ? activePreview.height : 900
+  );
+  const posterWidth = Number.isSafeInteger(generatedPoster?.width) && generatedPoster.width > 0
+    ? generatedPoster.width
     : 1200;
-  const intrinsicHeight = Number.isSafeInteger(activePreview?.height) && activePreview.height > 0
-    ? activePreview.height
+  const posterHeight = Number.isSafeInteger(generatedPoster?.height) && generatedPoster.height > 0
+    ? generatedPoster.height
     : 900;
 
   if (activePreview?.src && activePreview.mediaKind === "video") {
@@ -55,6 +64,11 @@ export default function LabExperimentPreview({
         loop
         playsInline
         preload="metadata"
+        onLoadedMetadata={(event) => {
+          const width = event.currentTarget.videoWidth;
+          const height = event.currentTarget.videoHeight;
+          if (width > 0 && height > 0) setMeasuredDimensions({ src: activePreview.src, width, height });
+        }}
         onError={() => setFailedSrc(activePreview.src)}
         className={[`pointer-events-none block ${className}`, fitClass].join(" ")}
       />
@@ -76,6 +90,11 @@ export default function LabExperimentPreview({
           sizes={sizes}
           priority={activePreview.priority === true}
           unoptimized={isGif}
+          onLoad={(event) => {
+            const width = event.currentTarget.naturalWidth;
+            const height = event.currentTarget.naturalHeight;
+            if (width > 0 && height > 0) setMeasuredDimensions({ src: activePreview.src, width, height });
+          }}
           onError={() => setFailedSrc(activePreview.src)}
           className={[
             className,
@@ -87,10 +106,15 @@ export default function LabExperimentPreview({
           <Image
             src={generatedPoster.src}
             alt={activePreview.alt || ""}
-            width={intrinsicWidth}
-            height={intrinsicHeight}
+            width={posterWidth}
+            height={posterHeight}
             sizes={sizes}
             unoptimized
+            onLoad={(event) => {
+              const width = event.currentTarget.naturalWidth;
+              const height = event.currentTarget.naturalHeight;
+              if (width > 0 && height > 0) setMeasuredDimensions({ src: generatedPoster.src, width, height });
+            }}
             onError={() => setFailedSrc(generatedPoster.src)}
             className={[`hidden motion-reduce:block ${className}`, fitClass].join(" ")}
           />
