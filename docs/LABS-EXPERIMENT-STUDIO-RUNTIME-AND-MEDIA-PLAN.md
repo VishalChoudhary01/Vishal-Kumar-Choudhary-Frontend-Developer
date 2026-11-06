@@ -24,7 +24,7 @@ This file is the concise source of truth for Labs runtime, release and media beh
 | Public detail page | Static | No executable workspace, runtime iframe or built-in demo |
 | Likes | Implemented | Existing LabLikeButton and engagement API |
 | Protected source access | Implemented | Verified-email authorization, session checks, file selection and copy action |
-| Media sizing polish | Planned | Preserve intrinsic ratios; no stretching or unintended cropping |
+| Media sizing polish | Phase 1 code committed; QA pending | DTO carries intrinsic dimensions; all shared media uses contain; detail stage uses natural height and a bounded responsive maximum |
 | Monaco reader/editor | Planned | Shared lazy-loaded wrapper with read-only and editable modes |
 | Detail layout polish | Planned | Improve section order and spacing while preserving Like and source access |
 
@@ -146,3 +146,10 @@ Production remains unchanged until explicit release approval.
 - [React JSX/TSX, Tailwind and Motion runtime](./LABS-REACT-JSX-TSX-TAILWIND-MOTION-RUNTIME-PLAN.md)
 - [Media upload and promotion pipeline](./LABS-MEDIA-PIPELINE-PHASE-1.md)
 - [Preview Run recovery and snapshot lifecycle](./LABS-PREVIEW-RUN-RECOVERY-AND-SNAPSHOT-LIFECYCLE.md)
+
+
+## 10. Phase 1 media presentation progress — 6 November 2026
+
+The current feature branch now stores verified uploaded-media dimensions with the published gallery media reference and exposes them in the public experiment DTO. The generated poster DTO carries its fixed 1200×900 dimensions. Shared gallery, featured and detail preview elements use aspect-ratio-safe contain fitting; browser-measured dimensions cover older media records. Public detail no longer forces a 4:3 mobile / 16:9 desktop media box and uses a bounded natural-height preview. The existing Like, source-access, Run, Save Draft, Build & Publish, artifact and poster-capture flows were not changed in this phase.
+
+Regression tests were added for the generated poster, portrait image, GIF, video, invalid upload fallback and empty fallback. The root production build invokes this media suite before Labs analytics and SEO checks. Preview/browser verification is still required before marking the phase complete.
