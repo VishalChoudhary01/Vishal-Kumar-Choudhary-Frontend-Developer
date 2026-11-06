@@ -64,6 +64,7 @@ export default function useLabPublicCollection({
   const [isLoadingCategory, setIsLoadingCategory] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState("");
+  const [retryVersion, setRetryVersion] = useState(0);
   const pageCache = useRef(new Map([["all", firstPage]]));
   const activeCategoryRef = useRef("all");
   const loadMoreController = useRef(null);
@@ -147,7 +148,7 @@ export default function useLabPublicCollection({
       });
 
     return () => controller.abort();
-  }, [activeCategory, builtInExperiments, categoryCounts, firstPage]);
+  }, [activeCategory, builtInExperiments, categoryCounts, firstPage, retryVersion]);
 
   const filteredBuiltIns = useMemo(() => {
     if (activeCategory === "all") return builtInExperiments;
@@ -253,9 +254,7 @@ export default function useLabPublicCollection({
     setLoadError("");
     setRemotePage({ category: activeCategory, experiments: [], nextCursor: null });
     setIsLoadingCategory(false);
-    // The active-category effect re-runs after its cache entry is removed.
-    setActiveCategory((current) => current === "all" ? current : `${current} `);
-    setActiveCategory(activeCategory);
+    setRetryVersion((current) => current + 1);
   }, [activeCategory]);
 
   return {
