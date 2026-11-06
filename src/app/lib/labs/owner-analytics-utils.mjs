@@ -163,3 +163,83 @@ export function selectEligiblePublishedCustomExperiments({
 
   return eligible;
 }
+
+
+const ZERO_TOTALS = {
+  sourceOpens: 0,
+  uniqueVerifiedAccounts: 0,
+  codeCopies: 0,
+  verifiedLikeActions: 0,
+  verifiedUnlikeActions: 0,
+  anonymousLikeActions: 0,
+  anonymousUnlikeActions: 0,
+  activeVerifiedLikes: 0,
+  activeAnonymousLikes: 0,
+  totalActiveLikes: 0,
+};
+
+export function applyAnalyticsEventGroups(rows, eventGroups) {
+  const bySlug = new Map(rows.map((row) => [row.slug, { ...row }]));
+
+  for (const group of eventGroups) {
+    const row = bySlug.get(group?._id?.slug);
+    if (!row) continue;
+
+    const eventType = group?._id?.eventType;
+    const actorCategory = group?._id?.actorCategory;
+    const count = Math.max(0, Number(group?.count) || 0);
+
+    if (eventType === "source_open" && actorCategory === "verified_user") {
+      row.sourceOpens += count;
+      row.uniqueVerifiedAccounts += new Set(
+        (Array.isArray(group.actorIds) ? group.actorIds : []).filter(
+          (actorId) => typeof actorId === "string" && actorId.length > 0,
+        ),
+      ).size;
+    } else if (eventType === "code_copy" && actorCategory === "verified_user") {
+      row.codeCopies += count;
+    } else if (eventType === "like" && actorCategory === "verified_user") {
+      row.verifiedLikeActions += count;
+    } else if (eventType === "unlike" && actorCategory === "verified_user") {
+      row.verifiedUnlikeActions += count;
+    } else if (eventType === "guest_like" && actorCategory === "guest") {
+      row.anonymousLikeActions += count;
+    } else if (eventType === "guest_unlike" && actorCategory === "guest") {
+      row.anonymousUnlikeActions += count;
+    }
+  }
+
+  return [...bySlug.values()];
+}
+
+export function applyActiveLikeGroups(rows, verifiedLikeGroups, guestLikeGroups) {
+  const bySlug = new Map(rows.map((row) => [row.slug, { ...row }]));
+
+  for (const group of verifiedLikeGroups) {
+    const row = bySlug.get(group?._id);
+    if (row) row.activeVerifiedLikes = Math.max(0, Number(group.count) || 0);
+  }
+
+  for (const group of guestLikeGroups) {
+    const row = bySlug.get(group?._id);
+    if (row) row.activeAnonymousLikes = Math.max(0, Number(group.count) || 0);
+  }
+
+  for (const row of bySlug.values()) {
+    row.totalActiveLikes = row.activeVerifiedLikes + row.activeAnonymousLikes;
+  }
+
+  return [...bySlug.values()];
+}
+
+export function summarizeAnalyticsRows(rows) {
+  return rows.reduce(
+    (total, row) => {
+      for (const key of Object.keys(ZERO_TOTALS)) {
+        total[key] += Math.max(0, Number(row[key]) || 0);
+      }
+      return total;
+    },
+    { ...ZERO_TOTALS },
+  );
+}
