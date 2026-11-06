@@ -283,7 +283,9 @@ export async function getPublishedCustomLabExperimentPage({
   const pageSize = Number.isInteger(limit) ? Math.min(24, Math.max(1, limit)) : 18;
   await connectToDatabase();
 
-  const decodedCursor = cursor ? decodePublicExperimentCursor(cursor) : null;
+  const decodedCursor = cursor === null || cursor === undefined
+    ? null
+    : decodePublicExperimentCursor(cursor);
   const cursorMatch = decodedCursor
     ? buildPublicExperimentCursorMatch(decodedCursor, mongoose.Types.ObjectId)
     : null;
