@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useActionToast } from "@/app/providers/ActionToastProvider";
 import { AlertTriangle, Monitor, Play, RefreshCw, Smartphone, Terminal } from "lucide-react";
 
-export default function LabSourceLivePreview({ slug, files }) {
+export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
   const { showToast } = useActionToast();
   const [run, setRun] = useState(null);
   const [viewport, setViewport] = useState("desktop");
@@ -67,6 +67,9 @@ export default function LabSourceLivePreview({ slug, files }) {
   }, [run?.runId, status]);
 
   async function runPreview() {
+    const workingFiles = typeof getWorkingFiles === "function" ? getWorkingFiles() : files;
+    const runFiles = Array.isArray(workingFiles) ? workingFiles : [];
+
     setBusy(true);
     setStatus("building");
     // Unmount the previous iframe before compiling. A late message from that
@@ -88,7 +91,7 @@ export default function LabSourceLivePreview({ slug, files }) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            files: files.map((file) => ({
+            files: runFiles.map((file) => ({
               path: file.path,
               language: file.language,
               content: file.content,
