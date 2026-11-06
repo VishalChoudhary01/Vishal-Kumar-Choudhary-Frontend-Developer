@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Code2, LogOut, MailCheck, UserRound } from "lucide-react";
+import { ChartNoAxesCombined, Code2, LogOut, MailCheck, UserRound } from "lucide-react";
 
 import { authClient } from "@/app/lib/auth/client";
 import { publishAuthEvent, subscribeAuthEvents } from "@/app/lib/auth/session-events";
@@ -251,15 +251,26 @@ export default function LabsAccountControl({
             </Link>
           ) : null}
           {isOwner ? (
-            <Link
-              href="/admin/labs/sources"
-              role="menuitem"
-              onClick={() => setOpen(false)}
-              className="flex min-h-10 w-full items-center gap-2 px-3 text-left text-sm transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand"
-            >
-              <Code2 size={15} aria-hidden="true" />
-              Manage Labs sources
-            </Link>
+            <>
+              <Link
+                href="/admin/labs/analytics"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="flex min-h-10 w-full items-center gap-2 px-3 text-left text-sm transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand"
+              >
+                <ChartNoAxesCombined size={15} aria-hidden="true" />
+                Labs analytics
+              </Link>
+              <Link
+                href="/admin/labs/sources"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="flex min-h-10 w-full items-center gap-2 px-3 text-left text-sm transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand"
+              >
+                <Code2 size={15} aria-hidden="true" />
+                Source library
+              </Link>
+            </>
           ) : null}
           <div className="my-1 h-px bg-border" />
           {logoutError ? (
