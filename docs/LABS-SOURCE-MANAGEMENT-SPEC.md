@@ -299,7 +299,7 @@ The following route contracts are implemented on `feat/labs-platform-integration
 | Source analytics | `GET /api/v1/admin/labs/analytics?days=30` | Owner-only aggregate analytics across experiments; supports 7, 30, 90 or 365 days |
 | Owner status | `GET /api/v1/admin/labs/owner-status` | Safe boolean capability response for the owner navigation link |
 
-The source-management service writes append-only owner audit records; `GET /api/v1/admin/labs/sources/:slug/audit` and the editor's recent audit timeline are implemented. The experiment create and delete endpoints exist; an owner-only experiment metadata `PATCH` endpoint is not yet implemented. Its target contract belongs in the experiment-management section of the API contract and must remain separate from source-version writes. Owner analytics are aggregate-only and do not expose visitor-level event histories.
+The source-management service writes append-only owner audit records; `GET /api/v1/admin/labs/sources/:slug/audit` and the editor's recent audit timeline are implemented. The experiment create, metadata-update `PATCH` and delete endpoints exist. Metadata edits remain separate from source-version writes and use the existing experiment-management domain service. Owner analytics are aggregate-only and do not expose visitor-level event histories.
 
 Keep the existing user-facing endpoint `GET /api/v1/labs/:slug/source` as the only regular-user source read. Target policy requires a valid verified Better Auth session + published pointer; no grant lookup is performed. The response remains private/no-store.
 
