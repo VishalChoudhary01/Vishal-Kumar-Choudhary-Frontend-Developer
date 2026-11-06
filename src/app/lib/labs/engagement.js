@@ -264,6 +264,80 @@ export async function setLabLike({ slug, actor, liked }) {
   };
 }
 
+const SOURCE_EVENT_RATE_WINDOW_MS = 60 * 1000;
+const SOURCE_EVENT_RATE_LIMITS = {
+  source_open: 30,
+  code_copy: 20,
+};
+
+async function consumeSourceEventRateLimit({ userId, eventType }) {
+  const maxEvents = SOURCE_EVENT_RATE_LIMITS[eventType];
+  const secret = process.env.BETTER_AUTH_SECRET;
+
+  if (!maxEvents || !secret) {
+    throw new Error("Source event rate limiting is not configured.");
+  }
+
+  const key = createHmac("sha256", secret)
+    .update("labs-source-event:" + userId + ":" + eventType)
+    .digest("hex");
+
+  const now = new Date();
+  const cutoff = new Date(now.getTime() - SOURCE_EVENT_RATE_WINDOW_MS);
+  const collection = mongoose.connection.db.collection("lab_source_event_limits");
+
+  globalThis.__labsSourceEventLimitIndexPromise ||= collection.createIndex(
+    { updatedAt: 1 },
+    {
+      expireAfterSeconds: 24 * 60 * 60,
+      name: "lab_source_event_limit_ttl",
+    },
+  );
+  await globalThis.__labsSourceEventLimitIndexPromise;
+
+  const result = await collection.findOneAndUpdate(
+    { _id: key },
+    [
+      {
+        $set: {
+          windowStartedAt: {
+            $cond: [
+              { $gt: [{ $ifNull: ["$windowStartedAt", new Date(0)] }, cutoff] },
+              "$windowStartedAt",
+              now,
+            ],
+          },
+          count: {
+            $cond: [
+              { $gt: [{ $ifNull: ["$windowStartedAt", new Date(0)] }, cutoff] },
+              { $add: [{ $ifNull: ["$count", 0] }, 1] },
+              1,
+            ],
+          },
+          updatedAt: now,
+        },
+      },
+    ],
+    { upsert: true, returnDocument: "after" },
+  );
+
+  const document = result?.value ?? result;
+  const count = Number(document?.count || 0);
+  const windowStartedAt = new Date(document?.windowStartedAt || now);
+  const retryAfterSeconds = Math.max(
+    1,
+    Math.ceil(
+      (windowStartedAt.getTime() + SOURCE_EVENT_RATE_WINDOW_MS - now.getTime()) / 1000,
+    ),
+  );
+
+  return {
+    allowed: count <= maxEvents,
+    retryAfterSeconds,
+    remaining: Math.max(0, maxEvents - count),
+  };
+}
+
 export async function recordVerifiedSourceEvent({
   eventType,
   slug,
@@ -284,6 +358,23 @@ export async function recordVerifiedSourceEvent({
   await connectToDatabase();
   await ensureEngagementIndexes();
 
+  await connectToDatabase();
+  await ensureEngagementIndexes();
+
+  // A replay of an already accepted idempotency key is not a new attempt and
+  // must not consume the account's source-event quota.
+  const existingEvent = await LabAnalyticsEvent.exists({ eventId: safeEventId });
+  if (existingEvent) return { recorded: false, duplicate: true };
+
+  const rateLimit = await consumeSourceEventRateLimit({ userId, eventType });
+  if (!rateLimit.allowed) {
+    return {
+      recorded: false,
+      rateLimited: true,
+      retryAfterSeconds: rateLimit.retryAfterSeconds,
+    };
+  }
+
   try {
     await LabAnalyticsEvent.create({
       eventId: safeEventId,
@@ -295,7 +386,7 @@ export async function recordVerifiedSourceEvent({
       filePath: filePath || null,
       occurredAt: new Date(),
     });
-    return { recorded: true };
+    return { recorded: true, rateLimitRemaining: rateLimit.remaining };
   } catch (error) {
     if (error?.code === 11000) return { recorded: false, duplicate: true };
     throw error;
