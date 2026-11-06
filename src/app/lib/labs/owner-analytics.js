@@ -304,9 +304,10 @@ export async function getLabsOwnerActiveVerifiedLikes({
     {
       $unwind: {
         path: "$account",
-        preserveNullAndEmptyArrays: true,
+        preserveNullAndEmptyArrays: false,
       },
     },
+    { $match: { "account.emailVerified": true } },
   ];
 
   if (safeSearch) {
