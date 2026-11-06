@@ -56,6 +56,7 @@ export function adminError(error) {
     MEDIA_PROVIDER_ERROR: 503,
     COMPILER_NOT_CONFIGURED: 503,
     COMPILER_SNAPSHOT_EXPIRED: 503,
+    COMPILER_SNAPSHOT_STORAGE_LIMIT: 503,
     COMPILER_START_FAILED: 503,
     SANDBOX_INPUT_INIT_FAILED: 503,
     TYPECHECK_UNAVAILABLE: 503,
@@ -93,6 +94,7 @@ export function adminError(error) {
   const status = statusByCode[error?.code] || 503;
   const actionableOperationalCodes = new Set([
     "COMPILER_SNAPSHOT_EXPIRED",
+    "COMPILER_SNAPSHOT_STORAGE_LIMIT",
     "COMPILER_BUSY",
     "COMPILER_START_FAILED",
     "SANDBOX_INPUT_INIT_FAILED",
