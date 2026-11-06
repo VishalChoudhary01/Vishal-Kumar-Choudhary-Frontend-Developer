@@ -311,7 +311,11 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
         />
       </section>
 
-      <LabsEngagementTrendChart daily={analytics.daily} />
+      <LabsEngagementTrendChart
+        daily={analytics.daily}
+        periodDays={days}
+        isRefreshing={refreshing}
+      />
 
       <section aria-labelledby="experiment-rankings-title" className="mt-10">
         <div>
