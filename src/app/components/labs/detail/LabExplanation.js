@@ -6,7 +6,7 @@ export default function LabExplanation({ explanation }) {
   return (
     <section
       aria-labelledby="lab-explanation-heading"
-      className="mx-auto mt-16 w-full max-w-[1440px] px-6 sm:mt-20 sm:px-8 lg:px-20"
+      className="mx-auto mt-12 w-full max-w-[1440px] px-6 sm:mt-16 sm:px-8 lg:px-20"
     >
       <div className="max-w-3xl border-t border-border-subtle pt-7">
         <p className="font-mono text-[9px] font-medium uppercase tracking-[0.2em] text-brand">
