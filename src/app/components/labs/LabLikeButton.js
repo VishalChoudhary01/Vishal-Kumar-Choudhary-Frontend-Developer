@@ -205,7 +205,7 @@ export default function LabLikeButton({
           </motion.span>
         )}
         <span>{data?.liked ? "Liked" : "Like"}</span>
-        <span className="tabular-nums text-text-tertiary" aria-live="polite" aria-atomic="true">
+        <span className="inline-flex items-center leading-none tabular-nums text-text-tertiary" aria-live="polite" aria-atomic="true">
           {count === null ? "—" : (
             <MotionNumber
               value={count}
