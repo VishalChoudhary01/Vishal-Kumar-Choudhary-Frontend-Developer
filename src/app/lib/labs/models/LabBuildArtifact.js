@@ -12,6 +12,22 @@ const labBuildOutputSchema = new mongoose.Schema(
   { _id: false, strict: "throw" },
 );
 
+const labPreviewPosterSchema = new mongoose.Schema(
+  {
+    status: { type: String, enum: ["ready", "unavailable"], required: true },
+    path: { type: String, default: null, enum: [null, "__preview/gallery-poster.png"] },
+    url: { type: String, default: null, maxlength: 2048 },
+    contentType: { type: String, default: null, enum: [null, "image/png"] },
+    byteSize: { type: Number, default: null, min: 1, max: 8 * 1024 * 1024 },
+    width: { type: Number, default: null, min: 1, max: 1200 },
+    height: { type: Number, default: null, min: 1, max: 900 },
+    contentHash: { type: String, default: null, match: /^[a-f0-9]{64}$/ },
+    captureVersion: { type: String, required: true, maxlength: 40 },
+    reasonCode: { type: String, default: null, enum: [null, "browser_unavailable", "capture_timeout", "capture_failed", "no_visible_output", "invalid_output"] },
+  },
+  { _id: false, strict: "throw" },
+);
+
 const labBuildArtifactSchema = new mongoose.Schema(
   {
     artifactId: { type: String, required: true, unique: true, index: true, maxlength: 64 },
@@ -25,6 +41,9 @@ const labBuildArtifactSchema = new mongoose.Schema(
       required: true,
       validate: (files) => Array.isArray(files) && files.length >= 1 && files.length <= 80,
     },
+    // Generated from this exact immutable artifact; separate from outputFiles
+    // so the compiled-file count and runtime manifest stay intact.
+    previewPoster: { type: labPreviewPosterSchema, default: null },
     compiler: {
       type: mongoose.Schema.Types.Mixed,
       required: true,
