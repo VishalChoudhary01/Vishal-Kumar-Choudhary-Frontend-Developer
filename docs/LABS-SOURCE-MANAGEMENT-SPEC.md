@@ -307,7 +307,7 @@ Keep the existing user-facing endpoint `GET /api/v1/labs/:slug/source` as the on
 Engagement endpoints:
 - `GET /api/v1/labs/:slug/engagement` — returns public aggregate like counts and the current actor's like state. It does not create an anonymous cookie for a visitor who has not interacted.
 - `POST /api/v1/labs/:slug/engagement` — toggles one verified-account or anonymous-browser like. Verified accounts are keyed by the server-derived Better Auth user ID. Anonymous identities use a signed HTTP-only cookie and a keyed database digest; anonymous counts do not represent unique people. Signed-in unverified accounts are denied.
-- `POST /api/v1/labs/:slug/source/events` — records `source_open` or `code_copy` for a verified session. Copy events are submitted only after the browser reports clipboard success; clipboard contents are never sent.
+- `POST /api/v1/labs/:slug/source/events` — records `source_open` or `code_copy` for a verified session. Copy events are submitted only after the browser reports clipboard success; clipboard contents are never sent. Per verified user and event type, enforce 30 source opens or 20 copies per minute across experiments, return 429 with `Retry-After`, and do not consume quota for an accepted duplicate event ID.
 - `GET /api/v1/admin/labs/analytics?days=30` — returns aggregate owner analytics without individual browsing/action histories.
 
 
