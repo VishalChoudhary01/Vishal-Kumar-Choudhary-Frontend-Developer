@@ -4,7 +4,7 @@ import { connectToDatabase } from "@/app/lib/db/mongoose";
 import LabExperiment from "./models/LabExperiment";
 import LabSource from "./models/LabSource";
 import LabBuildArtifact from "./models/LabBuildArtifact";
-import { selectEligiblePublishedCustomExperiments } from "./owner-analytics-utils.mjs";
+import { PUBLISHED_LAB_SOURCE_PROJECTION, selectEligiblePublishedCustomExperiments } from "./owner-analytics-utils.mjs";
 import { resolveGalleryPreviewSelection } from "./gallery-preview-policy.mjs";
 
 function isPublicBlobUrl(value) {
@@ -163,7 +163,7 @@ export async function getPublishedCustomLabExperiments() {
     publishedVersionId: { $ne: null },
     publishedArtifactId: { $ne: null },
   })
-    .select("slug publishedVersionId publishedArtifactId")
+    .select(PUBLISHED_LAB_SOURCE_PROJECTION)
     .lean();
 
   if (!sources.length) return [];
