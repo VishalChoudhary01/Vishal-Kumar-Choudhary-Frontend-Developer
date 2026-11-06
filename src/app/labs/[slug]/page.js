@@ -3,7 +3,6 @@ import { cookies } from "next/headers";
 
 import LabsPageShell from "@/app/components/labs/LabsPageShell";
 import LabDetailHeader from "@/app/components/labs/detail/LabDetailHeader";
-import LabWorkspace from "@/app/components/labs/detail/LabWorkspace";
 import LabExperimentPreview from "@/app/components/labs/LabExperimentPreview";
 import LabExplanation from "@/app/components/labs/detail/LabExplanation";
 import LabSourceAccess from "@/app/components/labs/detail/LabSourceAccess";
@@ -160,11 +159,10 @@ export default async function LabExperimentPage({ params }) {
               />
             </div>
             <p className="mt-2 text-[10px] text-text-tertiary">
-              Static media preview · the interactive experiment runs below
+              Project preview
             </p>
           </section>
         ) : null}
-        <LabWorkspace key={experiment.slug} experiment={experiment} />
         <LabExplanation explanation={experiment.explanation} />
         <LabSourceAccess
           key={experiment.slug}
