@@ -632,3 +632,15 @@ Added `tests/labs-source-history-monaco.test.mjs` with six checks for shared rea
 5. Verify keyboard navigation, light/dark themes, modal sizing on mobile/tablet/desktop and the plain-text fallback if Monaco assets fail.
 
 Phases 1–5 are implemented in branch source. Phase 6 (responsive/accessibility/performance polish) and Phase 7 (full Preview and owner workflow regression) remain. Production has not been promoted.
+
+
+### Phase 5 Preview status — 7 November 2026
+
+Vercel has a `READY` Git Preview for the version-history Monaco UI commit:
+- Deployment: `dpl_7m599mPvgivpTsG5ZgWKxWPdMD6g`
+- URL: `https://vishal-kumar-choudhary-frontend-developer-94p8uczn7.vercel.app`
+- Source commit: `28635a34c416d4e84a912ac96d75b6a88f68a036`
+
+A second Preview `dpl_42Dy8FHJ8A8NymU1JxWRWjue4Y8J` is READY for the initial history test file commit `47e74bb5b62687c7f87c380525d7538c868ea384`. The subsequent `package.json` build-script commit `2372ae486315c701e05c67ed8858d00967191cd2` produced an ERROR because the first version of the new Restore ancestry test asserted against the UI file instead of the source-management service. That assertion was corrected in `175e31ae9d0e95d9574453cafed324deecb889b5`; the current branch clean-checkout production build, including every test suite, now passes. No Vercel deployment is listed yet for the corrected test commit or later documentation commits, so the exact current HEAD still needs a fresh READY Preview before release acceptance.
+
+The Preview is protected by Vercel Authentication. Owner must open it while signed in to complete the Phase 5 modal/file-switch/restore browser matrix. Production has not been changed.
