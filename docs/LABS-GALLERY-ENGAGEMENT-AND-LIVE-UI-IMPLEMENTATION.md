@@ -108,3 +108,12 @@ This is a design/implementation plan only. It does not mark the public page rede
 The public Labs hero implementation has been committed on `feat/labs-platform-integration`. It includes the editorial hero and conceptual SVG artwork, Motion entrance/count-up behavior, reduced-motion handling, a tested pure auth CTA mapping, and server-resolved authentication state. The build script now includes `test:labs-public-hero`.
 
 The implementation and exact verification gates are tracked in **[Labs Public Page Redesign — Phased Plan](./LABS-PUBLIC-PAGE-REDESIGN-PLAN.md)**. Do not treat the source commit as proof of a passing test suite, production build, visual QA or deployment. The navbar, feature spotlight, gallery cards, Likes and source/media/publishing contracts remain outside Phase 1.
+
+
+## 9. Phase 2 featured spotlight update — 7 November 2026
+
+The public featured spotlight now uses an eligible record from the same combined published list as the gallery. A slug-based resolver chooses the preferred featured experiment, then falls back deterministically to the first valid entry, or renders no spotlight for an empty/invalid collection. No duplicate featured project object or mock card is used.
+
+The presentation reuses the existing static, non-executable preview component and exact release media precedence. A failed image now advances to the next validated preview source through the shared failure-state helper. The new resolver/integration tests are included in the production build sequence.
+
+See the Labs Public Page Redesign phased plan for implementation details and outstanding acceptance checks. The code commit does not represent a passing build or deployed browser QA.
