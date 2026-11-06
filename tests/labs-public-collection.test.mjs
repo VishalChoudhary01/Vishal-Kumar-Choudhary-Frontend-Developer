@@ -103,3 +103,24 @@ test("progressive loading remains bounded to six items per action", () => {
   assert.match(loadMoreSource, /nextPageCount/);
   assert.match(loadMoreSource, /requestPublicPage/);
 });
+
+
+test("server collection summary prevents the current page from understating global counts", () => {
+  const options = buildLabCategoryOptions(
+    [{ slug: "magnetic-interaction", category: "Interface Interactions" }],
+    categories,
+    {
+      totalCount: 31,
+      categoryCounts: {
+        "Interface Interactions": 12,
+        "Creative Coding": 4,
+      },
+    },
+  );
+
+  assert.deepEqual(options, [
+    { id: "all", label: "All", count: 31 },
+    { ...categories[2], count: 12 },
+    { ...categories[3], count: 4 },
+  ]);
+});
