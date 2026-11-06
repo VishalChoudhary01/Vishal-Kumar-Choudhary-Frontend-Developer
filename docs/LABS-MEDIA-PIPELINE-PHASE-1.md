@@ -1,6 +1,22 @@
 # Labs Media Pipeline — Phase 1
 
-**Status:** Upload and verification foundation plus owner-only private preview and a single optional fallback attachment are implemented in the integration branch. Fallback media is used only when the live code preview cannot run or is unsupported. Public fallback delivery and release publication remain gated.
+**Status:** The private Cloudinary upload/verification foundation and one optional private `fallback-preview` attachment remain implemented. A separate owner-selected still-image poster promotion is now also committed: a ready JPEG/PNG/WebP/AVIF image is verified server-side, copied to public Vercel Blob, and bound to the exact current published artifact/version. This poster is public by explicit owner action; it is not the runtime fallback and is not automatically captured. Full build, Atlas/provider checks, authenticated browser QA and a new Preview deployment are pending. Public runtime-fallback delivery, detail-gallery role migration and automatic screenshot generation remain gated.
+
+## Included in the implemented public gallery poster slice
+
+This is separate from the private fallback-upload phase above and is not a general promotion of all media assets.
+
+- Owner-only mutation: `PUT /api/v1/admin/labs/experiments/:slug/media/gallery-preview`.
+- Promotion requires a published custom experiment and a ready published immutable artifact/version.
+- Only experiment-owned, owner-owned, ready authenticated Cloudinary image resources in JPEG/JPG, PNG, WebP or AVIF are accepted. GIF and video are excluded.
+- Maximum source image size is 5 MB.
+- The server re-verifies the Cloudinary resource, fetches through a short-lived private URL with redirects disabled, validates the downloaded signature and byte size, then writes a unique public Vercel Blob object.
+- MongoDB stores the public poster URL and exact `artifactId` + `sourceVersionId`; the public DTO exposes it only when both match the current published source.
+- The Studio explicitly labels the poster public and requires owner action. It supplies alt text. Do not place confidential or personal images in this field.
+- Replacing/removing a poster, publishing another artifact, unpublishing, and deleting an experiment attempt public Blob cleanup. Provider cleanup failures do not restore a public DTO pointer; they may leave an orphan requiring reconciliation.
+- This implementation does not capture the preview automatically. Automatic screenshot capture from a successfully rendered immutable artifact remains a separate future phase.
+
+Required configuration reuses `BLOB_READ_WRITE_TOKEN` already needed by the immutable artifact pipeline. The public gallery poster is delivered by Vercel Blob; the Cloudinary authenticated asset remains private and the private preview URL is never serialized into public data.
 
 ## Included in this phase
 
@@ -42,15 +58,15 @@ Required:
 
 ## Explicitly not included yet
 
-- Public fallback delivery conversion at publish time; owner previews are generated as short-lived private URLs by the owner media inventory.
-- Public fallback delivery conversion at publish time and binding the optional fallback to an immutable release manifest.
+- Public runtime-fallback delivery conversion at publish time and binding that optional fallback to an immutable release manifest.
 - Public runtime fallback behavior for failed/unsupported code previews.
-- Immutable per-version fallback reference in the draft/release manifest.
-- Asset deletion/cleanup and orphan reconciliation.
-- Optional fallback-video poster generation, if the selected public delivery mode requires it.
+- Detail-gallery media role migration and public delivery.
+- Automatic capture of a still poster from the successful isolated preview.
+- Full orphan reconciliation/cleanup jobs for provider objects if a best-effort delete fails.
+- Optional fallback-video poster generation.
 - Chunked/resumable video transfer.
 
-These remain part of the release phase. Until public fallback delivery is verified, uploaded assets stay private. The single optional fallback is considered only when code preview cannot run or is unsupported; it never replaces a working code preview.
+These remain separate release phases. Until public fallback delivery is verified, uploaded runtime-fallback assets stay private. The single optional fallback is considered only when code preview cannot run or is unsupported; it never replaces a working code preview. The public gallery poster flow described above is a separate explicit owner promotion of one static still image.
 
 ## Validation still required
 
