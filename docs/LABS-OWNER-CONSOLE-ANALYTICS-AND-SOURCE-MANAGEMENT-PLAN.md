@@ -342,11 +342,13 @@ Work in small phases with separate reviewable commits. Do not begin a later phas
 | Custom experiment analytics + source event coverage | Code committed / build-verified | Owner aggregation now combines code-owned experiments with published custom experiments whose source version matches a ready artifact; source-open/copy event validation accepts the same published custom catalogue. Atlas-backed reconciliation and verified event round-trip are still pending |
 | Custom experiment metadata editor/PATCH | Code committed / build-verified | Preview route manifest contains `/admin/labs/experiments/[slug]/edit`; anonymous request returns login with the exact edit destination. Authenticated save, stale conflict and Atlas audit verification remain pending |
 | Complete daily date buckets | Code committed / build-verified | Analytics now emits a complete UTC date series with zero-activity days; zero-value days render zero-height bars and the empty state checks actual activity | 
-| Live polling, MotionNumber and multi-series chart | Code committed / Preview build-verified on commit e2673785bd882a0b787318e9551d49b8e9e9468b |
+| Live polling, MotionNumber and multi-series chart | Code committed / Preview build-verified on commit `e2673785bd882a0b787318e9551d49b8e9e9468b` | Visible-tab 10-second polling, visibility pause, abort/no-overlap, bounded backoff, stale-data preservation and manual refresh. MotionNumber supports locale grouping; chart shows four instrumented series and an accessible daily table |
 | Instrumented-event rankings | Code committed / Preview build-verified | Collection analytics adds deterministic top-five rankings for source opens and code copies in the selected period, plus current active likes; zero-value entries are omitted and ties resolve by title then slug |
 | Per-experiment analytics API/detail route | Code committed / Preview build-verified | Adds owner-only `GET /api/v1/admin/labs/analytics/:slug` and `/admin/labs/analytics/[slug]`; aggregate-only output includes period metrics, current active likes and UTC daily series for published built-in or eligible custom experiments |
-| Analytics detail return-path protection | Code committed / Preview build-verified / page smoke-tested | Exact slug route is allowlisted through owner login/verification handling; API response remains private/no-store and exposes no raw events or account identifiers | Visible-tab 10-second polling, visibility pause, abort/no-overlap, backoff, stale-data preservation and manual refresh are present. MotionNumber supports locale grouping; the chart shows four instrumented series and an accessible daily table. The last commit after this READY deployment only removes an unused import and has not received a separate Preview build due Vercel's daily deployment API quota |
-| Build and protected-route smoke test | Passed on latest functional Preview | Deployment dpl_2q1CRakZTVJw2QLMNUsDFL6EBThQ reached READY; route manifest includes Analytics, Source Library, source workspace and metadata editor. Anonymous route checks confirm page-specific login return destinations and legacy ?days=30 forwarding |
+| Analytics detail return-path protection | Code committed / Preview build-verified / page smoke-tested | Exact slug route is allowlisted through owner login/verification handling; API response remains private/no-store and exposes no raw events or account identifiers |
+| Pure analytics regression tests | Added; 6 tests pass locally | Node-native tests cover ranking order/ties/limits, valid and invalid periods, complete UTC date buckets, invalid bounds and custom artifact/source-version eligibility |
+| Reporting-period upper bound | Code committed | Collection event aggregation now matches `occurredAt <= generatedAt` as well as the lower bound, preventing future-dated records from inflating period totals |
+| Build and protected-route smoke test | Passed on latest rankings/detail Preview | Deployment `dpl_ADaqDDWRKP2WjESBaKA2dqgBuv7a` reached READY; route manifest includes collection/detail pages and APIs. Anonymous detail-page protection/return-path check passed. The latest test-gating and period-bound commits need a fresh Preview build |
 
 ### Phase 2 initial code progress — 2026-11-06
 
@@ -422,6 +424,17 @@ The READY live-dashboard Preview was `dpl_2q1CRakZTVJw2QLMNUsDFL6EBThQ` at `e267
 | Metric boundaries | Code committed | Public experiment detail views and preview starts remain intentionally absent because those event types are not instrumented. Source opens are not labelled as views; active likes are labelled current state |
 | Authenticated detail and ranking reconciliation | Pending | Verify with the owner account against real Atlas records; compare rankings to fixtures and confirm built-in/custom published experiments only |
 | Detail page visual/accessibility QA | Pending | Test small/large screens, table alternatives, focus order, screen reader labels, contrast and zoom |
+
+### Analytics unit-test coverage — 2026-11-06
+
+- Added `npm run test:labs-analytics` using Node's built-in test runner; no third-party testing dependency was added.
+- The normal `npm run build` now runs this suite before SEO validation and Next.js compilation.
+- Six deterministic tests cover ranking order, tie-breaking, zero-value omission, limits, reporting period normalization, complete UTC daily buckets, invalid/reversed date bounds and published-custom artifact eligibility.
+- Extracted pure calculations into `owner-analytics-utils.mjs` so the production aggregation and tests use the same functions.
+- Custom published experiments are included only when the source is published and the ready artifact matches both the experiment slug and the exact published source version.
+- The collection event aggregation now bounds both ends of the selected reporting period (`since <= occurredAt <= generatedAt`).
+
+Local verification output: **6 tests passed, 0 failed**. The latest code/test-gating changes are committed after the READY ranking/detail deployment and still require a fresh Preview build.
 
 ### Additional authorization discrepancy found during audit
 
