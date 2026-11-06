@@ -60,7 +60,7 @@ function createExperimentRows(experiments) {
 }
 
 function createRankings(rows, limit = 5) {
-  function rankBy(metric, select) {
+  function rankBy(metric, select = () => ({})) {
     return [...rows]
       .filter((row) => Number(row[metric]) > 0)
       .sort((a, b) => {
@@ -90,7 +90,13 @@ function createRankings(rows, limit = 5) {
 }
 
 function normalizePeriod(days) {
-  const { periodDays, generatedAt, since } = normalizePeriod(days);
+  const allowedDays = new Set([7, 30, 90, 365]);
+  const periodDays = allowedDays.has(Number(days)) ? Number(days) : 30;
+  const generatedAt = new Date();
+  const since = new Date(
+    generatedAt.getTime() - periodDays * 24 * 60 * 60 * 1000,
+  );
+
   return { periodDays, generatedAt, since };
 }
 
