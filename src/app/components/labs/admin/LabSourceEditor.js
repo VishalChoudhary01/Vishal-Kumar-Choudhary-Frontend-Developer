@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import { useActionToast } from "@/app/providers/ActionToastProvider";
 import LabSourceLivePreview from "./LabSourceLivePreview";
+import LabCodeEditor from "@/app/components/labs/code/LabCodeEditor";
+import { updateSourceFileContent } from "@/app/lib/labs/source-editor-state.mjs";
 import LabMediaLibrary from "./LabMediaLibrary";
 import Link from "next/link";
 import {
@@ -93,6 +96,8 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
   const { showToast } = useActionToast();
   const [source, setSource] = useState(initialSource);
   const [files, setFiles] = useState(initialSource.files || []);
+  const filesRef = useRef(files);
+  const { resolvedTheme } = useTheme();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [versions, setVersions] = useState(initialVersions || []);
   const [audit, setAudit] = useState(initialAudit || []);
@@ -108,6 +113,19 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
   const [previewFileIndex, setPreviewFileIndex] = useState(0);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [publishStage, setPublishStage] = useState("");
+  // React files state is authoritative; this ref is its synchronous mirror.
+  // Monaco emits content on each change, so save/run/publish can always capture
+  // the latest keystroke even before a parent render is committed.
+  function commitFiles(nextValue) {
+    const nextFiles = typeof nextValue === "function"
+      ? nextValue(filesRef.current)
+      : nextValue;
+    const safeFiles = Array.isArray(nextFiles) ? nextFiles : [];
+    filesRef.current = safeFiles;
+    setFiles(safeFiles);
+    return safeFiles;
+  }
+
   function moveFile(fromIndex, toIndex) {
     if (
       busy ||
@@ -125,7 +143,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
     const [movedFile] = reorderedFiles.splice(fromIndex, 1);
     reorderedFiles.splice(toIndex, 0, movedFile);
 
-    setFiles(reorderedFiles);
+    commitFiles(reorderedFiles);
     setSelectedIndex(Math.max(0, reorderedFiles.indexOf(selectedFileBeforeMove)));
     setError("");
     setMessage("File order changed. Save the draft to preserve this order.");
@@ -156,9 +174,13 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
   }, [hasUnsavedChanges]);
 
   function updateSelected(patch) {
-    setFiles((current) =>
+    commitFiles((current) =>
       current.map((file, index) => index === selectedIndex ? { ...file, ...patch } : file),
     );
+  }
+
+  function updateFileContent(filePath, content) {
+    commitFiles((current) => updateSourceFileContent(current, filePath, content));
   }
 
   function getUniquePath(candidate, existingFiles = files) {
@@ -188,7 +210,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
 
     const next = files.length;
     const path = getUniquePath("src/new-file.js");
-    setFiles((current) => [
+    commitFiles((current) => [
       ...current,
       { path, language: "javascript", content: "" },
     ]);
@@ -222,7 +244,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
     }
 
     const nextFiles = [...files, ...additions];
-    setFiles(nextFiles);
+    commitFiles(nextFiles);
     setSelectedIndex(Math.max(0, nextFiles.findIndex((file) => file.path === "index.html")));
     setError("");
     setMessage(additions.length ? "HTML/CSS starter added. Edit index.html and styles.css, then press Run." : "The HTML/CSS starter files already exist.");
@@ -260,7 +282,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
 
     const additions = templates.filter((template) => !files.some((file) => file.path === template.path));
     const nextFiles = [...files, ...additions];
-    setFiles(nextFiles);
+    commitFiles(nextFiles);
     setSelectedIndex(Math.max(0, nextFiles.findIndex((file) => file.path === "src/App.jsx")));
     setError("");
     setMessage(additions.length ? "React starter added. Edit src/App.jsx and press Run to execute it." : "The React starter entry files already exist.");
@@ -297,7 +319,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
 
     const additions = templates.filter((template) => !files.some((file) => file.path === template.path));
     const nextFiles = [...files, ...additions];
-    setFiles(nextFiles);
+    commitFiles(nextFiles);
     setSelectedIndex(Math.max(0, nextFiles.findIndex((file) => file.path === "src/App.tsx")));
     setError("");
     setMessage(additions.length ? "React TypeScript starter added. Edit src/App.tsx and press Run to type-check and execute it." : "The React TypeScript starter entry files already exist.");
@@ -353,7 +375,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
       const safeName = file.name.replace(/[^A-Za-z0-9._-]/g, "-");
       const nextPath = getUniquePath("src/" + safeName);
       const nextIndex = files.length;
-      setFiles((current) => [
+      commitFiles((current) => [
         ...current,
         { path: nextPath, language, content },
       ]);
@@ -368,7 +390,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
   function removeSelectedFile() {
     if (!selectedFile) return;
     if (!window.confirm("Remove " + selectedFile.path + " from this draft?")) return;
-    setFiles((current) => current.filter((_, index) => index !== selectedIndex));
+    commitFiles((current) => current.filter((_, index) => index !== selectedIndex));
     setSelectedIndex(Math.max(0, Math.min(selectedIndex, files.length - 2)));
   }
 
@@ -412,7 +434,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
       requestJson(base + "/audit?limit=20"),
     ]);
     setSource(nextSource);
-    setFiles(nextSource.files || []);
+    commitFiles(nextSource.files || []);
     setVersions(nextVersions || []);
     setAudit(nextAudit || []);
     setSelectedIndex(0);
@@ -464,7 +486,8 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
   }
 
   async function saveDraft() {
-    const validationError = validateDraftFiles(files);
+    const filesToSave = filesRef.current;
+    const validationError = validateDraftFiles(filesToSave);
     if (validationError) {
       setError(validationError);
       return;
@@ -479,7 +502,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
         "/api/v1/admin/labs/sources/" + encodeURIComponent(source.slug) + "/versions",
         "POST",
         {
-          files,
+          files: filesToSave,
           expectedDraftVersionId: source.draftVersionId || null,
           changeSummary,
           requestId: makeRequestId(),
@@ -494,7 +517,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
           version: data.version,
           contentHash: data.contentHash,
         },
-        files,
+        files: filesToSave,
       }));
       setChangeSummary("");
       setMessage(data.version + " saved as a private draft.");
@@ -519,7 +542,9 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
   async function publishDraft() {
     if (busy) return;
 
-    const validationError = validateDraftFiles(files);
+    const filesToPublish = filesRef.current;
+    const isDirty = JSON.stringify(filesToPublish) !== JSON.stringify(source.files || []);
+    const validationError = validateDraftFiles(filesToPublish);
     if (validationError) {
       setError(validationError);
       return;
@@ -536,13 +561,13 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
     try {
       // The primary action is safe for dirty editor state: snapshot the exact
       // current files first, then build and publish that immutable version.
-      if (source.isCustom && (hasUnsavedChanges || !versionId)) {
+      if (source.isCustom && (isDirty || !versionId)) {
         setPublishStage("Saving the current editor changes as a private draft…");
         savedDraft = await requestJson(
           "/api/v1/admin/labs/sources/" + encodeURIComponent(source.slug) + "/versions",
           "POST",
           {
-            files,
+            files: filesToPublish,
             expectedDraftVersionId: source.draftVersionId || null,
             changeSummary,
             requestId: makeRequestId(),
@@ -558,7 +583,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
             version: savedDraft.version,
             contentHash: savedDraft.contentHash,
           },
-          files,
+          files: filesToPublish,
         }));
         setChangeSummary("");
         setMessage(savedDraft.version + " saved. Preparing the release build…");
@@ -603,7 +628,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
               contentHash: savedDraft.contentHash,
             }
           : current.draft,
-        files,
+        files: filesToPublish,
         published: true,
         publishedVersionId: publishResult.publishedVersionId || versionId,
         publishedArtifact: publishResult.artifact || null,
@@ -980,23 +1005,30 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                     </button>
                   </div>
                 </div>
-                <label className="mt-4 block">
-                  <span className="mb-1 flex flex-wrap items-center justify-between gap-2 text-[11px] font-medium uppercase tracking-[0.1em] text-text-tertiary">
+                <div className="mt-4">
+                  <div className="mb-1 flex flex-wrap items-center justify-between gap-2 text-[11px] font-medium uppercase tracking-[0.1em] text-text-tertiary">
                     <span>Source content</span>
                     <span className="font-mono normal-case tracking-normal">
                       {String(new TextEncoder().encode(selectedFile.content || "").length)} bytes · {(selectedFile.content || "").split("\n").length} lines
                     </span>
-                  </span>
-                  <textarea
-                    value={selectedFile.content}
-                    onChange={(event) => updateSelected({ content: event.target.value })}
-                    spellCheck={false}
-                    autoCapitalize="off"
-                    autoCorrect="off"
-                    className="min-h-[520px] w-full resize-y border border-border bg-surface-inset p-4 font-mono text-xs leading-6 text-text-primary outline-none focus:border-brand"
-                    placeholder="Paste or write the source code here…"
+                  </div>
+                  <LabCodeEditor
+                    value={selectedFile.content || ""}
+                    language={selectedFile.language}
+                    readOnly={false}
+                    onChange={(nextValue) => updateFileContent(selectedFile.path, nextValue)}
+                    scope="creator"
+                    experimentSlug={source.slug}
+                    versionId="working-copy"
+                    filePath={selectedFile.path}
+                    theme={resolvedTheme === "light" ? "labs-light" : "labs-dark"}
+                    wordWrap="off"
+                    minimap={false}
+                    keepCurrentModel
+                    ariaLabel={"Editable source code: " + selectedFile.path}
+                    className="h-[min(680px,72svh)] min-h-[520px] w-full border-0"
                   />
-                </label>
+                </div>
               </>
             ) : (
               <div className="grid min-h-[520px] place-items-center text-center">
@@ -1033,7 +1065,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                   type="button"
                   onClick={() => {
                     if (window.confirm("Discard all unsaved file changes?")) {
-                      setFiles(source.files || []);
+                      commitFiles(source.files || []);
                       setSelectedIndex(0);
                       setError("");
                     }
@@ -1126,7 +1158,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
               </div>
             ) : null}
           </div>
-          {source.isCustom ? <LabSourceLivePreview slug={source.slug} files={files} /> : null}
+          {source.isCustom ? <LabSourceLivePreview slug={source.slug} files={files} getWorkingFiles={() => filesRef.current} /> : null}
         </section>
 
         {source.isCustom ? <LabMediaLibrary slug={source.slug} /> : null}
