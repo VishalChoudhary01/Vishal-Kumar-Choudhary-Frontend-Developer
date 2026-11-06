@@ -242,3 +242,12 @@ The existing Labs navbar is explicitly out of scope. The public route must conti
 The hero implementation is now present on `feat/labs-platform-integration`. It adds the animated connected-node illustration, responsive hero layout, one-time real-data statistics count-up and server-resolved auth-state CTAs. The detailed behavior, file list and pending acceptance checks are recorded in **[Labs Public Page Redesign — Phased Plan](./LABS-PUBLIC-PAGE-REDESIGN-PLAN.md)**.
 
 This implementation does not modify the shared navbar or any experiment, detail-page, source-access, publishing, media, Like or owner-workspace behavior. It is not considered accepted/release-ready until the automated, build and browser verification gates in the phased plan pass.
+
+
+## 16. Phase 2 — featured experiment spotlight
+
+The public spotlight now resolves its selected slug against the same combined eligible experiment collection used by the gallery. The display metadata and preview are never maintained as a separate copied object. If the preferred slug is unavailable, the resolver chooses the first valid experiment in the approved collection; an empty/invalid collection returns no spotlight.
+
+The responsive editorial spotlight uses the shared non-executable LabExperimentPreview renderer and the exact upload → matching generated poster → artwork fallback policy. Its in-view Motion reveal respects reduced-motion preferences. The source changes and pending verification gates are documented in the Labs Public Page Redesign phased plan.
+
+This phase also fixes the shared image error handler in LabExperimentPreview, allowing its existing fallback selection to proceed after an image load failure. It does not enable source execution in the spotlight or change the navbar.
