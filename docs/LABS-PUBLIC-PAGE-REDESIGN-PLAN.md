@@ -1,6 +1,6 @@
 # Labs Public Page Redesign — Phased Plan
 
-**Status:** Phase 1 and Phase 2 implementation committed; automated, build and visual verification remain pending. Phases 3–5 remain planned. Hero Motion, statistics count-up and authentication-aware CTAs are included in scope.  
+**Status:** Phases 1–3 implementation committed; automated, build and visual verification remain pending. Phases 4–5 remain planned. Hero Motion, statistics count-up and authentication-aware CTAs are included in scope.  
 **Branch:** `feat/labs-platform-integration`  
 **Updated:** 7 November 2026  
 **Scope:** Public `/labs` discovery page.  
@@ -287,14 +287,27 @@ Still pending:
 
 ### Phase 3 — Collection, categories and card presentation
 
-- Rework the collection heading, navigation spacing, count/readout and card grid as one coherent section.
-- Keep the current four category definitions and derive visibility/counts from real entries.
-- Improve card preview hierarchy, title/description rhythm, technology metadata and Like placement.
-- Fix the Scroll-driven Text Reveal artwork clipping and audit all artwork variants for container sizing.
-- Keep all previews static and media-only; preserve existing like/unlike and engagement error states.
-- Add or improve loading/no-results/empty states only where current data flow needs them.
+<badge>Implementation committed — verification pending</badge>
 
-**Exit gate:** Cards are visually consistent and responsive; each card links to an eligible experiment and has no clipped content or fabricated data.
+Implemented:
+- Reworked the collection heading, eyebrow, result context and category navigation as one continuous discovery section.
+- Added data-derived category counts through `buildLabCategoryOptions()`; only categories represented by actual published experiments are shown. No placeholder categories/counts are introduced.
+- Restyled category navigation as compact bordered controls with clear active state, count labels, keyboard focus and horizontal overflow on narrow screens. Category navigation is intentionally not virtualized.
+- Rebuilt card composition with a consistent 4:3 preview, source-backed category/index overlay, restrained hover/focus affordance, improved typography/description rhythm and compact technology metadata.
+- Added reduced-motion-aware in-view Motion reveals to cards; the reveal does not block interaction or content access.
+- Preserved the actual `LabLikeButton` component, server-provided engagement, optimistic reconciliation and existing count behavior.
+- Preserved the existing six-item progressive-load behavior and made the next batch size explicit in the Load more control.
+- Added a distinct no-results state/reset action and retained the genuine empty-collection state.
+- Applied container-query typography to the built-in Scroll Text, Gradient Bloom and Generative Particle artworks (plus a container boundary on the Magnetic artwork) to prevent viewport-sized text clipping inside cards.
+- Added `tests/labs-public-collection.test.mjs` for data-backed category counts, real card links/likes, progressive loading, reduced-motion reveals and container-relative artwork; registered it as `test:labs-public-collection` in the production build sequence.
+
+Still pending:
+- Run the new collection suite, Phase 1/2 suites and existing Labs test suites.
+- Run ESLint and a clean production build.
+- Inspect real cards across desktop/tablet/mobile, both themes, narrow viewports and 200%/400% zoom.
+- Verify long titles/descriptions, all four built-in artworks, source-backed custom preview media and the Like interaction in an authenticated/guest browser journey.
+
+**Exit gate:** Cards are visually consistent and responsive; each card links to an eligible experiment and has no clipped content or fabricated data. Existing Like and progressive loading behavior must pass regression checks.
 
 ### Phase 4 — Catalogue scaling and discovery behavior
 
@@ -431,3 +444,20 @@ Changed:
 No navbar, gallery-card layout, category filtering, detail route, experiment runtime, compiler, publication, source-access, Like API or owner/admin workspace behavior was intentionally changed.
 
 **Verification is not claimed:** No test, lint, build or browser Preview result is recorded as passed by these commits.
+
+## 13. Phase 3 implementation progress — 7 November 2026
+
+**Status:** Code committed to feat/labs-platform-integration; automated, build and browser verification pending.
+
+Changed:
+- src/app/components/labs/LabsCollection.js — collection hierarchy, category controls, result status, card composition, reduced-motion reveals, empty/no-results states and Load more presentation.
+- src/app/lib/labs/category-options.mjs — derives category filter labels/counts from the currently eligible collection.
+- src/app/hooks/labs/useLabCategoryFilter.js — uses the data-backed category helper and keeps current category filtering behavior.
+- src/app/hooks/labs/useLabLoadMore.js — retains six-item batches and exposes the real next-batch size.
+- src/app/components/labs/landing/LabArtwork.js — container-relative type sizing for artwork labels/headlines.
+- tests/labs-public-collection.test.mjs — category, source integrity, Motion, artwork and progressive loading checks.
+- package.json — adds test:labs-public-collection to the production build test chain.
+
+Preserved: experiment slug identity, real data only, shared preview renderer, existing LikeButton/API/engagement data, category filter semantics, six-item progressive reveal, non-executable public previews and the unchanged navbar.
+
+**Verification is not claimed:** The new tests, ESLint, production build, deployed Preview and browser visual/accessibility checks have not been run in this editing session.
