@@ -975,6 +975,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                     <span className="mb-1 block text-[11px] font-medium uppercase tracking-[0.1em] text-text-tertiary">File path</span>
                     <input
                       value={selectedFile.path}
+                      disabled={Boolean(busy)}
                       onChange={(event) => updateSelected({ path: event.target.value })}
                       spellCheck={false}
                       className="h-9 w-full border border-border bg-background px-3 text-xs text-text-primary outline-none focus:border-brand"
@@ -984,6 +985,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                     <span className="mb-1 block text-[11px] font-medium uppercase tracking-[0.1em] text-text-tertiary">Language</span>
                     <select
                       value={selectedFile.language}
+                      disabled={Boolean(busy)}
                       onChange={(event) => updateSelected({ language: event.target.value })}
                       className="h-9 w-full border border-border bg-background px-2 text-xs text-text-primary outline-none focus:border-brand"
                     >
@@ -1015,7 +1017,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                   <LabCodeEditor
                     value={selectedFile.content || ""}
                     language={selectedFile.language}
-                    readOnly={false}
+                    readOnly={Boolean(busy)}
                     onChange={(nextValue) => updateFileContent(selectedFile.path, nextValue)}
                     scope="creator"
                     experimentSlug={source.slug}
