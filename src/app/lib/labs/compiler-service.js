@@ -5,6 +5,7 @@ import { put } from "@vercel/blob";
 import { Sandbox } from "@vercel/sandbox";
 import { prepareReactProject } from "./prepare-react-project.mjs";
 import { ensureSandboxInputDirectory } from "./sandbox-directory.mjs";
+import { getPublishedArtifactBlobPath } from "./release-artifact-path.mjs";
 
 const COMPILER_TIMEOUT_MS = 45_000;
 const PREVIEW_TIMEOUT_MS = 10 * 60 * 1000;
@@ -292,7 +293,13 @@ async function captureReleasePoster(sandbox, { slug, versionId, buildHash, artif
 
     const contentHash = createHash("sha256").update(bytes).digest("hex");
     const stored = await put(
-      ["labs", slug, versionId, buildHash, artifactId, "__preview", "gallery-poster.png"].join("/"),
+      getPublishedArtifactBlobPath({
+        experimentSlug: slug,
+        sourceVersionId: versionId,
+        buildHash,
+        artifactId,
+        filePath: "__preview/gallery-poster.png",
+      }),
       bytes,
       {
         access: "public",
@@ -430,13 +437,13 @@ export async function buildAndStoreOwnerLabRelease({ slug, user, version }) {
       }
       const extension = file.path.slice(file.path.lastIndexOf(".")).toLowerCase();
       const contentType = CONTENT_TYPES[extension] || "application/octet-stream";
-      const blobPath = [
-        "labs",
-        slug,
-        version.versionId,
-        result.buildHash,
-        file.path,
-      ].join("/");
+      const blobPath = getPublishedArtifactBlobPath({
+        experimentSlug: slug,
+        sourceVersionId: version.versionId,
+        buildHash: result.buildHash,
+        artifactId,
+        filePath: file.path,
+      });
 
       const stored = await put(blobPath, bytes, {
         access: "public",
