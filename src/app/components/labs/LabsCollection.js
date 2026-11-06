@@ -25,6 +25,7 @@ function CategoryNavigation({ categories, activeCategory, onChange }) {
           <button
             key={category.id}
             type="button"
+            aria-label={`${category.label}, ${category.count} experiments`}
             aria-pressed={active}
             onClick={() => onChange(category.id)}
             className={[
@@ -38,7 +39,7 @@ function CategoryNavigation({ categories, activeCategory, onChange }) {
           >
             <span>{category.label}</span>
             <span
-              aria-label={`${category.count} experiments`}
+              aria-hidden="true"
               className={[
                 "inline-flex min-w-5 items-center justify-center border px-1 py-0.5 text-[8px] tabular-nums",
                 active
