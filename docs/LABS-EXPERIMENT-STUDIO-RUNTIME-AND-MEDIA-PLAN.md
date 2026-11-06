@@ -25,7 +25,7 @@ This file is the concise source of truth for Labs runtime, release and media beh
 | Likes | Implemented | Existing LabLikeButton and engagement API |
 | Protected source access | Implemented | Verified-email authorization, session checks, file selection and copy action |
 | Media sizing polish | Phase 1 code committed; QA pending | DTO carries intrinsic dimensions; all shared media uses contain; detail stage uses natural height and a bounded responsive maximum |
-| Monaco foundation | Implemented; source UI integrations pending | Stable React 19 wrapper, self-hosted assets, read-only default, editable callback contract, plain-text fallback and 6 tests |
+| Monaco foundation | Implemented | Stable React 19 wrapper, self-hosted assets, read-only default, editable callback contract, plain-text fallback and 6 tests |
 | Detail layout polish | Planned | Improve section order and spacing while preserving Like and source access |
 
 ## 2. Run, Save Draft and Build & Publish must remain separate
@@ -188,3 +188,16 @@ Not yet implemented: replacing the public source reader, owner textarea or versi
 
 
 Phase 1/2 Preview note (6 November 2026): Vercel Preview deployment `dpl_Bc3VjAQq9Z5mQv7JEhor5ybH3z4F` is READY and includes the application code for both phases. Direct browser QA reached the Vercel deployment-protection sign-in screen, so deployed visual inspection of the protected preview remains an owner-authenticated acceptance step. Phase 2 clean-checkout install/build, 6 Monaco tests, 9 media tests, 15 analytics tests, ESLint and same-origin Monaco asset HTTP checks passed. Monaco has not yet been integrated into the public reader, Studio editor or version-history viewer; Run, Save Draft and Build & Publish remain unchanged.
+
+
+## 12. Phase 3 — protected public source viewer migration — 6 November 2026
+
+The public source viewer now uses the shared `LabCodeEditor` in read-only mode. It mounts only inside the existing authorized loaded-source state; guest, unverified and all non-loaded states do not render the editor. The server-side `getAuthorizedLabSource` resolution, protected source endpoint, verified-email/session revalidation and auth event invalidation are unchanged.
+
+File tabs still select the existing source files. The reader's Monaco model identity uses experiment slug, source version and file path and sets `keepCurrentModel={false}` so the protected model is disposed when the source view unmounts. Theme follows the app's resolved light/dark theme.
+
+The existing Copy action still copies the full original `file.content` via the Clipboard API and records the existing `code_copy` event with the same source version and file path. The `source_open` event is unchanged.
+
+Five protected-source reader contract tests were added and are included in every production build. Phase 3 validation passed: Monaco 6/6, source-reader contracts 5/5, media 9/9, Labs analytics 15/15, ESLint and the full clean-checkout Next.js production build.
+
+Remaining acceptance is authenticated Preview browser QA for reader rendering, guest/unverified no-source behavior, actual clipboard/event behavior, themes, mobile sizing and keyboard navigation. No source creator textarea, Run, Save Draft, version restore, Build & Publish or compiler flow was changed. See the [Phased Detail and Monaco plan](./LABS-DETAIL-PRESENTATION-AND-MONACO-EDITOR-IMPLEMENTATION-PLAN.md) for Phases 4–7.
