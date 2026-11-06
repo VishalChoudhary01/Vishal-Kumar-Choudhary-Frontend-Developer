@@ -1,6 +1,6 @@
 # Design Specification — Analytics Dashboard
 
-**Status:** Product/design authority. Initial owner source-engagement aggregation exists on `feat/labs-platform-integration`; dedicated Analytics routing, complete custom-experiment/event coverage, live refresh and the full dashboard implementation remain incomplete. This document defines the analytics experience and metric semantics; delivery order is in [the Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md).  
+**Status:** Product/design authority. Initial owner source-engagement aggregation exists on `feat/labs-platform-integration`. Dedicated Analytics routing and custom published-experiment aggregation/source-event validation are committed and Preview build-verified; authenticated owner-browser and Atlas-backed event verification remain pending. Live refresh, experiment-view/preview instrumentation and the full dashboard implementation remain incomplete. This document defines the analytics experience and metric semantics; delivery order is in [the Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md).  
 **Related:** [PRD](./PRD.md), [Admin design](./DESIGN-ADMIN.md), [Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md)
 
 ## 1. Purpose
@@ -142,7 +142,7 @@ This section maps the analytics design to the current Labs code. Metric meanings
 - `GET /api/v1/admin/labs/analytics?days=7|30|90|365` returns owner-only aggregate source engagement.
 - The current model records source opens, successful code-copy reports, verified like/unlike state transitions and anonymous guest-like actions.
 - The current page renders metric cards, a sparse daily bar chart, an experiment summary table and like activity. It is server-loaded and does not automatically refresh.
-- The current analytics aggregation is based on the code-owned published experiment catalogue. Custom database-backed published experiments are not yet consistently included in the aggregate and source-event validation paths.
+- The owner analytics aggregation now combines the code-owned published catalogue with `getPublishedCustomLabExperiments()`. A custom row is included only when its experiment is published and its published source pointer matches a ready artifact. This code is Preview build-verified; reconcile against real Atlas records before trusting production totals.
 - Experiment detail views, preview starts and preview interactions are requirements, not currently instrumented event types. They must not be represented as zero-valued live metrics.
 - The project's `MotionNumber` component and `motion/react` are the existing count-animation foundation. Reuse them; do not add a second counter system.
 
@@ -165,11 +165,11 @@ The refresh transport must return the same normalized aggregate shape so a later
 
 Before the richer chart and rankings are trusted:
 
-1. Include both code-owned and eligible database-backed custom experiments in the same server-side catalogue/aggregation path, without duplicate slugs.
-2. Allow valid published custom experiments through the protected source-event route only after rechecking verified identity, published status and the exact source version.
+1. **Code committed / Preview build-verified:** include code-owned experiments and published custom experiments whose source pointer matches a ready artifact in one slug-deduplicated server-side aggregation catalogue.
+2. **Code committed / Preview build-verified:** allow published custom experiments through the protected source-event route only when the resolver confirms published status, source publication and a ready matching artifact; the event handler still requires a verified session and exact current source version. Atlas-backed event round-trip remains pending.
 3. Add qualifying experiment-detail view instrumentation and a documented deduplication policy before showing view counts.
 4. Add preview-start and preview-interaction events only after the isolated runtime exposes a reliable successful-start signal and a bounded interaction allowlist.
-5. Return complete date buckets for the selected interval, including zero-activity days; label timezone and bucket boundaries.
+5. **Code committed / Preview build-verified:** return complete UTC calendar-date buckets for the selected rolling interval, including zero-activity days; the chart renders true zero-height bars. Keep timezone and bucket boundaries explicit.
 6. Label collection-wide unique-account totals correctly: summing per-experiment unique verified accounts counts experiment-account pairs, not globally unique accounts.
 7. Keep current active-like state separate from period like/unlike actions; report anonymous activity separately and do not call it people.
 
@@ -183,7 +183,7 @@ Use existing semantic theme tokens and the admin design system. Keep series iden
 
 - [x] Server-side owner aggregate endpoint exists for the initial source-engagement metrics.
 - [x] Initial source-open, copy and like/unlike event records exist.
-- [ ] Include custom database-backed published experiments in analytics and source-event validation.
+- [ ] Add qualifying experiment-detail view instrumentation and a documented deduplication policy.
 - [ ] Instrument experiment detail views with a documented qualifying-view rule.
 - [ ] Instrument preview start/interactions after runtime lifecycle approval.
 - [ ] Separate Analytics and Source Library routes.
