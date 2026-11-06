@@ -4,6 +4,7 @@ import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
 import {
   getLabEngagement,
   LABS_GUEST_LIKE_COOKIE,
+  mergeGuestLikesIntoVerifiedAccount,
   resolveGuestIdentity,
   setGuestIdentityCookie,
   setLabLike,
@@ -41,6 +42,14 @@ function actorFor(session, guestIdentity) {
     : null;
 }
 
+function publicEngagement(data, extra = {}) {
+  return {
+    totalLikes: Math.max(0, Number(data?.totalLikes) || 0),
+    liked: data?.liked === true,
+    ...extra,
+  };
+}
+
 function isSameOrigin(request) {
   const origin = request.headers.get("origin");
   return Boolean(origin) && origin === request.nextUrl.origin;
@@ -73,16 +82,24 @@ export async function GET(request, { params }) {
       session?.user?.id || !hasGuestCookie
         ? null
         : resolveGuestIdentity(request);
+
+    if (session?.user?.id && session.user.emailVerified === true && hasGuestCookie) {
+      const claimedIdentity = resolveGuestIdentity(request);
+      await mergeGuestLikesIntoVerifiedAccount({
+        guestKeyHash: claimedIdentity.guestKeyHash,
+        userId: session.user.id,
+      });
+    }
+
     const actor = actorFor(session, identity);
     const engagement = await getLabEngagement({ slug, actor });
     const canLikeAsGuest = !session?.user?.id;
 
     const response = json({
-      data: {
-        ...engagement,
+      data: publicEngagement(engagement, {
         likeAllowed: Boolean(actor) || canLikeAsGuest,
         actorType: actor?.type || (canLikeAsGuest ? "guest" : "unverified"),
-      },
+      }),
     });
 
     if (identity?.token) {
@@ -123,8 +140,20 @@ export async function POST(request, { params }) {
 
   try {
     const session = await readSession();
+    const hasGuestCookie = Boolean(
+      request.cookies?.get?.(LABS_GUEST_LIKE_COOKIE)?.value,
+    );
     const identity =
       session?.user?.id ? null : resolveGuestIdentity(request);
+
+    if (session?.user?.id && session.user.emailVerified === true && hasGuestCookie) {
+      const claimedIdentity = resolveGuestIdentity(request);
+      await mergeGuestLikesIntoVerifiedAccount({
+        guestKeyHash: claimedIdentity.guestKeyHash,
+        userId: session.user.id,
+      });
+    }
+
     const actor = actorFor(session, identity);
 
     if (!actor) {
@@ -142,7 +171,12 @@ export async function POST(request, { params }) {
       );
     }
 
-    const response = json({ data });
+    const response = json({
+      data: publicEngagement(data, {
+        actorType: actor.type === "verified" ? "verified_user" : "guest",
+        likeAllowed: true,
+      }),
+    });
 
     if (identity?.token) {
       setGuestIdentityCookie(response, identity.token);
