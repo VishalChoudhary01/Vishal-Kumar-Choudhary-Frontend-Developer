@@ -55,6 +55,15 @@ export default function LabExperimentMetadataEditor({ initialExperiment }) {
     setError("");
   }
 
+  function confirmNavigation(event) {
+    if (
+      hasUnsavedChanges &&
+      !window.confirm("Discard your unsaved experiment detail changes?")
+    ) {
+      event.preventDefault();
+    }
+  }
+
   async function saveDetails(event) {
     event.preventDefault();
     if (!hasUnsavedChanges || busy) return;
@@ -213,6 +222,7 @@ export default function LabExperimentMetadataEditor({ initialExperiment }) {
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
         <Link
           href={"/admin/labs/sources/" + encodeURIComponent(initialExperiment.slug)}
+          onClick={confirmNavigation}
           className="inline-flex h-9 items-center gap-2 text-xs font-medium text-text-secondary transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         >
           <ArrowLeft size={13} aria-hidden="true" />
@@ -222,6 +232,7 @@ export default function LabExperimentMetadataEditor({ initialExperiment }) {
         <div className="flex items-center gap-2">
           <Link
             href="/admin/labs/sources"
+            onClick={confirmNavigation}
             className="inline-flex h-9 items-center border border-border px-3 text-xs font-medium text-text-secondary transition-colors hover:border-brand hover:text-brand"
           >
             Cancel
