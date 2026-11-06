@@ -62,7 +62,7 @@ export default function MotionNumber({
     return (
         <span
             className={cn(
-                "pointer-events-none inline-flex items-center font-mono tabular-nums",
+                "pointer-events-none inline-flex h-[1em] shrink-0 items-center align-middle leading-none font-mono tabular-nums",
                 className,
             )}
             /*
@@ -89,7 +89,7 @@ export default function MotionNumber({
                     <span
                         key={index}
                         className={cn(
-                            "relative inline-block h-[1em] min-w-[0.62em] overflow-hidden",
+                            "relative inline-flex h-[1em] min-w-[0.62em] shrink-0 items-center justify-center overflow-hidden",
                             digitClassName,
                         )}
                     >
