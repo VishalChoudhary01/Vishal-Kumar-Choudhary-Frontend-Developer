@@ -20,10 +20,18 @@ export default async function LabsSourceEditorPage({ params }) {
     const { slug } = await params;
     redirect("/labs/login?returnTo=" + encodeURIComponent("/admin/labs/sources/" + slug));
   }
-  const ownerStatus = getLabsOwnerAccessStatus(session.user);
-  if (ownerStatus !== "owner") return <LabsOwnerAccessNotice status={ownerStatus} />;
-
   const { slug } = await params;
+  const returnTo = "/admin/labs/sources/" + slug;
+
+  const ownerStatus = getLabsOwnerAccessStatus(session.user);
+  if (ownerStatus !== "owner") {
+    return (
+      <LabsOwnerAccessNotice
+        status={ownerStatus}
+        returnTo={returnTo}
+      />
+    );
+  }
 
   let source;
   let versions;
