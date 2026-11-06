@@ -10,9 +10,9 @@ import { buildOwnerLabRelease } from "@/app/lib/labs/release-management";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-// A release compiles, uploads immutable assets and captures its poster.
-// Keep the request alive for the full bounded compiler worker lifecycle.
-export const maxDuration = 300;
+// The linked Vercel Hobby plan caps Route Handlers at 60 seconds.
+// Poster capture is optional and independently bounded inside the build worker.
+export const maxDuration = 60;
 
 export async function POST(request, { params }) {
   const { user, response } = await getLabsOwnerUser();
