@@ -4,6 +4,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { prepareReactProject } from "../../../src/app/lib/labs/prepare-react-project.mjs";
 import { resolveGalleryPreviewSelection } from "../../../src/app/lib/labs/gallery-preview-policy.mjs";
 import { getPublishedArtifactBlobPath } from "../../../src/app/lib/labs/release-artifact-path.mjs";
+import { PUBLISHED_LAB_SOURCE_PROJECTION, selectEligiblePublishedCustomExperiments } from "../../../src/app/lib/labs/owner-analytics-utils.mjs";
 import { ensureSandboxInputDirectory } from "../../../src/app/lib/labs/sandbox-directory.mjs";
 import {
   buildPublishedRuntimeCsp,
@@ -25,6 +26,33 @@ function assertNear(actual, expected, label) {
   }
 }
 
+const publishedProjectionFields = new Set(PUBLISHED_LAB_SOURCE_PROJECTION.split(/\\s+/));
+for (const requiredField of ["slug", "published", "publishedVersionId", "publishedArtifactId"]) {
+  if (!publishedProjectionFields.has(requiredField)) {
+    throw new Error("The public Labs source query must select " + requiredField + ".");
+  }
+}
+const publishedEligibilityFixtures = {
+  experiments: [
+    { slug: "published-one", title: "Published one" },
+    { slug: "unpublished-one", title: "Unpublished one" },
+    { slug: "stale-one", title: "Stale one" },
+  ],
+  sources: [
+    { slug: "published-one", published: true, publishedVersionId: "version-one", publishedArtifactId: "artifact-one" },
+    { slug: "unpublished-one", published: false, publishedVersionId: "version-two", publishedArtifactId: "artifact-two" },
+    { slug: "stale-one", published: true, publishedVersionId: "version-three", publishedArtifactId: "artifact-three" },
+  ],
+  artifacts: [
+    { artifactId: "artifact-one", experimentSlug: "published-one", sourceVersionId: "version-one", status: "ready" },
+    { artifactId: "artifact-two", experimentSlug: "unpublished-one", sourceVersionId: "version-two", status: "ready" },
+    { artifactId: "artifact-three", experimentSlug: "stale-one", sourceVersionId: "old-version", status: "ready" },
+  ],
+};
+const eligiblePublished = selectEligiblePublishedCustomExperiments(publishedEligibilityFixtures);
+if (eligiblePublished.length !== 1 || eligiblePublished[0].experiment.slug !== "published-one") {
+  throw new Error("The public Labs list must include a matching published source and exclude unpublished or stale artifacts.");
+}
 const artifactPathBase = {
   experimentSlug: "fluid-gradient-playground",
   sourceVersionId: "0f8fad5b-d9cb-469f-a165-70867728950e",
@@ -732,7 +760,7 @@ try {
   }
 
   process.stdout.write(
-    "PASS: artifact-specific immutable Blob paths, upload-vs-generated gallery precedence, idempotent sandbox input setup, nested Fluid Gradient HTML with inline CSS/Canvas JavaScript, static HTML/CSS/JS builds, CSS-only builds, JSX + TSX type checking, React 19, Motion, Lucide, React Icons, Tailwind v4, CSP, isolated preview HTTP server/bridge, traversal blocking and invalid-type rejection.\n",
+    "PASS: published Labs list projection/eligibility, artifact-specific immutable Blob paths, upload-vs-generated gallery precedence, idempotent sandbox input setup, nested Fluid Gradient HTML with inline CSS/Canvas JavaScript, static HTML/CSS/JS builds, CSS-only builds, JSX + TSX type checking, React 19, Motion, Lucide, React Icons, Tailwind v4, CSP, isolated preview HTTP server/bridge, traversal blocking and invalid-type rejection.\n",
   );
 } finally {
   await Promise.all([
