@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
+import { useTheme } from "next-themes";
 
 import useReducedMotion from "@/app/hooks/useReducedMotion";
 import {
@@ -56,6 +57,7 @@ export default function LabsEngagementTrendChart({
   isRefreshing = false,
 }) {
   const reducedMotion = useReducedMotion();
+  const { resolvedTheme } = useTheme();
   const canvasRef = useRef(null);
   const chartRef = useRef(null);
   const chartModuleRef = useRef(null);
@@ -76,8 +78,15 @@ export default function LabsEngagementTrendChart({
     [buckets],
   );
 
-  const activeIndex = hoverIndex ?? selectedIndex ?? Math.max(0, buckets.length - 1);
-  const activeBucket = buckets[activeIndex] || null;
+  const preferredIndex = hoverIndex ?? selectedIndex ?? buckets.length - 1;
+  const activeIndex = buckets.length
+    ? Math.min(Math.max(preferredIndex, 0), buckets.length - 1)
+    : -1;
+  const activeBucket = activeIndex >= 0 ? buckets[activeIndex] : null;
+  const dataSignature = metric.key + "|" + periodDays + "|" +
+    buckets.map((bucket) => bucket.key + ":" + bucket.value).join("|");
+  const lastDataSignatureRef = useRef("");
+  const chartThemeRef = useRef(null);
 
   latestDataRef.current = {
     buckets,
@@ -87,6 +96,14 @@ export default function LabsEngagementTrendChart({
   };
 
   useEffect(() => {
+    if (!hasBuckets || !canvasRef.current) {
+      chartRef.current?.destroy();
+      chartRef.current = null;
+      chartModuleRef.current = null;
+      setChartReady(false);
+      return undefined;
+    }
+
     let cancelled = false;
 
     async function mountChart() {
@@ -221,7 +238,6 @@ export default function LabsEngagementTrendChart({
                 ticks: {
                   color: theme.text,
                   precision: 0,
-                  stepSize: 1,
                   padding: 10,
                   font: { size: 10, family: "inherit" },
                   callback(value) {
@@ -250,11 +266,14 @@ export default function LabsEngagementTrendChart({
       chartModuleRef.current = null;
       setChartReady(false);
     };
-  }, []);
+  }, [hasBuckets]);
 
   useEffect(() => {
     const chart = chartRef.current;
     if (!chart || !canvasRef.current) return;
+    if (lastDataSignatureRef.current === dataSignature && chartThemeRef.current === resolvedTheme) {
+      return;
+    }
 
     const theme = readTheme(canvasRef.current);
     chart.data.labels = buckets.map((bucket) => bucket.label);
@@ -266,7 +285,7 @@ export default function LabsEngagementTrendChart({
 
     chart.options.animation = reducedMotion
       ? false
-      : { duration: isRefreshing ? 280 : 420, easing: "easeOutQuart" };
+      : { duration: 340, easing: "easeOutQuart" };
     chart.options.scales.x.ticks.maxTicksLimit =
       periodDays >= 90 ? 9 : periodDays === 30 ? 8 : 7;
     chart.options.plugins.tooltip.backgroundColor = theme.surface;
@@ -282,7 +301,9 @@ export default function LabsEngagementTrendChart({
       setSelectedIndex(safeIndex >= 0 ? safeIndex : null);
     }
     chart.update(reducedMotion ? "none" : "active");
-  }, [buckets, metric.label, periodDays, reducedMotion, isRefreshing, selectedIndex]);
+    lastDataSignatureRef.current = dataSignature;
+    chartThemeRef.current = resolvedTheme;
+  }, [buckets, metric.key, metric.label, periodDays, reducedMotion, resolvedTheme, dataSignature]);
 
   function currentBucket(index) {
     return latestDataRef.current?.buckets[index] || null;
