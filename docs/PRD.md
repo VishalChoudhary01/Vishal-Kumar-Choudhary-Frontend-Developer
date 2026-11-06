@@ -81,7 +81,7 @@ Extend the existing developer portfolio into a maintainable platform where the o
 - A save action must not automatically publish.
 
 ### FR-02 Lab management
-- Create and edit custom experiment metadata through a dedicated owner-only metadata workflow, separately from the source-code editor. The current branch implements experiment creation and deletion; a metadata-update API/UI remains to be added.
+- Create and edit custom experiment metadata through a dedicated owner-only metadata workflow, separately from the source-code editor. The current branch implements experiment creation, metadata editing and deletion for custom experiments. Metadata editing is a separate owner-only workflow and does not modify source files or published source/runtime pointers.
 - Create source aggregates for existing experiment slugs, add/edit/rename/delete text files, validate file paths and size limits, and save draft snapshots.
 - Publish/unpublish an exact saved source version; preserve immutable history and restore by creating a new version.
 - Published source is automatically readable by every registered account whose email is verified. There is no per-user source grant/revoke workflow; the owner controls availability through publish/unpublish.
