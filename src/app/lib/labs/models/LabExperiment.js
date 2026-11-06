@@ -72,7 +72,7 @@ const labExperimentSchema = new mongoose.Schema(
       alt: { type: String, default: "", trim: true, maxlength: 300 },
       mediaKind: { type: String, enum: ["image", "video"], default: "image" },
       contentType: { type: String, enum: ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif", "video/mp4", "video/webm"], default: "image/jpeg" },
-      fit: { type: String, enum: ["cover", "contain"], default: "cover" },
+      fit: { type: String, enum: ["cover", "contain"], default: "contain" },
       artifactId: { type: String, default: null, maxlength: 64 },
       sourceVersionId: { type: String, default: null, maxlength: 64 },
       createdAt: { type: Date, default: null },
