@@ -474,3 +474,15 @@ Validation in a clean, non-persistent Vercel Sandbox:
 4. Browser-test an actual mounted Monaco editor and workers with CSP in the deployed Preview. The local asset HTTP checks confirm file serving, not yet keyboard/editing behavior in a real browser session.
 
 **Non-regression:** this phase did not import Monaco into `LabSourceAccess` or `LabSourceEditor`. Existing textarea/file management, protected source authorization, copy tracking, Run, Save Draft, version restore, Build & Publish, artifact capture, Like behavior and public detail non-executable contract are unchanged.
+
+
+### Preview deployment and browser QA status — 6 November 2026
+
+A Git-connected Preview deployment built successfully with the Phase 1 and Phase 2 application commits:
+- Deployment: `dpl_Bc3VjAQq9Z5mQv7JEhor5ybH3z4F`
+- Deployment URL: `https://vishal-kumar-choudhary-frontend-developer-g7r618r2m.vercel.app`
+- Deployed source commit: `aecc1fb0ebeeaeac37a71c88c755b0563d8db140` (the branch's later HEAD `4aa63b667a0154fa16ca5b687fbb7dc53232f8ea` adds only documentation).
+
+The deployment build is READY. The browser inspection of `/labs/spotlightdock` reached Vercel's deployment-protection login page (HTTP 200 login HTML) instead of the application, so the browser automation could not inspect authenticated page content. This is an access gate, not an application rendering result. Phase 1 deployed visual acceptance remains pending until the owner opens the protected Preview while authenticated or provides an accessible Preview session.
+
+Phase 2 was validated by clean-checkout npm install, all unit suites, ESLint, full Next.js production build, and same-origin HTTP 200 checks for the local Monaco loader, editor entrypoint and TypeScript worker. An actual mounted Monaco browser interaction test is still pending because the component has not yet been integrated into the source reader or creator; those are later phases.
