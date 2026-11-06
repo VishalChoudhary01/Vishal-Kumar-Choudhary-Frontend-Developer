@@ -125,12 +125,21 @@ async function createCompilerSandbox({ timeout, ports = [] }) {
       source: { type: "snapshot", snapshotId: getCompilerSnapshotId() },
       region: "bom1",
       resources: { vcpus: 2 },
+      // Every owner Run / release build is a disposable worker. Persisting it
+      // creates a new full-filesystem snapshot on stop and exhausts Hobby storage.
+      persistent: false,
       timeout,
       ports,
       networkPolicy: "deny-all",
     });
   } catch (error) {
     const detail = String(error?.message || "");
+    if (/status code 402|snapshots? storage|snapshot storage quota|usage limit exceeded.*snapshot/i.test(detail)) {
+      fail(
+        "COMPILER_SNAPSHOT_STORAGE_LIMIT",
+        "Vercel Sandbox snapshot storage is over quota. Labs Run workers are now configured as non-persistent; remove legacy automatic snapshots in Vercel or upgrade the plan, then retry. Your source code was not changed.",
+      );
+    }
     if (/snapshot.*(?:expired|deleted)|status code 410/i.test(detail)) {
       fail(
         "COMPILER_SNAPSHOT_EXPIRED",
