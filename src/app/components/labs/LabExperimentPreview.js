@@ -32,7 +32,9 @@ export default function LabExperimentPreview({
       ? generatedPoster
       : null
     : preview;
-  const fitClass = activePreview?.fit === "contain" ? "object-contain" : "object-cover";
+  // Uploaded and generated media must preserve their intrinsic proportions.
+  // The stage may letterbox portrait/square assets; it must never crop or stretch them.
+  const fitClass = "object-contain object-center";
 
   if (activePreview?.src && activePreview.mediaKind === "video") {
     return (
