@@ -140,3 +140,9 @@ These are separate from the immediate quota fix:
 - Add correlation IDs to the Run request, sandbox name, run record and server logs; never log source code or secrets.
 - Add a compiler-image health check and snapshot-reference validator to deployment/operations QA.
 - Keep gallery screenshot capture separate from Run and use a browser only in the release capture worker when that browser runtime is explicitly installed and pinned.
+
+## 9. Latest Preview compiler snapshot verification
+
+On 2026-11-06, the compiler base was refreshed from the active branch snapshot. The new snapshot contains the current `serve-preview.mjs` run-ID bridge and the release-only poster worker. It passed `npm run test:smoke` and Node syntax checks inside the isolated Vercel Sandbox. The branch-scoped `LABS_COMPILER_SNAPSHOT_ID` now points to that verified snapshot. Only the `feat/labs-platform-integration` Preview variable was updated; Production was left unchanged.
+
+The diagnostic/refresh workers were created with `persistent: false` and explicitly stopped or snapshotted. The regular one-off Run/release worker path remains non-persistent. Do not add an automatic snapshot on worker shutdown.
