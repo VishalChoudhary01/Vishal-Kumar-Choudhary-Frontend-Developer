@@ -42,7 +42,9 @@ function toPublicExperiment(experiment, artifact) {
         mediaKind,
         contentType,
         format: contentType === "image/gif" ? "gif" : "",
-        fit: storedPreview.fit === "contain" ? "contain" : "cover",
+        fit: "contain",
+        width: Number.isSafeInteger(storedPreview.width) && storedPreview.width > 0 ? storedPreview.width : null,
+        height: Number.isSafeInteger(storedPreview.height) && storedPreview.height > 0 ? storedPreview.height : null,
       };
     }
   }
@@ -70,7 +72,9 @@ function toPublicExperiment(experiment, artifact) {
           encodeURIComponent(artifact.artifactId) +
           "/__preview/gallery-poster.png",
         alt: "Screenshot preview of " + experiment.title,
-        fit: "cover",
+        fit: "contain",
+        width: 1200,
+        height: 900,
         mediaKind: "image",
         contentType: "image/png",
         generated: true,
