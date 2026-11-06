@@ -59,6 +59,41 @@ function createExperimentRows(experiments) {
   return [...uniqueExperiments.values()];
 }
 
+function createRankings(rows, limit = 5) {
+  function rankBy(metric, select) {
+    return [...rows]
+      .filter((row) => Number(row[metric]) > 0)
+      .sort((a, b) => {
+        const difference = Number(b[metric]) - Number(a[metric]);
+        if (difference !== 0) return difference;
+        const titleOrder = a.title.localeCompare(b.title, "en-IN");
+        return titleOrder || a.slug.localeCompare(b.slug);
+      })
+      .slice(0, limit)
+      .map((row, index) => ({
+        rank: index + 1,
+        slug: row.slug,
+        title: row.title,
+        value: Number(row[metric]) || 0,
+        ...select(row),
+      }));
+  }
+
+  return {
+    mostSourceOpens: rankBy("sourceOpens"),
+    mostCodeCopies: rankBy("codeCopies"),
+    mostActiveLikes: rankBy("totalActiveLikes", (row) => ({
+      activeVerifiedLikes: row.activeVerifiedLikes,
+      activeAnonymousLikes: row.activeAnonymousLikes,
+    })),
+  };
+}
+
+function normalizePeriod(days) {
+  const { periodDays, generatedAt, since } = normalizePeriod(days);
+  return { periodDays, generatedAt, since };
+}
+
 function toUtcDateKey(date) {
   return [
     date.getUTCFullYear(),
@@ -270,5 +305,84 @@ export async function getLabsOwnerAnalytics({ user, days = 30 }) {
     totals,
     daily: buildCompleteDailySeries({ since, generatedAt, dailyGroups }),
     experiments: rows,
+    rankings: createRankings(rows),
+  };
+}
+
+
+export async function getLabsOwnerExperimentAnalytics({ user, slug, days = 30 }) {
+  if (!isLabsOwner(user)) {
+    const error = new Error("Owner access is required.");
+    error.code = "OWNER_ACCESS_DENIED";
+    throw error;
+  }
+
+  if (typeof slug !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+    const error = new Error("Experiment not found.");
+    error.code = "NOT_FOUND";
+    throw error;
+  }
+
+  const collection = await getLabsOwnerAnalytics({ user, days });
+  const experiment = collection.experiments.find((item) => item.slug === slug);
+  if (!experiment) {
+    const error = new Error("Experiment not found.");
+    error.code = "NOT_FOUND";
+    throw error;
+  }
+
+  const since = new Date(collection.since);
+  const generatedAt = new Date(collection.generatedAt);
+  const dailyGroups = await LabAnalyticsEvent.aggregate([
+    {
+      $match: {
+        experimentSlug: slug,
+        occurredAt: { $gte: since, $lte: generatedAt },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          $dateToString: {
+            format: "%Y-%m-%d",
+            date: "$occurredAt",
+            timezone: "UTC",
+          },
+        },
+        sourceOpens: {
+          $sum: { $cond: [{ $eq: ["$eventType", "source_open"] }, 1, 0] },
+        },
+        codeCopies: {
+          $sum: { $cond: [{ $eq: ["$eventType", "code_copy"] }, 1, 0] },
+        },
+        verifiedLikeActions: {
+          $sum: {
+            $cond: [
+              { $in: ["$eventType", ["like", "unlike"]] },
+              1,
+              0,
+            ],
+          },
+        },
+        anonymousLikeActions: {
+          $sum: {
+            $cond: [
+              { $in: ["$eventType", ["guest_like", "guest_unlike"]] },
+              1,
+              0,
+            ],
+          },
+        },
+      },
+    },
+    { $sort: { _id: 1 } },
+  ]);
+
+  return {
+    periodDays: collection.periodDays,
+    since: collection.since,
+    generatedAt: collection.generatedAt,
+    experiment,
+    daily: buildCompleteDailySeries({ since, generatedAt, dailyGroups }),
   };
 }
