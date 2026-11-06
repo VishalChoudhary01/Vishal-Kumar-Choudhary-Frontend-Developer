@@ -125,3 +125,13 @@ The public collection now has a redesigned category/count row, result summary an
 Six-item progressive loading remains unchanged. Card in-view transitions respect reduced motion, and code-owned artwork typography is container-relative to prevent clipping at narrower card widths. A new collection test suite is registered in the production build sequence.
 
 See the Labs Public Page Redesign phased plan for changed files and pending validation. This code commit is not proof of passing tests, production build or browser QA.
+
+## 11. Phase 4 public catalogue pagination — 7 November 2026
+
+The public Labs route no longer requests every custom experiment for the initial page. It loads at most 18 eligible custom records plus the code-owned built-ins. Additional pages are fetched through GET /api/v1/labs with a fixed server page size and validated category/cursor inputs.
+
+Server eligibility is applied by matching the published source to the exact ready artifact and source version before the page limit. The page order is publishedAt descending then immutable _id descending; the cursor is validated and applied before the source/artifact joins. Global/category counts are aggregated across the full eligible collection and combined with built-in counts.
+
+The client caches category pages and reveals six entries at a time. Existing Like behavior and non-executable media preview rules remain intact. No category virtualization, search or unsupported sort mode was added.
+
+Before release, run npm run db:ensure-labs-public-indexes against the correct MongoDB environment, run the pagination/collection and full Labs tests, verify cursor boundaries against a populated database, run a clean production build and perform browser QA. This repository change is not proof of database migration or deployed behavior.
