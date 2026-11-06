@@ -48,20 +48,46 @@ export default async function LabsPage() {
   const customExperiments = await getPublishedCustomLabExperiments();
   const experiments = [...publishedLabExperiments, ...customExperiments];
 
-  let engagementBySlug = {};
+  let session = null;
+  let authState = "unknown";
+  let sessionResolved = false;
+
   try {
-    const [session, cookieStore] = await Promise.all([
-      getCurrentAuthSession(),
-      cookies(),
-    ]);
-    engagementBySlug = await getLabEngagementSnapshot({
-      slugs: experiments.map((experiment) => experiment.slug),
-      session,
-      guestCookieValue: cookieStore.get(LABS_GUEST_LIKE_COOKIE)?.value || "",
-    });
+    session = await getCurrentAuthSession();
+    sessionResolved = true;
+
+    if (session?.user?.id) {
+      authState = session.user.emailVerified === true ? "verified" : "unverified";
+    } else {
+      authState = "guest";
+    }
   } catch (error) {
-    console.error("[labs-page] engagement snapshot failed:", error?.code || "ENGAGEMENT_READ_ERROR");
+    console.error(
+      "[labs-page] auth state resolution failed:",
+      error?.code || "AUTH_SESSION_READ_ERROR",
+    );
   }
+
+  let engagementBySlug = {};
+  if (sessionResolved) {
+    try {
+      const cookieStore = await cookies();
+      engagementBySlug = await getLabEngagementSnapshot({
+        slugs: experiments.map((experiment) => experiment.slug),
+        session,
+        guestCookieValue: cookieStore.get(LABS_GUEST_LIKE_COOKIE)?.value || "",
+      });
+    } catch (error) {
+      console.error(
+        "[labs-page] engagement snapshot failed:",
+        error?.code || "ENGAGEMENT_READ_ERROR",
+      );
+    }
+  }
+
+  const hasFeaturedExperiment =
+    Boolean(featuredLabExperiment?.slug) &&
+    experiments.some((experiment) => experiment.slug === featuredLabExperiment.slug);
 
   return (
     <LabsPageShell>
@@ -70,6 +96,10 @@ export default async function LabsPage() {
           experimentCount={experiments.length}
           categoryCount={
             new Set(experiments.map((experiment) => experiment.category)).size
+          }
+          authState={authState}
+          featuredHref={
+            hasFeaturedExperiment ? `/labs/${featuredLabExperiment.slug}` : null
           }
         />
         {featuredLabExperiment ? (
