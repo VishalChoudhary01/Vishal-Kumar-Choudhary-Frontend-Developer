@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import LabsPageShell from "@/app/components/labs/LabsPageShell";
 import LabDetailHeader from "@/app/components/labs/detail/LabDetailHeader";
 import LabWorkspace from "@/app/components/labs/detail/LabWorkspace";
+import LabExperimentPreview from "@/app/components/labs/LabExperimentPreview";
 import LabExplanation from "@/app/components/labs/detail/LabExplanation";
 import LabSourceAccess from "@/app/components/labs/detail/LabSourceAccess";
 import {
@@ -146,6 +147,23 @@ export default async function LabExperimentPage({ params }) {
           experiment={experiment}
           initialEngagement={initialEngagement}
         />
+        {experiment.galleryPreview || experiment.generatedPoster || experiment.thumbnail ? (
+          <section
+            aria-label="Experiment media preview"
+            className="mx-auto mt-2 w-full max-w-[1440px] px-6 sm:px-8 lg:px-20"
+          >
+            <div className="relative aspect-[4/3] overflow-hidden rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 sm:aspect-[16/9]">
+              <LabExperimentPreview
+                experiment={experiment}
+                sizes="(max-width: 1023px) 100vw, 1280px"
+                className="h-full w-full"
+              />
+            </div>
+            <p className="mt-2 text-[10px] text-text-tertiary">
+              Static media preview · the interactive experiment runs below
+            </p>
+          </section>
+        ) : null}
         <LabWorkspace key={experiment.slug} experiment={experiment} />
         <LabExplanation explanation={experiment.explanation} />
         <LabSourceAccess
