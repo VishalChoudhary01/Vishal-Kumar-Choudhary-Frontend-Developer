@@ -106,7 +106,7 @@ function LabCard({ experiment, index, total, engagement }) {
         <LabLikeButton
           slug={experiment.slug}
           initialData={engagement}
-          loadOnMount={false}
+          loadOnMount={!engagement}
           compact
         />
       </div>
