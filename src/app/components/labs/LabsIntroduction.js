@@ -6,6 +6,7 @@ import { animate, motion, useInView, useMotionValue, useTransform } from "motion
 
 import useReducedMotion from "@/app/hooks/useReducedMotion";
 import LabsHeroArtwork from "./landing/LabsHeroArtwork";
+import { getLabsHeroActions } from "@/app/lib/labs/hero-cta.mjs";
 
 const heroContainerVariants = {
   hidden: {},
@@ -94,50 +95,17 @@ function HeroAction({ href, children, primary = false }) {
 }
 
 function HeroActions({ authState, featuredHref }) {
-  const collectionHref = "#labs-collection-heading";
+  const actions = getLabsHeroActions({ authState, featuredHref });
 
-  if (authState === "guest") {
-    return (
-      <>
-        <HeroAction href="/labs/signup?returnTo=%2Flabs" primary>
-          Create account
-        </HeroAction>
-        <HeroAction href="/labs/login?returnTo=%2Flabs">
-          Sign in
-        </HeroAction>
-      </>
-    );
-  }
-
-  if (authState === "unverified") {
-    return (
-      <>
-        <HeroAction href="/labs/verify-email?returnTo=%2Flabs" primary>
-          Verify email
-        </HeroAction>
-        <HeroAction href={collectionHref}>Explore experiments</HeroAction>
-      </>
-    );
-  }
-
-  if (authState === "verified") {
-    return (
-      <>
-        <HeroAction href={collectionHref} primary>
-          Explore experiments
-        </HeroAction>
-        {featuredHref ? (
-          <HeroAction href={featuredHref}>Explore featured experiment</HeroAction>
-        ) : null}
-      </>
-    );
-  }
-
-  return (
-    <HeroAction href={collectionHref} primary>
-      Explore experiments
+  return actions.map((action) => (
+    <HeroAction
+      key={action.label}
+      href={action.href}
+      primary={action.variant === "primary"}
+    >
+      {action.label}
     </HeroAction>
-  );
+  ));
 }
 
 export default function LabsIntroduction({
@@ -147,10 +115,6 @@ export default function LabsIntroduction({
   featuredHref = null,
 }) {
   const prefersReducedMotion = useReducedMotion();
-  const safeAuthState = ["guest", "unverified", "verified"].includes(authState)
-    ? authState
-    : "unknown";
-
   return (
     <motion.section
       aria-labelledby="labs-heading"
@@ -190,7 +154,7 @@ export default function LabsIntroduction({
             variants={heroItemVariants}
             className="mt-7 flex flex-wrap items-center gap-3 sm:mt-8"
           >
-            <HeroActions authState={safeAuthState} featuredHref={featuredHref} />
+            <HeroActions authState={authState} featuredHref={featuredHref} />
           </motion.div>
 
           <motion.div
