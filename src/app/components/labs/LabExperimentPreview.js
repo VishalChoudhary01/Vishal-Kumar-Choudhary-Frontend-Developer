@@ -109,7 +109,7 @@ export default function LabExperimentPreview({
             const height = event.currentTarget.naturalHeight;
             if (width > 0 && height > 0) setMeasuredDimensions({ src: activePreview.src, width, height });
           }}
-          onError={() => setFailedSrc(activePreview.src)}
+          onError={() => markPreviewFailed(activePreview.src)}
           className={[
             className,
             fitClass,
