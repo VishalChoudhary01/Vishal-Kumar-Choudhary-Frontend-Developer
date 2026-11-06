@@ -649,7 +649,7 @@ try {
 
     const pageResponse = await fetch(previewBase);
     const pageHtml = await pageResponse.text();
-    if (!pageResponse.ok || !pageHtml.includes("https://example.test") || !pageHtml.includes("labs-preview-ready")) {
+    if (!pageResponse.ok || !pageHtml.includes("https://example.test") || !pageHtml.includes("labs-preview-ready") || !pageHtml.includes("const runId =") || !pageHtml.includes("requestAnimationFrame")) {
       throw new Error("The preview server did not serve the bridged React entry document.");
     }
 
