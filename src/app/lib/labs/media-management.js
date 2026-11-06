@@ -849,6 +849,8 @@ export async function saveOwnerLabGalleryPreview({ user, slug, assetId, altText 
     mediaKind: asset.mediaKind,
     contentType: mime,
     fit: safeFit,
+    width: Number.isSafeInteger(Number(asset.width)) && Number(asset.width) > 0 ? Number(asset.width) : null,
+    height: Number.isSafeInteger(Number(asset.height)) && Number(asset.height) > 0 ? Number(asset.height) : null,
     artifactId: artifact.artifactId,
     sourceVersionId: artifact.sourceVersionId,
     createdAt: new Date(),
