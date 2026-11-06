@@ -5,6 +5,7 @@ import {
   buildCompleteDailySeries,
   createRankings,
   normalizePeriod,
+  selectEligiblePublishedCustomExperiments,
 } from "../src/app/lib/labs/owner-analytics-utils.mjs";
 
 test("rankings omit zero-value rows, use stable tie-breaks and cap each list", () => {
@@ -138,4 +139,43 @@ test("daily series rejects invalid or reversed date bounds", () => {
     }),
     { name: "RangeError" },
   );
+});
+
+
+test("custom published experiments require a published source and an exact ready artifact match", () => {
+  const experiments = [
+    { slug: "valid", title: "Valid" },
+    { slug: "stale-version", title: "Stale Version" },
+    { slug: "wrong-experiment", title: "Wrong Experiment" },
+    { slug: "unpublished-source", title: "Unpublished Source" },
+    { slug: "missing-artifact", title: "Missing Artifact" },
+    { slug: "duplicate", title: "Duplicate First" },
+    { slug: "duplicate", title: "Duplicate Second" },
+    { slug: "../invalid", title: "Invalid Slug" },
+  ];
+  const sources = [
+    { slug: "valid", published: true, publishedVersionId: "v1", publishedArtifactId: "a1" },
+    { slug: "stale-version", published: true, publishedVersionId: "v2", publishedArtifactId: "a2" },
+    { slug: "wrong-experiment", published: true, publishedVersionId: "v1", publishedArtifactId: "a3" },
+    { slug: "unpublished-source", published: false, publishedVersionId: "v1", publishedArtifactId: "a4" },
+    { slug: "missing-artifact", published: true, publishedVersionId: "v1", publishedArtifactId: "missing" },
+    { slug: "duplicate", published: true, publishedVersionId: "v1", publishedArtifactId: "a5" },
+  ];
+  const artifacts = [
+    { artifactId: "a1", experimentSlug: "valid", sourceVersionId: "v1", status: "ready" },
+    { artifactId: "a2", experimentSlug: "stale-version", sourceVersionId: "v1", status: "ready" },
+    { artifactId: "a3", experimentSlug: "someone-else", sourceVersionId: "v1", status: "ready" },
+    { artifactId: "a4", experimentSlug: "unpublished-source", sourceVersionId: "v1", status: "ready" },
+    { artifactId: "a5", experimentSlug: "duplicate", sourceVersionId: "v1", status: "failed" },
+    { artifactId: "a5", experimentSlug: "duplicate", sourceVersionId: "v1", status: "ready" },
+  ];
+
+  const result = selectEligiblePublishedCustomExperiments({ experiments, sources, artifacts });
+
+  assert.deepEqual(result.map(({ experiment, artifact }) => [experiment.slug, artifact.artifactId]), [
+    ["valid", "a1"],
+    ["duplicate", "a5"],
+  ]);
+  assert.equal(result[0].experiment.title, "Valid");
+  assert.equal(result[1].experiment.title, "Duplicate First");
 });
