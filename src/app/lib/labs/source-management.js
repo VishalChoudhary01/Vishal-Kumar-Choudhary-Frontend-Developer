@@ -185,7 +185,7 @@ export async function listOwnerLabSources({ user }) {
 
   const [heads, versions, customExperiments] = await Promise.all([
     LabSource.find({})
-      .select("slug version published draftVersionId publishedVersionId updatedAt")
+      .select("slug version published draftVersionId publishedVersionId publishedArtifactId updatedAt")
       .lean(),
     LabSourceVersion.aggregate([
       { $sort: { versionNumber: -1 } },
@@ -197,8 +197,76 @@ export async function listOwnerLabSources({ user }) {
       .lean(),
   ]);
 
+  const publishedArtifactIds = heads
+    .map((head) => head.publishedArtifactId)
+    .filter((value) => typeof value === "string" && value);
+  const readyArtifacts = publishedArtifactIds.length
+    ? await LabBuildArtifact.find({
+        artifactId: { $in: publishedArtifactIds },
+        status: "ready",
+      })
+        .select("artifactId experimentSlug sourceVersionId")
+        .lean()
+    : [];
   const headBySlug = new Map(heads.map((head) => [head.slug, head]));
   const versionBySlug = new Map(versions.map((version) => [version._id, version]));
+  const artifactById = new Map(readyArtifacts.map((artifact) => [artifact.artifactId, artifact]));
+
+  function getPublicationReadiness(experiment, head) {
+    if (experiment.status !== "published") {
+      return {
+        eligible: false,
+        code: "EXPERIMENT_NOT_PUBLISHED",
+        label: "Experiment is not published",
+      };
+    }
+    if (!head?.published) {
+      return {
+        eligible: false,
+        code: "SOURCE_NOT_PUBLISHED",
+        label: "Source has not been published",
+      };
+    }
+    if (!head.publishedVersionId) {
+      return {
+        eligible: false,
+        code: "PUBLISHED_VERSION_MISSING",
+        label: "Published source version is missing",
+      };
+    }
+    if (!head.publishedArtifactId) {
+      return {
+        eligible: false,
+        code: "PUBLISHED_ARTIFACT_MISSING",
+        label: "Published build artifact is missing",
+      };
+    }
+
+    const artifact = artifactById.get(head.publishedArtifactId);
+    if (!artifact) {
+      return {
+        eligible: false,
+        code: "READY_ARTIFACT_MISSING",
+        label: "Published artifact is not ready",
+      };
+    }
+    if (
+      artifact.experimentSlug !== experiment.slug ||
+      artifact.sourceVersionId !== head.publishedVersionId
+    ) {
+      return {
+        eligible: false,
+        code: "ARTIFACT_VERSION_MISMATCH",
+        label: "Artifact does not match the published version",
+      };
+    }
+
+    return {
+      eligible: true,
+      code: "READY",
+      label: "Visible in public Labs gallery",
+    };
+  }
 
   const builtInItems = publishedLabExperiments.map((experiment) => {
     const head = headBySlug.get(experiment.slug) || null;
@@ -234,6 +302,7 @@ export async function listOwnerLabSources({ user }) {
       lifecycleStatus: experiment.status,
       hasSource: Boolean(head),
       published: head?.published === true,
+      publicationReadiness: getPublicationReadiness(experiment, head),
       draftVersionId: head?.draftVersionId || null,
       publishedVersionId: head?.publishedVersionId || null,
       legacyVersion: head?.version || null,
