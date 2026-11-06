@@ -8,7 +8,7 @@ import LabArtwork from "./landing/LabArtwork";
  * Shared non-executable renderer for gallery, featured and detail previews.
  * Uploaded media wins; failed uploads fall back to the generated release
  * screenshot; if both fail, existing artwork preserves the card layout.
- * The detail page's interactive artifact runtime stays in LabWorkspace.
+ * Public detail pages render media only; executable runtimes are not mounted here.
  */
 export default function LabExperimentPreview({
   experiment,
