@@ -31,6 +31,12 @@ const modelSource = await readFile(
 
 const objectId = "65f0c4a5b2d8a12f3e7a910c";
 
+class FakeObjectId {
+  constructor(value) {
+    this.value = value;
+  }
+}
+
 test("publication cursor encodes and decodes the stable publishedAt/id tuple", () => {
   const publishedAt = new Date("2026-11-07T12:30:00.000Z");
   const cursor = encodePublicExperimentCursor({ publishedAt, id: objectId });
@@ -48,22 +54,22 @@ test("null publication dates round-trip and stay at the end of descending order"
   assert.equal(decoded.publishedAt, null);
   assert.equal(decoded.id, objectId);
 
-  const match = buildPublicExperimentCursorMatch(decoded, (value) => ({ objectId: value }));
+  const match = buildPublicExperimentCursorMatch(decoded, FakeObjectId);
   assert.deepEqual(match, {
     publishedAt: null,
-    _id: { $lt: { objectId } },
+    _id: { $lt: new FakeObjectId(objectId) },
   });
 });
 
 test("cursor predicate uses the stable descending publication date and id tie-breaker", () => {
   const publishedAt = new Date("2026-11-07T12:30:00.000Z");
   const decoded = { publishedAt, id: objectId };
-  const match = buildPublicExperimentCursorMatch(decoded, (value) => ({ objectId: value }));
+  const match = buildPublicExperimentCursorMatch(decoded, FakeObjectId);
 
   assert.deepEqual(match, {
     $or: [
       { publishedAt: { $lt: publishedAt } },
-      { publishedAt, _id: { $lt: { objectId } } },
+      { publishedAt, _id: { $lt: new FakeObjectId(objectId) } },
     ],
   });
 });
