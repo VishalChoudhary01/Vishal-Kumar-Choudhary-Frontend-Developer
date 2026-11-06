@@ -177,7 +177,7 @@ The collection event query bounds both ends of the selected reporting window (`s
 
 **Chart panel layout**
 1. Heading: **Activity over time**. Supporting text states the selected metric, bucket grain and UTC timezone.
-2. Metric selector: four native, keyboard-operable options — **Source opens**, **Code copies**, **Verified like/unlike actions**, **Anonymous like/unlike actions**. Selecting one replaces the active dataset and gives it its own Y scale.
+2. Metric selector: six native, keyboard-operable options — **Source opens**, **Code copies**, **Verified likes**, **Verified unlikes**, **Anonymous likes**, **Anonymous unlikes**. Selecting one replaces the active dataset and gives it its own Y scale. Never combine a like and unlike into one directional-looking series.
 3. Keep the existing page-level reporting-period control (7, 30, 90, 365 days). Do not render a second period/window control inside the chart.
 4. Main canvas: one brand-coloured dataset, visible zero baseline, subtle horizontal grid, readable date ticks, integer Y-axis labels and a compact tooltip containing full date/range, metric name and exact value.
 5. Point readout: when a point is hovered/tapped, show its date/range and count in normal HTML text. With no point selected, show the most recent bucket's date and value.
@@ -185,22 +185,22 @@ The collection event query bounds both ends of the selected reporting window (`s
 
 **Bucket and aggregation rules**
 - 7, 30 and 90 day selections use one bar per UTC calendar date from the existing daily response.
-- The 365 day selection groups daily rows into UTC weeks (Monday–Sunday). First/last partial weeks are clearly identified in the tooltip. Weekly values are sums of daily buckets; they must sum exactly to the selected period total.
+- 7 and 30 day selections use UTC daily bars. 90 and 365 day selections group daily rows into UTC weeks (Monday–Sunday), keeping the chart readable at narrow widths. First/last partial weeks are identified in the tooltip. Weekly values are sums of daily buckets; they must sum exactly to the selected period total.
 - Preserve explicit zero-activity dates. A valid all-zero series is not the same as an empty or failed query.
 - Validate values as finite, non-negative integers; sort by bucket start; reject duplicate/out-of-order dates in the pure transform rather than silently drawing a misleading sequence.
-- Show only the four currently instrumented event metrics. Do not add experiment views, preview starts, preview interactions, rates or active-like history until those definitions/data exist.
+- Show only the six currently instrumented event metrics. This requires adding distinct daily `verifiedLikes`, `verifiedUnlikes`, `anonymousLikes` and `anonymousUnlikes` aggregates; keep the existing combined daily fields temporarily for compatibility until consumers are migrated. Do not add experiment views, preview starts, preview interactions, rates or active-like history until those definitions/data exist.
 
 **Chart.js implementation contract**
 - Lazy-load the chart module only on the Analytics overview and experiment-detail routes; do not add chart code to public Labs or the homepage bundle.
 - Load Chart.js through a small client-only adapter/component. Prefer core chart.js with only the required bar controller, bar element, category scale, linear scale and tooltip registered. No date adapter is needed for current UTC category labels.
 - Use a dedicated, relatively positioned parent container and Chart.js responsive sizing. Keep a stable height; destroy the chart instance on unmount/rebuild and update the existing instance when period, metric or data changes.
-- Set the Y scale to begin at zero, use integer tick formatting, no dual axis and no stacked series. The 365-day weekly view uses the same zero-based axis.
+- Set the Y scale to begin at zero, use integer tick formatting, no dual axis and no stacked series for both daily and weekly views. The 365-day weekly view uses the same zero-based axis.
 - Resolve chart/grid/text colours from active semantic theme tokens after mount. Do not hard-code a second independent light/dark palette or use success/error merely to colour neutral metrics.
 - Use restrained transitions for metric selection or real data changes. Disable chart animation for reduced-motion preferences and avoid replaying an entrance animation after every 10-second poll.
 - Tooltips are exact: dates in UTC, numbers in en-IN, no inferred percentages and no claims that a copy means code usage.
 
 **Interaction and accessibility**
-- The four metric controls are native buttons with aria-pressed, visible focus and keyboard access.
+- The six metric controls are native buttons with aria-pressed, visible focus and keyboard access.
 - Give the canvas an accessible name/description identifying selected metric and period. Retain an equivalent HTML table behind a labelled disclosure; it contains the same daily/weekly values and totals.
 - The selected-point date/value readout is regular DOM text, not canvas-only text.
 - Hover and touch inspection are optional. The table and metric controls remain usable without a pointer.
@@ -211,14 +211,14 @@ The collection event query bounds both ends of the selected reporting window (`s
 | Candidate | Assessment for this dashboard | Decision |
 |---|---|---|
 | Chart.js 4.6.1 | MIT; canvas renderer; standard categorical bar charts, zero-based axes, tooltips and responsive sizing; appropriate for daily/weekly historical counts | **Selected for implementation spike** |
-| Liveline 0.0.7 | MIT canvas renderer and real-time scrubbing/multi-series support, but API is designed around a moving seconds-based live window; pre-1.0, and canvas has no built-in keyboard/ARIA data navigation | Keep as an option for a future true streaming/tick chart, not the daily historical graph |
-| ApexCharts | Strong line/bar/time-series and built-in keyboard/ARIA support, but current redistribution terms can require OEM licensing for interactive charts embedded in products used by other people | Do not add until the exact deployment/use case is cleared against the current license |
+| Liveline 0.0.7 | MIT canvas renderer, crosshair scrubbing, `onHover`, and points shaped as `{ time: unixSeconds, value }`; it can receive historical points, but its UX and time-window controls are real-time oriented, its current version remains 0.x, and a canvas still needs an external accessible table/controls | Keep as an option for a future true streaming/tick chart, not this daily/weekly historical count chart |
+| ApexCharts | Rich line/bar/time-series features. Its current license distinguishes free Community use, paid Commercial use, and OEM/redistribution when interactive charts are embedded in a product/platform used by others; this owner-only dashboard does not need that licensing uncertainty | Do not select; use MIT-licensed Chart.js instead |
 | Hand-built Canvas 2D | Full visual control, but we would own axis ticks, date scales, hit testing, tooltips, resizing, high-DPI rendering, touch and accessibility fallback | Only fallback if Chart.js fails the spike; do not rebuild a chart engine prematurely |
 
 **Implementation spike before package adoption**
-1. Add the exact Chart.js version chosen at implementation time; record the lockfile and license. Do not add ApexCharts or Liveline in parallel.
-2. Render fixtures for 7, 30, 90 and 365 day windows, including all-zero, sparse, spike, repeated-value and first/last partial-week cases.
-3. Verify first/last selected dates remain visible, UTC labels do not drift by timezone, and 365-day weekly sums reconcile exactly with the daily table and API totals.
+1. Add Chart.js 4.6.1 (MIT) with an exact lockfile version; record license and bundle-size delta. Do not add ApexCharts or Liveline in parallel.
+2. Render fixtures for 7, 30, 90 and 365 day windows: 7/30 daily, 90/365 weekly, including all-zero, sparse, spike, repeated-value and first/last partial-week cases.
+3. Verify first/last selected dates remain visible, UTC labels do not drift by timezone, and 90/365 weekly sums reconcile exactly with daily rows, the table and API totals.
 4. Verify zero baseline, integer ticks, one high-volume metric cannot flatten another, and tooltips match the exact table row.
 5. Verify theme changes, resize, device pixel ratio 1/2, mobile touch, keyboard-only metric switching, table navigation and reduced motion.
 6. Verify client-only loading under Next.js App Router, React Strict Mode mount/unmount, polling updates and no leaked chart instances/listeners.
@@ -227,7 +227,7 @@ The collection event query bounds both ends of the selected reporting window (`s
 **Chart acceptance gate**
 - [ ] One metric at a time; no unlike metrics share a Y-axis.
 - [ ] Y-axis starts at zero and displays integer event counts.
-- [ ] 7/30/90 daily and 365 weekly bucket rules are visible and documented.
+- [ ] 7/30 daily and 90/365 weekly bucket rules are visible and documented.
 - [ ] Weekly and daily aggregates reconcile exactly with API totals and the HTML table.
 - [ ] Hover/tap inspection displays exact date and value.
 - [ ] Empty, all-zero, loading, stale and error states are distinct.
