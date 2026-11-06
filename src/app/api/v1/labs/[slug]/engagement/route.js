@@ -4,6 +4,7 @@ import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
 import {
   getLabEngagement,
   LABS_GUEST_LIKE_COOKIE,
+  clearGuestIdentityCookie,
   mergeGuestLikesIntoVerifiedAccount,
   resolveGuestIdentity,
   setGuestIdentityCookie,
@@ -102,7 +103,9 @@ export async function GET(request, { params }) {
       }),
     });
 
-    if (identity?.token) {
+    if (session?.user?.id && session.user.emailVerified === true && hasGuestCookie) {
+      clearGuestIdentityCookie(response);
+    } else if (identity?.token) {
       setGuestIdentityCookie(response, identity.token);
     }
 
@@ -178,7 +181,9 @@ export async function POST(request, { params }) {
       }),
     });
 
-    if (identity?.token) {
+    if (session?.user?.id && session.user.emailVerified === true && hasGuestCookie) {
+      clearGuestIdentityCookie(response);
+    } else if (identity?.token) {
       setGuestIdentityCookie(response, identity.token);
     }
 
