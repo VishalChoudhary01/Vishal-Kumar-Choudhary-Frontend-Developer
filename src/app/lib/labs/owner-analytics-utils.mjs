@@ -124,6 +124,8 @@ export function buildCompleteDailySeries({ since, generatedAt, dailyGroups = [] 
 }
 
 
+export const PUBLISHED_LAB_SOURCE_PROJECTION = "slug published publishedVersionId publishedArtifactId";
+
 export function selectEligiblePublishedCustomExperiments({
   experiments = [],
   sources = [],
