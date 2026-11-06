@@ -525,3 +525,14 @@ Added `tests/labs-protected-source-reader.test.mjs` with five build-time contrac
 4. Verify theme switching, mobile sizing, keyboard navigation and reduced-motion behavior in the deployed Preview.
 
 No owner editor textarea, version-history viewer, file-management control, Run, Save Draft or Build & Publish handler was changed in Phase 3.
+
+
+### Phase 3 Preview build status — 6 November 2026
+
+Vercel created a Git-connected Preview deployment from the Phase 3 application commit:
+- Deployment: `dpl_332fozxc8GV3xKgNnVH3Jc2LYcgH`
+- URL: `https://vishal-kumar-choudhary-frontend-developer-cpjm10w6g.vercel.app`
+- Source commit: `bfb87df8b394a04293d7894b9f0d1289887f2dfd`
+- State: `READY`
+
+The deployment contains the protected Monaco source reader, source-reader contract tests and build-script change. The latest branch HEAD includes later documentation-only commits. Authenticated browser inspection is still pending because Vercel deployment protection redirects unauthenticated requests to its sign-in page. The owner should open the Preview while signed in to verify the protected source, Copy action, session invalidation and themes.
