@@ -19,7 +19,8 @@
     "test:labs-public-hero": "node --test tests/labs-public-hero.test.mjs",
     "test:labs-featured-experiment": "node --test tests/labs-featured-experiment.test.mjs",
     "test:labs-public-collection": "node --test tests/labs-public-collection.test.mjs",
-    "test:labs-public-pagination": "node --test tests/labs-public-pagination.test.mjs"
+    "test:labs-public-pagination": "node --test tests/labs-public-pagination.test.mjs",
+    "db:ensure-labs-public-indexes": "node scripts/ensure-labs-public-pagination-indexes.mjs"
   },
   "dependencies": {
     "@better-auth/infra": "^0.4.26",
