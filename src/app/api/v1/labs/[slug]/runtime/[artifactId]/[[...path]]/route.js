@@ -1,5 +1,7 @@
 import "server-only";
 
+import { createHash } from "node:crypto";
+
 import { connectToDatabase } from "@/app/lib/db/mongoose";
 import LabBuildArtifact from "@/app/lib/labs/models/LabBuildArtifact";
 import LabExperiment from "@/app/lib/labs/models/LabExperiment";
@@ -248,10 +250,14 @@ export async function GET(request, { params }) {
     return safeError(404, "Published experiment runtime not found.");
   }
 
-  const artifactPath = getSafeArtifactPath(pathSegments);
+  const isPosterRequest = Array.isArray(pathSegments) &&
+    pathSegments.length === 2 &&
+    pathSegments[0] === "__preview" &&
+    pathSegments[1] === "gallery-poster.png";
+  const artifactPath = isPosterRequest ? "__preview/gallery-poster.png" : getSafeArtifactPath(pathSegments);
   if (!artifactPath) return safeError(404, "Runtime asset not found.");
 
-  const extension = artifactPath.slice(artifactPath.lastIndexOf(".")).toLowerCase();
+  const extension = isPosterRequest ? ".png" : artifactPath.slice(artifactPath.lastIndexOf(".")).toLowerCase();
   const contentType = CONTENT_TYPES[extension];
   if (!contentType) return safeError(404, "Runtime asset type is not supported.");
 
@@ -286,16 +292,27 @@ export async function GET(request, { params }) {
       return safeError(404, "Published experiment runtime not found.");
     }
 
-    const outputFile = (artifact.outputFiles || []).find(
-      (file) => file.path === artifactPath,
-    );
-    if (!outputFile || typeof outputFile.url !== "string") {
+    const poster = artifact.previewPoster;
+    const outputFile = isPosterRequest
+      ? null
+      : (artifact.outputFiles || []).find((file) => file.path === artifactPath);
+    const assetUrl = isPosterRequest
+      ? poster?.status === "ready" &&
+        poster.path === "__preview/gallery-poster.png" &&
+        poster.contentType === "image/png" &&
+        poster.byteSize > 0 && poster.byteSize <= 8 * 1024 * 1024 &&
+        poster.width === 1200 && poster.height === 900 &&
+        typeof poster.contentHash === "string" && /^[a-f0-9]{64}$/.test(poster.contentHash)
+        ? poster.url
+        : null
+      : outputFile?.url;
+    if (typeof assetUrl !== "string") {
       return safeError(404, "Runtime asset not found.");
     }
 
     let blobUrl;
     try {
-      blobUrl = new URL(outputFile.url);
+      blobUrl = new URL(assetUrl);
     } catch {
       return safeError(502, "The published runtime asset reference is invalid.");
     }
@@ -320,6 +337,33 @@ export async function GET(request, { params }) {
 
     if (!upstream.ok || !upstream.body) {
       return safeError(502, "The published runtime asset could not be loaded.");
+    }
+
+    if (isPosterRequest) {
+      const declaredType = String(upstream.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+      if (declaredType !== "image/png") return safeError(502, "The published gallery poster has an invalid media type.");
+      const bytes = Buffer.from(await upstream.arrayBuffer());
+      if (
+        bytes.length !== poster.byteSize ||
+        bytes.length > 8 * 1024 * 1024 ||
+        bytes.length < 24 ||
+        !bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) ||
+        bytes.readUInt32BE(16) !== 1200 ||
+        bytes.readUInt32BE(20) !== 900 ||
+        createHash("sha256").update(bytes).digest("hex") !== poster.contentHash
+      ) {
+        return safeError(502, "The published gallery poster failed its integrity check.");
+      }
+      return new Response(bytes, {
+        status: 200,
+        headers: getRuntimeHeaders({
+          contentType: "image/png",
+          fileName: "gallery-poster.png",
+          isHtml: false,
+          origin: request.nextUrl.origin,
+          assetBase: "",
+        }),
+      });
     }
 
     const origin = request.nextUrl.origin;
