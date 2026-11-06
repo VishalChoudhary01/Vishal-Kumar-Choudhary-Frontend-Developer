@@ -382,6 +382,8 @@ test("source event quotas are scoped by event type", () => {
   assert.equal(getSourceEventRateLimit("code_copy"), 20);
   assert.equal(getSourceEventRateLimit("like"), null);
   assert.equal(getSourceEventRateLimit("unknown"), null);
+  assert.equal(getSourceEventRateLimit("toString"), null);
+  assert.equal(getSourceEventRateLimit("__proto__"), null);
 });
 
 test("fixed-window rate limit reports remaining capacity and retry time", () => {
@@ -423,6 +425,16 @@ test("fixed-window rate limit rejects invalid policy input", () => {
   assert.throws(
     () => evaluateFixedWindowRateLimit({
       count: -1,
+      windowStartedAt: new Date("2026-11-06T10:00:00.000Z"),
+      now: new Date("2026-11-06T10:00:30.000Z"),
+      windowMs: 60_000,
+      maxEvents: 20,
+    }),
+    { name: "TypeError" },
+  );
+  assert.throws(
+    () => evaluateFixedWindowRateLimit({
+      count: 1.5,
       windowStartedAt: new Date("2026-11-06T10:00:00.000Z"),
       now: new Date("2026-11-06T10:00:30.000Z"),
       windowMs: 60_000,
