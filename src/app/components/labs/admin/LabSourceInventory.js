@@ -163,7 +163,7 @@ export default function LabSourceInventory() {
         }
         return result;
       },
-      { total: 0, missing: 0, setup: 0, draft: 0, published: 0, notInGallery: 0 },
+      { total: 0, missing: 0, setup: 0, draft: 0, published: 0, deleting: 0, notInGallery: 0 },
     );
   }, [items]);
 
@@ -300,6 +300,7 @@ export default function LabSourceInventory() {
           { label: "Drafts", value: counts.draft + counts.setup },
           { label: "Published", value: counts.published },
           { label: "Custom not in gallery", value: counts.notInGallery },
+          { label: "Cleanup pending", value: counts.deleting },
         ].map((metric) => (
           <div key={metric.label} className="border border-border bg-surface-1 px-3 py-3">
             <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-text-tertiary">
