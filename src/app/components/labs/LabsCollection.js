@@ -7,8 +7,7 @@ import { motion } from "motion/react";
 import LabExperimentPreview from "./LabExperimentPreview";
 import LabLikeButton from "./LabLikeButton";
 import useReducedMotion from "@/app/hooks/useReducedMotion";
-import useLabCategoryFilter from "@/app/hooks/labs/useLabCategoryFilter";
-import useLabLoadMore from "@/app/hooks/labs/useLabLoadMore";
+import useLabPublicCollection from "@/app/hooks/labs/useLabPublicCollection";
 
 function CategoryNavigation({ categories, activeCategory, onChange }) {
   if (!categories?.length) return null;
@@ -110,11 +109,9 @@ function LabCard({ experiment, index, total, engagement }) {
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col pt-4 sm:pt-5">
-          <div className="flex min-w-0 items-start justify-between gap-3">
-            <h3 className="min-w-0 max-w-[19ch] font-display text-[clamp(1.55rem,2.25vw,2.15rem)] font-normal leading-[1.02] tracking-[-0.04em] text-text-primary transition-colors duration-200 group-hover/card:text-brand motion-reduce:transition-none">
-              {experiment.title}
-            </h3>
-          </div>
+          <h3 className="min-w-0 max-w-[19ch] font-display text-[clamp(1.55rem,2.25vw,2.15rem)] font-normal leading-[1.02] tracking-[-0.04em] text-text-primary transition-colors duration-200 group-hover/card:text-brand motion-reduce:transition-none">
+            {experiment.title}
+          </h3>
 
           {experiment.description ? (
             <p className="mt-3 line-clamp-3 min-h-[4.5rem] text-xs leading-6 text-text-secondary sm:text-[13px]">
@@ -170,22 +167,32 @@ function EmptyLabsState() {
   );
 }
 
-function NoResultsState({ onReset }) {
+function NoResultsState({ onReset, loadError, onRetry }) {
   return (
     <div className="border-y border-border-subtle py-12 sm:py-16">
       <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-text-muted">
-        No matching experiments
+        {loadError ? "Collection temporarily unavailable" : "No matching experiments"}
       </p>
       <p className="mt-3 max-w-md text-sm leading-7 text-text-secondary">
-        There are no published experiments in this category yet.
+        {loadError || "There are no published experiments in this category yet."}
       </p>
-      <button
-        type="button"
-        onClick={onReset}
-        className="mt-5 inline-flex min-h-10 items-center border-b border-brand/60 pb-1 text-xs font-semibold text-text-primary transition-colors hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand motion-reduce:transition-none"
-      >
-        View all experiments
-      </button>
+      {loadError ? (
+        <button
+          type="button"
+          onClick={onRetry}
+          className="mt-5 inline-flex min-h-10 items-center border-b border-brand/60 pb-1 text-xs font-semibold text-text-primary transition-colors hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand motion-reduce:transition-none"
+        >
+          Try again
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={onReset}
+          className="mt-5 inline-flex min-h-10 items-center border-b border-brand/60 pb-1 text-xs font-semibold text-text-primary transition-colors hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand motion-reduce:transition-none"
+        >
+          View all experiments
+        </button>
+      )}
     </div>
   );
 }
@@ -197,6 +204,9 @@ function Gallery({
   selectedCategory,
   hasMore,
   nextPageCount,
+  isLoadingMore,
+  isLoadingCategory,
+  loadError,
   onLoadMore,
   engagementBySlug,
 }) {
@@ -234,20 +244,35 @@ function Gallery({
         ))}
       </div>
 
+      {loadError ? (
+        <p role="status" className="mt-6 text-center text-xs text-warning">
+          {loadError}
+        </p>
+      ) : null}
+
       {hasMore ? (
         <div className="mt-12 flex justify-center sm:mt-16">
           <button
             type="button"
             onClick={onLoadMore}
-            className="group inline-flex min-h-11 items-center gap-4 border border-border-subtle px-5 text-xs font-semibold text-text-primary transition-[background-color,border-color,color] duration-200 hover:border-brand hover:bg-surface-1 hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand motion-reduce:transition-none"
+            disabled={isLoadingMore || isLoadingCategory}
+            className="group inline-flex min-h-11 items-center gap-4 border border-border-subtle px-5 text-xs font-semibold text-text-primary transition-[background-color,border-color,color] duration-200 hover:border-brand hover:bg-surface-1 hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand disabled:cursor-wait disabled:opacity-60 motion-reduce:transition-none"
           >
-            Load {nextPageCount} more experiments
-            <span
-              aria-hidden="true"
-              className="inline-block transition-transform duration-200 group-hover:translate-y-0.5 motion-reduce:transform-none motion-reduce:transition-none"
-            >
-              ↓
-            </span>
+            {isLoadingMore
+              ? "Loading experiments…"
+              : isLoadingCategory
+                ? "Loading category…"
+                : nextPageCount > 0
+                  ? `Load ${nextPageCount} more experiments`
+                  : "Load more experiments"}
+            {!isLoadingMore ? (
+              <span
+                aria-hidden="true"
+                className="inline-block transition-transform duration-200 group-hover:translate-y-0.5 motion-reduce:transform-none motion-reduce:transition-none"
+              >
+                ↓
+              </span>
+            ) : null}
           </button>
         </div>
       ) : null}
@@ -255,8 +280,18 @@ function Gallery({
   );
 }
 
-export default function LabsCollection({ experiments = [], engagementBySlug = {} }) {
-  const cleanupSlug = experiments.find(
+export default function LabsCollection({
+  builtInExperiments = [],
+  initialCustomPage = {},
+  totalCount = 0,
+  categoryCounts = {},
+  engagementBySlug = {},
+}) {
+  const cleanupCandidates = [
+    ...builtInExperiments,
+    ...(Array.isArray(initialCustomPage.experiments) ? initialCustomPage.experiments : []),
+  ];
+  const cleanupSlug = cleanupCandidates.find(
     (experiment) => engagementBySlug?.[experiment.slug]?.guestCookieCleanupRequired,
   )?.slug || null;
 
@@ -286,17 +321,22 @@ export default function LabsCollection({ experiments = [], engagementBySlug = {}
     activeCategory,
     setActiveCategory,
     categories,
-    filteredExperiments,
-  } = useLabCategoryFilter(experiments);
-
-  const {
     visibleItems,
     visibleCount,
-    totalCount,
+    totalCount: categoryTotalCount,
     hasMore,
     nextPageCount,
+    isLoadingCategory,
+    isLoadingMore,
+    loadError,
     loadMore,
-  } = useLabLoadMore(filteredExperiments, activeCategory);
+    retryCategory,
+  } = useLabPublicCollection({
+    builtInExperiments,
+    initialCustomPage,
+    totalCount,
+    categoryCounts,
+  });
 
   const selectedCategory =
     categories.find((category) => category.id === activeCategory)?.label || "All";
@@ -309,7 +349,7 @@ export default function LabsCollection({ experiments = [], engagementBySlug = {}
       <div className="mb-8 grid grid-cols-1 items-end gap-5 border-t border-border-subtle pt-8 sm:mb-10 sm:pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(240px,0.42fr)] lg:gap-10">
         <div className="min-w-0">
           <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.22em] text-brand sm:text-[10px]">
-            The collection / {String(experiments.length).padStart(2, "0")} published
+            The collection / {String(totalCount).padStart(2, "0")} published
           </p>
           <h2
             id="labs-collection-heading"
@@ -319,7 +359,7 @@ export default function LabsCollection({ experiments = [], engagementBySlug = {}
           </h2>
         </div>
 
-        {experiments.length ? (
+        {totalCount ? (
           <p className="max-w-[22rem] text-xs leading-6 text-text-muted sm:text-sm sm:leading-7 lg:justify-self-end">
             Focused explorations across motion, CSS, interface interactions and
             creative coding. Choose a discipline to narrow the collection.
@@ -327,7 +367,7 @@ export default function LabsCollection({ experiments = [], engagementBySlug = {}
         ) : null}
       </div>
 
-      {experiments.length ? (
+      {totalCount > 0 ? (
         <>
           <CategoryNavigation
             categories={categories}
@@ -336,19 +376,30 @@ export default function LabsCollection({ experiments = [], engagementBySlug = {}
           />
 
           <div className="pt-5 sm:pt-7">
-            {filteredExperiments.length ? (
+            {isLoadingCategory && !visibleItems.length ? (
+              <p role="status" className="border-y border-border-subtle py-12 text-center text-xs text-text-muted">
+                Loading published experiments…
+              </p>
+            ) : visibleItems.length ? (
               <Gallery
                 visibleExperiments={visibleItems}
                 visibleCount={visibleCount}
-                totalCount={totalCount}
+                totalCount={categoryTotalCount}
                 selectedCategory={selectedCategory}
                 hasMore={hasMore}
                 nextPageCount={nextPageCount}
+                isLoadingMore={isLoadingMore}
+                isLoadingCategory={isLoadingCategory}
+                loadError={loadError}
                 onLoadMore={loadMore}
                 engagementBySlug={engagementBySlug}
               />
             ) : (
-              <NoResultsState onReset={() => setActiveCategory("all")} />
+              <NoResultsState
+                onReset={() => setActiveCategory("all")}
+                loadError={loadError}
+                onRetry={retryCategory}
+              />
             )}
           </div>
         </>
