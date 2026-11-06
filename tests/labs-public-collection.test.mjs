@@ -75,8 +75,8 @@ test("collection keeps existing real-data links, likes and progressive loading",
   assert.ok(collectionSource.includes("href={`/labs/${experiment.slug}`}"));
   assert.match(collectionSource, /<LabLikeButton/);
   assert.match(collectionSource, /initialData=\{engagement\}/);
-  assert.match(collectionSource, /useLabLoadMore/);
-  assert.match(collectionSource, /Load \{nextPageCount\} more experiments/);
+  assert.match(collectionSource, /useLabPublicCollection/);
+  assert.match(collectionSource, /nextPageCount > 0/);
 });
 
 test("collection uses reduced-motion-aware in-view reveals for cards", () => {
