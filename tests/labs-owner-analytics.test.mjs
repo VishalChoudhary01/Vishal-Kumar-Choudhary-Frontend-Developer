@@ -9,6 +9,8 @@ import {
   applyActiveLikeGroups,
   applyAnalyticsEventGroups,
   summarizeAnalyticsRows,
+  evaluateFixedWindowRateLimit,
+  getSourceEventRateLimit,
 } from "../src/app/lib/labs/owner-analytics-utils.mjs";
 
 test("rankings omit zero-value rows, use stable tie-breaks and cap each list", () => {
@@ -372,4 +374,70 @@ test("collection totals equal the sum of per-experiment aggregate values", () =>
     activeAnonymousLikes: 5,
     totalActiveLikes: 9,
   });
+});
+
+
+test("source event quotas are scoped by event type", () => {
+  assert.equal(getSourceEventRateLimit("source_open"), 30);
+  assert.equal(getSourceEventRateLimit("code_copy"), 20);
+  assert.equal(getSourceEventRateLimit("like"), null);
+  assert.equal(getSourceEventRateLimit("unknown"), null);
+});
+
+test("fixed-window rate limit reports remaining capacity and retry time", () => {
+  const now = new Date("2026-11-06T10:00:30.000Z");
+  const start = new Date("2026-11-06T10:00:00.000Z");
+
+  assert.deepEqual(
+    evaluateFixedWindowRateLimit({
+      count: 20,
+      windowStartedAt: start,
+      now,
+      windowMs: 60_000,
+      maxEvents: 20,
+    }),
+    {
+      allowed: true,
+      retryAfterSeconds: 30,
+      remaining: 0,
+    },
+  );
+
+  assert.deepEqual(
+    evaluateFixedWindowRateLimit({
+      count: 21,
+      windowStartedAt: start,
+      now,
+      windowMs: 60_000,
+      maxEvents: 20,
+    }),
+    {
+      allowed: false,
+      retryAfterSeconds: 30,
+      remaining: 0,
+    },
+  );
+});
+
+test("fixed-window rate limit rejects invalid policy input", () => {
+  assert.throws(
+    () => evaluateFixedWindowRateLimit({
+      count: -1,
+      windowStartedAt: new Date("2026-11-06T10:00:00.000Z"),
+      now: new Date("2026-11-06T10:00:30.000Z"),
+      windowMs: 60_000,
+      maxEvents: 20,
+    }),
+    { name: "TypeError" },
+  );
+  assert.throws(
+    () => evaluateFixedWindowRateLimit({
+      count: 1,
+      windowStartedAt: new Date("invalid"),
+      now: new Date("2026-11-06T10:00:30.000Z"),
+      windowMs: 60_000,
+      maxEvents: 20,
+    }),
+    { name: "TypeError" },
+  );
 });
