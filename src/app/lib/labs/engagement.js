@@ -285,13 +285,18 @@ async function consumeSourceEventRateLimit({ userId, eventType }) {
   const cutoff = new Date(now.getTime() - SOURCE_EVENT_RATE_WINDOW_MS);
   const collection = mongoose.connection.db.collection("lab_source_event_limits");
 
-  globalThis.__labsSourceEventLimitIndexPromise ||= collection.createIndex(
-    { updatedAt: 1 },
-    {
-      expireAfterSeconds: 24 * 60 * 60,
-      name: "lab_source_event_limit_ttl",
-    },
-  );
+  globalThis.__labsSourceEventLimitIndexPromise ||= collection
+    .createIndex(
+      { updatedAt: 1 },
+      {
+        expireAfterSeconds: 24 * 60 * 60,
+        name: "lab_source_event_limit_ttl",
+      },
+    )
+    .catch((error) => {
+      globalThis.__labsSourceEventLimitIndexPromise = null;
+      throw error;
+    });
   await globalThis.__labsSourceEventLimitIndexPromise;
 
   const result = await collection.findOneAndUpdate(
