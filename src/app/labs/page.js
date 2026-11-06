@@ -4,6 +4,7 @@ import FeaturedExperiment from "@/app/components/labs/FeaturedExperiment";
 import LabsCollection from "@/app/components/labs/LabsCollection";
 import {
   FEATURED_LAB_EXPERIMENT_SLUG,
+  LAB_CATEGORIES,
   publishedLabExperiments,
 } from "@/app/data/labsExperiments";
 import { resolveFeaturedExperiment } from "@/app/lib/labs/featured-experiment.mjs";
@@ -15,7 +16,7 @@ import {
   getLabEngagementSnapshot,
   LABS_GUEST_LIKE_COOKIE,
 } from "@/app/lib/labs/engagement";
-import { getPublishedCustomLabExperiments } from "@/app/lib/labs/public-experiments";
+import { getPublishedCustomLabExperimentPage } from "@/app/lib/labs/public-experiments";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -47,8 +48,20 @@ export function generateMetadata() {
 }
 
 export default async function LabsPage() {
-  const customExperiments = await getPublishedCustomLabExperiments();
-  const experiments = [...publishedLabExperiments, ...customExperiments];
+  const customPage = await getPublishedCustomLabExperimentPage({
+    limit: 18,
+    includeCategoryCounts: true,
+  });
+  const experiments = [...publishedLabExperiments, ...customPage.experiments];
+  const totalExperimentCount = publishedLabExperiments.length + customPage.totalCount;
+  const categoryCounts = Object.fromEntries(
+    LAB_CATEGORIES.map((category) => [
+      category.name,
+      publishedLabExperiments.filter((experiment) => experiment.category === category.name).length +
+        (customPage.categoryCounts[category.name] || 0),
+    ]).filter(([, count]) => count > 0),
+  );
+  const activeCategoryCount = Object.keys(categoryCounts).length;
 
   let session = null;
   let authState = "unknown";
@@ -100,14 +113,8 @@ export default async function LabsPage() {
     <LabsPageShell>
       <main className="min-h-screen bg-background text-text-primary">
         <LabsIntroduction
-          experimentCount={experiments.length}
-          categoryCount={
-            new Set(
-              experiments
-                .map((experiment) => experiment.category)
-                .filter((category) => typeof category === "string" && category.trim()),
-            ).size
-          }
+          experimentCount={totalExperimentCount}
+          categoryCount={activeCategoryCount}
           authState={authState}
           featuredHref={
             featuredExperiment ? `/labs/${featuredExperiment.slug}` : null
@@ -116,7 +123,13 @@ export default async function LabsPage() {
         {featuredExperiment ? (
           <FeaturedExperiment experiment={featuredExperiment} />
         ) : null}
-        <LabsCollection experiments={experiments} engagementBySlug={engagementBySlug} />
+        <LabsCollection
+          builtInExperiments={publishedLabExperiments}
+          initialCustomPage={customPage}
+          totalCount={totalExperimentCount}
+          categoryCounts={categoryCounts}
+          engagementBySlug={engagementBySlug}
+        />
       </main>
     </LabsPageShell>
   );
