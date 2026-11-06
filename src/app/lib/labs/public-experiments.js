@@ -87,7 +87,6 @@ function toPublicExperiment(experiment, artifact) {
     category: experiment.category,
     technologies: Array.isArray(experiment.technologies) ? experiment.technologies : [],
     galleryPreview: galleryVisual,
-    uploadedGalleryPreview: galleryPreview,
     generatedPoster,
     thumbnail,
     seo: {
