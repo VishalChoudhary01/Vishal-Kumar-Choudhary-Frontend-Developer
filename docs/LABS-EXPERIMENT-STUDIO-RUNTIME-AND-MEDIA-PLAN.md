@@ -222,3 +222,18 @@ Owner browser QA is still required on the Vercel-protected Preview: editing acro
 
 
 Phase 4 Preview deployment gate (6 November 2026): the editable Monaco creator integration and its full production build pass in a clean sandbox, but the current branch HEAD is not yet deployed. Vercel rejected a new Preview request with HTTP 402 `api-deployments-free-per-day` (24-hour retry window, more than 100 deployments). The latest listed READY Preview is from code commit `741ba0a96edf4542e152f0bf435db05f81c6c5d2`, which predates the final creator integration. The CLI fallback was unavailable because the sandbox had no `vercel` CLI or project link. Production was not changed. Owner browser QA must be run on a Preview created from the current branch after quota reset. See the phased implementation plan for the full acceptance matrix.
+
+
+## 14. Phase 5 — immutable version-history Monaco reader — 7 November 2026
+
+The owner version-history modal now uses shared `LabCodeEditor` in read-only mode instead of plain `pre/code`. Historical version label, immutable content hash, file tabs, paths and language labels remain. Editor content and language are read directly from the owner-authorized immutable version response.
+
+Each Monaco model is isolated by `scope="history"`, experiment slug, immutable `versionId` and file path. The history editor has no `onChange`, so it cannot update the current owner working copy. It sets `keepCurrentModel={false}` so its model is disposed when the modal closes. Switching historical file tabs selects the exact version/file model.
+
+The existing version API remains owner-authorized and returns the stored immutable snapshot. Restore remains on the existing `restoreVersion` and `/restore/[versionId]` flow; the restore service copies the old version's stored files into a newly saved draft and records `basedOnVersionId` as the source version. It does not modify the old version.
+
+Added six immutable-history contract tests in `tests/labs-source-history-monaco.test.mjs` and a `test:labs-history` build step.
+
+Phase 5 validation passed: Monaco 6/6, protected reader 5/5, creator/state 12/12, history 6/6, media 9/9, analytics 15/15, ESLint, SEO (zero warnings) and a clean Next.js 16.4.3 production build with all Labs routes compiled.
+
+Owner browser QA is still required on a Vercel Preview for immutable file switching, hash/content identity, no mutation of the current working copy, modal close/reopen model cleanup, Restore-as-new-draft behavior, themes, keyboard navigation and responsive sizing. Phases 1–5 are implemented in branch source; phases 6–7 and authenticated Preview acceptance remain. Production has not been promoted.
