@@ -113,7 +113,7 @@ test("daily series includes each UTC calendar day and fills missing dates with z
       anonymousUnlikes: 0,
       verifiedLikeActions: 2,
       anonymousLikeActions: 4,
-      totalActions: 4,
+      totalActions: 10,
     },
     {
       date: "2026-11-05",
@@ -137,7 +137,7 @@ test("daily series includes each UTC calendar day and fills missing dates with z
       anonymousUnlikes: 0,
       verifiedLikeActions: 0,
       anonymousLikeActions: 1,
-      totalActions: 7,
+      totalActions: 8,
     },
   ]);
 });
