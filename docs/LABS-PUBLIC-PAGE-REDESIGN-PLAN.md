@@ -1,6 +1,6 @@
 # Labs Public Page Redesign — Phased Plan
 
-**Status:** Planning only — no public-page UI implementation is included in this document update.  
+**Status:** Planning only — no public-page UI implementation is included in this document update. Hero Motion, statistics count-up and authentication-aware CTAs are included in scope.  
 **Branch:** `feat/labs-platform-integration`  
 **Updated:** 7 November 2026  
 **Scope:** Public `/labs` discovery page.  
@@ -142,6 +142,38 @@ Replace the current plain text-and-metrics composition with an asymmetric hero:
 - Mobile: stack the copy and illustration, keep the headline readable, make the collection action easy to reach and avoid a tall empty hero.
 - Adjust only page-content offsets below the existing navbar; navbar geometry and behavior stay untouched.
 
+#### Hero motion system
+
+The hero should feel intentionally animated, not like a collection of unrelated entrance effects.
+
+- Use `motion/react` for coordinated entrance and state transitions. Reuse the project's `useReducedMotion` convention.
+- Reveal the eyebrow, headline, supporting copy, actions and illustration in a small, ordered stagger when the hero enters. Keep travel distances short and durations restrained; the text must remain readable immediately.
+- The illustration may use subtle layered drift/opacity or a restrained one-time reveal. Avoid continuous distracting loops, cursor-following effects, scroll hijacking, large parallax travel and animation that blocks interaction.
+- The hero statistics must animate from the real initial state to their real values once when the statistics enter view. Use the shared `MotionNumber` visual language or a focused Labs stat wrapper. Any new initial-count animation must be opt-in; the default behavior of shared `MotionNumber` must remain unchanged for like counts and other existing consumers.
+- Stats are real values: published experiment count and number of represented active categories from the eligible published array. Never animate to a placeholder number or an invented target.
+- Count animation must be deterministic, bounded and triggered once per page view. It must not restart every time the user scrolls away and back.
+- Respect `prefers-reduced-motion`: display the final values immediately, without count-up or stagger delay.
+- Do not use `aria-live` to announce every animation frame. Expose the final numeric value and an accurate accessible label; decorative movement remains hidden from assistive technology.
+
+#### Authentication-aware hero actions
+
+The hero actions must reflect the actual Labs authentication state. Resolve the session on the server in the existing `/labs` request path and pass only the minimum safe auth state to the hero. Do not make the navbar the source of truth and do not modify its component, layout, loading behavior or account controls.
+
+| Resolved state | Primary action | Secondary action |
+|---|---|---|
+| Guest / signed out | **Create account** → `/labs/signup?returnTo=%2Flabs` | **Sign in** → `/labs/login?returnTo=%2Flabs` |
+| Signed in, email unverified | **Verify email** → `/labs/verify-email?returnTo=%2Flabs` | **Explore experiments** → collection anchor |
+| Signed in, email verified | **Explore experiments** → collection anchor | **Explore featured experiment** → real featured slug, only when one is eligible |
+
+Rules:
+- Never show Sign in/Create account actions to a user whose session is already authenticated.
+- Never show a Verify email action to a guest or verified user.
+- When session resolution fails or remains unknown, show only the neutral in-page Explore action; do not flash guest CTAs or misclassify the visitor.
+- Preserve safe local return navigation to `/labs` on auth routes. The auth pages remain responsible for registration readiness, provider availability, verification and redirect guards.
+- Do not add an owner-only management CTA unless the route already has a reliable server-derived owner capability. Do not infer ownership from a client-side email or a hidden URL.
+- The CTA group must remain useful when no featured item is available; omit the featured action and keep the collection action.
+- Keep CTA labels and destination state consistent with the existing Labs auth routes. The navbar remains unchanged.
+
 ### 4.2 Featured experiment — real work as the focal showcase
 
 Upgrade `FeaturedExperiment` into a deliberate editorial spotlight rather than a conventional image/card split.
@@ -221,6 +253,8 @@ The 60-card value is an evaluation trigger, not a requirement to install a libra
 ### Phase 1 — Hero redesign
 
 - Rework `LabsIntroduction` into the approved hero composition (keep the existing component name initially or extract a focused `LabsHero` component if that produces a cleaner responsibility boundary).
+- Resolve and pass the minimum server-side auth state to the hero; implement the guest, signed-in-unverified, verified and unknown CTA matrix without editing the navbar.
+- Add a coordinated, reduced-motion-aware hero reveal and one-time count-up animation for data-backed experiment/category statistics. Keep the shared `MotionNumber` default behavior unchanged.
 - Create the lightweight, brand-aligned conceptual hero illustration.
 - Connect the displayed counts to the exact eligible published collection.
 - Add collection/featured anchors and meaningful focus/hover states.
@@ -276,7 +310,7 @@ The 60-card value is an evaluation trigger, not a requirement to install a libra
 
 Expected first-pass files (final list may change after component design):
 
-- `src/app/labs/page.js` — final published collection and featured-item resolution.
+- `src/app/labs/page.js` — final published collection, featured-item resolution and minimal server-resolved auth state for hero CTAs.
 - `src/app/components/labs/LabsIntroduction.js` or a new `LabsHero.js` — hero structure.
 - A new focused hero illustration component under `src/app/components/labs/landing/`.
 - `src/app/components/labs/FeaturedExperiment.js` — featured spotlight.
@@ -309,6 +343,11 @@ Do not modify `src/app/components/layout/Navbar.js`, the Labs shell's navbar int
 - [ ] A source workspace for a built-in entry does not create a second card.
 - [ ] Featured content resolves to a real eligible experiment or is omitted.
 - [ ] Counts and result labels reflect the current filtered/published dataset.
+- [ ] Hero statistics animate once from the correct initial state to the real published counts; reduced-motion users see final values immediately.
+- [ ] Stats remain accessible and do not announce per-frame changes to screen readers.
+- [ ] Guest CTAs show Create account + Sign in with safe returnTo values.
+- [ ] Signed-in unverified users see Verify email + Explore experiments; verified users see discovery actions, never guest auth CTAs.
+- [ ] Unknown session state never flashes or mislabels guest CTAs.
 
 ### Visual and responsive quality
 - [ ] Hero is visually distinctive and illustrative without implying a fake experiment.
