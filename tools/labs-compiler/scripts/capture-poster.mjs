@@ -81,6 +81,9 @@ async function serveBuild() {
 
 function findChromium() {
   const configured = String(process.env.LABS_CHROMIUM_EXECUTABLE_PATH || "").trim();
+  const expectedVersion = String(process.env.LABS_CHROMIUM_EXPECTED_VERSION || "").trim();
+  if (!expectedVersion) return null;
+
   const candidates = [
     ...(configured ? [configured] : []),
     "/usr/bin/chromium",
@@ -92,12 +95,17 @@ function findChromium() {
     "google-chrome",
   ];
   for (const candidate of candidates) {
-    const check = candidate.includes("/") ? spawnSync(candidate, ["--version"], { encoding: "utf8", timeout: 2500 }) :
-      spawnSync("which", [candidate], { encoding: "utf8", timeout: 2500 });
-    if (check.status === 0) {
-      const executable = candidate.includes("/") ? candidate : check.stdout.trim();
-      if (executable) return executable;
-    }
+    const located = candidate.includes("/")
+      ? { status: 0, stdout: candidate }
+      : spawnSync("which", [candidate], { encoding: "utf8", timeout: 2500 });
+    if (located.status !== 0) continue;
+    const executable = String(located.stdout || "").trim();
+    if (!executable) continue;
+    const check = spawnSync(executable, ["--version"], { encoding: "utf8", timeout: 2500 });
+    if (check.status !== 0) continue;
+    const version = String(check.stdout || check.stderr || "").trim().slice(0, 160);
+    if (!version.includes(expectedVersion)) continue;
+    return { executable, version };
   }
   return null;
 }
@@ -149,7 +157,7 @@ function baseArgs(url) {
     "--autoplay-policy=user-gesture-required",
     "--hide-scrollbars",
     "--force-device-scale-factor=1",
-    "--force-prefers-reduced-motion",
+    "--force-prefers-reduced-motion=reduce",
     "--window-size=1200,900",
     "--disable-features=MediaRouter,OptimizationHints,Translate",
     "--virtual-time-budget=5000",
@@ -159,11 +167,15 @@ function baseArgs(url) {
 
 async function main() {
   await mkdir(dirname(SCREENSHOT_PATH), { recursive: true });
-  const executable = findChromium();
-  if (!executable) {
-    await writeResult({ status: "unavailable", reasonCode: "browser_unavailable" });
+  const browser = findChromium();
+  if (!browser) {
+    await writeResult({
+      status: "unavailable",
+      reasonCode: process.env.LABS_CHROMIUM_EXPECTED_VERSION ? "browser_unavailable" : "browser_unpinned",
+    });
     return;
   }
+  const executable = browser.executable;
 
   const server = await serveBuild();
   try {
@@ -212,6 +224,7 @@ async function main() {
       width,
       height,
       captureVersion: CAPTURE_VERSION,
+      browserVersion: browser.version,
     });
   } finally {
     await new Promise((resolveClose) => server.close(resolveClose));
