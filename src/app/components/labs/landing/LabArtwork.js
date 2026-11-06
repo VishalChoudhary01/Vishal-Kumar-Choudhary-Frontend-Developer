@@ -2,7 +2,7 @@ function MagneticArtwork() {
   return (
     <div
       aria-hidden="true"
-      className="relative flex h-full w-full items-center justify-center overflow-hidden bg-background"
+      className="relative flex h-full w-full @container items-center justify-center overflow-hidden bg-background"
     >
       <div
         className="absolute inset-0 opacity-[0.2]"
@@ -37,7 +37,7 @@ function ScrollTextArtwork() {
   return (
     <div
       aria-hidden="true"
-      className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-background px-5 py-6 sm:px-10"
+      className="relative flex h-full w-full @container flex-col items-center justify-center overflow-hidden bg-background px-4 py-6 sm:px-8"
     >
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_42%,var(--brand-soft),transparent_66%)] opacity-60" />
       <div className="absolute left-6 top-6 font-mono text-[8px] uppercase tracking-[0.18em] text-text-muted sm:left-9 sm:top-9">
@@ -46,7 +46,7 @@ function ScrollTextArtwork() {
       <p className="relative mb-4 font-mono text-[8px] uppercase tracking-[0.2em] text-brand sm:mb-6">
         A study in scroll and type
       </p>
-      <div className="relative max-w-3xl text-center font-display text-[clamp(2rem,5.2vw,4.6rem)] leading-[0.96] tracking-[-0.05em] text-text-primary">
+      <div className="relative w-full max-w-[18ch] text-center font-display text-[clamp(1.35rem,7.2cqw,2.85rem)] leading-[0.98] tracking-[-0.05em] text-text-primary">
         <span className="block">Motion gives</span>
         <span className="block text-brand">interfaces a</span>
         <span className="block">sense of life.</span>
@@ -72,7 +72,7 @@ function GradientBloomArtwork() {
         <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-text-muted">
           CSS study / 03
         </p>
-        <p className="mt-3 font-display text-[clamp(2rem,5vw,4rem)] leading-none tracking-[-0.06em] text-text-primary">
+        <p className="mt-3 font-display text-[clamp(1.55rem,8cqw,3.4rem)] leading-none tracking-[-0.06em] text-text-primary">
           Gradient
           <span className="block text-brand">Bloom.</span>
         </p>
@@ -105,7 +105,7 @@ function GenerativeParticleArtwork() {
   return (
     <div
       aria-hidden="true"
-      className="relative h-full w-full overflow-hidden bg-background"
+      className="relative h-full w-full @container overflow-hidden bg-background"
     >
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,var(--brand-soft),transparent_72%)] opacity-60" />
       <svg
@@ -140,12 +140,12 @@ function GenerativeParticleArtwork() {
       <div className="absolute left-6 top-6 font-mono text-[8px] uppercase tracking-[0.18em] text-text-muted sm:left-9 sm:top-9">
         Generative study / 04
       </div>
-      <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between gap-3 sm:bottom-9 sm:left-9 sm:right-9">
-        <p className="font-display text-[clamp(1.8rem,4vw,3.5rem)] leading-none tracking-[-0.05em] text-text-primary">
+      <div className="absolute bottom-5 left-5 right-5 flex flex-col items-start gap-2 sm:bottom-8 sm:left-8 sm:right-8">
+        <p className="max-w-[15ch] font-display text-[clamp(1.25rem,6.2cqw,2.75rem)] leading-[0.98] tracking-[-0.05em] text-text-primary">
           Connected by chance.
         </p>
         <span className="font-mono text-[8px] uppercase tracking-[0.16em] text-text-muted">
-          Canvas 2D
+          Canvas 2D / Generative art
         </span>
       </div>
     </div>
