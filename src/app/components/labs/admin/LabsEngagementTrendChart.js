@@ -77,6 +77,8 @@ export default function LabsEngagementTrendChart({
     () => buckets.reduce((sum, bucket) => sum + bucket.value, 0),
     [buckets],
   );
+  const hasBuckets = buckets.length > 0;
+  const hasActivity = total > 0;
 
   const preferredIndex = hoverIndex ?? selectedIndex ?? buckets.length - 1;
   const activeIndex = buckets.length
@@ -318,9 +320,6 @@ export default function LabsEngagementTrendChart({
     setHoverIndex(null);
     setSelectedIndex(null);
   }
-
-  const hasBuckets = buckets.length > 0;
-  const hasActivity = total > 0;
 
   return (
     <section className="mt-8 border border-border bg-surface-1 p-4 sm:p-5">
