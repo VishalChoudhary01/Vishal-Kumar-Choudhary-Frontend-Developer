@@ -1,6 +1,6 @@
 # Labs Detail Presentation and Monaco Editor — Phased Implementation Plan
 
-**Status:** Phases 1–4 implemented in branch source with regression tests and production build passing. Phase 4 Preview deployment is blocked by Vercel's daily API deployment quota; authenticated Preview/browser QA remains pending for Phases 1 and 3–4. Phase 5 version-history Monaco migration remains planned.
+**Status:** Phases 1–5 implemented in branch source with regression tests and production build passing. Authenticated Preview/browser QA remains pending for Phases 1, 3, 4 and 5; deployment availability must be checked before release. Phases 6–7 remain.
 **Branch:** `feat/labs-platform-integration`
 **Last reconciled:** 6 November 2026
 **Scope:** Public Labs detail page media/layout, protected read-only source viewer, and the admin source creator's code editor.
@@ -50,9 +50,9 @@ This section records what already exists. It is not a request to rebuild these c
 | Public detail executable workspace | Removed | `src/app/labs/[slug]/page.js` no longer mounts `LabWorkspace`; keep it absent |
 | Like/engagement | Implemented | Existing `LabLikeButton`, optimistic count, guest/signed-in behavior and server snapshot remain intact |
 | Protected source access | Implemented | Server resolves authorization before passing source to `LabSourceAccess`; verified-email/session checks and copy events remain in place |
-| Detail source code presentation | Not upgraded yet | Currently file tabs + plain `pre/code` rendering; planned read-only Monaco mode |
-| Owner editable source presentation | Not upgraded yet | Currently a controlled `textarea`; planned editable Monaco mode |
-| Version-history code viewer | Not upgraded yet | Currently plain `pre/code`; planned read-only Monaco mode |
+| Detail source code presentation | Implemented | Protected read-only Monaco; existing file tabs, copy event and session authorization preserved |
+| Owner editable source presentation | Implemented | Shared editable Monaco; React files state authoritative; Run/Save/Publish snapshot behavior covered by tests |
+| Version-history code viewer | Implemented | Shared read-only Monaco with immutable version/file model IDs and disposal on close; Restore still creates a new draft |
 | Detail media aspect-ratio presentation | Needs improvement | Detail wrapper currently forces responsive 4:3/16:9 stages and preview defaults to cover for some assets; fix without changing media precedence |
 | Detail section arrangement | Needs improvement | Current header/like, media, explanation and source sections exist; reorder/refine spacing while preserving each function |
 
@@ -377,7 +377,7 @@ Do not add a second unsynchronized `editorFiles` persistence state. Do not read 
 | 2 | Shared Monaco wrapper and self-hosted assets | Implemented; 6 config tests, ESLint, production build and local asset HTTP checks pass |
 | 3 | Public read-only source viewer | Implemented in source; 5 access/copy contract tests and production build pass; authenticated browser QA pending |
 | 4 | Editable Studio source creator | Implemented; 8 creator contracts + 4 path-state tests, ESLint and production build pass; owner browser QA pending |
-| 5 | Read-only version-history viewer | Pending integration with immutable version-scoped models |
+| 5 | Read-only version-history viewer | Implemented; 6 immutable-history tests, ESLint and production build pass; owner browser QA pending |
 | 6 | Responsive/accessibility/performance polish | No page bundle regression or keyboard/focus issue |
 | 7 | Full Preview regression and owner QA | Run, Save Draft, Build & Publish, poster capture and gallery checks all pass |
 
@@ -593,3 +593,42 @@ The Phase 4 branch source and full production build are green, but a Preview con
 A new Preview request from the current branch was rejected with HTTP 402 `api-deployments-free-per-day` and a 24-hour retry window (more than 100 deployments). The CLI fallback was checked but is unavailable in the validation sandbox (`vercel` CLI is not installed and the clone is not linked to the Vercel project). No billing/security settings were changed and Production was not touched.
 
 After the quota resets, deploy the current `feat/labs-platform-integration` HEAD to Preview and verify the owner browser journey listed in Phase 4 acceptance: final-keystroke Run, Save Draft content hash, Build & Publish exact version ID, file operations, discard/restore, busy-state locking, editor theme, keyboard behavior and fallback. The clean sandbox build is not a substitute for this deployed owner QA.
+
+
+## Phase 5 implementation progress — 7 November 2026
+
+**Immutable version-history source viewer migrated to read-only Monaco.**
+
+Implemented in `src/app/components/labs/admin/LabSourceEditor.js`:
+- Replaced the historical modal's plain `pre/code` block with shared `LabCodeEditor`.
+- The modal retains the immutable version label, full content hash, file tabs, active-file path and language labels, and the existing Restore as new draft action.
+- Historical editor mode is explicitly read-only and has no `onChange` handler.
+- Monaco model identity is scoped with `scope="history"`, experiment slug, the stored immutable `previewVersion.versionId` and the exact historical file path. It cannot collide with the editable creator's `working-copy` or another historical version/file.
+- Historical content and language are passed directly from the owner-authorized version snapshot returned by the existing API. No formatting or content mutation is performed.
+- `keepCurrentModel={false}` ensures the historical Monaco model is disposed when the modal closes/unmounts. File switching selects the corresponding version-scoped model.
+- The existing owner-authorized version GET route and source-management snapshot lookup were not changed.
+- Restore still calls the existing `restoreVersion` flow and `/restore/[versionId]` endpoint. The restore service copies the selected immutable version's stored files into a newly saved draft with `basedOnVersionId` pointing to the historical version. No historical record is edited.
+
+Added `tests/labs-source-history-monaco.test.mjs` with six checks for shared read-only Monaco, history/version/file model isolation, historical file-tab/content behavior, model cleanup on modal close, Restore ancestry/new-draft semantics and owner authorization/immutable snapshot response. Added `test:labs-history` to the production build script.
+
+### Phase 5 verification — 7 November 2026
+
+- Monaco foundation: 6/6 passed.
+- Protected source reader: 5/5 passed.
+- Source creator contract/state: 12/12 passed.
+- Version-history Monaco: 6/6 passed.
+- Media: 9/9 passed.
+- Labs analytics: 15/15 passed.
+- ESLint passed for the source editor, shared Monaco component, editor config and history test.
+- SEO validation passed with zero warnings.
+- Clean-checkout Next.js 16.4.3 production build passed; all 17 static pages generated and all Labs routes compiled.
+- Self-hosted Monaco assets copied successfully by `prebuild`.
+
+**Still pending for full Phase 5 acceptance:**
+1. Open a Vercel Preview while authenticated as the owner and verify historical versions load without altering current working-copy text.
+2. Switch across several files and different immutable versions; confirm the correct source, language and content hash each time.
+3. Close/reopen the modal and confirm no stale historical model leaks into the next view.
+4. Restore an older version and confirm it creates a new draft while the original version/hash stays unchanged.
+5. Verify keyboard navigation, light/dark themes, modal sizing on mobile/tablet/desktop and the plain-text fallback if Monaco assets fail.
+
+Phases 1–5 are implemented in branch source. Phase 6 (responsive/accessibility/performance polish) and Phase 7 (full Preview and owner workflow regression) remain. Production has not been promoted.
