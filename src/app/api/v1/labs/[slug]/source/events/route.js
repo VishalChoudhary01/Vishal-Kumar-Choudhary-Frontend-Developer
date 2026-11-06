@@ -6,6 +6,7 @@ import LabSource from "@/app/lib/labs/models/LabSource";
 import LabSourceVersion from "@/app/lib/labs/models/LabSourceVersion";
 import { recordVerifiedSourceEvent } from "@/app/lib/labs/engagement";
 import { getPublishedLabExperimentBySlug } from "@/app/data/labsExperiments";
+import { isPublishedCustomLabSlug } from "@/app/lib/labs/public-experiments";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,7 +30,24 @@ function json(body, status = 200) {
 export async function POST(request, { params }) {
   const { slug } = await params;
 
-  if (!SLUG_PATTERN.test(slug || "") || !getPublishedLabExperimentBySlug(slug)) {
+  if (!SLUG_PATTERN.test(slug || "")) {
+    return json({ error: { code: "NOT_FOUND", message: "Experiment not found." } }, 404);
+  }
+
+  // Code-owned experiments are resolved from the static catalogue. Owner-
+  // created experiments must have a published source and a ready artifact
+  // whose sourceVersionId still matches the published source pointer.
+  let isPublishedExperiment = Boolean(getPublishedLabExperimentBySlug(slug));
+  if (!isPublishedExperiment) {
+    try {
+      isPublishedExperiment = await isPublishedCustomLabSlug(slug);
+    } catch (error) {
+      console.error("[labs-source-event] experiment lookup failed:", error?.code || "EXPERIMENT_LOOKUP_ERROR");
+      return json({ error: { code: "EVENT_UNAVAILABLE", message: "This action is temporarily unavailable." } }, 503);
+    }
+  }
+
+  if (!isPublishedExperiment) {
     return json({ error: { code: "NOT_FOUND", message: "Experiment not found." } }, 404);
   }
 
