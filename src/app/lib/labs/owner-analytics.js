@@ -145,11 +145,11 @@ export async function getLabsOwnerAnalytics({ user, days = 30 }) {
       getPublishedCustomLabExperiments(),
     ]);
 
-  const rows = createExperimentRows([
+  const experimentRows = createExperimentRows([
     ...publishedLabExperiments,
     ...customExperiments,
   ]);
-  const eventRows = applyAnalyticsEventGroups(rows, eventGroups);
+  const eventRows = applyAnalyticsEventGroups(experimentRows, eventGroups);
   const rowsWithLikes = applyActiveLikeGroups(
     eventRows,
     verifiedLikeGroups,
