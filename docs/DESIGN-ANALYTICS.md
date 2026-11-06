@@ -1,6 +1,6 @@
 # Design Specification — Analytics Dashboard
 
-**Status:** Product/design authority. Initial owner source-engagement aggregation exists on `feat/labs-platform-integration`; dedicated Analytics routing, complete custom-experiment/event coverage, live refresh and the full dashboard design remain incomplete. This document defines the analytics experience and metric semantics; delivery order is in [the Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md).  
+**Status:** Product/design authority. Initial owner source-engagement aggregation exists on `feat/labs-platform-integration`; dedicated Analytics routing, complete custom-experiment/event coverage, live refresh and the full dashboard implementation remain incomplete. This document defines the analytics experience and metric semantics; delivery order is in [the Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md).  
 **Related:** [PRD](./PRD.md), [Admin design](./DESIGN-ADMIN.md), [Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md)
 
 ## 1. Purpose
