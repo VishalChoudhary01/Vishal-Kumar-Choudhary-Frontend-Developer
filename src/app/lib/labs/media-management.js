@@ -479,20 +479,18 @@ export async function deleteOwnerLabMediaAssetsForExperiment({ user, slug }) {
 }
 
 
-const GALLERY_PREVIEW_FORMATS = new Set(["jpg", "jpeg", "png", "webp", "avif"]);
-const GALLERY_PREVIEW_MAX_BYTES = 5 * 1024 * 1024;
+const GALLERY_IMAGE_FORMATS = new Set(["jpg", "jpeg", "png", "webp", "avif", "gif"]);
+const GALLERY_VIDEO_FORMATS = new Set(["mp4", "webm"]);
 
 function galleryPreviewMime(format) {
   return ({
-    jpg: "image/jpeg",
-    jpeg: "image/jpeg",
-    png: "image/png",
-    webp: "image/webp",
-    avif: "image/avif",
+    jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png",
+    webp: "image/webp", avif: "image/avif", gif: "image/gif",
+    mp4: "video/mp4", webm: "video/webm",
   })[format] || null;
 }
 
-function matchesImageSignature(bytes, format) {
+function matchesGalleryMediaSignature(bytes, format) {
   if (!Buffer.isBuffer(bytes)) return false;
   if (format === "jpg" || format === "jpeg") {
     return bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
@@ -511,13 +509,19 @@ function matchesImageSignature(bytes, format) {
     return bytes.length >= 16 && box.startsWith("ftyp") &&
       (box.includes("avif") || box.includes("avis"));
   }
+  if (format === "gif") {
+    const signature = bytes.toString("ascii", 0, 6);
+    return bytes.length >= 10 && (signature === "GIF87a" || signature === "GIF89a");
+  }
+  if (format === "mp4") return bytes.length >= 12 && bytes.toString("ascii", 4, 8) === "ftyp";
+  if (format === "webm") return bytes.length >= 4 && bytes.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3]));
   return false;
 }
 
 /**
- * Promote one owner-uploaded private still image into an immutable public
- * gallery derivative. It is bound to the exact currently published artifact
- * and source version; a later publish automatically makes this poster ineligible.
+ * Promote one verified owner-uploaded image, GIF or video into a public
+ * gallery media reference. It is bound to the exact currently published
+ * artifact and source version; a later publish makes it ineligible.
  */
 export async function saveOwnerLabGalleryPreview({ user, slug, assetId, altText = "", fit = "cover" }) {
   if (!isLabsOwner(user)) fail("OWNER_ACCESS_DENIED", "Owner access is required.");
@@ -573,7 +577,7 @@ export async function saveOwnerLabGalleryPreview({ user, slug, assetId, altText 
   }
 
   if (typeof assetId !== "string" || !mongoose.isValidObjectId(assetId)) {
-    fail("MEDIA_INVALID", "Choose a valid image from this experiment's media library.");
+    fail("MEDIA_INVALID", "Choose a valid image, GIF or video from this experiment's media library.");
   }
   if (safeAltText.length > 300) {
     fail("MEDIA_INVALID", "Gallery preview alt text is too long.");
@@ -607,20 +611,22 @@ export async function saveOwnerLabGalleryPreview({ user, slug, assetId, altText 
     _id: new mongoose.Types.ObjectId(assetId),
     experimentSlug: slug,
     ownerUserId: user.id,
-    mediaKind: "image",
     deliveryType: "authenticated",
     status: "ready",
-    format: { $in: [...GALLERY_PREVIEW_FORMATS] },
+    $or: [
+      { mediaKind: "image", format: { $in: [...GALLERY_IMAGE_FORMATS] } },
+      { mediaKind: "video", format: { $in: [...GALLERY_VIDEO_FORMATS] } },
+    ],
   }).lean();
   if (!asset) {
-    fail("MEDIA_INVALID", "Choose a ready JPEG, PNG, WebP or AVIF image owned by this experiment. GIF and video files cannot be public gallery posters.");
+    fail("MEDIA_INVALID", "Choose a ready JPEG, PNG, WebP, AVIF, GIF, MP4 or WebM asset owned by this experiment.");
   }
 
   const { client } = getCloudinary();
   let remote;
   try {
     remote = await client.api.resource(asset.cloudinaryPublicId, {
-      resource_type: "image",
+      resource_type: asset.mediaKind,
       type: "authenticated",
     });
   } catch {
@@ -630,17 +636,23 @@ export async function saveOwnerLabGalleryPreview({ user, slug, assetId, altText 
   const format = String(remote?.format || "").toLowerCase();
   const mime = galleryPreviewMime(format);
   const remoteBytes = Number(remote?.bytes || 0);
+  const configuredMaxBytes = Number(process.env.LABS_MEDIA_MAX_UPLOAD_BYTES);
+  const formatAllowed = asset.mediaKind === "image"
+    ? GALLERY_IMAGE_FORMATS.has(format)
+    : asset.mediaKind === "video" && GALLERY_VIDEO_FORMATS.has(format);
   if (
     remote?.public_id !== asset.cloudinaryPublicId ||
-    remote?.resource_type !== "image" ||
+    remote?.resource_type !== asset.mediaKind ||
     remote?.type !== "authenticated" ||
     !mime ||
-    !GALLERY_PREVIEW_FORMATS.has(format) ||
+    !formatAllowed ||
+    !Number.isSafeInteger(configuredMaxBytes) ||
+    configuredMaxBytes <= 0 ||
     !Number.isSafeInteger(remoteBytes) ||
     remoteBytes <= 0 ||
-    remoteBytes > GALLERY_PREVIEW_MAX_BYTES
+    remoteBytes > configuredMaxBytes
   ) {
-    fail("MEDIA_INVALID", "The image did not pass the public gallery poster format or 5 MB size policy.");
+    fail("MEDIA_INVALID", "The selected media did not pass the verified public gallery format or configured size policy.");
   }
 
   const privateUrl = createOwnerPreviewUrl(client, {
@@ -678,9 +690,9 @@ export async function saveOwnerLabGalleryPreview({ user, slug, assetId, altText 
     bytes.length === 0 ||
     bytes.length > GALLERY_PREVIEW_MAX_BYTES ||
     bytes.length !== remoteBytes ||
-    !matchesImageSignature(bytes, format)
+    !matchesGalleryMediaSignature(bytes, format)
   ) {
-    fail("MEDIA_INVALID", "The downloaded image did not match Cloudinary's verified format and size.");
+    fail("MEDIA_INVALID", "The downloaded media did not match Cloudinary's verified format and size.");
   }
 
   const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
@@ -722,6 +734,8 @@ export async function saveOwnerLabGalleryPreview({ user, slug, assetId, altText 
     assetId: asset._id,
     src: publicUrl.toString(),
     alt: safeAltText,
+    mediaKind: asset.mediaKind,
+    contentType: mime,
     fit: safeFit,
     artifactId: artifact.artifactId,
     sourceVersionId: artifact.sourceVersionId,
