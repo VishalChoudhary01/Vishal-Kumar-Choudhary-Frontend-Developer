@@ -1,4 +1,4 @@
-# 3d-image-gallery
+# 3D Image Gallery
 
 **Status:** Spec locked · **Category:** Advanced visual effects
 

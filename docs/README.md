@@ -14,8 +14,8 @@ This documentation defines the proposed portfolio platform extension. It is not 
 8. `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md` — source of truth for owner Run, isolated compiler/runtime, immutable published artifacts, runtime and media release gates.
 9. `LABS-GALLERY-ENGAGEMENT-AND-LIVE-UI-IMPLEMENTATION.md` — current code record for gallery eligibility, explicit public still-image posters, combined likes, anonymous identity, owner liker drilldown, Chart.js and toast behavior.
 10. `DESIGN-LAB.md` — public Labs UX requirements, gallery card hierarchy, runtime/source interactions, accessibility and performance expectations.
-11. [Motion Lab component specification system](./MOTION-LAB/README.md) — locked visual design system, Motion engineering standard, mandatory AI-agent protocol, component inventory and one build-ready specification per component.
 10. Existing project-level source-of-truth documents and current implementation — authoritative for current behavior and technical conventions. Inspect before changing code.
+11. [Motion Lab component specification system](./MOTION-LAB/README.md) — locked visual design system, Motion engineering standard, mandatory AI-agent protocol, component inventory and one build-ready specification per component.
 
 ## Locked baseline
 - Preserve the current public portfolio home page, project detail pages, education section, design, responsive behavior, animation, SEO, accessibility, and functionality.
