@@ -100,7 +100,11 @@ export default async function LabsPage() {
         <LabsIntroduction
           experimentCount={experiments.length}
           categoryCount={
-            new Set(experiments.map((experiment) => experiment.category)).size
+            new Set(
+              experiments
+                .map((experiment) => experiment.category)
+                .filter((category) => typeof category === "string" && category.trim()),
+            ).size
           }
           authState={authState}
           featuredHref={
