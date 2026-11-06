@@ -54,14 +54,21 @@ test("empty, malformed and invalid collections cannot create a featured placehol
   assert.equal(resolveFeaturedExperiment([{ slug: "good", title: "Good" }], "../good"), null);
 });
 
-test("route resolves the featured item from the same published list sent to the gallery", () => {
+test("route resolves the spotlight from the same eligible initial set delivered to the collection", () => {
   assert.match(dataSource, /FEATURED_LAB_EXPERIMENT_SLUG/);
-  assert.match(routeSource, /resolveFeaturedExperiment\(\s*experiments,/);
-  assert.match(routeSource, /<FeaturedExperiment experiment=\{featuredExperiment\}/);
-  assert.match(routeSource, /<LabsCollection experiments=\{experiments\}/);
+  assert.match(routeSource, /getPublishedCustomLabExperimentPage\\(/);
+  assert.match(
+    routeSource,
+    /const experiments = \\[\\.\\.\\.publishedLabExperiments, \\.\\.\\.customPage\\.experiments\\];/,
+  );
+  assert.match(routeSource, /resolveFeaturedExperiment\\(\\s*experiments,/);
+  assert.match(routeSource, /<FeaturedExperiment experiment=\\{featuredExperiment\\}/);
+  assert.match(
+    routeSource,
+    /<LabsCollection\\s+builtInExperiments=\\{publishedLabExperiments\\}\\s+initialCustomPage=\\{customPage\\}/,
+  );
   assert.doesNotMatch(routeSource, /featuredLabExperiment/);
 });
-
 test("spotlight is a media-only detail link and respects reduced motion", () => {
   assert.match(spotlightSource, /useReducedMotion/);
   assert.match(spotlightSource, /whileInView="visible"/);
