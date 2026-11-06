@@ -33,11 +33,23 @@ export async function PUT(request, { params }) {
     );
   }
 
+  if (
+    !body ||
+    typeof body !== "object" ||
+    !Object.prototype.hasOwnProperty.call(body, "assetId") ||
+    (body.assetId !== null && typeof body.assetId !== "string")
+  ) {
+    return adminJson(
+      { error: { code: "INVALID_REQUEST", message: "Choose an image or explicitly remove the current gallery poster." } },
+      400,
+    );
+  }
+
   try {
     const data = await saveOwnerLabGalleryPreview({
       user,
       slug,
-      assetId: body?.assetId ?? null,
+      assetId: body.assetId,
       altText: body?.altText ?? "",
       fit: body?.fit ?? "cover",
     });
