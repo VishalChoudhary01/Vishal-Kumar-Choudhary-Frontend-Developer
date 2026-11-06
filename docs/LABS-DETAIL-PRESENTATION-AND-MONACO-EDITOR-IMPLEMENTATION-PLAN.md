@@ -410,7 +410,7 @@ This plan is the acceptance contract for the next implementation work. Update it
 
 ### Phase 1 implementation progress — 6 November 2026
 
-**Code committed; deployed browser QA still pending.**
+**Code committed; regression tests passed; deployed browser QA still pending.**
 
 Implemented in the current branch:
 - Public \`galleryPreview\` schema now stores the actual uploaded media width and height from the already-verified Cloudinary asset record.
@@ -425,7 +425,7 @@ Implemented in the current branch:
 **No Run/Save/Publish code path was modified in Phase 1.** The Studio textarea, current React \`files\` state, temporary Run preview, draft APIs, version history, publish flow, compiler sandbox and poster capture worker are unchanged.
 
 **Still required before Phase 1 can be marked complete:**
-1. Run the new media test suite and full Next.js production build.
+1. Complete a Git-connected Vercel Preview build from the latest branch commit and confirm the full Next.js production build.
 2. Inspect the Preview detail page at mobile, tablet and desktop.
 3. Verify a real portrait, landscape, square image, generated 1200×900 poster, animated GIF, MP4 and WebM. Confirm there is no stretch/crop and the bounded detail height remains usable.
 4. Verify gallery cards remain consistently framed and contain media.
@@ -433,3 +433,6 @@ Implemented in the current branch:
 6. Verify the detail page still makes no executable iframe/runtime request.
 
 Do not start Monaco integration until this Phase 1 gate is green.
+
+
+**Verification update:** On 6 November 2026, the isolated test sandbox ran `npm run test:labs-media` (9 passing cases) and `npm run test:labs-analytics` (passed). A TypeScript parser syntax pass also succeeded for all changed JSX/JS application files. The latest Vercel READY deployment visible during this check was built from an earlier commit (`e0177880`), not the current branch HEAD; no claim is made that the current Phase 1 code is deployed or browser-accepted yet.
