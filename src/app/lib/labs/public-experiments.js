@@ -206,6 +206,20 @@ function buildPublishedEligibilityStages({ category, cursorMatch = null } = {}) 
     { $match: experimentMatch },
     ...(cursorMatch ? [{ $match: cursorMatch }] : []),
     {
+      $project: {
+        _id: 1,
+        slug: 1,
+        title: 1,
+        description: 1,
+        explanation: 1,
+        category: 1,
+        technologies: 1,
+        galleryPreview: 1,
+        publishedAt: 1,
+        updatedAt: 1,
+      },
+    },
+    {
       $lookup: {
         from: LabSource.collection.name,
         localField: "slug",
