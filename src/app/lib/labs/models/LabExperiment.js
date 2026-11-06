@@ -63,6 +63,18 @@ const labExperimentSchema = new mongoose.Schema(
         message: "An experiment can have at most one optional fallback preview.",
       },
     },
+    // Public, static gallery artwork is separate from private runtime-fallback
+    // media. The artifact/version binding prevents an old poster from being
+    // displayed after a different source version is published.
+    galleryPreview: {
+      assetId: { type: mongoose.Schema.Types.ObjectId, default: null },
+      src: { type: String, default: null, maxlength: 2048 },
+      alt: { type: String, default: "", trim: true, maxlength: 300 },
+      fit: { type: String, enum: ["cover", "contain"], default: "cover" },
+      artifactId: { type: String, default: null, maxlength: 64 },
+      sourceVersionId: { type: String, default: null, maxlength: 64 },
+      createdAt: { type: Date, default: null },
+    },
     status: { type: String, required: true, enum: ["draft", "published", "deleting"], default: "draft", index: true },
     createdBy: { type: String, required: true, maxlength: 128 },
     updatedBy: { type: String, required: true, maxlength: 128 },
