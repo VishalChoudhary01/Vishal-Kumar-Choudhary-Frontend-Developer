@@ -1,7 +1,7 @@
 # Design Specification — Component Lab
 
 **Status:** Product/design authority aligned with the Labs Runtime and Media Plan. Implementation status and release gates are tracked in that plan; this document defines target UX, not proof of deployment readiness.  
-**Related:** [PRD](./PRD.md), [Admin design](./DESIGN-ADMIN.md), [Analytics design](./DESIGN-ANALYTICS.md)
+**Related:** [PRD](./PRD.md), [Admin design](./DESIGN-ADMIN.md), [Analytics design](./DESIGN-ANALYTICS.md), [Public Labs page redesign plan](./LABS-PUBLIC-PAGE-REDESIGN-PLAN.md)
 
 ## 1. Purpose and constraints
 The Lab is a public discovery surface for React components, Motion animations and frontend experiments. It must integrate with the existing portfolio's visual language while keeping source execution, code editor dependencies and Lab-only behavior away from the public homepage critical path.
@@ -228,3 +228,10 @@ Do not invent these items as locked decisions. The source-management specificati
 - Only server-derived owner capability may reveal that navigation item. Directly opening an owner URL must still run the owner guard.
 - Editing a protected Atlas snapshot does not update the public demo runtime. Existing public demos remain code-owned and are changed through the canonical repository and normal deployment workflow.
 - Do not imply that Save/Publish source executes code or updates the live demo. Any live preview of stored source is a separate isolated-preview design and security gate.
+
+
+## 14. Public Labs page redesign reference
+
+The phased public discovery-page redesign is tracked in **[Labs Public Page Redesign — Phased Plan](./LABS-PUBLIC-PAGE-REDESIGN-PLAN.md)**. It defines the hero, featured experiment, collection/card hierarchy, authentication-aware hero actions, reduced-motion statistics animation, category navigation and catalogue scaling.
+
+The existing Labs navbar is explicitly out of scope. The public route must continue to show only eligible published experiments, with the shared preview-media precedence and no executable source in gallery cards. The redesign plan does not replace this document's runtime, source-access, publication, engagement, privacy or media contracts.
