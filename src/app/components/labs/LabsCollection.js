@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import LabExperimentPreview from "./LabExperimentPreview";
 import LabLikeButton from "./LabLikeButton";
@@ -107,6 +108,7 @@ function LabCard({ experiment, index, total, engagement }) {
           slug={experiment.slug}
           initialData={engagement}
           loadOnMount={!engagement}
+          skipGuestCookieCleanup
           compact
         />
       </div>
@@ -186,6 +188,32 @@ function Gallery({
 }
 
 export default function LabsCollection({ experiments = [], engagementBySlug = {} }) {
+  const cleanupSlug = experiments.find(
+    (experiment) => engagementBySlug?.[experiment.slug]?.guestCookieCleanupRequired,
+  )?.slug || null;
+
+  useEffect(() => {
+    if (!cleanupSlug) return undefined;
+
+    const controller = new AbortController();
+    fetch(
+      "/api/v1/labs/" + encodeURIComponent(cleanupSlug) + "/engagement",
+      {
+        method: "GET",
+        cache: "no-store",
+        credentials: "same-origin",
+        headers: { Accept: "application/json" },
+        signal: controller.signal,
+      },
+    ).catch((error) => {
+      if (error?.name !== "AbortError") {
+        console.error("[labs-engagement] guest identity cleanup request failed");
+      }
+    });
+
+    return () => controller.abort();
+  }, [cleanupSlug]);
+
   const {
     activeCategory,
     setActiveCategory,
