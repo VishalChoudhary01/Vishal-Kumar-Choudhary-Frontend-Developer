@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useActionToast } from "@/app/providers/ActionToastProvider";
 import Link from "next/link";
 import {
@@ -79,6 +80,7 @@ function StateLabel({ state }) {
 }
 
 export default function LabSourceInventory() {
+  const router = useRouter();
   const { showToast } = useActionToast();
   const [items, setItems] = useState([]);
   const [query, setQuery] = useState("");
@@ -191,24 +193,23 @@ export default function LabSourceInventory() {
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(payload?.error?.message || "Could not create source.");
+        if (response.status === 409) {
+          await loadInventory({ quiet: true });
+        }
+        throw new Error(
+          payload?.error?.message ||
+            (response.status === 409
+              ? "A source workspace already exists. The inventory has been refreshed."
+              : "Could not create source."),
+        );
       }
 
-      setItems((current) =>
-        current.map((item) =>
-          item.slug === slug
-            ? {
-                ...item,
-                hasSource: true,
-                published: false,
-                draftVersionId: null,
-                latestVersion: null,
-                legacyVersion: "0.0",
-              }
-            : item,
-        ),
-      );
-      showToast("success", "Source workspace created.");
+      if (payload?.data?.slug !== slug) {
+        throw new Error("The server did not confirm the requested source workspace.");
+      }
+
+      showToast("success", "Source workspace created. Opening the editor…");
+      router.push("/admin/labs/sources/" + encodeURIComponent(payload.data.slug));
     } catch (reason) {
       setError(reason.message || "Could not create source.");
       showToast("error", reason.message || "Could not create source.");
