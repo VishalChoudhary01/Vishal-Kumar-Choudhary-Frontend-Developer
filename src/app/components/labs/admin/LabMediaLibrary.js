@@ -7,7 +7,6 @@ import { Image as ImageIcon, LoaderCircle, RefreshCw, Save, UploadCloud } from "
 const ACCEPT = "image/jpeg,image/png,image/webp,image/avif,image/gif,video/mp4,video/webm";
 const IMAGE_FORMATS = new Set(["jpg", "jpeg", "png", "webp", "avif", "gif"]);
 const VIDEO_FORMATS = new Set(["mp4", "webm"]);
-const GALLERY_FORMATS = new Set(["jpg", "jpeg", "png", "webp", "avif"]);
 const FALLBACK_ROLE = "fallback-preview";
 
 function formatBytes(value) {
@@ -155,7 +154,7 @@ export default function LabMediaLibrary({ slug }) {
         showToast("info", "Gallery poster saved; old image cleanup is pending.");
       } else {
         setMessage(assetId
-          ? "Public gallery poster saved for the exact published build. A later published version will require a new poster."
+          ? "Public gallery media saved for the exact published build. A later published version will require a new poster."
           : "Public gallery poster removed.");
         showToast("success", assetId ? "Gallery poster published." : "Gallery poster removed.");
       }
@@ -230,7 +229,7 @@ export default function LabMediaLibrary({ slug }) {
         uploaded += 1;
       }
       await loadAssets();
-      setMessage(uploaded + (uploaded === 1 ? " media asset uploaded." : " media assets uploaded.") + " Choose at most one only as fallback when code preview cannot run.");
+      setMessage(uploaded + (uploaded === 1 ? " media asset uploaded." : " media assets uploaded.") + " Choose a private fallback separately, or publish one uploaded asset as the public gallery/detail visual.");
       showToast("success", uploaded + (uploaded === 1 ? " fallback media asset uploaded." : " fallback media assets uploaded."));
     } catch (reason) {
       try { await loadAssets(); } catch { /* Keep the original upload error. */ }
@@ -249,7 +248,7 @@ export default function LabMediaLibrary({ slug }) {
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-brand">OPTIONAL FALLBACK MEDIA</p>
           <h2 id="labs-media-library-title" className="mt-1 text-base font-semibold">Fallback preview media</h2>
           <p className="mt-1 max-w-2xl text-xs leading-5 text-text-tertiary">
-            The interactive code preview is always primary. Private fallback media is used only when code preview cannot run. A separate JPEG, PNG, WebP or AVIF image can be explicitly promoted as a public static gallery poster.
+            The interactive code preview is always primary. Private fallback media is used only when code preview cannot run. An uploaded image, GIF or video can be explicitly promoted as the public gallery/detail visual. Otherwise the published code build receives an automatic screenshot when capture support is available.
           </p>
         </div>
         <label className={[
@@ -284,11 +283,11 @@ export default function LabMediaLibrary({ slug }) {
           <div className="min-w-0">
             <h3 id="labs-gallery-poster-title" className="text-xs font-semibold">Public gallery poster</h3>
             <p className="mt-1 max-w-2xl text-[10px] leading-5 text-text-tertiary">
-              Promoting an image copies it from private Cloudinary storage to public Vercel Blob storage. Anyone can view the image. It is tied to the exact currently published artifact and will be hidden automatically after a different source version is published.
+              Promoting an image, GIF or video copies it from private Cloudinary storage to public Vercel Blob storage. Anyone can view the selected media. It is tied to the exact published build and is hidden automatically after a different source version is published.
             </p>
           </div>
           <span className="border border-info/30 bg-info/5 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.08em] text-info">
-            Public image
+            Public media
           </span>
         </div>
         <label className="mt-3 block max-w-lg text-[10px] font-medium text-text-tertiary">
@@ -309,7 +308,7 @@ export default function LabMediaLibrary({ slug }) {
             className="inline-flex h-8 items-center gap-2 bg-brand px-3 text-[11px] font-semibold text-brand-contrast hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-40"
           >
             {savingGalleryPreview ? <LoaderCircle size={12} className="animate-spin" aria-hidden="true" /> : <Save size={12} aria-hidden="true" />}
-            {savingGalleryPreview ? "Saving…" : "Publish gallery poster"}
+            {savingGalleryPreview ? "Saving…" : "Publish gallery media"}
           </button>
           {assets.some((asset) => asset.isGalleryPreview) ? (
             <button
@@ -318,17 +317,17 @@ export default function LabMediaLibrary({ slug }) {
               disabled={savingGalleryPreview || busy || saving || loading}
               className="inline-flex h-8 items-center border border-border px-3 text-[11px] font-medium text-text-secondary hover:border-warning hover:text-warning disabled:opacity-40"
             >
-              Remove public poster
+              Remove public media
             </button>
           ) : null}
           {assets.some((asset) => asset.isGalleryPreview) ? (
             <span className="text-[10px] text-text-tertiary">
               {assets.find((asset) => asset.isGalleryPreview)?.isGalleryPreviewCurrent
-                ? "Current poster is visible in the public gallery."
-                : "Saved poster is stale and not displayed after the latest publish."}
+                ? "Current uploaded media is visible in the public gallery."
+                : "Saved media is stale and not displayed after the latest publish."}
             </span>
           ) : (
-            <span className="text-[10px] text-text-tertiary">No public gallery poster selected.</span>
+            <span className="text-[10px] text-text-tertiary">No uploaded gallery media selected. The automatic screenshot is used when available.</span>
           )}
         </div>
       </section>
@@ -357,7 +356,7 @@ export default function LabMediaLibrary({ slug }) {
                     <p className="mt-1 text-[10px] text-text-tertiary">{String(asset.format || "").toUpperCase()} · {formatBytes(asset.byteSize)}{asset.width && asset.height ? " · " + asset.width + "×" + asset.height : ""}{asset.durationSeconds ? " · " + asset.durationSeconds.toFixed(1) + "s" : ""}</p>
                     <p className="mt-2 text-[9px] font-semibold uppercase tracking-[0.08em] text-brand">Private · Ready</p>
                     {asset.roles?.includes(FALLBACK_ROLE) ? <p className="mt-1 text-[10px] text-text-secondary">Saved private fallback</p> : <p className="mt-1 text-[10px] text-text-tertiary">Not a fallback</p>}
-                    {asset.mediaKind === "image" && GALLERY_FORMATS.has(String(asset.format || "").toLowerCase()) ? (
+                    {asset.mediaKind === "image" || asset.mediaKind === "video" ? (
                       <label className="mt-2 flex items-center gap-2 text-[11px] font-medium text-text-secondary">
                         <input
                           type="radio"
@@ -367,12 +366,12 @@ export default function LabMediaLibrary({ slug }) {
                           disabled={busy || saving || savingGalleryPreview}
                           className="accent-[var(--brand)]"
                         />
-                        Use as public gallery poster
+                        Use as public gallery media
                       </label>
                     ) : null}
                     {asset.isGalleryPreview ? (
                       <p className="mt-1 text-[9px] font-medium text-info">
-                        {asset.isGalleryPreviewCurrent ? "Public poster · current release" : "Public poster · stale release"}
+                        {asset.isGalleryPreviewCurrent ? "Public media · current release" : "Public media · stale release"}
                       </p>
                     ) : null}
                     <label className="mt-3 flex items-center gap-2 text-[11px] font-medium text-text-secondary">
@@ -405,7 +404,7 @@ export default function LabMediaLibrary({ slug }) {
         </div>
       )}
       <p className="mt-3 text-[10px] leading-5 text-text-tertiary">
-        Supported fallback formats: JPEG, PNG, WebP, AVIF, GIF, MP4 and WebM. A successful code preview always takes precedence; fallback media is shown only when the runtime cannot run or is unsupported.
+        Supported upload formats: JPEG, PNG, WebP, AVIF, GIF, MP4 and WebM. Select any ready upload to show it in the public gallery and detail preview. Uploaded gallery media takes priority over the automatically generated screenshot; neither replaces the interactive code runtime.
       </p>
     </section>
   );
