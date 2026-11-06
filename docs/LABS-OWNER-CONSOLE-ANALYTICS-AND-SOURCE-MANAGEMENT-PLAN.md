@@ -436,6 +436,14 @@ The READY live-dashboard Preview was `dpl_2q1CRakZTVJw2QLMNUsDFL6EBThQ` at `e267
 
 Previous READY Preview verification: **6 tests passed, 0 failed**. Current expanded Node suite contains 12 cases; its automated Preview run is pending.
 
+### Latest Phase 6 build blocker — 2026-11-06
+
+- Current branch HEAD: `b772a775d4381f4bae299511f18fd331278803cb`.
+- The last READY test-gated deployment remains `dpl_JB5bK44KScheRZeiE9cjTRvxE2Kh`, built from `b015a1aa38c0ed543b14a2e440de5cfecb195062`; that deployment contains the earlier six-test suite and does **not** include the latest aggregation helper/rate-limit changes.
+- A new Preview deployment was requested for the current HEAD. Vercel rejected it with HTTP 402 `api-deployments-free-per-day` and `retryAfter=86400` (24 hours). No billing or deployment-target settings were changed.
+- The current 12-test suite and MongoDB source-event rate limiter are committed but **not build-verified**. Retry a Preview build after Vercel's quota window resets; then confirm all 12 tests pass, SEO validation, Next.js compile, route manifest and protected endpoint responses.
+- Do not treat the older READY preview as proof of these Phase 6 changes.
+
 ### Phase 6 event-attribution and abuse-control hardening — 2026-11-06
 
 | Item | Status | Evidence / remaining check |
