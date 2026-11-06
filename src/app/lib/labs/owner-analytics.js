@@ -79,7 +79,7 @@ export async function getLabsOwnerAnalytics({ user, days = 30 }) {
   const [eventGroups, verifiedLikeGroups, guestLikeGroups, dailyGroups, customExperiments] =
     await Promise.all([
       LabAnalyticsEvent.aggregate([
-        { $match: { occurredAt: { $gte: since } } },
+        { $match: { occurredAt: { $gte: since, $lte: generatedAt } } },
         {
           $group: {
             _id: {
