@@ -381,6 +381,117 @@ export async function listOwnerLabMediaAssets({ user, slug }) {
   ));
 }
 
+
+const POSTER_CAPTURE_VERSION = "playwright-chromium-v1";
+const POSTER_PLAYWRIGHT_VERSION = "1.65.0";
+const POSTER_CHROMIUM_VERSION = "158.0.8127.18";
+
+function isApprovedPublicBlobUrl(value) {
+  if (typeof value !== "string") return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" &&
+      url.hostname.endsWith(".public.blob.vercel-storage.com") &&
+      !url.username && !url.password && !url.port && !url.search && !url.hash;
+  } catch {
+    return false;
+  }
+}
+
+export async function getOwnerLabReleasePosterStatus({ user, slug }) {
+  if (!isLabsOwner(user)) fail("OWNER_ACCESS_DENIED", "Owner access is required.");
+  await assertCustomExperiment(slug);
+
+  const source = await LabSource.findOne({
+    slug,
+    published: true,
+    publishedVersionId: { $ne: null },
+    publishedArtifactId: { $ne: null },
+  })
+    .select("published publishedVersionId publishedArtifactId")
+    .lean();
+
+  if (!source) {
+    return { status: "not_published", artifactId: null, sourceVersionId: null };
+  }
+
+  const artifact = await LabBuildArtifact.findOne({
+    artifactId: source.publishedArtifactId,
+    experimentSlug: slug,
+    sourceVersionId: source.publishedVersionId,
+    status: "ready",
+  })
+    .select("artifactId sourceVersionId buildHash createdAt previewPoster")
+    .lean();
+
+  if (!artifact) {
+    return {
+      status: "artifact_missing",
+      artifactId: source.publishedArtifactId,
+      sourceVersionId: source.publishedVersionId,
+    };
+  }
+
+  const poster = artifact.previewPoster;
+  const base = {
+    artifactId: artifact.artifactId,
+    sourceVersionId: artifact.sourceVersionId,
+    buildHash: artifact.buildHash,
+    publishedAt: artifact.createdAt ? new Date(artifact.createdAt).toISOString() : null,
+  };
+
+  if (!poster) {
+    return { ...base, status: "not_generated", reasonCode: "poster_metadata_missing" };
+  }
+
+  if (poster.status === "unavailable") {
+    return {
+      ...base,
+      status: "unavailable",
+      reasonCode: typeof poster.reasonCode === "string" ? poster.reasonCode : "capture_failed",
+      captureVersion: poster.captureVersion || null,
+    };
+  }
+
+  const validPoster = poster.status === "ready" &&
+    poster.path === "__preview/gallery-poster.png" &&
+    poster.contentType === "image/png" &&
+    poster.captureVersion === POSTER_CAPTURE_VERSION &&
+    poster.playwrightVersion === POSTER_PLAYWRIGHT_VERSION &&
+    poster.browserVersion === POSTER_CHROMIUM_VERSION &&
+    Number.isSafeInteger(poster.byteSize) &&
+    poster.byteSize > 0 &&
+    poster.byteSize <= 8 * 1024 * 1024 &&
+    poster.width === 1200 &&
+    poster.height === 900 &&
+    typeof poster.contentHash === "string" &&
+    /^[a-f0-9]{64}$/.test(poster.contentHash) &&
+    isApprovedPublicBlobUrl(poster.url);
+
+  if (!validPoster) {
+    return { ...base, status: "invalid", reasonCode: "poster_metadata_invalid" };
+  }
+
+  return {
+    ...base,
+    status: "ready",
+    previewUrl:
+      "/api/v1/labs/" +
+      encodeURIComponent(slug) +
+      "/runtime/" +
+      encodeURIComponent(artifact.artifactId) +
+      "/__preview/gallery-poster.png",
+    contentType: "image/png",
+    byteSize: poster.byteSize,
+    width: poster.width,
+    height: poster.height,
+    contentHash: poster.contentHash,
+    captureVersion: poster.captureVersion,
+    playwrightVersion: poster.playwrightVersion,
+    browserVersion: poster.browserVersion,
+  };
+}
+
 export async function saveOwnerLabMediaAttachments({ user, slug, attachments: input }) {
   if (!isLabsOwner(user)) fail("OWNER_ACCESS_DENIED", "Owner access is required.");
   if (!Array.isArray(input) || input.length > 1) {
