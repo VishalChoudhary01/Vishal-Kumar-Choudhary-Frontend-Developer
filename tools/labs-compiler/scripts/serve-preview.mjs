@@ -50,39 +50,47 @@ if (!Number.isInteger(PORT) || PORT < 1024 || PORT > 65535) {
   fail("The preview port is invalid.");
 }
 
-function createBridge(targetOrigin) {
+function createBridge(targetOrigin, runId) {
   return [
     "<script>",
     "(() => {",
     "  const targetOrigin = " + JSON.stringify(targetOrigin) + ";",
+    "  const runId = " + JSON.stringify(runId) + ";",
+    "  let startupError = false;",
+    "  const send = (type, extra = {}) => {",
+    "    try { window.parent.postMessage({ type, runId, ...extra }, targetOrigin); } catch {}",
+    "  };",
     "  const report = (type, level, args) => {",
-    "    try {",
-    "      const message = args.map((value) => {",
-    "        if (typeof value === 'string') return value;",
-    "        try { return JSON.stringify(value); } catch { return String(value); }",
-    "      }).join(' ').slice(0, 1200);",
-    "      window.parent.postMessage({ type, level, message }, targetOrigin);",
-    "    } catch {}",
+    "    const message = args.map((value) => {",
+    "      if (typeof value === 'string') return value;",
+    "      try { return JSON.stringify(value); } catch { return String(value); }",
+    "    }).join(' ').slice(0, 1200);",
+    "    send(type, { level, message });",
     "  };",
     "  for (const level of ['log', 'info', 'warn', 'error']) {",
     "    const original = console[level].bind(console);",
     "    console[level] = (...args) => { original(...args); report('labs-preview-console', level, args); };",
     "  }",
     "  window.addEventListener('error', (event) => {",
+    "    startupError = true;",
     "    report('labs-preview-console', 'error', [event.message || 'Runtime error', event.filename ? event.filename + ':' + event.lineno + ':' + event.colno : '']);",
     "  });",
     "  window.addEventListener('unhandledrejection', (event) => {",
+    "    startupError = true;",
     "    report('labs-preview-console', 'error', [event.reason?.stack || event.reason?.message || event.reason || 'Unhandled promise rejection']);",
     "  });",
     "  window.addEventListener('load', () => {",
-    "    window.parent.postMessage({ type: 'labs-preview-ready' }, targetOrigin);",
+    "    requestAnimationFrame(() => requestAnimationFrame(() => {",
+    "      if (!startupError) send('labs-preview-ready');",
+    "    }));",
     "  }, { once: true });",
     "})();",
     "</script>",
   ].join("\n");
 }
 
-const bridge = createBridge(parentOrigin);
+const previewRunId = PREFIX.slice('/preview/'.length);
+const bridge = createBridge(parentOrigin, previewRunId);
 
 function safePathname(rawPathname) {
   let pathname;
