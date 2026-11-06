@@ -1,6 +1,6 @@
 # Labs Owner Console — Analytics and Source Management Plan
 
-**Status:** Active execution plan. Phase 0 baseline re-audit is complete. Phase 1 Analytics/Source Library route separation, Phase 2 initial custom-experiment analytics correctness, and Phase 3 metadata-only edit workflow are committed and Preview build-verified. Anonymous protected-route smoke tests pass; authenticated owner-browser, metadata save/conflict/audit and Atlas-backed event checks remain pending. Phase 4–6 and live refresh/richer analytics remain outstanding.  
+**Status:** Active execution plan. Phases 0–5 have implementation code committed; the route split, custom analytics correction, metadata editor, source creation handoff and initial live Analytics dashboard have Preview build coverage. Anonymous protected-route smoke tests pass. Authenticated owner actions, Atlas-backed reconciliation, visual/accessibility QA and ranking/experiment-detail analytics remain pending. Phase 6 regression/release verification and further analytics instrumentation remain outstanding.  
 **Audited branch:** `feat/labs-platform-integration`  
 **Audited commit:** `3cfacf96ec6847e78fa2fc8f83b9bd18cd573fad`  
 **Audit date:** 2026-11-06  
@@ -338,12 +338,12 @@ Work in small phases with separate reviewable commits. Do not begin a later phas
 | Shared owner navigation | Build-verified | `LabsOwnerNavigation` provides Analytics and Source Library destinations; account menu contains both links. Authenticated owner-menu interaction still needs browser QA |
 | Legacy reporting-period bookmarks | Route smoke-tested | Anonymous request to a valid `?days=30` bookmark returns the login page with `returnTo=/admin/labs/analytics`; code forwards valid 7/30/90/365 values |
 | Owner verification return path | Build-verified / partly smoke-tested | Notice validates exact allowed owner return paths; source editor and import pass their own destination. Verification completion itself still needs an authenticated browser test |
-| Source creation-to-editor handoff | Not started | Remains Phase 4; current inventory create behavior is intentionally unchanged |
+| Source creation-to-editor handoff | Code committed / Preview build-verified | LabSourceInventory validates the server-confirmed slug and opens the new workspace. A 409 conflict quietly refreshes inventory and never navigates to an unconfirmed path. Authenticated create/duplicate behavior against Atlas remains pending |
 | Custom experiment analytics + source event coverage | Code committed / build-verified | Owner aggregation now combines code-owned experiments with published custom experiments whose source version matches a ready artifact; source-open/copy event validation accepts the same published custom catalogue. Atlas-backed reconciliation and verified event round-trip are still pending |
 | Custom experiment metadata editor/PATCH | Code committed / build-verified | Preview route manifest contains `/admin/labs/experiments/[slug]/edit`; anonymous request returns login with the exact edit destination. Authenticated save, stale conflict and Atlas audit verification remain pending |
 | Complete daily date buckets | Code committed / build-verified | Analytics now emits a complete UTC date series with zero-activity days; zero-value days render zero-height bars and the empty state checks actual activity | 
-| Live polling, MotionNumber and richer chart | Not started | Remains Phase 5; the current page still uses its original server-loaded chart and static count treatment |
-| Build and protected-route smoke test | Passed | Vercel deployment `dpl_4smAhYYqvrcgr5YpEnDUCDjoym69` for the application changes reached READY; route manifest includes both new owner routes and existing editor/import routes. Anonymous route checks confirm login return destinations for Analytics, Source Library and Import, and legacy `?days=30` forwarding |
+| Live polling, MotionNumber and multi-series chart | Code committed / Preview build-verified on commit e2673785bd882a0b787318e9551d49e9b8e9e9468b | Visible-tab 10-second polling, visibility pause, abort/no-overlap, backoff, stale-data preservation and manual refresh are present. MotionNumber supports locale grouping; the chart shows four instrumented series and an accessible daily table. The last commit after this READY deployment only removes an unused import and has not received a separate Preview build due Vercel's daily deployment API quota |
+| Build and protected-route smoke test | Passed on latest functional Preview | Deployment dpl_2q1CRakZTVJw2QLMNUsDFL6EBThQ reached READY; route manifest includes Analytics, Source Library, source workspace and metadata editor. Anonymous route checks confirm page-specific login return destinations and legacy ?days=30 forwarding |
 
 ### Phase 2 initial code progress — 2026-11-06
 
@@ -382,6 +382,33 @@ The metadata-edit Preview deployment reached READY:
 
 This does not prove an authenticated owner save, conflict response or MongoDB audit transaction. Those tests remain required before Phase 3 is considered fully accepted.
 
+### Phase 4 source-workspace handoff — 2026-11-06
+
+| Item | Status | Evidence / remaining check |
+|---|---|---|
+| Confirmed creation response | Code committed / Preview build-verified | The inventory validates `payload.data.slug` against the requested canonical slug before navigation |
+| Automatic workspace navigation | Code committed / Preview build-verified | After a successful server response, the owner is sent directly to `/admin/labs/sources/[slug]`; no second Open workspace click is required |
+| Duplicate/conflict behavior | Code committed / Preview build-verified | A 409 triggers a quiet inventory refresh and an actionable message; it does not navigate to an unconfirmed path or retry creation automatically |
+| Authenticated create flow | Pending | Verify against a provisioned owner and actual eligible experiment in Atlas; confirm new workspace loads and is immediately editable |
+
+Preview deployment `dpl_AzAnNtSHEwjdbkE6qVCW5nQMPHhf` reached READY for commit `ddf5686526133f304376300a9435dbf79a2d0d53`. Its route manifest retained the Source Library, source workspace, import, metadata editor and Analytics routes.
+
+### Phase 5 live Analytics dashboard — 2026-11-06
+
+| Item | Status | Evidence / remaining check |
+|---|---|---|
+| Server-first data and owner authorization | Code committed / Preview build-verified | The Analytics Server Component retains the owner guard and initial aggregate query, then passes only the aggregate payload to the route-scoped client dashboard |
+| 10-second polling | Code committed / Preview build-verified | Uses the existing owner analytics GET endpoint and current reporting-period query |
+| Visibility and request lifecycle | Code committed / Preview build-verified | Polling pauses while hidden; focus/visibility resumes; AbortController cleans up; overlapping requests are prevented |
+| Failure behavior | Code committed / Preview build-verified | Exponential bounded backoff up to 60 seconds, manual refresh and visible stale/error banner; last successful data remains on screen |
+| Animated counters | Code committed / Preview build-verified | Reuses existing MotionNumber; locale support adds en-IN digit grouping; reduced-motion behavior remains within the existing component |
+| Multi-series trend chart | Code committed / Preview build-verified | Motion-driven SVG series for source opens, code copies, verified like actions and anonymous like actions; semantic theme variables; empty state and accessible daily data table |
+| Uninstrumented metrics | Intentionally not displayed | Experiment detail views, preview starts and preview interactions remain absent until events are defined and recorded; no fake zero metrics are added |
+| Authenticated refresh round-trip | Pending | Verify the owner dashboard updates after real accepted source/like/copy events, filters survive polling, stale state clears after recovery and no duplicate requests occur |
+| Visual/accessibility QA | Pending | Verify desktop/mobile widths, zoom, focus, screen reader table, light/dark semantic contrast, reduced motion and chart readability with real data |
+| Final HEAD Preview build | Pending | Functional build READY for e2673785bd882a0b787318e9551d49e9b8e9e9468b; cleanup-only HEAD 50b09ef3add5de456831e22955da77aa1f18fc70 has not been separately deployed because Vercel returned the free-plan daily deployment API quota limit (retry after 24 hours) |
+
+The READY live-dashboard Preview was `dpl_2q1CRakZTVJw2QLMNUsDFL6EBThQ` at `e2673785bd882a0b787318e9551d49e9b8e9e9468b`. Next.js compiled successfully in 20.3 seconds; SEO validation reported zero warnings. The route manifest contained Analytics, Source Library and existing owner workspace/editor routes. The subsequent `50b09ef3...` commit only removes an unused icon import; no runtime behavior changes, but a separate deployment could not be created because Vercel's free-plan API deployment limit was reached.
 ### Additional authorization discrepancy found during audit
 
 The current `src/app/lib/labs/owner-access.js` accepts either `LABS_OWNER_USER_ID` **or** `LABS_OWNER_EMAIL`, while the locked owner-identity decision in the source-management specification says `LABS_OWNER_USER_ID` only. This route-split slice deliberately does not remove the email fallback because doing so without checking the configured Preview environment could lock out the current owner. Reconcile the code and deployment configuration in the authorization verification phase before treating the owner-identity decision as enforced.
