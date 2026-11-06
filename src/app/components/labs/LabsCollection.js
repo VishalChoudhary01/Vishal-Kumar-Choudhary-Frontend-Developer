@@ -208,6 +208,7 @@ function Gallery({
   isLoadingCategory,
   loadError,
   onLoadMore,
+  onRetryCategory,
   engagementBySlug,
 }) {
   return (
@@ -245,9 +246,18 @@ function Gallery({
       </div>
 
       {loadError ? (
-        <p role="status" className="mt-6 text-center text-xs text-warning">
-          {loadError}
-        </p>
+        <div role="status" className="mt-6 flex flex-wrap items-center justify-center gap-3 text-xs text-warning">
+          <span>{loadError}</span>
+          {!hasMore ? (
+            <button
+              type="button"
+              onClick={onRetryCategory}
+              className="border-b border-warning/50 pb-0.5 font-semibold hover:border-warning focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            >
+              Retry category
+            </button>
+          ) : null}
+        </div>
       ) : null}
 
       {hasMore ? (
@@ -392,6 +402,7 @@ export default function LabsCollection({
                 isLoadingCategory={isLoadingCategory}
                 loadError={loadError}
                 onLoadMore={loadMore}
+                onRetryCategory={retryCategory}
                 engagementBySlug={engagementBySlug}
               />
             ) : (
