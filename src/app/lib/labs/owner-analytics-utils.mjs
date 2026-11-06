@@ -251,7 +251,9 @@ const SOURCE_EVENT_RATE_LIMITS = Object.freeze({
 });
 
 export function getSourceEventRateLimit(eventType) {
-  return SOURCE_EVENT_RATE_LIMITS[eventType] || null;
+  return Object.prototype.hasOwnProperty.call(SOURCE_EVENT_RATE_LIMITS, eventType)
+    ? SOURCE_EVENT_RATE_LIMITS[eventType]
+    : null;
 }
 
 export function evaluateFixedWindowRateLimit({
@@ -268,7 +270,7 @@ export function evaluateFixedWindowRateLimit({
   const currentTime = new Date(now);
 
   if (
-    !Number.isFinite(numericCount) ||
+    !Number.isInteger(numericCount) ||
     numericCount < 0 ||
     !Number.isFinite(numericWindow) ||
     numericWindow <= 0 ||
