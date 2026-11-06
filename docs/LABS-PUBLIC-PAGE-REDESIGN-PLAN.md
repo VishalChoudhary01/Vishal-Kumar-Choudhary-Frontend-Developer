@@ -1,6 +1,6 @@
 # Labs Public Page Redesign — Phased Plan
 
-**Status:** Planning only — no public-page UI implementation is included in this document update. Hero Motion, statistics count-up and authentication-aware CTAs are included in scope.  
+**Status:** Phase 1 hero implementation committed; automated, build and visual verification remain pending. Phases 2–5 remain planned. Hero Motion, statistics count-up and authentication-aware CTAs are included in scope.  
 **Branch:** `feat/labs-platform-integration`  
 **Updated:** 7 November 2026  
 **Scope:** Public `/labs` discovery page.  
@@ -376,3 +376,28 @@ Do not modify `src/app/components/layout/Navbar.js`, the Labs shell's navbar int
 ## 10. Implementation status
 
 This document is a plan and a set of constraints. No UI implementation phase is marked complete by creating or updating this file. Update each phase's status and evidence here as code, tests and Preview verification are completed. Production readiness must not be inferred from a Git commit alone.
+
+
+## 11. Phase 1 implementation progress — 7 November 2026
+
+**Status:** Code committed to `feat/labs-platform-integration`; acceptance and release verification pending.
+
+Implemented:
+- Replaced the text-and-stat-only introduction with a responsive two-column editorial hero. The existing `LabsIntroduction` component name and public route composition are retained.
+- Added the lightweight `LabsHeroArtwork` SVG illustration. It uses a connected-node/interaction-field concept, existing theme tokens and a small one-time Motion reveal. It is decorative and does not represent a fabricated experiment or execute experiment code.
+- Added coordinated `motion/react` entrance variants for the hero content.
+- Added one-time, in-view statistic count-up using MotionValues and `useTransform`, avoiding a React state update on every animation frame. The values come from the real published experiment array and its represented category count.
+- Added reduced-motion behavior: count values move directly to the final number and illustration/content transitions are disabled or reduced through the existing `useReducedMotion` provider convention.
+- Extracted `getLabsHeroActions` into `src/app/lib/labs/hero-cta.mjs`; guest, unverified, verified and unknown states are explicit. Featured experiment links are restricted to safe internal `/labs/:slug` paths.
+- Resolved the auth session on the server in `src/app/labs/page.js`. Auth runtime unavailability is classified as unknown, not as guest. Authentication destinations retain a safe `returnTo=/labs`.
+- Added `tests/labs-public-hero.test.mjs` for CTA state mapping, internal featured-link validation, server auth classification, MotionValue/count-up safeguards and reduced-motion illustration behavior. Added this suite to the production build test sequence as `test:labs-public-hero`.
+- Left `src/app/components/layout/Navbar.js`, its shell integration, the featured section, gallery, detail page, publication pipeline, likes and source access untouched.
+
+Verification still pending:
+- Execute `npm run test:labs-public-hero` in the repository checkout.
+- Run ESLint for changed files and the full production build (which includes the existing Labs suites and SEO validation).
+- Perform authenticated browser checks for guest, signed-in-unverified, verified and unknown/configuration-unavailable states.
+- Visually inspect desktop/tablet/mobile and light/dark themes, keyboard focus, reduced motion, 200%/400% zoom, artwork bounds and hero-to-featured spacing.
+- Confirm the existing navbar is visually and behaviorally unchanged in a Preview deployment created from the exact resulting branch commit.
+
+No claim of passing tests, production build, browser QA or deployment is made by this source commit.
