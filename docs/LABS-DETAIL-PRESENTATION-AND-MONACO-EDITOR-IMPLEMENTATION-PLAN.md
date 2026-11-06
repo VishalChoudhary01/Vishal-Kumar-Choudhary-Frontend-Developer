@@ -375,7 +375,7 @@ Do not add a second unsynchronized `editorFiles` persistence state. Do not read 
 | 0 | Baseline, dependency pin and regression contract | Existing Run/save/publish/source/like/media checks recorded |
 | 1 | Media aspect ratio and detail layout | Code/tests committed; complete Preview/browser media matrix and Like/static-detail QA |
 | 2 | Shared Monaco wrapper and self-hosted assets | Implemented; 6 config tests, ESLint, production build and local asset HTTP checks pass |
-| 3 | Public read-only source viewer | Pending integration using shared LabCodeEditor |
+| 3 | Public read-only source viewer | Implemented in source; 5 access/copy contract tests and production build pass; authenticated browser QA pending |
 | 4 | Editable Studio source creator | Pending integration using existing files state as authority |
 | 5 | Read-only version-history viewer | Pending integration with immutable version-scoped models |
 | 6 | Responsive/accessibility/performance polish | No page bundle regression or keyboard/focus issue |
@@ -401,7 +401,7 @@ Do not ship a phase that weakens a gate from an earlier phase. Use a Preview dep
 
 **Phase 1 implementation committed:** public media DTO now includes promoted upload dimensions and the known 1200×900 generated-poster dimensions; newly promoted media is normalized to `contain`; the shared renderer uses `object-contain`, measures browser intrinsic dimensions for legacy uploads and keeps broken-media fallbacks; the detail page no longer forces a 4:3/16:9 wrapper and instead uses natural height with a responsive maximum; detail header/explanation spacing was tightened; six media selection/dimension regression tests are included in every production build. Browser verification for portrait/landscape/square/GIF/video on the deployed Preview remains pending.
 
-**Still planned:** shared Monaco component, public read-only source viewer, editable owner source creator, read-only version history viewer, and their regression/performance/accessibility checks.
+**Implemented:** shared Monaco foundation and protected public read-only source viewer. **Still planned:** editable owner source creator, read-only version-history viewer, actual authenticated browser interaction QA, and remaining regression/performance/accessibility checks.
 
 **Not yet implemented by this plan:** Monaco package installation, local worker delivery, Monaco wrapper, any Monaco integration, and the new detail layout/media sizing changes.
 
@@ -486,3 +486,42 @@ A Git-connected Preview deployment built successfully with the Phase 1 and Phase
 The deployment build is READY. The browser inspection of `/labs/spotlightdock` reached Vercel's deployment-protection login page (HTTP 200 login HTML) instead of the application, so the browser automation could not inspect authenticated page content. This is an access gate, not an application rendering result. Phase 1 deployed visual acceptance remains pending until the owner opens the protected Preview while authenticated or provides an accessible Preview session.
 
 Phase 2 was validated by clean-checkout npm install, all unit suites, ESLint, full Next.js production build, and same-origin HTTP 200 checks for the local Monaco loader, editor entrypoint and TypeScript worker. An actual mounted Monaco browser interaction test is still pending because the component has not yet been integrated into the source reader or creator; those are later phases.
+
+
+## Phase 3 implementation progress — 6 November 2026
+
+**Protected public source viewer migrated to shared read-only Monaco.**
+
+Implemented in `src/app/components/labs/detail/LabSourceAccess.js`:
+- Replaced the old `pre/code` renderer with `LabCodeEditor`.
+- Monaco mounts only in the existing `state === "loaded" && source` branch. Guest, unverified, unpublished, session-mismatch, loading and error states do not mount the editor.
+- No server authorization logic or source endpoint changed. Initial source still comes from `getAuthorizedLabSource` in the Server Component; subsequent loads still use the existing protected `/source` endpoint.
+- Existing file tabs and selected-file state remain unchanged. The active file's original path and validated source language are passed to Monaco.
+- Reader identity is scoped by `scope="reader"`, experiment slug, published source version and file path.
+- Monaco is explicitly read-only; the public reader does not provide an `onChange` callback.
+- Reader uses `keepCurrentModel={false}` so the editor model is disposed when a protected source view unmounts (including session invalidation). The wrapper retains its normal configurable model behavior for the later creator integration.
+- Theme follows the resolved application light/dark theme.
+- Existing Copy file action still calls `navigator.clipboard.writeText(file.content)` on the exact validated selected file and records the same `code_copy` event with version and path. It does not copy a formatted/editor projection.
+- Existing `source_open` event, periodic session revalidation, auth-event invalidation, retry flow, guest CTA and email verification state are unchanged.
+- No executable workspace/iframe/runtime was added to the public detail page.
+
+Added `tests/labs-protected-source-reader.test.mjs` with five build-time contract tests covering authorized render gating, version/file model identity, exact full-file copy and code-copy event, session invalidation and removal of the previous pre/code renderer. The `test:labs-source-reader` script is now part of every production build.
+
+### Phase 3 verification — 6 November 2026
+
+- Monaco config tests: 6/6 passed.
+- Protected source-reader contract tests: 5/5 passed.
+- Media tests: 9/9 passed.
+- Labs analytics tests: 15/15 passed.
+- ESLint passed for `LabSourceAccess.js`, `LabCodeEditor.js`, the editor config helper and the new source-reader test.
+- SEO validation passed with zero warnings.
+- Clean-checkout Next.js 16.4.3 production build passed, including static page generation and all Labs source/publish routes.
+- Public source API route and source-event API route remain unchanged.
+
+**Still pending for full Phase 3 acceptance:**
+1. Verify an authenticated user opening the protected Preview sees Monaco and the correct active file; direct browser access to the Vercel Preview is protected by Vercel Authentication, and this check sandbox did not have an installed Chromium binary.
+2. Verify guest and unverified sessions do not load Monaco assets or receive source content.
+3. Verify copy and source_open/code_copy analytics in a real authenticated browser session.
+4. Verify theme switching, mobile sizing, keyboard navigation and reduced-motion behavior in the deployed Preview.
+
+No owner editor textarea, version-history viewer, file-management control, Run, Save Draft or Build & Publish handler was changed in Phase 3.
