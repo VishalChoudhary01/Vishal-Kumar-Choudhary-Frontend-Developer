@@ -384,6 +384,9 @@ export default function LabSourceInventory() {
                         </span>
                       ) : null}
                       <StateLabel state={state} />
+                      {item.isCustom && item.publicationReadiness?.eligible !== true && state !== "not-in-gallery" ? (
+                        <StateLabel state="not-in-gallery" />
+                      ) : null}
                     </div>
                     <p className="mt-1 truncate font-mono text-[10px] text-text-tertiary">{item.slug}</p>
                     {item.description ? (
@@ -425,7 +428,9 @@ export default function LabSourceInventory() {
                       href={"/admin/labs/sources/" + encodeURIComponent(item.slug)}
                       className="inline-flex h-9 items-center gap-2 border border-border px-3 text-xs font-semibold text-text-secondary transition-colors hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                     >
-                      Open workspace
+                      {item.isCustom && item.publicationReadiness?.eligible !== true
+                        ? "Continue to publish"
+                        : "Open workspace"}
                       <ArrowUpRight size={13} aria-hidden="true" />
                     </Link>
                     {item.isCustom ? (
