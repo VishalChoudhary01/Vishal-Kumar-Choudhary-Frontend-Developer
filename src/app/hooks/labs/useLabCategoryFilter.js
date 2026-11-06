@@ -2,36 +2,15 @@
 
 import { useMemo, useState } from "react";
 import { LAB_CATEGORIES } from "@/app/data/labsExperiments";
+import { buildLabCategoryOptions } from "@/app/lib/labs/category-options.mjs";
 
 export default function useLabCategoryFilter(experiments = []) {
   const [activeCategory, setActiveCategory] = useState("all");
 
-  const categories = useMemo(() => {
-    const counts = new Map();
-
-    for (const experiment of experiments) {
-      if (typeof experiment?.category !== "string" || !experiment.category.trim()) {
-        continue;
-      }
-
-      counts.set(
-        experiment.category,
-        (counts.get(experiment.category) || 0) + 1,
-      );
-    }
-
-    const availableCategories = LAB_CATEGORIES
-      .filter((category) => counts.has(category.name))
-      .map((category) => ({
-        ...category,
-        count: counts.get(category.name),
-      }));
-
-    return [
-      { id: "all", label: "All", count: experiments.length },
-      ...availableCategories,
-    ];
-  }, [experiments]);
+  const categories = useMemo(
+    () => buildLabCategoryOptions(experiments, LAB_CATEGORIES),
+    [experiments],
+  );
 
   const filteredExperiments = useMemo(() => {
     if (activeCategory === "all") return experiments;
