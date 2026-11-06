@@ -251,6 +251,10 @@ async function main() {
     });
 
     const page = await context.newPage();
+    const pageErrors = [];
+    page.on("pageerror", (error) => {
+      pageErrors.push(String(error?.message || "Runtime error").slice(0, 500));
+    });
     page.setDefaultNavigationTimeout(15_000);
     page.setDefaultTimeout(8_000);
 
@@ -274,7 +278,10 @@ async function main() {
         requestAnimationFrame(() => requestAnimationFrame(resolve))
       );
     });
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(750);
+    if (pageErrors.length) {
+      throw captureError("runtime_error", "The experiment raised a browser runtime error before screenshot capture.");
+    }
 
     const rendered = await inspectRenderedOutput(page);
     if (!rendered.visible) {
