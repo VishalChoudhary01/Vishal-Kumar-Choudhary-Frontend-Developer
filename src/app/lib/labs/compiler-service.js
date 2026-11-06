@@ -10,6 +10,8 @@ const COMPILER_TIMEOUT_MS = 45_000;
 const PREVIEW_TIMEOUT_MS = 10 * 60 * 1000;
 const MAX_OUTPUT_BYTES = 15 * 1024 * 1024;
 const MAX_OUTPUT_FILES = 80;
+const POSTER_CAPTURE_VERSION = "chromium-cli-v1";
+const MAX_POSTER_BYTES = 8 * 1024 * 1024;
 
 const CONTENT_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -214,6 +216,116 @@ async function executeBuild(sandbox, files, { base = "./" } = {}) {
   return { ...result, outputFiles: visibleFiles };
 }
 
+
+async function captureReleasePoster(sandbox, { slug, versionId, buildHash, token }) {
+  const resultPath = "/vercel/sandbox/gallery-poster-result.json";
+  const screenshotPath = "/vercel/sandbox/gallery-poster.png";
+  try {
+    const command = await sandbox.runCommand({
+      cmd: "node",
+      args: ["/vercel/labs-compiler/scripts/capture-poster.mjs"],
+      cwd: "/vercel/labs-compiler",
+      env: {
+        LABS_CAPTURE_BUILD_OUTPUT: "/vercel/sandbox/output",
+        LABS_CAPTURE_SCREENSHOT_PATH: screenshotPath,
+        LABS_CAPTURE_RESULT_PATH: resultPath,
+        LABS_CHROMIUM_EXECUTABLE_PATH: process.env.LABS_CHROMIUM_EXECUTABLE_PATH || "",
+      },
+      timeoutMs: 40_000,
+    });
+    const resultText = await sandbox.fs.readFile(resultPath, "utf8");
+    const capture = JSON.parse(resultText);
+    if (
+      command.exitCode !== 0 ||
+      capture?.status !== "ready" ||
+      capture?.captureVersion !== POSTER_CAPTURE_VERSION
+    ) {
+      const allowedReasons = new Set([
+        "browser_unavailable",
+        "capture_timeout",
+        "capture_failed",
+        "no_visible_output",
+        "invalid_output",
+      ]);
+      return {
+        status: "unavailable",
+        reasonCode: allowedReasons.has(capture?.reasonCode) ? capture.reasonCode : "capture_failed",
+        captureVersion: POSTER_CAPTURE_VERSION,
+      };
+    }
+
+    const bytes = await sandbox.readFileToBuffer({ path: screenshotPath });
+    const isPng = Buffer.isBuffer(bytes) &&
+      bytes.length >= 24 &&
+      bytes.length <= MAX_POSTER_BYTES &&
+      bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+    if (
+      !isPng ||
+      bytes.length !== capture.byteSize ||
+      bytes.readUInt32BE(16) !== 1200 ||
+      bytes.readUInt32BE(20) !== 900
+    ) {
+      return {
+        status: "unavailable",
+        reasonCode: "invalid_output",
+        captureVersion: POSTER_CAPTURE_VERSION,
+      };
+    }
+
+    const contentHash = createHash("sha256").update(bytes).digest("hex");
+    const stored = await put(
+      ["labs", slug, versionId, buildHash, "__preview", "gallery-poster.png"].join("/"),
+      bytes,
+      {
+        access: "public",
+        token,
+        addRandomSuffix: false,
+        allowOverwrite: false,
+        contentType: "image/png",
+      },
+    );
+    const url = new URL(stored.url);
+    if (
+      url.protocol !== "https:" ||
+      !url.hostname.endsWith(".public.blob.vercel-storage.com") ||
+      url.username ||
+      url.password ||
+      url.port ||
+      url.search ||
+      url.hash
+    ) {
+      return {
+        status: "unavailable",
+        reasonCode: "capture_failed",
+        captureVersion: POSTER_CAPTURE_VERSION,
+      };
+    }
+
+    return {
+      status: "ready",
+      path: "__preview/gallery-poster.png",
+      url: url.toString(),
+      contentType: "image/png",
+      byteSize: bytes.length,
+      width: 1200,
+      height: 900,
+      contentHash,
+      captureVersion: POSTER_CAPTURE_VERSION,
+      reasonCode: null,
+    };
+  } catch (error) {
+    console.warn("[labs-poster] automatic poster capture unavailable:", {
+      slug,
+      reason: String(error?.code || error?.message || "capture_failed").slice(0, 120),
+    });
+    return {
+      status: "unavailable",
+      reasonCode: "capture_failed",
+      captureVersion: POSTER_CAPTURE_VERSION,
+    };
+  }
+}
+
 export async function createOwnerLabPreview({ slug, user, inputFiles, parentOrigin }) {
   const files = prepareReactProject(validateFileNames(inputFiles));
   const runId = randomUUID();
@@ -322,6 +434,15 @@ export async function buildAndStoreOwnerLabRelease({ slug, user, version }) {
     const entry = uploaded.find((file) => file.path === "index.html");
     if (!entry) fail("ARTIFACT_ENTRY_MISSING", "The compiled release is missing its HTML entry point.");
 
+    // Capture the exact immutable build while the same network-denied sandbox
+    // is still alive. Poster failure is intentionally non-blocking for publish.
+    const previewPoster = await captureReleasePoster(sandbox, {
+      slug,
+      versionId: version.versionId,
+      buildHash: result.buildHash,
+      token,
+    });
+
     return {
       artifactId,
       experimentSlug: slug,
@@ -330,6 +451,7 @@ export async function buildAndStoreOwnerLabRelease({ slug, user, version }) {
       buildHash: result.buildHash,
       entryUrl: entry.url,
       outputFiles: uploaded,
+      previewPoster,
       compiler: result.compiler,
       createdBy: user.id,
       status: "ready",
