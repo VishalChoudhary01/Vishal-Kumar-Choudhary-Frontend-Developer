@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { spawn, spawnSync } from "node:child_process";
 import { prepareReactProject } from "../../../src/app/lib/labs/prepare-react-project.mjs";
+import { resolveGalleryPreviewSelection } from "../../../src/app/lib/labs/gallery-preview-policy.mjs";
 import { ensureSandboxInputDirectory } from "../../../src/app/lib/labs/sandbox-directory.mjs";
 import {
   buildPublishedRuntimeCsp,
@@ -23,6 +24,20 @@ function assertNear(actual, expected, label) {
   }
 }
 
+const generatedPosterFixture = { src: "/generated-poster.png", mediaKind: "image", contentType: "image/png", generated: true };
+const uploadedImageFixture = { src: "https://media.example/uploaded.webp", mediaKind: "image", contentType: "image/webp" };
+const uploadedGifFixture = { src: "https://media.example/uploaded.gif", mediaKind: "image", contentType: "image/gif" };
+const uploadedVideoFixture = { src: "https://media.example/uploaded.mp4", mediaKind: "video", contentType: "video/mp4" };
+const imageSelection = resolveGalleryPreviewSelection({ uploadedPreview: uploadedImageFixture, generatedPoster: generatedPosterFixture });
+if (imageSelection.galleryVisual !== uploadedImageFixture || imageSelection.thumbnail !== uploadedImageFixture) throw new Error("An uploaded image must replace the generated poster.");
+const gifSelection = resolveGalleryPreviewSelection({ uploadedPreview: uploadedGifFixture, generatedPoster: generatedPosterFixture });
+if (gifSelection.galleryVisual !== uploadedGifFixture || gifSelection.thumbnail !== uploadedGifFixture) throw new Error("An uploaded GIF must replace the generated poster.");
+const videoSelection = resolveGalleryPreviewSelection({ uploadedPreview: uploadedVideoFixture, generatedPoster: generatedPosterFixture });
+if (videoSelection.galleryVisual !== uploadedVideoFixture || videoSelection.thumbnail !== generatedPosterFixture) throw new Error("Uploaded video must drive the visual while the generated still remains the metadata thumbnail.");
+const automaticSelection = resolveGalleryPreviewSelection({ generatedPoster: generatedPosterFixture });
+if (automaticSelection.galleryVisual !== generatedPosterFixture || automaticSelection.thumbnail !== generatedPosterFixture) throw new Error("A generated poster must be selected when no upload exists.");
+const artworkSelection = resolveGalleryPreviewSelection({});
+if (artworkSelection.galleryVisual !== null || artworkSelection.thumbnail !== null) throw new Error("Missing media must retain the artwork fallback.");
 if (
   MAGNETIC_SPRING.stiffness !== 280 ||
   MAGNETIC_SPRING.damping !== 24 ||
@@ -676,7 +691,7 @@ try {
   }
 
   process.stdout.write(
-    "PASS: idempotent sandbox input setup, nested Fluid Gradient HTML with inline CSS/Canvas JavaScript, static HTML/CSS/JS builds and asset delivery, CSS-only builds, JSX + TSX type checking, React 19, Motion, Lucide, React Icons, Tailwind v4, CSP, isolated preview HTTP server/bridge, traversal blocking and invalid-type rejection.\n",
+    "PASS: upload-vs-generated gallery precedence, idempotent sandbox input setup, nested Fluid Gradient HTML with inline CSS/Canvas JavaScript, static HTML/CSS/JS builds, CSS-only builds, JSX + TSX type checking, React 19, Motion, Lucide, React Icons, Tailwind v4, CSP, isolated preview HTTP server/bridge, traversal blocking and invalid-type rejection.\n",
   );
 } finally {
   await Promise.all([
