@@ -35,6 +35,12 @@ export default function LabExperimentPreview({
   // Uploaded and generated media must preserve their intrinsic proportions.
   // The stage may letterbox portrait/square assets; it must never crop or stretch them.
   const fitClass = "object-contain object-center";
+  const intrinsicWidth = Number.isSafeInteger(activePreview?.width) && activePreview.width > 0
+    ? activePreview.width
+    : 1200;
+  const intrinsicHeight = Number.isSafeInteger(activePreview?.height) && activePreview.height > 0
+    ? activePreview.height
+    : 900;
 
   if (activePreview?.src && activePreview.mediaKind === "video") {
     return (
@@ -42,6 +48,8 @@ export default function LabExperimentPreview({
         src={activePreview.src}
         poster={generatedPoster?.src || undefined}
         aria-label={activePreview.alt || experiment?.title || "Experiment video preview"}
+        width={intrinsicWidth}
+        height={intrinsicHeight}
         autoPlay
         muted
         loop
@@ -63,8 +71,8 @@ export default function LabExperimentPreview({
           key={activePreview.src}
           src={activePreview.src}
           alt={activePreview.alt || ""}
-          width={900}
-          height={675}
+          width={intrinsicWidth}
+          height={intrinsicHeight}
           sizes={sizes}
           priority={activePreview.priority === true}
           unoptimized={isGif}
@@ -79,8 +87,8 @@ export default function LabExperimentPreview({
           <Image
             src={generatedPoster.src}
             alt={activePreview.alt || ""}
-            width={900}
-            height={675}
+            width={intrinsicWidth}
+            height={intrinsicHeight}
             sizes={sizes}
             unoptimized
             onError={() => setFailedSrc(generatedPoster.src)}
