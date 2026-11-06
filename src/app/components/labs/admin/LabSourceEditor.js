@@ -107,6 +107,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
   const [previewVersion, setPreviewVersion] = useState(null);
   const [previewFileIndex, setPreviewFileIndex] = useState(0);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [publishStage, setPublishStage] = useState("");
   function moveFile(fromIndex, toIndex) {
     if (
       busy ||
@@ -372,18 +373,34 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
   }
 
   async function requestJson(url, method = "GET", body) {
-    const response = await fetch(url, {
-      method,
-      cache: "no-store",
-      credentials: "same-origin",
-      headers: {
-        Accept: "application/json",
-        ...(body ? { "Content-Type": "application/json" } : {}),
-      },
-      ...(body ? { body: JSON.stringify(body) } : {}),
-    });
+    let response;
+    try {
+      response = await fetch(url, {
+        method,
+        cache: "no-store",
+        credentials: "same-origin",
+        headers: {
+          Accept: "application/json",
+          ...(body ? { "Content-Type": "application/json" } : {}),
+        },
+        ...(body ? { body: JSON.stringify(body) } : {}),
+      });
+    } catch (reason) {
+      if (reason?.name === "AbortError") {
+        throw new Error("The request was cancelled before the server finished.");
+      }
+      throw new Error("The owner request could not reach the server. Check your connection and retry.");
+    }
+
     const payload = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(payload?.error?.message || "The request could not be completed.");
+    if (!response.ok) {
+      if (response.status === 504) {
+        throw new Error(
+          "The release build exceeded the server request limit. The existing published release was not switched. Retry the build; if it happens again, check the deployment's function duration and build logs.",
+        );
+      }
+      throw new Error(payload?.error?.message || "The request could not be completed (HTTP " + response.status + ").");
+    }
     return payload.data;
   }
 
@@ -500,14 +517,72 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
   }
 
   async function publishDraft() {
-    const versionId = source.draftVersionId;
-    if (!versionId) return;
+    if (busy) return;
+
+    const validationError = validateDraftFiles(files);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    let versionId = source.draftVersionId || null;
+    let savedDraft = null;
 
     setBusy("publish");
     setError("");
     setMessage("");
+    setPublishStage("");
 
     try {
+      // The primary action is safe for dirty editor state: snapshot the exact
+      // current files first, then build and publish that immutable version.
+      if (source.isCustom && (hasUnsavedChanges || !versionId)) {
+        setPublishStage("Saving the current editor changes as a private draft…");
+        savedDraft = await requestJson(
+          "/api/v1/admin/labs/sources/" + encodeURIComponent(source.slug) + "/versions",
+          "POST",
+          {
+            files,
+            expectedDraftVersionId: source.draftVersionId || null,
+            changeSummary,
+            requestId: makeRequestId(),
+          },
+        );
+        versionId = savedDraft.versionId;
+
+        setSource((current) => ({
+          ...current,
+          draftVersionId: versionId,
+          draft: {
+            versionId,
+            version: savedDraft.version,
+            contentHash: savedDraft.contentHash,
+          },
+          files,
+        }));
+        setChangeSummary("");
+        setMessage(savedDraft.version + " saved. Preparing the release build…");
+
+        try {
+          const nextVersions = await requestJson(
+            "/api/v1/admin/labs/sources/" + encodeURIComponent(source.slug) + "/versions",
+          );
+          setVersions(nextVersions || []);
+        } catch {
+          // Version history refresh is secondary; the new draft is already saved.
+        }
+      }
+
+      if (!versionId) {
+        throw new Error("There is no saved draft to publish. Add source files and try again.");
+      }
+
+      setPublishStage(
+        source.isCustom
+          ? "Building the saved version, uploading its immutable artifact and publishing…"
+          : "Publishing the saved source version…",
+      );
+
       const publishResult = await requestJson(
         "/api/v1/admin/labs/sources/" + encodeURIComponent(source.slug) + "/publish",
         "POST",
@@ -517,25 +592,56 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
           requestId: makeRequestId(),
         },
       );
+
       setSource((current) => ({
         ...current,
+        draftVersionId: versionId,
+        draft: savedDraft
+          ? {
+              versionId,
+              version: savedDraft.version,
+              contentHash: savedDraft.contentHash,
+            }
+          : current.draft,
+        files,
         published: true,
-        publishedVersionId: versionId,
+        publishedVersionId: publishResult.publishedVersionId || versionId,
         publishedArtifact: publishResult.artifact || null,
       }));
       setConfirmPublish(false);
-      setMessage(source.isCustom ? "React release built and published. The public Labs page now runs this immutable artifact." : "Source published. Every verified account can now access this version.");
-      showToast("success", source.isCustom ? "Release built and published successfully." : "Source published successfully.");
+      setError("");
+      setMessage(
+        source.isCustom
+          ? "Release built and published. The public Labs page now runs this exact immutable artifact."
+          : "Source published. Every verified account can now access this version.",
+      );
+      showToast(
+        "success",
+        source.isCustom ? "Release built and published successfully." : "Source published successfully.",
+      );
+
       try {
-        await refreshAudit();
+        const [nextVersions] = await Promise.all([
+          requestJson("/api/v1/admin/labs/sources/" + encodeURIComponent(source.slug) + "/versions"),
+          refreshAudit(),
+        ]);
+        setVersions(nextVersions || []);
       } catch {
-        setMessage("Source was published. The audit timeline could not refresh; reload the page to see the latest activity.");
+        setMessage("The source was published. The history panel could not refresh; reload the page to see the latest activity.");
       }
     } catch (reason) {
-      setError(reason.message || "Source could not be published.");
-      showToast("error", reason.message || "Source could not be published.");
+      const failureMessage = reason.message || "Source could not be published.";
+      if (savedDraft) {
+        setMessage(
+          savedDraft.version +
+            " was saved as a private draft, but its release was not published. Fix the issue and retry Build & publish.",
+        );
+      }
+      setError(failureMessage);
+      showToast("error", failureMessage);
     } finally {
       setBusy("");
+      setPublishStage("");
     }
   }
 
@@ -972,16 +1078,16 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                 </div>
                 <button
                   type="button"
-                  onClick={() => setConfirmPublish(true)}
-                  disabled={Boolean(busy) || hasUnsavedChanges || !source.draftVersionId}
+                  onClick={() => { setError(""); setConfirmPublish(true); }}
+                  disabled={Boolean(busy) || !files.length}
                   className="mt-4 inline-flex h-9 items-center gap-2 border border-brand px-3 text-xs font-semibold text-brand hover:bg-brand-soft disabled:cursor-not-allowed disabled:opacity-40"
-                  title={hasUnsavedChanges ? "Save the working copy before publishing." : "Build and publish the current saved draft."}
+                  title={hasUnsavedChanges || !source.draftVersionId ? "Save the current editor files, then build and publish them." : "Build and publish the current saved draft."}
                 >
                   <Upload size={13} aria-hidden="true" />
                   Build &amp; publish release
                 </button>
-                {hasUnsavedChanges ? (
-                  <p className="mt-2 text-[10px] text-warning">Save your current edits before publishing. The public page can only use an immutable saved version.</p>
+                {hasUnsavedChanges || !source.draftVersionId ? (
+                  <p className="mt-2 text-[10px] text-text-tertiary">Your current editor files will be saved as a private version before the release build starts.</p>
                 ) : null}
               </div>
             ) : null}
@@ -1191,14 +1297,48 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
       {confirmPublish ? (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" role="presentation">
           <section role="dialog" aria-modal="true" aria-labelledby="publish-title" className="w-full max-w-md border border-border bg-surface-1 p-5 shadow-2xl">
-            <h2 id="publish-title" className="text-base font-semibold">Publish this source version?</h2>
+            <h2 id="publish-title" className="text-base font-semibold">
+              {source.isCustom ? "Build and publish this release?" : "Publish this source version?"}
+            </h2>
             <p className="mt-2 text-sm leading-6 text-text-secondary">
-              {source.isCustom ? "This will compile " + (source.draft?.version || "the saved draft") + " in the isolated React toolchain, upload an immutable public runtime artifact and switch the Labs page to it. If the build fails, the existing live release stays unchanged." : "This will make " + (source.draft?.version || "the saved draft") + " available to every account with a verified email. Anonymous visitors will still not be able to view the code."}
+              {source.isCustom
+                ? hasUnsavedChanges || !source.draftVersionId
+                  ? "Your current editor files will first be saved as a private draft, then compiled in the isolated React toolchain. The immutable artifact and its screenshot will be stored before the public Labs page is switched. The current live release stays active if any step fails."
+                  : "The saved draft will be compiled in the isolated React toolchain. Its immutable runtime artifact and screenshot will be stored before the public Labs page is switched. The current live release stays active if the build fails."
+                : "This will make " + (source.draft?.version || "the saved draft") + " available to every account with a verified email. Anonymous visitors will still not be able to view the code."}
             </p>
+            {busy === "publish" && publishStage ? (
+              <div className="mt-4 flex items-start gap-2 border border-brand/30 bg-brand-soft/20 px-3 py-3" role="status" aria-live="polite">
+                <LoaderCircle size={15} className="mt-0.5 shrink-0 animate-spin text-brand" aria-hidden="true" />
+                <p className="text-xs leading-5 text-text-secondary">{publishStage}</p>
+              </div>
+            ) : null}
+            {error ? (
+              <div className="mt-4 border border-warning/40 bg-warning/10 px-3 py-3" role="alert">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-warning">Build & publish failed</p>
+                <p className="mt-1 break-words text-xs leading-5 text-text-secondary">{error}</p>
+              </div>
+            ) : null}
             <div className="mt-5 flex justify-end gap-2">
-              <button type="button" onClick={() => setConfirmPublish(false)} className="h-9 border border-border px-3 text-xs">Cancel</button>
-              <button type="button" onClick={publishDraft} disabled={Boolean(busy)} className="h-9 bg-brand px-3 text-xs font-semibold text-brand-contrast disabled:opacity-50">
-                {busy === "publish" ? (source.isCustom ? "Building & publishing…" : "Publishing…") : (source.isCustom ? "Build & publish" : "Confirm publish")}
+              <button
+                type="button"
+                onClick={() => setConfirmPublish(false)}
+                disabled={Boolean(busy)}
+                className="h-9 border border-border px-3 text-xs disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={publishDraft}
+                disabled={Boolean(busy) || !files.length}
+                aria-busy={busy === "publish"}
+                className="inline-flex h-9 items-center gap-2 bg-brand px-3 text-xs font-semibold text-brand-contrast disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {busy === "publish" ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <Upload size={13} aria-hidden="true" />}
+                {busy === "publish"
+                  ? (source.isCustom ? "Building & publishing…" : "Publishing…")
+                  : (source.isCustom ? "Build & publish" : "Confirm publish")}
               </button>
             </div>
           </section>
