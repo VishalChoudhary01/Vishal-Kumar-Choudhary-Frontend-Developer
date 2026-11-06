@@ -13,7 +13,7 @@ const runPreview = await readFile(
 
 test("owner source creator uses editable shared Monaco instead of a textarea", () => {
   assert.match(editor, /<LabCodeEditor/);
-  assert.match(editor, /readOnly=\{false\}/);
+  assert.match(editor, /readOnly=\{Boolean\(busy\)\}/);
   assert.match(editor, /onChange=\{\(nextValue\) => updateFileContent\(selectedFile\.path, nextValue\)\}/);
   assert.doesNotMatch(editor, /<textarea/);
 });
