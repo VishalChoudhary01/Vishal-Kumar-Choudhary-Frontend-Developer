@@ -1,6 +1,6 @@
 # Design Specification — Analytics Dashboard
 
-**Status:** Product/design authority. Initial owner source-engagement aggregation exists on `feat/labs-platform-integration`. Dedicated Analytics routing and custom published-experiment aggregation/source-event validation are committed and Preview build-verified; authenticated owner-browser and Atlas-backed event verification remain pending. Live refresh, experiment-view/preview instrumentation and the full dashboard implementation remain incomplete. This document defines the analytics experience and metric semantics; delivery order is in [the Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md).  
+**Status:** Product/design authority. Dedicated Analytics/Source Library routes, custom published-experiment aggregation/source-event validation, metadata editor, create-to-workspace handoff and the first live Analytics dashboard are committed. A READY Preview build verifies the server-first dashboard, 10-second visible-tab polling, MotionNumber counters and four-series motion chart; anonymous protected-route smoke checks pass. Authenticated owner refresh, Atlas event reconciliation and visual/accessibility QA remain pending. Experiment-view/preview instrumentation, rankings and experiment-specific analytics remain incomplete. This document defines the analytics experience and metric semantics; delivery order is in [the Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md).  
 **Related:** [PRD](./PRD.md), [Admin design](./DESIGN-ADMIN.md), [Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md)
 
 ## 1. Purpose
@@ -157,7 +157,7 @@ The inventory and source workspace must not become alternate analytics dashboard
 
 ### Live refresh interaction contract
 
-For the first live release, use the existing owner analytics GET endpoint with visible-tab polling. Target a 10-second interval while the Analytics route is visible. Pause when hidden, resume on focus/visibility, prevent overlapping requests, abort on unmount, preserve the last successful snapshot on failure, use bounded backoff and show a truthful last-updated/stale state. Provide manual refresh. The same reporting period and filters must remain applied to each request.
+The first live release now uses the existing owner analytics GET endpoint with visible-tab polling at a 10-second interval. It pauses while hidden, resumes on focus/visibility, prevents overlapping requests, aborts on unmount, preserves the last successful snapshot on failure, uses bounded backoff and exposes manual refresh plus a truthful last-updated/stale state. The same reporting period is applied to every request. This is code- and Preview-build-verified; authenticated event-to-screen refresh and browser QA remain pending.
 
 The refresh transport must return the same normalized aggregate shape so a later push transport can be evaluated without rewriting charts. WebSockets are not required for the first release; any future upgrade must document hosting, cross-instance fanout, reconnect/replay, authorization and fallback behavior before adding infrastructure.
 
@@ -184,10 +184,11 @@ Use existing semantic theme tokens and the admin design system. Keep series iden
 - [x] Server-side owner aggregate endpoint exists for the initial source-engagement metrics.
 - [x] Initial source-open, copy and like/unlike event records exist.
 - [ ] Add qualifying experiment-detail view instrumentation and a documented deduplication policy.
-- [ ] Instrument experiment detail views with a documented qualifying-view rule.
 - [ ] Instrument preview start/interactions after runtime lifecycle approval.
-- [ ] Separate Analytics and Source Library routes.
-- [ ] Add visible-tab polling and truthful stale/error state.
-- [ ] Add complete date buckets, multi-series trends, rankings and experiment detail reporting.
-- [ ] Verify MotionNumber, chart accessibility, responsive layout, reduced motion and light/dark semantic contrast.
+- [x] Separate Analytics and Source Library routes (Preview build verified; authenticated owner UI QA remains pending).
+- [x] Add visible-tab 10-second polling, no-overlap/abort/backoff and truthful stale/error state (Preview build verified; authenticated refresh round-trip remains pending).
+- [x] Add complete UTC date buckets including zero-activity days.
+- [x] Add four-series trends for currently instrumented events, MotionNumber counters and an accessible daily table (Preview build verified).
+- [ ] Add aggregate rankings and experiment-specific analytics detail route.
+- [ ] Verify chart accessibility, responsive layout, reduced motion and light/dark semantic contrast in an authenticated browser.
 - [ ] Approve retention/account-deletion policy before production analytics release.
