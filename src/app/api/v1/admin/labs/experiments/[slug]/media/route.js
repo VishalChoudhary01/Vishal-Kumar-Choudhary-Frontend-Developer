@@ -3,7 +3,7 @@ import {
   adminJson,
   getLabsOwnerUser,
 } from "@/app/lib/labs/admin-http";
-import { listOwnerLabMediaAssets } from "@/app/lib/labs/media-management";
+import { getOwnerLabReleasePosterStatus, listOwnerLabMediaAssets } from "@/app/lib/labs/media-management";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,7 +15,11 @@ export async function GET(_request, { params }) {
 
   const { slug } = await params;
   try {
-    return adminJson({ data: await listOwnerLabMediaAssets({ user, slug }) });
+    const [assets, releasePoster] = await Promise.all([
+      listOwnerLabMediaAssets({ user, slug }),
+      getOwnerLabReleasePosterStatus({ user, slug }),
+    ]);
+    return adminJson({ data: { assets, releasePoster } });
   } catch (error) {
     return adminError(error);
   }
