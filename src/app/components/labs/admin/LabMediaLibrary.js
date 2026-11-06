@@ -32,6 +32,8 @@ async function readJson(response) {
 export default function LabMediaLibrary({ slug }) {
   const { showToast } = useActionToast();
   const [assets, setAssets] = useState([]);
+  const [releasePoster, setReleasePoster] = useState(null);
+  const [posterPreviewFailed, setPosterPreviewFailed] = useState(false);
   const [selectedFallbackId, setSelectedFallbackId] = useState(null);
   const [fallbackText, setFallbackText] = useState({ altText: "", caption: "" });
   const [selectedGalleryPreviewId, setSelectedGalleryPreviewId] = useState(null);
@@ -53,8 +55,12 @@ export default function LabMediaLibrary({ slug }) {
   );
 
   const applyAssets = useCallback((data) => {
-    const nextAssets = Array.isArray(data) ? data : [];
+    const nextAssets = Array.isArray(data) ? data : Array.isArray(data?.assets) ? data.assets : [];
     setAssets(nextAssets);
+    if (!Array.isArray(data) && Object.prototype.hasOwnProperty.call(data || {}, "releasePoster")) {
+      setReleasePoster(data.releasePoster || null);
+      setPosterPreviewFailed(false);
+    }
     const selected = nextAssets.find((asset) => Array.isArray(asset.roles) && asset.roles.includes(FALLBACK_ROLE));
     setSelectedFallbackId(selected?.id || null);
     setFallbackText({ altText: selected?.altText || "", caption: selected?.caption || "" });
@@ -277,6 +283,87 @@ export default function LabMediaLibrary({ slug }) {
           </button>
         </div>
       </div>
+
+      <section aria-labelledby="labs-generated-poster-title" className="mt-4 border border-border bg-background p-3 sm:p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 id="labs-generated-poster-title" className="text-xs font-semibold">Automatic screenshot</h3>
+            <p className="mt-1 max-w-2xl text-[10px] leading-5 text-text-tertiary">
+              Captured from the exact published build during release. This preview is automatic and does not require an upload or gallery-media promotion.
+            </p>
+          </div>
+          <span className={[
+            "border px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.08em]",
+            releasePoster?.status === "ready"
+              ? "border-brand/30 bg-brand-soft/20 text-brand"
+              : "border-border text-text-tertiary",
+          ].join(" ")}>
+            {releasePoster?.status === "ready" ? "Generated" : releasePoster?.status === "unavailable" || releasePoster?.status === "invalid" ? "Needs attention" : "Release status"}
+          </span>
+        </div>
+
+        {releasePoster?.status === "ready" && releasePoster.previewUrl && !posterPreviewFailed ? (
+          <div className="mt-3 overflow-hidden border border-border bg-surface-1">
+            <img
+              key={releasePoster.artifactId + ":" + releasePoster.previewUrl}
+              src={releasePoster.previewUrl}
+              alt="Automatically generated screenshot of the current published experiment"
+              loading="lazy"
+              className="block aspect-[4/3] w-full object-cover"
+              onError={() => setPosterPreviewFailed(true)}
+            />
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-3 py-2">
+              <span className="text-[10px] text-text-secondary">
+                {releasePoster.width} × {releasePoster.height} · {formatBytes(releasePoster.byteSize)}
+              </span>
+              <span className="font-mono text-[9px] text-text-tertiary">
+                {String(releasePoster.artifactId || "").slice(0, 8)} · {String(releasePoster.captureVersion || "capture").replace(/-/g, " ")}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-3 flex min-h-24 items-center gap-3 border border-dashed border-border px-4 py-4">
+            <ImageIcon size={18} className="shrink-0 text-text-tertiary" aria-hidden="true" />
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-text-primary">
+                {releasePoster?.status === "not_published"
+                  ? "No published release yet"
+                  : releasePoster?.status === "artifact_missing"
+                    ? "Published artifact could not be found"
+                    : releasePoster?.status === "not_generated"
+                      ? "No screenshot was recorded for this release"
+                      : releasePoster?.status === "unavailable"
+                        ? "Automatic screenshot capture was unavailable"
+                        : releasePoster?.status === "invalid"
+                          ? "Screenshot metadata failed validation"
+                          : posterPreviewFailed
+                            ? "Screenshot could not be loaded"
+                            : "Screenshot status unavailable"}
+              </p>
+              <p className="mt-1 break-words text-[10px] leading-5 text-text-tertiary">
+                {releasePoster?.status === "not_published"
+                  ? "Build and publish a saved source version to generate its screenshot."
+                  : releasePoster?.status === "artifact_missing"
+                    ? "The published source points to an artifact that is missing or not ready. Check the release record before publishing again."
+                    : releasePoster?.status === "not_generated"
+                      ? "This older release has no capture record. Build and publish the current saved version again to generate a screenshot."
+                      : releasePoster?.status === "unavailable"
+                        ? "Capture did not complete (" + (releasePoster.reasonCode || "capture_failed") + "). The live code release remains available; retry by publishing a new build."
+                        : releasePoster?.status === "invalid"
+                          ? "The saved poster does not match the approved capture format or renderer version. Publish a fresh build to regenerate it."
+                          : posterPreviewFailed
+                            ? "The current artifact poster URL returned an error. Refresh this panel after checking the published artifact and screenshot storage."
+                            : "Refresh this panel to retrieve the status of the current published artifact."}
+              </p>
+            </div>
+          </div>
+        )}
+        {releasePoster?.status === "ready" ? (
+          <p className="mt-2 break-all text-[9px] leading-4 text-text-tertiary">
+            Source version: {releasePoster.sourceVersionId} · Build: {releasePoster.buildHash}
+          </p>
+        ) : null}
+      </section>
 
       <section aria-labelledby="labs-gallery-poster-title" className="mt-4 border border-border bg-background p-3 sm:p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
