@@ -111,6 +111,7 @@ function serializeAsset(
   previewUrl = null,
   isGalleryPreview = false,
   isGalleryPreviewCurrent = false,
+  galleryPreviewAlt = "",
 ) {
   return {
     id: String(asset._id),
@@ -129,6 +130,7 @@ function serializeAsset(
     roles: attachment?.roles || [],
     isGalleryPreview,
     isGalleryPreviewCurrent,
+    galleryPreviewAlt,
     previewUrl,
     createdAt: asset.createdAt ? new Date(asset.createdAt).toISOString() : null,
   };
@@ -373,6 +375,9 @@ export async function listOwnerLabMediaAssets({ user, slug }) {
     String(experiment.galleryPreview?.assetId || "") === String(asset._id),
     galleryPreviewCurrent &&
       String(experiment.galleryPreview?.assetId || "") === String(asset._id),
+    String(experiment.galleryPreview?.assetId || "") === String(asset._id)
+      ? experiment.galleryPreview?.alt || ""
+      : "",
   ));
 }
 
