@@ -61,7 +61,7 @@ export default function LabMediaLibrary({ slug }) {
     setFallbackText({ altText: selected?.altText || "", caption: selected?.caption || "" });
     const gallerySelection = nextAssets.find((asset) => asset.isGalleryPreview);
     setSelectedGalleryPreviewId(gallerySelection?.id || null);
-    setGalleryPreviewAlt(gallerySelection?.isGalleryPreview ? gallerySelection.altText || "" : "");
+    setGalleryPreviewAlt(gallerySelection?.isGalleryPreview ? gallerySelection.galleryPreviewAlt || "" : "");
     setPreviewErrorIds([]);
   }, []);
 
