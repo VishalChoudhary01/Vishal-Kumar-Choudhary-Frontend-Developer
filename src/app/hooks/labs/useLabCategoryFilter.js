@@ -4,12 +4,12 @@ import { useMemo, useState } from "react";
 import { LAB_CATEGORIES } from "@/app/data/labsExperiments";
 import { buildLabCategoryOptions } from "@/app/lib/labs/category-options.mjs";
 
-export default function useLabCategoryFilter(experiments = []) {
+export default function useLabCategoryFilter(experiments = [], summary = {}) {
   const [activeCategory, setActiveCategory] = useState("all");
 
   const categories = useMemo(
-    () => buildLabCategoryOptions(experiments, LAB_CATEGORIES),
-    [experiments],
+    () => buildLabCategoryOptions(experiments, LAB_CATEGORIES, summary),
+    [experiments, summary],
   );
 
   const filteredExperiments = useMemo(() => {
