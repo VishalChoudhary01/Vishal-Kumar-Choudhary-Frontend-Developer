@@ -7,6 +7,7 @@ import { Image as ImageIcon, LoaderCircle, RefreshCw, Save, UploadCloud } from "
 const ACCEPT = "image/jpeg,image/png,image/webp,image/avif,image/gif,video/mp4,video/webm";
 const IMAGE_FORMATS = new Set(["jpg", "jpeg", "png", "webp", "avif", "gif"]);
 const VIDEO_FORMATS = new Set(["mp4", "webm"]);
+const GALLERY_FORMATS = new Set(["jpg", "jpeg", "png", "webp", "avif"]);
 const FALLBACK_ROLE = "fallback-preview";
 
 function formatBytes(value) {
@@ -34,9 +35,12 @@ export default function LabMediaLibrary({ slug }) {
   const [assets, setAssets] = useState([]);
   const [selectedFallbackId, setSelectedFallbackId] = useState(null);
   const [fallbackText, setFallbackText] = useState({ altText: "", caption: "" });
+  const [selectedGalleryPreviewId, setSelectedGalleryPreviewId] = useState(null);
+  const [galleryPreviewAlt, setGalleryPreviewAlt] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savingGalleryPreview, setSavingGalleryPreview] = useState(false);
   const [progressLabel, setProgressLabel] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -55,6 +59,9 @@ export default function LabMediaLibrary({ slug }) {
     const selected = nextAssets.find((asset) => Array.isArray(asset.roles) && asset.roles.includes(FALLBACK_ROLE));
     setSelectedFallbackId(selected?.id || null);
     setFallbackText({ altText: selected?.altText || "", caption: selected?.caption || "" });
+    const gallerySelection = nextAssets.find((asset) => asset.isGalleryPreview);
+    setSelectedGalleryPreviewId(gallerySelection?.id || null);
+    setGalleryPreviewAlt(gallerySelection?.isGalleryPreview ? gallerySelection.altText || "" : "");
     setPreviewErrorIds([]);
   }, []);
 
@@ -117,6 +124,39 @@ export default function LabMediaLibrary({ slug }) {
       showToast("error", reason.message || "Fallback preview could not be saved.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function saveGalleryPreview() {
+    if (savingGalleryPreview || busy || saving) return;
+
+    setSavingGalleryPreview(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const response = await fetch(endpoint + "/gallery-preview", {
+        method: "PUT",
+        cache: "no-store",
+        credentials: "same-origin",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({
+          assetId: selectedGalleryPreviewId,
+          altText: galleryPreviewAlt,
+          fit: "cover",
+        }),
+      });
+      await readJson(response);
+      await loadAssets();
+      setMessage(selectedGalleryPreviewId
+        ? "Public gallery poster saved for the exact published build. A later published version will require a new poster."
+        : "Public gallery poster removed.");
+      showToast("success", selectedGalleryPreviewId ? "Gallery poster published." : "Gallery poster removed.");
+    } catch (reason) {
+      setError(reason.message || "The public gallery poster could not be saved.");
+      showToast("error", reason.message || "The public gallery poster could not be saved.");
+    } finally {
+      setSavingGalleryPreview(false);
     }
   }
 
@@ -202,7 +242,7 @@ export default function LabMediaLibrary({ slug }) {
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-brand">OPTIONAL FALLBACK MEDIA</p>
           <h2 id="labs-media-library-title" className="mt-1 text-base font-semibold">Fallback preview media</h2>
           <p className="mt-1 max-w-2xl text-xs leading-5 text-text-tertiary">
-            The interactive code preview is always primary. Upload an image, GIF or video only when the experiment cannot be previewed from code or its runtime is unsupported. Media is not needed when code preview works.
+            The interactive code preview is always primary. Private fallback media is used only when code preview cannot run. A separate JPEG, PNG, WebP or AVIF image can be explicitly promoted as a public static gallery poster.
           </p>
         </div>
         <label className={[
@@ -211,7 +251,7 @@ export default function LabMediaLibrary({ slug }) {
         ].join(" ")}>
           {busy ? <LoaderCircle size={14} className="animate-spin" aria-hidden="true" /> : <UploadCloud size={14} aria-hidden="true" />}
           {busy ? "Uploading…" : "Upload fallback media"}
-          <input type="file" accept={ACCEPT} multiple disabled={busy || saving} onChange={handleFiles} className="sr-only" aria-label="Upload optional fallback images, GIFs or videos" />
+          <input type="file" accept={ACCEPT} multiple disabled={busy || saving || savingGalleryPreview} onChange={handleFiles} className="sr-only" aria-label="Upload optional fallback images, GIFs or videos" />
         </label>
       </header>
 
@@ -231,6 +271,50 @@ export default function LabMediaLibrary({ slug }) {
           </button>
         </div>
       </div>
+
+      <section aria-labelledby="labs-gallery-poster-title" className="mt-4 border border-border bg-background p-3 sm:p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 id="labs-gallery-poster-title" className="text-xs font-semibold">Public gallery poster</h3>
+            <p className="mt-1 max-w-2xl text-[10px] leading-5 text-text-tertiary">
+              Promoting an image copies it from private Cloudinary storage to public Vercel Blob storage. Anyone can view the image. It is tied to the exact currently published artifact and will be hidden automatically after a different source version is published.
+            </p>
+          </div>
+          <span className="border border-info/30 bg-info/5 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.08em] text-info">
+            Public image
+          </span>
+        </div>
+        <label className="mt-3 block max-w-lg text-[10px] font-medium text-text-tertiary">
+          Alt text
+          <input
+            value={galleryPreviewAlt}
+            onChange={(event) => setGalleryPreviewAlt(event.target.value)}
+            maxLength={300}
+            placeholder="Describe the project preview"
+            className="mt-1 h-9 w-full border border-border bg-surface-1 px-2 text-xs text-text-primary outline-none focus:border-brand"
+          />
+        </label>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={saveGalleryPreview}
+            disabled={savingGalleryPreview || busy || saving || loading || (!selectedGalleryPreviewId && !assets.some((asset) => asset.isGalleryPreview))}
+            className="inline-flex h-8 items-center gap-2 bg-brand px-3 text-[11px] font-semibold text-brand-contrast hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {savingGalleryPreview ? <LoaderCircle size={12} className="animate-spin" aria-hidden="true" /> : <Save size={12} aria-hidden="true" />}
+            {savingGalleryPreview ? "Saving…" : selectedGalleryPreviewId ? "Publish gallery poster" : "Remove gallery poster"}
+          </button>
+          {assets.some((asset) => asset.isGalleryPreview) ? (
+            <span className="text-[10px] text-text-tertiary">
+              {assets.find((asset) => asset.isGalleryPreview)?.isGalleryPreviewCurrent
+                ? "Current poster is visible in the public gallery."
+                : "Saved poster is stale and not displayed after the latest publish."}
+            </span>
+          ) : (
+            <span className="text-[10px] text-text-tertiary">No public gallery poster selected.</span>
+          )}
+        </div>
+      </section>
 
       {loading ? (
         <div className="flex min-h-20 items-center justify-center gap-2 text-xs text-text-tertiary"><LoaderCircle size={14} className="animate-spin" aria-hidden="true" /> Loading media…</div>
@@ -255,7 +339,25 @@ export default function LabMediaLibrary({ slug }) {
                     <p className="truncate text-xs font-semibold" title={asset.originalFilename}>{asset.originalFilename}</p>
                     <p className="mt-1 text-[10px] text-text-tertiary">{String(asset.format || "").toUpperCase()} · {formatBytes(asset.byteSize)}{asset.width && asset.height ? " · " + asset.width + "×" + asset.height : ""}{asset.durationSeconds ? " · " + asset.durationSeconds.toFixed(1) + "s" : ""}</p>
                     <p className="mt-2 text-[9px] font-semibold uppercase tracking-[0.08em] text-brand">Private · Ready</p>
-                    {asset.roles?.includes(FALLBACK_ROLE) ? <p className="mt-1 text-[10px] text-text-secondary">Saved fallback</p> : <p className="mt-1 text-[10px] text-text-tertiary">Not attached</p>}
+                    {asset.roles?.includes(FALLBACK_ROLE) ? <p className="mt-1 text-[10px] text-text-secondary">Saved private fallback</p> : <p className="mt-1 text-[10px] text-text-tertiary">Not a fallback</p>}
+                    {asset.mediaKind === "image" && GALLERY_FORMATS.has(String(asset.format || "").toLowerCase()) ? (
+                      <label className="mt-2 flex items-center gap-2 text-[11px] font-medium text-text-secondary">
+                        <input
+                          type="radio"
+                          name="labs-gallery-poster"
+                          checked={selectedGalleryPreviewId === asset.id}
+                          onChange={() => setSelectedGalleryPreviewId(asset.id)}
+                          disabled={busy || saving || savingGalleryPreview}
+                          className="accent-[var(--brand)]"
+                        />
+                        Use as public gallery poster
+                      </label>
+                    ) : null}
+                    {asset.isGalleryPreview ? (
+                      <p className="mt-1 text-[9px] font-medium text-info">
+                        {asset.isGalleryPreviewCurrent ? "Public poster · current release" : "Public poster · stale release"}
+                      </p>
+                    ) : null}
                     <label className="mt-3 flex items-center gap-2 text-[11px] font-medium text-text-secondary">
                       <input type="radio" name="labs-fallback-preview" checked={isSelected} onChange={() => chooseFallback(asset.id)} className="accent-[var(--brand)]" />
                       Use only as fallback
