@@ -149,6 +149,168 @@ export async function createOwnerLabExperiment({ user, input }) {
   }
 }
 
+function validateMetadataInput(input) {
+  const title = typeof input?.title === "string" ? input.title.trim() : "";
+  const description = typeof input?.description === "string" ? input.description.trim() : "";
+  const explanation = typeof input?.explanation === "string" ? input.explanation.trim() : "";
+  const category = typeof input?.category === "string" ? input.category.trim() : "";
+
+  if (!title || title.length > 100) {
+    fail("VALIDATION_ERROR", "Enter a title between 1 and 100 characters.");
+  }
+  if (!description || description.length > 500) {
+    fail("VALIDATION_ERROR", "Enter a description between 1 and 500 characters.");
+  }
+  if (explanation.length > 2000) {
+    fail("VALIDATION_ERROR", "The explanation must be 2,000 characters or fewer.");
+  }
+  if (!LAB_CATEGORIES.some((item) => item.name === category)) {
+    fail("VALIDATION_ERROR", "Choose one of the available Labs categories.");
+  }
+  if (!Array.isArray(input?.technologies) || input.technologies.some((item) => typeof item !== "string")) {
+    fail("VALIDATION_ERROR", "Technologies must be provided as a list of text values.");
+  }
+
+  const technologies = [...new Set(
+    input.technologies.map((item) => item.trim()).filter(Boolean),
+  )];
+  if (technologies.length > 8 || technologies.some((item) => item.length > 32)) {
+    fail("VALIDATION_ERROR", "Add up to eight technologies, each 32 characters or fewer.");
+  }
+
+  return { title, description, explanation, category, technologies };
+}
+
+function serializeOwnerExperiment(experiment) {
+  return {
+    slug: experiment.slug,
+    title: experiment.title,
+    description: experiment.description,
+    explanation: experiment.explanation || "",
+    category: experiment.category,
+    technologies: Array.isArray(experiment.technologies) ? experiment.technologies : [],
+    status: experiment.status,
+    updatedAt: experiment.updatedAt?.toISOString?.() || null,
+  };
+}
+
+export async function getOwnerLabExperiment({ user, slug }) {
+  if (!isLabsOwner(user)) fail("OWNER_ACCESS_DENIED", "Owner access is required.");
+  if (typeof slug !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+    fail("NOT_FOUND", "Owner-created experiment not found.");
+  }
+  if (publishedLabExperiments.some((item) => item.slug === slug)) {
+    fail("NOT_FOUND", "Owner-created experiment not found.");
+  }
+
+  await connectToDatabase();
+  const experiment = await LabExperiment.findOne({
+    slug,
+    kind: "custom",
+    status: { $ne: "deleting" },
+  })
+    .select("slug title description explanation category technologies status updatedAt")
+    .lean();
+
+  if (!experiment) fail("NOT_FOUND", "Owner-created experiment not found.");
+  return serializeOwnerExperiment(experiment);
+}
+
+export async function updateOwnerLabExperimentMetadata({
+  user,
+  slug,
+  input,
+  expectedUpdatedAt,
+  requestId = null,
+}) {
+  if (!isLabsOwner(user)) fail("OWNER_ACCESS_DENIED", "Owner access is required.");
+  if (typeof slug !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+    fail("NOT_FOUND", "Owner-created experiment not found.");
+  }
+  if (publishedLabExperiments.some((item) => item.slug === slug)) {
+    fail("FORBIDDEN", "Built-in Labs experiment details cannot be edited here.");
+  }
+
+  if (typeof expectedUpdatedAt !== "string" || !expectedUpdatedAt.trim()) {
+    fail("VALIDATION_ERROR", "Reload the experiment before saving its details.");
+  }
+  const expectedDate = new Date(expectedUpdatedAt);
+  if (!Number.isFinite(expectedDate.getTime())) {
+    fail("VALIDATION_ERROR", "The experiment update token is invalid.");
+  }
+
+  const metadata = validateMetadataInput(input);
+  const safeRequestId =
+    typeof requestId === "string" && /^[A-Za-z0-9_-]{8,100}$/.test(requestId)
+      ? requestId
+      : null;
+
+  await connectToDatabase();
+  await Promise.all([
+    LabExperiment.createIndexes(),
+    LabSourceAuditEvent.createIndexes(),
+  ]);
+
+  const session = await mongoose.startSession();
+  let updatedExperiment;
+
+  try {
+    await session.withTransaction(async () => {
+      const current = await LabExperiment.findOne({
+        slug,
+        kind: "custom",
+        status: { $ne: "deleting" },
+      })
+        .select("slug updatedAt")
+        .session(session)
+        .lean();
+
+      if (!current) fail("NOT_FOUND", "Owner-created experiment not found.");
+      if (new Date(current.updatedAt).getTime() !== expectedDate.getTime()) {
+        fail("CONFLICT", "This experiment was updated elsewhere. Reload before saving your changes.");
+      }
+
+      const result = await LabExperiment.updateOne(
+        {
+          _id: current._id,
+          kind: "custom",
+          status: { $ne: "deleting" },
+          updatedAt: current.updatedAt,
+        },
+        { $set: { ...metadata, updatedBy: user.id } },
+        { session, runValidators: true },
+      );
+
+      if (result.modifiedCount !== 1) {
+        fail("CONFLICT", "This experiment changed while you were saving. Reload and try again.");
+      }
+
+      updatedExperiment = await LabExperiment.findById(current._id)
+        .select("slug title description explanation category technologies status updatedAt")
+        .session(session)
+        .lean();
+
+      await LabSourceAuditEvent.create(
+        [{
+          actorUserId: user.id,
+          action: "experiment_metadata_updated",
+          experimentSlug: slug,
+          versionId: null,
+          requestId: safeRequestId,
+          resultCode: "ok",
+          createdAt: new Date(),
+        }],
+        { session },
+      );
+    });
+  } finally {
+    await session.endSession();
+  }
+
+  return serializeOwnerExperiment(updatedExperiment);
+}
+
+
 
 export async function deleteOwnerLabExperiment({ user, slug, confirmSlug }) {
   if (!isLabsOwner(user)) fail("OWNER_ACCESS_DENIED", "Owner access is required.");
