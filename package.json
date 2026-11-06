@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run test:labs-public-hero && npm run test:labs-featured-experiment && npm run test:labs-public-collection && npm run test:labs-monaco && npm run test:labs-source-reader && npm run test:labs-source-creator && npm run test:labs-history && npm run test:labs-media && npm run test:labs-analytics && node scripts/validate-seo.cjs && next build",
+    "build": "npm run test:labs-public-hero && npm run test:labs-featured-experiment && npm run test:labs-public-collection && npm run test:labs-public-pagination && npm run test:labs-monaco && npm run test:labs-source-reader && npm run test:labs-source-creator && npm run test:labs-history && npm run test:labs-media && npm run test:labs-analytics && node scripts/validate-seo.cjs && next build",
     "start": "next start",
     "lint": "eslint",
     "validate:seo": "node scripts/validate-seo.cjs",
@@ -18,7 +18,8 @@
     "test:labs-history": "node --test tests/labs-source-history-monaco.test.mjs",
     "test:labs-public-hero": "node --test tests/labs-public-hero.test.mjs",
     "test:labs-featured-experiment": "node --test tests/labs-featured-experiment.test.mjs",
-    "test:labs-public-collection": "node --test tests/labs-public-collection.test.mjs"
+    "test:labs-public-collection": "node --test tests/labs-public-collection.test.mjs",
+    "test:labs-public-pagination": "node --test tests/labs-public-pagination.test.mjs"
   },
   "dependencies": {
     "@better-auth/infra": "^0.4.26",
