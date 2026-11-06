@@ -7,6 +7,11 @@ import LabAnalyticsEvent from "./models/LabAnalyticsEvent";
 import LabLike from "./models/LabLike";
 import LabGuestLike from "./models/LabGuestLike";
 import { isLabsOwner } from "./owner-access";
+import {
+  buildCompleteDailySeries,
+  createRankings,
+  normalizePeriod,
+} from "./owner-analytics-utils";
 
 let indexPromise;
 
@@ -57,99 +62,6 @@ function createExperimentRows(experiments) {
   }
 
   return [...uniqueExperiments.values()];
-}
-
-function createRankings(rows, limit = 5) {
-  function rankBy(metric, select = () => ({})) {
-    return [...rows]
-      .filter((row) => Number(row[metric]) > 0)
-      .sort((a, b) => {
-        const difference = Number(b[metric]) - Number(a[metric]);
-        if (difference !== 0) return difference;
-        const titleOrder = a.title.localeCompare(b.title, "en-IN");
-        return titleOrder || a.slug.localeCompare(b.slug);
-      })
-      .slice(0, limit)
-      .map((row, index) => ({
-        rank: index + 1,
-        slug: row.slug,
-        title: row.title,
-        value: Number(row[metric]) || 0,
-        ...select(row),
-      }));
-  }
-
-  return {
-    mostSourceOpens: rankBy("sourceOpens"),
-    mostCodeCopies: rankBy("codeCopies"),
-    mostActiveLikes: rankBy("totalActiveLikes", (row) => ({
-      activeVerifiedLikes: row.activeVerifiedLikes,
-      activeAnonymousLikes: row.activeAnonymousLikes,
-    })),
-  };
-}
-
-function normalizePeriod(days) {
-  const allowedDays = new Set([7, 30, 90, 365]);
-  const periodDays = allowedDays.has(Number(days)) ? Number(days) : 30;
-  const generatedAt = new Date();
-  const since = new Date(
-    generatedAt.getTime() - periodDays * 24 * 60 * 60 * 1000,
-  );
-
-  return { periodDays, generatedAt, since };
-}
-
-function toUtcDateKey(date) {
-  return [
-    date.getUTCFullYear(),
-    String(date.getUTCMonth() + 1).padStart(2, "0"),
-    String(date.getUTCDate()).padStart(2, "0"),
-  ].join("-");
-}
-
-function buildCompleteDailySeries({ since, generatedAt, dailyGroups }) {
-  const groupsByDate = new Map(dailyGroups.map((day) => [day._id, day]));
-  const firstDay = new Date(Date.UTC(
-    since.getUTCFullYear(),
-    since.getUTCMonth(),
-    since.getUTCDate(),
-  ));
-  const lastDay = new Date(Date.UTC(
-    generatedAt.getUTCFullYear(),
-    generatedAt.getUTCMonth(),
-    generatedAt.getUTCDate(),
-  ));
-  const days = [];
-
-  for (
-    const cursor = new Date(firstDay);
-    cursor <= lastDay;
-    cursor.setUTCDate(cursor.getUTCDate() + 1)
-  ) {
-    const date = toUtcDateKey(cursor);
-    const group = groupsByDate.get(date);
-
-    const sourceOpens = group?.sourceOpens || 0;
-    const codeCopies = group?.codeCopies || 0;
-    const verifiedLikeActions = group?.verifiedLikeActions || 0;
-    const anonymousLikeActions = group?.anonymousLikeActions || 0;
-
-    days.push({
-      date,
-      sourceOpens,
-      codeCopies,
-      verifiedLikeActions,
-      anonymousLikeActions,
-      totalActions:
-        sourceOpens +
-        codeCopies +
-        verifiedLikeActions +
-        anonymousLikeActions,
-    });
-  }
-
-  return days;
 }
 
 export async function getLabsOwnerAnalytics({ user, days = 30 }) {
