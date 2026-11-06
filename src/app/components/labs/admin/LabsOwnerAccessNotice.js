@@ -27,7 +27,13 @@ function getSafeOwnerReturnTo(value) {
     return value;
   }
 
-  if (typeof value === "string" && /^\/admin\/labs\/sources\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) {
+  if (
+    typeof value === "string" &&
+    (
+      /^\/admin\/labs\/sources\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value) ||
+      /^\/admin\/labs\/experiments\/[a-z0-9]+(?:-[a-z0-9]+)*\/edit$/.test(value)
+    )
+  ) {
     return value;
   }
 
