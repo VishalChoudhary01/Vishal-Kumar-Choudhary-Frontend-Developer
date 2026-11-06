@@ -436,3 +436,9 @@ Do not start Monaco integration until this Phase 1 gate is green.
 
 
 **Verification update:** On 6 November 2026, the isolated test sandbox ran `npm run test:labs-media` (9 passing cases) and `npm run test:labs-analytics` (passed). A TypeScript parser syntax pass also succeeded for all changed JSX/JS application files. The latest Vercel READY deployment visible during this check was built from an earlier commit (`e0177880`), not the current branch HEAD; no claim is made that the current Phase 1 code is deployed or browser-accepted yet.
+
+### Phase 1 deployment gate — 6 November 2026
+
+A new Vercel Preview deployment was requested for the latest branch after the source and regression checks passed. Vercel rejected deployment creation with HTTP 402 `api-deployments-free-per-day` and a 24-hour retry window (more than 100 deployments). The most recent READY deployment currently listed was built from commit `e0177880`, which predates the final Phase 1 implementation commits. Therefore the current source changes are **not yet deployed** and no deployed browser/media matrix has been claimed. Production has not been touched.
+
+After the Vercel quota resets, create a Preview from the current `feat/labs-platform-integration` HEAD, verify the full Next.js build, then run the real portrait/landscape/square/GIF/MP4/WebM browser matrix and Like/source-access/static-detail checks. Do not begin Monaco phases until this Preview gate is green.
