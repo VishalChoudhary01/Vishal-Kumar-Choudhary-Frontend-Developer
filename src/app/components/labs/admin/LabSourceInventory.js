@@ -11,6 +11,7 @@ import {
   FileCode2,
   FolderPlus,
   LoaderCircle,
+  Pencil,
   RefreshCw,
   Search,
   SearchX,
@@ -386,6 +387,16 @@ export default function LabSourceInventory() {
                 </div>
 
                 <div className="flex shrink-0 items-center gap-2 pl-12 sm:pl-0">
+                  {item.isCustom ? (
+                    <Link
+                      href={"/admin/labs/experiments/" + encodeURIComponent(item.slug) + "/edit"}
+                      aria-label={"Edit details for " + item.title}
+                      className="inline-flex h-9 items-center gap-2 border border-border px-3 text-xs font-semibold text-text-secondary transition-colors hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                    >
+                      <Pencil size={13} aria-hidden="true" />
+                      Edit details
+                    </Link>
+                  ) : null}
                   {hasWorkspace ? (
                     <>
                     <Link
