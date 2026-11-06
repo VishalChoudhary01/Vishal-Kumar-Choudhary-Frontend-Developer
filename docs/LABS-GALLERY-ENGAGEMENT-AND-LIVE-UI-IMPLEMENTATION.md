@@ -117,3 +117,11 @@ The public featured spotlight now uses an eligible record from the same combined
 The presentation reuses the existing static, non-executable preview component and exact release media precedence. A failed image now advances to the next validated preview source through the shared failure-state helper. The new resolver/integration tests are included in the production build sequence.
 
 See the Labs Public Page Redesign phased plan for implementation details and outstanding acceptance checks. The code commit does not represent a passing build or deployed browser QA.
+
+## 10. Phase 3 public collection presentation — 7 November 2026
+
+The public collection now has a redesigned category/count row, result summary and responsive card composition. Category counts are computed from the eligible published entries, and absent categories are omitted. Cards retain real experiment slugs, the shared non-executable preview renderer and the existing LikeButton/engagement contract.
+
+Six-item progressive loading remains unchanged. Card in-view transitions respect reduced motion, and code-owned artwork typography is container-relative to prevent clipping at narrower card widths. A new collection test suite is registered in the production build sequence.
+
+See the Labs Public Page Redesign phased plan for changed files and pending validation. This code commit is not proof of passing tests, production build or browser QA.
