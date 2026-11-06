@@ -10,7 +10,9 @@ const COMPILER_TIMEOUT_MS = 45_000;
 const PREVIEW_TIMEOUT_MS = 10 * 60 * 1000;
 const MAX_OUTPUT_BYTES = 15 * 1024 * 1024;
 const MAX_OUTPUT_FILES = 80;
-const POSTER_CAPTURE_VERSION = "chromium-cli-v1";
+const POSTER_CAPTURE_VERSION = "playwright-chromium-v1";
+const POSTER_PLAYWRIGHT_VERSION = "1.65.0";
+const POSTER_CHROMIUM_VERSION = "158.0.8127.18";
 const MAX_POSTER_BYTES = 8 * 1024 * 1024;
 
 const CONTENT_TYPES = {
@@ -226,7 +228,7 @@ async function executeBuild(sandbox, files, { base = "./" } = {}) {
 }
 
 
-async function captureReleasePoster(sandbox, { slug, versionId, buildHash, token }) {
+async function captureReleasePoster(sandbox, { slug, versionId, buildHash, artifactId, token }) {
   const resultPath = "/vercel/sandbox/gallery-poster-result.json";
   const screenshotPath = "/vercel/sandbox/gallery-poster.png";
   try {
@@ -238,8 +240,8 @@ async function captureReleasePoster(sandbox, { slug, versionId, buildHash, token
         LABS_CAPTURE_BUILD_OUTPUT: "/vercel/sandbox/output",
         LABS_CAPTURE_SCREENSHOT_PATH: screenshotPath,
         LABS_CAPTURE_RESULT_PATH: resultPath,
-        LABS_CHROMIUM_EXECUTABLE_PATH: process.env.LABS_CHROMIUM_EXECUTABLE_PATH || "",
-        LABS_CHROMIUM_EXPECTED_VERSION: process.env.LABS_CHROMIUM_EXPECTED_VERSION || "",
+        PLAYWRIGHT_BROWSERS_PATH: "/opt/ms-playwright",
+        LABS_CHROMIUM_EXPECTED_VERSION: POSTER_CHROMIUM_VERSION,
       },
       timeoutMs: 40_000,
     });
@@ -248,13 +250,18 @@ async function captureReleasePoster(sandbox, { slug, versionId, buildHash, token
     if (
       command.exitCode !== 0 ||
       capture?.status !== "ready" ||
-      capture?.captureVersion !== POSTER_CAPTURE_VERSION
+      capture?.captureVersion !== POSTER_CAPTURE_VERSION ||
+      capture?.playwrightVersion !== POSTER_PLAYWRIGHT_VERSION ||
+      capture?.browserVersion !== POSTER_CHROMIUM_VERSION
     ) {
       const allowedReasons = new Set([
         "browser_unavailable",
         "capture_timeout",
         "capture_failed",
         "browser_unpinned",
+        "browser_version_mismatch",
+        "navigation_failed",
+        "runtime_error",
         "no_visible_output",
         "invalid_output",
       ]);
@@ -285,7 +292,7 @@ async function captureReleasePoster(sandbox, { slug, versionId, buildHash, token
 
     const contentHash = createHash("sha256").update(bytes).digest("hex");
     const stored = await put(
-      ["labs", slug, versionId, buildHash, "__preview", "gallery-poster.png"].join("/"),
+      ["labs", slug, versionId, buildHash, artifactId, "__preview", "gallery-poster.png"].join("/"),
       bytes,
       {
         access: "public",
@@ -322,7 +329,8 @@ async function captureReleasePoster(sandbox, { slug, versionId, buildHash, token
       height: 900,
       contentHash,
       captureVersion: POSTER_CAPTURE_VERSION,
-      browserVersion: typeof capture.browserVersion === "string" ? capture.browserVersion.slice(0, 160) : null,
+      browserVersion: capture.browserVersion,
+      playwrightVersion: capture.playwrightVersion,
       reasonCode: null,
     };
   } catch (error) {
@@ -452,6 +460,7 @@ export async function buildAndStoreOwnerLabRelease({ slug, user, version }) {
       slug,
       versionId: version.versionId,
       buildHash: result.buildHash,
+      artifactId,
       token,
     });
 
