@@ -127,7 +127,7 @@ export default function LabMediaLibrary({ slug }) {
     }
   }
 
-  async function saveGalleryPreview() {
+  async function saveGalleryPreview(assetId = selectedGalleryPreviewId) {
     if (savingGalleryPreview || busy || saving) return;
 
     setSavingGalleryPreview(true);
@@ -141,17 +141,17 @@ export default function LabMediaLibrary({ slug }) {
         credentials: "same-origin",
         headers: { Accept: "application/json", "Content-Type": "application/json" },
         body: JSON.stringify({
-          assetId: selectedGalleryPreviewId,
+          assetId,
           altText: galleryPreviewAlt,
           fit: "cover",
         }),
       });
       await readJson(response);
       await loadAssets();
-      setMessage(selectedGalleryPreviewId
+      setMessage(assetId
         ? "Public gallery poster saved for the exact published build. A later published version will require a new poster."
         : "Public gallery poster removed.");
-      showToast("success", selectedGalleryPreviewId ? "Gallery poster published." : "Gallery poster removed.");
+      showToast("success", assetId ? "Gallery poster published." : "Gallery poster removed.");
     } catch (reason) {
       setError(reason.message || "The public gallery poster could not be saved.");
       showToast("error", reason.message || "The public gallery poster could not be saved.");
@@ -297,13 +297,23 @@ export default function LabMediaLibrary({ slug }) {
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button
             type="button"
-            onClick={saveGalleryPreview}
-            disabled={savingGalleryPreview || busy || saving || loading || (!selectedGalleryPreviewId && !assets.some((asset) => asset.isGalleryPreview))}
+            onClick={() => saveGalleryPreview()}
+            disabled={savingGalleryPreview || busy || saving || loading || !selectedGalleryPreviewId}
             className="inline-flex h-8 items-center gap-2 bg-brand px-3 text-[11px] font-semibold text-brand-contrast hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-40"
           >
             {savingGalleryPreview ? <LoaderCircle size={12} className="animate-spin" aria-hidden="true" /> : <Save size={12} aria-hidden="true" />}
-            {savingGalleryPreview ? "Saving…" : selectedGalleryPreviewId ? "Publish gallery poster" : "Remove gallery poster"}
+            {savingGalleryPreview ? "Saving…" : "Publish gallery poster"}
           </button>
+          {assets.some((asset) => asset.isGalleryPreview) ? (
+            <button
+              type="button"
+              onClick={() => saveGalleryPreview(null)}
+              disabled={savingGalleryPreview || busy || saving || loading}
+              className="inline-flex h-8 items-center border border-border px-3 text-[11px] font-medium text-text-secondary hover:border-warning hover:text-warning disabled:opacity-40"
+            >
+              Remove public poster
+            </button>
+          ) : null}
           {assets.some((asset) => asset.isGalleryPreview) ? (
             <span className="text-[10px] text-text-tertiary">
               {assets.find((asset) => asset.isGalleryPreview)?.isGalleryPreviewCurrent
