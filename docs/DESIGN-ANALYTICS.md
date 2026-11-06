@@ -1,6 +1,6 @@
 # Design Specification — Analytics Dashboard
 
-**Status:** Product/design authority. Dedicated Analytics/Source Library routes, custom published-experiment aggregation/source-event validation, metadata editor, create-to-workspace handoff and the first live Analytics dashboard are committed. A READY Preview build verifies the server-first dashboard, 10-second visible-tab polling, MotionNumber counters and four-series motion chart; anonymous protected-route smoke checks pass. Authenticated owner refresh, Atlas event reconciliation and visual/accessibility QA remain pending. Deterministic rankings for instrumented source opens, code copies and current active likes, plus a slug-scoped experiment analytics detail page/API, are now implemented in code; they are included in READY Preview deployment `dpl_ADaqDDWRKP2WjESBaKA2dqgBuv7a`. Anonymous detail-page protection and exact login return path pass; authenticated Atlas reconciliation and visual/accessibility QA remain pending. Public experiment-view/preview instrumentation and global ranking by views remain incomplete. This document defines the analytics experience and metric semantics; delivery order is in [the Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md).  
+**Status:** Product/design authority. Dedicated Analytics/Source Library routes, custom published-experiment aggregation/source-event validation, metadata editor, create-to-workspace handoff, live polling dashboard, rankings and experiment detail route are implemented in code. The current four-series SVG chart is temporary and explicitly rejected as the final UX because it overlays unlike metrics on a shared scale and offers insufficient inspection. This document specifies its replacement: a lazy-loaded, single-metric Chart.js canvas column chart; compatibility and visual QA are pending. Authenticated owner refresh, Atlas reconciliation and visual/accessibility QA remain pending. Public experiment-view/preview instrumentation and global ranking by views remain incomplete. This document defines the analytics experience and metric semantics; delivery order is in [the Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md).  
 **Related:** [PRD](./PRD.md), [Admin design](./DESIGN-ADMIN.md), [Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md)
 
 ## 1. Purpose
@@ -141,7 +141,7 @@ This section maps the analytics design to the current Labs code. Metric meanings
 - The current owner page is `/admin/labs/sources`, where an analytics overview is rendered above the source inventory. This is a temporary combined presentation, not the target information architecture.
 - `GET /api/v1/admin/labs/analytics?days=7|30|90|365` returns owner-only aggregate source engagement.
 - The current model records source opens, successful code-copy reports, verified like/unlike state transitions and anonymous guest-like actions.
-- The current page renders metric cards, a sparse daily bar chart, an experiment summary table and like activity. It is server-loaded and does not automatically refresh.
+- The current dashboard renders summary cards, rankings, a four-series SVG trend component and an experiment table, with 10-second visible-tab polling. LabsEngagementTrendChart is temporary: all four measures share one Y scale, geometry is manually fixed at 960×280, ticks are sparse and there is no useful crosshair/tooltip inspection. It is not the accepted final chart UX; see Chart redesign — replacement plan below.
 - The owner analytics aggregation now combines the code-owned published catalogue with `getPublishedCustomLabExperiments()`. A custom row is included only when its experiment is published, its source is published, and a ready artifact matches both the experiment slug and exact published source version. The same eligibility resolver is covered by a Node-native regression test; reconcile against real Atlas records before trusting production totals.
 - Collection analytics now returns deterministic top-five rankings for source opens and copies in the selected period, plus current active likes. Ties are ordered by title and then slug; zero-value entries are omitted. Active-like ranking is current state, not period activity.
 - `/admin/labs/analytics/[slug]` and `GET /api/v1/admin/labs/analytics/:slug` provide a private aggregate detail view for one published built-in or eligible custom experiment. It reports only measured source opens, per-experiment distinct verified accounts, copies, verified/anonymous like actions, current active likes and UTC daily trends. Preview build verification and authenticated Atlas reconciliation are pending.
@@ -162,6 +162,78 @@ The inventory and source workspace must not become alternate analytics dashboard
 The first live release now uses the existing owner analytics GET endpoint with visible-tab polling at a 10-second interval. It pauses while hidden, resumes on focus/visibility, prevents overlapping requests, aborts on unmount, preserves the last successful snapshot on failure, uses bounded backoff and exposes manual refresh plus a truthful last-updated/stale state. The same reporting period is applied to every request. This is code- and Preview-build-verified; authenticated event-to-screen refresh and browser QA remain pending.
 
 The collection event query bounds both ends of the selected reporting window (`since <= occurredAt <= generatedAt`) to prevent future-dated events from inflating totals. Pure ranking, period normalization, UTC daily-series and custom-artifact eligibility helpers have a Node-native regression suite that runs before the production build. The previous READY Preview ran six tests; this branch now extends the suite to twelve cases covering actor attribution, active-like attribution, collection totals and source-event rate-limit policy. The latest rate-limited event-write changes require a fresh Preview build before being marked verified; authenticated Atlas reconciliation remains pending. The refresh transport must return the same normalized aggregate shape so a later push transport can be evaluated without rewriting charts. WebSockets are not required for the first release; any future upgrade must document hosting, cross-instance fanout, reconnect/replay, authorization and fallback behavior before adding infrastructure.
+
+
+### Chart redesign — replacement plan (2026-11-06)
+
+**Decision:** replace the current four-series SVG graph with a lazy-loaded **Chart.js canvas column chart**, showing one selected metric at a time. Use the direct chart.js package, not an additional React wrapper in the first implementation. Chart.js 4.6.1 is MIT-licensed and provides canvas rendering, bar charts, responsive sizing, axes and tooltip primitives. Keep the dependency isolated to the private Analytics route. This is a library decision for historical daily analytics; no package has been installed yet.
+
+**Why the current chart is rejected**
+- Source opens, copies and like actions can differ by orders of magnitude. Overlaying all four on one Y-axis makes lower-volume measures appear flat or invisible.
+- The 960×280 SVG uses fixed plot geometry and hand-built path/tick placement rather than a chart scale/layout engine.
+- There is no crosshair or useful point inspection readout; users must infer values from a sparse axis and open the table.
+- Four line colours create legend work without helping the user compare the data correctly.
+- “Live engagement trends” is misleading: the data is daily aggregation refreshed by polling, not a real-time event stream.
+
+**Chart panel layout**
+1. Heading: **Activity over time**. Supporting text states the selected metric, bucket grain and UTC timezone.
+2. Metric selector: four native, keyboard-operable options — **Source opens**, **Code copies**, **Verified like/unlike actions**, **Anonymous like/unlike actions**. Selecting one replaces the active dataset and gives it its own Y scale.
+3. Keep the existing page-level reporting-period control (7, 30, 90, 365 days). Do not render a second period/window control inside the chart.
+4. Main canvas: one brand-coloured dataset, visible zero baseline, subtle horizontal grid, readable date ticks, integer Y-axis labels and a compact tooltip containing full date/range, metric name and exact value.
+5. Point readout: when a point is hovered/tapped, show its date/range and count in normal HTML text. With no point selected, show the most recent bucket's date and value.
+6. Keep the existing summary cards and rankings. Do not chart active-like state as a daily series: **active likes are a current snapshot**, not a daily event measure.
+
+**Bucket and aggregation rules**
+- 7, 30 and 90 day selections use one bar per UTC calendar date from the existing daily response.
+- The 365 day selection groups daily rows into UTC weeks (Monday–Sunday). First/last partial weeks are clearly identified in the tooltip. Weekly values are sums of daily buckets; they must sum exactly to the selected period total.
+- Preserve explicit zero-activity dates. A valid all-zero series is not the same as an empty or failed query.
+- Validate values as finite, non-negative integers; sort by bucket start; reject duplicate/out-of-order dates in the pure transform rather than silently drawing a misleading sequence.
+- Show only the four currently instrumented event metrics. Do not add experiment views, preview starts, preview interactions, rates or active-like history until those definitions/data exist.
+
+**Chart.js implementation contract**
+- Lazy-load the chart module only on the Analytics overview and experiment-detail routes; do not add chart code to public Labs or the homepage bundle.
+- Load Chart.js through a small client-only adapter/component. Prefer core chart.js with only the required bar controller, bar element, category scale, linear scale and tooltip registered. No date adapter is needed for current UTC category labels.
+- Use a dedicated, relatively positioned parent container and Chart.js responsive sizing. Keep a stable height; destroy the chart instance on unmount/rebuild and update the existing instance when period, metric or data changes.
+- Set the Y scale to begin at zero, use integer tick formatting, no dual axis and no stacked series. The 365-day weekly view uses the same zero-based axis.
+- Resolve chart/grid/text colours from active semantic theme tokens after mount. Do not hard-code a second independent light/dark palette or use success/error merely to colour neutral metrics.
+- Use restrained transitions for metric selection or real data changes. Disable chart animation for reduced-motion preferences and avoid replaying an entrance animation after every 10-second poll.
+- Tooltips are exact: dates in UTC, numbers in en-IN, no inferred percentages and no claims that a copy means code usage.
+
+**Interaction and accessibility**
+- The four metric controls are native buttons with aria-pressed, visible focus and keyboard access.
+- Give the canvas an accessible name/description identifying selected metric and period. Retain an equivalent HTML table behind a labelled disclosure; it contains the same daily/weekly values and totals.
+- The selected-point date/value readout is regular DOM text, not canvas-only text.
+- Hover and touch inspection are optional. The table and metric controls remain usable without a pointer.
+- Respect reduced motion, light/dark theme, 200% zoom and narrow mobile widths without page-level horizontal scrolling.
+
+**Library comparison and fallback**
+
+| Candidate | Assessment for this dashboard | Decision |
+|---|---|---|
+| Chart.js 4.6.1 | MIT; canvas renderer; standard categorical bar charts, zero-based axes, tooltips and responsive sizing; appropriate for daily/weekly historical counts | **Selected for implementation spike** |
+| Liveline 0.0.7 | MIT canvas renderer and real-time scrubbing/multi-series support, but API is designed around a moving seconds-based live window; pre-1.0, and canvas has no built-in keyboard/ARIA data navigation | Keep as an option for a future true streaming/tick chart, not the daily historical graph |
+| ApexCharts | Strong line/bar/time-series and built-in keyboard/ARIA support, but current redistribution terms can require OEM licensing for interactive charts embedded in products used by other people | Do not add until the exact deployment/use case is cleared against the current license |
+| Hand-built Canvas 2D | Full visual control, but we would own axis ticks, date scales, hit testing, tooltips, resizing, high-DPI rendering, touch and accessibility fallback | Only fallback if Chart.js fails the spike; do not rebuild a chart engine prematurely |
+
+**Implementation spike before package adoption**
+1. Add the exact Chart.js version chosen at implementation time; record the lockfile and license. Do not add ApexCharts or Liveline in parallel.
+2. Render fixtures for 7, 30, 90 and 365 day windows, including all-zero, sparse, spike, repeated-value and first/last partial-week cases.
+3. Verify first/last selected dates remain visible, UTC labels do not drift by timezone, and 365-day weekly sums reconcile exactly with the daily table and API totals.
+4. Verify zero baseline, integer ticks, one high-volume metric cannot flatten another, and tooltips match the exact table row.
+5. Verify theme changes, resize, device pixel ratio 1/2, mobile touch, keyboard-only metric switching, table navigation and reduced motion.
+6. Verify client-only loading under Next.js App Router, React Strict Mode mount/unmount, polling updates and no leaked chart instances/listeners.
+7. Measure the private Analytics bundle and render/update cost with 365 daily inputs. If the spike fails correctness, accessibility or performance gates, do not ship the package; evaluate a small purpose-built canvas renderer with independently tested pure geometry utilities.
+
+**Chart acceptance gate**
+- [ ] One metric at a time; no unlike metrics share a Y-axis.
+- [ ] Y-axis starts at zero and displays integer event counts.
+- [ ] 7/30/90 daily and 365 weekly bucket rules are visible and documented.
+- [ ] Weekly and daily aggregates reconcile exactly with API totals and the HTML table.
+- [ ] Hover/tap inspection displays exact date and value.
+- [ ] Empty, all-zero, loading, stale and error states are distinct.
+- [ ] Keyboard, screen-reader equivalent, touch, reduced motion, light/dark and narrow-screen checks pass.
+- [ ] Chart library is lazy-loaded and absent from public Labs/homepage bundles.
+- [ ] No WebSocket, Redis or additional backend is introduced for chart animation.
 
 ### Custom experiment and instrumentation gaps
 
@@ -190,7 +262,8 @@ Use existing semantic theme tokens and the admin design system. Keep series iden
 - [x] Separate Analytics and Source Library routes (Preview build verified; authenticated owner UI QA remains pending).
 - [x] Add visible-tab 10-second polling, no-overlap/abort/backoff and truthful stale/error state (Preview build verified; authenticated refresh round-trip remains pending).
 - [x] Add complete UTC date buckets including zero-activity days.
-- [x] Add four-series trends for currently instrumented events, MotionNumber counters and an accessible daily table (Preview build verified).
+- [x] Existing four-series SVG baseline is code/build verified but explicitly temporary and rejected as the final chart.
+- [ ] Replace it with the selected single-metric Chart.js canvas design after the compatibility spike and chart acceptance gate pass.
 - [x] Add deterministic rankings for currently instrumented source opens, copies and current active likes (Preview build verified; authenticated Atlas reconciliation pending).
 - [x] Add owner-only aggregate experiment analytics API and `/admin/labs/analytics/[slug]` detail page (Preview build verified; authenticated Atlas reconciliation pending).
 - [ ] Add public experiment-view and preview-event instrumentation before ranking by views or showing those metrics.
