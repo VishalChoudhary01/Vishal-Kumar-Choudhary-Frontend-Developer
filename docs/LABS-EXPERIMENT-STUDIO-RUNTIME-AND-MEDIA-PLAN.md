@@ -1404,3 +1404,31 @@ The capture runtime was installed into and verified within the Preview compiler 
 - The setup sandbox was stopped with `persistent: false`; its verified manual snapshot is the only retained result of this maintenance operation.
 
 **Not yet verified:** a new Git-connected Vercel Preview deployment using the latest branch commit and refreshed snapshot, followed by the signed-in owner publish flow against a real Atlas experiment. The previous listed Preview deployment was created before the final snapshot environment refresh. Do not call deployed end-to-end capture complete until that new deployment and owner-flow test pass.
+
+
+### 44.7 Publish retry failure — verified root cause and fix — 6 November 2026
+
+The owner publish route was reached successfully. The Vercel runtime logs for repeated POST requests to `/api/v1/admin/labs/sources/fluid-gradient-playground/publish` recorded:
+
+`Vercel Blob: This blob already exists, use allowOverwrite: true ...`
+
+The compiled release file keys were deterministic by slug/sourceVersion/buildHash/file path, while each call explicitly set `allowOverwrite: false`. Retrying a publish of the same saved source therefore attempted to create the same public Blob object and failed before the database publish-pointer transaction. The generic admin error wrapper then replaced the provider error with “The requested owner operation is temporarily unavailable.”
+
+**Fix committed on `feat/labs-platform-integration`:**
+
+- Added `src/app/lib/labs/release-artifact-path.mjs`. The canonical helper validates slug, UUID sourceVersion/artifact IDs, SHA-256 build hash and safe relative output path.
+- Every compiled output file key now includes the new unique `artifactId`: `labs/{slug}/{sourceVersionId}/{buildHash}/{artifactId}/{filePath}`.
+- The generated screenshot uses the same artifact ID namespace, including `__preview/gallery-poster.png`.
+- Blob objects remain immutable with `allowOverwrite: false`; retry attempts receive new paths instead of overwriting previous artifacts.
+- Compiled Blob failures are logged with bounded provider diagnostics and thrown as `ARTIFACT_STORAGE_ERROR`, which `adminError()` maps to a useful actionable owner-visible message.
+- The publish dialog now displays its failure inline instead of leaving the detailed error behind the open modal.
+- The Build & Publish action now snapshots unsaved editor files as a private draft first, then builds and publishes that exact new version. It no longer silently disables the action when editor content differs from the last saved version.
+- The publish route is configured for a 300-second maximum, and its isolated release worker is bounded to 240 seconds to leave time for the final pointer transaction. Vercel's current Fluid Compute duration limits permit up to 300 seconds on Hobby; deployments must retain the project's Fluid Compute configuration.
+- HTTP 504 feedback now instructs the owner to reload release status before retrying, since a timeout response alone should not be treated as proof that no release completed.
+
+**Verification completed in a fresh non-persistent Vercel Sandbox:**
+
+- TypeScript parser syntax validation passed for `LabSourceEditor.js`, `admin-http.js`, `release-artifact-path.mjs`, `compiler-service.js` and the publish Route Handler.
+- `npm run test:smoke` passed. The suite confirms two publish attempts for the same slug/source version/build use distinct Blob paths; poster and compiled files share the artifact namespace; malformed artifact IDs are rejected; and prior compiler/media-precedence regression tests still pass.
+
+**Deployment status:** source changes are committed, but a new Preview deployment could not be created during this verification because Vercel returned `402 payment_required` for the team's `api-deployments-free-per-day` quota (more than 100 API-created deployments; retry window reported as 24 hours). The existing Preview deployment therefore still runs the old storage-key implementation. No Production deployment or Production environment variable was changed. Create a new Preview deployment from the latest branch commit after the quota resets or through the project's permitted Git deployment workflow, then retry `fluid-gradient-playground` Build & Publish.
