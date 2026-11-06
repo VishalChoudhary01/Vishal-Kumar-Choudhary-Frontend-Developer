@@ -237,3 +237,6 @@ Added six immutable-history contract tests in `tests/labs-source-history-monaco.
 Phase 5 validation passed: Monaco 6/6, protected reader 5/5, creator/state 12/12, history 6/6, media 9/9, analytics 15/15, ESLint, SEO (zero warnings) and a clean Next.js 16.4.3 production build with all Labs routes compiled.
 
 Owner browser QA is still required on a Vercel Preview for immutable file switching, hash/content identity, no mutation of the current working copy, modal close/reopen model cleanup, Restore-as-new-draft behavior, themes, keyboard navigation and responsive sizing. Phases 1–5 are implemented in branch source; phases 6–7 and authenticated Preview acceptance remain. Production has not been promoted.
+
+
+Phase 5 deployment note (7 November 2026): Vercel Preview `dpl_7m599mPvgivpTsG5ZgWKxWPdMD6g` is READY for the read-only version-history Monaco UI commit `28635a34c416d4e84a912ac96d75b6a88f68a036`. The first build with the new history test runner failed because one Restore ancestry assertion targeted the UI component rather than the source-management service; the assertion was corrected in commit `175e31ae9d0e95d9574453cafed324deecb889b5`, and the clean-checkout production build now passes. A READY build containing that corrected test revision has not yet been observed. Authenticated owner browser QA remains pending; Production is unchanged.
