@@ -75,3 +75,10 @@ test("there is one React files-state write path behind the synchronous mirror", 
   assert.match(editor, /function commitFiles\(/);
   assert.match(editor, /filesRef\.current/);
 });
+
+
+test("source editor and metadata controls lock while save, restore or publish is in flight", () => {
+  assert.match(editor, /disabled=\{Boolean\(busy\)\}[\s\S]*?onChange=\{\(event\) => updateSelected\(\{ path:/);
+  assert.match(editor, /disabled=\{Boolean\(busy\)\}[\s\S]*?onChange=\{\(event\) => updateSelected\(\{ language:/);
+  assert.match(editor, /readOnly=\{Boolean\(busy\)\}/);
+});
