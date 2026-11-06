@@ -172,8 +172,8 @@ The following are domain concepts, not finalized MongoDB documents. Field names 
 ### Lab experiment version payload
 - Title, slug, description, tags/category/technologies.
 - Preview mode and published presentation references.
-- Optional gallery-preview asset, ordered detail-gallery references and optional runtime-fallback asset, after the role migration.
-- Optional generated poster reference bound to the exact source version and build artifact.
+- Current `LabExperiment.galleryPreview` object: public Blob URL, owner-selected image asset reference, alt text, fit, and exact published artifact/source-version IDs. Only the matching release may serialize it to the public DTO.
+- Ordered detail-gallery references and public runtime-fallback asset remain future role-migration work. Automatic generated-poster metadata/capture is deferred; do not treat it as the current poster path.
 - Full source/configuration remains protected by server policy.
 - Explicit dependency allowlist/runtime profile if interactive execution is enabled.
 - No privileged environment variables or arbitrary unrestricted network policy.
@@ -189,10 +189,11 @@ The following are domain concepts, not finalized MongoDB documents. Field names 
 ### Like
 - Experiment/content ID.
 - Actor type and authenticated user ID where applicable.
-- Guest deduplication token only if approved and privacy-reviewed.
-- Active state or immutable action events as selected.
+- Anonymous state is stored separately in `lab_guest_likes` using the HMAC digest of a signed HTTP-only browser cookie; it identifies a browser profile, not a person, and is not cross-device.
+- Active state and append-only action events are separate; a Like/Unlike control does not create a dislike vote.
 - Timestamps and uniqueness/index strategy.
-- Authenticated unique constraint: at most one active like per user/experiment.
+- Authenticated unique constraint: at most one active like per user/experiment; guest state has a unique browser-key/experiment constraint and expiry.
+- On a verified session with the same guest cookie, current active guest states are claimed transactionally by the verified account; historical events are not rewritten.
 
 ### Analytics event
 - Event ID, allowed event type, timestamp, experiment/content ID and version where applicable.
@@ -214,10 +215,10 @@ These are domain contracts. Final Route Handler versus Server Action selection a
 - **Owner Run:** accepts the current unsaved working-copy snapshot and a request/run ID; server derives the owner, validates the file tree and limits, compiles in the isolated sandbox and returns bounded status/diagnostics plus a temporary preview URL. It must not save or publish implicitly. A failed Run preserves editor content and the previous published release.
 - **Run lifecycle:** `queued/building → artifact-ready → iframe-starting → runtime-ready`, or a bounded `build-error/runtime-error/timeout/stopped` state. Runtime-ready requires a validated bridge message correlated to the current run ID; iframe `load` alone is insufficient. Stale messages are ignored.
 - **Poster generation:** owner-only request bound to an exact successful run or immutable published sourceVersionId/artifactId. Capture only after validated runtime-ready. A poster record stores asset reference, source-version ID, artifact ID, capture viewport/configuration, format/dimensions, content hash and created timestamp. Never accept a client-supplied arbitrary page URL or source hash as authority.
-- **Poster timing:** capture on explicit owner Generate/Regenerate or as a bounded publish-time task only when no valid selected `gallery-preview` asset or current poster exists. Never capture on every keystroke, every visitor request or for every card during gallery render.
-- **Public card DTO:** one safe preview descriptor and published release version reference only; never source files, draft preview URLs, owner-only URLs or storage credentials. Poster must exactly match the current published source/artifact version.
+- **Deferred automatic poster capture (not the current implementation):** a future capture worker may support an explicit owner Generate/Regenerate action or bounded publish-time capture only when no valid selected poster exists. Never capture on every keystroke, every visitor request or for every card during gallery render.
+- **Current public card DTO:** one safe preview descriptor only; for owner-created experiments the implemented `galleryPreview` must match the current published `artifactId` and `sourceVersionId`. It must never contain source files, draft preview URLs, private Cloudinary URLs or storage credentials.
 - **Published detail DTO:** immutable artifact reference and safe presentation-role references. The runtime is fetched only by the detail page on a separate origin and only after its canvas is near the viewport.
-- **Security:** poster capture occurs inside the approved isolated/headless-browser boundary. Do not weaken cross-origin isolation or read iframe pixels from the portfolio page. The exact capture worker/provider/storage method remains OPEN pending validation.
+- **Security for any future capture worker:** poster capture must occur inside the approved isolated/headless-browser boundary. Do not weaken cross-origin isolation or read iframe pixels from the portfolio page. The exact capture worker/provider/storage method remains OPEN pending validation.
 - These target contracts do not authorize Production publication; complete the preview/runtime and threat-model gates in the Labs Runtime and Media Plan first.
 
 ## 5. Query, pagination and mutation contracts
@@ -326,7 +327,7 @@ The collection and per-experiment analytics endpoints are owner-only aggregate r
 - `code_copy` is accepted only after the browser reports that the Clipboard API write succeeded. The server rechecks the verified session and the current published source. The event never includes clipboard contents or source file text.
 - `like`/`unlike` events are written only when the unique current like-state record actually changes. Duplicate clicks/retries that preserve state do not increment counts.
 - The current implemented `GET /api/v1/admin/labs/analytics` returns aggregate source-engagement metrics across code-owned published experiments and published custom experiments whose source pointer matches a ready artifact. The owner aggregation now returns complete UTC date buckets, including zero-activity days. Experiment detail views, preview starts/interactions and broader rankings remain uninstrumented/incomplete and must not be represented as real values until the event paths are implemented and validated.
-- The first release does not expose individual users' source-open/copy/like histories, emails or raw event rows in the admin dashboard.
+- The owner-only experiment detail page currently exposes only the current active verified-liker list (name, masked email and state timestamp) with pagination/search. It does not expose user-level historical source-open/copy/like timelines, raw user IDs, anonymous identity hashes or raw event rows.
 - Verified events use the server-derived Better Auth user ID for deduplication/abuse controls. Guest-like events use `actorCategory: guest` and no user ID; do not introduce stable cross-device guest identity. Events do not store raw IP, email, clipboard data, source contents or unnecessary device identifiers.
 - Event retention and account-deletion handling are deployment gates and must be disclosed in the Privacy Policy before production analytics is enabled.
 
