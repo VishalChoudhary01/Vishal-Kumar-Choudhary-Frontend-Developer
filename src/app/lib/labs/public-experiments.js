@@ -290,7 +290,7 @@ export async function getPublishedCustomLabExperimentPage({
 
   const pagePipeline = [
     ...buildPublishedEligibilityStages({ category, cursorMatch }),
-    { $sort: { publishedAt: -1, updatedAt: -1, _id: -1 } },
+    { $sort: { publishedAt: -1, _id: -1 } },
     { $limit: pageSize + 1 },
     {
       $project: {
@@ -331,7 +331,6 @@ export async function getPublishedCustomLabExperimentPage({
   const nextCursor = hasMore && lastRecord
     ? encodePublicExperimentCursor({
         publishedAt: lastRecord.publishedAt,
-        updatedAt: lastRecord.updatedAt,
         id: String(lastRecord._id),
       })
     : null;
