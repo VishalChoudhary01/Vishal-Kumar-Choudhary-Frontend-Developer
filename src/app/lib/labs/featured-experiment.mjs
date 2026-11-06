@@ -11,12 +11,18 @@ export function resolveFeaturedExperiment(experiments = [], featuredSlug = "") {
     return null;
   }
 
+  const isEligibleItem = (experiment) =>
+    typeof experiment?.slug === "string" &&
+    /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(experiment.slug) &&
+    typeof experiment.title === "string" &&
+    experiment.title.trim().length > 0;
+
   return (
     experiments.find(
       (experiment) =>
-        experiment?.slug === featuredSlug &&
-        typeof experiment.title === "string" &&
-        experiment.title.trim().length > 0,
-    ) || null
+        isEligibleItem(experiment) && experiment.slug === featuredSlug,
+    ) ||
+    experiments.find(isEligibleItem) ||
+    null
   );
 }
