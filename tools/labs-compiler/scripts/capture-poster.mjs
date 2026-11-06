@@ -1,30 +1,70 @@
 import { createServer } from "node:http";
-import { spawn, spawnSync } from "node:child_process";
-import { access, readFile, mkdir, writeFile } from "node:fs/promises";
+import { chromium } from "playwright";
+import {
+  access,
+  mkdir,
+  readFile,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { constants } from "node:fs";
-import { dirname, extname, resolve, sep } from "node:path";
+import {
+  dirname,
+  extname,
+  resolve,
+  sep,
+} from "node:path";
 
 const BUILD_ROOT = resolve(process.env.LABS_CAPTURE_BUILD_OUTPUT || "/vercel/sandbox/output");
 const SCREENSHOT_PATH = resolve(process.env.LABS_CAPTURE_SCREENSHOT_PATH || "/vercel/sandbox/gallery-poster.png");
 const RESULT_PATH = resolve(process.env.LABS_CAPTURE_RESULT_PATH || "/vercel/sandbox/gallery-poster-result.json");
 const HOST = "127.0.0.1";
-const PORT = 4173;
+const VIEWPORT = { width: 1200, height: 900 };
 const MAX_POSTER_BYTES = 8 * 1024 * 1024;
-const CAPTURE_VERSION = "chromium-cli-v1";
+const CAPTURE_VERSION = "playwright-chromium-v1";
+const PINNED_PLAYWRIGHT_VERSION = "1.65.0";
+const EXPECTED_BROWSER_VERSION = String(process.env.LABS_CHROMIUM_EXPECTED_VERSION || "").trim();
+
 const CONTENT_TYPES = {
-  ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
-  ".mjs": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
-  ".json": "application/json; charset=utf-8", ".svg": "image/svg+xml",
-  ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
-  ".webp": "image/webp", ".avif": "image/avif", ".gif": "image/gif",
-  ".woff": "font/woff", ".woff2": "font/woff2", ".ttf": "font/ttf",
+  ".html": "text/html; charset=utf-8",
+  ".htm": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".mjs": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
+  ".avif": "image/avif",
+  ".gif": "image/gif",
+  ".ico": "image/x-icon",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+  ".ttf": "font/ttf",
+  ".otf": "font/otf",
+  ".mp4": "video/mp4",
+  ".webm": "video/webm",
 };
 
-function writeResult(result) {
-  return writeFile(RESULT_PATH, JSON.stringify({
-    captureVersion: CAPTURE_VERSION,
-    ...result,
-  }), { mode: 0o600 });
+function captureError(code, message) {
+  const error = new Error(message);
+  error.code = code;
+  return error;
+}
+
+async function writeResult(result) {
+  await mkdir(dirname(RESULT_PATH), { recursive: true });
+  await writeFile(
+    RESULT_PATH,
+    JSON.stringify({
+      captureVersion: CAPTURE_VERSION,
+      playwrightVersion: PINNED_PLAYWRIGHT_VERSION,
+      ...result,
+    }),
+    { mode: 0o600 },
+  );
 }
 
 function isInside(root, candidate) {
@@ -33,188 +73,234 @@ function isInside(root, candidate) {
 
 async function serveBuild() {
   const entry = resolve(BUILD_ROOT, "index.html");
-  if (!isInside(BUILD_ROOT, entry)) throw new Error("BUILD_ENTRY_INVALID");
+  if (!isInside(BUILD_ROOT, entry)) {
+    throw captureError("build_entry_invalid", "The compiled release has an invalid HTML entry.");
+  }
   await access(entry, constants.R_OK);
 
   const server = createServer(async (request, response) => {
     try {
-      const rawPath = String(request.url || "/").split("?")[0];
+      if (request.method !== "GET" && request.method !== "HEAD") {
+        response.writeHead(405, { Allow: "GET, HEAD" }).end();
+        return;
+      }
+
+      const requestUrl = new URL(request.url || "/", "http://" + HOST);
       let pathname;
-      try { pathname = decodeURIComponent(rawPath); } catch {
+      try {
+        pathname = decodeURIComponent(requestUrl.pathname);
+      } catch {
         response.writeHead(400).end();
         return;
       }
+
       const relative = pathname === "/" ? "index.html" : pathname.replace(/^\/+/, "");
-      if (!relative || relative.split("/").some((part) => !part || part === "." || part === ".." || part.startsWith("."))) {
+      if (
+        !relative ||
+        relative.split("/").some((part) =>
+          !part || part === "." || part === ".." || part.startsWith(".")
+        )
+      ) {
         response.writeHead(404).end();
         return;
       }
+
       const filePath = resolve(BUILD_ROOT, relative);
-      if (!isInside(BUILD_ROOT, filePath)) {
+      if (!isInside(BUILD_ROOT, filePath) || filePath === BUILD_ROOT) {
         response.writeHead(404).end();
         return;
       }
+
       const contentType = CONTENT_TYPES[extname(filePath).toLowerCase()];
       if (!contentType) {
         response.writeHead(404).end();
         return;
       }
+
       const bytes = await readFile(filePath);
       response.writeHead(200, {
         "Content-Type": contentType,
         "Content-Length": bytes.length,
         "Cache-Control": "no-store",
         "X-Content-Type-Options": "nosniff",
+        "Cross-Origin-Resource-Policy": "same-origin",
       });
-      response.end(bytes);
+      response.end(request.method === "HEAD" ? undefined : bytes);
     } catch {
-      response.writeHead(404).end();
+      response.writeHead(404, { "Cache-Control": "no-store" }).end();
     }
   });
 
   await new Promise((resolveListen, reject) => {
     server.once("error", reject);
-    server.listen(PORT, HOST, resolveListen);
+    server.listen(0, HOST, resolveListen);
   });
-  return server;
-}
 
-function findChromium() {
-  const configured = String(process.env.LABS_CHROMIUM_EXECUTABLE_PATH || "").trim();
-  const expectedVersion = String(process.env.LABS_CHROMIUM_EXPECTED_VERSION || "").trim();
-  if (!expectedVersion) return null;
-
-  const candidates = [
-    ...(configured ? [configured] : []),
-    "/usr/bin/chromium",
-    "/usr/bin/chromium-browser",
-    "/usr/bin/google-chrome",
-    "/opt/google/chrome/chrome",
-    "chromium",
-    "chromium-browser",
-    "google-chrome",
-  ];
-  for (const candidate of candidates) {
-    const located = candidate.includes("/")
-      ? { status: 0, stdout: candidate }
-      : spawnSync("which", [candidate], { encoding: "utf8", timeout: 2500 });
-    if (located.status !== 0) continue;
-    const executable = String(located.stdout || "").trim();
-    if (!executable) continue;
-    const check = spawnSync(executable, ["--version"], { encoding: "utf8", timeout: 2500 });
-    if (check.status !== 0) continue;
-    const version = String(check.stdout || check.stderr || "").trim().slice(0, 160);
-    if (!version.includes(expectedVersion)) continue;
-    return { executable, version };
+  const address = server.address();
+  if (!address || typeof address === "string" || !Number.isInteger(address.port)) {
+    await new Promise((resolveClose) => server.close(resolveClose));
+    throw captureError("capture_failed", "The local screenshot server did not expose a valid port.");
   }
-  return null;
+
+  return { server, port: address.port };
 }
 
-function runChromium(executable, args, timeoutMs = 25000) {
-  return new Promise((resolveRun) => {
-    const child = spawn(executable, args, {
-      stdio: ["ignore", "pipe", "pipe"],
-      env: { ...process.env, HOME: process.env.HOME || "/tmp" },
+async function inspectRenderedOutput(page) {
+  return page.evaluate(() => {
+    const body = document.body;
+    if (!body) return { visible: false, textLength: 0 };
+
+    const text = String(body.innerText || "").replace(/\s+/g, " ").trim();
+    const visibleElement = Array.from(
+      document.querySelectorAll(
+        "canvas,svg,img,video,h1,h2,h3,h4,h5,h6,p,button,main,section,article,nav,form,ul,ol,[role=img]",
+      ),
+    ).some((element) => {
+      const rect = element.getBoundingClientRect();
+      const style = window.getComputedStyle(element);
+      return (
+        rect.width > 1 &&
+        rect.height > 1 &&
+        style.display !== "none" &&
+        style.visibility !== "hidden" &&
+        Number(style.opacity || 1) > 0
+      );
     });
-    let stdout = "";
-    let stderr = "";
-    let settled = false;
-    const finish = (result) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      resolveRun(result);
+
+    return {
+      visible: text.length >= 12 || visibleElement,
+      textLength: text.length,
+      hasVisibleElement: visibleElement,
     };
-    const timer = setTimeout(() => {
-      child.kill("SIGKILL");
-      finish({ ok: false, reasonCode: "capture_timeout", stdout, stderr });
-    }, timeoutMs);
-    child.stdout.on("data", (chunk) => {
-      stdout = (stdout + chunk.toString("utf8")).slice(-2_000_000);
-    });
-    child.stderr.on("data", (chunk) => {
-      stderr = (stderr + chunk.toString("utf8")).slice(-12000);
-    });
-    child.once("error", () => finish({ ok: false, reasonCode: "capture_failed", stdout, stderr }));
-    child.once("close", (code) => finish({ ok: code === 0, exitCode: code, stdout, stderr }));
   });
-}
-
-function baseArgs(url) {
-  return [
-    "--headless=new",
-    "--no-sandbox",
-    "--disable-dev-shm-usage",
-    "--disable-background-networking",
-    "--disable-component-update",
-    "--disable-default-apps",
-    "--disable-extensions",
-    "--disable-sync",
-    "--disable-translate",
-    "--no-first-run",
-    "--no-default-browser-check",
-    "--mute-audio",
-    "--autoplay-policy=user-gesture-required",
-    "--hide-scrollbars",
-    "--force-device-scale-factor=1",
-    "--force-prefers-reduced-motion=reduce",
-    "--window-size=1200,900",
-    "--disable-features=MediaRouter,OptimizationHints,Translate",
-    "--virtual-time-budget=5000",
-    url,
-  ];
 }
 
 async function main() {
   await mkdir(dirname(SCREENSHOT_PATH), { recursive: true });
-  const browser = findChromium();
-  if (!browser) {
-    await writeResult({
-      status: "unavailable",
-      reasonCode: process.env.LABS_CHROMIUM_EXPECTED_VERSION ? "browser_unavailable" : "browser_unpinned",
-    });
+  await rm(SCREENSHOT_PATH, { force: true });
+  await rm(RESULT_PATH, { force: true });
+
+  if (!EXPECTED_BROWSER_VERSION) {
+    await writeResult({ status: "unavailable", reasonCode: "browser_unpinned" });
     return;
   }
-  const executable = browser.executable;
 
-  const server = await serveBuild();
+  let browser;
+  let server;
   try {
-    const url = `http://${HOST}:${PORT}/`;
-    const inspected = await runChromium(executable, [
-      ...baseArgs(url),
-      "--dump-dom",
-    ]);
-    if (!inspected.ok) {
-      await writeResult({ status: "unavailable", reasonCode: inspected.reasonCode || "capture_failed" });
-      return;
+    browser = await chromium.launch({
+      headless: true,
+      timeout: 12_000,
+      args: [
+        "--no-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-background-networking",
+        "--disable-component-update",
+        "--disable-default-apps",
+        "--disable-extensions",
+        "--disable-sync",
+        "--disable-translate",
+        "--no-first-run",
+        "--no-default-browser-check",
+        "--mute-audio",
+        "--hide-scrollbars",
+      ],
+    });
+
+    const browserVersion = browser.version();
+    if (browserVersion !== EXPECTED_BROWSER_VERSION) {
+      throw captureError(
+        "browser_version_mismatch",
+        "The screenshot browser version does not match the compiler snapshot pin.",
+      );
     }
 
-    const body = inspected.stdout.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i)?.[1] || "";
-    const visibleMarkup = /<(canvas|svg|img|video|h[1-6]|p|button|main|section|article|nav|form|ul|ol)\b/i.test(body);
-    const visibleText = body.replace(/<script\b[\s\S]*?<\/script>/gi, "").replace(/<style\b[\s\S]*?<\/style>/gi, "").replace(/<[^>]+>/g, " ").replace(/&nbsp;|&#160;/g, " ").trim();
-    if (!visibleMarkup && visibleText.length < 12) {
-      await writeResult({ status: "unavailable", reasonCode: "no_visible_output" });
-      return;
+    server = await serveBuild();
+    const context = await browser.newContext({
+      viewport: VIEWPORT,
+      deviceScaleFactor: 1,
+      colorScheme: "light",
+      reducedMotion: "reduce",
+      serviceWorkers: "block",
+    });
+
+    // Even though the sandbox has outbound networking denied, explicitly
+    // constrain the page to the local artifact server and inline data/blob
+    // resources. The screenshot must not depend on remote services.
+    await context.route("**/*", async (route) => {
+      const rawUrl = route.request().url();
+      if (rawUrl.startsWith("data:") || rawUrl.startsWith("blob:")) {
+        await route.continue();
+        return;
+      }
+
+      try {
+        const url = new URL(rawUrl);
+        if (
+          url.protocol === "http:" &&
+          url.hostname === HOST &&
+          url.port === String(server.port)
+        ) {
+          await route.continue();
+          return;
+        }
+      } catch {
+        // Invalid and non-local URLs are blocked below.
+      }
+      await route.abort("blockedbyclient");
+    });
+
+    const page = await context.newPage();
+    page.setDefaultNavigationTimeout(15_000);
+    page.setDefaultTimeout(8_000);
+
+    try {
+      await page.goto("http://" + HOST + ":" + server.port + "/", {
+        waitUntil: "load",
+        timeout: 15_000,
+      });
+    } catch {
+      throw captureError("navigation_failed", "The compiled experiment could not finish loading for its screenshot.");
     }
 
-    const screenshot = await runChromium(executable, [
-      ...baseArgs(url),
-      `--screenshot=${SCREENSHOT_PATH}`,
-    ]);
-    if (!screenshot.ok) {
-      await writeResult({ status: "unavailable", reasonCode: screenshot.reasonCode || "capture_failed" });
-      return;
+    await page.evaluate(async () => {
+      if (document.fonts?.ready) {
+        await Promise.race([
+          document.fonts.ready,
+          new Promise((resolve) => setTimeout(resolve, 2_000)),
+        ]);
+      }
+      await new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve))
+      );
+    });
+    await page.waitForTimeout(500);
+
+    const rendered = await inspectRenderedOutput(page);
+    if (!rendered.visible) {
+      throw captureError("no_visible_output", "The compiled experiment did not render visible content.");
     }
 
-    const bytes = await readFile(SCREENSHOT_PATH);
-    const isPng = bytes.length >= 24 &&
+    const bytes = await page.screenshot({
+      type: "png",
+      animations: "disabled",
+      caret: "hide",
+      fullPage: false,
+      timeout: 10_000,
+    });
+
+    const isPng = Buffer.isBuffer(bytes) &&
+      bytes.length >= 24 &&
+      bytes.length <= MAX_POSTER_BYTES &&
       bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
     const width = isPng ? bytes.readUInt32BE(16) : 0;
     const height = isPng ? bytes.readUInt32BE(20) : 0;
-    if (!isPng || bytes.length > MAX_POSTER_BYTES || width !== 1200 || height !== 900) {
-      await writeResult({ status: "unavailable", reasonCode: "invalid_output" });
-      return;
+
+    if (!isPng || width !== VIEWPORT.width || height !== VIEWPORT.height) {
+      throw captureError("invalid_output", "The screenshot did not pass PNG, dimensions and 8 MB size validation.");
     }
+
+    await writeFile(SCREENSHOT_PATH, bytes, { mode: 0o600 });
     await writeResult({
       status: "ready",
       reasonCode: null,
@@ -223,11 +309,31 @@ async function main() {
       byteSize: bytes.length,
       width,
       height,
-      captureVersion: CAPTURE_VERSION,
-      browserVersion: browser.version,
+      browserVersion,
+      renderedTextLength: rendered.textLength,
+      hasVisibleElement: rendered.hasVisibleElement,
     });
+  } catch (error) {
+    const allowedReasons = new Set([
+      "browser_version_mismatch",
+      "capture_timeout",
+      "capture_failed",
+      "navigation_failed",
+      "no_visible_output",
+      "invalid_output",
+    ]);
+    const reasonCode = allowedReasons.has(error?.code)
+      ? error.code
+      : /timeout/i.test(String(error?.message || ""))
+        ? "capture_timeout"
+        : "capture_failed";
+    await rm(SCREENSHOT_PATH, { force: true }).catch(() => {});
+    await writeResult({ status: "unavailable", reasonCode });
   } finally {
-    await new Promise((resolveClose) => server.close(resolveClose));
+    if (browser) await browser.close().catch(() => {});
+    if (server?.server) {
+      await new Promise((resolveClose) => server.server.close(resolveClose));
+    }
   }
 }
 
