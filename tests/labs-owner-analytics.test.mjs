@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  buildActivityBuckets,
   buildCompleteDailySeries,
   createRankings,
   normalizePeriod,
@@ -106,14 +107,22 @@ test("daily series includes each UTC calendar day and fills missing dates with z
       date: "2026-11-04",
       sourceOpens: 3,
       codeCopies: 1,
+      verifiedLikes: 0,
+      verifiedUnlikes: 0,
+      anonymousLikes: 0,
+      anonymousUnlikes: 0,
       verifiedLikeActions: 2,
       anonymousLikeActions: 4,
-      totalActions: 10,
+      totalActions: 4,
     },
     {
       date: "2026-11-05",
       sourceOpens: 0,
       codeCopies: 0,
+      verifiedLikes: 0,
+      verifiedUnlikes: 0,
+      anonymousLikes: 0,
+      anonymousUnlikes: 0,
       verifiedLikeActions: 0,
       anonymousLikeActions: 0,
       totalActions: 0,
@@ -122,9 +131,13 @@ test("daily series includes each UTC calendar day and fills missing dates with z
       date: "2026-11-06",
       sourceOpens: 5,
       codeCopies: 2,
+      verifiedLikes: 0,
+      verifiedUnlikes: 0,
+      anonymousLikes: 0,
+      anonymousUnlikes: 0,
       verifiedLikeActions: 0,
       anonymousLikeActions: 1,
-      totalActions: 8,
+      totalActions: 7,
     },
   ]);
 });
@@ -449,6 +462,72 @@ test("fixed-window rate limit rejects invalid policy input", () => {
       now: new Date("2026-11-06T10:00:30.000Z"),
       windowMs: 60_000,
       maxEvents: 20,
+    }),
+    { name: "TypeError" },
+  );
+});
+
+
+test("activity buckets keep one metric per chart and use daily points for 7/30 days", () => {
+  const daily = [
+    { date: "2026-11-01", sourceOpens: 2, codeCopies: 1, verifiedLikes: 3, verifiedUnlikes: 1, anonymousLikes: 4, anonymousUnlikes: 2 },
+    { date: "2026-11-02", sourceOpens: 0, codeCopies: 2, verifiedLikes: 0, verifiedUnlikes: 0, anonymousLikes: 1, anonymousUnlikes: 0 },
+  ];
+
+  const buckets = buildActivityBuckets({ daily, metric: "verifiedLikes", periodDays: 7 });
+
+  assert.deepEqual(buckets, [
+    { key: "2026-11-01", startDate: "2026-11-01", endDate: "2026-11-01", label: "01 Nov", value: 3 },
+    { key: "2026-11-02", startDate: "2026-11-02", endDate: "2026-11-02", label: "02 Nov", value: 0 },
+  ]);
+  assert.equal(buckets.reduce((sum, item) => sum + item.value, 0), 3);
+});
+
+test("activity buckets group long ranges into Monday-Sunday UTC weeks and preserve partial weeks", () => {
+  const daily = [
+    { date: "2026-10-30", sourceOpens: 1 },
+    { date: "2026-10-31", sourceOpens: 2 },
+    { date: "2026-11-01", sourceOpens: 3 },
+    { date: "2026-11-02", sourceOpens: 4 },
+    { date: "2026-11-03", sourceOpens: 5 },
+    { date: "2026-11-09", sourceOpens: 6 },
+  ];
+
+  const buckets = buildActivityBuckets({ daily, metric: "sourceOpens", periodDays: 90 });
+
+  assert.deepEqual(buckets, [
+    { key: "2026-10-26", startDate: "2026-10-30", endDate: "2026-11-01", value: 6, label: "30 Oct – 01 Nov" },
+    { key: "2026-11-02", startDate: "2026-11-02", endDate: "2026-11-03", value: 9, label: "02 Nov – 03 Nov" },
+    { key: "2026-11-09", startDate: "2026-11-09", endDate: "2026-11-09", value: 6, label: "09 Nov" },
+  ]);
+  assert.equal(buckets.reduce((sum, item) => sum + item.value, 0), 21);
+});
+
+test("activity buckets reject duplicate, out-of-order and invalid values", () => {
+  assert.throws(
+    () => buildActivityBuckets({
+      metric: "sourceOpens",
+      periodDays: 7,
+      daily: [
+        { date: "2026-11-02", sourceOpens: 1 },
+        { date: "2026-11-02", sourceOpens: 2 },
+      ],
+    }),
+    { name: "RangeError" },
+  );
+  assert.throws(
+    () => buildActivityBuckets({
+      metric: "sourceOpens",
+      periodDays: 7,
+      daily: [{ date: "2026-11-02", sourceOpens: -1 }],
+    }),
+    { name: "TypeError" },
+  );
+  assert.throws(
+    () => buildActivityBuckets({
+      metric: "not-a-metric",
+      periodDays: 7,
+      daily: [{ date: "2026-11-02", sourceOpens: 1 }],
     }),
     { name: "TypeError" },
   );
