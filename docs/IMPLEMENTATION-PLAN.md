@@ -205,6 +205,16 @@ Do not mark a row complete because a page renders. Each capability still needs i
 **Gate**
 - The detailed phase gates and preservation checklist in the Owner Console plan pass. No WebSocket/provider/Redis dependency is added without a measured requirement and separate decision.
 
+### Phase 8A progress — 2026-11-06
+
+- **Phase 0 audit:** complete against `feat/labs-platform-integration` before route separation.
+- **Phase 1 route split:** code committed. The existing analytics presentation is now served from `/admin/labs/analytics`; `/admin/labs/sources` now renders the existing Source Library component. Shared owner navigation and separate account-menu links are present. Valid legacy `?days=` bookmarks forward to Analytics. Import uses the same navigation and verification return-path handling.
+- **Source editor:** existing `/admin/labs/sources/[slug]` route and component were preserved; its verification notice now retains the safe editor destination.
+- **Not yet complete:** Vercel build is queued; build result and browser/accessibility verification are pending. No custom analytics coverage, metadata PATCH/editor, source create-to-editor handoff, live polling, MotionNumber integration or richer charts are claimed complete.
+- **Authorization follow-up:** owner-access code currently also accepts `LABS_OWNER_EMAIL`, while the locked decision specifies `LABS_OWNER_USER_ID` only. Reconcile against the actual Preview environment before changing the fallback or claiming the locked policy is enforced.
+
+Do not mark Phase 8A complete until the full phase gates in `LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md` pass.
+
 ## Phase 8B — Isolated live previews (separate security-gated work)
 **Work**
 - Do not couple source storage/editing approval to source execution.
