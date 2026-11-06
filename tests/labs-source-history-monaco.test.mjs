@@ -88,7 +88,7 @@ test("Restore still calls the existing restore flow and never edits the historic
   assert.match(modal, /restoreVersion\(versionId, versionLabel\)/);
   assert.match(editor, /async function restoreVersion\(versionId, versionLabel\)/);
   assert.match(editor, /\/restore\/\" \+ encodeURIComponent\(versionId\)/);
-  assert.match(editor, /basedOnVersionId:\s*oldVersion\.versionId/);
+  assert.match(sourceManagement, /basedOnVersionId:\s*oldVersion\.versionId/);
   assert.match(sourceManagement, /files:\s*oldVersion\.files/);
   assert.match(sourceManagement, /return result;/);
 });
