@@ -9,6 +9,7 @@ import {
 import { buildSiteUrl } from "@/app/lib/seo/urls";
 import { cookies } from "next/headers";
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
+import { isAuthRuntimeConfigured } from "@/app/lib/auth/auth";
 import {
   getLabEngagementSnapshot,
   LABS_GUEST_LIKE_COOKIE,
@@ -56,10 +57,14 @@ export default async function LabsPage() {
     session = await getCurrentAuthSession();
     sessionResolved = true;
 
-    if (session?.user?.id) {
-      authState = session.user.emailVerified === true ? "verified" : "unverified";
+    if (isAuthRuntimeConfigured()) {
+      if (session?.user?.id) {
+        authState = session.user.emailVerified === true ? "verified" : "unverified";
+      } else {
+        authState = "guest";
+      }
     } else {
-      authState = "guest";
+      authState = "unknown";
     }
   } catch (error) {
     console.error(
