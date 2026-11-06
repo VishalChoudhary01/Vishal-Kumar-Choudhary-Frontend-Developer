@@ -1,5 +1,5 @@
 import ResetPasswordForm from "@/app/components/labs/auth/ResetPasswordForm";
-import { getSafeReturnTo } from "@/app/lib/auth/return-to";
+import { getSafeOwnerReturnTo, getSafeReturnTo } from "@/app/lib/auth/return-to";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -9,7 +9,7 @@ export const metadata = {
 
 export default async function LabsResetPasswordPage({ searchParams }) {
   const query = await searchParams;
-  const returnTo = getSafeReturnTo(query?.returnTo);
+  const returnTo = getSafeOwnerReturnTo(query?.returnTo) || getSafeReturnTo(query?.returnTo);
 
   return (
     <ResetPasswordForm
