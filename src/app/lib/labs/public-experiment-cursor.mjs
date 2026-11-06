@@ -1,8 +1,7 @@
 const OBJECT_ID_PATTERN = /^[a-f0-9]{24}$/i;
-const CURSOR_MAX_LENGTH = 512;
+const CURSOR_MAX_LENGTH = 384;
 
-export function encodePublicExperimentCursor({ publishedAt, updatedAt, id }) {
-  const updated = updatedAt instanceof Date ? updatedAt : new Date(updatedAt);
+export function encodePublicExperimentCursor({ publishedAt, id }) {
   const published =
     publishedAt === null || publishedAt === undefined
       ? null
@@ -11,7 +10,6 @@ export function encodePublicExperimentCursor({ publishedAt, updatedAt, id }) {
         : new Date(publishedAt);
 
   if (
-    Number.isNaN(updated.getTime()) ||
     (published && Number.isNaN(published.getTime())) ||
     typeof id !== "string" ||
     !OBJECT_ID_PATTERN.test(id)
@@ -21,7 +19,6 @@ export function encodePublicExperimentCursor({ publishedAt, updatedAt, id }) {
 
   const payload = {
     p: published ? published.toISOString() : null,
-    u: updated.toISOString(),
     id: id.toLowerCase(),
   };
 
@@ -49,32 +46,32 @@ export function decodePublicExperimentCursor(value) {
     !payload ||
     typeof payload !== "object" ||
     !(payload.p === null || typeof payload.p === "string") ||
-    typeof payload.u !== "string" ||
     typeof payload.id !== "string" ||
     !OBJECT_ID_PATTERN.test(payload.id)
   ) {
     throw new TypeError("Invalid public experiment cursor.");
   }
 
-  const updatedAt = new Date(payload.u);
   const publishedAt = payload.p === null ? null : new Date(payload.p);
 
   if (
-    Number.isNaN(updatedAt.getTime()) ||
     (publishedAt && Number.isNaN(publishedAt.getTime())) ||
-    (publishedAt && publishedAt.toISOString() !== payload.p) ||
-    updatedAt.toISOString() !== payload.u
+    (publishedAt && publishedAt.toISOString() !== payload.p)
   ) {
     throw new TypeError("Invalid public experiment cursor.");
   }
 
   return {
     publishedAt,
-    updatedAt,
     id: payload.id.toLowerCase(),
   };
 }
 
+/**
+ * Keyset predicate for sort order { publishedAt: -1, _id: -1 }.
+ * Both fields are stable for a given published record, preventing updatedAt
+ * changes from moving a card across pagination boundaries.
+ */
 export function buildPublicExperimentCursorMatch(cursor, ObjectId) {
   if (!cursor || typeof ObjectId !== "function") return null;
 
@@ -82,25 +79,14 @@ export function buildPublicExperimentCursorMatch(cursor, ObjectId) {
   if (cursor.publishedAt === null) {
     return {
       publishedAt: null,
-      $or: [
-        { updatedAt: { $lt: cursor.updatedAt } },
-        { updatedAt: cursor.updatedAt, _id: { $lt: id } },
-      ],
+      _id: { $lt: id },
     };
   }
 
   return {
     $or: [
       { publishedAt: { $lt: cursor.publishedAt } },
-      {
-        publishedAt: cursor.publishedAt,
-        updatedAt: { $lt: cursor.updatedAt },
-      },
-      {
-        publishedAt: cursor.publishedAt,
-        updatedAt: cursor.updatedAt,
-        _id: { $lt: id },
-      },
+      { publishedAt: cursor.publishedAt, _id: { $lt: id } },
     ],
   };
 }
