@@ -1,11 +1,7 @@
-# Labs Source Management — Owner Console and Protected Code Lifecycle
-
-**Status:** Source inventory/editor, owner-created experiment catalogue, owner-only source lifecycle APIs, immutable source versions, audit and initial aggregate engagement analytics are present on `feat/labs-platform-integration`. This is a code-baseline statement, not deployed end-to-end verification. The Analytics + Source Library route split and shared owner navigation are committed and Preview build-verified; authenticated owner-browser QA remains pending. The owner-only metadata editor, PATCH endpoint, shared metadata validation, concurrency guard and audit action are committed and Preview build-verified; authenticated save/conflict and Atlas audit tests remain pending. The create-to-editor handoff is committed and Preview build-verified: a successful source-head creation opens the confirmed workspace, while 409 conflicts refresh the library and never navigate to an unconfirmed path. Custom published-experiment aggregation and source-open/copy event support are committed and Preview build-verified; Atlas-backed reconciliation remains pending. The first live Analytics dashboard (visible-tab polling, MotionNumber counters, four-series trend chart and daily table) is also committed and Preview build-verified; authenticated event-to-screen and visual/accessibility QA remain pending. Deployed owner Run, public custom-experiment detail rendering, immutable release verification, generated poster capture and first-class media-role migration remain unverified or planned; see `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`. Production release remains gated by owner/SMTP configuration, Atlas provisioning/migration, Cloudinary preset/quota setup, sandbox/security validation and privacy review.  
-**Version:** 0.3  
+**Status:** The owner source inventory/editor, immutable source lifecycle, source access gate and initial aggregate engagement analytics are present in code. The source/analytics route split, metadata editor and creation handoff have prior Preview build coverage; those results apply only to their recorded historical commits. The current branch additionally contains the Chart.js single-metric analytics trend, a public combined-like DTO, transactionally claiming active guest likes on verified sessions, owner-only active verified-liker attribution, custom publication-readiness diagnostics and owner-selected release-bound public gallery poster promotion. Current-turn additions have not yet passed a fresh complete test/build, Atlas-backed reconciliation, authenticated browser QA or a new Preview deployment. Automatic runtime screenshot capture, public runtime-fallback delivery and detail-gallery role migration remain unimplemented. See [the Labs Gallery/Engagement implementation record](./LABS-GALLERY-ENGAGEMENT-AND-LIVE-UI-IMPLEMENTATION.md) and [the Studio Runtime/Media Plan](./LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md). Production release remains gated by owner/SMTP configuration, Atlas provisioning/migration, Cloudinary preset/quota setup, sandbox/security validation and privacy review.  
+**Version:** 0.4  
 **Updated:** 2026-11-06  
-**Related:** `PRD.md`, `ARCHITECTURE.md`, `API-CONTRACTS.md`, `THREAT-MODEL.md`, `IMPLEMENTATION-PLAN.md`, `DESIGN-LAB.md`, `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`, `LABS-AND-AUTHENTICATION-DESIGN-SPEC.md`, `LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md`
-
----
+**Related:** `PRD.md`, `ARCHITECTURE.md`, `API-CONTRACTS.md`, `THREAT-MODEL.md`, `IMPLEMENTATION-PLAN.md`, `DESIGN-LAB.md`, `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`, `LABS-GALLERY-ENGAGEMENT-AND-LIVE-UI-IMPLEMENTATION.md`, `LABS-AND-AUTHENTICATION-DESIGN-SPEC.md`, `LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md`
 
 ## 1. Purpose
 
@@ -15,7 +11,7 @@ This remains a **Labs-specific experiment-authoring and source-management capabi
 
 The complete forward-looking contract for React/JSX, Tailwind CSS v4, Motion, build isolation, media uploads, immutable artifacts and custom experiment publication is `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`. Where this older source-only specification says execution/media management is out of scope, that statement is superseded by the newer Labs-specific plan; general portfolio CMS/media management remains out of scope.
 
-The integration branch contains the Labs source-access gate, anonymous/verified likes, source-open/copy events, owner-only APIs, source inventory/editor, immutable versions, publish/unpublish/restore, audit history and aggregate analytics. It has passed a clean `npm ci`, targeted Labs/auth/admin/legal lint and a Next.js production build. Atlas end-to-end flows have not yet been exercised against a provisioned owner account, and no source snapshots are seeded automatically; the owner must create a source record and import reviewed files before publishing.
+The integration branch contains the Labs source-access gate, anonymous/verified likes, source-open/copy events, owner-only APIs, source inventory/editor, immutable versions, publish/unpublish/restore, audit history and aggregate analytics. Earlier baseline commits passed a clean `npm ci`, targeted Labs/auth/admin/legal lint and a Next.js production build; those checks predate the latest gallery/like/chart/toast changes and are not evidence that the current branch head builds. Atlas end-to-end flows still require reconciliation against a provisioned owner account, and no source snapshots are seeded automatically; the owner must create a source record and import reviewed files before publishing.
 
 ## 2. Repository and deployment audit — current baseline
 
@@ -208,9 +204,11 @@ The source-management boundary is limited to preserving correct source lifecycle
 - Source-open is recorded only after a verified source request successfully returns the currently published source.
 - Code-copy is recorded only after successful Clipboard API acknowledgement and server acceptance; no clipboard/source text is sent.
 - Source-version and experiment references are canonical and server-validated.
-- Source mutations remain owner-audited; engagement reporting remains aggregate-only.
+- Source mutations remain owner-audited.
+- Verified account likes and anonymous browser-cookie likes remain separate state/event categories. Public responses expose the combined count only. When a verified session is seen with the same guest cookie, active guest likes are transactionally claimed by that account without rewriting historical events.
+- The owner experiment analytics page may identify the account name, masked email and timestamp for **currently active verified likes** on that experiment. This is not a user-level historical event log. Anonymous identities are always aggregate-only.
 
-The analytics owner routes, dynamic custom-experiment coverage, live refresh transport and implementation sequence are defined by `LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md`. Do not duplicate metric formulas or dashboard layout here.
+The analytics owner routes, current active verified-liker view, live refresh transport and implementation sequence are defined by `LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md`, `DESIGN-ANALYTICS.md` and `LABS-GALLERY-ENGAGEMENT-AND-LIVE-UI-IMPLEMENTATION.md`. Do not duplicate metric formulas or dashboard layout here.
 
 
 ### 5.8 Owner entry point and navigation
@@ -264,7 +262,7 @@ One current like-state record per verified Better Auth user and experiment:
 - `active` boolean.
 - `createdAt`, `updatedAt`, and the timestamps of the latest state transition.
 
-Use a unique index on `{ userId, experimentSlug }`. A repeated verified like/unlike request that does not change state must not create another verified like action event. Guest and signed-in-unverified users retain the existing best-effort anonymous public-like behavior where the public UI supports it; their current like state is not stored as an account entitlement or guaranteed across devices. Where guest-like telemetry is accepted, count `guest_like` / `guest_unlike` actions separately without claiming unique people.
+Use a unique index on `{ userId, experimentSlug }`. A repeated verified like/unlike request that does not change state must not create another verified like action event. Anonymous public likes use the separate `LabGuestLike` collection with a unique HMAC-derived browser-cookie key + experiment slug and an expiry. This key identifies a browser profile, not a natural person; it is not guaranteed across devices, browsers, private sessions or cleared cookies. Signed-in unverified users cannot like. Where guest-like telemetry is accepted, count `guest_like` / `guest_unlike` actions separately without claiming unique people. A single Like/Unlike control changes current state; there is no dislike vote.
 
 ### 6.4 `lab_analytics_events` — source engagement events
 
