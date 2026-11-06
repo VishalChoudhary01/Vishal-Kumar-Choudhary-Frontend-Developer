@@ -346,9 +346,9 @@ Work in small phases with separate reviewable commits. Do not begin a later phas
 | Instrumented-event rankings | Code committed / Preview build-verified | Collection analytics adds deterministic top-five rankings for source opens and code copies in the selected period, plus current active likes; zero-value entries are omitted and ties resolve by title then slug |
 | Per-experiment analytics API/detail route | Code committed / Preview build-verified | Adds owner-only `GET /api/v1/admin/labs/analytics/:slug` and `/admin/labs/analytics/[slug]`; aggregate-only output includes period metrics, current active likes and UTC daily series for published built-in or eligible custom experiments |
 | Analytics detail return-path protection | Code committed / Preview build-verified / page smoke-tested | Exact slug route is allowlisted through owner login/verification handling; API response remains private/no-store and exposes no raw events or account identifiers |
-| Pure analytics regression tests | Added; 6 tests pass locally | Node-native tests cover ranking order/ties/limits, valid and invalid periods, complete UTC date buckets, invalid bounds and custom artifact/source-version eligibility |
-| Reporting-period upper bound | Code committed | Collection event aggregation now matches `occurredAt <= generatedAt` as well as the lower bound, preventing future-dated records from inflating period totals |
-| Build and protected-route smoke test | Passed on latest rankings/detail Preview | Deployment `dpl_ADaqDDWRKP2WjESBaKA2dqgBuv7a` reached READY; route manifest includes collection/detail pages and APIs. Anonymous detail-page protection/return-path check passed. The latest test-gating and period-bound commits need a fresh Preview build |
+| Pure analytics regression tests | Passed in READY Preview build | Node-native test gate reports 6 passed / 0 failed before SEO validation and Next.js build; covers ranking order/ties/limits, valid and invalid periods, complete UTC date buckets, invalid bounds and custom artifact/source-version eligibility |
+| Reporting-period upper bound | Code committed / Preview build-verified | Collection event aggregation matches `since <= occurredAt <= generatedAt`, preventing future-dated records from inflating period totals |
+| Build and protected-route smoke test | Passed on test-gated Preview | Deployment `dpl_JB5bK44KScheRZeiE9cjTRvxE2Kh` reached READY for app commit `b015a1aa38c0ed543b14a2e440de5cfecb195062`; six analytics tests passed, SEO validation reported zero warnings, Next.js compiled in 5.2 seconds, route manifest includes collection/detail pages and APIs, and anonymous Analytics/detail/Source Library return-path smoke tests passed |
 
 ### Phase 2 initial code progress — 2026-11-06
 
@@ -435,6 +435,18 @@ The READY live-dashboard Preview was `dpl_2q1CRakZTVJw2QLMNUsDFL6EBThQ` at `e267
 - The collection event aggregation now bounds both ends of the selected reporting period (`since <= occurredAt <= generatedAt`).
 
 Local verification output: **6 tests passed, 0 failed**. The latest code/test-gating changes are committed after the READY ranking/detail deployment and still require a fresh Preview build.
+
+### Latest test-gated Preview verification — 2026-11-06
+
+- Deployment: `dpl_JB5bK44KScheRZeiE9cjTRvxE2Kh`
+- Preview URL: `https://vishal-kumar-choudhary-frontend-developer-mep08gsd5.vercel.app`
+- Application commit built: `b015a1aa38c0ed543b14a2e440de5cfecb195062`
+- Node test gate: 6 passed, 0 failed.
+- SEO validation: passed with 0 warnings.
+- Next.js: compiled successfully in 5.2 seconds; deployment reached READY.
+- Generated routes include `/admin/labs/analytics`, `/admin/labs/analytics/[slug]`, `/api/v1/admin/labs/analytics`, `/api/v1/admin/labs/analytics/[slug]`, and the existing Source Library/source APIs.
+- Anonymous browser fetches confirmed Analytics, experiment detail and Source Library redirect to login with their exact route-specific `returnTo` values.
+- Authenticated owner/Atlas reconciliation, real event round-trip and visual/accessibility QA remain pending.
 
 ### Additional authorization discrepancy found during audit
 
