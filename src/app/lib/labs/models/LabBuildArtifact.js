@@ -23,7 +23,8 @@ const labPreviewPosterSchema = new mongoose.Schema(
     height: { type: Number, default: null, min: 1, max: 900 },
     contentHash: { type: String, default: null, match: /^[a-f0-9]{64}$/ },
     captureVersion: { type: String, required: true, maxlength: 40 },
-    reasonCode: { type: String, default: null, enum: [null, "browser_unavailable", "capture_timeout", "capture_failed", "no_visible_output", "invalid_output"] },
+    browserVersion: { type: String, default: null, maxlength: 160 },
+    reasonCode: { type: String, default: null, enum: [null, "browser_unavailable", "capture_timeout", "capture_failed", "no_visible_output", "invalid_output", "browser_unpinned"] },
   },
   { _id: false, strict: "throw" },
 );
