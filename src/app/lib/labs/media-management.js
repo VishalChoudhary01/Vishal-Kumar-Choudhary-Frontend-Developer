@@ -535,6 +535,9 @@ export async function saveOwnerLabGalleryPreview({ user, slug, assetId, altText 
   if (!experiment || experiment.status === "deleting") {
     fail("NOT_FOUND", "Experiment not found.");
   }
+  if (assetId !== null && assetId !== "" && experiment.status !== "published") {
+    fail("PUBLISH_REQUIRED", "Publish the custom experiment before promoting a public gallery poster.");
+  }
 
   const safeAltText = typeof altText === "string" ? altText.trim().slice(0, 300) : "";
   const safeFit = fit === "contain" ? "contain" : "cover";
