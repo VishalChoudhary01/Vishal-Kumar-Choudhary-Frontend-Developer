@@ -101,3 +101,10 @@ The planned hero behavior includes:
 - Authentication-aware hero actions: guests receive Create account and Sign in; signed-in unverified users receive Verify email and Explore experiments; verified users receive discovery actions rather than guest auth actions. Unknown session state uses a neutral Explore action.
 
 This is a design/implementation plan only. It does not mark the public page redesign as implemented or verified. The navbar remains unchanged and all current Labs route, media, likes, source-access and publication contracts remain authoritative.
+
+
+## 8. Phase 1 Labs hero implementation — 7 November 2026
+
+The public Labs hero implementation has been committed on `feat/labs-platform-integration`. It includes the editorial hero and conceptual SVG artwork, Motion entrance/count-up behavior, reduced-motion handling, a tested pure auth CTA mapping, and server-resolved authentication state. The build script now includes `test:labs-public-hero`.
+
+The implementation and exact verification gates are tracked in **[Labs Public Page Redesign — Phased Plan](./LABS-PUBLIC-PAGE-REDESIGN-PLAN.md)**. Do not treat the source commit as proof of a passing test suite, production build, visual QA or deployment. The navbar, feature spotlight, gallery cards, Likes and source/media/publishing contracts remain outside Phase 1.
