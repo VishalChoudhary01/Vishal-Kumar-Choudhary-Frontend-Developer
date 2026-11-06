@@ -63,8 +63,11 @@ export default function FooterOutlinedWord({
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-0 block whitespace-nowrap text-brand"
                 initial={false}
-                animate={{ scaleX: fillActive ? 1 : 0 }}
-                style={{ transformOrigin: "left center" }}
+                animate={{
+                    clipPath: fillActive
+                        ? "inset(-2px 0 -2px 0)"
+                        : "inset(-2px 100% -2px 0)",
+                }}
                 transition={{
                     duration: reduced ? 0 : 0.85,
                     ease: EASE,
