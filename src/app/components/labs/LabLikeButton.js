@@ -34,12 +34,54 @@ export default function LabLikeButton({
   initialData = null,
   compact = false,
   loadOnMount = true,
+  skipGuestCookieCleanup = false,
 }) {
   const reducedMotion = useReducedMotion();
   const [confirmed, setConfirmed] = useState(() => normalizeEngagement(initialData));
   const [message, setMessage] = useState("");
   const [isPending, startTransition] = useTransition();
   const [optimistic, setOptimistic] = useOptimistic(confirmed, (current, next) => next);
+
+  useEffect(() => {
+    if (!initialData?.guestCookieCleanupRequired || skipGuestCookieCleanup) {
+      return undefined;
+    }
+
+    let active = true;
+    const controller = new AbortController();
+
+    async function retireGuestIdentity() {
+      try {
+        const response = await fetch(
+          "/api/v1/labs/" + encodeURIComponent(slug) + "/engagement",
+          {
+            method: "GET",
+            cache: "no-store",
+            credentials: "same-origin",
+            headers: { Accept: "application/json" },
+            signal: controller.signal,
+          },
+        );
+        const payload = await response.json().catch(() => ({}));
+        if (active && response.ok && payload?.data) {
+          setConfirmed(normalizeEngagement(payload.data));
+        }
+      } catch (error) {
+        // A failed cleanup is safe to retry on the next page visit. The
+        // server-side claim is idempotent and the current account count is
+        // already correct from the server snapshot.
+        if (error?.name !== "AbortError") {
+          console.error("[labs-engagement] guest identity cleanup failed");
+        }
+      }
+    }
+
+    retireGuestIdentity();
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [initialData?.guestCookieCleanupRequired, skipGuestCookieCleanup, slug]);
 
   useEffect(() => {
     if (initialData || !loadOnMount) return undefined;
@@ -132,6 +174,7 @@ export default function LabLikeButton({
         whileTap={!reducedMotion && data?.likeAllowed && !isPending ? { scale: 0.96 } : undefined}
         transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 520, damping: 28 }}
         disabled={isDisabled}
+        aria-busy={isPending}
         aria-pressed={data?.liked === true}
         aria-label={data?.liked ? "Unlike this experiment" : "Like this experiment"}
         title={message || (data?.likeAllowed ? "Like this experiment" : data?.actorType === "unverified" ? "Verify your email to like" : "Like unavailable")}
