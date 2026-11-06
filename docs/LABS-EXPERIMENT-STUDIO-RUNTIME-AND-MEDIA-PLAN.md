@@ -25,7 +25,7 @@ This file is the concise source of truth for Labs runtime, release and media beh
 | Likes | Implemented | Existing LabLikeButton and engagement API |
 | Protected source access | Implemented | Verified-email authorization, session checks, file selection and copy action |
 | Media sizing polish | Phase 1 code committed; QA pending | DTO carries intrinsic dimensions; all shared media uses contain; detail stage uses natural height and a bounded responsive maximum |
-| Monaco foundation | Implemented; UI integrations pending | Stable React 19 wrapper, self-hosted assets, read-only default, editable callback contract, plain-text fallback and 6 tests |
+| Monaco foundation | Implemented; source UI integrations pending | Stable React 19 wrapper, self-hosted assets, read-only default, editable callback contract, plain-text fallback and 6 tests |
 | Detail layout polish | Planned | Improve section order and spacing while preserving Like and source access |
 
 ## 2. Run, Save Draft and Build & Publish must remain separate
@@ -185,3 +185,6 @@ Implemented:
 Not yet implemented: replacing the public source reader, owner textarea or version-history viewer with Monaco. Those remain Phases 3–5 in the separate [Detail Presentation and Monaco Editor plan](./LABS-DETAIL-PRESENTATION-AND-MONACO-EDITOR-IMPLEMENTATION-PLAN.md).
 
 **Non-regression:** Phase 1/2 did not change compiler, temporary Run, draft APIs, version history, restore, publish, poster capture, protected source authorization, Like API or public detail executable policy.
+
+
+Phase 1/2 Preview note (6 November 2026): Vercel Preview deployment `dpl_Bc3VjAQq9Z5mQv7JEhor5ybH3z4F` is READY and includes the application code for both phases. Direct browser QA reached the Vercel deployment-protection sign-in screen, so deployed visual inspection of the protected preview remains an owner-authenticated acceptance step. Phase 2 clean-checkout install/build, 6 Monaco tests, 9 media tests, 15 analytics tests, ESLint and same-origin Monaco asset HTTP checks passed. Monaco has not yet been integrated into the public reader, Studio editor or version-history viewer; Run, Save Draft and Build & Publish remain unchanged.
