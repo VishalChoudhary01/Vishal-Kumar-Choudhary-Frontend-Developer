@@ -243,7 +243,7 @@ async function captureReleasePoster(sandbox, { slug, versionId, buildHash, artif
         PLAYWRIGHT_BROWSERS_PATH: "/opt/ms-playwright",
         LABS_CHROMIUM_EXPECTED_VERSION: POSTER_CHROMIUM_VERSION,
       },
-      timeoutMs: 40_000,
+      timeoutMs: 22_000,
     });
     const resultText = await sandbox.fs.readFile(resultPath, "utf8");
     const capture = JSON.parse(resultText);
