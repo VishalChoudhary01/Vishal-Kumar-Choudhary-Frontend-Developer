@@ -7,6 +7,31 @@ import LabBuildArtifact from "./models/LabBuildArtifact";
 import { selectEligiblePublishedCustomExperiments } from "./owner-analytics-utils.mjs";
 
 function toPublicExperiment(experiment, artifact) {
+  const storedPreview = experiment.galleryPreview;
+  let galleryPreview = null;
+
+  if (
+    storedPreview?.artifactId === artifact.artifactId &&
+    storedPreview?.sourceVersionId === artifact.sourceVersionId &&
+    typeof storedPreview.src === "string"
+  ) {
+    try {
+      const previewUrl = new URL(storedPreview.src);
+      if (
+        previewUrl.protocol === "https:" &&
+        previewUrl.hostname.endsWith(".public.blob.vercel-storage.com")
+      ) {
+        galleryPreview = {
+          src: previewUrl.toString(),
+          alt: typeof storedPreview.alt === "string" ? storedPreview.alt : "",
+          fit: storedPreview.fit === "contain" ? "contain" : "cover",
+        };
+      }
+    } catch {
+      galleryPreview = null;
+    }
+  }
+
   return {
     slug: experiment.slug,
     title: experiment.title,
@@ -14,7 +39,8 @@ function toPublicExperiment(experiment, artifact) {
     explanation: experiment.explanation || "",
     category: experiment.category,
     technologies: Array.isArray(experiment.technologies) ? experiment.technologies : [],
-    thumbnail: null,
+    galleryPreview,
+    thumbnail: galleryPreview,
     seo: {
       title: experiment.title + " — Labs",
       description: experiment.description,
@@ -76,7 +102,7 @@ export async function getPublishedCustomLabExperiments() {
     kind: "custom",
     status: "published",
   })
-    .select("slug title description explanation category technologies")
+    .select("slug title description explanation category technologies galleryPreview")
     .sort({ publishedAt: -1, updatedAt: -1 })
     .lean();
 
