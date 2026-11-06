@@ -1,6 +1,6 @@
 # Labs Public Page Redesign — Phased Plan
 
-**Status:** Phase 1 hero implementation committed; automated, build and visual verification remain pending. Phases 2–5 remain planned. Hero Motion, statistics count-up and authentication-aware CTAs are included in scope.  
+**Status:** Phase 1 and Phase 2 implementation committed; automated, build and visual verification remain pending. Phases 3–5 remain planned. Hero Motion, statistics count-up and authentication-aware CTAs are included in scope.  
 **Branch:** `feat/labs-platform-integration`  
 **Updated:** 7 November 2026  
 **Scope:** Public `/labs` discovery page.  
@@ -265,13 +265,25 @@ The 60-card value is an evaluation trigger, not a requirement to install a libra
 
 ### Phase 2 — Featured experiment spotlight
 
-- Resolve the featured item against the final `experiments` array in `src/app/labs/page.js`.
-- Remove the separate-data assumption where it could drift from the list of eligible experiments.
-- Rebuild the spotlight layout around real preview media, category, title, description, technologies and one clear detail-page action.
-- Verify the current featured built-in record and the no-eligible-feature state.
-- Preserve the shared upload → generated poster → artwork media policy and stale-artifact checks.
+<badge>Implementation committed — verification pending</badge>
 
-**Exit gate:** The section always presents a real eligible experiment or does not render.
+Implemented:
+- Added a pure featured resolver that selects the preferred slug from the final eligible collection and deterministically falls back to the first valid eligible item. It returns null for empty/invalid content.
+- Replaced the separate featured display object with a selected slug; title, description, category, technologies and preview now come from the same actual experiment record passed to the gallery.
+- Rebuilt FeaturedExperiment as an editorial spotlight with a large media stage, category, title, supporting description, technology list and one real detail-page action.
+- Added restrained motion/react in-view reveal and reduced-motion handling.
+- Reused LabExperimentPreview and its existing uploaded media → exact generated release poster → artwork fallback.
+- Fixed the shared preview image onError callback so failed image media is recorded and the validated next fallback can be selected.
+- Added tests/labs-featured-experiment.test.mjs and registered it as test:labs-featured-experiment in the production build sequence.
+- Hero featured CTA now uses the resolved featured record, so it cannot point to an item that the spotlight does not render.
+
+Still pending:
+- Run the new featured-experiment test suite and existing public hero/media suites.
+- Run lint and the full production build.
+- Inspect a new Preview at desktop/tablet/mobile in both themes and reduced-motion mode.
+- Verify missing preferred featured slug, no eligible experiment, broken uploaded media, generated poster and artwork fallback in the browser.
+
+**Exit gate:** The section always presents a real eligible experiment or does not render; all preview fallbacks and responsive states pass browser verification.
 
 ### Phase 3 — Collection, categories and card presentation
 
@@ -401,3 +413,21 @@ Verification still pending:
 - Confirm the existing navbar is visually and behaviorally unchanged in a Preview deployment created from the exact resulting branch commit.
 
 No claim of passing tests, production build, browser QA or deployment is made by this source commit.
+
+
+## 12. Phase 2 implementation progress — 7 November 2026
+
+**Status:** Code committed to feat/labs-platform-integration; test, build and browser verification pending.
+
+Changed:
+- src/app/lib/labs/featured-experiment.mjs — pure featured resolver.
+- src/app/data/labsExperiments.js — exports the chosen featured slug, not a copied featured display object.
+- src/app/labs/page.js — resolves the featured record from the final combined built-in + eligible custom collection and passes the same resolved record to the hero CTA and spotlight.
+- src/app/components/labs/FeaturedExperiment.js — responsive editorial featured spotlight with Motion reveal.
+- src/app/components/labs/LabExperimentPreview.js — fixed the image error handler to call the existing fallback-state helper.
+- tests/labs-featured-experiment.test.mjs — eligibility, fallback, route integration, reduced-motion and media-error regression coverage.
+- package.json — added test:labs-featured-experiment to the normal build test sequence.
+
+No navbar, gallery-card layout, category filtering, detail route, experiment runtime, compiler, publication, source-access, Like API or owner/admin workspace behavior was intentionally changed.
+
+**Verification is not claimed:** No test, lint, build or browser Preview result is recorded as passed by these commits.
