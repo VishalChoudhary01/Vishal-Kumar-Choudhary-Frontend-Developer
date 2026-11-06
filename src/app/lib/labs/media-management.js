@@ -2,11 +2,14 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 import mongoose from "mongoose";
+import { put } from "@vercel/blob";
 import { v2 as cloudinary } from "cloudinary";
 
 import { connectToDatabase } from "@/app/lib/db/mongoose";
 import LabExperiment from "./models/LabExperiment";
 import LabMediaAsset from "./models/LabMediaAsset";
+import LabSource from "./models/LabSource";
+import LabBuildArtifact from "./models/LabBuildArtifact";
 import LabSourceAuditEvent from "./models/LabSourceAuditEvent";
 import { isLabsOwner } from "./owner-access";
 
@@ -440,4 +443,267 @@ export async function deleteOwnerLabMediaAssetsForExperiment({ user, slug }) {
   );
 
   return { deletedCount: results.length };
+}
+
+
+const GALLERY_PREVIEW_FORMATS = new Set(["jpg", "jpeg", "png", "webp", "avif"]);
+const GALLERY_PREVIEW_MAX_BYTES = 5 * 1024 * 1024;
+
+function galleryPreviewMime(format) {
+  return ({
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    webp: "image/webp",
+    avif: "image/avif",
+  })[format] || null;
+}
+
+function matchesImageSignature(bytes, format) {
+  if (!Buffer.isBuffer(bytes)) return false;
+  if (format === "jpg" || format === "jpeg") {
+    return bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  }
+  if (format === "png") {
+    return bytes.length >= 8 &&
+      bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+  }
+  if (format === "webp") {
+    return bytes.length >= 12 &&
+      bytes.toString("ascii", 0, 4) === "RIFF" &&
+      bytes.toString("ascii", 8, 12) === "WEBP";
+  }
+  if (format === "avif") {
+    const box = bytes.toString("ascii", 4, 16);
+    return bytes.length >= 16 && box.startsWith("ftyp") &&
+      (box.includes("avif") || box.includes("avis"));
+  }
+  return false;
+}
+
+/**
+ * Promote one owner-uploaded private still image into an immutable public
+ * gallery derivative. It is bound to the exact currently published artifact
+ * and source version; a later publish automatically makes this poster ineligible.
+ */
+export async function saveOwnerLabGalleryPreview({ user, slug, assetId, altText = "", fit = "cover" }) {
+  if (!isLabsOwner(user)) fail("OWNER_ACCESS_DENIED", "Owner access is required.");
+  if (typeof slug !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+    fail("NOT_FOUND", "Experiment not found.");
+  }
+
+  await connectToDatabase();
+  const experiment = await LabExperiment.findOne({
+    slug,
+    kind: "custom",
+  })
+    .select("_id status galleryPreview")
+    .lean();
+  if (!experiment || experiment.status === "deleting") {
+    fail("NOT_FOUND", "Experiment not found.");
+  }
+
+  const safeAltText = typeof altText === "string" ? altText.trim().slice(0, 300) : "";
+  const safeFit = fit === "contain" ? "contain" : "cover";
+
+  if (assetId === null || assetId === "") {
+    await LabExperiment.updateOne(
+      { _id: experiment._id, kind: "custom" },
+      { $set: { galleryPreview: null, updatedBy: user.id } },
+    );
+    await LabSourceAuditEvent.create({
+      actorUserId: user.id,
+      action: "gallery_preview_updated",
+      experimentSlug: slug,
+      versionId: experiment.galleryPreview?.sourceVersionId || null,
+      requestId: randomUUID(),
+      resultCode: "removed",
+      createdAt: new Date(),
+    });
+    return { galleryPreview: null };
+  }
+
+  if (typeof assetId !== "string" || !mongoose.isValidObjectId(assetId)) {
+    fail("MEDIA_INVALID", "Choose a valid image from this experiment's media library.");
+  }
+  if (safeAltText.length > 300) {
+    fail("MEDIA_INVALID", "Gallery preview alt text is too long.");
+  }
+
+  const source = await LabSource.findOne({
+    slug,
+    published: true,
+    publishedVersionId: { $ne: null },
+    publishedArtifactId: { $ne: null },
+  })
+    .select("publishedVersionId publishedArtifactId")
+    .lean();
+  if (!source) {
+    fail("PUBLISH_REQUIRED", "Publish a ready source version before setting its public gallery preview.");
+  }
+
+  const artifact = await LabBuildArtifact.findOne({
+    artifactId: source.publishedArtifactId,
+    experimentSlug: slug,
+    sourceVersionId: source.publishedVersionId,
+    status: "ready",
+  })
+    .select("artifactId sourceVersionId")
+    .lean();
+  if (!artifact) {
+    fail("PUBLISH_REQUIRED", "The current published build is not ready. Build and publish the exact saved source version first.");
+  }
+
+  const asset = await LabMediaAsset.findOne({
+    _id: new mongoose.Types.ObjectId(assetId),
+    experimentSlug: slug,
+    ownerUserId: user.id,
+    mediaKind: "image",
+    deliveryType: "authenticated",
+    status: "ready",
+    format: { $in: [...GALLERY_PREVIEW_FORMATS] },
+  }).lean();
+  if (!asset) {
+    fail("MEDIA_INVALID", "Choose a ready JPEG, PNG, WebP or AVIF image owned by this experiment. GIF and video files cannot be public gallery posters.");
+  }
+
+  const { client } = getCloudinary();
+  let remote;
+  try {
+    remote = await client.api.resource(asset.cloudinaryPublicId, {
+      resource_type: "image",
+      type: "authenticated",
+    });
+  } catch {
+    fail("MEDIA_PROVIDER_ERROR", "The private preview image could not be verified with Cloudinary.");
+  }
+
+  const format = String(remote?.format || "").toLowerCase();
+  const mime = galleryPreviewMime(format);
+  const remoteBytes = Number(remote?.bytes || 0);
+  if (
+    remote?.public_id !== asset.cloudinaryPublicId ||
+    remote?.resource_type !== "image" ||
+    remote?.type !== "authenticated" ||
+    !mime ||
+    !GALLERY_PREVIEW_FORMATS.has(format) ||
+    !Number.isSafeInteger(remoteBytes) ||
+    remoteBytes <= 0 ||
+    remoteBytes > GALLERY_PREVIEW_MAX_BYTES
+  ) {
+    fail("MEDIA_INVALID", "The image did not pass the public gallery poster format or 5 MB size policy.");
+  }
+
+  const privateUrl = createOwnerPreviewUrl(client, {
+    ...asset,
+    format,
+  });
+  if (!privateUrl) fail("MEDIA_PROVIDER_ERROR", "A temporary private image URL could not be created.");
+
+  let download;
+  try {
+    download = await fetch(privateUrl, {
+      cache: "no-store",
+      redirect: "error",
+      signal: AbortSignal.timeout(15000),
+    });
+  } catch {
+    fail("MEDIA_PROVIDER_ERROR", "Cloudinary could not deliver the private image for safe promotion.");
+  }
+  if (!download.ok) {
+    fail("MEDIA_PROVIDER_ERROR", "Cloudinary could not deliver the private image for safe promotion.");
+  }
+
+  const contentLength = Number(download.headers.get("content-length") || 0);
+  if (contentLength > GALLERY_PREVIEW_MAX_BYTES) {
+    fail("MEDIA_INVALID", "The gallery preview image exceeds the 5 MB size limit.");
+  }
+
+  let bytes;
+  try {
+    bytes = Buffer.from(await download.arrayBuffer());
+  } catch {
+    fail("MEDIA_PROVIDER_ERROR", "The private image could not be read.");
+  }
+  if (
+    bytes.length === 0 ||
+    bytes.length > GALLERY_PREVIEW_MAX_BYTES ||
+    bytes.length !== remoteBytes ||
+    !matchesImageSignature(bytes, format)
+  ) {
+    fail("MEDIA_INVALID", "The downloaded image did not match Cloudinary's verified format and size.");
+  }
+
+  const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!blobToken) {
+    fail("ARTIFACT_STORAGE_NOT_CONFIGURED", "Public gallery image storage is not configured.");
+  }
+
+  let stored;
+  try {
+    stored = await put(
+      ["labs", slug, "gallery", artifact.artifactId, randomUUID() + "." + format].join("/"),
+      bytes,
+      {
+        access: "public",
+        token: blobToken,
+        addRandomSuffix: false,
+        allowOverwrite: false,
+        contentType: mime,
+      },
+    );
+  } catch {
+    fail("ARTIFACT_STORAGE_ERROR", "The public gallery image could not be stored.");
+  }
+
+  let publicUrl;
+  try {
+    publicUrl = new URL(stored.url);
+  } catch {
+    fail("ARTIFACT_STORAGE_ERROR", "The gallery image provider returned an invalid public URL.");
+  }
+  if (
+    publicUrl.protocol !== "https:" ||
+    !publicUrl.hostname.endsWith(".public.blob.vercel-storage.com")
+  ) {
+    fail("ARTIFACT_STORAGE_ERROR", "The gallery image provider returned an unsupported public URL.");
+  }
+
+  const galleryPreview = {
+    assetId: asset._id,
+    src: publicUrl.toString(),
+    alt: safeAltText,
+    fit: safeFit,
+    artifactId: artifact.artifactId,
+    sourceVersionId: artifact.sourceVersionId,
+    createdAt: new Date(),
+  };
+
+  // This pointer may become stale if a publish races the promotion. The
+  // public DTO checks both immutable IDs before rendering it, so it will
+  // never bind to a different release.
+  await LabExperiment.updateOne(
+    { _id: experiment._id, kind: "custom" },
+    { $set: { galleryPreview, updatedBy: user.id } },
+  );
+
+  await LabSourceAuditEvent.create({
+    actorUserId: user.id,
+    action: "gallery_preview_updated",
+    experimentSlug: slug,
+    versionId: artifact.sourceVersionId,
+    requestId: randomUUID(),
+    resultCode: "ok",
+    createdAt: new Date(),
+  });
+
+  return {
+    galleryPreview: {
+      src: galleryPreview.src,
+      alt: galleryPreview.alt,
+      fit: galleryPreview.fit,
+      artifactId: galleryPreview.artifactId,
+      sourceVersionId: galleryPreview.sourceVersionId,
+    },
+  };
 }
