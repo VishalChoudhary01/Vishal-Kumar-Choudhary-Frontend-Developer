@@ -202,18 +202,15 @@ The owner can view and compare version contents, then restore an old version by 
 
 ### 5.7 Source engagement analytics
 
-The owner/admin can inspect aggregated engagement per published experiment and across the Labs collection:
-- Successful source-viewer opens, grouped by experiment slug/title.
-- Code-copy actions reported after the supported clipboard operation succeeds.
-- Current active likes per experiment.
-- Successful like and unlike state transitions over the selected date range.
-- Daily/monthly trends and rankings for source opens, copies and active likes.
+The source library and source editor provide entry points into analytics, but do not render a duplicate dashboard. The full metric catalog, event definitions, aggregation formulas, privacy boundaries, ranking/trend requirements and visualization rules are owned by `DESIGN-ANALYTICS.md`.
 
-The dashboard shows experiment-level aggregates and reporting periods, not a browsable list of individual users' source-view/copy/like histories or their email addresses. Do not expose user-level event records to the browser. Distinguish verified current-like state from anonymous guest-like action counts; guest actions are not unique people. A verified account may open/copy/like multiple experiments; deduplication must prevent retries from multiplying one action. Show verified active likes/actions separately from best-effort guest like/unlike action counts; guest counts are not unique users and may be incomplete.
+The source-management boundary is limited to preserving correct source lifecycle events and metadata needed by analytics:
+- Source-open is recorded only after a verified source request successfully returns the currently published source.
+- Code-copy is recorded only after successful Clipboard API acknowledgement and server acceptance; no clipboard/source text is sent.
+- Source-version and experiment references are canonical and server-validated.
+- Source mutations remain owner-audited; engagement reporting remains aggregate-only.
 
-Source-open events are recorded only after the source endpoint successfully authorizes and returns the published source for a verified account. A public detail-page view is not a source open. Copy events are recorded only after the client reports a successful Clipboard API write; a copy event is not proof that code was pasted, executed or shipped. Like/unlike events are recorded only for actual server-confirmed state transitions.
-
-Analytics event records use the server-derived Better Auth user ID for abuse control/deduplication, never a client-supplied identity. Avoid storing email, raw IP, full source contents, clipboard text or unnecessary device data. Retention and account-deletion handling must be approved and disclosed before production analytics launch.
+The analytics owner routes, dynamic custom-experiment coverage, live refresh transport and implementation sequence are defined by `LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md`. Do not duplicate metric formulas or dashboard layout here.
 
 
 ### 5.8 Owner entry point and navigation
