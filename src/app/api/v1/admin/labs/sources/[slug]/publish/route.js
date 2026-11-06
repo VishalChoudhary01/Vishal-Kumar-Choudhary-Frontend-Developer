@@ -10,7 +10,9 @@ import { buildOwnerLabRelease } from "@/app/lib/labs/release-management";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-export const maxDuration = 60;
+// A release compiles, uploads immutable assets and captures its poster.
+// Keep the request alive for the full bounded compiler worker lifecycle.
+export const maxDuration = 300;
 
 export async function POST(request, { params }) {
   const { user, response } = await getLabsOwnerUser();
