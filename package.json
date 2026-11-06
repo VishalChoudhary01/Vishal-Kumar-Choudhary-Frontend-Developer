@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run test:labs-analytics && node scripts/validate-seo.cjs && next build",
+    "build": "npm run test:labs-media && npm run test:labs-analytics && node scripts/validate-seo.cjs && next build",
     "start": "next start",
     "lint": "eslint",
     "validate:seo": "node scripts/validate-seo.cjs",
-    "test:labs-analytics": "node --test tests/labs-owner-analytics.test.mjs"
+    "test:labs-analytics": "node --test tests/labs-owner-analytics.test.mjs",
+    "test:labs-media": "node --test tests/labs-preview-media.test.mjs"
   },
   "dependencies": {
     "@better-auth/infra": "^0.4.26",
