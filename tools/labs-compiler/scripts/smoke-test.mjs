@@ -3,6 +3,7 @@ import path from "node:path";
 import { spawn, spawnSync } from "node:child_process";
 import { prepareReactProject } from "../../../src/app/lib/labs/prepare-react-project.mjs";
 import { resolveGalleryPreviewSelection } from "../../../src/app/lib/labs/gallery-preview-policy.mjs";
+import { getPublishedArtifactBlobPath } from "../../../src/app/lib/labs/release-artifact-path.mjs";
 import { ensureSandboxInputDirectory } from "../../../src/app/lib/labs/sandbox-directory.mjs";
 import {
   buildPublishedRuntimeCsp,
@@ -24,6 +25,46 @@ function assertNear(actual, expected, label) {
   }
 }
 
+const artifactPathBase = {
+  experimentSlug: "fluid-gradient-playground",
+  sourceVersionId: "0f8fad5b-d9cb-469f-a165-70867728950e",
+  buildHash: "a".repeat(64),
+  filePath: "assets/index.js",
+};
+const firstArtifactBlobPath = getPublishedArtifactBlobPath({
+  ...artifactPathBase,
+  artifactId: "0f8fad5b-d9cb-469f-a165-70867728950e",
+});
+const secondArtifactBlobPath = getPublishedArtifactBlobPath({
+  ...artifactPathBase,
+  artifactId: "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+});
+if (firstArtifactBlobPath === secondArtifactBlobPath) {
+  throw new Error("A retry of the same source/build must use a unique immutable artifact Blob path.");
+}
+if (!firstArtifactBlobPath.includes("/0f8fad5b-d9cb-469f-a165-70867728950e/assets/index.js")) {
+  throw new Error("Compiled release files must be namespaced by their artifact ID.");
+}
+const firstPosterBlobPath = getPublishedArtifactBlobPath({
+  ...artifactPathBase,
+  artifactId: "0f8fad5b-d9cb-469f-a165-70867728950e",
+  filePath: "__preview/gallery-poster.png",
+});
+if (!firstPosterBlobPath.endsWith("/__preview/gallery-poster.png")) {
+  throw new Error("The generated poster must share the artifact's unique immutable namespace.");
+}
+let invalidArtifactPathRejected = false;
+try {
+  getPublishedArtifactBlobPath({
+    ...artifactPathBase,
+    artifactId: "not-an-artifact-id",
+  });
+} catch {
+  invalidArtifactPathRejected = true;
+}
+if (!invalidArtifactPathRejected) {
+  throw new Error("An invalid artifact identifier must not be used for a Blob key.");
+}
 const generatedPosterFixture = { src: "/generated-poster.png", mediaKind: "image", contentType: "image/png", generated: true };
 const uploadedImageFixture = { src: "https://media.example/uploaded.webp", mediaKind: "image", contentType: "image/webp" };
 const uploadedGifFixture = { src: "https://media.example/uploaded.gif", mediaKind: "image", contentType: "image/gif" };
@@ -691,7 +732,7 @@ try {
   }
 
   process.stdout.write(
-    "PASS: upload-vs-generated gallery precedence, idempotent sandbox input setup, nested Fluid Gradient HTML with inline CSS/Canvas JavaScript, static HTML/CSS/JS builds, CSS-only builds, JSX + TSX type checking, React 19, Motion, Lucide, React Icons, Tailwind v4, CSP, isolated preview HTTP server/bridge, traversal blocking and invalid-type rejection.\n",
+    "PASS: artifact-specific immutable Blob paths, upload-vs-generated gallery precedence, idempotent sandbox input setup, nested Fluid Gradient HTML with inline CSS/Canvas JavaScript, static HTML/CSS/JS builds, CSS-only builds, JSX + TSX type checking, React 19, Motion, Lucide, React Icons, Tailwind v4, CSP, isolated preview HTTP server/bridge, traversal blocking and invalid-type rejection.\n",
   );
 } finally {
   await Promise.all([
