@@ -2,6 +2,7 @@ import "server-only";
 
 import { createHash, randomUUID } from "node:crypto";
 import mongoose from "mongoose";
+import { del } from "@vercel/blob";
 
 import { connectToDatabase } from "@/app/lib/db/mongoose";
 import { publishedLabExperiments } from "@/app/data/labsExperiments";
@@ -694,9 +695,20 @@ export async function publishOwnerLabSource({
       await source.save({ session });
 
       if (experiment.isCustom) {
+        const experimentUpdate = {
+          status: "published",
+          publishedAt: new Date(),
+          updatedBy: user.id,
+        };
+        if (
+          experiment.galleryPreview?.src &&
+          experiment.galleryPreview.artifactId !== artifact.artifactId
+        ) {
+          experimentUpdate.galleryPreview = null;
+        }
         await LabExperiment.updateOne(
           { slug, kind: "custom" },
-          { $set: { status: "published", publishedAt: new Date(), updatedBy: user.id } },
+          { $set: experimentUpdate },
           { session },
         );
       }
@@ -718,6 +730,20 @@ export async function publishOwnerLabSource({
     await session.endSession();
   }
 
+  if (
+    experiment.isCustom &&
+    experiment.galleryPreview?.src &&
+    experiment.galleryPreview.artifactId !== artifactId
+  ) {
+    try {
+      const token = process.env.BLOB_READ_WRITE_TOKEN;
+      if (!token) throw new Error("Blob storage token is unavailable.");
+      await del(experiment.galleryPreview.src, { token });
+    } catch {
+      console.error("[labs-gallery-preview] stale poster cleanup is pending for", slug);
+    }
+  }
+
   return { published: true, publishedVersionId: versionId };
 }
 
@@ -728,7 +754,7 @@ export async function unpublishOwnerLabSource({
   requestId = null,
 }) {
   assertOwner(user);
-  await getExperiment(slug);
+  const experiment = await getExperiment(slug);
   await connectToDatabase();
 
   const session = await mongoose.startSession();
@@ -747,12 +773,13 @@ export async function unpublishOwnerLabSource({
       source.updatedBy = user.id;
       await source.save({ session });
 
-      const experiment = await LabExperiment.findOne({ slug, kind: "custom" }).session(session);
-      if (experiment) {
-        experiment.status = "draft";
-        experiment.publishedAt = null;
-        experiment.updatedBy = user.id;
-        await experiment.save({ session });
+      const currentExperiment = await LabExperiment.findOne({ slug, kind: "custom" }).session(session);
+      if (currentExperiment) {
+        currentExperiment.status = "draft";
+        currentExperiment.publishedAt = null;
+        currentExperiment.galleryPreview = null;
+        currentExperiment.updatedBy = user.id;
+        await currentExperiment.save({ session });
       }
 
       await LabSourceAuditEvent.create(
@@ -770,6 +797,16 @@ export async function unpublishOwnerLabSource({
     });
   } finally {
     await session.endSession();
+  }
+
+  if (experiment.isCustom && experiment.galleryPreview?.src) {
+    try {
+      const token = process.env.BLOB_READ_WRITE_TOKEN;
+      if (!token) throw new Error("Blob storage token is unavailable.");
+      await del(experiment.galleryPreview.src, { token });
+    } catch {
+      console.error("[labs-gallery-preview] unpublished poster cleanup is pending for", slug);
+    }
   }
 
   return { published: false, publishedVersionId: null };
