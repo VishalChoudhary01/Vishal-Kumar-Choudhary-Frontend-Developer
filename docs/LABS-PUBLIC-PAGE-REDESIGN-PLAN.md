@@ -1,6 +1,6 @@
 # Labs Public Page Redesign — Phased Plan
 
-**Status:** Phases 1–4 implementation committed; automated, database-index, build and visual verification remain pending. Phase 5 remains planned. Hero Motion, statistics count-up and authentication-aware CTAs are included in scope.  
+**Status:** Phases 1–4 implementation committed. Hero/collection/pagination automated checks and production compilation have passed in an isolated build; database-index provisioning and browser visual QA remain pending. The hero viewport-fit refinement is recorded below. Hero Motion, statistics count-up and authentication-aware CTAs are included in scope.  
 **Branch:** `feat/labs-platform-integration`  
 **Updated:** 7 November 2026  
 **Scope:** Public `/labs` discovery page.  
@@ -498,3 +498,17 @@ Changed:
 Behavior preserved: built-in experiments remain code-owned and always included; custom records must match a current published source and exact ready artifact/version; page size is fixed server-side; category counts include the complete eligible collection; six cards are revealed per action; Like remains on its existing API; no category virtualization is introduced.
 
 **Verification is not claimed:** No pagination test, DB index creation, Atlas integration test, production build, or browser Preview was executed by these commits. The explicit index provisioning command must be run in the intended DB environment before production release.
+
+## 7. Hero viewport-fit refinement — 7 November 2026
+
+The first-viewport review identified excess vertical spacing and an overly dashboard-like right illustration. Refine only the public Labs hero; keep the shared navbar and all routes/data/engagement behavior unchanged.
+
+- On desktop, the hero should use a viewport-aware minimum height that accounts for the existing 78 px desktop navbar, with content vertically centered inside the available area.
+- Reduce top/bottom padding, eyebrow-to-heading gap, copy gap, CTA gap and statistics spacing so the first viewport feels composed rather than vertically stretched.
+- Keep the editorial two-line heading and existing real-data statistics/auth-aware actions. Reduce display sizing slightly at wide widths to maintain hierarchy without dominating the viewport.
+- Replace the bordered/grid-and-caption illustration with a cleaner orbit/network composition: fewer rings and nodes, no dashboard frame, no invented labels or corner annotations.
+- Use only restrained semantic brand tones. Orbit motion should be slow and local; reduced motion renders the illustration in a stable static state.
+- The illustration remains conceptual and decorative. It must not resemble a fake experiment preview or add interactive functionality.
+- Mobile remains content-first and naturally stacked, without forcing a viewport-height hero.
+
+Acceptance: 1440×900 and 1920×1080 desktop first-view checks, tablet width, 390×844 mobile, both themes, reduced motion, keyboard action focus, no horizontal overflow and no navbar changes.

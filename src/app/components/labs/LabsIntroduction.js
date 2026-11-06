@@ -12,19 +12,19 @@ const heroContainerVariants = {
   hidden: {},
   visible: {
     transition: {
-      delayChildren: 0.06,
-      staggerChildren: 0.11,
+      delayChildren: 0.04,
+      staggerChildren: 0.085,
     },
   },
 };
 
 const heroItemVariants = {
-  hidden: { opacity: 0, y: 18 },
+  hidden: { opacity: 0, y: 14 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.68,
+      duration: 0.56,
       ease: [0.16, 1, 0.3, 1],
     },
   },
@@ -49,7 +49,7 @@ function AnimatedLabStat({ value, label }) {
 
     count.set(0);
     const controls = animate(count, value, {
-      duration: 1.12,
+      duration: 0.95,
       ease: [0.16, 1, 0.3, 1],
     });
 
@@ -61,11 +61,11 @@ function AnimatedLabStat({ value, label }) {
       <p
         role="img"
         aria-label={`${value} ${label.toLowerCase()}`}
-        className="font-display text-[clamp(2.25rem,4.2vw,3.5rem)] leading-none tracking-[-0.055em] text-text-primary tabular-nums"
+        className="font-display text-[clamp(2rem,3.5vw,3rem)] leading-none tracking-[-0.055em] text-text-primary tabular-nums"
       >
         <motion.span aria-hidden="true">{displayValue}</motion.span>
       </p>
-      <p className="mt-2 max-w-[11rem] font-mono text-[9px] uppercase leading-5 tracking-[0.12em] text-text-muted sm:text-[10px]">
+      <p className="mt-2 max-w-[11rem] font-mono text-[9px] uppercase leading-4 tracking-[0.1em] text-text-muted sm:text-[10px]">
         {label}
       </p>
     </div>
@@ -115,19 +115,20 @@ export default function LabsIntroduction({
   featuredHref = null,
 }) {
   const prefersReducedMotion = useReducedMotion();
+
   return (
     <motion.section
       aria-labelledby="labs-heading"
       initial={prefersReducedMotion ? false : "hidden"}
       animate="visible"
       variants={heroContainerVariants}
-      className="relative mx-auto w-full max-w-[1440px] overflow-hidden px-6 pb-16 pt-[clamp(7.5rem,10vw,9.5rem)] sm:px-8 sm:pb-20 lg:px-20 lg:pb-24"
+      className="relative mx-auto flex w-full max-w-[1440px] flex-col justify-center overflow-hidden px-6 pb-10 pt-[calc(60px+2rem)] sm:px-8 sm:pb-12 sm:pt-[calc(60px+2.5rem)] lg:min-h-[calc(100svh-78px)] lg:px-20 lg:pb-8 lg:pt-[calc(78px+2.25rem)]"
     >
-      <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-[minmax(0,1.04fr)_minmax(0,0.96fr)] lg:gap-10 xl:gap-16">
+      <div className="grid grid-cols-1 items-center gap-8 sm:gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:gap-8 xl:gap-12">
         <div className="relative z-10 flex min-w-0 flex-col items-start">
           <motion.p
             variants={heroItemVariants}
-            className="mb-5 font-mono text-[9px] font-semibold uppercase tracking-[0.24em] text-brand sm:mb-6 sm:text-[10px]"
+            className="mb-4 font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-brand sm:mb-5 sm:text-[10px]"
           >
             Frontend experiments / Open collection
           </motion.p>
@@ -135,7 +136,7 @@ export default function LabsIntroduction({
           <motion.h1
             id="labs-heading"
             variants={heroItemVariants}
-            className="max-w-[11ch] font-display text-[clamp(3.35rem,7.1vw,7.1rem)] font-normal leading-[0.9] tracking-[-0.065em] text-text-primary"
+            className="max-w-[10ch] font-display text-[clamp(3.2rem,6.2vw,6.35rem)] font-normal leading-[0.89] tracking-[-0.065em] text-text-primary"
           >
             A space for
             <span className="block text-brand">experiments.</span>
@@ -143,7 +144,7 @@ export default function LabsIntroduction({
 
           <motion.p
             variants={heroItemVariants}
-            className="mt-6 max-w-[34rem] text-sm leading-7 text-text-secondary sm:mt-7 sm:text-base sm:leading-8"
+            className="mt-5 max-w-[31rem] text-sm leading-6 text-text-secondary sm:mt-6 sm:text-[15px] sm:leading-7"
           >
             A growing collection of frontend explorations in motion, interface
             interactions, CSS, and creative coding. Built to explore ideas,
@@ -152,28 +153,28 @@ export default function LabsIntroduction({
 
           <motion.div
             variants={heroItemVariants}
-            className="mt-7 flex flex-wrap items-center gap-3 sm:mt-8"
+            className="mt-6 flex flex-wrap items-center gap-3"
           >
             <HeroActions authState={authState} featuredHref={featuredHref} />
           </motion.div>
 
           <motion.div
             variants={heroItemVariants}
-            className="mt-10 grid w-full max-w-[28rem] grid-cols-2 gap-6 border-t border-border-subtle pt-5 sm:mt-12 sm:gap-10"
+            className="mt-8 grid w-full max-w-[25rem] grid-cols-2 gap-6 border-t border-border-subtle pt-4 sm:mt-9 sm:gap-8"
           >
             <AnimatedLabStat value={experimentCount} label="Published experiments" />
             <AnimatedLabStat value={categoryCount} label="Active disciplines" />
           </motion.div>
         </div>
 
-        <div className="relative min-w-0 lg:pl-2">
+        <div className="relative min-w-0 lg:justify-self-end">
           <LabsHeroArtwork />
         </div>
       </div>
 
       <div
         aria-hidden="true"
-        className="mt-14 h-px w-full bg-border-subtle sm:mt-16 lg:mt-20"
+        className="mt-8 h-px w-full bg-border-subtle lg:mt-7"
       />
     </motion.section>
   );
