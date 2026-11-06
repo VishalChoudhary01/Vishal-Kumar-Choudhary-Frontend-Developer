@@ -15,7 +15,7 @@ A custom experiment is eligible for the public gallery only when all release ref
 3. The source has non-empty `publishedVersionId` and `publishedArtifactId`.
 4. A ready `LabBuildArtifact` exists for the same experiment slug and its `sourceVersionId` equals the source's published version.
 
-The public catalogue applies this gate. The owner Source Library now returns a `publicationReadiness` diagnostic for custom experiments (for example, missing artifact or artifact/version mismatch) so excluded cards can be investigated instead of guessed at. The gallery never executes code, mounts a React tree, starts an iframe, or invokes the compiler.
+The public catalogue applies this gate. The owner Source Library now returns a `publicationReadiness` diagnostic for custom experiments (for example, missing artifact or artifact/version mismatch) so excluded cards can be investigated instead of guessed at. The inventory has a dedicated **Not in gallery** filter/count, a status badge and a `Continue to publish` action for custom experiments that are not eligible. Its helper copy distinguishes creating a new gallery experiment from adding a source workspace to one of the four built-in cards: **Create source** on a built-in row only adds protected source to that existing card; use **New gallery experiment** to create a distinct public entry. The gallery never executes code, mounts a React tree, starts an iframe, or invokes the compiler.
 
 The public visual priority is:
 
