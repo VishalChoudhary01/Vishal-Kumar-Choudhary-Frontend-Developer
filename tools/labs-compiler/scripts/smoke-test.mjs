@@ -26,7 +26,7 @@ function assertNear(actual, expected, label) {
   }
 }
 
-const publishedProjectionFields = new Set(PUBLISHED_LAB_SOURCE_PROJECTION.split(/\\s+/));
+const publishedProjectionFields = new Set(PUBLISHED_LAB_SOURCE_PROJECTION.split(/\s+/));
 for (const requiredField of ["slug", "published", "publishedVersionId", "publishedArtifactId"]) {
   if (!publishedProjectionFields.has(requiredField)) {
     throw new Error("The public Labs source query must select " + requiredField + ".");
