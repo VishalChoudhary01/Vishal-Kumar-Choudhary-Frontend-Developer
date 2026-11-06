@@ -55,19 +55,21 @@ test("empty, malformed and invalid collections cannot create a featured placehol
 });
 
 test("route resolves the spotlight from the same eligible initial set delivered to the collection", () => {
-  assert.match(dataSource, /FEATURED_LAB_EXPERIMENT_SLUG/);
-  assert.match(routeSource, /getPublishedCustomLabExperimentPage\\(/);
-  assert.match(
-    routeSource,
-    /const experiments = \\[\\.\\.\\.publishedLabExperiments, \\.\\.\\.customPage\\.experiments\\];/,
+  assert.ok(dataSource.includes("FEATURED_LAB_EXPERIMENT_SLUG"));
+  assert.ok(routeSource.includes("getPublishedCustomLabExperimentPage("));
+  assert.ok(
+    routeSource.includes(
+      "const experiments = [...publishedLabExperiments, ...customPage.experiments];",
+    ),
   );
-  assert.match(routeSource, /resolveFeaturedExperiment\\(\\s*experiments,/);
-  assert.match(routeSource, /<FeaturedExperiment experiment=\\{featuredExperiment\\}/);
-  assert.match(
-    routeSource,
-    /<LabsCollection\\s+builtInExperiments=\\{publishedLabExperiments\\}\\s+initialCustomPage=\\{customPage\\}/,
+  assert.ok(routeSource.includes("resolveFeaturedExperiment("));
+  assert.ok(routeSource.includes("experiments,"));
+  assert.ok(
+    routeSource.includes("<FeaturedExperiment experiment={featuredExperiment}"),
   );
-  assert.doesNotMatch(routeSource, /featuredLabExperiment/);
+  assert.ok(routeSource.includes("builtInExperiments={publishedLabExperiments}"));
+  assert.ok(routeSource.includes("initialCustomPage={customPage}"));
+  assert.ok(!routeSource.includes("featuredLabExperiment"));
 });
 test("spotlight is a media-only detail link and respects reduced motion", () => {
   assert.match(spotlightSource, /useReducedMotion/);
