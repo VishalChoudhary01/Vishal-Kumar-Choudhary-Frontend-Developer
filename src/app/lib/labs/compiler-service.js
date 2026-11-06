@@ -313,6 +313,7 @@ async function captureReleasePoster(sandbox, { slug, versionId, buildHash, token
       height: 900,
       contentHash,
       captureVersion: POSTER_CAPTURE_VERSION,
+      browserVersion: typeof capture.browserVersion === "string" ? capture.browserVersion.slice(0, 160) : null,
       reasonCode: null,
     };
   } catch (error) {
@@ -324,7 +325,6 @@ async function captureReleasePoster(sandbox, { slug, versionId, buildHash, token
       status: "unavailable",
       reasonCode: "capture_failed",
       captureVersion: POSTER_CAPTURE_VERSION,
-      browserVersion: typeof capture.browserVersion === "string" ? capture.browserVersion.slice(0, 160) : null,
     };
   }
 }
