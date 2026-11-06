@@ -1,6 +1,6 @@
 # Labs Detail Presentation and Monaco Editor — Phased Implementation Plan
 
-**Status:** Phases 1–4 implemented in source with regression tests and production build passing. Authenticated Preview/browser QA remains pending for Phases 1 and 3–4. Phase 5 version-history Monaco migration remains planned.
+**Status:** Phases 1–4 implemented in branch source with regression tests and production build passing. Phase 4 Preview deployment is blocked by Vercel's daily API deployment quota; authenticated Preview/browser QA remains pending for Phases 1 and 3–4. Phase 5 version-history Monaco migration remains planned.
 **Branch:** `feat/labs-platform-integration`
 **Last reconciled:** 6 November 2026
 **Scope:** Public Labs detail page media/layout, protected read-only source viewer, and the admin source creator's code editor.
@@ -584,3 +584,12 @@ Added:
 7. Verify theme switching, keyboard shortcuts, large source files, worker startup, responsive editor sizing and the plain-text fallback in the deployed Preview.
 
 The version-history modal still uses its existing read-only plain code view and is reserved for Phase 5. Production remains unchanged until explicit release approval.
+
+
+### Phase 4 deployment gate — 6 November 2026
+
+The Phase 4 branch source and full production build are green, but a Preview containing the final owner Monaco integration has not yet been created. The latest Vercel `READY` Preview visible is `dpl_GsN5vUQXZi9hEzkvXaZxFuEe5TeQ` from code commit `741ba0a96edf4542e152f0bf435db05f81c6c5d2`, which predates the final creator integration and the subsequent Run/Save/Publish synchronization changes.
+
+A new Preview request from the current branch was rejected with HTTP 402 `api-deployments-free-per-day` and a 24-hour retry window (more than 100 deployments). The CLI fallback was checked but is unavailable in the validation sandbox (`vercel` CLI is not installed and the clone is not linked to the Vercel project). No billing/security settings were changed and Production was not touched.
+
+After the quota resets, deploy the current `feat/labs-platform-integration` HEAD to Preview and verify the owner browser journey listed in Phase 4 acceptance: final-keystroke Run, Save Draft content hash, Build & Publish exact version ID, file operations, discard/restore, busy-state locking, editor theme, keyboard behavior and fallback. The clean sandbox build is not a substitute for this deployed owner QA.
