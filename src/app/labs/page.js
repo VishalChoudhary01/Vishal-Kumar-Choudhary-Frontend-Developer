@@ -3,9 +3,10 @@ import LabsIntroduction from "@/app/components/labs/LabsIntroduction";
 import FeaturedExperiment from "@/app/components/labs/FeaturedExperiment";
 import LabsCollection from "@/app/components/labs/LabsCollection";
 import {
-  featuredLabExperiment,
+  FEATURED_LAB_EXPERIMENT_SLUG,
   publishedLabExperiments,
 } from "@/app/data/labsExperiments";
+import { resolveFeaturedExperiment } from "@/app/lib/labs/featured-experiment.mjs";
 import { buildSiteUrl } from "@/app/lib/seo/urls";
 import { cookies } from "next/headers";
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
@@ -90,9 +91,10 @@ export default async function LabsPage() {
     }
   }
 
-  const hasFeaturedExperiment =
-    Boolean(featuredLabExperiment?.slug) &&
-    experiments.some((experiment) => experiment.slug === featuredLabExperiment.slug);
+  const featuredExperiment = resolveFeaturedExperiment(
+    experiments,
+    FEATURED_LAB_EXPERIMENT_SLUG,
+  );
 
   return (
     <LabsPageShell>
@@ -108,11 +110,11 @@ export default async function LabsPage() {
           }
           authState={authState}
           featuredHref={
-            hasFeaturedExperiment ? `/labs/${featuredLabExperiment.slug}` : null
+            featuredExperiment ? `/labs/${featuredExperiment.slug}` : null
           }
         />
-        {featuredLabExperiment ? (
-          <FeaturedExperiment experiment={featuredLabExperiment} />
+        {featuredExperiment ? (
+          <FeaturedExperiment experiment={featuredExperiment} />
         ) : null}
         <LabsCollection experiments={experiments} engagementBySlug={engagementBySlug} />
       </main>
