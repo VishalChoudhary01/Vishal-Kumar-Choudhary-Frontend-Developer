@@ -72,7 +72,7 @@ test("invalid category values do not create fake filters or counts", () => {
 
 test("collection keeps existing real-data links, likes and progressive loading", () => {
   assert.match(collectionSource, /key=\{experiment\.slug\}/);
-  assert.match(collectionSource, /href=\{\`\/labs\/\$\{experiment\.slug\}\`\}/);
+  assert.ok(collectionSource.includes("href={`/labs/${experiment.slug}`}"));
   assert.match(collectionSource, /<LabLikeButton/);
   assert.match(collectionSource, /initialData=\{engagement\}/);
   assert.match(collectionSource, /useLabLoadMore/);
