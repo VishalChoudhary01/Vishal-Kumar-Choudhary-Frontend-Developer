@@ -146,3 +146,10 @@ These are separate from the immediate quota fix:
 On 2026-11-06, the compiler base was refreshed from the active branch snapshot. The new snapshot contains the current `serve-preview.mjs` run-ID bridge and the release-only poster worker. It passed `npm run test:smoke` and Node syntax checks inside the isolated Vercel Sandbox. The branch-scoped `LABS_COMPILER_SNAPSHOT_ID` now points to that verified snapshot. Only the `feat/labs-platform-integration` Preview variable was updated; Production was left unchanged.
 
 The diagnostic/refresh workers were created with `persistent: false` and explicitly stopped or snapshotted. The regular one-off Run/release worker path remains non-persistent. Do not add an automatic snapshot on worker shutdown.
+
+
+## 10. Screenshot capture snapshot addition — 2026-11-06
+
+The Preview compiler snapshot was extended with pinned Playwright 1.65.0 and Chromium 158.0.8127.18, including Linux browser libraries. The new branch-only compiler snapshot is `snap_1Ep7fqKr9Q4MMSKWALnzZ9nQumBt`. The compiler smoke suite and a real 1200×900 compiled React artifact screenshot passed inside the snapshot. It was saved as a manual snapshot; the temporary setup worker was stopped with `persistent: false`. Only the `feat/labs-platform-integration` Preview environment's `LABS_COMPILER_SNAPSHOT_ID` was updated; Production was not changed.
+
+The Playwright capture process is now part of release build only. It is not invoked by Run, gallery requests or detail page requests. The actual deployed owner publish flow remains to be verified after a new Preview deployment consumes this snapshot ID.
