@@ -445,13 +445,28 @@ export async function buildAndStoreOwnerLabRelease({ slug, user, version }) {
         filePath: file.path,
       });
 
-      const stored = await put(blobPath, bytes, {
-        access: "public",
-        token,
-        addRandomSuffix: false,
-        allowOverwrite: false,
-        contentType,
-      });
+      let stored;
+      try {
+        stored = await put(blobPath, bytes, {
+          access: "public",
+          token,
+          addRandomSuffix: false,
+          allowOverwrite: false,
+          contentType,
+        });
+      } catch (error) {
+        console.error("[labs-compiler] immutable artifact upload failed:", {
+          slug,
+          artifactId,
+          path: file.path,
+          code: error?.code || "BLOB_UPLOAD_FAILED",
+          message: String(error?.message || "Blob upload failed").slice(0, 240),
+        });
+        fail(
+          "ARTIFACT_STORAGE_ERROR",
+          "A compiled release file could not be stored. The current published release remains unchanged. Retry Build & publish.",
+        );
+      }
       uploaded.push({
         path: file.path,
         url: stored.url,
