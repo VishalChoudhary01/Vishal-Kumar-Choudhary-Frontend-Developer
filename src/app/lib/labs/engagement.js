@@ -7,6 +7,10 @@ import { connectToDatabase } from "@/app/lib/db/mongoose";
 import LabLike from "./models/LabLike";
 import LabGuestLike from "./models/LabGuestLike";
 import LabAnalyticsEvent from "./models/LabAnalyticsEvent";
+import {
+  evaluateFixedWindowRateLimit,
+  getSourceEventRateLimit,
+} from "./owner-analytics-utils.mjs";
 
 export const LABS_GUEST_LIKE_COOKIE = "labs_guest_like";
 
@@ -265,13 +269,8 @@ export async function setLabLike({ slug, actor, liked }) {
 }
 
 const SOURCE_EVENT_RATE_WINDOW_MS = 60 * 1000;
-const SOURCE_EVENT_RATE_LIMITS = {
-  source_open: 30,
-  code_copy: 20,
-};
-
 async function consumeSourceEventRateLimit({ userId, eventType }) {
-  const maxEvents = SOURCE_EVENT_RATE_LIMITS[eventType];
+  const maxEvents = getSourceEventRateLimit(eventType);
   const secret = process.env.BETTER_AUTH_SECRET;
 
   if (!maxEvents || !secret) {
@@ -322,20 +321,14 @@ async function consumeSourceEventRateLimit({ userId, eventType }) {
   );
 
   const document = result?.value ?? result;
-  const count = Number(document?.count || 0);
-  const windowStartedAt = new Date(document?.windowStartedAt || now);
-  const retryAfterSeconds = Math.max(
-    1,
-    Math.ceil(
-      (windowStartedAt.getTime() + SOURCE_EVENT_RATE_WINDOW_MS - now.getTime()) / 1000,
-    ),
-  );
 
-  return {
-    allowed: count <= maxEvents,
-    retryAfterSeconds,
-    remaining: Math.max(0, maxEvents - count),
-  };
+  return evaluateFixedWindowRateLimit({
+    count: document?.count || 0,
+    windowStartedAt: document?.windowStartedAt || now,
+    now,
+    windowMs: SOURCE_EVENT_RATE_WINDOW_MS,
+    maxEvents,
+  });
 }
 
 export async function recordVerifiedSourceEvent({
