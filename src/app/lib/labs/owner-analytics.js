@@ -120,23 +120,23 @@ export async function getLabsOwnerAnalytics({ user, days = 30 }) {
             codeCopies: {
               $sum: { $cond: [{ $eq: ["$eventType", "code_copy"] }, 1, 0] },
             },
+            verifiedLikes: {
+              $sum: { $cond: [{ $and: [{ $eq: ["$actorCategory", "verified_user"] }, { $eq: ["$eventType", "like"] }] }, 1, 0] },
+            },
+            verifiedUnlikes: {
+              $sum: { $cond: [{ $and: [{ $eq: ["$actorCategory", "verified_user"] }, { $eq: ["$eventType", "unlike"] }] }, 1, 0] },
+            },
+            anonymousLikes: {
+              $sum: { $cond: [{ $and: [{ $eq: ["$actorCategory", "guest"] }, { $eq: ["$eventType", "guest_like"] }] }, 1, 0] },
+            },
+            anonymousUnlikes: {
+              $sum: { $cond: [{ $and: [{ $eq: ["$actorCategory", "guest"] }, { $eq: ["$eventType", "guest_unlike"] }] }, 1, 0] },
+            },
             verifiedLikeActions: {
-              $sum: {
-                $cond: [
-                  { $in: ["$eventType", ["like", "unlike"]] },
-                  1,
-                  0,
-                ],
-              },
+              $sum: { $cond: [{ $in: ["$eventType", ["like", "unlike"]] }, 1, 0] },
             },
             anonymousLikeActions: {
-              $sum: {
-                $cond: [
-                  { $in: ["$eventType", ["guest_like", "guest_unlike"]] },
-                  1,
-                  0,
-                ],
-              },
+              $sum: { $cond: [{ $in: ["$eventType", ["guest_like", "guest_unlike"]] }, 1, 0] },
             },
           },
         },
@@ -215,23 +215,23 @@ export async function getLabsOwnerExperimentAnalytics({ user, slug, days = 30 })
         codeCopies: {
           $sum: { $cond: [{ $eq: ["$eventType", "code_copy"] }, 1, 0] },
         },
+        verifiedLikes: {
+          $sum: { $cond: [{ $and: [{ $eq: ["$actorCategory", "verified_user"] }, { $eq: ["$eventType", "like"] }] }, 1, 0] },
+        },
+        verifiedUnlikes: {
+          $sum: { $cond: [{ $and: [{ $eq: ["$actorCategory", "verified_user"] }, { $eq: ["$eventType", "unlike"] }] }, 1, 0] },
+        },
+        anonymousLikes: {
+          $sum: { $cond: [{ $and: [{ $eq: ["$actorCategory", "guest"] }, { $eq: ["$eventType", "guest_like"] }] }, 1, 0] },
+        },
+        anonymousUnlikes: {
+          $sum: { $cond: [{ $and: [{ $eq: ["$actorCategory", "guest"] }, { $eq: ["$eventType", "guest_unlike"] }] }, 1, 0] },
+        },
         verifiedLikeActions: {
-          $sum: {
-            $cond: [
-              { $in: ["$eventType", ["like", "unlike"]] },
-              1,
-              0,
-            ],
-          },
+          $sum: { $cond: [{ $in: ["$eventType", ["like", "unlike"]] }, 1, 0] },
         },
         anonymousLikeActions: {
-          $sum: {
-            $cond: [
-              { $in: ["$eventType", ["guest_like", "guest_unlike"]] },
-              1,
-              0,
-            ],
-          },
+          $sum: { $cond: [{ $in: ["$eventType", ["guest_like", "guest_unlike"]] }, 1, 0] },
         },
       },
     },
