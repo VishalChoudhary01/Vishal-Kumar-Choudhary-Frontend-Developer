@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import {
   Copy,
   Eye,
@@ -48,6 +49,40 @@ function MetricCard({ icon: Icon, label, value, detail }) {
         />
       </div>
       {detail ? <p className="mt-1 text-xs text-text-tertiary">{detail}</p> : null}
+    </article>
+  );
+}
+
+function RankingCard({ title, description, items, valueLabel, valueSuffix = "" }) {
+  return (
+    <article className="border border-border bg-surface-1 p-5">
+      <h3 className="text-sm font-semibold">{title}</h3>
+      <p className="mt-1 text-xs leading-5 text-text-tertiary">{description}</p>
+      {items.length ? (
+        <ol className="mt-4 space-y-3">
+          {items.map((item) => (
+            <li key={item.slug} className="flex items-center justify-between gap-3 border-t border-border pt-3 first:border-0 first:pt-0">
+              <div className="flex min-w-0 items-start gap-3">
+                <span className="w-5 shrink-0 pt-0.5 text-xs tabular-nums text-text-tertiary">{item.rank}.</span>
+                <Link
+                  href={"/admin/labs/analytics/" + encodeURIComponent(item.slug)}
+                  className="min-w-0 text-xs font-medium text-text-primary transition-colors hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                >
+                  <span className="block truncate">{item.title}</span>
+                  <span className="mt-1 block truncate font-mono text-[10px] font-normal text-text-tertiary">{item.slug}</span>
+                </Link>
+              </div>
+              <span className="shrink-0 text-sm font-semibold tabular-nums text-text-primary">
+                {number(item.value)}{valueSuffix}
+              </span>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="mt-4 border border-dashed border-border px-3 py-4 text-xs text-text-tertiary">
+          No recorded activity in this ranking yet.
+        </p>
+      )}
     </article>
   );
 }
@@ -278,6 +313,35 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
 
       <LabsEngagementTrendChart daily={analytics.daily} />
 
+      <section aria-labelledby="experiment-rankings-title" className="mt-10">
+        <div>
+          <h2 id="experiment-rankings-title" className="text-lg font-semibold">Experiment rankings</h2>
+          <p className="mt-1 text-xs text-text-tertiary">
+            Opens and copies use the selected period. Active likes show the current persisted state.
+          </p>
+        </div>
+        <div className="mt-4 grid gap-3 xl:grid-cols-3">
+          <RankingCard
+            title="Most source opens"
+            description="Successful verified source loads during this period."
+            items={analytics.rankings?.mostSourceOpens || []}
+            valueLabel="opens"
+          />
+          <RankingCard
+            title="Most code copies"
+            description="Clipboard-success reports accepted during this period."
+            items={analytics.rankings?.mostCodeCopies || []}
+            valueLabel="copies"
+          />
+          <RankingCard
+            title="Most active likes"
+            description="Current active likes; not limited to the reporting period."
+            items={analytics.rankings?.mostActiveLikes || []}
+            valueLabel="active likes"
+          />
+        </div>
+      </section>
+
       <section className="mt-10">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -308,7 +372,12 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
               {analytics.experiments.map((experiment) => (
                 <tr key={experiment.slug} className="border-t border-border">
                   <th scope="row" className="px-4 py-4 font-medium text-text-primary">
-                    <span className="block">{experiment.title}</span>
+                    <Link
+                      href={"/admin/labs/analytics/" + encodeURIComponent(experiment.slug)}
+                      className="block transition-colors hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                    >
+                      {experiment.title}
+                    </Link>
                     <span className="mt-1 block text-xs font-normal text-text-tertiary">
                       {experiment.slug}
                     </span>
