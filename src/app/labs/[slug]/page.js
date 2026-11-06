@@ -149,13 +149,13 @@ export default async function LabExperimentPage({ params }) {
         {experiment.galleryPreview || experiment.generatedPoster || experiment.thumbnail ? (
           <section
             aria-label="Experiment media preview"
-            className="mx-auto mt-2 w-full max-w-[1440px] px-6 sm:px-8 lg:px-20"
+            className="mx-auto mt-0 w-full max-w-[1440px] px-6 sm:px-8 lg:px-20"
           >
-            <div className="relative aspect-[4/3] overflow-hidden rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 sm:aspect-[16/9]">
+            <div className="flex min-h-[220px] w-full items-center justify-center overflow-hidden rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-2 py-3 sm:px-4 sm:py-5">
               <LabExperimentPreview
                 experiment={experiment}
                 sizes="(max-width: 1023px) 100vw, 1280px"
-                className="h-full w-full"
+                className="block h-auto max-h-[min(76svh,780px)] w-full object-contain object-center"
               />
             </div>
             <p className="mt-2 text-[10px] text-text-tertiary">
