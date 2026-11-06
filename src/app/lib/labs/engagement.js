@@ -358,9 +358,6 @@ export async function recordVerifiedSourceEvent({
   await connectToDatabase();
   await ensureEngagementIndexes();
 
-  await connectToDatabase();
-  await ensureEngagementIndexes();
-
   // A replay of an already accepted idempotency key is not a new attempt and
   // must not consume the account's source-event quota.
   const existingEvent = await LabAnalyticsEvent.exists({ eventId: safeEventId });
