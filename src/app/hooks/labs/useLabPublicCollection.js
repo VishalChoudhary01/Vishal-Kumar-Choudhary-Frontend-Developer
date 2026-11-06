@@ -82,6 +82,13 @@ export default function useLabPublicCollection({
     activeCategoryRef.current = activeCategory;
   }, [activeCategory]);
 
+  useEffect(
+    () => () => {
+      loadMoreController.current?.abort();
+    },
+    [],
+  );
+
   useEffect(() => {
     setVisibleCount(REVEAL_BATCH_SIZE);
     setLoadError("");
@@ -253,6 +260,7 @@ export default function useLabPublicCollection({
     pageCache.current.delete(activeCategory);
     setLoadError("");
     setRemotePage({ category: activeCategory, experiments: [], nextCursor: null });
+    setVisibleCount(REVEAL_BATCH_SIZE);
     setIsLoadingCategory(false);
     setRetryVersion((current) => current + 1);
   }, [activeCategory]);
