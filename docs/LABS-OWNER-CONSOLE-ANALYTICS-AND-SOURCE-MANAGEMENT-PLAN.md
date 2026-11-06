@@ -346,7 +346,7 @@ Work in small phases with separate reviewable commits. Do not begin a later phas
 | Instrumented-event rankings | Code committed / Preview build-verified | Collection analytics adds deterministic top-five rankings for source opens and code copies in the selected period, plus current active likes; zero-value entries are omitted and ties resolve by title then slug |
 | Per-experiment analytics API/detail route | Code committed / Preview build-verified | Adds owner-only `GET /api/v1/admin/labs/analytics/:slug` and `/admin/labs/analytics/[slug]`; aggregate-only output includes period metrics, current active likes and UTC daily series for published built-in or eligible custom experiments |
 | Analytics detail return-path protection | Code committed / Preview build-verified / page smoke-tested | Exact slug route is allowlisted through owner login/verification handling; API response remains private/no-store and exposes no raw events or account identifiers |
-| Pure analytics regression tests | Passed in READY Preview build | Node-native test gate reports 6 passed / 0 failed before SEO validation and Next.js build; covers ranking order/ties/limits, valid and invalid periods, complete UTC date buckets, invalid bounds and custom artifact/source-version eligibility |
+| Pure analytics regression tests | Previous READY Preview: 6 passed; expanded suite: build pending | The earlier test-gated deployment reported 6 passed / 0 failed. The current branch adds actor attribution, active-like separation, collection totals and fixed-window rate policy cases, bringing the suite to 12; the expanded run needs a fresh Preview build |
 | Reporting-period upper bound | Code committed / Preview build-verified | Collection event aggregation matches `since <= occurredAt <= generatedAt`, preventing future-dated records from inflating period totals |
 | Build and protected-route smoke test | Passed on test-gated Preview | Deployment `dpl_JB5bK44KScheRZeiE9cjTRvxE2Kh` reached READY for app commit `b015a1aa38c0ed543b14a2e440de5cfecb195062`; six analytics tests passed, SEO validation reported zero warnings, Next.js compiled in 5.2 seconds, route manifest includes collection/detail pages and APIs, and anonymous Analytics/detail/Source Library return-path smoke tests passed |
 
@@ -355,7 +355,7 @@ Work in small phases with separate reviewable commits. Do not begin a later phas
 | Item | Status | Evidence / remaining check |
 |---|---|---|
 | Built-in + custom analytics catalogue | Code committed / build-verified | Owner analytics now combines the static built-in catalogue with `getPublishedCustomLabExperiments()`, which includes only published custom experiments whose current source pointer matches a ready artifact |
-| Custom source-open/copy event validation | Code committed / build-verified | Source-event route uses the same published custom experiment resolver; the existing verified-session, same-origin, source-version/file validation and event-id deduplication remain in place |
+| Custom source-open/copy event validation | Code committed / prior build-verified; rate-limit addition pending build | Source-event route uses the published custom resolver, verified session, same-origin, exact source version/file validation and event-id deduplication. New atomic per-user/per-event quotas (30 opens / 20 copies per minute), HMAC-derived keys, 24-hour TTL and 429/Retry-After handling are committed; expanded build pending |
 | Complete UTC daily series | Code committed / build-verified | Server aggregation emits each UTC calendar date across the rolling period; missing dates contain zero values |
 | Zero-data chart behavior | Code committed / build-verified | Chart distinguishes no activity from an empty date array and renders zero-height bars for zero activity |
 | Atlas reconciliation | Pending | Verify real custom experiment documents, source heads, immutable versions, ready artifacts, likes and event counts against expected aggregates |
@@ -434,7 +434,20 @@ The READY live-dashboard Preview was `dpl_2q1CRakZTVJw2QLMNUsDFL6EBThQ` at `e267
 - Custom published experiments are included only when the source is published and the ready artifact matches both the experiment slug and the exact published source version.
 - The collection event aggregation now bounds both ends of the selected reporting period (`since <= occurredAt <= generatedAt`).
 
-Local verification output: **6 tests passed, 0 failed**. The latest code/test-gating changes are committed after the READY ranking/detail deployment and still require a fresh Preview build.
+Previous READY Preview verification: **6 tests passed, 0 failed**. Current expanded Node suite contains 12 cases; its automated Preview run is pending.
+
+### Phase 6 event-attribution and abuse-control hardening — 2026-11-06
+
+| Item | Status | Evidence / remaining check |
+|---|---|---|
+| Event attribution helpers | Code committed; build pending | Pure helpers apply only supported actor/event pairs, count distinct verified actor IDs per experiment, ignore events outside the published catalogue and avoid mutating the source rows |
+| Active like state attribution | Code committed; build pending | Verified and anonymous active-like counts are mapped separately and total active likes are derived per experiment |
+| Collection total consistency | Code committed; build pending | A shared reducer calculates the collection totals from per-experiment rows; test fixtures assert all counters |
+| Source-event fixed-window quota | Code committed; build pending | MongoDB atomic per-user/per-event-type one-minute quota: 30 `source_open`, 20 `code_copy` across all experiments |
+| Limiter privacy and cleanup | Code committed; build pending | Quota document key is HMAC-derived from verified user ID + event type; 24-hour TTL index; raw user ID is not stored in the limiter collection |
+| Idempotency and response behavior | Code committed; build pending | Existing event ID is checked before quota consumption; over-limit requests return HTTP 429 with `Retry-After`; duplicate insert race still resolves through the unique event ID index |
+| Expanded pure regression suite | Code committed; build pending | 12 Node tests now cover rankings, period normalization, UTC buckets, artifact eligibility, actor/event attribution, active-like separation, totals and fixed-window limit policy |
+| Live abuse/Atlas verification | Pending | Verify 429 and retry timing with the owner account; inspect limiter TTL behavior and confirm only accepted events appear once in the analytics aggregates |
 
 ### Latest test-gated Preview verification — 2026-11-06
 
