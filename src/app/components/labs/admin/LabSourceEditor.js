@@ -396,7 +396,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
     if (!response.ok) {
       if (response.status === 504) {
         throw new Error(
-          "The release build exceeded the server request limit. The existing published release was not switched. Retry the build; if it happens again, check the deployment's function duration and build logs.",
+          "The server did not return before its request limit. Reload the source status before retrying, and check whether a new release completed. The previously published artifact remains available until the publish transaction succeeds.",
         );
       }
       throw new Error(payload?.error?.message || "The request could not be completed (HTTP " + response.status + ").");
