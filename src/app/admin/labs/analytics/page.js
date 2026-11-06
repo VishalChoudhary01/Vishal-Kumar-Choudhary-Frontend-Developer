@@ -182,11 +182,11 @@ export default async function LabsAnalyticsPage({ searchParams }) {
                   </p>
                 </div>
                 <span className="text-xs text-text-tertiary">
-                  {analytics.daily.length} active days
+                  {analytics.daily.length} days in range
                 </span>
               </div>
 
-              {analytics.daily.length ? (
+              {analytics.daily.some((day) => day.totalActions > 0) ? (
                 <div className="mt-5 overflow-x-auto">
                   <div
                     className="flex h-36 min-w-[560px] items-end gap-1 border-b border-border pb-2"
@@ -198,7 +198,9 @@ export default async function LabsAnalyticsPage({ searchParams }) {
                         1,
                         ...analytics.daily.map((item) => item.totalActions),
                       );
-                      const height = Math.max(3, (day.totalActions / maximum) * 100);
+                      const height = day.totalActions > 0
+                        ? Math.max(3, (day.totalActions / maximum) * 100)
+                        : 0;
 
                       return (
                         <div
