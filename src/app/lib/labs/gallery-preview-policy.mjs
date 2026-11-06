@@ -37,3 +37,37 @@ export function resolveGalleryPreviewSelection({ uploadedPreview = null, generat
     generatedPoster: generated,
   };
 }
+
+
+/**
+ * Resolve the next usable visual after a browser media error.
+ * Failed uploaded media falls through to the exact release poster, then
+ * an optional validated thumbnail. The caller uses its artwork fallback
+ * when every candidate has failed.
+ */
+export function selectActiveGalleryPreview({
+  uploadedPreview = null,
+  generatedPoster = null,
+  thumbnail = null,
+  failedSources = [],
+} = {}) {
+  const failed = failedSources instanceof Set ? failedSources : new Set(failedSources);
+  const candidates = [
+    isValidUploadedPreview(uploadedPreview) ? uploadedPreview : null,
+    isValidGeneratedPoster(generatedPoster) ? generatedPoster : null,
+    thumbnail && typeof thumbnail.src === "string" && thumbnail.src
+      ? thumbnail
+      : null,
+  ];
+
+  const seen = new Set();
+  for (const candidate of candidates) {
+    if (!candidate?.src || seen.has(candidate.src)) continue;
+    seen.add(candidate.src);
+    if (!failed.has(candidate.src)) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
