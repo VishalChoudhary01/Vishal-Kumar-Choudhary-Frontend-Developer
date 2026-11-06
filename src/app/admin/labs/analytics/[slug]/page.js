@@ -88,7 +88,10 @@ export default async function LabsExperimentAnalyticsPage({ params, searchParams
               <Metric icon={Heart} label="Active likes" value={analytics.experiment.totalActiveLikes} detail={number(analytics.experiment.activeAnonymousLikes) + " anonymous · " + number(analytics.experiment.activeVerifiedLikes) + " verified · current state"} />
             </section>
 
-            <LabsEngagementTrendChart daily={analytics.daily} />
+            <LabsEngagementTrendChart
+              daily={analytics.daily}
+              periodDays={days}
+            />
 
             <section className="mt-8 grid gap-3 sm:grid-cols-2">
               <article className="border border-border bg-surface-1 p-5">
