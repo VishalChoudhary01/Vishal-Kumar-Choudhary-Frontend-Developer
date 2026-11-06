@@ -23,7 +23,18 @@ const COPY = {
 };
 
 function getSafeOwnerReturnTo(value) {
-  if (value === "/admin/labs/analytics" || value === "/admin/labs/sources" || value === "/admin/labs/sources/import") {
+  if (
+    value === "/admin/labs/analytics" ||
+    value === "/admin/labs/sources" ||
+    value === "/admin/labs/sources/import"
+  ) {
+    return value;
+  }
+
+  if (
+    typeof value === "string" &&
+    /^\/admin\/labs\/analytics\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)
+  ) {
     return value;
   }
 
