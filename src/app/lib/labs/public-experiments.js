@@ -4,6 +4,7 @@ import { connectToDatabase } from "@/app/lib/db/mongoose";
 import LabExperiment from "./models/LabExperiment";
 import LabSource from "./models/LabSource";
 import LabBuildArtifact from "./models/LabBuildArtifact";
+import { selectEligiblePublishedCustomExperiments } from "./owner-analytics-utils.mjs";
 
 function toPublicExperiment(experiment, artifact) {
   return {
@@ -92,20 +93,17 @@ export async function getPublishedCustomLabExperiments() {
     .lean();
 
   if (!sources.length) return [];
-  const sourceBySlug = new Map(sources.map((item) => [item.slug, item]));
   const artifactIds = sources.map((item) => item.publishedArtifactId);
   const artifacts = await LabBuildArtifact.find({
     artifactId: { $in: artifactIds },
     status: "ready",
   }).lean();
-  const artifactById = new Map(artifacts.map((item) => [item.artifactId, item]));
 
-  return experiments.flatMap((experiment) => {
-    const source = sourceBySlug.get(experiment.slug);
-    const artifact = source ? artifactById.get(source.publishedArtifactId) : null;
-    if (!source || !artifact || artifact.sourceVersionId !== source.publishedVersionId) return [];
-    return [toPublicExperiment(experiment, artifact)];
-  });
+  return selectEligiblePublishedCustomExperiments({
+    experiments,
+    sources,
+    artifacts,
+  }).map(({ experiment, artifact }) => toPublicExperiment(experiment, artifact));
 }
 
 export async function isPublishedCustomLabSlug(slug) {
