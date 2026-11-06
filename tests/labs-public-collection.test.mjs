@@ -87,12 +87,13 @@ test("collection uses reduced-motion-aware in-view reveals for cards", () => {
 });
 
 test("category filters combine local entries with the complete server category summary", () => {
-  assert.match(
-    filterHookSource,
-    /buildLabCategoryOptions\\(experiments, LAB_CATEGORIES, summary\\)/,
+  assert.ok(
+    filterHookSource.includes(
+      "buildLabCategoryOptions(experiments, LAB_CATEGORIES, summary)",
+    ),
   );
-  assert.match(filterHookSource, /\\[experiments, summary\\]/);
-  assert.match(filterHookSource, /experiments\\.filter/);
+  assert.ok(filterHookSource.includes("[experiments, summary]"));
+  assert.ok(filterHookSource.includes("experiments.filter"));
 });
 test("card artwork uses container-query sizing to prevent title clipping", () => {
   assert.match(artworkSource, /@container/);
