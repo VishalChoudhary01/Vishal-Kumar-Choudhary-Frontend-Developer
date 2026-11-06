@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { animate, motion, useInView } from "motion/react";
+import { animate, motion, useInView, useMotionValue, useTransform } from "motion/react";
 
 import useReducedMotion from "@/app/hooks/useReducedMotion";
 import LabsHeroArtwork from "./landing/LabsHeroArtwork";
@@ -33,29 +33,27 @@ function AnimatedLabStat({ value, label }) {
   const statRef = useRef(null);
   const isInView = useInView(statRef, { once: true, amount: 0.6 });
   const prefersReducedMotion = useReducedMotion();
-  const [displayValue, setDisplayValue] = useState(0);
+  const count = useMotionValue(0);
+  const displayValue = useTransform(count, (latest) =>
+    String(Math.min(value, Math.max(0, Math.round(latest)))).padStart(2, "0")
+  );
 
   useEffect(() => {
     if (!isInView) return undefined;
 
     if (prefersReducedMotion || value <= 0) {
-      setDisplayValue(value);
+      count.set(value);
       return undefined;
     }
 
-    setDisplayValue(0);
-
-    const controls = animate(0, value, {
+    count.set(0);
+    const controls = animate(count, value, {
       duration: 1.12,
       ease: [0.16, 1, 0.3, 1],
-      onUpdate: (latest) => {
-        const nextValue = Math.min(value, Math.max(0, Math.round(latest)));
-        setDisplayValue((current) => current === nextValue ? current : nextValue);
-      },
     });
 
     return () => controls.stop();
-  }, [isInView, prefersReducedMotion, value]);
+  }, [count, isInView, prefersReducedMotion, value]);
 
   return (
     <div ref={statRef} className="min-w-0">
@@ -64,7 +62,7 @@ function AnimatedLabStat({ value, label }) {
         aria-label={`${value} ${label.toLowerCase()}`}
         className="font-display text-[clamp(2.25rem,4.2vw,3.5rem)] leading-none tracking-[-0.055em] text-text-primary tabular-nums"
       >
-        <span aria-hidden="true">{String(displayValue).padStart(2, "0")}</span>
+        <motion.span aria-hidden="true">{displayValue}</motion.span>
       </p>
       <p className="mt-2 max-w-[11rem] font-mono text-[9px] uppercase leading-5 tracking-[0.12em] text-text-muted sm:text-[10px]">
         {label}
