@@ -96,7 +96,7 @@ The current `LabSourceEditor` already supports:
 5. **Daily series is sparse:** the current aggregation returns active dates only. The graph should receive a complete date range with explicit zero-activity days, generated consistently for its selected period/timezone.
 6. **Unique-account labels need precision:** the current total adds per-experiment distinct verified-account counts. The same account can be counted once for each experiment. Label the total as a sum of per-experiment unique accounts (experiment-account pairs), not as a deduplicated total of individual people/accounts across all Labs.
 7. **Current state versus period events:** active likes are current-state aggregates; like/unlike actions are period events. Never combine or label them as the same measure.
-8. **Chart scope:** existing activity is aggregated daily in UTC. Keep timezone and bucket boundaries explicit when improving the graph.
+8. **Chart scope:** existing activity is aggregated daily in UTC. The redesign uses six independent selectable event measures (source opens, copies, verified like, verified unlike, anonymous like, anonymous unlike), one at a time. 7/30/90 use UTC daily bars; 365 uses Monday–Sunday UTC weekly sums. Keep timezone and partial-week boundaries explicit. Active likes are a current snapshot, not a historical chart series.
 
 Do not backfill or fabricate historical views, preview events or custom-experiment engagement. Newly instrumented metrics begin when their instrumentation is released; communicate that boundary in the UI and reporting documentation.
 
@@ -202,7 +202,7 @@ Do not add Redis, a hosted WebSocket provider or a second backend simply because
 - Preserve tabular number alignment and locale-aware formatting. Define units, timezone, chart interval and missing-day behavior.
 - Every chart must have an accessible textual/table equivalent, keyboard/focus support for interactive details and responsive behavior without page-level horizontal overflow.
 - Respect reduced-motion settings. Avoid looping/decorative animation and do not make animated movement necessary to understand a value.
-- Do not add a chart package until the team has compared the current stack and an explicit dependency decision is recorded. A lightweight SVG/CSS chart using existing Motion is a valid first candidate, subject to accessibility and performance tests.
+- Chart rendering decision: use the direct `chart.js` MIT package for the private Analytics canvas chart, after the fixture/SSR/accessibility spike in `DESIGN-ANALYTICS.md`. The current SVG remains only as a temporary build-verified baseline until its replacement passes the chart acceptance gate; do not add ApexCharts or Liveline in parallel.
 
 ## 7. Implementation sequence
 
@@ -298,19 +298,42 @@ Work in small phases with separate reviewable commits. Do not begin a later phas
 **Work**
 - Add an Analytics client refresh layer using the polling contract in Section 6.1.
 - Reuse `MotionNumber` for summary counts; add locale support only if needed.
-- Build a multi-series trend chart for instrumented metrics, with complete daily/monthly buckets appropriate to the selected period.
-- Add period controls, metric context/definitions, hover/focus detail, accessible table data and last-updated/stale states.
-- Add rankings for metrics that are genuinely instrumented and a dedicated experiment analytics detail route.
-- Use theme semantic tokens, not hard-coded colour assumptions.
-- Lazy-load analytics-only chart code; keep dashboard/editor bundles out of public Labs and homepage bundles.
+- Replace the current four-series shared-axis SVG with the approved single-metric Chart.js canvas column chart defined in `DESIGN-ANALYTICS.md`; one active measure and one zero-based Y-axis at a time.
+- Add six explicit metric choices backed by distinct daily fields: source opens, code copies, verified likes, verified unlikes, anonymous likes and anonymous unlikes. Do not combine opposite actions or include current active-like state in a historical series.
+- Keep the page-level 7/30/90/365 reporting-period control as the single source of date range; use daily UTC buckets for 7/30/90 days and weekly UTC aggregation for 365 days.
+- Add an exact HTML point readout, precise tooltip and equivalent daily/weekly data table. Preserve the existing polling/last-updated/stale contract; chart updates must not replay full entrance animations.
+- Add period/metric context and definitions, rankings for genuinely instrumented measures and the dedicated experiment analytics detail route.
+- Use semantic theme tokens, zero-based integer axes and accessible native metric controls; lazy-load the chart on private Analytics routes only.
+- Do not add Liveline/ApexCharts in parallel, nor add Redis/WebSockets for this visualization.
 
 **Gate**
 - Polling follows visibility, cancellation, no-overlap, backoff and manual-refresh rules.
 - Controlled new events visibly update only the appropriate card/chart series.
 - Errors preserve last-known-good data and never masquerade as zero activity.
 - Reduced-motion users receive accurate static updates.
-- Chart values reconcile with API fixtures and table equivalents.
-- Responsive, keyboard, screen-reader, contrast and light/dark verification passes.
+- The selected chart metric uses exactly one correct daily field; no unlike measures share a Y-axis.
+- Six separate like/unlike measures reconcile with event fixtures; active likes remain current-state cards only.
+- 7/30/90 daily and 365 weekly buckets reconcile to API totals and the HTML table, including partial weeks and zero dates.
+- Tooltips/HTML readout show exact UTC bucket and en-IN integer value; empty, all-zero, stale and failed states remain distinct.
+- Responsive, keyboard, screen-reader, touch, reduced-motion, contrast, light/dark and 200% zoom verification passes.
+- The chart library is absent from public Labs/homepage bundles.
+
+### Chart redesign implementation plan — execution checklist
+
+The final chart is a **single-metric historical activity chart**, not a multi-line realtime monitor. The chart decision and full visual/accessibility contract are in `DESIGN-ANALYTICS.md`.
+
+| Step | Work | Required output / gate |
+|---|---|---|
+| 1. Metric contract | Extend collection and per-experiment daily aggregation with distinct `verifiedLikes`, `verifiedUnlikes`, `anonymousLikes`, `anonymousUnlikes`; retain old combined fields until the new component is verified | Daily API contract documents each field as accepted event count; all six series match per-experiment totals |
+| 2. Pure bucket transform | Add a pure helper to validate UTC days, aggregate 365-day daily rows to Monday–Sunday weeks, preserve first/last partial weeks and zero days | Unit fixtures prove daily + weekly sums equal selected period totals, including leap/month boundaries |
+| 3. Dependency spike | Install only direct `chart.js` with an exact version; register only required modules; load dynamically/client-only in analytics routes | License, package lock and bundle-size delta reviewed; no dependency reaches public Labs/homepage bundle |
+| 4. Chart component | Replace the shared-axis SVG component with single-metric responsive canvas columns, true zero baseline, integer Y ticks and exact tooltip/readout | All-zero, sparse, spike and high-count fixtures render correctly and remain legible |
+| 5. Metric controls | Add six native segmented/button controls with `aria-pressed`, labels and visible focus; retain page period selector | Keyboard/touch can switch measure; active period is not duplicated inside chart |
+| 6. Table equivalent | Table shows exact daily/weekly values for selected measure and its range total; selection applies consistently to canvas/readout/table | Values reconcile row-by-row and by total; keyboard and screen reader can use data without canvas |
+| 7. Polling/theme lifecycle | Update existing chart instance on accepted polling payload; handle theme changes, resize, Strict Mode unmount and reduced motion | No leaked canvas/chart instances, no repeated full animation, no stale colour tokens |
+| 8. QA/release | Verify desktop/mobile, dark/light, zoom, keyboard, touch, screen reader, 365-week boundaries and current data fixtures | All acceptance checks in `DESIGN-ANALYTICS.md` pass before deleting the temporary SVG |
+
+No implementation should start by installing three chart libraries or building a generic charting framework. Implement only the exact chart and six current measures needed by Labs Analytics.
 
 ### Phase 6 — Integrated security, regression and release verification
 
@@ -504,7 +527,7 @@ A feature is not complete merely because its new screen renders. It is complete 
 
 ### Open; do not silently assume
 
-1. Exact chart rendering implementation after accessibility/performance comparison; no chart library is selected by this plan.
+1. Exact Chart.js patch version and bundle budget at implementation time; the library choice is Chart.js, but package adoption is gated on daily/weekly fixture, Next.js client-only loading, accessibility and performance verification.
 2. Exact event definition and deduplication window for experiment detail views.
 3. Preview-start success threshold and explicitly instrumented interaction allowlist; dependent on runtime lifecycle readiness.
 4. Analytics retention, account-deletion treatment and production Privacy Policy review.
