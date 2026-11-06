@@ -1299,13 +1299,38 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                   </button>
                 ))}
               </div>
-              <div className="mt-3 min-h-0 flex-1 overflow-auto border border-border bg-surface-inset">
-                <div className="sticky top-0 border-b border-border bg-surface-1 px-3 py-2 text-xs text-text-tertiary">
-                  {previewVersion.files[previewFileIndex]?.path}
-                </div>
-                <pre className="min-h-[360px] overflow-auto p-4 font-mono text-xs leading-6 text-text-primary">
-                  <code>{previewVersion.files[previewFileIndex]?.content}</code>
-                </pre>
+              <div className="mt-3 min-h-0 flex-1 overflow-hidden border border-border bg-surface-inset">
+                {previewVersion.files[previewFileIndex] ? (
+                  <>
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-surface-1 px-3 py-2">
+                      <p className="min-w-0 truncate font-mono text-xs text-text-secondary">
+                        {previewVersion.files[previewFileIndex].path}
+                      </p>
+                      <span className="shrink-0 text-[10px] uppercase tracking-[0.1em] text-text-tertiary">
+                        {previewVersion.files[previewFileIndex].language}
+                      </span>
+                    </div>
+                    <LabCodeEditor
+                      value={previewVersion.files[previewFileIndex].content}
+                      language={previewVersion.files[previewFileIndex].language}
+                      readOnly
+                      scope="history"
+                      experimentSlug={source.slug}
+                      versionId={previewVersion.versionId}
+                      filePath={previewVersion.files[previewFileIndex].path}
+                      theme={resolvedTheme === "light" ? "labs-light" : "labs-dark"}
+                      wordWrap="off"
+                      minimap={false}
+                      keepCurrentModel={false}
+                      ariaLabel={"Immutable source version " + previewVersion.version + ": " + previewVersion.files[previewFileIndex].path}
+                      className="h-[min(560px,58svh)] min-h-[320px] w-full border-0"
+                    />
+                  </>
+                ) : (
+                  <div className="grid min-h-[360px] place-items-center px-4 text-center text-xs text-text-tertiary" role="status">
+                    This version does not contain a readable source file.
+                  </div>
+                )}
               </div>
             </div>
             <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-4">
