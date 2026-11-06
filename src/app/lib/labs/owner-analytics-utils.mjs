@@ -243,3 +243,51 @@ export function summarizeAnalyticsRows(rows) {
     { ...ZERO_TOTALS },
   );
 }
+
+
+const SOURCE_EVENT_RATE_LIMITS = Object.freeze({
+  source_open: 30,
+  code_copy: 20,
+});
+
+export function getSourceEventRateLimit(eventType) {
+  return SOURCE_EVENT_RATE_LIMITS[eventType] || null;
+}
+
+export function evaluateFixedWindowRateLimit({
+  count,
+  windowStartedAt,
+  now,
+  windowMs,
+  maxEvents,
+}) {
+  const numericCount = Number(count);
+  const numericWindow = Number(windowMs);
+  const numericMaximum = Number(maxEvents);
+  const startedAt = new Date(windowStartedAt);
+  const currentTime = new Date(now);
+
+  if (
+    !Number.isFinite(numericCount) ||
+    numericCount < 0 ||
+    !Number.isFinite(numericWindow) ||
+    numericWindow <= 0 ||
+    !Number.isInteger(numericMaximum) ||
+    numericMaximum < 1 ||
+    Number.isNaN(startedAt.getTime()) ||
+    Number.isNaN(currentTime.getTime())
+  ) {
+    throw new TypeError("Invalid fixed-window rate limit input.");
+  }
+
+  const retryAfterSeconds = Math.max(
+    1,
+    Math.ceil((startedAt.getTime() + numericWindow - currentTime.getTime()) / 1000),
+  );
+
+  return {
+    allowed: numericCount <= numericMaximum,
+    retryAfterSeconds,
+    remaining: Math.max(0, numericMaximum - numericCount),
+  };
+}
