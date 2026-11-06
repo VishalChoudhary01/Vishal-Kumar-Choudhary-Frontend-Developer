@@ -1,6 +1,6 @@
 # API Contracts, Domain Schemas and Endpoint Ownership
 
-**Status:** Labs auth, public source/engagement, owner source/editor lifecycle, initial owner analytics, media and compiler endpoints are recorded as implemented only where verified in `feat/labs-platform-integration`. The owner analytics and source library are currently combined in one page; dedicated routes, custom-experiment analytics/event coverage and metadata-edit PATCH remain planned. Generated poster capture, role-aware media attachments and public gallery preview metadata remain target contracts, not completed behavior. See `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md` and `LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md`.  
+**Status:** Labs auth, public source/engagement, owner source/editor lifecycle, initial owner analytics, media and compiler endpoints are recorded as implemented only where verified in `feat/labs-platform-integration`. Dedicated `/admin/labs/analytics` and `/admin/labs/sources` pages, shared owner navigation and account-menu links are now committed on the integration branch; Vercel build/browser verification is pending. Custom-experiment analytics/event coverage and metadata-edit PATCH remain planned. Generated poster capture, role-aware media attachments and public gallery preview metadata remain target contracts, not completed behavior. See `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md` and `LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md`.  
 **Related:** ARCHITECTURE.md, PROJECT-STRUCTURE.md, PRD.md
 
 ## 1. Contract rules
