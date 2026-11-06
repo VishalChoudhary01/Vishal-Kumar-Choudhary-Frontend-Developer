@@ -107,3 +107,59 @@ export function buildCompleteDailySeries({ since, generatedAt, dailyGroups = [] 
 
   return days;
 }
+
+
+export function selectEligiblePublishedCustomExperiments({
+  experiments = [],
+  sources = [],
+  artifacts = [],
+}) {
+  const sourceBySlug = new Map(sources.map((source) => [source.slug, source]));
+  const artifactsById = new Map();
+
+  for (const artifact of artifacts) {
+    const existing = artifactsById.get(artifact.artifactId) || [];
+    existing.push(artifact);
+    artifactsById.set(artifact.artifactId, existing);
+  }
+
+  const seenSlugs = new Set();
+  const eligible = [];
+
+  for (const experiment of experiments) {
+    const slug = experiment?.slug;
+    if (
+      typeof slug !== "string" ||
+      !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) ||
+      seenSlugs.has(slug)
+    ) {
+      continue;
+    }
+
+    const source = sourceBySlug.get(slug);
+    if (
+      !source ||
+      source.published !== true ||
+      typeof source.publishedVersionId !== "string" ||
+      !source.publishedVersionId ||
+      typeof source.publishedArtifactId !== "string" ||
+      !source.publishedArtifactId
+    ) {
+      continue;
+    }
+
+    const artifact = (artifactsById.get(source.publishedArtifactId) || []).find(
+      (item) =>
+        item.status === "ready" &&
+        item.experimentSlug === slug &&
+        item.sourceVersionId === source.publishedVersionId,
+    );
+
+    if (!artifact) continue;
+
+    seenSlugs.add(slug);
+    eligible.push({ experiment, artifact });
+  }
+
+  return eligible;
+}
