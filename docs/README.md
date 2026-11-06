@@ -14,6 +14,7 @@ This documentation defines the proposed portfolio platform extension. It is not 
 8. `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md` — source of truth for owner Run, isolated compiler/runtime, immutable published artifacts, runtime and media release gates.
 9. `LABS-GALLERY-ENGAGEMENT-AND-LIVE-UI-IMPLEMENTATION.md` — current code record for gallery eligibility, explicit public still-image posters, combined likes, anonymous identity, owner liker drilldown, Chart.js and toast behavior.
 10. `DESIGN-LAB.md` — public Labs UX requirements, gallery card hierarchy, runtime/source interactions, accessibility and performance expectations.
+11. [Motion Lab component specification system](./MOTION-LAB/README.md) — locked visual design system, Motion engineering standard, mandatory AI-agent protocol, component inventory and one build-ready specification per component.
 10. Existing project-level source-of-truth documents and current implementation — authoritative for current behavior and technical conventions. Inspect before changing code.
 
 ## Locked baseline
@@ -34,6 +35,7 @@ This documentation defines the proposed portfolio platform extension. It is not 
 - [Admin design](./DESIGN-ADMIN.md)
 - [Analytics design](./DESIGN-ANALYTICS.md)
 - [Lab design](./DESIGN-LAB.md)
+- [Motion Lab component specification system](./MOTION-LAB/README.md) — global visual and motion standards plus 120 individual component build specifications.
 
 - [Labs and authentication UX + implementation guide](./LABS-AND-AUTHENTICATION-DESIGN-SPEC.md) — detailed Labs page design, auth flows, current stack/repository baseline, proposed components/hooks/state ownership and feature implementation guidance.
 - [Labs owner-managed source lifecycle](./LABS-SOURCE-MANAGEMENT-SPEC.md) — protected owner workspace, source snapshots/versions, automatic verified-user access, likes/copy/open analytics, auditing, migration and rollout phases.

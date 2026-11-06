@@ -1,7 +1,7 @@
 # Design Specification — Component Lab
 
 **Status:** Product/design authority aligned with the Labs Runtime and Media Plan. Implementation status and release gates are tracked in that plan; this document defines target UX, not proof of deployment readiness.  
-**Related:** [PRD](./PRD.md), [Admin design](./DESIGN-ADMIN.md), [Analytics design](./DESIGN-ANALYTICS.md), [Public Labs page redesign plan](./LABS-PUBLIC-PAGE-REDESIGN-PLAN.md)
+**Related:** [PRD](./PRD.md), [Admin design](./DESIGN-ADMIN.md), [Analytics design](./DESIGN-ANALYTICS.md), [Public Labs page redesign plan](./LABS-PUBLIC-PAGE-REDESIGN-PLAN.md), [Motion Lab component specification system](./MOTION-LAB/README.md)
 
 ## 1. Purpose and constraints
 The Lab is a public discovery surface for React components, Motion animations and frontend experiments. It must integrate with the existing portfolio's visual language while keeping source execution, code editor dependencies and Lab-only behavior away from the public homepage critical path.
@@ -267,3 +267,8 @@ The public catalogue is designed for bounded loading: the first Labs route respo
 Pagination order uses publication date and immutable record ID. Category counts are computed from the full eligible custom collection and merged with built-in counts, so the first page is not mistaken for the catalogue total. Category navigation remains unvirtualized. On the client, the current category page is cached and six cards are progressively revealed before the next server page is requested.
 
 Required operational step: provision the two compound MongoDB indexes using `npm run db:ensure-labs-public-indexes` and verify them in the intended environment. Tests, large-data boundary checks, index verification, production build and browser QA remain outstanding. Full implementation details are tracked in the Labs Public Page Redesign phased plan.
+
+
+## Motion Lab component specification authority
+
+Reusable React/Motion components are governed by the separate [Motion Lab specification system](./MOTION-LAB/README.md). It defines the locked professional visual language, motion engineering rules, mandatory AI-agent workflow and the canonical component inventory, with an individual build-ready specification for every listed component. It does not claim those components are already implemented. Agents must read the global standards and the individual specification before implementing a component.
