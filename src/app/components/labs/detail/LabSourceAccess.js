@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -16,6 +17,7 @@ import {
 
 import { subscribeAuthEvents } from "@/app/lib/auth/session-events";
 import { authClient } from "@/app/lib/auth/client";
+import LabCodeEditor from "@/app/components/labs/code/LabCodeEditor";
 
 function getInitialSource(source, slug, userId) {
   if (!source || !userId || !Array.isArray(source.files)) return null;
@@ -40,6 +42,7 @@ export default function LabSourceAccess({
   const router = useRouter();
   const pathname = usePathname();
   const returnTo = pathname + "?source=1";
+  const { resolvedTheme } = useTheme();
 
   const firstSource = getInitialSource(initialSource, slug, initialUserId);
   const [loading, setLoading] = useState(initialAuthState === "verified" && !firstSource);
@@ -50,6 +53,7 @@ export default function LabSourceAccess({
     initialAuthState === "error" ? "We could not load the published source. Please try again." : "",
   );
   const [copied, setCopied] = useState(false);
+  const selectedSourceFile = source?.files?.[selectedFile] || null;
   const { data: session, isPending: sessionPending } = authClient.useSession();
 
   const sourceRef = useRef(firstSource);
@@ -443,14 +447,37 @@ export default function LabSourceAccess({
                 ))}
               </div>
             ) : null}
-            <div className="mt-4 overflow-hidden border border-border bg-surface-inset">
-              <div className="border-b border-border px-4 py-2 text-xs text-text-tertiary">
-                {source.files[selectedFile]?.path}
+            {selectedSourceFile ? (
+              <div className="mt-4 overflow-hidden border border-border bg-surface-inset">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-2">
+                  <p className="min-w-0 truncate font-mono text-xs text-text-secondary">
+                    {selectedSourceFile.path}
+                  </p>
+                  <span className="shrink-0 text-[10px] uppercase tracking-[0.1em] text-text-tertiary">
+                    {selectedSourceFile.language}
+                  </span>
+                </div>
+                <LabCodeEditor
+                  value={selectedSourceFile.content}
+                  language={selectedSourceFile.language}
+                  readOnly
+                  scope="reader"
+                  experimentSlug={slug}
+                  versionId={String(source.version)}
+                  filePath={selectedSourceFile.path}
+                  theme={resolvedTheme === "light" ? "labs-light" : "labs-dark"}
+                  wordWrap="off"
+                  minimap={false}
+                  keepCurrentModel={false}
+                  ariaLabel={"Read-only source code: " + selectedSourceFile.path}
+                  className="h-[min(620px,70svh)] min-h-[320px] w-full border-0"
+                />
               </div>
-              <pre className="max-h-[620px] overflow-auto p-4 text-xs leading-6 text-text-primary">
-                <code>{source.files[selectedFile]?.content}</code>
-              </pre>
-            </div>
+            ) : (
+              <p className="mt-4 border border-border bg-surface-inset px-4 py-6 text-sm text-text-secondary" role="status">
+                This source file is unavailable. Choose another file or reload the published source.
+              </p>
+            )}
           </>
         ) : !session?.user?.id && !initialUserId ? (
           <div className="flex items-start gap-3">
