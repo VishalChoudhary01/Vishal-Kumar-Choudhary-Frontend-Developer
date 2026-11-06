@@ -5,10 +5,10 @@ import Image from "next/image";
 import LabArtwork from "./landing/LabArtwork";
 
 /**
- * Shared non-executable preview renderer for Labs discovery surfaces.
- *
- * It renders only public selected media, the generated release poster or
- * existing artwork. The detail page's interactive runtime remains separate.
+ * Shared non-executable renderer for gallery, featured and detail previews.
+ * Uploaded media wins; failed uploads fall back to the generated release
+ * screenshot; if both fail, existing artwork preserves the card layout.
+ * The detail page's interactive artifact runtime stays in LabWorkspace.
  */
 export default function LabExperimentPreview({
   experiment,
@@ -27,8 +27,6 @@ export default function LabExperimentPreview({
     setFailedSrc("");
   }, [experiment?.slug, preview?.src, generatedPoster?.src]);
 
-  // A deleted/revoked uploaded asset or a CDN failure must not leave an empty
-  // card. Fall back to the exact published build's screenshot; then artwork.
   const activePreview = preview?.src === failedSrc
     ? generatedPoster?.src && generatedPoster.src !== failedSrc
       ? generatedPoster
@@ -41,7 +39,7 @@ export default function LabExperimentPreview({
       <video
         src={activePreview.src}
         poster={generatedPoster?.src || undefined}
-        aria-hidden="true"
+        aria-label={activePreview.alt || experiment?.title || "Experiment video preview"}
         autoPlay
         muted
         loop
@@ -60,6 +58,7 @@ export default function LabExperimentPreview({
     return (
       <>
         <Image
+          key={activePreview.src}
           src={activePreview.src}
           alt={activePreview.alt || ""}
           width={900}
@@ -82,6 +81,7 @@ export default function LabExperimentPreview({
             height={675}
             sizes={sizes}
             unoptimized
+            onError={() => setFailedSrc(generatedPoster.src)}
             className={[`hidden motion-reduce:block ${className}`, fitClass].join(" ")}
           />
         ) : null}
