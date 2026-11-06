@@ -1,15 +1,148 @@
-[object Object]
-## 46. Locked public Labs detail presentation — 6 November 2026
+# Labs Experiment Studio — Runtime, Publishing and Media Contract
 
-**LOCKED — preserve this behavior unless explicitly changed by the owner.**
+**Branch:** `feat/labs-platform-integration`  
+**Reconciled:** 6 November 2026
 
-- A successful release build generates a poster from the exact compiled artifact. The generated poster remains the default visual for the public Labs gallery card and public project detail preview when no uploaded gallery asset is selected.
-- An owner may upload an image, animated GIF, or video and explicitly publish it as the public gallery media. That selected media replaces the generated poster in both the gallery card and project detail preview. The public selection remains bound to the exact published artifact/source version. Private uploads and unpromoted uploads never appear publicly.
-- GIFs must remain animated (unless reduced motion is requested); videos render muted, inline and looped in the visual preview. A video uses the generated still as its metadata poster when available.
-- Media failure falls back to the generated poster, then to existing Labs artwork. The preview component is a non-executing media renderer.
-- The public project detail page does not mount LabWorkspace, LabRuntimeBoundary, a published-artifact iframe, or a built-in executable runtime. It shows the title/header, selected static media preview, experiment explanation, and the existing authorized source-access section. Source access is a read-only source feature and is not an executable preview.
-- LabWorkspace and runtime infrastructure remain in the repository for a future dedicated playground surface; this change only removes the executable workspace from the public detail page. Do not delete or change compiler/build/publish/artifact capture behavior.
+This file is the concise source of truth for Labs runtime, release and media behavior. The public detail-page presentation and Monaco migration are planned separately in **[Labs Detail Presentation and Monaco Editor — Phased Implementation Plan](./LABS-DETAIL-PRESENTATION-AND-MONACO-EDITOR-IMPLEMENTATION-PLAN.md)**.
 
-### 46.1 Detail-page implementation
+## 1. Implemented capabilities
 
-The public route src/app/labs/[slug]/page.js no longer imports or renders LabWorkspace. The media caption now reads "Project preview" rather than promising an interactive experiment below it. LabExperimentPreview remains the shared visual renderer for gallery cards, featured content and detail media.
+| Area | Status | Current behavior |
+|---|---|---|
+| Owner source creator | Implemented | File management, private drafts, versions, Run and Build & Publish |
+| Isolated code Run | Implemented | Runs current working-copy files, including unsaved changes, in a temporary sandbox and separate-origin preview |
+| Compiler | Implemented | React 19, JSX/TSX, Motion, Tailwind CSS v4, Lucide and React Icons |
+| Draft/version management | Implemented | Private immutable versions and content hashes |
+| Release publishing | Implemented | Builds exact saved version; public pointer switches only after successful artifact build |
+| Artifact storage | Implemented | Unique artifact-ID Blob namespace; immutable files |
+| Automatic poster | Implemented | Captures exact compiled artifact during publishing; does not run on editor Run or public page requests |
+| Poster validation | Implemented | Pinned Playwright/Chromium; PNG signature, size, dimensions, renderer version and SHA-256 checked |
+| Owner poster status | Implemented | Owner media endpoint returns current published artifact's poster status; panel can display preview and diagnostics |
+| Uploaded media | Implemented | Private Cloudinary upload/verification and explicit owner promotion to public Blob |
+| Public media selection | Locked | Uploaded image/GIF/video → generated screenshot → existing artwork |
+| Public gallery query | Implemented | Published source and exact matching ready artifact required |
+| Public detail page | Static | No executable workspace, runtime iframe or built-in demo |
+| Likes | Implemented | Existing LabLikeButton and engagement API |
+| Protected source access | Implemented | Verified-email authorization, session checks, file selection and copy action |
+| Media sizing polish | Planned | Preserve intrinsic ratios; no stretching or unintended cropping |
+| Monaco reader/editor | Planned | Shared lazy-loaded wrapper with read-only and editable modes |
+| Detail layout polish | Planned | Improve section order and spacing while preserving Like and source access |
+
+## 2. Run, Save Draft and Build & Publish must remain separate
+
+### Run
+- Executes the current owner working copy, including unsaved changes.
+- Uses the temporary isolated sandbox and preview iframe.
+- Returns bounded build diagnostics and run-scoped console messages.
+- Does not save a draft, publish an artifact or capture a poster.
+- Preview expiry/cleanup does not affect saved versions or the live release.
+
+### Save Draft
+- Validates file paths, languages, file count and byte limits.
+- Creates a private immutable version and content hash.
+- Does not publish or create a public artifact.
+- Preserves version history and audit behavior.
+
+### Build & Publish
+1. Validate the current editor files.
+2. If dirty, save those exact files as a private immutable version.
+3. Verify the exact saved version ID and content hash.
+4. Compile using the pinned isolated compiler.
+5. Validate and upload output files to an artifact-ID-specific immutable namespace.
+6. Attempt automatic poster capture from the exact compiled output.
+7. Persist artifact and poster metadata/status.
+8. Switch the published source/artifact pointer only after the release artifact is valid.
+
+The previous published release remains live if compilation, upload or publish fails. Poster capture is optional and non-blocking; failure records an unavailable status/reason and must not invalidate a successful code release or reuse a previous artifact's poster.
+
+## 3. Compiler and sandbox contract
+
+- Compilation runs outside the Next.js application process in Vercel Sandbox.
+- Dependencies are pinned in `tools/labs-compiler/package.json` and its lockfile.
+- No user package installs, custom build scripts, arbitrary plugins or package manifests.
+- No application, database, authentication, Cloudinary or Blob secrets are exposed to user-authored code.
+- Build and preview workers deny outbound network access.
+- Temporary workers are non-persistent. Stopping them must not create a new automatic snapshot.
+- File count/size, output size, CPU, memory, wall-clock time and diagnostics remain bounded.
+- Snapshot refresh is an explicit maintenance operation and never silently changes Production configuration.
+
+Detailed compiler architecture and acceptance tests are in **[Labs React JSX/TSX/Tailwind/Motion Runtime Plan](./LABS-REACT-JSX-TSX-TAILWIND-MOTION-RUNTIME-PLAN.md)**.
+
+## 4. Automatic release poster contract
+
+- Capture happens during Build & Publish after the exact release output is compiled and before the release sandbox stops.
+- The capture worker serves the built output on loopback; browser requests to external hosts are blocked.
+- Current Preview renderer pin: Playwright 1.65.0 and Chromium 158.0.8127.18.
+- Capture viewport is 1200×900 (4:3), with bounded page/font/layout settling and reduced-motion emulation.
+- Blank output, JavaScript page errors, browser/version mismatch, invalid PNG, incorrect dimensions, excessive size and timeouts are capture failures.
+- A successful PNG is hashed and stored at an immutable path containing experiment slug, source version, build hash and artifact ID.
+- Poster metadata is stored on the matching immutable LabBuildArtifact and delivered only when artifact/source-version pointers still match the current published release.
+- Capture failure is recorded for owner diagnostics; it does not fail otherwise successful publishing.
+
+## 5. Public media precedence — locked
+
+Identical policy for gallery cards, featured experiment and project detail:
+
+1. Explicitly owner-promoted image, animated GIF, MP4 or WebM bound to the current published artifact/source version.
+2. Generated PNG screenshot from that exact artifact.
+3. Existing Labs artwork fallback.
+
+Private/unpromoted uploads never become public. A later release invalidates an older uploaded-media binding until the owner promotes media for the new artifact.
+
+Presentation requirements:
+- Never stretch media; preserve intrinsic aspect ratio.
+- Do not use universal `object-cover` cropping.
+- GIF remains animated unless reduced motion is requested.
+- Video is muted, inline and looped; generated still remains available for metadata/social preview.
+- Broken uploaded media falls back to generated screenshot, then artwork.
+
+Upload/promotion details are in **[Labs Media Pipeline Phase 1](./LABS-MEDIA-PIPELINE-PHASE-1.md)**.
+
+## 6. Public detail page — locked static behavior
+
+The detail page is a project presentation, not a playground. It shows:
+- Back navigation, category, title, description and technologies.
+- Existing Like/engagement component.
+- Selected uploaded media or generated poster.
+- Experiment explanation.
+- Protected source access for eligible verified accounts.
+
+It must not mount LabWorkspace, LabRuntimeBoundary, an artifact iframe or any executable experiment runtime. The owner source creator's Run preview remains available. Do not delete compiler/runtime infrastructure as part of the public detail-page change.
+
+## 7. Monaco source reader/editor — planned, not yet implemented
+
+The phased implementation plan is **[here](./LABS-DETAIL-PRESENTATION-AND-MONACO-EDITOR-IMPLEMENTATION-PLAN.md)**.
+
+Mandatory non-regression rules:
+- Public source reader: read-only Monaco, loaded only after existing verified-email authorization succeeds.
+- Owner creator: editable Monaco.
+- Historical version viewer: read-only Monaco.
+- Existing React `files` state remains authoritative; Monaco is only the editor surface.
+- Save Draft, Run and Build & Publish must use the exact current text, including the final keystroke.
+- Add/import/rename/remove/reorder, language selection, validation, dirty state, discard, history, restore, Run/console, publish/unpublish, audit and delete behavior must remain intact.
+- Monaco is client-only, lazy-loaded and self-hosted; it is independent of compiler sandbox dependencies.
+- A usable plain-text fallback remains if Monaco or its worker fails to load.
+
+## 8. Preview release verification gates
+
+Before calling a Preview complete:
+- Test Run with unsaved JS/JSX/TS/TSX content.
+- Test Save Draft, discard, history and restore.
+- Test Build & Publish exact-version binding and previous-release preservation.
+- Confirm screenshot capture occurs during publish only.
+- Test image/GIF/video media sizing across portrait, square and landscape on mobile/tablet/desktop.
+- Confirm uploaded → generated poster → artwork precedence and stale artifact rejection.
+- Confirm guest/unverified users never receive source content.
+- Confirm Like, file tabs, copy, session revalidation and source events.
+- Confirm public detail makes no executable iframe/runtime request.
+- For Monaco, test file switching, import/reorder/rename/remove, last-keystroke synchronization, save/discard, Run, history/restore and publish.
+- Run a deployed Preview owner browser journey; sandbox-only tests are not a substitute.
+
+Production remains unchanged until explicit release approval.
+
+## 9. Related plans
+
+- **[Detail layout, media sizing and Monaco phases](./LABS-DETAIL-PRESENTATION-AND-MONACO-EDITOR-IMPLEMENTATION-PLAN.md)**
+- [React JSX/TSX, Tailwind and Motion runtime](./LABS-REACT-JSX-TSX-TAILWIND-MOTION-RUNTIME-PLAN.md)
+- [Media upload and promotion pipeline](./LABS-MEDIA-PIPELINE-PHASE-1.md)
+- [Preview Run recovery and snapshot lifecycle](./LABS-PREVIEW-RUN-RECOVERY-AND-SNAPSHOT-LIFECYCLE.md)
