@@ -1,6 +1,6 @@
 # Product Requirements Document — Portfolio Platform
 
-**Status:** Approved product requirements baseline. The `feat/labs-platform-integration` branch contains the public Labs/auth foundation, owner source inventory/editor, source lifecycle APIs, immutable version/audit foundations and initial aggregate source-engagement analytics. The owner console is currently combined under the Sources route; dedicated Analytics/Source Library separation, custom-experiment analytics coverage, metadata editing and live refresh remain planned. Preview/runtime and media release gates remain governed by the Runtime and Media Plan.  
+**Status:** Approved product requirements baseline. The `feat/labs-platform-integration` branch contains the public Labs/auth foundation, owner source inventory/editor, source lifecycle APIs, immutable version/audit foundations and initial aggregate source-engagement analytics. The dedicated Analytics and Source Library routes are now committed on the integration branch with build/browser verification pending; custom-experiment analytics coverage, metadata editing and live refresh remain planned. Preview/runtime and media release gates remain governed by the Runtime and Media Plan.  
 **Version:** 1.3  
 **Scope:** Existing portfolio extension: Labs, authentication, owner-managed source lifecycle, analytics, media and the separately deferred general portfolio CMS/Admin. This PRD records target requirements; branch code or a rendered page alone does not establish production readiness.
 
