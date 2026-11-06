@@ -1,6 +1,6 @@
 # Labs Detail Presentation and Monaco Editor — Phased Implementation Plan
 
-**Status:** Phase 1 code implemented and tests/build passed; deployed visual QA pending. Phase 2 shared Monaco foundation implemented and tests/build passed. Phases 3–5 integrations remain planned.
+**Status:** Phases 1–4 implemented in source with regression tests and production build passing. Authenticated Preview/browser QA remains pending for Phases 1 and 3–4. Phase 5 version-history Monaco migration remains planned.
 **Branch:** `feat/labs-platform-integration`
 **Last reconciled:** 6 November 2026
 **Scope:** Public Labs detail page media/layout, protected read-only source viewer, and the admin source creator's code editor.
@@ -376,7 +376,7 @@ Do not add a second unsynchronized `editorFiles` persistence state. Do not read 
 | 1 | Media aspect ratio and detail layout | Code/tests committed; complete Preview/browser media matrix and Like/static-detail QA |
 | 2 | Shared Monaco wrapper and self-hosted assets | Implemented; 6 config tests, ESLint, production build and local asset HTTP checks pass |
 | 3 | Public read-only source viewer | Implemented in source; 5 access/copy contract tests and production build pass; authenticated browser QA pending |
-| 4 | Editable Studio source creator | Pending integration using existing files state as authority |
+| 4 | Editable Studio source creator | Implemented; 8 creator contracts + 4 path-state tests, ESLint and production build pass; owner browser QA pending |
 | 5 | Read-only version-history viewer | Pending integration with immutable version-scoped models |
 | 6 | Responsive/accessibility/performance polish | No page bundle regression or keyboard/focus issue |
 | 7 | Full Preview regression and owner QA | Run, Save Draft, Build & Publish, poster capture and gallery checks all pass |
@@ -401,7 +401,7 @@ Do not ship a phase that weakens a gate from an earlier phase. Use a Preview dep
 
 **Phase 1 implementation committed:** public media DTO now includes promoted upload dimensions and the known 1200×900 generated-poster dimensions; newly promoted media is normalized to `contain`; the shared renderer uses `object-contain`, measures browser intrinsic dimensions for legacy uploads and keeps broken-media fallbacks; the detail page no longer forces a 4:3/16:9 wrapper and instead uses natural height with a responsive maximum; detail header/explanation spacing was tightened; six media selection/dimension regression tests are included in every production build. Browser verification for portrait/landscape/square/GIF/video on the deployed Preview remains pending.
 
-**Implemented:** shared Monaco foundation and protected public read-only source viewer. **Still planned:** editable owner source creator, read-only version-history viewer, actual authenticated browser interaction QA, and remaining regression/performance/accessibility checks.
+**Implemented:** shared Monaco foundation, protected public read-only source viewer, and editable owner source creator. **Still planned:** read-only version-history viewer and remaining authenticated browser interaction, performance and accessibility QA.
 
 **Not yet implemented by this plan:** Monaco package installation, local worker delivery, Monaco wrapper, any Monaco integration, and the new detail layout/media sizing changes.
 
@@ -536,3 +536,51 @@ Vercel created a Git-connected Preview deployment from the Phase 3 application c
 - State: `READY`
 
 The deployment contains the protected Monaco source reader, source-reader contract tests and build-script change. The latest branch HEAD includes later documentation-only commits. Authenticated browser inspection is still pending because Vercel deployment protection redirects unauthenticated requests to its sign-in page. The owner should open the Preview while signed in to verify the protected source, Copy action, session invalidation and themes.
+
+
+## Phase 4 implementation progress — 6 November 2026
+
+**Owner Source Creator migrated from textarea to shared editable Monaco.**
+
+Implemented in `src/app/components/labs/admin/LabSourceEditor.js`:
+- Replaced the controlled source `textarea` with shared `LabCodeEditor` in editable mode.
+- Monaco is keyed by owner scope, experiment slug, `working-copy` version and selected file path. Existing language selection drives syntax highlighting.
+- Theme follows the application's resolved light/dark theme. The editor uses line numbers, folding, two-space indentation, 13px monospace text, 22px line-height, no minimap and horizontal scrolling by default.
+- Existing file path and language controls, files sidebar, starter templates, import, rename, add, remove, reorder and file limits remain in place.
+- Added path-addressed `updateFileContent(filePath, content)`; a rapid selected-tab change cannot redirect a pending Monaco onChange update to a different index.
+- Added `filesRef` as a synchronous mirror of the existing React `files` state. All working-copy writes flow through one `commitFiles` function, which updates the ref and then React state. React `files` remains the only rendered/business state; the ref is used for immediate snapshots only.
+- Save Draft captures `filesRef.current` before validation and request construction, and persists that exact immutable snapshot.
+- Build & Publish captures `filesRef.current`, calculates dirty state from that snapshot, saves it first when required, and publishes the exact version ID returned by the save request.
+- `LabSourceLivePreview` receives a getter for the current working copy and captures it at the moment Run is clicked. Run remains separate and does not save/publish or capture the poster.
+- During Save, Restore and Publish, Monaco becomes read-only and path/language controls are disabled. This prevents additional edits from racing an in-flight snapshot. Run leaves the editor editable and runs the snapshot taken on click.
+- Existing Discard, refresh/restore, version history, audit, media library, console, isolated iframe, publishing confirmation, error/toast, unpublish and delete controls remain in place.
+- No compiler service, preview API, save API, version schema or release pipeline was rewritten.
+
+Added:
+- `src/app/lib/labs/source-editor-state.mjs` — pure path-addressed working-copy update helper.
+- `tests/labs-source-creator-monaco.test.mjs` — 8 contract tests for editable Monaco, single React files-state write path, Save Draft snapshot, Build & Publish exact-version snapshot, Run snapshot, preserved file/runtime controls and in-flight locking.
+- `tests/labs-source-editor-state.test.mjs` — 4 tests for path isolation, same-value identity, rapid tab change safety and invalid inputs.
+- `test:labs-source-creator` is included in every production build.
+
+### Phase 4 verification — 6 November 2026
+
+- Monaco foundation: 6/6 passed.
+- Protected source reader: 5/5 passed.
+- Source creator contract/state: 12/12 passed.
+- Media: 9/9 passed.
+- Labs analytics: 15/15 passed.
+- ESLint passed for the editor, live preview, shared Monaco component, state helper and creator tests.
+- SEO validation passed with zero warnings.
+- Clean-checkout Next.js 16.4.3 production build passed; all 17 static pages generated and all Labs source, preview, publish, poster and runtime routes compiled.
+- `prebuild` copied self-hosted Monaco assets successfully.
+
+**Still required before full Phase 4 acceptance:**
+1. Authenticated owner browser QA on the protected Preview: type JS/JSX/TS/TSX, switch files, change language, add/import/rename/remove/reorder and verify the correct file is edited.
+2. Type and immediately click Run; verify the request includes the latest keystroke and the temporary preview/console still work.
+3. Type and immediately Save Draft; verify the saved content hash/version contains the latest keystroke.
+4. Type and immediately Build & Publish; verify the new immutable draft contains the latest text and the release uses that exact version ID.
+5. Verify editor and metadata controls lock during save/restore/publish and remain editable again on completion/failure.
+6. Verify Discard and Restore update both Monaco models and the React working copy without changing immutable historical versions.
+7. Verify theme switching, keyboard shortcuts, large source files, worker startup, responsive editor sizing and the plain-text fallback in the deployed Preview.
+
+The version-history modal still uses its existing read-only plain code view and is reserved for Phase 5. Production remains unchanged until explicit release approval.
