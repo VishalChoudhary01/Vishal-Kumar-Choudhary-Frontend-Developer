@@ -65,8 +65,11 @@ export function getSafeOwnerReturnTo(value) {
       !parsed.search &&
       !parsed.hash &&
       (
+        parsed.pathname === "/admin/labs/analytics" ||
         parsed.pathname === "/admin/labs/sources" ||
-        /^\/admin\/labs\/sources\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(parsed.pathname)
+        parsed.pathname === "/admin/labs/sources/import" ||
+        /^\/admin\/labs\/sources\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(parsed.pathname) ||
+        /^\/admin\/labs\/experiments\/[a-z0-9]+(?:-[a-z0-9]+)*\/edit$/.test(parsed.pathname)
       );
 
     return isOwnerRoute ? parsed.pathname : null;
