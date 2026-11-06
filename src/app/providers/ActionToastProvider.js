@@ -97,6 +97,7 @@ function ToastItem({ toast, onDismiss, reducedMotion }) {
       onBlurCapture={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) resumeTimer();
       }}
+      role={toast.type === "error" ? "alert" : "status"}
       className={
         "pointer-events-auto relative flex w-full items-start gap-3 overflow-hidden border px-3 py-3 shadow-xl shadow-black/15 " +
         STYLES[toast.type]
@@ -122,16 +123,6 @@ function ToastItem({ toast, onDismiss, reducedMotion }) {
       >
         <X size={14} aria-hidden="true" />
       </button>
-      <motion.span
-        aria-hidden="true"
-        className={[
-          "absolute inset-x-0 bottom-0 h-px origin-left",
-          toast.type === "error" ? "bg-warning" : toast.type === "success" ? "bg-brand" : "bg-text-tertiary",
-        ].join(" ")}
-        initial={{ scaleX: 1 }}
-        animate={{ scaleX: paused ? undefined : 0 }}
-        transition={reducedMotion ? { duration: 0 } : { duration: remainingRef.current / 1000, ease: "linear" }}
-      />
     </motion.li>
   );
 }
