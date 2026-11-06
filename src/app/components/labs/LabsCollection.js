@@ -233,6 +233,12 @@ function Gallery({
         </span>
       </div>
 
+      {isLoadingCategory && visibleExperiments.length ? (
+        <p role="status" className="mb-4 text-xs text-text-muted">
+          Loading the rest of this category…
+        </p>
+      ) : null}
+
       <div className="grid grid-cols-1 items-stretch gap-x-7 gap-y-10 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-12 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-14">
         {visibleExperiments.map((experiment, index) => (
           <LabCard
