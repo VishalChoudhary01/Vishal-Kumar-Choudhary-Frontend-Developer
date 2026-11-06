@@ -60,7 +60,6 @@ export default function LabsEngagementTrendChart({
   const { resolvedTheme } = useTheme();
   const canvasRef = useRef(null);
   const chartRef = useRef(null);
-  const chartModuleRef = useRef(null);
   const latestDataRef = useRef(null);
   const [metricKey, setMetricKey] = useState("sourceOpens");
   const [hoverIndex, setHoverIndex] = useState(null);
@@ -101,7 +100,6 @@ export default function LabsEngagementTrendChart({
     if (!hasBuckets || !canvasRef.current) {
       chartRef.current?.destroy();
       chartRef.current = null;
-      chartModuleRef.current = null;
       setChartReady(false);
       return undefined;
     }
@@ -129,7 +127,6 @@ export default function LabsEngagementTrendChart({
           LinearScale,
           Tooltip,
         );
-        chartModuleRef.current = module;
 
         const current = latestDataRef.current;
         const theme = readTheme(canvasRef.current);
@@ -186,6 +183,8 @@ export default function LabsEngagementTrendChart({
                 setHoverIndex((currentIndex) =>
                   currentIndex === nextIndex ? currentIndex : nextIndex,
                 );
+              } else {
+                setHoverIndex(null);
               }
             },
             onClick(_event, activeElements) {
