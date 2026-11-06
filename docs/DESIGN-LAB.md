@@ -251,3 +251,11 @@ The public spotlight now resolves its selected slug against the same combined el
 The responsive editorial spotlight uses the shared non-executable LabExperimentPreview renderer and the exact upload → matching generated poster → artwork fallback policy. Its in-view Motion reveal respects reduced-motion preferences. The source changes and pending verification gates are documented in the Labs Public Page Redesign phased plan.
 
 This phase also fixes the shared image error handler in LabExperimentPreview, allowing its existing fallback selection to proceed after an image load failure. It does not enable source execution in the spotlight or change the navbar.
+
+## 17. Phase 3 — public Labs collection presentation
+
+The public collection has a unified heading/filter/results/card hierarchy. Category filter labels and counts are derived from categories present in the current published collection. Category navigation remains a small horizontally scrollable control rather than a virtualized list. Experiment cards retain slug-backed detail links, the shared static preview renderer and the existing LikeButton/engagement flow. The six-item progressive reveal remains in place.
+
+Cards now use restrained in-view Motion reveals and improved preview/content/technology hierarchy. Built-in artwork typography uses container-relative sizing so it scales with the card preview rather than the browser viewport. Reduced-motion behavior is provided through the existing hook.
+
+Implementation files, tests and outstanding QA gates are tracked in the Labs Public Page Redesign phased plan. The navbar, detail page, runtime and source-access behavior remain unchanged.
