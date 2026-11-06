@@ -259,3 +259,11 @@ The public collection has a unified heading/filter/results/card hierarchy. Categ
 Cards now use restrained in-view Motion reveals and improved preview/content/technology hierarchy. Built-in artwork typography uses container-relative sizing so it scales with the card preview rather than the browser viewport. Reduced-motion behavior is provided through the existing hook.
 
 Implementation files, tests and outstanding QA gates are tracked in the Labs Public Page Redesign phased plan. The navbar, detail page, runtime and source-access behavior remain unchanged.
+
+## 18. Phase 4 — paginated public collection
+
+The public catalogue is designed for bounded loading: the first Labs route response contains all code-owned built-ins plus at most 18 eligible custom experiments. Further custom pages use a cursor endpoint with a fixed 18-record page size. Each page is filtered against the current published source and exact ready build artifact/version before applying its limit.
+
+Pagination order uses publication date and immutable record ID. Category counts are computed from the full eligible custom collection and merged with built-in counts, so the first page is not mistaken for the catalogue total. Category navigation remains unvirtualized. On the client, the current category page is cached and six cards are progressively revealed before the next server page is requested.
+
+Required operational step: provision the two compound MongoDB indexes using `npm run db:ensure-labs-public-indexes` and verify them in the intended environment. Tests, large-data boundary checks, index verification, production build and browser QA remain outstanding. Full implementation details are tracked in the Labs Public Page Redesign phased plan.
