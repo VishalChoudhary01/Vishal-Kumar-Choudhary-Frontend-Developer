@@ -88,20 +88,32 @@ export function buildCompleteDailySeries({ since, generatedAt, dailyGroups = [] 
 
     const sourceOpens = Number(group?.sourceOpens) || 0;
     const codeCopies = Number(group?.codeCopies) || 0;
-    const verifiedLikeActions = Number(group?.verifiedLikeActions) || 0;
-    const anonymousLikeActions = Number(group?.anonymousLikeActions) || 0;
+    const verifiedLikes = Number(group?.verifiedLikes) || 0;
+    const verifiedUnlikes = Number(group?.verifiedUnlikes) || 0;
+    const anonymousLikes = Number(group?.anonymousLikes) || 0;
+    const anonymousUnlikes = Number(group?.anonymousUnlikes) || 0;
+    const verifiedLikeActions =
+      Number(group?.verifiedLikeActions) || verifiedLikes + verifiedUnlikes;
+    const anonymousLikeActions =
+      Number(group?.anonymousLikeActions) || anonymousLikes + anonymousUnlikes;
 
     days.push({
       date,
       sourceOpens,
       codeCopies,
+      verifiedLikes,
+      verifiedUnlikes,
+      anonymousLikes,
+      anonymousUnlikes,
       verifiedLikeActions,
       anonymousLikeActions,
       totalActions:
         sourceOpens +
         codeCopies +
-        verifiedLikeActions +
-        anonymousLikeActions,
+        verifiedLikes +
+        verifiedUnlikes +
+        anonymousLikes +
+        anonymousUnlikes,
     });
   }
 
@@ -292,4 +304,102 @@ export function evaluateFixedWindowRateLimit({
     retryAfterSeconds,
     remaining: Math.max(0, numericMaximum - numericCount),
   };
+}
+
+
+export const LABS_ACTIVITY_METRICS = Object.freeze([
+  { key: "sourceOpens", label: "Source opens", singular: "source open" },
+  { key: "codeCopies", label: "Code copies", singular: "code copy" },
+  { key: "verifiedLikes", label: "Verified likes", singular: "verified like" },
+  { key: "verifiedUnlikes", label: "Verified unlikes", singular: "verified unlike" },
+  { key: "anonymousLikes", label: "Anonymous likes", singular: "anonymous like" },
+  { key: "anonymousUnlikes", label: "Anonymous unlikes", singular: "anonymous unlike" },
+]);
+
+function parseUtcDay(value) {
+  if (typeof value !== "string" || !/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) {
+    throw new TypeError("Activity dates must use YYYY-MM-DD.");
+  }
+  const parsed = new Date(value + "T00:00:00.000Z");
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value) {
+    throw new TypeError("Activity date is not a valid UTC calendar date.");
+  }
+  return parsed;
+}
+
+function formatUtcDay(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function mondayForUtcDay(date) {
+  const monday = new Date(date);
+  monday.setUTCDate(monday.getUTCDate() - ((monday.getUTCDay() + 6) % 7));
+  return monday;
+}
+
+function shortUtcDate(value) {
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    timeZone: "UTC",
+  }).format(parseUtcDay(value));
+}
+
+export function buildActivityBuckets({ daily, metric, periodDays }) {
+  if (!LABS_ACTIVITY_METRICS.some((item) => item.key === metric)) {
+    throw new TypeError("Unsupported Labs activity metric.");
+  }
+  if (!Array.isArray(daily) || daily.length === 0) return [];
+
+  const isWeekly = Number(periodDays) >= 90;
+  const normalized = [];
+  let previousDate = null;
+
+  for (const entry of daily) {
+    const parsed = parseUtcDay(entry?.date);
+    if (previousDate && parsed.getTime() <= previousDate.getTime()) {
+      throw new RangeError("Daily activity dates must be unique and ascending.");
+    }
+    const value = Number(entry?.[metric]);
+    if (!Number.isSafeInteger(value) || value < 0) {
+      throw new TypeError("Activity values must be non-negative safe integers.");
+    }
+    normalized.push({ date: entry.date, value, parsed });
+    previousDate = parsed;
+  }
+
+  if (!isWeekly) {
+    return normalized.map(({ date, value }) => ({
+      key: date,
+      startDate: date,
+      endDate: date,
+      label: shortUtcDate(date),
+      value,
+    }));
+  }
+
+  const weeks = new Map();
+  for (const point of normalized) {
+    const weekStart = mondayForUtcDay(point.parsed);
+    const key = formatUtcDay(weekStart);
+    const existing = weeks.get(key);
+    if (existing) {
+      existing.value += point.value;
+      existing.endDate = point.date;
+    } else {
+      weeks.set(key, {
+        key,
+        startDate: point.date,
+        endDate: point.date,
+        value: point.value,
+      });
+    }
+  }
+
+  return [...weeks.values()].map((week) => ({
+    ...week,
+    label: week.startDate === week.endDate
+      ? shortUtcDate(week.startDate)
+      : shortUtcDate(week.startDate) + " – " + shortUtcDate(week.endDate),
+  }));
 }
