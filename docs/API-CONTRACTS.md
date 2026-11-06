@@ -1,6 +1,6 @@
 # API Contracts, Domain Schemas and Endpoint Ownership
 
-**Status:** Implemented Labs/auth/source/editor/media/compiler routes are recorded only where verified in the repository. Generated poster capture, role-aware media attachments and public gallery preview metadata are target contracts/phases, not current endpoints. See `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md` for their release order.  
+**Status:** Labs auth, public source/engagement, owner source/editor lifecycle, initial owner analytics, media and compiler endpoints are recorded as implemented only where verified in `feat/labs-platform-integration`. The owner analytics and source library are currently combined in one page; dedicated routes, custom-experiment analytics/event coverage and metadata-edit PATCH remain planned. Generated poster capture, role-aware media attachments and public gallery preview metadata remain target contracts, not completed behavior. See `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md` and `LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md`.  
 **Related:** ARCHITECTURE.md, PROJECT-STRUCTURE.md, PRD.md
 
 ## 1. Contract rules
@@ -271,7 +271,7 @@ For each endpoint/action, test:
 
 ## 9. Owner-only Labs source-management contracts
 
-**Status:** Proposed contracts from `LABS-SOURCE-MANAGEMENT-SPEC.md`; not implemented by the current source-viewing foundation. Final route naming is subject to Phase 1 approval.
+**Status:** The owner-only source-management routes below are present on `feat/labs-platform-integration`. The owner Analytics GET endpoint and initial source-engagement aggregation are also present. The new metadata-update PATCH contract and separated owner Analytics UI routes are planned additions, not implemented endpoints. Route/page delivery order is defined in `LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md`.
 
 ### Owner authorization prerequisite
 
@@ -280,9 +280,9 @@ For each endpoint/action, test:
 - The owner may manage drafts and unpublished versions through the owner guard. Every other registered account with a verified email reads published source automatically; there is no per-user grant.
 - Owner routes/actions must be independently protected at transport, domain-use-case and data-access boundaries.
 
-### Proposed endpoints
+### Existing endpoints and planned additions
 
-| Operation | Proposed endpoint | Contract |
+| Operation | Endpoint/status | Contract |
 |---|---|---|
 | List source inventory | `GET /api/v1/admin/labs/sources` | Owner-only paginated aggregate metadata; no file contents in list response |
 | Create source aggregate | `POST /api/v1/admin/labs/sources` | Validates an existing canonical experiment slug; creates one source head only |
@@ -293,9 +293,11 @@ For each endpoint/action, test:
 | Restore version | `POST /api/v1/admin/labs/sources/:slug/restore/:versionId` | Creates a new draft snapshot based on an immutable historical version |
 | Publish exact version | `POST /api/v1/admin/labs/sources/:slug/publish` | Explicitly advances published pointer to a previously saved version |
 | Unpublish source | `POST /api/v1/admin/labs/sources/:slug/unpublish` | Clears published pointer; preserves immutable versions, audit and engagement events |
-| Read source audit | `GET /api/v1/admin/labs/sources/:slug/audit` | Owner-only paginated append-only audit metadata |
+| Read source audit | `GET /api/v1/admin/labs/sources/:slug/audit` — implemented | Owner-only paginated append-only audit metadata |
+| Owner source analytics | `GET /api/v1/admin/labs/analytics?days=7|30|90|365` — implemented | Owner-only aggregate source opens, unique verified accounts per experiment, copy actions, active likes and like/unlike actions |
+| Update custom experiment metadata | `PATCH /api/v1/admin/labs/experiments/:slug` — planned | Owner-only, same-origin update of title, description, explanation, category and technologies only; slug and system/publication/source fields are immutable in this operation |
 
-These are candidate endpoints, not permission to build a full CMS. Same-app mutations may use Server Actions if that yields a smaller attack surface; whichever transport is selected must preserve these domain contracts.
+The listed source endpoints are part of the existing Labs implementation on the audited branch. The PATCH row is a target addition, not an existing route. These Labs operations do not authorize a general portfolio CMS. Keep mutations in the server-side experiment/source domain services; do not let client components call Mongoose directly.
 
 ### Domain invariants
 
@@ -316,12 +318,12 @@ These are candidate endpoints, not permission to build a full CMS. Same-app muta
 - A deliberate viewer opening is associated with a client-generated idempotency key so retries of the same request do not inflate counts. A later explicit reopen/refresh is a new open according to the approved deduplication window.
 - `code_copy` is accepted only after the browser reports that the Clipboard API write succeeded. The server rechecks the verified session and the current published source. The event never includes clipboard contents or source file text.
 - `like`/`unlike` events are written only when the unique current like-state record actually changes. Duplicate clicks/retries that preserve state do not increment counts.
-- Admin analytics endpoints return aggregates grouped by experiment and reporting period: detail views, source opens, unique verified accounts, copy actions, current active likes, like/unlike transitions and trend/ranking data.
+- The current implemented `GET /api/v1/admin/labs/analytics` returns initial aggregate source-engagement metrics. It does not yet provide fully instrumented experiment detail views, preview starts/interactions or complete trend/ranking coverage for dynamic custom experiments. Those are target additions and must be instrumented/validated before being represented as real values.
 - The first release does not expose individual users' source-open/copy/like histories, emails or raw event rows in the admin dashboard.
 - Verified events use the server-derived Better Auth user ID for deduplication/abuse controls. Guest-like events use `actorCategory: guest` and no user ID; do not introduce stable cross-device guest identity. Events do not store raw IP, email, clipboard data, source contents or unnecessary device identifiers.
 - Event retention and account-deletion handling are deployment gates and must be disclosed in the Privacy Policy before production analytics is enabled.
 
-### Proposed source domain records
+### Current and target source domain records
 
 - `lab_sources`: unique canonical `slug` (retain the current field name), `draftVersionId`, `publishedVersionId`, created/updated actor and timestamps.
 - `lab_source_versions`: source ID/slug, monotonic version number, immutable files, server-calculated content hash, parent version, bounded change summary, actor and timestamp.
@@ -329,7 +331,7 @@ These are candidate endpoints, not permission to build a full CMS. Same-app muta
 - `lab_analytics_events`: server-validated `source_open` and `code_copy` events for verified users; `like`/`unlike` events for verified state transitions; and separate anonymous `guest_like`/`guest_unlike` action events where the public like mechanism reports them. Store experiment slug, source version where relevant, actor category, optional server-derived verified user ID, server timestamp and idempotency key. Never store email, clipboard content or source text.
 - `lab_source_audit_events`: actor, action, experiment, version references, request ID, safe outcome code and timestamp. Owner source lifecycle mutations only; append-only, no source text, email, credentials, raw tokens or secrets.
 
-These are target records. The inspected implementation currently embeds `files` in a mutable `LabSource` record and has no separate immutable version/audit collection. Do not treat the proposed model as already migrated.
+The audited integration branch contains the source head, immutable version, like, analytics-event and audit models described above. Their existence does not prove that the user's deployed Atlas database has been fully migrated, seeded or verified. Do not claim deployment readiness without migration and role-matrix evidence.
 
 ### Additional contract tests
 
