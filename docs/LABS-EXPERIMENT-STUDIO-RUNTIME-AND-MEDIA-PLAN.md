@@ -1432,3 +1432,33 @@ The compiled release file keys were deterministic by slug/sourceVersion/buildHas
 - `npm run test:smoke` passed. The suite confirms two publish attempts for the same slug/source version/build use distinct Blob paths; poster and compiled files share the artifact namespace; malformed artifact IDs are rejected; and prior compiler/media-precedence regression tests still pass.
 
 **Deployment status:** source changes are committed, but a new Preview deployment could not be created during this verification because Vercel returned `402 payment_required` for the team's `api-deployments-free-per-day` quota (more than 100 API-created deployments; retry window reported as 24 hours). The existing Preview deployment therefore still runs the old storage-key implementation. No Production deployment or Production environment variable was changed. Create a new Preview deployment from the latest branch commit after the quota resets or through the project's permitted Git deployment workflow, then retry `fluid-gradient-playground` Build & Publish.
+
+## 45. Public custom Labs listing and automatic poster visibility — 6 November 2026
+
+### 45.1 Published listing query correction
+
+The collection source query now uses the shared explicit PUBLISHED_LAB_SOURCE_PROJECTION from owner-analytics-utils.mjs:
+
+slug published publishedVersionId publishedArtifactId
+
+The eligibility helper requires source.published === true, the source's current published version/artifact IDs and an exact ready artifact match (experimentSlug and sourceVersionId). The previous projection omitted published, so Mongoose returned it as undefined in the lean result and every custom experiment was filtered out even when the database record was published. The projection and helper now share a regression test covering included current releases, unpublished sources and stale artifacts.
+
+### 45.2 Owner automatic screenshot status
+
+The owner media GET endpoint now returns both private assets and a releasePoster status object. The status is derived exclusively from the exact currently published LabSource.publishedArtifactId and publishedVersionId. The owner endpoint validates the artifact poster metadata and approved Blob host before returning the same artifact runtime poster URL used by the public gallery. It never returns private Cloudinary source URLs or storage tokens.
+
+LabMediaLibrary now displays a separate Automatic screenshot preview with dimensions, size, artifact ID, capture version, source version and build hash. It distinguishes no published release, missing artifact, legacy release without capture metadata, capture unavailable, invalid poster metadata and image delivery failure. Uploaded media management and explicit publication are kept separate.
+
+### 45.3 Shared public visual fallback
+
+LabExperimentPreview is shared by the gallery cards, featured experiment and detail page. It now handles failed uploaded media/poster URLs: selected uploaded media first, then the exact artifact's generated screenshot, then the existing LabArtwork fallback. Uploaded videos remain muted, inline and looping in the visual preview; GIFs remain animated unless reduced motion is requested. The detail page retains its separate interactive LabWorkspace runtime below the static media preview.
+
+### 45.4 Verification performed
+
+- Compiler npm run test:smoke: passed with 15 tests, including the public projection/eligibility and upload-versus-generated visual precedence cases.
+- A real compiled React 19 + Motion + Tailwind v4 fixture built in the pinned compiler sandbox and was captured by the current branch's Playwright script: status=ready, Playwright 1.65.0, Chromium 158.0.8127.18, PNG 1200x900, 21,793 bytes, SHA-256 e2fbc92d60db628efe2121278dd71ecc34be492e5288d764d648c17b6c4e6eca.
+- TypeScript parser syntax validation passed for the owner media panel, preview component, owner media GET route, public experiments module, media management module, poster runtime route, /labs page and detail page.
+- The linked compiler snapshot snap_1Ep7fqKr9Q4MMSKWALnzZ9nQumBt remains configured only for the feat/labs-platform-integration Preview environment.
+- The publish Route Handler maxDuration is set to 60, which is the Hobby plan maximum. A prior value of 300 caused Vercel to reject deployments with invalid_max_duration; this was corrected.
+
+Deployment verification: the latest Preview deployment for commit 08865f6c5603dcd3a5a35e79bb9a053dde7e266f is being built after the 60-second limit correction. The application source, compiler smoke tests and local artifact capture are verified, but public HTTP gallery response, owner media API response against the live database, and signed-in publish-to-gallery browser journey must still be checked against the resulting READY deployment. Production environment and deployment remain untouched.
