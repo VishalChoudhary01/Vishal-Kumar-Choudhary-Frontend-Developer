@@ -278,7 +278,7 @@ export async function getLabsOwnerActiveVerifiedLikes({
     : 1;
   const safeSearch = typeof search === "string" ? search.trim().slice(0, 80) : "";
   const pageSize = 20;
-  const pipeline = [
+  const basePipeline = [
     { $match: { experimentSlug: slug, active: true } },
     {
       $lookup: {
@@ -311,7 +311,7 @@ export async function getLabsOwnerActiveVerifiedLikes({
 
   if (safeSearch) {
     const expression = new RegExp(escapeRegex(safeSearch), "i");
-    pipeline.push({
+    basePipeline.push({
       $match: {
         $or: [
           { "account.name": expression },
@@ -320,6 +320,50 @@ export async function getLabsOwnerActiveVerifiedLikes({
       },
     });
   }
+
+  await connectToDatabase();
+  await ensureIndexes();
+
+  const [countResult] = await LabLike.aggregate([
+    ...basePipeline,
+    { $count: "count" },
+  ]);
+  const total = Number(countResult?.count || 0);
+  const pages = Math.max(1, Math.ceil(total / pageSize));
+  const effectivePage = Math.min(safePage, pages);
+
+  const items = await LabLike.aggregate([
+    ...basePipeline,
+    { $sort: { lastTransitionAt: -1, _id: -1 } },
+    { $skip: (effectivePage - 1) * pageSize },
+    { $limit: pageSize },
+    {
+      $project: {
+        _id: 0,
+        name: { $ifNull: ["$account.name", "Account unavailable"] },
+        email: { $ifNull: ["$account.email", ""] },
+        emailVerified: { $eq: ["$account.emailVerified", true] },
+        likedAt: { $ifNull: ["$lastTransitionAt", "$updatedAt"] },
+      },
+    },
+  ]);
+
+  return {
+    items: Array.isArray(items) ? items.map((item) => ({
+      name: typeof item.name === "string" && item.name.trim()
+        ? item.name
+        : "Account unavailable",
+      email: typeof item.email === "string" ? item.email : "",
+      emailVerified: item.emailVerified === true,
+      likedAt: item.likedAt ? new Date(item.likedAt).toISOString() : null,
+    })) : [],
+    total,
+    page: effectivePage,
+    pageSize,
+    pages,
+    search: safeSearch,
+  };
+}
 
   pipeline.push(
     { $sort: { lastTransitionAt: -1, _id: -1 } },
