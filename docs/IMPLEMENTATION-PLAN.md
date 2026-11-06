@@ -1,6 +1,6 @@
 # Implementation Plan — Portfolio Platform
 
-**Status:** Living platform plan. Active Labs work is on `feat/labs-platform-integration`. The branch contains public Labs, Better Auth, owner source/editor and isolated compiler/runtime foundations. The 5 November 2026 browser screenshots identify an owner preview Run regression to re-verify, missing custom gallery visuals and a blank Spotlight Dock detail runtime. These are release-blocking recovery items, not completed features. The next Labs product phases are defined in `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`.
+**Status:** Living platform plan. Active Labs work is on `feat/labs-platform-integration`. The branch contains public Labs, Better Auth, owner source inventory/editor and source lifecycle foundations, initial owner engagement analytics, and isolated compiler/runtime foundations. The 5 November 2026 browser screenshots identify an owner preview Run regression to re-verify, missing custom gallery visuals and a blank Spotlight Dock detail runtime. These remain release-blocking recovery items, not completed features. Runtime/media delivery is governed by `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`; the next owner routing, metadata editing, analytics coverage and live refresh work is governed by `LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md`.
 
 ## Principles
 - Inspect first; change second.
@@ -10,11 +10,11 @@
 - Keep decisions open when they remain unselected; document alternatives and validation requirements.
 - Prefer small, reversible phases and isolated commits. No broad rewrites for convenience.
 
-## Current implementation baseline — 2026-11-05
+## Current implementation baseline — 2026-11-06
 
 The following is the inspected code baseline, not a production-readiness certificate:
 
-| Capability | Current state on `feat/labs-public-page` | Remaining work |
+| Capability | Current state on `feat/labs-platform-integration` as audited on 2026-11-06 | Remaining work |
 |---|---|---|
 | Public Labs listing/detail and four code-owned demos | Implemented in integration branch | Regress all four; custom published-artifact detail runtime currently has a blank-canvas defect in browser evidence and must be restored |
 | Better Auth + MongoDB adapter | Foundation implemented | Final session policy and security/release tests |
@@ -22,8 +22,8 @@ The following is the inspected code baseline, not a production-readiness certifi
 | Google/GitHub OAuth + email/password | Code implemented on integration branch | Configure OAuth apps/Preview variables and run complete login/signup/linking/verified-email browser tests |
 | Privacy Policy / Terms cleanup | Privacy retained; Terms route/checkbox/consent code removed | Review Privacy wording and separately assess any historical labs_registration_consents collection data; no collection drop was run |
 | Protected source read endpoint | Verified-session + published-source policy implemented in integration branch; legacy grant model retained for migration safety | Verify guest/unverified denial, verified direct access, no-store responses and CTA/session UX in deployed browser |
-| Owner source inventory/editor and lifecycle routes | Implemented in the integration branch | Re-verify deployed create/add/edit/delete/save/version/restore/publish/unpublish flows, owner guard, stale-version and failure states |
-| Source audit, immutable versions, likes and engagement analytics | Implemented in integration-branch foundation | Re-verify Atlas bootstrap, migration/retention, idempotency, privacy disclosure and aggregate-only reporting |
+| Owner source inventory/editor and lifecycle routes | Code present in the integration branch | Complete deployed create-to-editor handoff and browser/Atlas verification for add/import/edit/rename/delete/save/version/restore/preview/publish/unpublish/audit and owner guard; preserve every existing operation |
+| Source audit, immutable versions, likes and initial engagement analytics | Code foundation present in integration branch | Verify Atlas bootstrap/migration/retention, idempotency/privacy and aggregate reporting; add custom-experiment coverage and complete event instrumentation before trusting all metrics |
 | Owner isolated preview compiler/runtime | Compiler and runtime foundation implemented and smoke-tested | Restore and prove deployed Run for unsaved HTML/CSS/JS, JSX and TSX; validate runtime bridge, public artifact delivery and threat model; browser QA is still open |
 | General CMS/Admin, media management, portfolio-wide analytics and scheduling | Deferred | Begin only after Labs work is complete and separately authorized; Labs source-engagement aggregates are included in Phase 8 |
 
@@ -61,7 +61,7 @@ Do not mark a row complete because a page renders. Each capability still needs i
 **Work**
 - Implement validated domain models and indexes.
 - Establish server-only data access boundaries and centralized authorization helpers.
-- Implement the approved singleton-owner provisioning path without any public self-service owner/admin escalation. The owner identity mechanism remains open pending explicit approval.
+- Use the locked singleton-owner identity `LABS_OWNER_USER_ID`; deny owner operations when absent/mismatched. Never allow public self-service owner/admin escalation or client-supplied owner identity.
 - Add safe error handling, rate/abuse controls and audit metadata where required.
 - Add tests for protected reads and mutations.
 
@@ -171,33 +171,39 @@ Do not mark a row complete because a page renders. Each capability still needs i
 - Production remains separately gated by sandbox threat model, source privacy, environment/owner provisioning and explicit release approval.
 
 ## Phase 8 — Owner-managed source lifecycle and verified-user access
-**Work**
-- Follow `docs/LABS-SOURCE-MANAGEMENT-SPEC.md` as the detailed source-management plan.
-- Implement the approved singleton owner identity with server-only `LABS_OWNER_USER_ID`; owner operations deny by default when the setting is absent or mismatched.
-- Evolve the current mutable LabSource record into a source aggregate with draft/published pointers and immutable source-version snapshots; preserve/migrate existing records safely.
-- Add idempotent collection/index bootstrap for source heads, immutable versions, append-only owner audit events, verified-user likes and source-engagement events.
-- Retire the legacy `LabSourceGrant` model and `lab_source_grants` collection from the access-control path after checking/exporting any existing records and safely removing runtime references. Do not migrate individual grants as active entitlements.
-- Implement owner-only use cases for source creation, file add/edit/rename/delete, save draft, version history, compare/restore, explicit publish/unpublish and audit.
-- Implement verified-session source authorization: any Better Auth session with `emailVerified === true` may read every published source. Guests and signed-in-unverified users are denied. No per-user grant, expiry or revoke is required.
-- Enforce verified-account code copy and like/unlike; create one active like state per user/experiment and record only server-confirmed state transitions.
-- Record successful source opens and code-copy actions with server-derived actor IDs and idempotency keys; never store source text, clipboard contents, email or raw IP in analytics events.
-- Build the lazy-loaded owner source workspace and per-experiment source-engagement analytics dashboard. Dashboard aggregates: source opens, unique verified accounts, copies, current active likes, like/unlike actions, trends and rankings.
-- Add optimistic concurrency, idempotency, strict text/path/language/byte/secret validation and private/no-store response behavior.
-- Provision the first reviewed `magnetic-interaction` source snapshot from an audited canonical file list; do not guess files or import secrets.
 
-**Gate / done**
-- Guest and signed-in-unverified users receive 401/403 and no source. Any verified registered account reads all published source without manual owner action or per-user grant.
-- Owner access is never based on first registration, browser email, client role or supplied user ID.
-- Draft saves do not change the published pointer; publish selects an exact immutable version; unpublish denies subsequent reads for every regular user; restore creates a new snapshot.
-- Verified users can copy code and like/unlike. One active like per user/experiment is enforced; duplicate requests do not inflate likes or action counts.
-- Source-open events occur only after a successful authorized source response; copy events require successful Clipboard API acknowledgement; retries are idempotent.
-- Owner/admin analytics show per-experiment counts for source opens, unique verified accounts, copies, active likes and like/unlike trends; no user-level source browsing history or email list is exposed.
-- Source content does not appear in guest/unverified HTML/RSC, public APIs, client bundles, source maps, shared caches, analytics or logs.
-- Legacy grant lookup is removed, no new grant records are created, and the legacy grant collection is safely retired after reconciliation.
-- Migration/bootstrap is replay-safe and the rollback/reconciliation procedure is tested.
-- Owner editor/analytics dependencies remain out of the homepage and public Labs listing bundle.
-- Privacy Policy disclosure, analytics retention, deduplication and account-deletion handling are approved before Production analytics is enabled.
-- The existing public demo behavior and routes remain unchanged.
+**Code baseline:** The audited integration branch contains the owner-only source inventory, source creation/read APIs, source editor, immutable version, restore, publish/unpublish, audit, verified source access, like state, source-open/copy event and initial aggregate analytics foundations. This phase is not a greenfield implementation task.
+
+**Remaining verification**
+- Run Atlas-backed migrations/index/bootstrap and legacy-grant reconciliation with rollback evidence.
+- Verify the Guest / signed-in-unverified / verified / singleton Owner access matrix with direct route and direct API requests.
+- Run browser tests for source creation, file add/import/edit/rename/delete/reorder, byte/path validation, save-draft, version history/view/restore, preview, publish/unpublish, audit, stale pointers and failure recovery.
+- Verify source events are server-attributed, idempotent and written only after successful authorized source response / clipboard acknowledgement.
+- Verify private/no-store headers and prove no source leakage into public HTML/RSC, DTOs, bundles, maps, logs or shared caches.
+- Configure owner/SMTP/Atlas deployment requirements and approve analytics retention/privacy before production release.
+
+**Detailed source authority:** `docs/LABS-SOURCE-MANAGEMENT-SPEC.md`.
+
+**Gate**
+- All existing source lifecycle operations pass the preservation tests; no source action is removed or silently redefined.
+- Migration is replay-safe and has rollback/reconciliation evidence.
+- Owner security, verified-account automatic source access and aggregate-only analytics pass direct-request tests.
+- Production remains blocked by outstanding infrastructure, privacy, browser and release approvals even when local build/lint passes.
+
+## Phase 8A — Owner Console separation, metadata editing and live analytics
+
+**Detailed authority:** `docs/LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md`.
+
+- Split the current combined `/admin/labs/sources` page into `/admin/labs/analytics` and `/admin/labs/sources`; retain the existing `/admin/labs/sources/[slug]` source editor route.
+- Add a separate owner-only metadata editor and PATCH contract for custom experiment title/description/explanation/category/technologies. Keep it separate from code-file editing, source-version pointers and publication.
+- Fix dynamic custom-experiment analytics catalogue and source-event validation coverage before building richer charts.
+- Add experiment view/preview metrics only after their event lifecycles and deduplication rules are implemented; never show uninstrumented metrics as zero.
+- Add visible-tab 10-second polling with no overlapping requests, visibility pause, abort/backoff, manual refresh and truthful stale state.
+- Reuse existing MotionNumber/motion/react and semantic theme tokens; complete responsive, reduced-motion and accessible chart/table verification.
+- Preserve all existing source create/open/edit/save/version/restore/preview/publish/unpublish/audit/delete and public Labs behaviors.
+
+**Gate**
+- The detailed phase gates and preservation checklist in the Owner Console plan pass. No WebSocket/provider/Redis dependency is added without a measured requirement and separate decision.
 
 ## Phase 8B — Isolated live previews (separate security-gated work)
 **Work**
@@ -214,18 +220,19 @@ Do not mark a row complete because a page renders. Each capability still needs i
 - Until this gate passes, stored source remains text-only and can be viewed only through the protected source flow.
 
 ## Phase 9 — Likes, user dashboard and analytics
-**Work**
-- Preserve best-effort guest public likes where supported; implement verified-account likes with one persistent active state per user/experiment.
-- Add server-validated source-open, code-copy, like and unlike event schema with idempotency, rate limits and abuse protections.
-- Build owner/admin aggregate source-engagement dashboard with date ranges, per-experiment source opens/unique verified accounts/copies/active verified likes/verified like-unlike trends, and separate guest-like action counts where measurable. Keep individual user histories out of the first release.
-- User dashboard personal activity remains separately scoped and must not be confused with owner aggregate reporting.
-- Document every metric, denominator, event source and known limitation.
+
+- Preserve the existing anonymous public-like behavior where supported and the verified account's one-active-like-per-experiment state.
+- The initial Labs event model and aggregate source-engagement endpoint exist; do not recreate them as duplicate systems.
+- Complete missing custom-experiment event/aggregation coverage, qualifying experiment views, preview starts/interactions (only when runtime signals are ready), rankings and experiment-level aggregate reporting.
+- Keep personal user activity separate from owner aggregate reporting.
+- Full event semantics and metric definitions belong to `DESIGN-ANALYTICS.md`; owner routing, polling and delivery phases belong to `LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md`.
 
 **Gate / done**
-- One active authenticated like per user/experiment is enforced server-side.
-- Metrics reconcile against controlled test events.
-- Source opens are separate from public detail views. Copy events are labelled as successful clipboard actions, not verified code usage.
-- Charts have accessible text/table alternatives; private personal activity cannot be queried by other users.
+- Metrics reconcile against controlled fixtures and do not fabricate history.
+- Source opens remain separate from public detail views; copies remain successful clipboard actions, not code usage.
+- Active like state remains separate from period like/unlike events; anonymous actions are not labelled unique people.
+- Charts have accessible table/text alternatives and no raw user-level history is exposed.
+- Retention and account-deletion treatment are approved before production analytics launch.
 
 ## Phase 10 — Scheduling and operational recovery
 **Work**
