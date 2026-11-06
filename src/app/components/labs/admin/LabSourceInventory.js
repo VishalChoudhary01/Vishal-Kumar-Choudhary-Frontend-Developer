@@ -379,6 +379,14 @@ export default function LabSourceInventory() {
                     <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-text-tertiary">
                       <span>{item.versionCount || 0} saved versions</span>
                       {item.latestVersion ? <span>Latest {item.latestVersion}</span> : null}
+                      {item.isCustom ? (
+                        <span
+                          className={item.publicationReadiness?.eligible ? "font-semibold text-success" : "font-medium text-warning"}
+                          title={item.publicationReadiness?.code || "GALLERY_READINESS_UNKNOWN"}
+                        >
+                          Gallery: {item.publicationReadiness?.label || "Eligibility unavailable"}
+                        </span>
+                      ) : null}
                       <span className="inline-flex items-center gap-1">
                         <Clock3 size={11} aria-hidden="true" />
                         {formatDate(item.updatedAt)}
