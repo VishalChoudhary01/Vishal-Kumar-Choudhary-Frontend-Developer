@@ -1,6 +1,6 @@
 # Labs Detail Presentation and Monaco Editor — Phased Implementation Plan
 
-**Status:** Planning / implementation not started for the visual-sizing and Monaco phases.
+**Status:** Phase 1 implementation committed; deployed/browser verification pending. Monaco phases remain planned.
 **Branch:** `feat/labs-platform-integration`
 **Last reconciled:** 6 November 2026
 **Scope:** Public Labs detail page media/layout, protected read-only source viewer, and the admin source creator's code editor.
@@ -373,7 +373,7 @@ Do not add a second unsynchronized `editorFiles` persistence state. Do not read 
 | Phase | Work | Gate |
 |---|---|---|
 | 0 | Baseline, dependency pin and regression contract | Existing Run/save/publish/source/like/media checks recorded |
-| 1 | Media aspect ratio and detail layout | All media types preserve proportions; Like and static detail verified |
+| 1 | Media aspect ratio and detail layout | Code/tests committed; complete Preview/browser media matrix and Like/static-detail QA |
 | 2 | Shared Monaco wrapper and local workers | Next.js production build and worker/CSP check pass |
 | 3 | Public read-only source viewer | Auth, file tabs, copy and analytics unchanged |
 | 4 | Editable Studio source creator | File operations and state synchronization pass |
@@ -399,8 +399,37 @@ Do not ship a phase that weakens a gate from an earlier phase. Use a Preview dep
 
 **Already implemented:** isolated React code Run preview; private draft/version workflow; exact-version Build & Publish; immutable artifact upload; poster capture during publish; artifact-bound public poster delivery; uploaded image/GIF/video promotion and media precedence; public custom listing query; owner poster status display; static public detail page; Like/engagement; protected source access/copy.
 
-**Planned in this document:** fix the media's no-distortion sizing/layout, rearrange detail sections, introduce shared Monaco component, replace public source `pre/code` with read-only Monaco, replace owner textarea and history `pre/code` with editable/read-only Monaco modes, and complete all regression/performance/accessibility checks.
+**Phase 1 implementation committed:** public media DTO now includes promoted upload dimensions and the known 1200×900 generated-poster dimensions; newly promoted media is normalized to `contain`; the shared renderer uses `object-contain`, measures browser intrinsic dimensions for legacy uploads and keeps broken-media fallbacks; the detail page no longer forces a 4:3/16:9 wrapper and instead uses natural height with a responsive maximum; detail header/explanation spacing was tightened; six media selection/dimension regression tests are included in every production build. Browser verification for portrait/landscape/square/GIF/video on the deployed Preview remains pending.
+
+**Still planned:** shared Monaco component, public read-only source viewer, editable owner source creator, read-only version history viewer, and their regression/performance/accessibility checks.
 
 **Not yet implemented by this plan:** Monaco package installation, local worker delivery, Monaco wrapper, any Monaco integration, and the new detail layout/media sizing changes.
 
 This plan is the acceptance contract for the next implementation work. Update its status table after each phase is completed; do not mark a phase complete from a source-only change without its stated verification.
+
+
+### Phase 1 implementation progress — 6 November 2026
+
+**Code committed; deployed browser QA still pending.**
+
+Implemented in the current branch:
+- Public \`galleryPreview\` schema now stores the actual uploaded media width and height from the already-verified Cloudinary asset record.
+- The custom public experiment DTO carries uploaded media dimensions. The generated poster exposes its known 1200×900 dimensions.
+- The media selection policy normalizes uploaded and generated visuals to \`fit: "contain"\`; owner promotion API and Studio payload use the same default. The schema default is now contain for new records.
+- \`LabExperimentPreview\` uses the real intrinsic dimensions when present and measures \`naturalWidth/naturalHeight\` or \`videoWidth/videoHeight\` after loading for older media records without dimensions. This avoids keeping a hard-coded 4:3 size for portrait and widescreen uploads.
+- Gallery/featured cards retain their consistent 4:3 visual stage; the content inside it is contained and letterboxed instead of cropped or stretched.
+- Public detail media no longer sits in a forced mobile 4:3 / desktop 16:9 box. It uses a natural-height contained visual with a 76svh / 780px maximum.
+- Detail header vertical rhythm and explanation spacing were tightened. The existing Like component, explanation content, protected-source section, and non-executable detail-page contract were not replaced.
+- Added \`tests/labs-preview-media.test.mjs\` for generated poster default, portrait uploaded image dimensions, GIF, video, invalid upload fallback and no-media fallback. \`npm run build\` now runs this media suite before the existing Labs analytics and SEO checks.
+
+**No Run/Save/Publish code path was modified in Phase 1.** The Studio textarea, current React \`files\` state, temporary Run preview, draft APIs, version history, publish flow, compiler sandbox and poster capture worker are unchanged.
+
+**Still required before Phase 1 can be marked complete:**
+1. Run the new media test suite and full Next.js production build.
+2. Inspect the Preview detail page at mobile, tablet and desktop.
+3. Verify a real portrait, landscape, square image, generated 1200×900 poster, animated GIF, MP4 and WebM. Confirm there is no stretch/crop and the bounded detail height remains usable.
+4. Verify gallery cards remain consistently framed and contain media.
+5. Verify the Like action/count and protected-source authorization/copy behavior remain intact.
+6. Verify the detail page still makes no executable iframe/runtime request.
+
+Do not start Monaco integration until this Phase 1 gate is green.
