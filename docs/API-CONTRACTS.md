@@ -1,7 +1,5 @@
-# API Contracts, Domain Schemas and Endpoint Ownership
-
-**Status:** Labs auth, public source/engagement, owner source/editor lifecycle, initial owner analytics, media and compiler endpoints are recorded as implemented only where verified in `feat/labs-platform-integration`. Dedicated `/admin/labs/analytics` and `/admin/labs/sources` pages, shared owner navigation and account-menu links are committed and Preview build-verified; authenticated owner-browser QA remains pending. Custom published experiment aggregation/source-event validation and the owner-only custom experiment metadata PATCH/editor are also committed and Preview build-verified. Atlas-backed analytics reconciliation and authenticated metadata save/conflict tests remain pending. Generated poster capture, role-aware media attachments and public gallery preview metadata remain target contracts, not completed behavior. See `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md` and `LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md`.  
-**Related:** ARCHITECTURE.md, PROJECT-STRUCTURE.md, PRD.md
+**Status:** Labs auth, public source/engagement, owner source/editor lifecycle, initial owner analytics, private media upload, isolated compiler and immutable runtime endpoints are present in code. The single-metric Chart.js trend chart, public combined-like contract, guest-to-verified active-like migration, owner active verified-liker drilldown, publication-readiness diagnostics and owner-promoted release-bound public gallery poster route are also committed on `feat/labs-platform-integration`. The poster mutation is a new owner-only contract; automatic screenshot generation, public runtime-fallback delivery and detail-gallery media roles remain unimplemented. All current-turn changes still need a clean full build/test, Atlas/provider validation, authenticated browser QA and a new Preview deployment; code presence is not release verification.  
+**Related:** ARCHITECTURE.md, PROJECT-STRUCTURE.md, PRD.md, [Labs Gallery/Engagement Implementation](./LABS-GALLERY-ENGAGEMENT-AND-LIVE-UI-IMPLEMENTATION.md)
 
 ## 1. Contract rules
 - This file defines endpoint families and responsibilities, not a claim that endpoints already exist.
@@ -70,12 +68,13 @@ These paths are candidate REST endpoints; the same use cases may be Server Actio
 ### Labs public pages, engagement and protected source
 
 Public page routes:
-- `/labs` — published public experiment listing with lightweight public metadata and exactly one safe visual reference per card. Visual priority: published `gallery-preview` asset, otherwise generated poster matching the published source/artifact version, otherwise existing LabArtwork/neutral artwork. No executable preview is mounted in a card.
+- `/labs` — published public experiment listing with lightweight public metadata and exactly one safe visual reference per card. For custom experiments, the current implemented visual priority is an owner-promoted `galleryPreview` whose artifact ID and source-version ID both match the published release, otherwise existing LabArtwork/neutral artwork. Automatic generated screenshot posters remain deferred. Private Cloudinary preview URLs are never exposed. No executable preview is mounted in a card.
 - `/labs/:slug` — published experiment detail. Code-owned demos use the approved lazy runtime registry; owner-created experiments use only the exact published immutable artifact through the isolated runtime. Public page DTOs never include protected source contents.
 
 Public engagement routes:
-- `GET /api/v1/labs/:slug/engagement` — returns active anonymous/verified aggregate like counts and the current actor's like state. A guest identity is not created just by reading the count.
-- `POST /api/v1/labs/:slug/engagement` — toggles a like using `{ liked: boolean }`. Verified accounts use their server-derived Better Auth user ID. Anonymous visitors use a signed HTTP-only browser cookie and keyed digest. Signed-in unverified accounts are denied. Anonymous counts are browser identities/actions, not unique people.
+- `GET /api/v1/labs/:slug/engagement` — returns the combined active `totalLikes`, the current actor's `liked` state and permission/actor metadata. It does not expose verified-versus-anonymous counts. A guest identity is not created just by reading the count.
+- `POST /api/v1/labs/:slug/engagement` — sets the current like state using `{ liked: boolean }`. The same control toggles Like/Unlike; Unlike is undo, not a dislike vote. Verified accounts use their server-derived Better Auth user ID and a unique account/experiment state. Anonymous visitors use a signed HTTP-only browser cookie and keyed digest, unique per browser-cookie identity/experiment. Signed-in unverified accounts are denied. Anonymous browser identities are not unique people and are not cross-device.
+- When a verified session is observed with the same guest cookie, active guest states are transactionally claimed by that account. An already-active account state wins; the guest active state is deactivated to avoid double-counting. Historical action events are not rewritten, and no synthetic verified like event is generated during migration.
 
 Protected source routes:
 - `GET /api/v1/labs/:slug/source` — requires a valid verified Better Auth session, canonical public Labs experiment slug and a published source snapshot. No per-user grant lookup is performed. The server validates the published file snapshot and responds private/no-store.
@@ -93,6 +92,11 @@ Owner-only Labs source management routes:
 - `POST /api/v1/admin/labs/sources/:slug/publish` and `POST /api/v1/admin/labs/sources/:slug/unpublish` — explicit publication transitions.
 - `GET /api/v1/admin/labs/sources/:slug/audit` — read-only owner audit history.
 - `GET /api/v1/admin/labs/analytics?days=7|30|90|365` — owner-only aggregate source opens, verified accounts, copies, active anonymous/verified likes and like/unlike activity.
+- `GET /api/v1/admin/labs/experiments/:slug/media` — list owner-owned ready media assets with short-lived private preview URLs and attachment/poster state.
+- `POST /api/v1/admin/labs/experiments/:slug/media/upload-intent` and `POST /api/v1/admin/labs/experiments/:slug/media/finalize` — create and finalize signed private Cloudinary uploads.
+- `PUT /api/v1/admin/labs/experiments/:slug/media/attachments` — set the existing single optional private `fallback-preview` attachment.
+- `PUT /api/v1/admin/labs/experiments/:slug/media/gallery-preview` — explicitly promote one experiment-owned ready JPEG/PNG/WebP/AVIF still image as a public gallery poster for the exact current published artifact/version; body includes `assetId`, `altText` and `fit`. Send `assetId: null` to remove it. This is not automatic screenshot capture and does not make the private Cloudinary asset public.
+- Owner experiment analytics also runs a server-side, owner-authorized query for current active verified likers on that experiment. The page exposes name, masked email and current like timestamp with pagination/search; no raw IDs, anonymous identities or historical user-level events are returned.
 
 The owner guard uses server-only `LABS_OWNER_USER_ID` and requires a verified session. All owner mutations require same-origin requests; all owner APIs enforce authorization independently. Source, draft, version, audit and analytics responses are private/no-store. Do not return source in anonymous listing/detail payloads.
 
