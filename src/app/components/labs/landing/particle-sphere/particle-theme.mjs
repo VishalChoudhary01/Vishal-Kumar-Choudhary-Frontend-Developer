@@ -1,8 +1,11 @@
 export function getParticleSphereThemePalette(isDark) {
   if (isDark) {
     return Object.freeze({
-      particleColor: "#78d6ca",
-      surfaceParticleMix: 0.48,
+      particleColor: "#8ce8dc",
+      surfaceParticleMix: 0.08,
+      surfaceParticleBrightness: 1.45,
+      surfaceParticleOpacityFloor: 0.1,
+      surfaceParticleSizeScale: 1.16,
       innerParticleColor: "#bafff3",
       innerParticleOpacity: 0.88,
       volumeColor: "#62d8c7",
@@ -23,6 +26,9 @@ export function getParticleSphereThemePalette(isDark) {
   return Object.freeze({
     particleColor: "#103b37",
     surfaceParticleMix: 0.28,
+    surfaceParticleBrightness: 1,
+    surfaceParticleOpacityFloor: 0.012,
+    surfaceParticleSizeScale: 1,
     innerParticleColor: "#0b2926",
     innerParticleOpacity: 0.58,
     volumeColor: "#17685e",
