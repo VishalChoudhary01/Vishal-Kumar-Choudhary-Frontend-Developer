@@ -6,6 +6,7 @@ import { createSphereParticleData } from "../src/app/components/labs/landing/par
 import {
   getParticleBurstEnvelope,
   getOrbitBurstSpeed,
+  ORBIT_BURST_SPEED_MULTIPLIER,
   isParticleBurstActive,
 } from "../src/app/components/labs/landing/particle-sphere/particle-interaction.mjs";
 import { getParticleCameraDistance } from "../src/app/components/labs/landing/particle-sphere/particle-responsive.mjs";
@@ -340,17 +341,20 @@ test("renderer maps pointer hits to the sphere and restarts burst on a short tap
   assert.match(rendererSource, /addEventListener\("pointerdown"/);
   assert.match(rendererSource, /addEventListener\("pointerup"/);
   assert.match(rendererSource, /addEventListener\("pointermove"/);
+  assert.match(rendererSource, /startedOnSphere/);
   assert.match(rendererSource, /setPointerCapture\?\.\(event\.pointerId\)/);
   assert.match(rendererSource, /distance <= 12 && hitSphere/);
   assert.match(rendererSource, /burstStartedAt = elapsed/);
   assert.match(rendererSource, /touchAction = "pan-y"/);
   assert.match(rendererSource, /removeEventListener\("pointercancel"/);
+  assert.match(rendererSource, /releasePointerCapture\?\.\(event\.pointerId\)/);
 });
 
 test("orbit particles move continuously and retain their orbital path", () => {
   assert.match(orbitSource, /group\.userData\.update = \(elapsed\)/);
   assert.match(orbitSource, /runner\.position\.copy\(getOrbitPoint\(THREE, spec, progress\)\)/);
-  assert.match(orbitSource, /const burstSpeed = 1 \+ Math\.max\(0, Math\.min\(1, burstAmount\)\) \* 0\.65/);
+  assert.match(orbitSource, /ORBIT_BURST_SPEED_MULTIPLIER - 1/);
+  assert.equal(ORBIT_BURST_SPEED_MULTIPLIER, 1.65);
   assert.match(orbitSource, /delta \* spec\.speed \* burstSpeed/);
   assert.match(orbitSource, /end: Math\.PI \* 2/);
   assert.match(orbitSource, /orbit-particle-glow/);
@@ -376,8 +380,8 @@ test("Labs hero keeps its content layout and adds a dark-only right artwork grad
     "utf8",
   );
   assert.match(artworkSource, /dark:opacity-15/);
-  assert.match(artworkSource, /dark:opacity-12/);
-  assert.match(artworkSource, /dark:bg-\[#061814\]\/\[0\.035\]/);
+  assert.match(artworkSource, /dark:opacity-\[0\.035\]/);
+  assert.match(artworkSource, /dark:bg-\[#030b08\]\/\[0\.018\]/);
 });
 
 test("particle shader provides depth shading and soft point halos", () => {
