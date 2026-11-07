@@ -96,19 +96,14 @@ test("hero illustration is decorative and respects reduced motion", () => {
   assert.match(artworkSource, /strokeDasharray/);
 });
 
-test("hero composition is viewport-aware and uses a quieter label-free illustration", () => {
+test("hero artwork is visible at rest, fills its grid column and animates slowly", () => {
   assert.ok(componentSource.includes("lg:min-h-[calc(100svh-78px)]"));
-  assert.ok(componentSource.includes("pt-[calc(78px+2.25rem)]"));
   assert.ok(componentSource.includes("lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)]"));
-  assert.ok(artworkSource.includes('viewBox="0 0 640 640"'));
-  assert.ok(artworkSource.includes("repeat: Infinity"));
-  for (const removedLabel of [
-    "Interaction field",
-    "VKr / Labs",
-    "Explore · Build · Refine",
-    "Creative systems",
-  ]) {
-    assert.equal(artworkSource.includes(removedLabel), false);
-  }
-  assert.equal(artworkSource.includes("backgroundSize"), false);
+  assert.ok(componentSource.includes("min-w-0 w-full lg:justify-self-stretch"));
+  assert.ok(artworkSource.includes('viewBox="0 0 720 620"'));
+  assert.ok(artworkSource.includes("initial={false}"));
+  assert.ok(artworkSource.includes("duration: 76"));
+  assert.ok(artworkSource.includes("duration: 92"));
+  assert.ok(artworkSource.includes("useReducedMotion"));
+  assert.doesNotMatch(artworkSource, /Interaction field|VKr \/ Labs|Explore · Build · Refine|Creative systems/);
 });

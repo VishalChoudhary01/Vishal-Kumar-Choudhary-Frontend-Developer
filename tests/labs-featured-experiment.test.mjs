@@ -8,10 +8,6 @@ const routeSource = await readFile(
   new URL("../src/app/labs/page.js", import.meta.url),
   "utf8",
 );
-const dataSource = await readFile(
-  new URL("../src/app/data/labsExperiments.js", import.meta.url),
-  "utf8",
-);
 const spotlightSource = await readFile(
   new URL("../src/app/components/labs/FeaturedExperiment.js", import.meta.url),
   "utf8",
@@ -46,30 +42,28 @@ test("unavailable preferred slug falls back to the first real eligible experimen
 });
 
 test("empty, malformed and invalid collections cannot create a featured placeholder", () => {
-  assert.equal(resolveFeaturedExperiment([], "magnetic-interaction"), null);
-  assert.equal(resolveFeaturedExperiment(null, "magnetic-interaction"), null);
-  assert.equal(resolveFeaturedExperiment([{ slug: "broken" }], "broken"), null);
-  assert.equal(resolveFeaturedExperiment([{ slug: "broken", title: " " }], "broken"), null);
-  assert.equal(resolveFeaturedExperiment([{ slug: "bad slug", title: "Bad" }], "bad slug"), null);
-  assert.equal(resolveFeaturedExperiment([{ slug: "good", title: "Good" }], "../good"), null);
+  assert.equal(resolveFeaturedExperiment([]), null);
+  assert.equal(resolveFeaturedExperiment(null), null);
+  assert.equal(resolveFeaturedExperiment([{ slug: "broken" }]), null);
+  assert.equal(resolveFeaturedExperiment([{ slug: "broken", title: " " }]), null);
+  assert.equal(resolveFeaturedExperiment([{ slug: "bad slug", title: "Bad" }]), null);
 });
 
-test("route resolves the spotlight from the same eligible initial set delivered to the collection", () => {
-  assert.ok(dataSource.includes("FEATURED_LAB_EXPERIMENT_SLUG"));
+test("an omitted or invalid preferred slug falls back to the first eligible source record", () => {
+  const first = { slug: "fluid-gradient-playground", title: "Fluid Gradient Playground" };
+  const second = { slug: "spotlightdock", title: "SpotlightDock" };
+
+  assert.equal(resolveFeaturedExperiment([null, {}, first, second]), first);
+  assert.equal(resolveFeaturedExperiment([first, second], "../external"), first);
+});
+test("route resolves the spotlight only from the eligible source-backed page delivered to the collection", () => {
   assert.ok(routeSource.includes("getPublishedCustomLabExperimentPage("));
-  assert.ok(
-    routeSource.includes(
-      "const experiments = [...publishedLabExperiments, ...customPage.experiments];",
-    ),
-  );
-  assert.ok(routeSource.includes("resolveFeaturedExperiment("));
-  assert.ok(routeSource.includes("experiments,"));
-  assert.ok(
-    routeSource.includes("<FeaturedExperiment experiment={featuredExperiment}"),
-  );
-  assert.ok(routeSource.includes("builtInExperiments={publishedLabExperiments}"));
+  assert.ok(routeSource.includes("const experiments = customPage.experiments;"));
+  assert.ok(routeSource.includes("resolveFeaturedExperiment(experiments)"));
+  assert.ok(routeSource.includes("<FeaturedExperiment experiment={featuredExperiment}"));
   assert.ok(routeSource.includes("initialCustomPage={customPage}"));
-  assert.ok(!routeSource.includes("featuredLabExperiment"));
+  assert.ok(!routeSource.includes("publishedLabExperiments"));
+  assert.ok(!routeSource.includes("builtInExperiments"));
 });
 test("spotlight is a media-only detail link and respects reduced motion", () => {
   assert.match(spotlightSource, /useReducedMotion/);

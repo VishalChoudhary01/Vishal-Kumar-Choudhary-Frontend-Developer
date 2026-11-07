@@ -15,8 +15,8 @@ const collectionSource = await readFile(
   new URL("../src/app/components/labs/LabsCollection.js", import.meta.url),
   "utf8",
 );
-const artworkSource = await readFile(
-  new URL("../src/app/components/labs/landing/LabArtwork.js", import.meta.url),
+const previewSource = await readFile(
+  new URL("../src/app/components/labs/LabExperimentPreview.js", import.meta.url),
   "utf8",
 );
 const loadMoreSource = await readFile(
@@ -73,6 +73,7 @@ test("invalid category values do not create fake filters or counts", () => {
 test("collection keeps existing real-data links, likes and progressive loading", () => {
   assert.match(collectionSource, /key=\{experiment\.slug\}/);
   assert.ok(collectionSource.includes("href={`/labs/${experiment.slug}`}"));
+  assert.ok(!collectionSource.includes("builtInExperiments"));
   assert.match(collectionSource, /<LabLikeButton/);
   assert.match(collectionSource, /initialData=\{engagement\}/);
   assert.match(collectionSource, /useLabPublicCollection/);
@@ -95,13 +96,13 @@ test("category filters combine local entries with the complete server category s
   assert.ok(filterHookSource.includes("[experiments, summary]"));
   assert.ok(filterHookSource.includes("experiments.filter"));
 });
-test("card artwork uses container-query sizing to prevent title clipping", () => {
-  assert.match(artworkSource, /@container/);
-  assert.match(artworkSource, /cqw/);
-  assert.match(artworkSource, /max-w-\[18ch\]/);
-  assert.match(artworkSource, /max-w-\[15ch\]/);
+test("public preview uses only source-promoted media and no code-owned artwork fallback", () => {
+  assert.match(previewSource, /galleryPreview/);
+  assert.match(previewSource, /generatedPoster/);
+  assert.match(previewSource, /selectActiveGalleryPreview/);
+  assert.match(previewSource, /Preview media unavailable/);
+  assert.doesNotMatch(previewSource, /LabArtwork|MagneticArtwork|GradientBloomArtwork|GenerativeParticleArtwork/);
 });
-
 test("progressive loading remains bounded to six items per action", () => {
   assert.match(loadMoreSource, /const REVEAL_BATCH_SIZE = 6/);
   assert.match(loadMoreSource, /nextPageCount/);
