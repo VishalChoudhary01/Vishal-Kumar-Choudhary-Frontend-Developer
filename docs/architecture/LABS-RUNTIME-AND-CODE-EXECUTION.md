@@ -88,18 +88,18 @@ The compiler toolchain lives under the Labs compiler tool directory and uses pin
 
 Publishing starts from an exact saved LabSourceVersion, not mutable editor state:
 1. Owner selects the exact saved version to publish.
-2. POST /api/v1/admin/labs/sources/[slug]/publish validates owner and same-origin request.
+2. `POST /api/v1/admin/labs/sources/[slug]/publish` validates owner and same-origin request.
 3. The service loads that exact immutable version and validates its content hash.
 4. The compiler prepares the supported project mode and builds in the isolated compiler sandbox.
 5. Output is validated: manifest, entry file, file count, total bytes and content/build hashes.
 6. A unique artifact ID is created.
 7. Output files are uploaded to Vercel Blob under immutable version/build/artifact-scoped keys; overwriting an existing release key is not allowed.
-8. A LabBuildArtifact record stores exact source-version linkage, hashes, entry URL, output manifest and compiler metadata.
-9. Public gallery-preview media is managed separately through the owner promotion flow; it is not an automatic browser screenshot from this publish sequence.
-10. Only after successful build/artifact persistence does the publish lifecycle update the source's published source/artifact pointers and experiment publication eligibility.
+8. The same network-denied Sandbox runs `captureReleasePoster()` against the exact compiled output. Playwright 1.65.0 and Chromium 158.0.8127.18 capture a 1200×900 PNG after load, visible-output and runtime-error checks. The PNG is size/signature/dimension validated, SHA-256 hashed and uploaded under the immutable artifact's `__preview/gallery-poster.png` path.
+9. A `LabBuildArtifact` record stores exact source-version linkage, hashes, entry URL, output manifest, compiler metadata and a separate `previewPoster` status/metadata object. An unavailable poster does not fail an otherwise valid artifact build.
+10. Only after required artifact persistence does the publish lifecycle update the source's published source/artifact pointers and experiment publication eligibility.
 11. The owner action is recorded in the source audit log.
 
-Automatic browser screenshot capture is not implemented as part of the current publish path. The current gallery-preview workflow is an owner-selected still image promoted from an owned Cloudinary asset to a public Vercel Blob object, with exact artifact/source-version binding. Keep that media operation separate from compiler success, Run and immutable artifact creation.
+The automatic screenshot is a static poster fallback, not an interactive public detail runtime. It is captured during the immutable release build only; it does not run on every keystroke, on owner `Run`, or on a public page request. An explicitly promoted owner gallery media asset takes precedence over the generated release poster; see the Labs owner guide for the promotion contract.
 
 Unpublish removes current public source/artifact eligibility without rewriting historical snapshots or immutable artifact bytes. Restore creates a new immutable version based on an older version; it does not edit old history.
 
@@ -235,7 +235,8 @@ Required verification remains:
 - [ ] immutable artifact output/manifest/Blob integrity;
 - [ ] public artifact endpoint mismatch/path/MIME/CSP tests;
 - [ ] public Labs detail static check: no iframe/runtime request;
-- [ ] media poster/preview failure and exact-release binding;
+- [ ] automatic release poster capture success/failure, metadata/hash validation, artifact-route delivery and exact-release binding;
+- [ ] owner-promoted media precedence, cleanup and exact-release binding;
 - [ ] owner/non-owner/guest/unverified source access matrix;
 - [ ] mobile/desktop, keyboard, reduced-motion and both theme QA;
 - [ ] homepage/project-detail regression verification.
