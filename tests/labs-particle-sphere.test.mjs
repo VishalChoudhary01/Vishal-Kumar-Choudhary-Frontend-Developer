@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { createSphereParticleData } from "../src/app/components/labs/landing/particle-sphere/particle-geometry.mjs";
+import { getSphereSqueeze, SPHERE_PULSE_PERIOD } from "../src/app/components/labs/landing/particle-sphere/particle-animation.mjs";
 
 const rendererSource = await readFile(
   new URL("../src/app/components/labs/landing/particle-sphere/LabsParticleSphere.js", import.meta.url),
@@ -83,6 +84,21 @@ test("particle geometry is deterministic for a stable seed", () => {
   assert.deepEqual(first.layers, second.layers);
 });
 
+test("sphere squeeze eases in and recovers on a stable pulse cycle", () => {
+  assert.equal(getSphereSqueeze(0), 0);
+  assert.equal(getSphereSqueeze(2.5), 1);
+  assert.equal(getSphereSqueeze(2.5 + SPHERE_PULSE_PERIOD), 1);
+  assert.equal(getSphereSqueeze(7.0), 0);
+  assert.equal(getSphereSqueeze(-1), 0);
+  assert.equal(getSphereSqueeze(Number.NaN), 0);
+
+  const attack = getSphereSqueeze(2.2);
+  const recovery = getSphereSqueeze(3.4);
+
+  assert.ok(attack > 0 && attack < 1);
+  assert.ok(recovery > 0 && recovery < 1);
+});
+
 test("particle geometry rejects unsafe counts and invalid radius values", () => {
   assert.throws(
     () => createSphereParticleData({ surfaceCount: -1 }),
@@ -117,4 +133,7 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /directionalLight/);
   assert.match(shaderSource, /gl_PointCoord/);
   assert.match(shaderSource, /smoothstep/);
+  assert.match(shaderSource, /uSqueeze/);
+  assert.match(shaderSource, /sparkleMask/);
+  assert.match(shaderSource, /sparkleWave/);
 });
