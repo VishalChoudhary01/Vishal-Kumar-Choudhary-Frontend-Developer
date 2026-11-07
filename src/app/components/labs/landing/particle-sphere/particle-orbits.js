@@ -4,8 +4,8 @@ const ORBIT_SPECS = [
     radiusY: 0.91,
     rotation: [0.92, 0.12, -0.15],
     opacity: 0.12,
-    start: -Math.PI * 0.92,
-    end: Math.PI * 0.88,
+    start: 0,
+    end: Math.PI * 2,
     speed: 0.035,
     phase: 0.04,
     particleSize: 0.024,
@@ -15,8 +15,8 @@ const ORBIT_SPECS = [
     radiusY: 0.73,
     rotation: [1.26, -0.34, 0.48],
     opacity: 0.082,
-    start: -Math.PI * 0.76,
-    end: Math.PI * 0.98,
+    start: 0,
+    end: Math.PI * 2,
     speed: 0.046,
     phase: 0.38,
     particleSize: 0.019,
@@ -26,8 +26,8 @@ const ORBIT_SPECS = [
     radiusY: 0.82,
     rotation: [0.48, 0.42, -0.62],
     opacity: 0.058,
-    start: -Math.PI * 0.84,
-    end: Math.PI * 0.78,
+    start: 0,
+    end: Math.PI * 2,
     speed: 0.029,
     phase: 0.72,
     particleSize: 0.021,
@@ -50,8 +50,7 @@ export function createParticleOrbits(THREE) {
 
   ORBIT_SPECS.forEach((spec) => {
     const points = [];
-    const segments = 220;
-    const span = spec.end - spec.start;
+    const segments = 240;
 
     for (let index = 0; index <= segments; index += 1) {
       points.push(getOrbitPoint(THREE, spec, index / segments));
@@ -95,7 +94,7 @@ export function createParticleOrbits(THREE) {
       coreMaterial,
     );
     const glow = new THREE.Mesh(
-      new THREE.SphereGeometry(spec.particleSize * 3.4, 10, 8),
+      new THREE.SphereGeometry(spec.particleSize * 3.4, 12, 10),
       glowMaterial,
     );
 
