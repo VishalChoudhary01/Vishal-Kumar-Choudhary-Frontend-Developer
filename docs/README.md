@@ -20,6 +20,9 @@ This folder is the engineering handover for the complete portfolio platform. Sta
 10. [Labs Runtime and Code Execution](./architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md) — source → compiler → sandbox → immutable artifact → isolated public runtime.
 11. [Data Model Catalogue](./architecture/DATA-MODEL-CATALOG.md) — actual Mongoose collections, fields, constraints and indexes.
 12. [API Endpoint Inventory](./api/ENDPOINT-INVENTORY.md) — all current Route Handler endpoints and methods.
+13. [Authentication and Account Engineering](./pages/AUTHENTICATION-AND-ACCOUNT-ENGINEERING.md) — current Better Auth flows, social-provider gates, owner identity policy and unimplemented account features.
+14. [Privacy and Data Lifecycle](./architecture/PRIVACY-AND-DATA-LIFECYCLE.md) — source-derived data map, cookies, retention, public disclosure and privacy gaps.
+15. [Error and Not-Found Engineering](./pages/ERROR-AND-NOT-FOUND-ENGINEERING.md) — root App Router error boundaries, diagnostics and guarded chunk recovery.
 
 ## 2. Current-state page guides
 
@@ -27,7 +30,9 @@ This folder is the engineering handover for the complete portfolio platform. Sta
 - [Contact Form and Email Engineering](./pages/CONTACT-FORM-AND-EMAIL-ENGINEERING.md) — client form state/validation, POST API, server validation, email composition, Gmail SMTP, privacy, errors and hardening checklist.
 - [Vee Mascot](./pages/PORTFOLIO-MASCOT-ENGINEERING.md) — homepage companion 3D scene, scroll-based position/poses, section reactions and interactive scan system.
 - [Project Detail](./pages/PROJECT-DETAIL-ENGINEERING.md) — server/static route behavior, hero, snapshot, context, approach, design, engineering, motion, responsive, showcase, reflection, navigation.
-- [Public Labs and Owner Workspace](./pages/LABS-AND-OWNER-WORKSPACE.md) — public listing/detail, likes/source, owner analytics, inventory/editor, experiment metadata and media.
+- [Public Labs and Owner Workspace](./pages/LABS-AND-OWNER-WORKSPACE.md) — source-backed catalogue, static public detail, protected source, likes, owner workspace, Analytics and current code gaps.
+- [Authentication and Account Engineering](./pages/AUTHENTICATION-AND-ACCOUNT-ENGINEERING.md) — Better Auth configuration, verification, reset, OAuth, owner authorization and account-scope gaps.
+- [Error and Not-Found Engineering](./pages/ERROR-AND-NOT-FOUND-ENGINEERING.md) — shared 404/500 screens, development diagnostics and chunk-load recovery.
 - [Analytics Engineering](./pages/ANALYTICS-ENGINEERING.md) — separate Portfolio Analytics and Labs Engagement Analytics contracts.
 
 ## 3. Architecture and engineering references
@@ -82,9 +87,10 @@ These original flat documents remain important for decisions and detailed requir
 3. PRD and approved decisions define what should exist, not proof that it has been implemented.
 4. Domain docs own detailed invariants. API inventory owns the route index; it should not duplicate every internal schema field.
 5. Mark implementation and verification separately. Code present does not mean Preview/Production/browser/Atlas integration has passed.
-6. Record unresolved discrepancies as explicit audit items. Do not silently reconcile by guessing.
-7. Portfolio CMS and Project Detail CMS remain future work. Education remains code-owned/static.
-8. Do not change public composition, animation, responsive design, project slug behavior or runtime security while implementing docs.
+6. Accepted decisions in Section 39 of LABS-AND-AUTHENTICATION-DESIGN-SPEC.md supersede earlier conflicting Labs catalogue/runtime/owner/Analytics statements; PROJECT-STATUS.md and current-state guides record any remaining code mismatch.
+7. Record unresolved discrepancies as explicit audit items. Do not silently reconcile by guessing.
+8. Portfolio CMS and Project Detail CMS remain future work. Education remains code-owned/static.
+9. Do not change public composition, animation, responsive design, project slug behavior or runtime security while implementing docs.
 
 ## 8. Documentation change control
 
