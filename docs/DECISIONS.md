@@ -1,8 +1,8 @@
 # Architecture Decision Records
 
-**Status:** Phase 1 decision register; choices marked OPEN are not approved.  
+**Status:** Decision register; choices marked OPEN are not approved.  
 **Branch:** `feat/labs-platform-integration`  
-**Related:** PRD.md, ARCHITECTURE.md, API-CONTRACTS.md, IMPLEMENTATION-PLAN.md, THREAT-MODEL.md
+**Related:** PRD.md, architecture/SYSTEM-ARCHITECTURE.md, api/ENDPOINT-INVENTORY.md, THREAT-MODEL.md
 
 This document records current decisions, known repository facts and unresolved choices separately. A proposed design is not an implemented capability. Update this register when a decision is approved; record its rationale, consequences and any required migration.
 
@@ -118,29 +118,29 @@ No new infrastructure provider or runtime has been selected by this register. Th
 
 ## ADR-016 — Owner-managed Labs source lifecycle
 
-- **Status:** Owner identity and source-management authority ACCEPTED (2026-11-04); implementation pending
+- **Status:** Owner identity/source-management authority accepted (2026-11-04); source workspace and lifecycle are implemented in code, with external/browser verification pending
 - **Accepted decision:** Add a narrow owner-only source-management capability before general CMS/Admin. The first release is a singleton trusted portfolio owner, not a multi-admin role system. This owner manages source records/files/drafts/versions/publishing/restoration and source audit history, and can inspect source-engagement aggregates.
 - **Accepted owner identity:** Server-only `LABS_OWNER_USER_ID` containing the existing verified Better Auth user ID. Missing/mismatched configuration denies owner actions. First-user-wins, email matching supplied by the browser and client role flags are prohibited. The owner is the sole privileged administrator in the first release.
 - **Source-access policy — ACCEPTED (2026-11-04):** every registered user with a valid Better Auth session and `emailVerified === true` automatically receives read access to every published experiment source. Guests and signed-in unverified accounts cannot view or copy source. No per-user grant/expiry/revocation workflow exists in the target design; the owner controls availability by publishing/unpublishing each source.
 - **Data direction:** Source aggregate with draft/published pointers; immutable `lab_source_versions`; verified-user like state in `lab_likes`; `lab_analytics_events` for source opens/copies/like-unlike transitions; append-only `lab_source_audit_events`. Retire legacy `lab_source_grants` after safe migration/reference cleanup. Bootstrap must be idempotent and preserve source/version records.
 - **Lifecycle:** Save draft, publish exact version, unpublish and restore are separate operations. Restore creates a new immutable version. Source editing is text-only and does not execute code. Only verified accounts can open/copy source; verified accounts receive persistent likes while best-effort public guest likes remain where supported. The owner dashboard shows per-experiment source opens, unique verified accounts, copies, active verified likes, verified like/unlike trends and separate guest-like action counts where measurable.
-- **Owner identity:** RESOLVED / LOCKED. **Source access and engagement:** RESOLVED / LOCKED. **Still OPEN:** final route naming, editor dependency, exact byte/file/language limits, source import strategy, analytics retention/deduplication and account-deletion handling, and version retention/storage implications.
+- **Owner identity and source-access rules:** RESOLVED / LOCKED. **Implemented code:** owner source workspace, immutable versions, source access and editor. **Still OPEN:** analytics retention/deduplication, account-deletion handling, version retention/storage implications and any required legacy-data migration.
 - **Security gate:** Live execution of owner-authored source remains blocked until a separate isolated-preview architecture and threat-model review are approved.
-- **Source of detail:** `docs/LABS-SOURCE-MANAGEMENT-SPEC.md`.
+- **Current implementation detail:** `docs/pages/LABS-AND-OWNER-WORKSPACE.md` and `docs/architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md`.
 
 ## ADR-017 — Separate gallery posters from executable experiment previews
 
-- **Status:** Product/architecture decision ACCEPTED (2026-11-05); implementation phases pending.
+- **Status:** Gallery cards remain static-only. The older interactive detail-runtime portion was superseded by ADR-018 on 2026-11-07.
 - **Context:** Running every experiment inside gallery cards would create multiple React roots/iframes, compiler/runtime work, animation loops and media requests. The gallery must remain lightweight while still showing each experiment's actual visual output.
-- **Decision:** Gallery cards never execute experiment code. They display, in priority order: an explicitly selected published `gallery-preview` media asset; otherwise a generated static poster captured from the exact successfully rendered published artifact; otherwise existing LabArtwork/neutral artwork. The generated poster is a static screenshot of the experiment output and does not require uploaded GIF/MP4/image media.
-- **Detail runtime:** The experiment detail page runs the exact published immutable artifact in the isolated runtime. A working runtime always takes precedence over optional media. Detail-gallery media is supplementary; runtime-fallback media appears only after an explicit runtime error/unsupported state.
+- **Decision:** Gallery cards never execute experiment code. The current public preview displays an owner-promoted `galleryPreview` still image bound to the exact published artifact/source version; otherwise it uses generic Labs artwork or a neutral placeholder. The owner promotion validates an owned ready image and copies it from Cloudinary to public Vercel Blob. Automatic browser screenshot capture is not implemented.
+- **Detail runtime:** This older interactive detail requirement is superseded by ADR-018. The current public detail route is static/non-executable and does not embed the artifact iframe. The artifact delivery endpoint remains separate infrastructure.
 - **Owner Run:** The owner Studio Run action remains a core capability that compiles/executes the current unsaved working copy in isolation. Poster capture must never replace Run, alter the working copy or be required to inspect an unsaved change.
-- **Poster lifecycle:** Capture only after a successful runtime-ready signal. Pin poster metadata to sourceVersionId and artifactId. Do not generate on every keystroke or gallery request. Poster failure falls back to artwork and does not erase a valid release or break a working runtime.
+- **Gallery preview lifecycle:** The owner explicitly promotes a still image; the server binds it to the current `sourceVersionId` and `artifactId`. It is never generated in response to a gallery request or during owner Run. Automatic runtime screenshot capture remains unimplemented.
 - **Media migration:** Current implementation supports only one `fallback-preview` attachment. Target `gallery-preview`, `detail-gallery` and `runtime-fallback` roles require an explicit schema/API/data migration. Preserve private draft and historical release references; do not expose unattached Cloudinary assets.
 - **Performance:** No experiment React root, iframe or compiler job in gallery cards. Images/posters are responsive and lazy-loaded. GIF/video animation is visibility/engagement-gated, reduced-motion-aware and capped; video is muted, inline and `preload="none"`.
 - **Loading and interactions:** Add route-level skeletons for Labs listing/detail and owner inventory/editor without stacking duplicate global loaders. Use React 19 `useOptimistic` only for reversible server-backed actions with rollback; destructive/publish actions await server confirmation, and copy success/analytics follow successful Clipboard API acknowledgement.
-- **Consequences:** Runtime recovery is P0 before poster/media-role implementation. The 5 November 2026 blank Spotlight Dock detail canvas and missing custom gallery visuals are tracked in `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`. Do not claim this ADR is implemented until its phase gates pass.
-- **Source of detail:** `docs/LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md` and `docs/DESIGN-LAB.md`.
+- **Consequences:** Static public previews remain independent from owner Run and immutable compiler artifacts. The public detail page stays static under ADR-018. The current gallery-preview promotion flow exists in code; automatic screenshot capture and the complete media-role migration remain future engineering work.
+- **Current implementation detail:** `docs/pages/LABS-AND-OWNER-WORKSPACE.md` and `docs/architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md`.
 
 ## ADR-018 — 7 November Labs catalogue, detail, owner and Analytics supersession
 
@@ -152,5 +152,5 @@ No new infrastructure provider or runtime has been selected by this register. Th
 - **Analytics privacy:** Owner Labs Analytics is aggregate-only. Individual names, masked emails, per-user like timestamps, searchable active-liker directories and user-level source/copy/like histories are not allowed. The current experiment Analytics page still exposes an active verified-liker panel; removal/redesign is pending. Anonymous identities are never enumerated.
 - **Editor:** Monaco is integrated for protected source and history (read-only) and owner editing (editable), with plain-text fallback. Old textarea-only/editor-not-installed plans are superseded.
 - **Media:** Current schema is galleryPreview plus at most one fallback-preview attachment. Ordered detail-gallery and the full target roles gallery-preview/detail-gallery/runtime-fallback remain a migration task.
-- **Consequences:** Documentation and target decisions are now aligned, but the owner email fallback and active-liker identity panel remain implementation gaps. Missing detail-view/preview event types, full media-role migration, personal account dashboard/deletion and extended discovery remain open PRD gaps. See PROJECT-STATUS.md and DOCS-IMPLEMENTATION-GAP-AUDIT.md for current status.
-- **Source of detail:** Section 39 of LABS-AND-AUTHENTICATION-DESIGN-SPEC.md, pages/LABS-AND-OWNER-WORKSPACE.md, architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md and architecture/PRIVACY-AND-DATA-LIFECYCLE.md.
+- **Consequences:** Documentation and target decisions are now aligned, but the owner email fallback and active-liker identity panel remain implementation gaps. Missing detail-view/preview event types, full media-role migration, personal account dashboard/deletion and extended discovery remain open PRD gaps. See [PROJECT-STATUS.md](./PROJECT-STATUS.md), [Labs and Owner Workspace](./pages/LABS-AND-OWNER-WORKSPACE.md) and [Labs Runtime and Code Execution](./architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md) for current status.
+- **Source of detail:** pages/LABS-AND-OWNER-WORKSPACE.md, architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md, pages/AUTHENTICATION-AND-ACCOUNT-ENGINEERING.md and architecture/PRIVACY-AND-DATA-LIFECYCLE.md.
