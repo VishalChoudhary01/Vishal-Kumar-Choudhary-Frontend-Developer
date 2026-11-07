@@ -211,7 +211,8 @@ test("sphere world-space size stays fixed while camera framing adapts to mobile"
   assert.ok(mobileDistance > desktopDistance);
   assert.ok(mobileBurstDistance > mobileDistance);
   assert.ok(desktopBurstDistance > desktopDistance);
-  assert.match(rendererSource, /idleCameraDistance = getParticleCameraDistance/);
+  assert.match(rendererSource, /const artworkCameraDistance = getParticleCameraDistance/);
+  assert.match(rendererSource, /idleCameraDistance = artworkCameraDistance \* \(height \/ artworkHeight\)/);
   assert.match(rendererSource, /orbitRadius: 2\.02/);
   assert.match(rendererSource, /burstCameraDistance = getParticleCameraDistance/);
   assert.match(rendererSource, /getParticleBurstRadius\(PARTICLE_SPHERE_CONFIG\.radius\)/);
@@ -581,7 +582,7 @@ test("Labs hero applies one responsive dark radial background without a separate
 
   assert.match(
     heroSource,
-    /<div className="relative w-full overflow-hidden dark:bg-\[radial-gradient\(/,
+    /<div data-labs-hero-root="" className="relative w-full overflow-hidden dark:bg-\[radial-gradient\(/,
   );
   assert.match(heroSource, /lg:dark:bg-\[radial-gradient\(/);
   assert.doesNotMatch(heroSource, /aria-hidden="true"\s+className="pointer-events-none absolute/);
