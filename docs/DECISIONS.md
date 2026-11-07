@@ -12,7 +12,7 @@ This document records current decisions, known repository facts and unresolved c
 - **Decision:** Extend the existing Next.js App Router application in its current `src/app` organization. Do not replace or broadly restructure unrelated folders.
 - **Context:** Existing homepage/project routes rely on canonical JS data, SEO utilities, static project parameters, shared presentation components, lazy-loaded sections and loader/provider behavior.
 - **Consequences:** Introduce new platform boundaries incrementally. Keep public route/component contracts stable and test them before and after relevant changes.
-- **Evidence:** `docs/FOUNDATION-AUDIT.md`.
+- **Evidence:** current source structure in [System Architecture](./architecture/SYSTEM-ARCHITECTURE.md) and implementation status in [PROJECT-STATUS.md](./PROJECT-STATUS.md).
 
 ## ADR-002 — Next.js-native backend by default
 
@@ -100,14 +100,14 @@ This document records current decisions, known repository facts and unresolved c
 ## ADR-014 — API contract shape
 
 - **Status:** OPEN
-- **Candidate:** Stable JSON success/error envelopes and proposed endpoint inventory in `API-CONTRACTS.md`.
+- **Candidate:** Stable JSON success/error envelopes remain an open API consistency topic. The current route/method/auth inventory is maintained in [API Endpoint Inventory](./api/ENDPOINT-INVENTORY.md).
 - **Not decided:** Final endpoint paths, Server Action versus Route Handler per operation, validation library and exact DTO/schema field names.
 - **Rule:** Proposed API paths in planning docs are not implemented endpoints.
 
 ## ADR-015 — Foundation baseline evidence
 
 - **Status:** INCOMPLETE
-- **Known:** Repository source inspected and findings recorded in `FOUNDATION-AUDIT.md`.
+- **Known:** Repository findings and implementation status are maintained in `PROJECT-STATUS.md` and the relevant current-state engineering guides.
 - **Missing:** Local dependency install, lint, SEO validation, production build, browser screenshots, performance/accessibility measurements and production source-snapshot check.
 - **Gate:** Do not claim baseline passed and do not establish numeric performance improvement claims until evidence is recorded.
 
