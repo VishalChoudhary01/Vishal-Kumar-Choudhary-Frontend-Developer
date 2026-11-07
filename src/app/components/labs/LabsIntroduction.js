@@ -167,7 +167,7 @@ export default function LabsIntroduction({
           </motion.div>
         </div>
 
-        <div className="relative min-w-0 lg:justify-self-end">
+        <div className="relative min-w-0 w-full lg:justify-self-stretch">
           <LabsHeroArtwork />
         </div>
       </div>

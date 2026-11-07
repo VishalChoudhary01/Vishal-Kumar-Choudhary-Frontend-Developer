@@ -2,11 +2,7 @@ import LabsPageShell from "@/app/components/labs/LabsPageShell";
 import LabsIntroduction from "@/app/components/labs/LabsIntroduction";
 import FeaturedExperiment from "@/app/components/labs/FeaturedExperiment";
 import LabsCollection from "@/app/components/labs/LabsCollection";
-import {
-  FEATURED_LAB_EXPERIMENT_SLUG,
-  LAB_CATEGORIES,
-  publishedLabExperiments,
-} from "@/app/data/labsExperiments";
+import { LAB_CATEGORIES } from "@/app/lib/labs/categories.mjs";
 import { resolveFeaturedExperiment } from "@/app/lib/labs/featured-experiment.mjs";
 import { buildSiteUrl } from "@/app/lib/seo/urls";
 import { cookies } from "next/headers";
@@ -52,16 +48,12 @@ export default async function LabsPage() {
     limit: 18,
     includeCategoryCounts: true,
   });
-  const experiments = [...publishedLabExperiments, ...customPage.experiments];
-  const totalExperimentCount = publishedLabExperiments.length + customPage.totalCount;
-  const categoryCounts = Object.fromEntries(
-    LAB_CATEGORIES.map((category) => [
-      category.name,
-      publishedLabExperiments.filter((experiment) => experiment.category === category.name).length +
-        (customPage.categoryCounts[category.name] || 0),
-    ]).filter(([, count]) => count > 0),
-  );
-  const activeCategoryCount = Object.keys(categoryCounts).length;
+  const experiments = customPage.experiments;
+  const totalExperimentCount = customPage.totalCount;
+  const categoryCounts = customPage.categoryCounts;
+  const activeCategoryCount = Object.values(categoryCounts).filter(
+    (count) => Number(count) > 0,
+  ).length;
 
   let session = null;
   let authState = "unknown";
@@ -104,10 +96,8 @@ export default async function LabsPage() {
     }
   }
 
-  const featuredExperiment = resolveFeaturedExperiment(
-    experiments,
-    FEATURED_LAB_EXPERIMENT_SLUG,
-  );
+  // Resolve the spotlight only from the currently eligible source-backed page.
+  const featuredExperiment = resolveFeaturedExperiment(experiments);
 
   return (
     <LabsPageShell>
@@ -124,7 +114,6 @@ export default async function LabsPage() {
           <FeaturedExperiment experiment={featuredExperiment} />
         ) : null}
         <LabsCollection
-          builtInExperiments={publishedLabExperiments}
           initialCustomPage={customPage}
           totalCount={totalExperimentCount}
           categoryCounts={categoryCounts}

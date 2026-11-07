@@ -2,14 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import LabArtwork from "./landing/LabArtwork";
 import { selectActiveGalleryPreview } from "@/app/lib/labs/gallery-preview-policy.mjs";
 
 /**
  * Shared non-executable renderer for gallery, featured and detail previews.
- * Uploaded media wins; failed uploads fall back to the generated release
- * screenshot; if both fail, existing artwork preserves the card layout.
- * Public detail pages render media only; executable runtimes are not mounted here.
+ * It displays only media promoted from the current published source release:
+ * an owner-selected upload, the exact-release generated poster, or a validated
+ * sourced thumbnail. It never synthesizes experiment-specific artwork.
  */
 export default function LabExperimentPreview({
   experiment,
@@ -137,5 +136,14 @@ export default function LabExperimentPreview({
     );
   }
 
-  return <LabArtwork experiment={experiment} />;
+  return (
+    <div
+      aria-hidden="true"
+      className={[`relative grid min-h-[160px] w-full place-items-center overflow-hidden bg-surface-2`, className].join(" ")}
+    >
+      <span className="font-mono text-[8px] uppercase tracking-[0.16em] text-text-tertiary">
+        Preview media unavailable
+      </span>
+    </div>
+  );
 }

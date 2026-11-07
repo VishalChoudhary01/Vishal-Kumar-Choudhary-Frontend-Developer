@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { LAB_CATEGORIES } from "@/app/data/labsExperiments";
+import { LAB_CATEGORIES } from "@/app/lib/labs/categories.mjs";
 import { buildLabCategoryOptions } from "@/app/lib/labs/category-options.mjs";
 
 const REVEAL_BATCH_SIZE = 6;
@@ -46,7 +46,6 @@ async function requestPublicPage({ category, cursor, signal }) {
 }
 
 export default function useLabPublicCollection({
-  builtInExperiments = [],
   initialCustomPage = {},
   totalCount = 0,
   categoryCounts = {},
@@ -74,8 +73,8 @@ export default function useLabPublicCollection({
     [totalCount, categoryCounts],
   );
   const categoryOptions = useMemo(
-    () => buildLabCategoryOptions(builtInExperiments, LAB_CATEGORIES, categorySummary),
-    [builtInExperiments, categorySummary],
+    () => buildLabCategoryOptions(firstPage.experiments, LAB_CATEGORIES, categorySummary),
+    [firstPage.experiments, categorySummary],
   );
 
   useEffect(() => {
@@ -119,11 +118,8 @@ export default function useLabPublicCollection({
       return undefined;
     }
 
-    const builtInCount = builtInExperiments.filter(
-      (experiment) => experiment.category === selectedDefinition.name,
-    ).length;
-    const combinedCategoryCount = Number(categoryCounts[selectedDefinition.name]) || 0;
-    if (combinedCategoryCount <= builtInCount) {
+    const publishedCategoryCount = Number(categoryCounts[selectedDefinition.name]) || 0;
+    if (publishedCategoryCount <= 0) {
       const emptyPage = { experiments: [], nextCursor: null };
       pageCache.current.set(activeCategory, emptyPage);
       setRemotePage({ category: activeCategory, ...emptyPage });
@@ -155,25 +151,13 @@ export default function useLabPublicCollection({
       });
 
     return () => controller.abort();
-  }, [activeCategory, builtInExperiments, categoryCounts, firstPage, retryVersion]);
-
-  const filteredBuiltIns = useMemo(() => {
-    if (activeCategory === "all") return builtInExperiments;
-    const selected = LAB_CATEGORIES.find((item) => item.id === activeCategory);
-    if (!selected) return [];
-    return builtInExperiments.filter(
-      (experiment) => experiment.category === selected.name,
-    );
-  }, [activeCategory, builtInExperiments]);
+  }, [activeCategory, categoryCounts, firstPage, retryVersion]);
 
   const currentRemotePage =
     remotePage.category === activeCategory
       ? remotePage
       : { experiments: [], nextCursor: null };
-  const loadedExperiments = useMemo(
-    () => [...filteredBuiltIns, ...currentRemotePage.experiments],
-    [filteredBuiltIns, currentRemotePage.experiments],
-  );
+  const loadedExperiments = currentRemotePage.experiments;
   const visibleItems = loadedExperiments.slice(0, visibleCount);
   const visibleItemsCount = visibleItems.length;
   const remainingLoaded = Math.max(0, loadedExperiments.length - visibleCount);

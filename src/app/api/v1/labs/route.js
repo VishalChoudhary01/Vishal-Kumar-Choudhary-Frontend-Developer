@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { LAB_CATEGORIES } from "@/app/data/labsExperiments";
+import { LAB_CATEGORIES } from "@/app/lib/labs/categories.mjs";
 import { getPublishedCustomLabExperimentPage } from "@/app/lib/labs/public-experiments";
 import { decodePublicExperimentCursor } from "@/app/lib/labs/public-experiment-cursor.mjs";
 

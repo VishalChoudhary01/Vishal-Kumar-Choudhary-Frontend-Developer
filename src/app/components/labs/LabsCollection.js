@@ -297,16 +297,14 @@ function Gallery({
 }
 
 export default function LabsCollection({
-  builtInExperiments = [],
   initialCustomPage = {},
   totalCount = 0,
   categoryCounts = {},
   engagementBySlug = {},
 }) {
-  const cleanupCandidates = [
-    ...builtInExperiments,
-    ...(Array.isArray(initialCustomPage.experiments) ? initialCustomPage.experiments : []),
-  ];
+  const cleanupCandidates = Array.isArray(initialCustomPage.experiments)
+    ? initialCustomPage.experiments
+    : [];
   const cleanupSlug = cleanupCandidates.find(
     (experiment) => engagementBySlug?.[experiment.slug]?.guestCookieCleanupRequired,
   )?.slug || null;
@@ -348,7 +346,6 @@ export default function LabsCollection({
     loadMore,
     retryCategory,
   } = useLabPublicCollection({
-    builtInExperiments,
     initialCustomPage,
     totalCount,
     categoryCounts,
