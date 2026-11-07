@@ -19,7 +19,7 @@ const heroContainerVariants = {
 };
 
 const heroItemVariants = {
-  hidden: { opacity: 0, y: 14 },
+  hidden: { opacity: 1, y: 14 },
   visible: {
     opacity: 1,
     y: 0,
@@ -34,7 +34,7 @@ function AnimatedLabStat({ value, label }) {
   const statRef = useRef(null);
   const isInView = useInView(statRef, { once: true, amount: 0.6 });
   const prefersReducedMotion = useReducedMotion();
-  const count = useMotionValue(0);
+  const count = useMotionValue(value);
   const displayValue = useTransform(count, (latest) =>
     String(Math.min(value, Math.max(0, Math.round(latest)))).padStart(2, "0")
   );
