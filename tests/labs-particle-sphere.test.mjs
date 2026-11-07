@@ -10,6 +10,7 @@ import {
   getParticleBurstParticleEnvelope,
   getParticleCameraChoreography,
   PARTICLE_BURST_EXPANSION,
+  PARTICLE_BURST_CAMERA_FRAMING_EXPANSION,
   getOrbitBurstSpeed,
   ORBIT_BURST_SPEED_MULTIPLIER,
   isParticleBurstActive,
@@ -374,6 +375,11 @@ test("particle geometry rejects unsafe counts and invalid radius values", () => 
 
 test("renderer uses one GPU point system and pauses when it cannot be seen", () => {
   assert.match(rendererSource, /new THREE\.Points\(particleGeometry, particleMaterial\)/);
+  assert.match(rendererSource, /mount\.closest\("\[data-labs-hero-root\]"\)/);
+  assert.match(rendererSource, /renderRoot\.appendChild\(renderer\.domElement\)/);
+  assert.match(rendererSource, /renderRoot\.getBoundingClientRect\(\)/);
+  assert.match(rendererSource, /artworkGroup\.position\.set\(/);
+  assert.match(rendererSource, /resizeObserver\.observe\(renderRoot\)/);
   assert.match(rendererSource, /requestAnimationFrame/);
   assert.match(rendererSource, /IntersectionObserver/);
   assert.match(rendererSource, /document\.hidden/);
@@ -441,7 +447,8 @@ test("particle burst uses staggered per-particle recovery without changing base 
   assert.equal(getParticleBurstParticleEnvelope(2.2, 0.5), 0);
   assert.equal(getParticleBurstParticleEnvelope(Number.NaN, 0.5), 0);
 
-  assert.equal(PARTICLE_BURST_EXPANSION, 1.85);
+  assert.equal(PARTICLE_BURST_EXPANSION, 3.4);
+  assert.equal(PARTICLE_BURST_CAMERA_FRAMING_EXPANSION, 1.85);
   assert.ok(getParticleBurstRadius(1.38) > 4.8);
   assert.throws(() => getParticleBurstRadius(0), RangeError);
   assert.throws(() => getParticleBurstRadius(Number.NaN), RangeError);
@@ -642,7 +649,8 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /vTrailDirection/);
   assert.match(shaderSource, /trailTail/);
   assert.match(shaderSource, /burstDistance = length\(position\)\s*\*\s*uBurstExpansion\s*\*\s*particleBurst\s*\*\s*radialVariation/);
-  assert.ok(interactionSource.includes("PARTICLE_BURST_EXPANSION = 1.85"));
+  assert.ok(interactionSource.includes("PARTICLE_BURST_EXPANSION = 3.4"));
+  assert.ok(interactionSource.includes("PARTICLE_BURST_CAMERA_FRAMING_EXPANSION = 1.85"));
   assert.match(shaderSource, /pointerInfluence/);
   assert.match(shaderSource, /float sphereLayer = 1\.0 - ambientLayer/);
   assert.equal((shaderSource.match(/float sphereLayer = 1\.0 - ambientLayer/g) || []).length, 1);
