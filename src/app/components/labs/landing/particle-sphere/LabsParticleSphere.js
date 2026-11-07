@@ -304,6 +304,10 @@ export default function LabsParticleSphere() {
       });
 
       particles = new THREE.Points(particleGeometry, particleMaterial);
+      // Burst positions extend beyond the resting geometry bounds. Let the
+      // GPU clip individual points against the fixed canvas rather than
+      // culling the complete point cloud from its undeformed base bounds.
+      particles.frustumCulled = false;
       sphereGroup.add(particles);
 
       // Invisible raycast surface detects clicks and taps on the 3D sphere.
