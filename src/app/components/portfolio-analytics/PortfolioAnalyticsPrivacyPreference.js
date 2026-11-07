@@ -68,7 +68,7 @@ export default function PortfolioAnalyticsPrivacyPreference() {
             className="size-4 accent-[var(--brand)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
           />
           <span className="font-medium">
-            Disable analytics on this browser
+            Disable analytics on this browser profile
           </span>
         </label>
       </div>

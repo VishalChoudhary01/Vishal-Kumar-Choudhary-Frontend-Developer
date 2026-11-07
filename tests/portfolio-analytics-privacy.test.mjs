@@ -38,6 +38,22 @@ test("analytics opt-out preference persists only a boolean-like browser flag", (
   assert.equal(readPortfolioAnalyticsOptOut(storage), false);
 });
 
+test("unreadable browser storage fails closed for optional analytics", () => {
+  const blockedStorage = {
+    getItem() {
+      throw new Error("Storage is blocked");
+    },
+  };
+  assert.equal(readPortfolioAnalyticsOptOut(blockedStorage), true);
+
+  const blockedWindowStorage = Object.defineProperty({}, "localStorage", {
+    get() {
+      throw new Error("Storage is blocked");
+    },
+  });
+  assert.equal(readPortfolioAnalyticsOptOut(blockedWindowStorage.localStorage), true);
+});
+
 test("privacy preference uses a named same-origin event and does not generate an identifier", async () => {
   const [preference, wrapper, tracker, control] = await Promise.all([
     read("../src/app/lib/portfolio-analytics/privacy-preference.mjs"),

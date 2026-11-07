@@ -10,9 +10,8 @@ export function readPortfolioAnalyticsOptOut(storage) {
     );
     return target?.getItem(PORTFOLIO_ANALYTICS_OPT_OUT_KEY) === "1";
   } catch {
-    // When the preference cannot be read, do not infer an opt-out.
-    // No tracking still occurs unless both feature flags are explicitly enabled.
-    return false;
+    // Fail closed: when the stored preference cannot be read, do not collect.
+    return true;
   }
 }
 
