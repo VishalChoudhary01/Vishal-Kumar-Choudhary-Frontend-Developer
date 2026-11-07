@@ -4,7 +4,11 @@ import test from "node:test";
 
 import { createSphereParticleData } from "../src/app/components/labs/landing/particle-sphere/particle-geometry.mjs";
 import { getSphereSqueeze, SPHERE_PULSE_PERIOD } from "../src/app/components/labs/landing/particle-sphere/particle-animation.mjs";
-import { getParticleQualityProfile } from "../src/app/components/labs/landing/particle-sphere/particle-quality.mjs";
+import {
+  areParticleQualityProfilesEqual,
+  getParticleQualityProfile,
+  hasParticleBudgetChanged,
+} from "../src/app/components/labs/landing/particle-sphere/particle-quality.mjs";
 
 const rendererSource = await readFile(
   new URL("../src/app/components/labs/landing/particle-sphere/LabsParticleSphere.js", import.meta.url),
@@ -131,11 +135,14 @@ test("particle quality profiles adapt density and pixel ratio to viewport size",
   const mobile = getParticleQualityProfile({ viewportWidth: 390 });
 
   assert.equal(desktop.tier, "high");
-  assert.equal(desktop.surfaceCount, 4400);
+  assert.equal(desktop.surfaceCount, 5200);
+  assert.equal(desktop.maxFps, 60);
   assert.equal(tablet.tier, "medium");
-  assert.equal(tablet.surfaceCount, 3400);
+  assert.equal(tablet.surfaceCount, 4000);
+  assert.equal(tablet.maxFps, 50);
   assert.equal(mobile.tier, "compact");
-  assert.equal(mobile.surfaceCount, 2400);
+  assert.equal(mobile.surfaceCount, 2600);
+  assert.equal(mobile.maxFps, 40);
   assert.ok(mobile.maxPixelRatio < desktop.maxPixelRatio);
 });
 
@@ -147,8 +154,36 @@ test("constrained devices receive a lower particle budget", () => {
   });
 
   assert.equal(constrained.tier, "low");
-  assert.equal(constrained.surfaceCount, 2800);
+  assert.equal(constrained.surfaceCount, 2600);
+  assert.equal(constrained.maxFps, 30);
   assert.ok(constrained.maxPixelRatio <= 1.2);
+});
+
+test("low-tier mobile profile updates its budget even when tier label is unchanged", () => {
+  const lowDesktop = getParticleQualityProfile({
+    viewportWidth: 1440,
+    deviceMemory: 2,
+    hardwareConcurrency: 2,
+  });
+  const lowMobile = getParticleQualityProfile({
+    viewportWidth: 390,
+    deviceMemory: 2,
+    hardwareConcurrency: 2,
+  });
+
+  assert.equal(lowDesktop.tier, "low");
+  assert.equal(lowMobile.tier, "low");
+  assert.notEqual(lowDesktop.surfaceCount, lowMobile.surfaceCount);
+  assert.equal(hasParticleBudgetChanged(lowDesktop, lowMobile), true);
+  assert.equal(areParticleQualityProfilesEqual(lowDesktop, lowMobile), false);
+});
+
+test("equal particle profiles avoid unnecessary geometry replacement", () => {
+  const left = getParticleQualityProfile({ viewportWidth: 1440 });
+  const right = getParticleQualityProfile({ viewportWidth: 1440 });
+
+  assert.equal(areParticleQualityProfilesEqual(left, right), true);
+  assert.equal(hasParticleBudgetChanged(left, right), false);
 });
 
 test("particle geometry rejects unsafe counts and invalid radius values", () => {
@@ -178,6 +213,9 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.match(rendererSource, /cancelAnimationFrame/);
   assert.match(rendererSource, /ResizeObserver/);
   assert.match(rendererSource, /getParticleQualityProfile/);
+  assert.match(rendererSource, /areParticleQualityProfilesEqual/);
+  assert.match(rendererSource, /hasParticleBudgetChanged/);
+  assert.match(rendererSource, /frameInterval = 1000 \/\s*\(qualityProfile\?\.maxFps/);
   assert.match(rendererSource, /viewportWidth: window\.innerWidth/);
   assert.match(rendererSource, /themeObserver/);
   assert.match(rendererSource, /syncThemeColor/);
@@ -200,4 +238,7 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /uBrandColor/);
   assert.match(shaderSource, /smoothstep\(-0\.24, 0\.32, viewNormal\.z\)/);
   assert.match(shaderSource, /depthFade/);
+  assert.match(shaderSource, /rimLight/);
+  assert.match(shaderSource, /hemisphereFill/);
+  assert.match(shaderSource, /aSize \* ambientSize \* uPixelRatio \* \(5\.0 \/ viewDepth\)/);
 });
