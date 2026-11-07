@@ -50,8 +50,8 @@ Do not use production credentials or production user data for local testing.
 | AUTH_TRUSTED_IP_HEADER | Registration rate limit | Defaults in code to x-vercel-forwarded-for. |
 | AUTH_SMTP_HOST/PORT/USER/PASSWORD/SECURE | Labs verification/reset email | Keep all SMTP values server-only. |
 | AUTH_EMAIL_FROM | Labs auth mail sender | Use an authorized sender address. |
-| LABS_OWNER_USER_ID | Singleton owner identity | Preferred stable Better Auth ID. |
-| LABS_OWNER_EMAIL | Optional owner bootstrap identity | Code allows this verified email alternative; not currently listed in .env.example. |
+| LABS_OWNER_USER_ID | Singleton owner identity | **Required owner identity target:** stable Better Auth user ID, server-only. Use this as the sole owner allowlist. |
+| LABS_OWNER_EMAIL | Legacy code fallback; do not configure as approved policy | Current owner-access.js still accepts a verified email match as a fallback. This conflicts with the accepted ID-only policy; remove the fallback after verifying the deployed owner ID to avoid lockout. |
 
 OAuth:
 - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must both exist for Google provider registration.
@@ -108,7 +108,7 @@ This is a real config-documentation mismatch. During this docs-only task, applic
 - do not assume RESEND_API_KEY powers the current contact route;
 - consider correcting .env.example and any unused Resend reference in a dedicated configuration change.
 
-Also .env.example currently lists LABS_OWNER_USER_ID but does not list the code-supported LABS_OWNER_EMAIL fallback. Treat owner email as code-supported but absent from the template.
+Owner identity policy correction (7 November 2026): configure LABS_OWNER_USER_ID only. owner-access.js still contains a LABS_OWNER_EMAIL fallback in current code, but this is a known discrepancy against the accepted ID-only decision. Do not add LABS_OWNER_EMAIL to the template or rely on it as supported product policy. Before removing the code fallback, inspect Preview/Production owner provisioning and confirm LABS_OWNER_USER_ID is set correctly.
 
 ## 5. Database bootstrap and indexes
 
@@ -164,12 +164,12 @@ Do not rely on an older READY deployment as evidence for a newer branch head.
 - Project static metadata, canonical URL, JSON-LD and unknown slug 404.
 
 ### Labs
-- Public collection pagination and built-in/custom detail.
+- Public source-backed custom catalogue pagination and static detail page; do not expect built-in catalogue rows or an executable artifact iframe on /labs/[slug].
 - Guest vs verified source access.
 - Like/unlike and guest claim.
 - Source file validation/save/version/restore.
 - Unsaved Run.
-- Published artifact delivery and CSP.
+- Published artifact delivery endpoint and CSP (separate infrastructure; public detail does not embed it).
 - Media upload/finalization/poster.
 - Owner route guards.
 - Native scroll through full inventory/editor pages.
