@@ -202,7 +202,8 @@ test("light and dark themes use distinct particle, sparkle and glow palettes", (
   assert.equal(light.glowColor, "#0a2926");
   assert.equal(dark.particleColor, "#58b7ae");
   assert.equal(dark.sparkleColor, "#e1fff9");
-  assert.equal(dark.glowColor, "#0c514b");
+  assert.equal(dark.glowColor, "#061c18");
+  assert.equal(dark.glowOpacity, 0.028);
   assert.notEqual(light.orbitParticleColor, dark.orbitParticleColor);
   assert.notEqual(light.orbitParticleGlowColor, dark.orbitParticleGlowColor);
   assert.ok(light.orbitParticleOpacity > 0 && light.orbitParticleOpacity <= 1);
@@ -363,10 +364,20 @@ test("Labs hero keeps its content layout and adds a dark-only right artwork grad
   );
 
   assert.match(heroSource, /dark:bg-\[radial-gradient\(ellipse_at_68%_48%/);
-  assert.match(heroSource, /dark:w-\[68%\]/);
+  assert.match(heroSource, /dark:w-\[60%\]/);
+  assert.match(heroSource, /#010302_100%/);
+  assert.match(heroSource, /transparent_0%/);
   assert.match(heroSource, /A space for|labs-heading/);
   assert.match(heroSource, /Published experiments/);
   assert.match(heroSource, /LabsHeroArtwork/);
+
+  const artworkSource = await readFile(
+    new URL("../src/app/components/labs/landing/LabsHeroArtwork.js", import.meta.url),
+    "utf8",
+  );
+  assert.match(artworkSource, /dark:opacity-15/);
+  assert.match(artworkSource, /dark:opacity-12/);
+  assert.match(artworkSource, /dark:bg-\[#061814\]\/\[0\.035\]/);
 });
 
 test("particle shader provides depth shading and soft point halos", () => {
