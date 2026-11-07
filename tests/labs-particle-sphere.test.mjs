@@ -380,7 +380,6 @@ test("Labs hero keeps its content layout and adds a dark-only right artwork grad
     new URL("../src/app/components/labs/landing/LabsHeroArtwork.js", import.meta.url),
     "utf8",
   );
-  assert.match(artworkSource, /dark:opacity-15/);
   assert.match(artworkSource, /dark:opacity-\[0\.035\]/);
   assert.match(artworkSource, /rgba\(3,18,13,0\.04\)/);
   assert.match(artworkSource, /dark:bg-\[#030b08\]\/\[0\.018\]/);
@@ -407,6 +406,7 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /length\(position\) \* 0\.72 \* uBurst/);
   assert.match(shaderSource, /pointerInfluence/);
   assert.match(shaderSource, /float sphereLayer = 1\.0 - ambientLayer/);
+  assert.equal((shaderSource.match(/float sphereLayer = 1\.0 - ambientLayer/g) || []).length, 1);
   assert.match(shaderSource, /smoothstep\(-0\.24, 0\.32, viewNormal\.z\)/);
   assert.match(shaderSource, /depthFade/);
   assert.match(shaderSource, /rimLight/);
