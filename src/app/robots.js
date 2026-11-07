@@ -1,12 +1,12 @@
 import { buildSiteUrl } from "./lib/seo/urls";
 
 /*
- * ROBOTS — allow all public routes (spec §22).
+ * ROBOTS — allow public portfolio and Labs pages.
  *
- * No disallow entries: /debug, /internal, /admin do not exist in this
- * project, and fake paths must not be added just for appearance.
- * Robots.txt is not a substitute for noindex.
- */
+ * The repository contains a private /admin workspace and API Route Handlers.
+ * Keep those paths out of crawler discovery. Route authorization remains the
+ * security boundary; robots.txt is not access control or a replacement for
+ * noindex metadata on authentication flows.
 export default function robots() {
   const base = buildSiteUrl();
 
@@ -15,6 +15,7 @@ export default function robots() {
       {
         userAgent: "*",
         allow: "/",
+        disallow: ["/admin/", "/api/"],
       },
     ],
     sitemap: `${base}/sitemap.xml`,
