@@ -176,6 +176,7 @@ test("sphere world-space size stays fixed while camera framing adapts to mobile"
   assert.ok(Number.isFinite(desktopDistance));
   assert.ok(mobileDistance > desktopDistance);
   assert.match(rendererSource, /camera\.position\.z = getParticleCameraDistance/);
+  assert.match(rendererSource, /orbitRadius: 2\.2/);
   assert.doesNotMatch(rendererSource, /getSphereScale|getSphereContraction|\.scale\.setScalar/);
 
   for (let index = 0; index < data.surfaceCount; index += 1) {
@@ -381,6 +382,7 @@ test("Labs hero keeps its content layout and adds a dark-only right artwork grad
   );
   assert.match(artworkSource, /dark:opacity-15/);
   assert.match(artworkSource, /dark:opacity-\[0\.035\]/);
+  assert.match(artworkSource, /rgba\(3,18,13,0\.04\)/);
   assert.match(artworkSource, /dark:bg-\[#030b08\]\/\[0\.018\]/);
 });
 
