@@ -9,6 +9,9 @@ export const particleVertexShader = `
   uniform float uMotionEnabled;
   uniform vec3 uBrandColor;
   uniform vec3 uSparkleColor;
+  uniform float uBurst;
+  uniform vec3 uPointerPosition;
+  uniform float uPointerActive;
 
   varying vec3 vColor;
   varying float vOpacity;
@@ -19,6 +22,24 @@ export const particleVertexShader = `
     vec3 direction = normalize(position + vec3(0.0001));
 
     float ambientLayer = step(1.5, aLayer);
+    float sphereLayer = 1.0 - ambientLayer;
+
+    // Burst is a temporary radial displacement. The source geometry and
+    // resting sphere radius are never changed.
+    float burstVariation = 0.78 + fract(aSeed * 19.73) * 0.40;
+    float burstDistance = length(position) * 0.72 * uBurst * burstVariation;
+    transformed += direction * burstDistance * sphereLayer;
+
+    // A local magnetic push affects only particles near the pointer hit.
+    vec3 pointerDelta = transformed - uPointerPosition;
+    float pointerDistance = length(pointerDelta);
+    float pointerInfluence = 1.0 - smoothstep(0.06, 0.58, pointerDistance);
+    vec3 pointerDirection = normalize(pointerDelta + vec3(0.0001));
+    transformed += pointerDirection
+      * pointerInfluence
+      * 0.16
+      * uPointerActive
+      * sphereLayer;
 
     float microDrift = sin(uTime * 0.34 + aSeed * 6.28318)
       * 0.0035
@@ -48,7 +69,6 @@ export const particleVertexShader = `
       : (aLayer > 0.5 ? 0.28 : 1.0);
     float depthFade = 1.0 / (1.0 + max(0.0, viewDepth - 4.0) * 0.14);
 
-    // More particles are eligible to twinkle, but their timings remain independent.
     float sparkleThreshold = mix(0.958, 0.90, step(1.5, aLayer));
     float sparkleMask = step(sparkleThreshold, fract(aSeed * 37.0));
     float sparkleRate = 0.68 + fract(aSeed * 17.4) * 1.45;
@@ -57,13 +77,17 @@ export const particleVertexShader = `
       10.0
     );
     float sparkle = sparkleMask * sparkleWave * uMotionEnabled;
+    sparkle = min(1.0, sparkle + uBurst * 0.26 * step(1.5, aLayer) * 0.0
+      + uBurst * 0.18 * sparkleMask);
 
     float ambientSize = mix(1.0, 1.18, ambientLayer);
+    float burstSize = 1.0 + uBurst * 0.35 * sphereLayer;
 
     gl_PointSize = clamp(
-      aSize * ambientSize * uPixelRatio * (5.0 / viewDepth) * (1.0 + sparkle * 1.75),
+      aSize * ambientSize * burstSize * uPixelRatio
+        * (5.0 / viewDepth) * (1.0 + sparkle * 1.75),
       1.0,
-      8.0 * uPixelRatio
+      9.0 * uPixelRatio
     );
 
     gl_Position = projectionMatrix * modelPosition;
@@ -75,10 +99,11 @@ export const particleVertexShader = `
     vec3 sparkleColor = uSparkleColor * (0.7 + sparkle * 2.4);
 
     vColor = mix(litColor, sparkleColor, clamp(sparkle * 1.3, 0.0, 1.0));
-    vColor *= 1.0 + sparkle * 2.4;
+    vColor *= 1.0 + sparkle * 2.4 + uBurst * 0.16 * sphereLayer;
     vOpacity = (
       mix(0.012, 0.92, facing) * layerOpacity
       + sparkle * 1.1
+      + uBurst * 0.08 * sphereLayer
     ) * depthFade;
     vSparkle = sparkle;
   }
