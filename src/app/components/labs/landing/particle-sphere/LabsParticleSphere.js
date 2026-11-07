@@ -15,6 +15,14 @@ import {
   getParticleBurstEnvelope,
   getParticleBurstRadius,
   PARTICLE_BURST_EXPANSION,
+  PARTICLE_BURST_STAGGER_SECONDS,
+  PARTICLE_BURST_OUTWARD_SECONDS,
+  PARTICLE_BURST_RECOVERY_SECONDS,
+  PARTICLE_BURST_PARTICLE_RECOVERY_MIN,
+  PARTICLE_BURST_PARTICLE_RECOVERY_VARIATION,
+  PARTICLE_BURST_TANGENTIAL_STRENGTH,
+  PARTICLE_BURST_TANGENTIAL_VARIATION,
+  PARTICLE_BURST_DRIFT_STRENGTH,
 } from "./particle-interaction.mjs";
 import { PARTICLE_SPHERE_CONFIG } from "./particle-constants";
 import {
@@ -135,6 +143,7 @@ export default function LabsParticleSphere() {
       if (particleMaterial) {
         particleMaterial.uniforms.uTime.value = elapsed;
         particleMaterial.uniforms.uBurst.value = burstAmount;
+        particleMaterial.uniforms.uBurstTime.value = elapsed - burstStartedAt;
       }
 
       sphereGroup.rotation.y = elapsed * PARTICLE_SPHERE_CONFIG.rotationSpeed;
@@ -316,7 +325,16 @@ export default function LabsParticleSphere() {
           uInnerParticleOpacity: { value: initialPalette.innerParticleOpacity },
           uSparkleColor: { value: new THREE.Color(initialPalette.sparkleColor) },
           uBurst: { value: 0 },
+          uBurstTime: { value: -1 },
           uBurstExpansion: { value: PARTICLE_BURST_EXPANSION },
+          uBurstStagger: { value: PARTICLE_BURST_STAGGER_SECONDS },
+          uBurstOutwardSeconds: { value: PARTICLE_BURST_OUTWARD_SECONDS },
+          uBurstRecoverySeconds: { value: PARTICLE_BURST_RECOVERY_SECONDS },
+          uBurstRecoveryMin: { value: PARTICLE_BURST_PARTICLE_RECOVERY_MIN },
+          uBurstRecoveryVariation: { value: PARTICLE_BURST_PARTICLE_RECOVERY_VARIATION },
+          uBurstTangentialStrength: { value: PARTICLE_BURST_TANGENTIAL_STRENGTH },
+          uBurstTangentialVariation: { value: PARTICLE_BURST_TANGENTIAL_VARIATION },
+          uBurstDriftStrength: { value: PARTICLE_BURST_DRIFT_STRENGTH },
           uPointerPosition: { value: new THREE.Vector3() },
           uPointerActive: { value: 0 },
         },
