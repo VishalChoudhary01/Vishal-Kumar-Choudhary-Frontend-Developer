@@ -5,7 +5,6 @@ export const particleVertexShader = `
   attribute float aLayer;
 
   uniform float uTime;
-  uniform float uContraction;
   uniform float uPixelRatio;
   uniform float uMotionEnabled;
   uniform vec3 uBrandColor;
@@ -20,18 +19,6 @@ export const particleVertexShader = `
     vec3 direction = normalize(position + vec3(0.0001));
 
     float ambientLayer = step(1.5, aLayer);
-    float sphereLayer = 1.0 - ambientLayer;
-
-    // Contract all three axes by the same factor: the sphere stays spherical.
-    float radialScale = mix(1.0, 0.70, clamp(uContraction, 0.0, 1.0) * sphereLayer);
-    transformed *= radialScale;
-
-    float radialRipple = sin(position.y * 7.5 - uTime * 2.4)
-      * 0.005
-      * uContraction
-      * sphereLayer
-      * uMotionEnabled;
-    transformed += direction * radialRipple;
 
     float microDrift = sin(uTime * 0.34 + aSeed * 6.28318)
       * 0.0035
@@ -71,7 +58,6 @@ export const particleVertexShader = `
     );
     float sparkle = sparkleMask * sparkleWave * uMotionEnabled;
 
-    float contractionHighlight = uContraction * 0.06 * sphereLayer;
     float ambientSize = mix(1.0, 1.18, ambientLayer);
 
     gl_PointSize = clamp(
@@ -84,7 +70,7 @@ export const particleVertexShader = `
 
     vec3 particleColor = mix(uBrandColor, aColor, 0.28);
     vec3 litColor = particleColor * (
-      directionalLight * hemisphereFill + rimLight * 0.48 + contractionHighlight
+      directionalLight * hemisphereFill + rimLight * 0.48
     );
     vec3 sparkleColor = uSparkleColor * (0.7 + sparkle * 2.4);
 
@@ -93,7 +79,6 @@ export const particleVertexShader = `
     vOpacity = (
       mix(0.012, 0.92, facing) * layerOpacity
       + sparkle * 1.1
-      + contractionHighlight
     ) * depthFade;
     vSparkle = sparkle;
   }
