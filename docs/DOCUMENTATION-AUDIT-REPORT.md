@@ -166,6 +166,6 @@ The PRD, Threat Model, Analytics docs, source-management and Monaco plans, owner
 
 **Current code mismatches remain:** owner-access.js still accepts LABS_OWNER_EMAIL as a fallback; the Labs experiment Analytics page still exposes an active verified-liker identity panel. Those two application changes were not made as part of this documentation-only task. Other open requirements include Labs detail-view/preview events, full media-role migration, personal account dashboard/profile/deletion, discovery search/filter/sort and Analytics event-retention policy.
 
-**Navigation check:** docs/README.md now has 55 Markdown links to 42 unique relative targets; all 42 targets were fetched successfully on feat/labs-platform-integration. The previous count of 42 links was an earlier handover snapshot.
+**Navigation check:** docs/README.md now has 56 Markdown links to 43 unique relative targets; all 42 targets were fetched successfully on feat/labs-platform-integration. The previous count of 42 links was an earlier handover snapshot.
 
 No current-HEAD npm install, test, lint, build, browser/Playwright, Atlas, SMTP, OAuth, Cloudinary, Blob or Sandbox verification was performed by this follow-up. Earlier report checks remain historical evidence only.
