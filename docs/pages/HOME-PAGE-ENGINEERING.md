@@ -319,9 +319,11 @@ Fields are name, email, projectType, message. Validation is shared in contactFor
 - Project type: required.
 - Message: required, 10–1200 characters.
 
-Field blur validates that field. Submit validates all fields and focuses the first invalid field. Submission states include idle and submitting; success opens the success modal; failure shows actionable error text. Values are retained on validation/network errors.
+Field blur validates that field. Submit validates all fields and focuses the first invalid field. The form state machine is idle → submitting → success/error. Success opens the success modal; failure shows actionable error text. Values are retained on validation/network errors. Full state ownership, keyboard/radio behavior, request/response mapping, SMTP server flow, email template, environment variables, privacy and security review items are documented in [Contact Form and Email Engineering](./CONTACT-FORM-AND-EMAIL-ENGINEERING.md).
 
 Client API helper POSTs JSON to /api/contact. Server validates again and sends via Gmail SMTP using server-only GMAIL_USER, GMAIL_APP_PASSWORD and CONTACT_TO_EMAIL. Missing configuration returns 503, malformed JSON 400, validation 422 and transport failure 500. Never expose SMTP values client-side.
+
+The client also opens SuccessModal after { ok: true }; the modal plays /mp3/confirmation-002.mp3 via useUiSound. For full component tree, four-state lifecycle, email HTML/text builder, Gmail TLS settings, SMTP timeout/cleanup, API error handling and known security gaps, see [Contact Form and Email Engineering](./CONTACT-FORM-AND-EMAIL-ENGINEERING.md).
 
 ## 11. Shared navigation, footer and interactions
 
