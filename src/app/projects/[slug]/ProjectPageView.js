@@ -23,6 +23,7 @@ export default function ProjectPageView({
 
   return (
     <>
+      <PortfolioAnalyticsDeferred />
       {isLoading && (
         <PortfolioIntro onComplete={completeLoading} />
       )}
