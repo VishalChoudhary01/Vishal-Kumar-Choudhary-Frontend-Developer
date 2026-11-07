@@ -368,11 +368,13 @@ test("Labs hero keeps its content layout and adds a dark-only right artwork grad
     "utf8",
   );
 
-  assert.ok(heroSource.includes("absolute bottom-0 left-1/2 right-0 top-[68%]"));
+  assert.ok(heroSource.includes("absolute bottom-0 left-0 right-0 top-[68%]"));
+  assert.ok(heroSource.includes("ellipse_130%_110%_at_100%_50%"));
   assert.match(heroSource, /dark:block/);
   assert.match(heroSource, /bg-\[radial-gradient/);
-  assert.match(heroSource, /#010302_100%/);
-  assert.match(heroSource, /transparent_0%/);
+  assert.doesNotMatch(heroSource, /linear-gradient\(90deg/);
+  assert.doesNotMatch(heroSource, /mt-8 h-px w-full bg-border-subtle/);
+  assert.match(heroSource, /grid w-full max-w-\[25rem\] grid-cols-2 gap-6 border-t border-border-subtle/);
   assert.match(heroSource, /A space for|labs-heading/);
   assert.match(heroSource, /Published experiments/);
   assert.match(heroSource, /LabsHeroArtwork/);
