@@ -355,3 +355,115 @@ The current UI does not read these fields from a general Portfolio CMS. The proj
 - Verify Contact validation, error response and successful email configuration.
 - Verify Navbar hash/scroll state and mobile menu focus/scroll-lock cleanup.
 - Test light/dark themes, 200% zoom, narrow widths and prefers-reduced-motion.
+
+
+## 14. Additional verified component-level notes
+
+### Skills — exact viewport gate and category interaction
+
+SkillsSection consumes portfolio.skills, which is composed from src/app/data/skillsData.js through src/app/data/index.js and src/app/data/portfolio.js. There is also a same-named skills_comp/skillsData.js module in the section folder; SkillsSection does not import that local copy. Treat portfolio.skills as the actual rendered data source and do not modify the duplicate copy expecting the page to change.
+
+Each SkillCategory has one useInView target:
+- once: true;
+- margin: "-25% 0px -10% 0px".
+
+The exact RISE graph (all opacity 0 → 1, with ease [0.22,1,0.36,1] and duration .6 seconds) is:
+| Element | Initial Y | Delay |
+|---|---:|---:|
+| Numeral | 16px | 0s |
+| Category title | 12px | .06s |
+| Primary skills | 10px | .12s |
+| Supporting skills | 8px | .18s |
+| Context line | 6px | .24s |
+
+When category enters view, it calls the parent onVisible(category.id). The parent activeId is semantic active-category state only. It is not used to continuously scrub category transforms.
+
+Primary skill controls:
+- Mouse hover and keyboard focus temporarily set hoverNote to the skill note.
+- Click toggles selectedSkill; aria-pressed tracks this selected state.
+- Context line chooses hoverNote, then selectedSkill.note, then category.context.
+- Primary skills without a note are not interactive.
+- The skill note is contextual supporting copy, not a tooltip popup.
+- Desktop primary controls render understated underline/brand hover and scale feedback; narrow layout renders compact pills.
+- SkillContext crossfades its keyed text opacity 0/y3→1/y0 over .18 seconds.
+
+Static reduced-motion path renders StaticSkills and SkillCategory animate=false; category rows remain readable and no viewport-triggered entrance is required.
+
+### Experience — complete section grid and tab semantics
+
+ExperienceSection is a normal document-flow section, not a pinned scroll scene. Its responsive wrapper is:
+- section gutters px-5 / sm:px-8 / md:px-10;
+- vertical spacing py-28 / sm:py-36 / lg:py-44;
+- max-width max-w-7xl;
+- desktop label/content grid uses 180px + 1fr.
+
+The active employer is selected with activeIndex. The visible tabs are filtered from TAB_LABELS; Impact exists only when the active record has non-empty impact entries. Selecting a different employer resets activeTab to Overview.
+
+The content entrance is gated by useInView once with margin "-80px 0px", opacity0/y16→1/y0, duration .6, delay .1. Employer header uses AnimatePresence mode wait. Desktop and mobile watermarks are different components rather than one transformed desktop watermark.
+
+Company selector and tab navigation are real keyboard interactions:
+- company selector supports arrow navigation;
+- tabs use tablist/tab/tabpanel roles and ArrowLeft/ArrowRight roving focus;
+- underline position is measured rather than guessed from text length;
+- mobile selector scrolls active item with a 16px edge buffer.
+Keep tab state/reset logic, ARIA relationships and mobile selector scroll behavior if rebuilding the section.
+
+### Contact — reveal, atmosphere and form lifecycle
+
+ContactSection section geometry:
+- gutters px-[clamp(24px,5vw,80px)];
+- vertical padding py-[clamp(90px,11vw,170px)];
+- max-width max-w-7xl;
+- desktop 180px section rail + content column;
+- sequence: section label → supporting heading → ContactIntro → ContactForm;
+- ContactAtmosphere is an absolute background layer; content uses relative z-10.
+
+ContactAtmosphere:
+- root spans the section with pointer-events-none and aria-hidden=true;
+- useInView gates the expensive background animation;
+- if reduced motion or offscreen, the animated layer is not rendered;
+- while in view, an inner layer scales [1,1.04,1] in a 42-second easeInOut infinite cycle;
+- two ambient blurred color layers use about 120px and 140px blur.
+This gate prevents the last section's infinite animation from running for the entire offscreen session.
+
+ContactIntro:
+- useInView once with margin "-60px 0px";
+- opacity0/y14 → opacity1/y0;
+- reveal .6s with easing [0.16,1,0.3,1], .08 delay;
+- reduced motion is immediately visible.
+
+ContactForm:
+- useInView once with margin "-60px 0px";
+- values/errors/status/modal state are owned within ContactForm;
+- status is idle/submitting/success/error;
+- field blur validates one field;
+- project type selection clears its current error;
+- submit validates all fields and focuses the first invalid field;
+- request payload sends trimmed name/email/message and projectType;
+- success opens the success modal;
+- failure preserves values and shows submitError;
+- reset starts from INITIAL_FORM_VALUES and INITIAL_FORM_ERRORS.
+- CONTACT_MOTION uses reveal .6s, focus .35s, error .25s with y=-4, and background duration 42s.
+- CONTACT_STAGGER records name .06, projectType .18, message .24 and submit .3; keep these values aligned with ContactFormFields/ContactRevealRow when adjusting field entrances.
+
+The visual field validation is not the server security boundary. The API independently validates every field before Gmail SMTP delivery.
+
+### Shared Navbar and Footer layout
+
+Navbar:
+- root scroll listener is Motion useScroll/useMotionValueEvent;
+- compact/scrolled state toggles at scrollY > 24;
+- active section state is derived from flattened portfolio.navigation links and section visibility, only meaningful on homepage;
+- project context has no homepage section targets;
+- mobileMenuOpen is shared through MobileMenuProvider;
+- Escape/route navigation closes menu; focus/scroll-lock cleanup must remain intact;
+- optional LabsAccountControl is a route-context prop, not always present.
+
+Footer:
+- global root layout element;
+- useInView once, amount .18, margin "0px 0px -4% 0px";
+- actual shutter/reveal waits for both heroReady and footer isInView;
+- reduced motion skips the animated wait;
+- homepage-only hash navigation is hidden on project detail routes where anchors do not exist;
+- footer is suppressed on the explicit Labs auth path list.
+See design/LAYOUT-LAYERS-AND-TOKENS.md for actual font, semantic theme tokens, root layers and global CSS.
