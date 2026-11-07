@@ -6,6 +6,7 @@ import { createSphereParticleData } from "../src/app/components/labs/landing/par
 import {
   getParticleBurstEnvelope,
   getParticleBurstRadius,
+  getParticleBurstParticleEnvelope,
   PARTICLE_BURST_EXPANSION,
   getOrbitBurstSpeed,
   ORBIT_BURST_SPEED_MULTIPLIER,
@@ -370,23 +371,31 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.match(rendererSource, /if \(disposed\) return/);
 });
 
-test("particle burst expands quickly and recovers without changing base geometry", () => {
+test("particle burst uses staggered per-particle recovery without changing base geometry", () => {
   assert.equal(getParticleBurstEnvelope(-1), 0);
   assert.equal(getParticleBurstEnvelope(0), 0);
   assert.equal(getParticleBurstEnvelope(0.45), 1);
-  assert.equal(getParticleBurstEnvelope(1.35), 0);
+  assert.ok(getParticleBurstEnvelope(1.35) > 0);
+  assert.equal(getParticleBurstEnvelope(2.11), 0);
   assert.equal(getParticleBurstEnvelope(Number.NaN), 0);
 
+  assert.ok(getParticleBurstParticleEnvelope(0.04, 0.1) > 0);
+  assert.equal(getParticleBurstParticleEnvelope(0.04, 0.9), 0);
+  assert.ok(getParticleBurstParticleEnvelope(0.5, 0.2) > 0);
+  assert.equal(getParticleBurstParticleEnvelope(2.2, 0.5), 0);
+  assert.equal(getParticleBurstParticleEnvelope(Number.NaN, 0.5), 0);
+
   assert.equal(PARTICLE_BURST_EXPANSION, 1.85);
-  assert.equal(getParticleBurstRadius(1.38), 1.38 * (1 + 1.85 * 1.18) + 0.2);
-  assert.ok(getParticleBurstRadius(1.38) > 4.5);
+  assert.ok(getParticleBurstRadius(1.38) > 4.8);
   assert.throws(() => getParticleBurstRadius(0), RangeError);
   assert.throws(() => getParticleBurstRadius(Number.NaN), RangeError);
   assert.equal(getOrbitBurstSpeed(0), 1);
   assert.equal(getOrbitBurstSpeed(0.45), 1.65);
-  assert.equal(getOrbitBurstSpeed(1.35), 1);
+  assert.ok(getOrbitBurstSpeed(1.35) > 1);
+  assert.equal(getOrbitBurstSpeed(2.11), 1);
   assert.equal(isParticleBurstActive(0.8), true);
-  assert.equal(isParticleBurstActive(1.35), false);
+  assert.equal(isParticleBurstActive(1.35), true);
+  assert.equal(isParticleBurstActive(2.11), false);
 });
 
 test("renderer maps pointer hits to the sphere and restarts burst on a short tap", () => {
@@ -399,6 +408,8 @@ test("renderer maps pointer hits to the sphere and restarts burst on a short tap
   assert.match(rendererSource, /setPointerCapture\?\.\(event\.pointerId\)/);
   assert.match(rendererSource, /distance <= 12 && pointerDown\.startedOnSphere && hitSphere/);
   assert.match(rendererSource, /burstStartedAt = elapsed/);
+  assert.match(rendererSource, /Number\.isFinite\(burstStartedAt\) \? elapsed - burstStartedAt : -1/);
+  assert.match(rendererSource, /uBurstTime\.value = burstTime/);
   assert.match(rendererSource, /touchAction = "pan-y"/);
   assert.match(rendererSource, /removeEventListener\("pointercancel"/);
   assert.match(rendererSource, /releasePointerCapture\?\.\(event\.pointerId\)/);
@@ -447,7 +458,15 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /sparkleMask/);
   assert.match(shaderSource, /sparkleWave/);
   assert.match(shaderSource, /ambientDrift/);
-  assert.match(shaderSource, /sparkleThreshold/);
+  assert.match(shaderSource, /sparkleChance/);
+  assert.match(shaderSource, /sparkleRandom/);
+  assert.match(shaderSource, /burstGlint/);
+  assert.match(shaderSource, /particleBurstTime/);
+  assert.match(shaderSource, /burstRecovery/);
+  assert.match(shaderSource, /burstOffset \+= tangent/);
+  assert.match(shaderSource, /burstOffset \+= bitangent/);
+  assert.match(shaderSource, /vTrailDirection/);
+  assert.match(shaderSource, /trailTail/);
   assert.match(shaderSource, /uBrandColor/);
   assert.match(shaderSource, /uInnerParticleColor/);
   assert.match(shaderSource, /uInnerParticleOpacity/);
@@ -461,7 +480,7 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /uniform vec3 uPointerPosition/);
   assert.match(shaderSource, /uniform float uPointerActive/);
   assert.match(shaderSource, /uniform float uBurstExpansion/);
-  assert.ok(shaderSource.includes("length(position) * uBurstExpansion * uBurst * burstVariation"));
+  assert.match(shaderSource, /length\\(position\\)\\s*\\*\\s*uBurstExpansion\\s*\\*\\s*particleBurst\\s*\\*\\s*radialVariation/);
   assert.ok(interactionSource.includes("PARTICLE_BURST_EXPANSION = 1.85"));
   assert.match(shaderSource, /pointerInfluence/);
   assert.match(shaderSource, /float sphereLayer = 1\.0 - ambientLayer/);
