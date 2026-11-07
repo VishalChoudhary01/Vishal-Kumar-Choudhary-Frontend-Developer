@@ -53,6 +53,7 @@ export function createParticleOrbits(THREE) {
       opacity: spec.opacity,
       depthWrite: false,
     });
+    material.userData.baseOpacity = spec.opacity;
     const orbit = new THREE.Line(geometry, material);
 
     orbit.rotation.set(...spec.rotation);
