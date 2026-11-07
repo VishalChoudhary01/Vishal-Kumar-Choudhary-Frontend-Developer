@@ -13,6 +13,7 @@ import { getParticleCameraDistance } from "./particle-responsive.mjs";
 import { getParticleSphereThemePalette } from "./particle-theme.mjs";
 import {
   getParticleBurstEnvelope,
+  getParticleBurstRadius,
   PARTICLE_BURST_EXPANSION,
 } from "./particle-interaction.mjs";
 import { PARTICLE_SPHERE_CONFIG } from "./particle-constants";
@@ -93,6 +94,8 @@ export default function LabsParticleSphere() {
     );
 
     camera.position.set(0, 0, PARTICLE_SPHERE_CONFIG.cameraDistance);
+    let idleCameraDistance = PARTICLE_SPHERE_CONFIG.cameraDistance;
+    let burstCameraDistance = PARTICLE_SPHERE_CONFIG.cameraDistance;
 
     const sphereGroup = new THREE.Group();
     scene.add(sphereGroup);
@@ -121,6 +124,13 @@ export default function LabsParticleSphere() {
       elapsed += delta;
 
       const burstAmount = getParticleBurstEnvelope(elapsed - burstStartedAt);
+      const targetCameraDistance = THREE.MathUtils.lerp(
+        idleCameraDistance,
+        burstCameraDistance,
+        burstAmount,
+      );
+      const cameraEase = 1 - Math.exp(-delta * 12);
+      camera.position.z += (targetCameraDistance - camera.position.z) * cameraEase;
 
       if (particleMaterial) {
         particleMaterial.uniforms.uTime.value = elapsed;
@@ -199,13 +209,26 @@ export default function LabsParticleSphere() {
       const height = Math.max(1, Math.round(bounds.height));
 
       camera.aspect = width / height;
-      camera.position.z = getParticleCameraDistance({
+      idleCameraDistance = getParticleCameraDistance({
         width,
         height,
         fovDegrees: PARTICLE_SPHERE_CONFIG.cameraFov,
-        orbitRadius: 1.92,
-        fillRatio: 0.92,
+        orbitRadius: 2.02,
+        fillRatio: 0.94,
       });
+      burstCameraDistance = getParticleCameraDistance({
+        width,
+        height,
+        fovDegrees: PARTICLE_SPHERE_CONFIG.cameraFov,
+        orbitRadius: getParticleBurstRadius(PARTICLE_SPHERE_CONFIG.radius),
+        fillRatio: 0.9,
+      });
+      const activeBurst = getParticleBurstEnvelope(elapsed - burstStartedAt);
+      camera.position.z = THREE.MathUtils.lerp(
+        idleCameraDistance,
+        burstCameraDistance,
+        activeBurst,
+      );
       camera.updateProjectionMatrix();
 
       const nextProfile = getParticleQualityProfile({
@@ -315,7 +338,7 @@ export default function LabsParticleSphere() {
       // Invisible raycast surface detects clicks and taps on the 3D sphere.
       // It is not rendered and does not alter the visible sphere geometry.
       sphereHitArea = new THREE.Mesh(
-        new THREE.SphereGeometry(1.36, 24, 18),
+        new THREE.SphereGeometry(1.52, 24, 18),
         new THREE.MeshBasicMaterial({
           colorWrite: false,
           depthWrite: false,
