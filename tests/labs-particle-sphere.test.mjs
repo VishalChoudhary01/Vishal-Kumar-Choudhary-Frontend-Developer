@@ -314,7 +314,7 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.match(rendererSource, /case "orbit-particle"/);
   assert.match(rendererSource, /case "orbit-particle-glow"/);
   assert.match(rendererSource, /getParticleCameraDistance/);
-  assert.match(rendererSource, /orbitGroup\.userData\.update\?\.\(elapsed\)/);
+  assert.match(rendererSource, /orbitGroup\.userData\.update\?\.\(elapsed, burstAmount\)/);
   assert.doesNotMatch(rendererSource, /uContraction|getSphereScale|getSphereContraction|\.scale\.setScalar/);
   assert.ok(rendererSource.includes("renderer?.dispose()"));
   assert.match(rendererSource, /webglcontextlost/);
@@ -344,7 +344,7 @@ test("renderer maps pointer hits to the sphere and restarts burst on a short tap
   assert.match(rendererSource, /addEventListener\("pointermove"/);
   assert.match(rendererSource, /startedOnSphere/);
   assert.match(rendererSource, /setPointerCapture\?\.\(event\.pointerId\)/);
-  assert.match(rendererSource, /distance <= 12 && hitSphere/);
+  assert.match(rendererSource, /distance <= 12 && pointerDown\.startedOnSphere && hitSphere/);
   assert.match(rendererSource, /burstStartedAt = elapsed/);
   assert.match(rendererSource, /touchAction = "pan-y"/);
   assert.match(rendererSource, /removeEventListener\("pointercancel"/);
@@ -352,8 +352,8 @@ test("renderer maps pointer hits to the sphere and restarts burst on a short tap
 });
 
 test("orbit particles move continuously and retain their orbital path", () => {
-  assert.match(orbitSource, /group\.userData\.update = \(elapsed\)/);
-  assert.match(orbitSource, /runner\.position\.copy\(getOrbitPoint\(THREE, spec, progress\)\)/);
+  assert.match(orbitSource, /group\.userData\.update = \(elapsed, burstAmount = 0\)/);
+  assert.match(orbitSource, /runner\.position\.copy\(getOrbitPoint\(THREE, spec, progressByRunner\[index\]\)\)/);
   assert.match(orbitSource, /ORBIT_BURST_SPEED_MULTIPLIER - 1/);
   assert.equal(ORBIT_BURST_SPEED_MULTIPLIER, 1.65);
   assert.match(orbitSource, /delta \* spec\.speed \* burstSpeed/);
@@ -368,8 +368,9 @@ test("Labs hero keeps its content layout and adds a dark-only right artwork grad
     "utf8",
   );
 
-  assert.match(heroSource, /dark:bg-\[radial-gradient\(ellipse_at_68%_48%/);
-  assert.match(heroSource, /dark:w-\[60%\]/);
+  assert.match(heroSource, /absolute bottom-0 left-1\/2 right-0 top-\[68%\]/);
+  assert.match(heroSource, /dark:block/);
+  assert.match(heroSource, /bg-\[radial-gradient/);
   assert.match(heroSource, /#010302_100%/);
   assert.match(heroSource, /transparent_0%/);
   assert.match(heroSource, /A space for|labs-heading/);
@@ -411,7 +412,7 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /depthFade/);
   assert.match(shaderSource, /rimLight/);
   assert.match(shaderSource, /hemisphereFill/);
-  assert.match(shaderSource, /aSize \* ambientSize \* uPixelRatio \* \(5\.0 \/ viewDepth\)/);
+  assert.match(shaderSource, /aSize\s*\*\s*ambientSize\s*\*\s*burstSize\s*\*\s*uPixelRatio\s*\*\s*\(5\.0\s*\/\s*viewDepth\)/);
   assert.match(orbitSource, /baseOpacity = spec\.opacity/);
   assert.match(orbitSource, /themeRole = "orbit-particle"/);
   assert.match(orbitSource, /themeRole = "orbit-particle-glow"/);
