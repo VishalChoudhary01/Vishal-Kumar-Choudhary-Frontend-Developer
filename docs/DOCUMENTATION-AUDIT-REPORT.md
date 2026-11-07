@@ -143,3 +143,12 @@ Repository-specific differences are documented rather than silently copied from 
 The Sound Engineering guide was updated so `chop.mp3` is marked active, and the Layout/Token guide now points to the theme transition contract.
 
 This was a documentation-only reconciliation. No application behavior was changed. Browser acceptance for all four variants and cross-browser View Transition rendering remains a manual verification task.
+
+
+## 11. Contact form and SMTP implementation guide
+
+The contact form was reverse-engineered from its client component tree through `POST /api/contact`, `buildContactEmail()`, Nodemailer and Gmail SMTP. A new guide, [pages/CONTACT-FORM-AND-EMAIL-ENGINEERING.md](./pages/CONTACT-FORM-AND-EMAIL-ENGINEERING.md), records the current four-state client lifecycle, independent server validation, request/response contract, HTML/text email builder, SMTP TLS/timeouts, environment variables, privacy boundary and source-observed hardening gaps.
+
+The audit also found that `SuccessModal.js` plays `/mp3/confirmation-002.mp3` at volume 0.35 with `interrupt: true`; the sound inventory was corrected to show four active audio assets/call sites. This was missed by the earlier sound-only audit and is now linked to the contact form success lifecycle.
+
+No application code was changed. Contact-specific rate-limit/same-origin/body-size/idempotency hardening and the stale Resend configuration template remain separate implementation/configuration tasks.
