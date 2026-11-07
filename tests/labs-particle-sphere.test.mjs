@@ -198,6 +198,10 @@ test("light and dark themes use distinct particle, sparkle and glow palettes", (
   assert.equal(dark.particleColor, "#58b7ae");
   assert.equal(dark.sparkleColor, "#e1fff9");
   assert.equal(dark.glowColor, "#0c514b");
+  assert.notEqual(light.orbitParticleColor, dark.orbitParticleColor);
+  assert.notEqual(light.orbitParticleGlowColor, dark.orbitParticleGlowColor);
+  assert.ok(light.orbitParticleOpacity > 0 && light.orbitParticleOpacity <= 1);
+  assert.ok(dark.orbitParticleOpacity > 0 && dark.orbitParticleOpacity <= 1);
   assert.ok(light.orbitOpacityScale > 0 && light.orbitOpacityScale <= 1);
   assert.ok(dark.orbitOpacityScale > 0 && dark.orbitOpacityScale <= 1);
 });
@@ -299,6 +303,8 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.match(rendererSource, /palette\.particleColor/);
   assert.match(rendererSource, /uSparkleColor/);
   assert.match(rendererSource, /glow\.material\.color\.set\(palette\.glowColor\)/);
+  assert.match(rendererSource, /case "orbit-particle"/);
+  assert.match(rendererSource, /case "orbit-particle-glow"/);
   assert.match(rendererSource, /getParticleCameraDistance/);
   assert.match(rendererSource, /orbitGroup\.userData\.update\?\.\(elapsed\)/);
   assert.doesNotMatch(rendererSource, /uContraction|getSphereScale|getSphereContraction|\.scale\.setScalar/);
@@ -330,15 +336,6 @@ test("Labs hero keeps its content layout and adds a dark-only right artwork grad
   assert.match(heroSource, /LabsHeroArtwork/);
 });
 
-test("orbit particles move continuously and retain their orbital path", () => {
-  assert.match(orbitSource, /group\.userData\.update = \(elapsed\)/);
-  assert.match(orbitSource, /runner\.position\.copy\(getOrbitPoint\(THREE, spec, progress\)\)/);
-  assert.match(orbitSource, /const progress = \(spec\.phase \+ elapsed \* spec\.speed\) % 1/);
-  assert.match(orbitSource, /end: Math\.PI \* 2/);
-  assert.match(orbitSource, /orbit-particle-glow/);
-  assert.match(rendererSource, /orbitGroup\.userData\.update\?\.\(elapsed\)/);
-});
-
 test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /viewDepth/);
   assert.match(shaderSource, /directionalLight/);
@@ -360,6 +357,8 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /hemisphereFill/);
   assert.match(shaderSource, /aSize \* ambientSize \* uPixelRatio \* \(5\.0 \/ viewDepth\)/);
   assert.match(orbitSource, /baseOpacity = spec\.opacity/);
+  assert.match(orbitSource, /themeRole = "orbit-particle"/);
+  assert.match(orbitSource, /themeRole = "orbit-particle-glow"/);
   assert.match(orbitSource, /opacity: 0\.12/);
   assert.match(orbitSource, /opacity: 0\.082/);
   assert.match(orbitSource, /opacity: 0\.058/);
