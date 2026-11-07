@@ -11,12 +11,13 @@ import {
 import { createParticleOrbits } from "./particle-orbits";
 import { getSphereSqueeze } from "./particle-animation.mjs";
 import { PARTICLE_SPHERE_CONFIG } from "./particle-constants";
+import { getParticleQualityProfile } from "./particle-quality.mjs";
 
-function createParticleGeometry() {
+function createParticleGeometry(profile) {
   const data = createSphereParticleData({
-    surfaceCount: PARTICLE_SPHERE_CONFIG.surfaceCount,
-    innerCount: PARTICLE_SPHERE_CONFIG.innerCount,
-    ambientCount: PARTICLE_SPHERE_CONFIG.ambientCount,
+    surfaceCount: profile.surfaceCount,
+    innerCount: profile.innerCount,
+    ambientCount: profile.ambientCount,
     radius: PARTICLE_SPHERE_CONFIG.radius,
   });
   const geometry = new THREE.BufferGeometry();
@@ -46,10 +47,13 @@ export default function LabsParticleSphere() {
     let renderer;
     let particleGeometry;
     let particleMaterial;
+    let particles;
+    let qualityProfile;
     let orbitGroup;
     let glow;
     let resizeObserver;
     let intersectionObserver;
+    let themeObserver;
     let handleContextLost;
     let disposed = false;
     let animationFrame = 0;
@@ -129,6 +133,7 @@ export default function LabsParticleSphere() {
       stop();
       resizeObserver?.disconnect();
       intersectionObserver?.disconnect();
+      themeObserver?.disconnect();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("resize", resize);
       renderer?.domElement?.removeEventListener("webglcontextlost", handleContextLost);
@@ -166,6 +171,34 @@ export default function LabsParticleSphere() {
 
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
+
+      const nextProfile = getParticleQualityProfile({
+        viewportWidth: width,
+        deviceMemory: window.navigator.deviceMemory,
+        hardwareConcurrency: window.navigator.hardwareConcurrency,
+      });
+
+      if (!qualityProfile || qualityProfile.tier !== nextProfile.tier) {
+        const previousGeometry = particles?.geometry;
+        qualityProfile = nextProfile;
+
+        if (particles) {
+          particles.geometry = createParticleGeometry(qualityProfile);
+          previousGeometry?.dispose();
+        }
+      }
+
+      const nextPixelRatio = Math.min(
+        window.devicePixelRatio || 1,
+        qualityProfile?.maxPixelRatio ?? PARTICLE_SPHERE_CONFIG.maxPixelRatio,
+      );
+      if (renderer.getPixelRatio() !== nextPixelRatio) {
+        renderer.setPixelRatio(nextPixelRatio);
+        if (particleMaterial) {
+          particleMaterial.uniforms.uPixelRatio.value = nextPixelRatio;
+        }
+      }
+
       renderer.setSize(width, height, false);
     };
 
@@ -197,13 +230,23 @@ export default function LabsParticleSphere() {
 
       mount.appendChild(renderer.domElement);
 
-      particleGeometry = createParticleGeometry();
+      qualityProfile = getParticleQualityProfile({
+        viewportWidth: mount.getBoundingClientRect().width || window.innerWidth,
+        deviceMemory: window.navigator.deviceMemory,
+        hardwareConcurrency: window.navigator.hardwareConcurrency,
+      });
+      particleGeometry = createParticleGeometry(qualityProfile);
       particleMaterial = new THREE.ShaderMaterial({
         uniforms: {
           uTime: { value: 0 },
           uSqueeze: { value: 0 },
           uPixelRatio: { value: renderer.getPixelRatio() },
           uMotionEnabled: { value: 1 },
+          uBrandColor: {
+            value: new THREE.Color(
+              getComputedStyle(document.documentElement).getPropertyValue("--brand").trim() || "#176b68",
+            ),
+          },
         },
         vertexShader: particleVertexShader,
         fragmentShader: particleFragmentShader,
@@ -213,11 +256,29 @@ export default function LabsParticleSphere() {
         blending: THREE.AdditiveBlending,
       });
 
-      const particles = new THREE.Points(particleGeometry, particleMaterial);
+      particles = new THREE.Points(particleGeometry, particleMaterial);
       sphereGroup.add(particles);
 
       orbitGroup = createParticleOrbits(THREE);
       scene.add(orbitGroup);
+
+      const syncThemeColor = () => {
+        const brandColor = getComputedStyle(document.documentElement)
+          .getPropertyValue("--brand")
+          .trim() || "#176b68";
+        particleMaterial.uniforms.uBrandColor.value.set(brandColor);
+        orbitGroup.traverse((object) => {
+          object.material?.color?.set(brandColor);
+        });
+      };
+
+      if (typeof MutationObserver !== "undefined") {
+        themeObserver = new MutationObserver(syncThemeColor);
+        themeObserver.observe(document.documentElement, {
+          attributes: true,
+          attributeFilter: ["class"],
+        });
+      }
 
       glow = new THREE.Mesh(
         new THREE.SphereGeometry(0.94, 28, 20),
