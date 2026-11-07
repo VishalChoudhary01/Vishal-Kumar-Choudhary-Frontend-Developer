@@ -1,6 +1,6 @@
 # Portfolio Analytics — Implementation Plan
 
-**Status:** Approved implementation baseline · **Implementation:** Phases 1–5 committed; public tracking remains disabled by default  
+**Status:** Approved implementation baseline · **Implementation:** Phases 1–6 committed; public tracking remains disabled by default  
 **Target branch:** `feat/labs-platform-integration`  
 **Scope:** First-party analytics for the public portfolio homepage, project detail pages, Labs collection and Lab detail pages.  
 **Stack:** Existing Next.js App Router, JavaScript, Tailwind CSS v4, Motion (`motion/react`), MongoDB/Mongoose and Vercel hosting.
@@ -934,3 +934,39 @@ Verified after the dashboard regression assertion correction:
 - Next.js build output registered `/admin/portfolio/analytics` as a dynamic route.
 
 No live MongoDB read has been validated against the production visitor collection yet. The dashboard safely renders empty states until eligible visit records exist. Automatic refresh is still Phase 6; deletion controls are Phase 7.
+
+
+---
+
+## Phase 6 implementation record — owner read API and live dashboard polling
+
+**Status:** Implemented in source; polling is active only while the private owner dashboard is open. Public-page tracking remains gated by its two Production flags.
+
+Added `GET /api/v1/admin/portfolio/analytics`:
+- Uses the current Better Auth session and the existing `isLabsOwner` check before any reporting query.
+- Returns a not-found response for authenticated non-owners and an unauthenticated response when there is no session.
+- Supports strict allowlisted query contracts: `view=summary|recent`, `days=7|30|60`, and a bounded recent cursor only for the recent view.
+- Summary and recent reads are independent so the recent table does not cause the more expensive aggregate to rerun.
+- Responses use private/no-store headers, same-origin resource policy and no-referrer policy. No CDN/browser cache is allowed.
+
+Dashboard polling:
+- Summary is refreshed every 10 seconds; recent visits every 30 seconds.
+- The two requests have separate in-flight guards, AbortControllers, timers, failure counters and error states.
+- Polling stops when the document is hidden; pending requests are aborted. Visibility return and window focus request an immediate refresh.
+- Failures use exponential retry backoff (10/20/40/60 seconds for the summary and 30/60 seconds maximum for recent rows), never exceeding 60 seconds.
+- Abort errors are silent. Last successful data remains visible with a restrained stale-data warning after a real failure.
+- Manual refresh requests both resources while preventing overlap.
+- The summary and recent timestamps are kept separately; the dashboard displays the last summary update and each panel's refreshing state.
+- Newly returned recent rows are compared with the previous page snapshot and only inserted rows get a short Motion entrance. Existing rows are not replayed.
+- Period/cursor changes reset the dashboard state to match the new server-provided initial data.
+
+Performance boundaries:
+- All polling code remains inside the private dashboard hook.
+- No polling timer, read API import or admin chart code is mounted on public pages.
+- There is no WebSocket/SSE connection or long-lived server process; polling is browser-driven while the owner page is visible.
+- Read queries are bounded by date range, 12-item aggregation rankings and a 25-row recent page.
+- The UI preserves current data during refresh and does not re-render on a 1-second counter timer.
+
+Tests cover strict query validation, independent intervals, exponential backoff, visibility eligibility, owner check before read queries, no-store response contract, abort behavior, stale-data preservation, manual refresh wiring and new-row-only animation.
+
+**Operational boundary:** Actual API reads still depend on the MongoDB indexes being provisioned and the public tracker being deliberately enabled after the privacy gate. The analytics dashboard can display an empty state until real visit records are collected. No production data collection flag was enabled by Phase 6.
