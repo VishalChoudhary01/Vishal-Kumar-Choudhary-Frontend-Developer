@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import * as THREE from "three";
 
 import { createSphereParticleData } from "../src/app/components/labs/landing/particle-sphere/particle-geometry.mjs";
 import {
@@ -211,15 +210,12 @@ test("sphere world-space size stays fixed while camera framing adapts to mobile"
   assert.ok(mobileDistance > desktopDistance);
   assert.ok(mobileBurstDistance > mobileDistance);
   assert.ok(desktopBurstDistance > desktopDistance);
-  assert.match(rendererSource, /const artworkCameraDistance = getParticleCameraDistance/);
-  assert.match(rendererSource, /idleCameraDistance = artworkCameraDistance \* \(height \/ artworkHeight\)/);
+  assert.match(rendererSource, /idleCameraDistance = getParticleCameraDistance/);
   assert.match(rendererSource, /orbitRadius: 2\.02/);
   assert.match(rendererSource, /burstCameraDistance = getParticleCameraDistance/);
   assert.match(rendererSource, /getParticleBurstRadius\(PARTICLE_SPHERE_CONFIG\.radius\)/);
   assert.match(rendererSource, /camera\.position\.z \+= \(targetCameraDistance - camera\.position\.z\) \* cameraEase/);
   assert.ok(constantsSource.includes("radius: 1.38"));
-  assert.match(rendererSource, /new THREE\.SphereGeometry\(PARTICLE_SPHERE_CONFIG\.radius \+ 0\.14/);
-  assert.match(rendererSource, /new THREE\.SphereGeometry\(PARTICLE_SPHERE_CONFIG\.radius \* 0\.68/);
   assert.match(rendererSource, /particles\.frustumCulled = false/);
   assert.match(rendererSource, /className="absolute inset-0 h-full w-full overflow-hidden"/);
   assert.match(artworkSource, /aspect-\[1\.08\/1\] min-h-\[280px\].*overflow-hidden/);
@@ -259,14 +255,13 @@ test("light and dark themes use distinct particle, sparkle and glow palettes", (
   assert.equal(dark.surfaceParticleOpacityFloor, 0.1);
   assert.equal(light.surfaceParticleSizeScale, 1);
   assert.equal(dark.surfaceParticleSizeScale, 1.16);
-  assert.equal(dark.innerParticleColor, "#a2f2e4");
-  assert.equal(dark.innerParticleOpacity, 0.92);
+  assert.equal(dark.innerParticleColor, "#bafff3");
+  assert.equal(dark.innerParticleOpacity, 0.88);
   assert.equal(dark.sparkleColor, "#e1fff9");
   assert.equal(dark.glowColor, "#061c18");
   assert.equal(dark.glowOpacity, 0.028);
   assert.equal(light.volumeColor, "#17685e");
-  assert.equal(dark.volumeColor, "#67dccb");
-  assert.equal(dark.volumeIntensity, 0.42);
+  assert.equal(dark.volumeColor, "#62d8c7");
   assert.ok(dark.volumeIntensity > light.volumeIntensity);
   assert.equal(light.ambientParticleOpacity, 0.42);
   assert.equal(dark.ambientParticleOpacity, 0.62);
@@ -293,13 +288,6 @@ test("particle quality profiles adapt density and pixel ratio to viewport size",
   assert.equal(mobile.surfaceCount, 2600);
   assert.equal(mobile.maxFps, 40);
   assert.ok(mobile.maxPixelRatio < desktop.maxPixelRatio);
-  assert.equal(desktop.sparkleSpeed, 0.36);
-  assert.equal(mobile.sparkleSpeed, 0.3);
-  assert.equal(mobile.sparkleDensity, 0.42);
-  assert.equal(mobile.sparkleIntensity, 0.42);
-  assert.ok(mobile.sparkleSpeed < desktop.sparkleSpeed);
-  assert.ok(mobile.sparkleDensity < desktop.sparkleDensity);
-  assert.ok(mobile.sparkleIntensity < desktop.sparkleIntensity);
 });
 
 test("constrained devices receive a lower particle budget", () => {
@@ -313,9 +301,6 @@ test("constrained devices receive a lower particle budget", () => {
   assert.equal(constrained.surfaceCount, 2600);
   assert.equal(constrained.maxFps, 30);
   assert.ok(constrained.maxPixelRatio <= 1.2);
-  assert.equal(constrained.sparkleDensity, 0.52);
-  assert.equal(constrained.sparkleIntensity, 0.55);
-  assert.equal(constrained.sparkleSpeed, 0.3);
 });
 
 test("low-tier mobile profile updates its budget even when tier label is unchanged", () => {
@@ -335,17 +320,6 @@ test("low-tier mobile profile updates its budget even when tier label is unchang
   assert.notEqual(lowDesktop.surfaceCount, lowMobile.surfaceCount);
   assert.equal(hasParticleBudgetChanged(lowDesktop, lowMobile), true);
   assert.equal(areParticleQualityProfilesEqual(lowDesktop, lowMobile), false);
-  assert.equal(lowMobile.sparkleDensity, 0.28);
-  assert.equal(lowMobile.sparkleIntensity, 0.3);
-  assert.equal(lowMobile.sparkleSpeed, 0.26);
-});
-
-test("sparkle-only profile changes update quality equality without rebuilding particle geometry", () => {
-  const mobile = getParticleQualityProfile({ viewportWidth: 390 });
-  const slowerMobile = { ...mobile, sparkleSpeed: 0.22 };
-
-  assert.equal(hasParticleBudgetChanged(mobile, slowerMobile), false);
-  assert.equal(areParticleQualityProfilesEqual(mobile, slowerMobile), false);
 });
 
 test("equal particle profiles avoid unnecessary geometry replacement", () => {
@@ -377,11 +351,6 @@ test("particle geometry rejects unsafe counts and invalid radius values", () => 
 
 test("renderer uses one GPU point system and pauses when it cannot be seen", () => {
   assert.match(rendererSource, /new THREE\.Points\(particleGeometry, particleMaterial\)/);
-  assert.match(rendererSource, /mount\.closest\("\[data-labs-hero-root\]"\)/);
-  assert.match(rendererSource, /renderRoot\.appendChild\(renderer\.domElement\)/);
-  assert.match(rendererSource, /renderRoot\.getBoundingClientRect\(\)/);
-  assert.match(rendererSource, /artworkGroup\.position\.set\(/);
-  assert.match(rendererSource, /resizeObserver\.observe\(renderRoot\)/);
   assert.match(rendererSource, /requestAnimationFrame/);
   assert.match(rendererSource, /IntersectionObserver/);
   assert.match(rendererSource, /document\.hidden/);
@@ -404,12 +373,6 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.match(rendererSource, /palette\.innerParticleColor/);
   assert.match(rendererSource, /palette\.innerParticleOpacity/);
   assert.match(rendererSource, /uSparkleColor/);
-  assert.match(rendererSource, /uSparkleDensity: \{ value: qualityProfile\.sparkleDensity \}/);
-  assert.match(rendererSource, /uSparkleIntensity: \{ value: qualityProfile\.sparkleIntensity \}/);
-  assert.match(rendererSource, /uSparkleSpeed: \{ value: qualityProfile\.sparkleSpeed \}/);
-  assert.match(rendererSource, /particleMaterial\.uniforms\.uSparkleDensity\.value = qualityProfile\.sparkleDensity/);
-  assert.match(rendererSource, /particleMaterial\.uniforms\.uSparkleIntensity\.value = qualityProfile\.sparkleIntensity/);
-  assert.match(rendererSource, /particleMaterial\.uniforms\.uSparkleSpeed\.value = qualityProfile\.sparkleSpeed/);
   assert.match(rendererSource, /uSurfaceParticleMix/);
   assert.match(rendererSource, /uSurfaceParticleBrightness/);
   assert.match(rendererSource, /uSurfaceParticleOpacityFloor/);
@@ -449,8 +412,8 @@ test("particle burst uses staggered per-particle recovery without changing base 
   assert.equal(getParticleBurstParticleEnvelope(2.2, 0.5), 0);
   assert.equal(getParticleBurstParticleEnvelope(Number.NaN, 0.5), 0);
 
-  assert.equal(PARTICLE_BURST_EXPANSION, 3.4);
-  assert.ok(getParticleBurstRadius(1.38) > 7.5);
+  assert.equal(PARTICLE_BURST_EXPANSION, 1.85);
+  assert.ok(getParticleBurstRadius(1.38) > 4.8);
   assert.throws(() => getParticleBurstRadius(0), RangeError);
   assert.throws(() => getParticleBurstRadius(Number.NaN), RangeError);
   assert.equal(getOrbitBurstSpeed(0), 1);
@@ -507,74 +470,6 @@ test("orbit particles move continuously and retain their orbital path", () => {
   assert.equal(ORBIT_BURST_SPEED_MULTIPLIER, 1.65);
   assert.match(orbitSource, /delta \* spec\.speed \* burstSpeed/);
   assert.match(orbitSource, /end: Math\.PI \* 2/);
-  const orbitRadii = [...orbitSource.matchAll(/radiusX: ([0-9.]+),\s+radiusY: ([0-9.]+)/g)]
-    .map(([, radiusX, radiusY]) => [Number(radiusX), Number(radiusY)]);
-  assert.equal(orbitRadii.length, 3);
-  orbitRadii.forEach(([radiusX, radiusY]) => {
-    assert.equal(radiusX, radiusY);
-    assert.ok(radiusY > 0);
-  });
-  assert.deepEqual(orbitRadii, [[1.56, 1.56], [1.54, 1.54], [1.7, 1.7]]);
-
-  // Validate the actual perspective projection of each sampled orbit path,
-  // not only its orthographic radius. Every ring must clear the sphere's
-  // apparent silhouette at supported mobile and desktop artwork sizes.
-  const orbitRotations = [...orbitSource.matchAll(/rotation: \[([0-9., -]+)\]/g)]
-    .map(([, rotation]) => rotation.split(",").map(Number));
-  assert.equal(orbitRotations.length, orbitRadii.length);
-
-  const viewportCases = [
-    { width: 320, height: 296 },
-    { width: 375, height: 347 },
-    { width: 768, height: 711 },
-    { width: 1440, height: 1333 },
-  ];
-  const outerSphereRadius = 1.38 * 1.014;
-
-  viewportCases.forEach(({ width, height }) => {
-    const cameraDistance = getParticleCameraDistance({
-      width,
-      height,
-      fovDegrees: 42,
-      orbitRadius: 2.02,
-      fillRatio: 0.94,
-    });
-    const sphereScreenRadius = cameraDistance * outerSphereRadius
-      / Math.sqrt(cameraDistance ** 2 - outerSphereRadius ** 2);
-
-    orbitRadii.forEach(([radius], orbitIndex) => {
-      const rotation = new THREE.Euler(...orbitRotations[orbitIndex], "XYZ");
-      let minimumScreenRadius = Number.POSITIVE_INFINITY;
-
-      for (let segment = 0; segment <= 240; segment += 1) {
-        const angle = (Math.PI * 2 * segment) / 240;
-        const point = new THREE.Vector3(
-          Math.cos(angle) * radius,
-          Math.sin(angle) * radius,
-          Math.sin(angle * 2) * 0.045,
-        ).applyEuler(rotation);
-
-        const projectedRadius = cameraDistance * Math.hypot(point.x, point.y)
-          / (cameraDistance - point.z);
-        minimumScreenRadius = Math.min(minimumScreenRadius, projectedRadius);
-      }
-
-      assert.ok(
-        minimumScreenRadius >= sphereScreenRadius + 0.06,
-        "Orbit " + (orbitIndex + 1) + " must visibly enclose the sphere at " + width + "px",
-      );
-    });
-  });
-  assert.match(orbitSource, /createParticleOrbits\(THREE\)/);
-  assert.doesNotMatch(orbitSource, /desktopRotation|setDesktop/);
-  assert.match(rendererSource, /createParticleOrbits\(THREE\)/);
-  assert.doesNotMatch(rendererSource, /setDesktop/);
-  assert.doesNotMatch(rendererSource, /orbitGroup\.rotation\.y\s*=/);
-  assert.match(rendererSource, /orbitGroup\.rotation\.z\s*=\s*Math\.sin/);
-
-  assert.match(orbitSource, /particleSize: 0\.012/);
-  assert.match(orbitSource, /particleSize: 0\.01/);
-  assert.match(orbitSource, /particleSize: 0\.011/);
   assert.match(orbitSource, /orbit-particle-glow/);
   assert.ok(rendererSource.includes("orbitGroup.userData.update?.(elapsed, burstAmount)"));
 });
@@ -587,7 +482,7 @@ test("Labs hero applies one responsive dark radial background without a separate
 
   assert.match(
     heroSource,
-    /<div data-labs-hero-root="" className="relative w-full overflow-hidden dark:bg-\[radial-gradient\(/,
+    /<div className="relative w-full overflow-hidden dark:bg-\[radial-gradient\(/,
   );
   assert.match(heroSource, /lg:dark:bg-\[radial-gradient\(/);
   assert.doesNotMatch(heroSource, /aria-hidden="true"\s+className="pointer-events-none absolute/);
@@ -611,13 +506,6 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /sparkleMask/);
   assert.match(shaderSource, /sparkleWave/);
   assert.match(shaderSource, /ambientDrift/);
-  assert.match(shaderSource, /uniform float uSparkleDensity/);
-  assert.match(shaderSource, /uniform float uSparkleIntensity/);
-  assert.match(shaderSource, /uniform float uSparkleSpeed/);
-  assert.match(shaderSource, /sparkleChance = mix\(0\.025, 0\.16, sparkleRandom\) \* uSparkleDensity/);
-  assert.match(shaderSource, /sparkleRate = \(0\.62 \+ hash11\(aSeed \* 17\.4\) \* 2\.1\) \* uSparkleSpeed/);
-  assert.match(shaderSource, /sparkleWave/);
-  assert.match(shaderSource, /uSparkleIntensity/);
   assert.match(shaderSource, /sparkleChance/);
   assert.match(shaderSource, /sparkleRandom/);
   assert.match(shaderSource, /burstGlint/);
@@ -653,7 +541,7 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /vTrailDirection/);
   assert.match(shaderSource, /trailTail/);
   assert.match(shaderSource, /burstDistance = length\(position\)\s*\*\s*uBurstExpansion\s*\*\s*particleBurst\s*\*\s*radialVariation/);
-  assert.ok(interactionSource.includes("PARTICLE_BURST_EXPANSION = 3.4"));
+  assert.ok(interactionSource.includes("PARTICLE_BURST_EXPANSION = 1.85"));
   assert.match(shaderSource, /pointerInfluence/);
   assert.match(shaderSource, /float sphereLayer = 1\.0 - ambientLayer/);
   assert.equal((shaderSource.match(/float sphereLayer = 1\.0 - ambientLayer/g) || []).length, 1);

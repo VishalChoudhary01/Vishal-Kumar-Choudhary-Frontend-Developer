@@ -1,7 +1,7 @@
 # Public Labs and Owner Workspace — Current Engineering Map
 
 **Audited branch:** `feat/labs-platform-integration`  
-**Current-state date:** 2026-11-08  
+**Current-state date:** 2026-11-07  
 **Authority:** This guide describes the routes and behavior present in this branch. The PRD and retained design documents define product requirements; accepted superseding Labs decisions are recorded in [ADR-018](../DECISIONS.md#adr-018--7-november-labs-catalogue-detail-owner-and-analytics-supersession).
 
 > **Important boundary:** Public Labs is currently a source-backed custom-experiment catalogue with a static detail page. The owner compiler, temporary Run preview, immutable artifact build and public artifact Route Handler are separate capabilities. The public detail route does not mount the interactive published artifact.
@@ -21,90 +21,6 @@
 | `/admin/labs/experiments/[slug]/edit` | Edit permitted metadata fields | Owner |
 
 Portfolio Analytics at `/admin/portfolio/analytics` is a separate product and data domain. It must not be merged with Labs source-engagement events.
-
-### 1.1 Public Labs landing hero and particle-sphere artwork
-
-**Route entry:** `src/app/labs/page.js` renders `LabsIntroduction` above the public experiment collection.
-**Hero composition:** `src/app/components/labs/LabsIntroduction.js` owns the copy, CTA/stat region, full-hero root and responsive layout. `src/app/components/labs/landing/LabsHeroArtwork.js` owns the decorative artwork boundary. The actual WebGL renderer and its supporting modules live under `src/app/components/labs/landing/particle-sphere/`.
-
-The hero uses a stacked layout on compact screens and a two-column copy/artwork layout at the desktop breakpoint. The outer wrapper is marked with `data-labs-hero-root`, is positioned relative and clips overflow to the hero bounds. Its dark theme uses one responsive radial background on that wrapper; the artwork does not add a separate full-width overlay. Hero copy/CTA content is layered above the artwork. The copy wrapper ignores pointer events by default while its interactive content explicitly restores them, so the decorative canvas does not block the CTA links.
-
-**Artwork is decorative, not an experiment preview.** The figure and canvas are `aria-hidden`. They do not execute a published Lab experiment, load owner source, create an experiment iframe or use the owner compiler. The visual is a Three.js scene authored for the Labs landing page.
-
-#### Render lifecycle and fallback
-
-- `LabsHeroArtwork` uses `motion/react` `useInView` with `once: true` and a `140px` vertical margin. The animated component is not mounted until the figure approaches the viewport.
-- The renderer is loaded through `next/dynamic` with `ssr: false`. While the dynamic module is loading, a lightweight CSS sphere illustration is shown instead of a blank area.
-- The same CSS artwork is used when the user prefers reduced motion and while the figure has not entered the viewport. Reduced-motion mode therefore does not start the animated Three.js scene.
-- If WebGL setup fails or the browser reports `webglcontextlost`, `LabsParticleSphere` disposes the renderer and scene and switches to its static CSS fallback.
-- The component is a client-side visual only. It is not part of server-rendered experiment content.
-
-#### Full-hero canvas and artwork anchoring
-
-The WebGL mount begins inside the artwork figure, but the renderer deliberately attaches its canvas to the closest `[data-labs-hero-root]` element. This is the key boundary that lets the burst occupy the available Labs hero instead of being clipped to the smaller artwork figure.
-
-The canvas is absolutely positioned over the hero root at `inset: 0`, with the root's width and height. The root's `overflow-hidden` is the final clipping boundary, so the burst can travel across the hero without bleeding into the page above or below it.
-
-The sphere and orbits are not moved to the hero's geometric center when the canvas expands. During resize, the renderer measures both the hero root and the original artwork mount, computes the artwork figure's center relative to the hero canvas, and positions the Three.js `artworkGroup` at that center. It separately calculates the idle camera distance from the artwork figure dimensions, then converts that distance to the larger canvas height. This preserves the sphere's resting on-screen size and its position in the artwork column while the WebGL canvas spans the entire hero.
-
-Burst framing uses the hero canvas dimensions and the calculated burst radius. The camera eases from the idle framing toward that wider hero framing during the interaction and returns as the particles recover. This is a camera/framing change; it does not enlarge the sphere geometry or relocate the orbit group.
-
-#### Scene construction and geometry contract
-
-The scene uses one GPU `THREE.Points` system with a custom `ShaderMaterial`. Particle geometry supplies position, size, stable seed, color and layer attributes. The shader handles depth/facing, the visible surface, inner-volume particles, ambient particles, sparkle, glow, pointer influence and burst displacement.
-
-| Element | Current implementation |
-| --- | --- |
-| Sphere | World-space radius `1.38`; the visible particle shell, interior volume, ambient layer and soft glow are grouped together and rotate gently. |
-| First orbit | Circular path radius `1.56`, with its own inclined plane and moving particle runner. |
-| Second orbit | Circular path radius `1.54`, with its own inclined plane and moving particle runner. |
-| Outer orbit | Circular path radius `1.70`, with its own inclined plane and moving particle runner. |
-
-Each orbit path is constructed from 240 line segments and has a separate moving runner with a restrained glow. The ring planes retain their depth angles while the orbit group receives only a very small camera-axis roll; runners advance along their own paths. During a burst, runner speed can rise to at most `1.65×`, but the sphere and ring paths remain intact around the same artwork center.
-
-The orbit/sphere relationship is a tested geometry invariant, not only a visual assumption. `tests/labs-particle-sphere.test.mjs` samples 241 points along each ring after perspective projection at artwork-size fixtures of 320×296, 375×347, 768×711 and 1440×1333. Every sampled orbit must retain at least `0.06` projected-radius clearance outside the sphere silhouette. If the sphere radius, camera fit or an orbit plane/radius is changed, update the geometry test and recheck all three paths together.
-
-#### Sphere tap and full-area particle burst
-
-The renderer uses an invisible interaction-only sphere as the raycast target; this hit surface does not render and does not modify the visible particle geometry. Pointer movement over the sphere updates the shader's local pointer position. A short pointer press/release that starts and ends on the sphere (maximum movement of 12 CSS pixels) restarts the burst. A drag or a press that begins outside the sphere does not trigger it. Pointer capture is used for an active sphere press, and the canvas keeps `touch-action: pan-y` so normal vertical page scrolling remains available.
-
-The burst is a per-particle shader displacement, not a sphere-scale animation:
-
-- The radial expansion factor is `3.4`, with seed-based stagger so particles do not all launch on the same frame.
-- Outward movement reaches its attack phase over `0.45s`; the stagger window is `0.08s`; each particle then recovers over its configured, seed-varied recovery duration (base recovery setting `1.3s`).
-- The camera has a brief anticipation movement, then begins its wider pullback after the particle impulse starts. The camera tracks the longest staggered recovery and eases back to the idle framing.
-- Orbit runners accelerate during the active burst and settle to their regular speeds as the global burst envelope returns to zero.
-- The base particle geometry is retained. Shader offsets are removed progressively per particle, so the sphere reforms rather than being rebuilt or left scattered.
-
-Because the renderer canvas spans `data-labs-hero-root`, the exploded particles can spread across the available hero area. The sphere itself stays at its artwork-column anchor and remains enclosed by its orbit system; the surrounding burst cloud is the part that fills the wider canvas.
-
-#### Theme, responsive quality and lifecycle
-
-`particle-theme.mjs` supplies separate light/dark palettes for surface particles, inner particles, volume, ambient particles, sparkles, glow and orbit runners. The dark palette uses lighter teal particle tones so the secondary sphere layers remain visible against the dark hero, while the glow and orbit-line opacity remain restrained. A theme-class observer updates the existing material uniforms and orbit materials without recreating the whole scene.
-
-`particle-quality.mjs` selects a bounded quality profile using viewport width plus available `navigator.deviceMemory` and `navigator.hardwareConcurrency` hints. It adjusts surface/inner/ambient point counts, sparkle density/intensity/speed, the pixel-ratio cap and the render-FPS cap. The high desktop profile is 5,200 surface points, 620 inner points and 26 ambient points (60 FPS cap, pixel ratio capped at 1.5). Medium, compact and low profiles reduce these budgets; the lowest compact profile uses 1,600 surface points, 140 inner points and 6 ambient points, with a 30 FPS cap, pixel ratio capped at 1.0, and lower/slower sparkle values. Missing device hints are treated as unknown rather than automatically low-end.
-
-The scene resizes from a `ResizeObserver` on both the full hero root and artwork mount (with a window-resize fallback). An `IntersectionObserver` stops the animation loop when the mount is outside the viewport; `document.visibilitychange` also pauses rendering for a hidden tab. The frame loop uses `requestAnimationFrame`, caps delta time and enforces the selected profile's FPS ceiling. On cleanup, the component cancels the frame, disconnects observers, removes event listeners, disposes geometries/materials/render lists and disposes the WebGL renderer.
-
-#### Source ownership and verification
-
-| Concern | Source |
-| --- | --- |
-| Hero content, layout, root marker and background | `src/app/components/labs/LabsIntroduction.js` |
-| Figure, in-view gate, reduced-motion branch and CSS loading fallback | `src/app/components/labs/landing/LabsHeroArtwork.js` |
-| Three.js scene, hero-root canvas, camera, resize, pointer handling and lifecycle | `src/app/components/labs/landing/particle-sphere/LabsParticleSphere.js` |
-| Sphere world-space configuration | `src/app/components/labs/landing/particle-sphere/particle-constants.js` |
-| Sphere point geometry | `src/app/components/labs/landing/particle-sphere/particle-geometry.mjs` |
-| Orbit radii, planes, paths and moving runners | `src/app/components/labs/landing/particle-sphere/particle-orbits.js` |
-| Camera fit for idle and burst framing | `src/app/components/labs/landing/particle-sphere/particle-responsive.mjs` |
-| Burst envelope, particle recovery and camera choreography | `src/app/components/labs/landing/particle-sphere/particle-interaction.mjs` |
-| Device/viewport quality profiles | `src/app/components/labs/landing/particle-sphere/particle-quality.mjs` |
-| Theme palettes | `src/app/components/labs/landing/particle-sphere/particle-theme.mjs` |
-| Custom GPU shaders | `src/app/components/labs/landing/particle-sphere/particle-shaders.js` |
-| Geometry, projected orbit clearance, renderer, burst, theme and quality regression tests | `tests/labs-particle-sphere.test.mjs` |
-| Hero lazy-loading and reduced-motion behavior | `tests/labs-public-hero.test.mjs` |
-
-**Refactor invariants:** keep the canvas attached to the hero root (not only the figure); keep the artwork group anchored to the measured figure center; preserve the idle camera's figure-sized framing; expand the particle cloud through shader displacement and hero-sized camera framing rather than scaling the sphere; keep all three projected orbit paths clear of the sphere; and retain reduced-motion, WebGL-failure, offscreen-pause and tab-hidden behavior.
 
 ## 2. Public catalogue — source-backed custom experiments only
 
@@ -135,14 +51,13 @@ The hero artwork implementation is isolated under `src/app/components/labs/landi
 
 - `LabsHeroArtwork` lazy-loads the client-only Three.js renderer after the artwork enters the viewport. It does not add Three.js to the homepage route.
 - The scene renders one `THREE.Points` system. Its high-tier profile uses 5,200 Fibonacci-distributed surface particles, 620 interior particles and 26 detached ambient particles; the sphere world-space radius is 1.38 (previously 1.22), with a closer responsive idle camera envelope so the visible sphere reads larger on desktop and mobile. medium, compact and constrained-device profiles use lower budgets, DPR caps and render-rate limits. Geometry generation is deterministic and renderer-independent in `particle-geometry.mjs`.
-- Custom shaders provide front-facing surface emphasis, subdued rear-surface visibility, hemisphere fill and a restrained rim highlight for stronger volume, view-space depth attenuation, clearer point cores, soft particle halos, independently seeded particle shimmer and restrained star-like glints; sparkle timing is slower on every device and mobile uses a lower sparkle density and intensity, and small ambient-particle drift. Light mode uses a deep teal particle body (`#103b37`), near-black teal shimmer (`#041816`) and dark teal core glow (`#0a2926`). Dark mode uses a lighter mint-teal outer/surface particle color (`#8ce8dc`) with a 0.08 original-particle blend, 1.45× surface brightness, a 0.10 rear-surface opacity floor and 1.16× surface point-size scale so the full sphere remains visible against the near-black hero background; it retains mint-white glints and a distinct luminous inner layer (`#bafff3`, 0.88 opacity). Light mode retains its original deep-teal surface color, original particle blend, brightness, size and rear-surface opacity, plus the subdued dark-teal inner layer (`#0b2926`, 0.58 opacity). Inner particles use their own shader color/opacity uniforms and retain visibility through the volume instead of inheriting the outer surface's front-facing fade. Theme changes update these uniforms without rebuilding the scene.
+- Custom shaders provide front-facing surface emphasis, subdued rear-surface visibility, hemisphere fill and a restrained rim highlight for stronger volume, view-space depth attenuation, clearer point cores, soft particle halos, stronger independent particle shimmer with bright star-like glints, and small ambient-particle drift. Light mode uses a deep teal particle body (`#103b37`), near-black teal shimmer (`#041816`) and dark teal core glow (`#0a2926`). Dark mode uses a lighter mint-teal outer/surface particle color (`#8ce8dc`) with a 0.08 original-particle blend, 1.45× surface brightness, a 0.10 rear-surface opacity floor and 1.16× surface point-size scale so the full sphere remains visible against the near-black hero background; it retains mint-white glints and a distinct luminous inner layer (`#bafff3`, 0.88 opacity). Light mode retains its original deep-teal surface color, original particle blend, brightness, size and rear-surface opacity, plus the subdued dark-teal inner layer (`#0b2926`, 0.58 opacity). Inner particles use their own shader color/opacity uniforms and retain visibility through the volume instead of inheriting the outer surface's front-facing fade. Theme changes update these uniforms without rebuilding the scene.
 - The sphere has a fixed world-space radius throughout its animation. No contraction, squeeze, scale pulse or geometry resize is applied. Its particles only rotate and use subtle shader-level micro-drift/shimmer.
 - Each of the three closed orbital curves has a small bright core particle and a soft glow particle. The runner advances continuously around its own ellipse using the same animation clock as the scene; the orbit curves themselves remain restrained and behind the sphere.
 - A short click/tap on the visible sphere is confirmed with a Three.js raycast against an invisible interaction-only hit sphere. Each surface/inner particle receives a deterministic 3D impulse: a radial-dominant displacement plus two perpendicular tangential components, per-particle radial variation and a small depth drift. Launch times are staggered across 80 ms and recovery durations vary per particle; the outward phase is 450 ms and recovery varies from approximately 1.36 to 1.57 seconds. The combined radial/tangential envelope can reach roughly 3.4× resting radial distance. A new tap restarts the current burst instead of stacking forces; source geometry and resting sphere radius remain unchanged.
 - Pointer movement over the sphere applies a local repulsion field to nearby particles. The canvas uses Pointer Events, captures only a gesture that begins on the sphere, releases capture on completion/cancel, and keeps `touch-action: pan-y` so vertical page scrolling remains available.
 - During the burst, the three orbit runners accelerate smoothly to at most 1.65× their normal speed and return to their regular cadence as the particles recover.
 - The existing GPU point shader draws a short tapered streak inside each burst particle's point sprite, aligned with its projected screen-space travel direction; it does not allocate separate trail meshes. Sparkle chance, phase, rate and burst-glint intensity are independently seeded per particle, so highlights do not flash in unison.
-- Sparkle animation uses the quality profile's per-device density, intensity and speed values. Compact mobile renders use 0.42 density, 0.42 intensity and 0.30 speed; constrained mobile renders use 0.28 density, 0.30 intensity and 0.26 speed. The renderer updates these shader uniforms on viewport/profile changes without rebuilding particle geometry.
 - Camera response uses a brief anticipation move immediately after interaction, followed by a 140 ms-delayed pullback that follows the particle burst envelope. The camera eases outward faster than it eases back to the idle composition, and resize recalculates the same choreography without changing the artwork viewport or resting sphere geometry.
 - Volumetric shading stays within the single GPU point system. Near/far particles receive separate size and opacity attenuation, distant points blend subtly toward a theme-specific atmospheric tint, interior particles use radial light falloff and a soft volume halo, and ambient points use their own theme color/opacity. Theme changes update the volume and ambient uniforms without rebuilding particle geometry or adding extra light meshes.
 - The perspective camera recalculates its idle and burst distances from the actual canvas width/height. On narrow/mobile canvases it frames the larger idle sphere and orbital paths; during a burst it smoothly eases farther back to reveal the radial particle cloud in all directions, then returns to the closer idle framing. It never scales the sphere geometry. The fixed figure/canvas `overflow-hidden` bounds remain the final guard against page overflow. The figure keeps its fixed `aspect-[1.08/1]` sizing and 280 px minimum height; the burst only changes GPU particle positions and never changes layout dimensions, document height or page overflow.
