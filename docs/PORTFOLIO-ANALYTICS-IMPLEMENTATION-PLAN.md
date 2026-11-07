@@ -1,6 +1,6 @@
 # Portfolio Analytics — Implementation Plan
 
-**Status:** Approved implementation baseline · **Implementation:** Phases 1–2 committed; public tracking remains disabled  
+**Status:** Approved implementation baseline · **Implementation:** Phases 1–3 committed; public tracking remains disabled by default  
 **Target branch:** `feat/labs-platform-integration`  
 **Scope:** First-party analytics for the public portfolio homepage, project detail pages, Labs collection and Lab detail pages.  
 **Stack:** Existing Next.js App Router, JavaScript, Tailwind CSS v4, Motion (`motion/react`), MongoDB/Mongoose and Vercel hosting.
@@ -808,3 +808,36 @@ Verification:
 The public tracker is still not installed. No public page is querying MongoDB or sending analytics requests. `PORTFOLIO_ANALYTICS_ENABLED` remains false by default.
 
 **Operational gate:** run `npm run db:ensure-portfolio-analytics-indexes` against the intended MongoDB database before enabling the public tracker. This provisions both the visit-retention TTL index and the short-lived rate-limit TTL index. 
+
+
+---
+
+## Phase 3 implementation record — deferred public page tracker
+
+**Status:** Implemented in source; not enabled by default.
+
+The tracker is mounted only from these existing client shells:
+- Homepage: `HomePage`
+- Project detail: `ProjectPageView`
+- Labs collection and Lab detail: shared `LabsPageShell`
+
+It is not mounted in the root layout, `AppProviders`, navbar, admin pages or authentication routes.
+
+Implementation:
+- `PortfolioAnalyticsDeferred` waits for hydration and a browser idle opportunity (`requestIdleCallback`, timeout 2.2 seconds; fallback delay 900 ms) before importing the separate tracker chunk.
+- The module import is cached after first load, so subsequent SPA navigation does not wait through another idle period.
+- A tab-scoped random UUID is kept in `sessionStorage`; when storage is blocked, tracking is skipped instead of using a fingerprint.
+- Every eligible page visit has a fresh idempotency UUID. The server HMACs the tab-session and idempotency data before persistence.
+- Only `/`, `/projects/[slug]`, `/labs` and `/labs/[slug]` are accepted.
+- First landing attribution retains only external referrer hostname and the allowlisted UTM source/medium/campaign values. Later same-tab routes are marked internal; arbitrary query parameters and full referrer URLs are omitted.
+- Heartbeats run every 15 seconds while visible. Hidden tabs pause; visible tabs resume. BFCache pagehide/pageshow is handled separately from a true page exit.
+- The module-level lease/grace period handles React Strict Mode effect replay and overlapping public shell transitions. Pending starts are ended if their visit ID arrives after the user has already navigated away.
+- Heartbeat requests do not overlap; public tracking failures remain silent and do not block rendering or navigation.
+
+The client build-time flag `NEXT_PUBLIC_PORTFOLIO_ANALYTICS_ENABLED` is separate from the server flag `PORTFOLIO_ANALYTICS_ENABLED`. Both remain false by default. Client code never receives `PORTFOLIO_ANALYTICS_HMAC_SECRET`. The browser also checks the canonical hostname; the server independently checks its production host and secret.
+
+No route layout, server render function, database query, root provider or public navigation waits for analytics. The tracker code is separately imported after idle. The 4 KB gzip goal and actual Web Vitals impact are not claimed as measured; Phase 8 must measure them on the four public routes.
+
+Tests cover route allowlisting, private-route exclusion, UTM filtering, referrer hostname minimisation, same-tab attribution, deferred import and exact shell mount scope.
+
+**Activation remains blocked** until the MongoDB TTL indexes are provisioned, privacy notice/consent behavior is approved and both feature flags are intentionally set only in the canonical Production environment.
