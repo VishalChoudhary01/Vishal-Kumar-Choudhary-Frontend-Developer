@@ -1,5 +1,8 @@
 # Implementation Plan — Portfolio Platform
 
+
+> **Current-state clarification (2026-11-07):** This is the original phased platform plan and includes historical milestones/gaps from earlier audits. For the latest code status and remaining verification, use [PROJECT-STATUS.md](./PROJECT-STATUS.md). Current architecture, APIs, schemas, runtime, page behavior and Motion are documented in the current-state guides linked from [README.md](./README.md). Historical statements below should be interpreted against their stated audit date, not as the latest branch result.
+
 **Status:** Living platform plan. Active Labs work is on `feat/labs-platform-integration`. The branch contains public Labs, Better Auth, owner source inventory/editor and source lifecycle foundations, initial owner engagement analytics, and isolated compiler/runtime foundations. The 5 November 2026 browser screenshots identify an owner preview Run regression to re-verify, missing custom gallery visuals and a blank Spotlight Dock detail runtime. These remain release-blocking recovery items, not completed features. Runtime/media delivery is governed by `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`; the owner-console plan records the now-implemented route split, metadata editing, custom analytics correction, source handoff and first live dashboard, plus the remaining authenticated QA, Atlas reconciliation, rankings/detail reports and release gates.
 
 ## Principles
