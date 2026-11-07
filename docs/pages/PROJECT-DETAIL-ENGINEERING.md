@@ -21,6 +21,8 @@ The route:
 
 The page's SEO/media metadata is derived from project.seo and project.media. The visible client UI is mounted by ProjectPageView.
 
+ProjectPageView inserts the shared Navbar with `context="project"`: logo-to-home, social links from small breakpoints upward and ThemeToggle remain; homepage section navigation, hamburger menu, Resume and Labs account control are omitted. RootLayout supplies the shared Footer after the project page; homepage section links are hidden there, while socials, Privacy Policy and metadata remain. See [Navbar and Footer Engineering](./NAVBAR-AND-FOOTER-ENGINEERING.md) for the full route/context contract.
+
 ## 2. Route and component tree
 
     projects/[slug]/page.js (Server Component)
