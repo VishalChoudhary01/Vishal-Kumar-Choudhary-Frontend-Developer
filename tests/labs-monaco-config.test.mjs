@@ -28,6 +28,12 @@ test("maps every existing Labs source language to the correct Monaco language", 
   }
 });
 
+test("Monaco hands wheel input back to the owner page at editor scroll boundaries", () => {
+  const options = createLabEditorOptions({ readOnly: false });
+  assert.equal(options.alwaysConsumeMouseWheel, false);
+  assert.equal(options.scrollbar.alwaysConsumeMouseWheel, undefined);
+});
+
 test("unknown or absent language falls back to plaintext without changing source validation", () => {
   assert.equal(resolveLabEditorLanguage("unknown"), "plaintext");
   assert.equal(resolveLabEditorLanguage(null), "plaintext");

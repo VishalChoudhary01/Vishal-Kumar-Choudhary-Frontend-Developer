@@ -63,6 +63,11 @@ export function createLabEditorOptions({
     wordWrap: wordWrap === "on" ? "on" : "off",
     scrollBeyondLastLine: false,
     smoothScrolling: true,
+    /*
+     * Monaco otherwise consumes wheel input even at its scroll boundaries,
+     * preventing the outer owner workspace from continuing to scroll.
+     */
+    alwaysConsumeMouseWheel: false,
     cursorSmoothCaretAnimation: "on",
     automaticLayout: true,
     fontFamily: "var(--font-azeret-mono), ui-monospace, SFMono-Regular, monospace",
@@ -89,7 +94,6 @@ export function createLabEditorOptions({
     scrollbar: {
       verticalScrollbarSize: 10,
       horizontalScrollbarSize: 10,
-      alwaysConsumeMouseWheel: false,
     },
   };
 }

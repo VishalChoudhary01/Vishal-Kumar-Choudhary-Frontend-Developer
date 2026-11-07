@@ -3,22 +3,19 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Lenis from "lenis";
+import { shouldUseLenis } from "./scroll-policy.mjs";
 
 export default function SmoothScroll({ children }) {
   const pathname = usePathname();
-  const isLabsRoute =
-    pathname === "/labs" || pathname.startsWith("/labs/");
+  const useLenis = shouldUseLenis(pathname);
 
   useEffect(() => {
     /*
-     * Labs uses native browser scrolling.
-     *
-     * Scroll-linked experiments observe the document's natural scroll
-     * position. Running the global Lenis wheel/touch interpolation on these
-     * routes makes the page feel like it is taking control of user input.
-     * Leave native scrolling untouched throughout /labs and its detail pages.
+     * Public portfolio and project details retain Lenis. Labs and private
+     * owner/admin pages use native document scrolling so wheel events remain
+     * with the page and naturally hand off from editors and controls.
      */
-    if (isLabsRoute) {
+    if (!useLenis) {
       const activeLenis = window.lenis;
 
       if (activeLenis) {
@@ -61,7 +58,7 @@ export default function SmoothScroll({ children }) {
 
       lenis.destroy();
     };
-  }, [isLabsRoute]);
+  }, [useLenis]);
 
   return children;
 }
