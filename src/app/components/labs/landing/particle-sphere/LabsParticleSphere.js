@@ -200,7 +200,7 @@ export default function LabsParticleSphere() {
         width,
         height,
         fovDegrees: PARTICLE_SPHERE_CONFIG.cameraFov,
-        orbitRadius: 1.9,
+        orbitRadius: 2.2,
         fillRatio: 0.92,
       });
       camera.updateProjectionMatrix();
