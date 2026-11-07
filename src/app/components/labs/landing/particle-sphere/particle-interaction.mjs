@@ -1,6 +1,7 @@
 export const PARTICLE_BURST_OUTWARD_SECONDS = 0.45;
 export const PARTICLE_BURST_RECOVERY_SECONDS = 1.3;
-export const PARTICLE_BURST_EXPANSION = 1.85;
+export const PARTICLE_BURST_EXPANSION = 3.4;
+export const PARTICLE_BURST_CAMERA_FRAMING_EXPANSION = 1.85;
 export const PARTICLE_BURST_MAX_VARIATION = 1.18;
 export const PARTICLE_BURST_CAMERA_PADDING = 0.2;
 export const PARTICLE_BURST_STAGGER_SECONDS = 0.08;
@@ -33,7 +34,7 @@ export function getParticleBurstRadius(sphereRadius) {
     throw new RangeError("sphereRadius must be a positive finite number.");
   }
 
-  const radialReach = PARTICLE_BURST_EXPANSION * PARTICLE_BURST_MAX_VARIATION;
+  const radialReach = PARTICLE_BURST_CAMERA_FRAMING_EXPANSION * PARTICLE_BURST_MAX_VARIATION;
   const tangentialReach = PARTICLE_BURST_TANGENTIAL_STRENGTH
     * (0.65 + PARTICLE_BURST_TANGENTIAL_VARIATION);
   const driftReach = PARTICLE_BURST_DRIFT_STRENGTH;
