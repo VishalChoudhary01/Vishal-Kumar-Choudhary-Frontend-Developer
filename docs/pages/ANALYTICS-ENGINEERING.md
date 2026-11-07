@@ -114,7 +114,7 @@ The page:
 
 GET /api/v1/admin/portfolio/analytics accepts view=summary or recent, validated period, cursor and other approved filters. It returns aggregate data or a paginated recent-visit page, with private/no-store behavior. DELETE /api/v1/admin/portfolio/analytics/visits is owner-only and same-origin protected; it accepts a validated deletion scope and deletes matching visit records. Never allow client-selected arbitrary Mongo filters.
 
-The dashboard reports sessions/visits, page types/pages, source, device and approximate location where the data supports it. Date boundaries and labels must be read from read-query/report-service code; do not substitute a different timezone or imply unique people.
+The dashboard reports sessions/visits, page types/pages, source, device and approximate location where the data supports it. The Portfolio Analytics lab_detail page-visit record is separate from Labs Engagement event instrumentation; it cannot be used to claim per-experiment detail-view/preview event coverage. Date boundaries and labels must be read from read-query/report-service code; do not substitute a different timezone or imply unique people.
 
 The report service uses server-side Mongo aggregation. Aggregate reports should not send raw event records to the browser when aggregate buckets are enough. Recent-visit pagination uses a cursor; recent visit data is more sensitive than aggregates and stays owner-only.
 
@@ -157,8 +157,9 @@ Landing: /admin/labs/analytics
 Detail: /admin/labs/analytics/[slug]
 - owner-only;
 - summary metrics and trend for one experiment;
-- the current active verified-liker panel is a narrow identity exception: name, masked email and like timestamp for active verified likes on this experiment only;
-- do not expose raw user IDs, guest identities or historical individual source/copy/like records.
+- the accepted 7 November privacy contract is aggregate-only: the detail page may display aggregate totals, trends and rankings, but not names, masked emails, like timestamps tied to individual accounts, searchable active-liker rows or individual source/copy/like histories;
+- **Current implementation discrepancy:** the branch still contains an active verified-liker panel that resolves account names and masked emails with timestamps and search/pagination. Remove/redesign it and keep the server DTO aggregate-only before claiming compliance;
+- never expose raw user IDs or guest identities.
 
 ### Event aggregation boundaries
 
