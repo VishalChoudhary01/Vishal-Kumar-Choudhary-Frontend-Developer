@@ -1,5 +1,7 @@
 # Labs Public Page Redesign — Phased Plan
 
+> **Supersession note (2026-11-07):** Sections 1–14 preserve earlier design/audit history and may refer to four code-owned demos or a combined built-in/custom public catalogue. Section 15 records the accepted source-only catalogue decision and is authoritative: current /labs lists only eligible published custom experiments. The public detail page is static/non-executable. Follow Section 15, Section 39 of LABS-AND-AUTHENTICATION-DESIGN-SPEC.md and pages/LABS-AND-OWNER-WORKSPACE.md for current behavior. Historical proposals are not implementation instructions.
+
 **Status:** Phases 1–4 implementation committed. Hero/collection/pagination automated checks and production compilation have passed in an isolated build; database-index provisioning and browser visual QA remain pending. The hero viewport-fit refinement is recorded below. Hero Motion, statistics count-up and authentication-aware CTAs are included in scope.  
 **Branch:** `feat/labs-platform-integration`  
 **Updated:** 7 November 2026  
