@@ -1,12 +1,12 @@
 **Status:** Product/design authority. Dedicated Analytics/Source Library routes, custom published-experiment aggregation/source-event validation, metadata editor, create-to-workspace handoff, live polling dashboard, rankings and experiment detail route are implemented in code. The trend chart is now a lazy-loaded single-metric Chart.js canvas column chart with metric selection, semantic colors, UTC daily/weekly buckets, hover/selection readouts, a data-table equivalent, reduced-motion handling and a retryable load-error state. This code has not yet received a fresh full build, Atlas reconciliation, authenticated browser QA or a new Preview deployment. Experiment-view/preview instrumentation and global ranking by views remain incomplete.
 
-**Owner privacy boundary:** Public like responses expose only the combined active count and the current visitor's state. The owner experiment page may additionally show the current active verified accounts for that one experiment (name, masked email and like timestamp); it does not expose raw user IDs or historical per-user source/copy/like events. Anonymous likes remain aggregate-only.
+**Owner privacy boundary — accepted 2026-11-07:** Public like responses expose only combined active count and the current visitor's state. Owner Analytics is aggregate-only: do not show individual names, masked emails, per-user like timestamps, searchable active-liker rows or source/copy/like histories. Anonymous likes remain aggregate-only. The current experiment-detail UI still contains the older identity panel; remove/redesign it before claiming the interface matches this decision.
 
 This document defines the analytics experience and metric semantics; delivery order is in [the Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md).  
 **Related:** [PRD](./PRD.md), [Admin design](./DESIGN-ADMIN.md), [Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md), [Labs Gallery/Engagement implementation](./LABS-GALLERY-ENGAGEMENT-AND-LIVE-UI-IMPLEMENTATION.md)
 
 ## 1. Purpose
-Give the portfolio owner reliable insight into Lab discovery and engagement, without presenting estimates as exact people counts or implying actions prove downstream outcomes. Analytics are private to the singleton owner/admin. For the first source-engagement release, reporting is aggregate per experiment and reporting period. The sole current-state identity exception is the owner-only active verified-liker drilldown per experiment; there is no individual historical source-view/copy/like timeline. Anonymous browser identities are aggregate-only.
+Give the portfolio owner reliable insight into Lab discovery and engagement, without presenting estimates as exact people counts or implying actions prove downstream outcomes. Analytics are private to the singleton owner/admin. For the first source-engagement release, reporting is aggregate per experiment and reporting period. The 7 November decision removes the previous active verified-liker identity exception. There is no individual historical source-view/copy/like timeline and no individual current-like identity list. Anonymous browser identities are aggregate-only.
 
 ## 2. Dashboard structure
 ### Header and global controls
@@ -103,7 +103,7 @@ Metric names and formulas must be displayed or discoverable in the UI. Avoid com
 - Verified-account likes enforce one active like per account/experiment, using a unique state record. Repeated like/unlike retries do not inflate event counts. Unlike reverses current state; it is not a negative rating. Guest-like events remain separate anonymous action counts.
 - When a verified session is seen with the same guest cookie, the active guest likes are transactionally claimed by the account. An already-active account like wins; the guest state is deactivated to avoid double-counting. Historical events are not rewritten and no synthetic account like event is emitted.
 - Public engagement DTOs expose only the combined active count and the current actor's like state/permission. Do not expose the verified/anonymous breakdown publicly.
-- Restrict analytics endpoints to the singleton owner/admin. Aggregate counts/trends are reported by experiment and date range. The owner-only experiment detail page additionally shows current active verified likers (name, masked email, timestamp) with pagination/search; it does not expose raw user IDs or historical user event rows. Anonymous identities remain aggregate-only.
+- Restrict analytics endpoints to the singleton owner/admin. Aggregate counts/trends are reported by experiment and date range. The accepted owner contract is aggregate-only: no names, masked emails, like timestamps tied to accounts, search/pagination of users or historical per-user event rows. The current implementation still contains an active verified-liker panel; remove/redesign it before release. Anonymous identities remain aggregate-only.
 - Define analytics retention and deletion policy before production. Content version retention is unlimited, but that does not imply unlimited analytics/user-activity retention.
 - Account deletion must follow the documented treatment of account-linked analytics and likes.
 
@@ -214,13 +214,13 @@ The collection event query bounds both ends of the selected reporting window (`s
 
 | Candidate | Assessment for this dashboard | Decision |
 |---|---|---|
-| [Chart.js 4.6.1](https://www.npmjs.com/package/chart.js) | MIT; canvas renderer; standard categorical bar charts, zero-based axes, tooltips and responsive sizing; appropriate for daily/weekly historical counts | **Selected for implementation spike** |
+| [Chart.js 4.6.1](https://www.npmjs.com/package/chart.js) | MIT; canvas renderer; standard categorical bar charts, zero-based axes, tooltips and responsive sizing; appropriate for daily/weekly historical counts | **Selected and integrated in the current branch; current-HEAD verification remains pending** |
 | [Liveline 0.0.7](https://github.com/benjitaylor/liveline) | MIT canvas renderer, crosshair scrubbing, `onHover`, and points shaped as `{ time: unixSeconds, value }`; it can receive historical points, but its line/interpolation and seconds-window controls are optimized for real-time feeds, its version remains 0.x, and a canvas still needs external accessible table/controls | Strong future choice for streaming ticks; not selected for these discrete daily/weekly counts |
 | [ApexCharts](https://apexcharts.com/license/) | Rich line/bar/time-series features. Its current model has a free Community tier only for qualifying organisations below the stated USD 2M resource threshold, paid Commercial licensing for larger organisations, and OEM/redistribution licensing for interactive charts embedded in products/platforms used by others | Not selected; Chart.js MIT terms are simpler for this project and avoid a future distribution-tier ambiguity |
 | Hand-built Canvas 2D | Full visual control, but we would own axis ticks, date scales, hit testing, tooltips, resizing, high-DPI rendering, touch and accessibility fallback | Only fallback if Chart.js fails the spike; do not rebuild a chart engine prematurely |
 
-**Implementation spike before package adoption**
-1. Add Chart.js 4.6.1 (MIT) with an exact lockfile version; record license and bundle-size delta. Do not add ApexCharts or Liveline in parallel.
+**Historical pre-adoption implementation spike checklist (retained as decision history)**
+1. **Historical:** add/pin Chart.js 4.6.1 (MIT), record license and bundle-size delta. This package is already integrated in the current branch; do not add ApexCharts or Liveline in parallel.
 2. Render fixtures for 7, 30, 90 and 365 day windows: 7/30 daily, 90/365 weekly, including all-zero, sparse, spike, repeated-value and first/last partial-week cases.
 3. Verify first/last selected dates remain visible, UTC labels do not drift by timezone, and 90/365 weekly sums reconcile exactly with daily rows, the table and API totals.
 4. Verify zero baseline, integer ticks, one high-volume metric cannot flatten another, and tooltips match the exact table row.
@@ -228,7 +228,7 @@ The collection event query bounds both ends of the selected reporting window (`s
 6. Verify client-only loading under Next.js App Router, React Strict Mode mount/unmount, polling updates and no leaked chart instances/listeners.
 7. Measure the private Analytics bundle and render/update cost with 365 daily inputs. If the spike fails correctness, accessibility or performance gates, do not ship the package; evaluate a small purpose-built canvas renderer with independently tested pure geometry utilities.
 
-**Chart acceptance gate**
+**Chart acceptance gate — current browser verification still required**
 - [ ] One metric at a time; no unlike metrics share a Y-axis.
 - [ ] Y-axis starts at zero and displays integer event counts.
 - [ ] 7/30 daily and 90/365 weekly bucket rules are visible and documented.
