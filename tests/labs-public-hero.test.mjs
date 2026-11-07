@@ -89,22 +89,23 @@ test("Labs route resolves authentication on the server and treats unavailable au
   assert.match(pageSource, /session\.user\.emailVerified === true \? "verified" : "unverified"/);
 });
 
-test("hero illustration is decorative and respects reduced motion", () => {
+test("hero artwork is decorative, lazy-loads Three.js and respects reduced motion", () => {
   assert.match(artworkSource, /aria-hidden="true"/);
   assert.match(artworkSource, /useReducedMotion/);
-  assert.ok(artworkSource.includes("initial={false}"));
-  assert.ok(artworkSource.includes("animate={reducedMotion"));
-  assert.match(artworkSource, /strokeDasharray/);
+  assert.match(artworkSource, /dynamic\(/);
+  assert.match(artworkSource, /ssr:\s*false/);
+  assert.match(artworkSource, /<LabsParticleSphere\s*\/>/);
+  assert.match(artworkSource, /reducedMotion\s*\|\|\s*!isInView/);
+  assert.match(artworkSource, /StaticSphereArtwork/);
 });
 
 test("hero artwork is visible at rest, fills its grid column and animates slowly", () => {
   assert.ok(componentSource.includes("lg:min-h-[calc(100svh-78px)]"));
   assert.ok(componentSource.includes("lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)]"));
   assert.ok(componentSource.includes("min-w-0 w-full lg:justify-self-stretch"));
-  assert.ok(artworkSource.includes('viewBox="0 0 720 620"'));
-  assert.ok(artworkSource.includes("initial={false}"));
-  assert.ok(artworkSource.includes("duration: 76"));
-  assert.ok(artworkSource.includes("duration: 92"));
-  assert.ok(artworkSource.includes("useReducedMotion"));
+  assert.ok(artworkSource.includes("aspect-[1.08/1]"));
+  assert.ok(artworkSource.includes("max-w-[39rem]"));
+  assert.ok(artworkSource.includes("useInView"));
+  assert.ok(artworkSource.includes("margin: \"140px 0px\""));
   assert.doesNotMatch(artworkSource, /Interaction field|VKr \/ Labs|Explore · Build · Refine|Creative systems/);
 });
