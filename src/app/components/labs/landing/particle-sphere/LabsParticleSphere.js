@@ -64,6 +64,8 @@ export default function LabsParticleSphere() {
 
     if (!mount) return undefined;
 
+    const renderRoot = mount.closest("[data-labs-hero-root]") ?? mount;
+
     let renderer;
     let particleGeometry;
     let particleMaterial;
@@ -107,8 +109,24 @@ export default function LabsParticleSphere() {
     let idleCameraDistance = PARTICLE_SPHERE_CONFIG.cameraDistance;
     let burstCameraDistance = PARTICLE_SPHERE_CONFIG.cameraDistance;
 
+    const artworkGroup = new THREE.Group();
+    scene.add(artworkGroup);
+
     const sphereGroup = new THREE.Group();
-    scene.add(sphereGroup);
+    artworkGroup.add(sphereGroup);
+    let artworkCenterNdcX = 0;
+    let artworkCenterNdcY = 0;
+
+    const updateArtworkPosition = () => {
+      const verticalHalfFov = (PARTICLE_SPHERE_CONFIG.cameraFov * Math.PI) / 360;
+      const worldOffsetScale = camera.position.z * Math.tan(verticalHalfFov);
+
+      artworkGroup.position.set(
+        artworkCenterNdcX * worldOffsetScale * camera.aspect,
+        artworkCenterNdcY * worldOffsetScale,
+        0,
+      );
+    };
 
     const stop = () => {
       isRunning = false;
@@ -149,6 +167,7 @@ export default function LabsParticleSphere() {
       const cameraFollowSpeed = cameraPullingBack ? 8 : 5.2;
       const cameraEase = 1 - Math.exp(-delta * cameraFollowSpeed);
       camera.position.z += (targetCameraDistance - camera.position.z) * cameraEase;
+      updateArtworkPosition();
 
       if (particleMaterial) {
         particleMaterial.uniforms.uTime.value = elapsed;
@@ -218,28 +237,42 @@ export default function LabsParticleSphere() {
       renderer?.renderLists?.dispose();
       renderer?.dispose();
 
-      if (renderer?.domElement?.parentNode === mount) {
-        mount.removeChild(renderer.domElement);
+      if (renderer?.domElement?.parentNode === renderRoot) {
+        renderRoot.removeChild(renderer.domElement);
       }
     };
 
     const resize = () => {
       if (!renderer || !mount) return;
 
-      const bounds = mount.getBoundingClientRect();
-      const width = Math.max(1, Math.round(bounds.width));
-      const height = Math.max(1, Math.round(bounds.height));
+      const rootBounds = renderRoot.getBoundingClientRect();
+      const artworkBounds = mount.getBoundingClientRect();
+      const width = Math.max(1, Math.round(rootBounds.width));
+      const height = Math.max(1, Math.round(rootBounds.height));
+      const artworkHeight = Math.max(1, artworkBounds.height);
+      const artworkCenterX = artworkBounds.left + artworkBounds.width / 2;
+      const artworkCenterY = artworkBounds.top + artworkBounds.height / 2;
 
       camera.aspect = width / height;
-      idleCameraDistance = getParticleCameraDistance({
-        width,
-        height,
+      artworkCenterNdcX = ((artworkCenterX - rootBounds.left) / width) * 2 - 1;
+      artworkCenterNdcY = 1 - ((artworkCenterY - rootBounds.top) / height) * 2;
+
+      // Preserve the sphere's resting pixel size even though the renderer now
+      // spans the taller/wider hero instead of only the artwork figure.
+      const artworkCameraDistance = getParticleCameraDistance({
+        width: artworkBounds.width,
+        height: artworkBounds.height,
         fovDegrees: PARTICLE_SPHERE_CONFIG.cameraFov,
         orbitRadius: 2.02,
         fillRatio: 0.94,
       });
+      idleCameraDistance = artworkCameraDistance * (height / artworkHeight);
+
+      // Use the hero's vertical field for the burst framing. The particles are
+      // intentionally allowed to pass beyond this envelope and reach the full
+      // hero canvas rather than remaining contained around the sphere.
       burstCameraDistance = getParticleCameraDistance({
-        width,
+        width: height,
         height,
         fovDegrees: PARTICLE_SPHERE_CONFIG.cameraFov,
         orbitRadius: getParticleBurstRadius(PARTICLE_SPHERE_CONFIG.radius),
@@ -257,6 +290,7 @@ export default function LabsParticleSphere() {
           * PARTICLE_CAMERA_ANTICIPATION_DISTANCE_RATIO
           * resizeCameraChoreography.anticipation;
       camera.updateProjectionMatrix();
+      updateArtworkPosition();
 
       const nextProfile = getParticleQualityProfile({
         viewportWidth: window.innerWidth,
@@ -333,10 +367,14 @@ export default function LabsParticleSphere() {
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.domElement.setAttribute("aria-hidden", "true");
       renderer.domElement.style.display = "block";
+      renderer.domElement.style.position = "absolute";
+      renderer.domElement.style.inset = "0";
+      renderer.domElement.style.zIndex = "0";
       renderer.domElement.style.width = "100%";
       renderer.domElement.style.height = "100%";
+      renderer.domElement.style.pointerEvents = "auto";
 
-      mount.appendChild(renderer.domElement);
+      renderRoot.appendChild(renderer.domElement);
 
       particleGeometry = createParticleGeometry(qualityProfile);
       particleMaterial = new THREE.ShaderMaterial({
@@ -404,7 +442,7 @@ export default function LabsParticleSphere() {
       sphereGroup.add(sphereHitArea);
 
       orbitGroup = createParticleOrbits(THREE);
-      scene.add(orbitGroup);
+      artworkGroup.add(orbitGroup);
 
       const syncThemeColor = () => {
         const palette = getParticleSphereThemePalette(
@@ -486,6 +524,7 @@ export default function LabsParticleSphere() {
         raycaster.setFromCamera(pointerNdc, camera);
 
         const hit = raycaster.intersectObject(sphereHitArea, false)[0];
+        renderer.domElement.style.cursor = hit ? "pointer" : "default";
         if (!hit) {
           particleMaterial.uniforms.uPointerActive.value = 0;
           return false;
@@ -554,7 +593,7 @@ export default function LabsParticleSphere() {
       };
 
       renderer.domElement.style.touchAction = "pan-y";
-      renderer.domElement.style.cursor = "pointer";
+      renderer.domElement.style.cursor = "default";
       renderer.domElement.addEventListener("pointermove", handlePointerMove, { passive: true });
       renderer.domElement.addEventListener("pointerdown", handlePointerDown, { passive: true });
       renderer.domElement.addEventListener("pointerup", handlePointerUp, { passive: true });
@@ -565,6 +604,7 @@ export default function LabsParticleSphere() {
 
       if (typeof ResizeObserver !== "undefined") {
         resizeObserver = new ResizeObserver(resize);
+        resizeObserver.observe(renderRoot);
         resizeObserver.observe(mount);
       } else {
         window.addEventListener("resize", resize, { passive: true });
