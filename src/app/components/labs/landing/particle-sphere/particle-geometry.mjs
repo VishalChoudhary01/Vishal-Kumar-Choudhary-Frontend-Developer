@@ -55,7 +55,7 @@ export function createSphereParticleData({
     positions[offset + 1] = direction.y * particleRadius;
     positions[offset + 2] = direction.z * particleRadius;
 
-sizes[index] = isAmbient
+    sizes[index] = isAmbient
       ? 1.0 + random() * 0.8
       : isInner
         ? 0.48 + random() * 0.62
