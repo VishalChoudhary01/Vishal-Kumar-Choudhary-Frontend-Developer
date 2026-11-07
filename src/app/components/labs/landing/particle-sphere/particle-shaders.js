@@ -12,13 +12,28 @@ export const particleVertexShader = `
   uniform float uInnerParticleOpacity;
   uniform vec3 uSparkleColor;
   uniform float uBurst;
+  uniform float uBurstTime;
   uniform float uBurstExpansion;
+  uniform float uBurstStagger;
+  uniform float uBurstOutwardSeconds;
+  uniform float uBurstRecoverySeconds;
+  uniform float uBurstRecoveryMin;
+  uniform float uBurstRecoveryVariation;
+  uniform float uBurstTangentialStrength;
+  uniform float uBurstTangentialVariation;
+  uniform float uBurstDriftStrength;
   uniform vec3 uPointerPosition;
   uniform float uPointerActive;
 
   varying vec3 vColor;
   varying float vOpacity;
   varying float vSparkle;
+  varying vec2 vTrailDirection;
+  varying float vTrailStrength;
+
+  float hash11(float value) {
+    return fract(sin(value) * 43758.5453123);
+  }
 
   void main() {
     vec3 transformed = position;
@@ -28,11 +43,59 @@ export const particleVertexShader = `
     float innerLayer = step(0.5, aLayer) * (1.0 - ambientLayer);
     float sphereLayer = 1.0 - ambientLayer;
 
-    // Burst is a temporary radial displacement. The source geometry and
-    // resting sphere radius are never changed.
-    float burstVariation = 0.78 + fract(aSeed * 19.73) * 0.40;
-    float burstDistance = length(position) * uBurstExpansion * uBurst * burstVariation;
-    transformed += direction * burstDistance * sphereLayer;
+    // Each particle launches at a slightly different time and recovers at
+    // its own rate. Its source position remains unchanged.
+    float burstDelay = hash11(aSeed * 13.37 + 4.1) * uBurstStagger;
+    float particleBurstTime = uBurstTime - burstDelay;
+    float recoveryVariation = hash11(aSeed * 7.13 + 2.8);
+    float particleRecovery = uBurstRecoverySeconds
+      * (uBurstRecoveryMin + recoveryVariation * uBurstRecoveryVariation);
+    float burstAttack = smoothstep(0.0, uBurstOutwardSeconds, particleBurstTime);
+    float burstRecovery = 1.0 - smoothstep(
+      uBurstOutwardSeconds,
+      uBurstOutwardSeconds + particleRecovery,
+      particleBurstTime
+    );
+    float particleBurst = burstAttack * burstRecovery * sphereLayer;
+
+    // Build a stable 3D impulse from the radial direction and two
+    // perpendicular tangent axes. Radial motion dominates, while the
+    // tangent components create organic depth and lateral scattering.
+    float impulseSeed = aSeed * 91.7;
+    vec3 randomAxis = normalize(vec3(
+      sin(impulseSeed + 1.3),
+      cos(impulseSeed * 0.79 + 2.7),
+      sin(impulseSeed * 1.31 + 0.8)
+    ));
+    vec3 tangent = randomAxis - direction * dot(randomAxis, direction);
+
+    if (length(tangent) < 0.001) {
+      tangent = cross(direction, vec3(0.0, 1.0, 0.0));
+    }
+
+    tangent = normalize(tangent);
+    vec3 bitangent = normalize(cross(direction, tangent));
+
+    float radialVariation = 0.82 + hash11(aSeed * 19.73) * 0.36;
+    float tangentVariation = 0.65
+      + hash11(aSeed * 31.37 + 5.2) * uBurstTangentialVariation;
+    float driftVariation = (hash11(aSeed * 47.11 + 9.4) * 2.0 - 1.0);
+
+    float burstDistance = length(position)
+      * uBurstExpansion
+      * particleBurst
+      * radialVariation;
+
+    vec3 burstOffset = direction * burstDistance;
+    burstOffset += tangent
+      * burstDistance
+      * uBurstTangentialStrength
+      * tangentVariation;
+    burstOffset += bitangent
+      * burstDistance
+      * uBurstDriftStrength
+      * driftVariation;
+    transformed += burstOffset;
 
     // A local magnetic push affects only particles near the pointer hit.
     vec3 pointerDelta = transformed - uPointerPosition;
@@ -61,6 +124,26 @@ export const particleVertexShader = `
     vec4 modelPosition = modelViewMatrix * vec4(transformed, 1.0);
     float viewDepth = max(1.0, -modelPosition.z);
 
+    // Project the displacement to screen space so fragment trails align
+    // with each particle's actual 3D travel direction.
+    vec4 baseModelPosition = modelViewMatrix * vec4(position, 1.0);
+    vec4 baseClipPosition = projectionMatrix * baseModelPosition;
+    vec4 displacedClipPosition = projectionMatrix * modelPosition;
+    vec2 baseScreenPosition = baseClipPosition.xy / max(baseClipPosition.w, 0.0001);
+    vec2 displacedScreenPosition = displacedClipPosition.xy
+      / max(displacedClipPosition.w, 0.0001);
+    vec2 screenTravel = displacedScreenPosition - baseScreenPosition;
+    float screenTravelLength = length(screenTravel);
+    vec2 projectedRadial = (projectionMatrix * modelViewMatrix * vec4(direction, 0.0)).xy;
+    vTrailDirection = screenTravelLength > 0.00001
+      ? screenTravel / screenTravelLength
+      : normalize(projectedRadial + vec2(0.00001));
+    vTrailStrength = clamp(
+      particleBurst * smoothstep(0.018, 0.12, length(burstOffset)),
+      0.0,
+      1.0
+    );
+
     vec3 viewNormal = normalize(mat3(modelViewMatrix) * direction);
     vec3 lightDirection = normalize(vec3(-0.46, 0.38, 0.82));
     float directionalLight = 0.50
@@ -73,27 +156,36 @@ export const particleVertexShader = `
     layerOpacity = mix(layerOpacity, 0.68, ambientLayer);
     float depthFade = 1.0 / (1.0 + max(0.0, viewDepth - 4.0) * 0.14);
 
-    float sparkleThreshold = mix(0.958, 0.90, step(1.5, aLayer));
-    float sparkleMask = step(sparkleThreshold, fract(aSeed * 37.0));
-    float sparkleRate = 0.68 + fract(aSeed * 17.4) * 1.45;
+    // Sparkle frequency, phase, chance and intensity are independently
+    // seeded, so points glint at different moments instead of flashing together.
+    float sparkleRandom = hash11(aSeed * 113.17 + 17.3);
+    float sparkleChance = mix(0.025, 0.16, sparkleRandom);
+    float sparkleMask = step(1.0 - sparkleChance, hash11(aSeed * 37.0 + 3.9));
+    float sparkleRate = 0.62 + hash11(aSeed * 17.4) * 2.1;
+    float sparklePhase = aSeed * 31.4 + sparkleRandom * 6.28318;
     float sparkleWave = pow(
-      max(0.0, sin(uTime * sparkleRate + aSeed * 31.4)),
-      10.0
+      max(0.0, sin(uTime * sparkleRate + sparklePhase)),
+      14.0
     );
-    float sparkle = sparkleMask * sparkleWave * uMotionEnabled;
-    sparkle = min(1.0, sparkle + uBurst * 0.18 * sparkleMask);
+    float burstGlint = particleBurst * sparkleMask
+      * (0.18 + sparkleRandom * 0.72);
+    float sparkle = clamp(
+      (sparkleMask * sparkleWave + burstGlint) * uMotionEnabled,
+      0.0,
+      1.0
+    );
 
     float ambientSize = mix(1.0, 1.18, ambientLayer);
-    float burstSize = 1.0 + uBurst * 0.35 * sphereLayer;
+    float burstSize = 1.0 + particleBurst * 0.85;
 
     gl_PointSize = clamp(
       aSize * ambientSize * burstSize * uPixelRatio
-        * (5.0 / viewDepth) * (1.0 + sparkle * 1.75),
+        * (5.0 / viewDepth) * (1.0 + sparkle * 2.0),
       1.0,
-      9.0 * uPixelRatio
+      12.0 * uPixelRatio
     );
 
-    gl_Position = projectionMatrix * modelPosition;
+    gl_Position = displacedClipPosition;
 
     vec3 particleColor = mix(uBrandColor, aColor, 0.28);
     particleColor = mix(particleColor, uInnerParticleColor, innerLayer);
@@ -102,14 +194,14 @@ export const particleVertexShader = `
     );
     vec3 innerLitColor = uInnerParticleColor * (0.72 + hemisphereFill * 0.28);
     litColor = mix(litColor, innerLitColor, innerLayer);
-    vec3 sparkleColor = uSparkleColor * (0.7 + sparkle * 2.4);
+    vec3 sparkleColor = uSparkleColor * (0.7 + sparkle * 2.8);
 
-    vColor = mix(litColor, sparkleColor, clamp(sparkle * 1.3, 0.0, 1.0));
-    vColor *= 1.0 + sparkle * 2.4 + uBurst * 0.16 * sphereLayer;
+    vColor = mix(litColor, sparkleColor, clamp(sparkle * 1.35, 0.0, 1.0));
+    vColor *= 1.0 + sparkle * 2.8 + particleBurst * 0.22;
     vOpacity = (
       layerOpacity
-      + sparkle * 1.1
-      + uBurst * 0.08 * sphereLayer
+      + sparkle * 1.15
+      + particleBurst * 0.12
     ) * depthFade;
     vSparkle = sparkle;
   }
@@ -119,26 +211,48 @@ export const particleFragmentShader = `
   varying vec3 vColor;
   varying float vOpacity;
   varying float vSparkle;
+  varying vec2 vTrailDirection;
+  varying float vTrailStrength;
 
   void main() {
-    vec2 centered = gl_PointCoord - vec2(0.5);
+    vec2 centered = (gl_PointCoord - vec2(0.5)) * 2.0;
     float distanceFromCenter = length(centered);
+    float alongTrail = dot(centered, vTrailDirection);
+    vec2 perpendicular = vec2(-vTrailDirection.y, vTrailDirection.x);
+    float acrossTrail = abs(dot(centered, perpendicular));
 
-    float core = 1.0 - smoothstep(0.05, 0.44, distanceFromCenter);
-    float halo = exp(-distanceFromCenter * distanceFromCenter * 25.0) * 0.24;
-    float sparkleHalo = exp(-distanceFromCenter * distanceFromCenter * 10.0)
+    float core = 1.0 - smoothstep(0.10, 0.88, distanceFromCenter);
+    float halo = exp(-distanceFromCenter * distanceFromCenter * 6.2) * 0.24;
+    float sparkleHalo = exp(-distanceFromCenter * distanceFromCenter * 4.8)
       * vSparkle
-      * 0.92;
+      * 1.05;
 
-    float rayX = 1.0 - smoothstep(0.0, 0.045, abs(centered.x));
-    float rayY = 1.0 - smoothstep(0.0, 0.045, abs(centered.y));
-    float rayFade = 1.0 - smoothstep(0.08, 0.5, distanceFromCenter);
-    float starRays = max(rayX, rayY) * rayFade * vSparkle * 0.48;
+    // A tapered streak follows the projected movement direction and fades
+    // behind the particle core. It remains inside the existing point sprite.
+    float trailWidth = exp(-acrossTrail * 16.0);
+    float trailLength = exp(-max(0.0, -alongTrail) * 3.4);
+    float trailTail = step(alongTrail, 0.0)
+      * trailWidth
+      * trailLength
+      * vTrailStrength
+      * 0.48;
 
-    float alpha = (core * 0.78 + halo + sparkleHalo + starRays) * vOpacity;
+    float rayX = 1.0 - smoothstep(0.0, 0.04, abs(centered.x));
+    float rayY = 1.0 - smoothstep(0.0, 0.04, abs(centered.y));
+    float rayFade = 1.0 - smoothstep(0.08, 0.72, distanceFromCenter);
+    float starRays = max(rayX, rayY) * rayFade * vSparkle * 0.58;
+
+    float alpha = (
+      core * 0.78
+      + halo
+      + sparkleHalo
+      + starRays
+      + trailTail
+    ) * vOpacity;
 
     if (alpha < 0.012) discard;
 
-    gl_FragColor = vec4(vColor * (1.0 + vSparkle * 2.0), alpha);
+    vec3 trailColor = vColor * (0.78 + trailTail * 0.7);
+    gl_FragColor = vec4(trailColor * (1.0 + vSparkle * 2.2), alpha);
   }
 `;
