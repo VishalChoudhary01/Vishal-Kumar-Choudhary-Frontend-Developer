@@ -20,6 +20,7 @@ This folder is the engineering handover for the complete portfolio platform. Sta
 ## 2. Current-state page guides
 
 - [Homepage](./pages/HOME-PAGE-ENGINEERING.md) — hero, About, Education, Skills, Experience, Projects and Contact, including animation/scroll reconstruction.
+- [Vee Mascot](./pages/PORTFOLIO-MASCOT-ENGINEERING.md) — homepage companion 3D scene, scroll-based position/poses, section reactions and interactive scan system.
 - [Project Detail](./pages/PROJECT-DETAIL-ENGINEERING.md) — server/static route behavior, hero, snapshot, context, approach, design, engineering, motion, responsive, showcase, reflection, navigation.
 - [Public Labs and Owner Workspace](./pages/LABS-AND-OWNER-WORKSPACE.md) — public listing/detail, likes/source, owner analytics, inventory/editor, experiment metadata and media.
 - [Analytics Engineering](./pages/ANALYTICS-ENGINEERING.md) — separate Portfolio Analytics and Labs Engagement Analytics contracts.
