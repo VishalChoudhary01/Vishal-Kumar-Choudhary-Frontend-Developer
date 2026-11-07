@@ -58,6 +58,17 @@ The hero artwork implementation is isolated under `src/app/components/labs/landi
 - Unit coverage is in `tests/labs-particle-sphere.test.mjs`; the test is part of the `npm run build` checks through `test:labs-particle-sphere`.
 
 
+The hero artwork implementation is isolated under `src/app/components/labs/landing/particle-sphere/` and replaces the earlier SVG orbit illustration in `LabsHeroArtwork.js`.
+
+- `LabsHeroArtwork` lazy-loads the client-only Three.js renderer after the artwork enters the viewport. It does not add Three.js to the homepage route.
+- The scene renders one `THREE.Points` system: 4,400 Fibonacci-distributed surface particles, 480 interior particles and 26 detached ambient particles. Geometry generation is deterministic and renderer-independent in `particle-geometry.mjs`.
+- Custom shaders provide view-space depth shading, soft particle halos, per-particle shimmer and small independent ambient-particle drift.
+- A periodic GPU squeeze deforms particle positions (horizontal expansion with vertical compression) and animates the inner glow/orbits; the pulse recovers to the original spherical silhouette.
+- The renderer caps device pixel ratio, resizes through `ResizeObserver`, pauses RAF when offscreen or the document is hidden, and disposes GPU resources. WebGL initialization/context-loss errors fall back to static sphere artwork.
+- Reduced-motion users receive the static artwork and do not initialize the continuously animated WebGL scene.
+- Unit coverage is in `tests/labs-particle-sphere.test.mjs`; the test is part of the `npm run build` checks through `test:labs-particle-sphere`.
+
+
 ## 3. Public detail — static presentation, not an interactive playground
 
 Entry point: `src/app/labs/[slug]/page.js`.
