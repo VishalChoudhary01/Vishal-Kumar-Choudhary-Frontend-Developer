@@ -33,10 +33,12 @@ Current sound is event-driven. There is no confirmed ambient music loop, app-wid
 | File/path | Responsibility |
 |---|---|
 | src/app/hooks/useUiSound.js | Shared Web Audio hook, AudioContext singleton, decoded-buffer cache, voices, fallback pool, unlock listeners, play/stop API |
-| src/app/components/mascot/PortfolioMascot.js | Vee's laser SFX hook call, separate welcome voice, audio prompt and lifecycle |\n| src/app/components/ui/ThemeToggle.js | Plays the theme toggle click/chop effect directly from the user's click before applying the theme |
+| src/app/components/mascot/PortfolioMascot.js | Vee's laser SFX hook call, separate welcome voice, audio prompt and lifecycle |
+| src/app/components/ui/ThemeToggle.js | Plays the theme toggle click/chop effect directly from the user's click before applying the theme |
 | src/app/providers/AppProviders.js | Confirms current provider tree; no dedicated audio provider is mounted |
 | public/audio/hey-there-im-vee-your.wav | Vee spoken welcome |
-| public/mp3/laser-large-004.mp3 | Vee holographic scan / laser SFX |\n| public/mp3/chop.mp3 | ThemeToggle click/chop SFX |
+| public/mp3/laser-large-004.mp3 | Vee holographic scan / laser SFX |
+| public/mp3/chop.mp3 | ThemeToggle click/chop SFX |
 | public/mp3/* | Additional MP3 files present in public; unassigned status is listed in the asset inventory below |
 
 ### Current provider composition
@@ -297,10 +299,10 @@ The recursive repository tree contains nine audio assets. Three are currently co
 
 | Asset | Size | Confirmed current call site | Status |
 |---|---:|---|---|
-| public/audio/hey-there-im-vee-your.wav | 511,244 bytes | Vee welcome voice via native Audio | <active> |
-| public/mp3/laser-large-004.mp3 | 6,103 bytes | Vee scan effect via useUiSound | <active> |
-| public/mp3/book-flip-1.mp3 | 6,730 bytes | None confirmed in this review | Unassigned |
+| public/audio/hey-there-im-vee-your.wav | 511,244 bytes | Vee welcome voice via native Audio | Active |
+| public/mp3/laser-large-004.mp3 | 6,103 bytes | Vee scan effect via useUiSound | Active |
 | public/mp3/chop.mp3 | 2,550 bytes | ThemeToggle click effect via useUiSound (volume 0.25, interrupt true) | Active |
+| public/mp3/book-flip-1.mp3 | 6,730 bytes | None confirmed in this review | Unassigned |
 | public/mp3/click-soft.mp3 | 669 bytes | None confirmed in this review | Unassigned |
 | public/mp3/confirmation-002.mp3 | 4,849 bytes | None confirmed in this review | Unassigned |
 | public/mp3/draw-knife-2.mp3 | 4,222 bytes | None confirmed in this review | Unassigned |
@@ -328,7 +330,19 @@ Public assets are served as static files. No import statement is required for th
       → start sound
       → onended cleanup and disconnect
 
-### Theme Toggle path\n\n    User click\n      → ThemeToggle onClick handler\n      → optional consumer callback\n      → return if defaultPrevented\n      → useUiSound.play() for /mp3/chop.mp3 at volume 0.25\n      → useThemeToggle.toggle()\n      → View Transition / direct theme fallback\n\nThe sound and theme update are sequential, not coupled: a sound failure is swallowed by useUiSound and does not prevent the toggle.\n\n### Vee welcome path
+### Theme Toggle path
+
+    User click
+      → ThemeToggle onClick handler
+      → optional consumer callback
+      → return if defaultPrevented
+      → useUiSound.play() for /mp3/chop.mp3 at volume 0.25
+      → useThemeToggle.toggle()
+      → View Transition / direct theme fallback
+
+The sound and theme update are sequential, not coupled: a sound failure is swallowed by useUiSound and does not prevent the toggle.
+
+### Vee welcome path
 
     Homepage heroReady
       → lazy-load PortfolioMascot
