@@ -107,10 +107,17 @@ export function createParticleOrbits(THREE) {
     orbiters.push({ runner, spec });
   });
 
-  group.userData.update = (elapsed) => {
-    orbiters.forEach(({ runner, spec }) => {
-      const progress = (spec.phase + elapsed * spec.speed) % 1;
-      runner.position.copy(getOrbitPoint(THREE, spec, progress));
+  let lastElapsed = 0;
+  const progressByRunner = orbiters.map(({ spec }) => spec.phase);
+
+  group.userData.update = (elapsed, burstAmount = 0) => {
+    const delta = Math.max(0, elapsed - lastElapsed);
+    const burstSpeed = 1 + Math.max(0, Math.min(1, burstAmount)) * 0.65;
+    lastElapsed = elapsed;
+
+    orbiters.forEach(({ runner, spec }, index) => {
+      progressByRunner[index] = (progressByRunner[index] + delta * spec.speed * burstSpeed) % 1;
+      runner.position.copy(getOrbitPoint(THREE, spec, progressByRunner[index]));
     });
   };
 
