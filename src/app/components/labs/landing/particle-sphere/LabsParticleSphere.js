@@ -9,7 +9,8 @@ import {
   particleVertexShader,
 } from "./particle-shaders";
 import { createParticleOrbits } from "./particle-orbits";
-import { getSphereSqueeze } from "./particle-animation.mjs";
+import { getSphereContraction, getSphereScale } from "./particle-animation.mjs";
+import { getParticleSphereThemePalette } from "./particle-theme.mjs";
 import { PARTICLE_SPHERE_CONFIG } from "./particle-constants";
 import {
   areParticleQualityProfilesEqual,
@@ -105,23 +106,23 @@ export default function LabsParticleSphere() {
 
       if (particleMaterial) {
         particleMaterial.uniforms.uTime.value = elapsed;
-        particleMaterial.uniforms.uSqueeze.value = getSphereSqueeze(elapsed);
+        particleMaterial.uniforms.uContraction.value = getSphereContraction(elapsed);
       }
 
       sphereGroup.rotation.y = elapsed * PARTICLE_SPHERE_CONFIG.rotationSpeed;
       sphereGroup.rotation.x = Math.sin(elapsed * 0.16) * 0.035;
       sphereGroup.rotation.z = Math.sin(elapsed * 0.11) * 0.018;
 
-      const squeeze = getSphereSqueeze(elapsed);
+      const sphereScale = getSphereScale(elapsed);
 
       if (orbitGroup) {
         orbitGroup.rotation.y = -elapsed * PARTICLE_SPHERE_CONFIG.orbitSpeed;
         orbitGroup.rotation.z = Math.sin(elapsed * 0.08) * 0.012;
-        orbitGroup.scale.set(1 + squeeze * 0.012, 1 - squeeze * 0.018, 1);
+        orbitGroup.scale.setScalar(sphereScale);
       }
 
       if (glow) {
-        glow.scale.set(1 + squeeze * 0.035, 1 - squeeze * 0.075, 1 + squeeze * 0.02);
+        glow.scale.setScalar(sphereScale);
       }
 
       renderer.render(scene, camera);
@@ -232,6 +233,10 @@ export default function LabsParticleSphere() {
         hardwareConcurrency: window.navigator.hardwareConcurrency,
       });
 
+      const initialPalette = getParticleSphereThemePalette(
+        document.documentElement.classList.contains("dark"),
+      );
+
       renderer = new THREE.WebGLRenderer({
         alpha: true,
         antialias: true,
@@ -255,14 +260,11 @@ export default function LabsParticleSphere() {
       particleMaterial = new THREE.ShaderMaterial({
         uniforms: {
           uTime: { value: 0 },
-          uSqueeze: { value: 0 },
+          uContraction: { value: 0 },
           uPixelRatio: { value: renderer.getPixelRatio() },
           uMotionEnabled: { value: 1 },
-          uBrandColor: {
-            value: new THREE.Color(
-              getComputedStyle(document.documentElement).getPropertyValue("--brand").trim() || "#176b68",
-            ),
-          },
+          uBrandColor: { value: new THREE.Color(initialPalette.particleColor) },
+          uSparkleColor: { value: new THREE.Color(initialPalette.sparkleColor) },
         },
         vertexShader: particleVertexShader,
         fragmentShader: particleFragmentShader,
@@ -279,13 +281,26 @@ export default function LabsParticleSphere() {
       scene.add(orbitGroup);
 
       const syncThemeColor = () => {
-        const brandColor = getComputedStyle(document.documentElement)
-          .getPropertyValue("--brand")
-          .trim() || "#176b68";
-        particleMaterial.uniforms.uBrandColor.value.set(brandColor);
+        const palette = getParticleSphereThemePalette(
+          document.documentElement.classList.contains("dark"),
+        );
+
+        particleMaterial.uniforms.uBrandColor.value.set(palette.particleColor);
+        particleMaterial.uniforms.uSparkleColor.value.set(palette.sparkleColor);
+
         orbitGroup.traverse((object) => {
-          object.material?.color?.set(brandColor);
+          const material = object.material;
+          if (!material) return;
+
+          material.color.set(palette.particleColor);
+          material.opacity = (material.userData.baseOpacity ?? material.opacity)
+            * palette.orbitOpacityScale;
         });
+
+        if (glow) {
+          glow.material.color.set(palette.glowColor);
+          glow.material.opacity = palette.glowOpacity;
+        }
       };
 
       if (typeof MutationObserver !== "undefined") {
@@ -295,19 +310,19 @@ export default function LabsParticleSphere() {
           attributeFilter: ["class"],
         });
       }
-      syncThemeColor();
 
       glow = new THREE.Mesh(
         new THREE.SphereGeometry(0.94, 28, 20),
         new THREE.MeshBasicMaterial({
-          color: 0x0c514b,
+          color: initialPalette.glowColor,
           transparent: true,
-          opacity: 0.035,
+          opacity: initialPalette.glowOpacity,
           side: THREE.BackSide,
           depthWrite: false,
         }),
       );
       sphereGroup.add(glow);
+      syncThemeColor();
 
       resize();
 
