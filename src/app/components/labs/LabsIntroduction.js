@@ -146,9 +146,11 @@ export default function LabsIntroduction({
             variants={heroItemVariants}
             className="mt-5 max-w-[31rem] text-sm leading-6 text-text-secondary sm:mt-6 sm:text-[15px] sm:leading-7"
           >
-            A growing collection of frontend explorations in motion, interface
-            interactions, CSS, and creative coding. Built to explore ideas,
-            sharpen details, and make the browser a place to experiment.
+            Published frontend experiments by Vishal Kumar Choudhary, a
+            Frontend Developer, exploring motion and animation, CSS,
+            interface interactions, and creative coding. Each detail page
+            explains the experiment and lists its category and technologies;
+            preview media appears when available.
           </motion.p>
 
           <motion.div
