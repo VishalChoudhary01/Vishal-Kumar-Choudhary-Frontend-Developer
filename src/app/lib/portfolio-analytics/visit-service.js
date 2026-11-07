@@ -101,11 +101,14 @@ function buildVisitRecord({ parsed, request, secret, now }) {
   const location = readPortfolioLocation(headers);
   const deviceType = classifyPortfolioDevice(headers.get("user-agent"));
   const attribution = resolvePortfolioAttribution({
-    referrer: headers.get("referer"),
+    referrer: parsed.referrerHost
+      ? `https://${parsed.referrerHost}`
+      : headers.get("referer"),
     ownHosts: getRequestOwnHosts(request),
     utmSource: parsed.utmSource,
     utmMedium: parsed.utmMedium,
     utmCampaign: parsed.utmCampaign,
+    isInternalNavigation: parsed.isInternalNavigation,
   });
 
   return {

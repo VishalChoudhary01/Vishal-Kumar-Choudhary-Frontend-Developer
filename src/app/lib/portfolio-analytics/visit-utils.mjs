@@ -117,6 +117,37 @@ export function resolvePortfolioVisitPage(pathname) {
   return null;
 }
 
+function normalizeReferrerHost(value) {
+  if (typeof value !== "string" || value.length > 253) {
+    throw invalid("Referrer host is invalid.");
+  }
+
+  const candidate = value.trim().toLowerCase();
+  if (
+    !candidate ||
+    candidate.includes("/") ||
+    candidate.includes("@") ||
+    candidate.includes(":") ||
+    candidate.includes("?") ||
+    candidate.includes("#")
+  ) {
+    throw invalid("Referrer host is invalid.");
+  }
+
+  try {
+    const parsed = new URL(`https://${candidate}`);
+    if (
+      parsed.hostname !== candidate ||
+      !/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$/i.test(candidate)
+    ) {
+      throw invalid("Referrer host is invalid.");
+    }
+    return parsed.hostname;
+  } catch {
+    throw invalid("Referrer host is invalid.");
+  }
+}
+
 function normalizeCampaignValue(value) {
   if (value === undefined || value === null || value === "") return null;
   if (typeof value !== "string") throw invalid("Campaign values must be strings.");
@@ -142,6 +173,8 @@ export function parsePortfolioVisitStartPayload(payload) {
     "utmSource",
     "utmMedium",
     "utmCampaign",
+    "referrerHost",
+    "isInternalNavigation",
   ]);
 
   if (payload.action !== "start") throw invalid("Start action is required.");
@@ -156,6 +189,18 @@ export function parsePortfolioVisitStartPayload(payload) {
     throw invalid("A valid idempotency key is required.");
   }
 
+  const referrerHost =
+    payload.referrerHost === undefined || payload.referrerHost === null || payload.referrerHost === ""
+      ? null
+      : normalizeReferrerHost(payload.referrerHost);
+
+  if (
+    payload.isInternalNavigation !== undefined &&
+    typeof payload.isInternalNavigation !== "boolean"
+  ) {
+    throw invalid("Internal navigation flag must be boolean.");
+  }
+
   return {
     action: "start",
     ...page,
@@ -164,6 +209,8 @@ export function parsePortfolioVisitStartPayload(payload) {
     utmSource: normalizeCampaignValue(payload.utmSource),
     utmMedium: normalizeCampaignValue(payload.utmMedium),
     utmCampaign: normalizeCampaignValue(payload.utmCampaign),
+    referrerHost,
+    isInternalNavigation: payload.isInternalNavigation === true,
   };
 }
 
@@ -258,6 +305,7 @@ export function resolvePortfolioAttribution({
   utmSource = null,
   utmMedium = null,
   utmCampaign = null,
+  isInternalNavigation = false,
 } = {}) {
   const ownHostSet = new Set(
     ownHosts.map(normalizeHost).filter(Boolean),
@@ -291,13 +339,15 @@ export function resolvePortfolioAttribution({
     }
   })();
 
-  const sourceType = hasCampaign
-    ? "campaign"
-    : isInternal
-      ? "internal"
-      : referrerHost
-        ? "referral"
-        : "direct";
+  const sourceType = isInternalNavigation
+    ? "internal"
+    : hasCampaign
+      ? "campaign"
+      : isInternal
+        ? "internal"
+        : referrerHost
+          ? "referral"
+          : "direct";
 
   return {
     sourceType,
