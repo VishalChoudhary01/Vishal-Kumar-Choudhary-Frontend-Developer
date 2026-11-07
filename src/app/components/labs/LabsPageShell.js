@@ -3,6 +3,7 @@
 import Navbar from "@/app/components/layout/Navbar";
 import PortfolioIntro from "@/app/components/sections/Intro_loader/portfolioIntro";
 import { usePageLoader } from "@/app/providers/PageLoaderProvider";
+import PortfolioAnalyticsDeferred from "@/app/components/portfolio-analytics/PortfolioAnalyticsDeferred";
 
 export default function LabsPageShell({
   children,
@@ -13,6 +14,7 @@ export default function LabsPageShell({
 
   return (
     <>
+      <PortfolioAnalyticsDeferred />
       {isLoading ? <PortfolioIntro onComplete={completeLoading} /> : null}
       <div
         className="min-h-screen bg-background text-text-primary"

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run test:labs-public-hero && npm run test:labs-featured-experiment && npm run test:labs-public-collection && npm run test:labs-source-only && npm run test:portfolio-analytics-foundation && npm run test:portfolio-analytics-ingestion && npm run test:labs-public-pagination && npm run test:labs-monaco && npm run test:labs-source-reader && npm run test:labs-source-creator && npm run test:labs-history && npm run test:labs-media && npm run test:labs-analytics && node scripts/validate-seo.cjs && next build",
+    "build": "npm run test:labs-public-hero && npm run test:labs-featured-experiment && npm run test:labs-public-collection && npm run test:labs-source-only && npm run test:portfolio-analytics-foundation && npm run test:portfolio-analytics-ingestion && npm run test:portfolio-analytics-tracker && npm run test:labs-public-pagination && npm run test:labs-monaco && npm run test:labs-source-reader && npm run test:labs-source-creator && npm run test:labs-history && npm run test:labs-media && npm run test:labs-analytics && node scripts/validate-seo.cjs && next build",
     "start": "next start",
     "lint": "eslint",
     "validate:seo": "node scripts/validate-seo.cjs",
@@ -24,7 +24,8 @@
     "test:labs-source-only": "node --test tests/labs-source-only-public.test.mjs",
     "test:portfolio-analytics-foundation": "node --test tests/portfolio-analytics-foundation.test.mjs",
     "db:ensure-portfolio-analytics-indexes": "node scripts/ensure-portfolio-analytics-indexes.mjs",
-    "test:portfolio-analytics-ingestion": "node --test tests/portfolio-analytics-ingestion.test.mjs"
+    "test:portfolio-analytics-ingestion": "node --test tests/portfolio-analytics-ingestion.test.mjs",
+    "test:portfolio-analytics-tracker": "node --test tests/portfolio-analytics-tracker.test.mjs"
   },
   "dependencies": {
     "@better-auth/infra": "^0.4.26",

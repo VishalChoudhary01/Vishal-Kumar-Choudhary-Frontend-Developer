@@ -3,6 +3,7 @@
 import { lazy, Suspense } from "react";
 import PortfolioIntro from "./sections/Intro_loader/portfolioIntro";
 import { usePageLoader } from "../providers/PageLoaderProvider";
+import PortfolioAnalyticsDeferred from "@/app/components/portfolio-analytics/PortfolioAnalyticsDeferred";
 import Navbar from "./layout/Navbar";
 const PortfolioMascot = lazy(() => import("./mascot/PortfolioMascot"));
 /*
@@ -52,6 +53,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-background text-background">
+      <PortfolioAnalyticsDeferred />
       {isLoading && (
         <PortfolioIntro onComplete={completeLoading} />
       )}
