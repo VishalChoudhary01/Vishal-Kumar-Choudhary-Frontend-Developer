@@ -2,7 +2,7 @@ export const PARTICLE_SPHERE_CONFIG = Object.freeze({
   surfaceCount: 4400,
   innerCount: 480,
   ambientCount: 26,
-  radius: 1.38,
+  radius: 1.52,
   cameraFov: 42,
   cameraDistance: 4.55,
   maxPixelRatio: 1.5,
