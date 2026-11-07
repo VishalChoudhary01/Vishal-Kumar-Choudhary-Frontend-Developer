@@ -23,6 +23,14 @@ const labsHeroSource = await readFile(
   new URL("../src/app/components/labs/LabsIntroduction.js", import.meta.url),
   "utf8",
 );
+const labsFeaturedSource = await readFile(
+  new URL("../src/app/components/labs/FeaturedExperiment.js", import.meta.url),
+  "utf8",
+);
+const labsCollectionSource = await readFile(
+  new URL("../src/app/components/labs/LabsCollection.js", import.meta.url),
+  "utf8",
+);
 const labsDetailHeader = await readFile(
   new URL("../src/app/components/labs/detail/LabDetailHeader.js", import.meta.url),
   "utf8",
@@ -242,4 +250,12 @@ test("sitemap includes eligible published Labs pages through all cursor pages an
 test("robots keeps private admin paths out of crawl discovery without blocking public Labs poster routes", () => {
   assert.match(robotsSource, /disallow: \["\/admin", "\/admin\/"\]/);
   assert.doesNotMatch(robotsSource, /"\/api\//);
+});
+
+
+test("SEO-critical Labs text and collection cards remain visible before Motion entrances", () => {
+  assert.match(labsHeroSource, /hidden: \{ opacity: 1, y: 14 \}/);
+  assert.match(labsHeroSource, /useMotionValue\(value\)/);
+  assert.match(labsFeaturedSource, /hidden: \{ opacity: 1, y: 16 \}/);
+  assert.match(labsCollectionSource, /initial=\{reducedMotion \? false : \{ opacity: 1, y: 16 \} \}/);
 });
