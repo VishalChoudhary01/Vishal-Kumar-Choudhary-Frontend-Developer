@@ -126,7 +126,7 @@ export default function LabsIntroduction({
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 right-0 z-0 hidden w-full bg-[radial-gradient(ellipse_at_76%_48%,rgba(0,0,0,0.22)_0%,rgba(5,12,10,0.12)_42%,transparent_78%)] dark:block dark:w-[68%] dark:bg-[radial-gradient(ellipse_at_68%_48%,rgba(0,0,0,0.76)_0%,rgba(2,9,7,0.58)_44%,rgba(4,10,8,0.12)_72%,transparent_88%)]"
+        className="pointer-events-none absolute bottom-0 right-0 top-[48%] z-0 hidden w-full bg-[radial-gradient(ellipse_at_76%_48%,rgba(0,0,0,0.22)_0%,rgba(5,12,10,0.12)_42%,transparent_78%)] dark:block dark:w-[68%] dark:bg-[radial-gradient(ellipse_at_68%_48%,rgba(0,0,0,0.76)_0%,rgba(2,9,7,0.58)_44%,rgba(4,10,8,0.12)_72%,transparent_88%)] lg:top-0"
       />
 
       <div className="relative z-10 grid grid-cols-1 items-center gap-8 sm:gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:gap-8 xl:gap-12">
