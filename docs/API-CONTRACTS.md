@@ -1,4 +1,7 @@
 **Status:** Labs auth, public source/engagement, owner source/editor lifecycle, initial owner analytics, private media upload, isolated compiler and immutable runtime endpoints are present in code. The single-metric Chart.js trend chart, public combined-like contract, guest-to-verified active-like migration, owner active verified-liker drilldown, publication-readiness diagnostics and owner-promoted release-bound public gallery poster route are also committed on `feat/labs-platform-integration`. The poster mutation is a new owner-only contract; automatic screenshot generation, public runtime-fallback delivery and detail-gallery media roles remain unimplemented. All current-turn changes still need a clean full build/test, Atlas/provider validation, authenticated browser QA and a new Preview deployment; code presence is not release verification.  
+
+
+> **Current-state clarification (2026-11-07):** This file contains domain contract/design notes and implementation-era API requirements. The current route-handler inventory, actual methods and current access summary are maintained in [api/ENDPOINT-INVENTORY.md](./api/ENDPOINT-INVENTORY.md). For field-level live request/response behavior inspect the Route Handler and owning domain service. When this file describes endpoints not present in the route inventory, treat those details as proposed/historical until the route is implemented.
 **Related:** ARCHITECTURE.md, PROJECT-STRUCTURE.md, PRD.md, [Labs Gallery/Engagement Implementation](./LABS-GALLERY-ENGAGEMENT-AND-LIVE-UI-IMPLEMENTATION.md)
 
 ## 1. Contract rules
