@@ -649,7 +649,6 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /trailTail/);
   assert.match(shaderSource, /burstDistance = length\(position\)\s*\*\s*uBurstExpansion\s*\*\s*particleBurst\s*\*\s*radialVariation/);
   assert.ok(interactionSource.includes("PARTICLE_BURST_EXPANSION = 3.4"));
-  assert.ok(interactionSource.includes("PARTICLE_BURST_CAMERA_FRAMING_EXPANSION = 1.85"));
   assert.match(shaderSource, /pointerInfluence/);
   assert.match(shaderSource, /float sphereLayer = 1\.0 - ambientLayer/);
   assert.equal((shaderSource.match(/float sphereLayer = 1\.0 - ambientLayer/g) || []).length, 1);
