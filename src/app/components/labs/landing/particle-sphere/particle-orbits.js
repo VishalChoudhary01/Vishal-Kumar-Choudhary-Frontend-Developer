@@ -6,7 +6,7 @@ const ORBIT_SPECS = [
   {
     radiusX: 1.56,
     radiusY: 1.56,
-    rotation: [0.24, 0.12, -0.15],
+    rotation: [0.035, 0.03, -0.15],
     opacity: 0.12,
     start: 0,
     end: Math.PI * 2,
@@ -15,9 +15,9 @@ const ORBIT_SPECS = [
     particleSize: 0.012,
   },
   {
-    radiusX: 1.43,
-    radiusY: 1.43,
-    rotation: [0.02, -0.02, 0.48],
+    radiusX: 1.54,
+    radiusY: 1.54,
+    rotation: [0.015, -0.015, 0.48],
     opacity: 0.082,
     start: 0,
     end: Math.PI * 2,
@@ -28,7 +28,7 @@ const ORBIT_SPECS = [
   {
     radiusX: 1.7,
     radiusY: 1.7,
-    rotation: [0.3, 0.35, -0.62],
+    rotation: [0.07, 0.07, -0.62],
     opacity: 0.058,
     start: 0,
     end: Math.PI * 2,
