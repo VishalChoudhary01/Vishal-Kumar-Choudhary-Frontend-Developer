@@ -55,10 +55,10 @@ The scene uses one GPU `THREE.Points` system with a custom `ShaderMaterial`. Par
 
 | Element | Current implementation |
 | --- | --- |
-| Sphere | World-space radius `1.52`; the visible particle shell, interior volume, ambient layer and soft glow are grouped together and rotate gently. |
-| Inner orbit | Circular path radius `1.70`, with its own inclined plane and moving particle runner. |
-| Middle orbit | Circular path radius `1.72`, with its own inclined plane and moving particle runner. |
-| Outer orbit | Circular path radius `1.88`, with its own inclined plane and moving particle runner. |
+| Sphere | World-space radius `1.38`; the visible particle shell, interior volume, ambient layer and soft glow are grouped together and rotate gently. |
+| First orbit | Circular path radius `1.56`, with its own inclined plane and moving particle runner. |
+| Second orbit | Circular path radius `1.54`, with its own inclined plane and moving particle runner. |
+| Outer orbit | Circular path radius `1.70`, with its own inclined plane and moving particle runner. |
 
 Each orbit path is constructed from 240 line segments and has a separate moving runner with a restrained glow. The ring planes retain their depth angles while the orbit group receives only a very small camera-axis roll; runners advance along their own paths. During a burst, runner speed can rise to at most `1.65×`, but the sphere and ring paths remain intact around the same artwork center.
 

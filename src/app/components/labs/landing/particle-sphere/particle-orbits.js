@@ -1,40 +1,40 @@
 import { ORBIT_BURST_SPEED_MULTIPLIER } from "./particle-interaction.mjs";
 
-// Keep each enlarged orbit's projected inner edge outside the sphere silhouette
-// across the tested artwork sizes; the perspective-clearance test protects this.
+// Keep each orbit's projected inner edge outside the sphere silhouette
+// at the supported artwork sizes; the perspective-clearance test protects this.
 const ORBIT_SPECS = [
   {
-    radiusX: 1.72,
-    radiusY: 1.72,
+    radiusX: 1.56,
+    radiusY: 1.56,
     rotation: [0.035, 0.03, -0.15],
     opacity: 0.12,
     start: 0,
     end: Math.PI * 2,
     speed: 0.035,
     phase: 0.04,
-    particleSize: 0.013,
+    particleSize: 0.012,
   },
   {
-    radiusX: 1.7,
-    radiusY: 1.7,
+    radiusX: 1.54,
+    radiusY: 1.54,
     rotation: [0.015, -0.015, 0.48],
     opacity: 0.082,
     start: 0,
     end: Math.PI * 2,
     speed: 0.046,
     phase: 0.38,
-    particleSize: 0.011,
+    particleSize: 0.01,
   },
   {
-    radiusX: 1.88,
-    radiusY: 1.88,
+    radiusX: 1.7,
+    radiusY: 1.7,
     rotation: [0.07, 0.07, -0.62],
     opacity: 0.058,
     start: 0,
     end: Math.PI * 2,
     speed: 0.029,
     phase: 0.72,
-    particleSize: 0.012,
+    particleSize: 0.011,
   },
 ];
 
