@@ -124,7 +124,12 @@ export default function LabsIntroduction({
       variants={heroContainerVariants}
       className="relative mx-auto flex w-full max-w-[1440px] flex-col justify-center overflow-hidden px-6 pb-10 pt-[calc(60px+2rem)] sm:px-8 sm:pb-12 sm:pt-[calc(60px+2.5rem)] lg:min-h-[calc(100svh-78px)] lg:px-20 lg:pb-8 lg:pt-[calc(78px+2.25rem)]"
     >
-      <div className="grid grid-cols-1 items-center gap-8 sm:gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:gap-8 xl:gap-12">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 right-0 z-0 hidden w-full bg-[radial-gradient(ellipse_at_76%_48%,rgba(0,0,0,0.22)_0%,rgba(5,12,10,0.12)_42%,transparent_78%)] dark:block dark:w-[68%] dark:bg-[radial-gradient(ellipse_at_68%_48%,rgba(0,0,0,0.76)_0%,rgba(2,9,7,0.58)_44%,rgba(4,10,8,0.12)_72%,transparent_88%)]"
+      />
+
+      <div className="relative z-10 grid grid-cols-1 items-center gap-8 sm:gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:gap-8 xl:gap-12">
         <div className="relative z-10 flex min-w-0 flex-col items-start">
           <motion.p
             variants={heroItemVariants}
