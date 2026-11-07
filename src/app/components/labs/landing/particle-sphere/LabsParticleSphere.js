@@ -9,6 +9,7 @@ import {
   particleVertexShader,
 } from "./particle-shaders";
 import { createParticleOrbits } from "./particle-orbits";
+import { getSphereSqueeze } from "./particle-animation.mjs";
 import { PARTICLE_SPHERE_CONFIG } from "./particle-constants";
 
 function createParticleGeometry() {
@@ -45,6 +46,7 @@ export default function LabsParticleSphere() {
     let particleGeometry;
     let particleMaterial;
     let orbitGroup;
+    let glow;
     let resizeObserver;
     let animationFrame = 0;
     let isRunning = false;
@@ -65,12 +67,8 @@ export default function LabsParticleSphere() {
     const sphereGroup = new THREE.Group();
     scene.add(sphereGroup);
 
-    const clock = new THREE.Clock();
-
     const stop = () => {
       isRunning = false;
-      clock.stop();
-
       if (animationFrame) {
         cancelAnimationFrame(animationFrame);
         animationFrame = 0;
@@ -90,15 +88,23 @@ export default function LabsParticleSphere() {
 
       if (particleMaterial) {
         particleMaterial.uniforms.uTime.value = elapsed;
+        particleMaterial.uniforms.uSqueeze.value = getSphereSqueeze(elapsed);
       }
 
       sphereGroup.rotation.y = elapsed * PARTICLE_SPHERE_CONFIG.rotationSpeed;
       sphereGroup.rotation.x = Math.sin(elapsed * 0.16) * 0.035;
       sphereGroup.rotation.z = Math.sin(elapsed * 0.11) * 0.018;
 
+      const squeeze = getSphereSqueeze(elapsed);
+
       if (orbitGroup) {
         orbitGroup.rotation.y = -elapsed * PARTICLE_SPHERE_CONFIG.orbitSpeed;
         orbitGroup.rotation.z = Math.sin(elapsed * 0.08) * 0.012;
+        orbitGroup.scale.set(1 + squeeze * 0.012, 1 - squeeze * 0.018, 1);
+      }
+
+      if (glow) {
+        glow.scale.set(1 + squeeze * 0.035, 1 - squeeze * 0.075, 1 + squeeze * 0.02);
       }
 
       renderer.render(scene, camera);
@@ -109,7 +115,6 @@ export default function LabsParticleSphere() {
 
       isRunning = true;
       previousTime = 0;
-      clock.start();
       animationFrame = requestAnimationFrame(renderFrame);
     };
 
@@ -157,6 +162,7 @@ export default function LabsParticleSphere() {
       particleMaterial = new THREE.ShaderMaterial({
         uniforms: {
           uTime: { value: 0 },
+          uSqueeze: { value: 0 },
           uPixelRatio: { value: renderer.getPixelRatio() },
           uMotionEnabled: { value: 1 },
         },
@@ -174,7 +180,7 @@ export default function LabsParticleSphere() {
       orbitGroup = createParticleOrbits(THREE);
       scene.add(orbitGroup);
 
-      const glow = new THREE.Mesh(
+      glow = new THREE.Mesh(
         new THREE.SphereGeometry(0.94, 28, 20),
         new THREE.MeshBasicMaterial({
           color: 0x0c514b,
