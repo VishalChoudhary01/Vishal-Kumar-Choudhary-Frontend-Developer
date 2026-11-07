@@ -158,6 +158,7 @@ The detail page now keeps these factual answers visible in the semantic page:
 - category label, when present;
 - actual experiment description;
 - visible creator byline: “A frontend experiment by Vishal Kumar Choudhary.”;
+- valid persisted publication and update dates rendered as semantic `time` elements, in the same UTC date format used by the source-derived JSON-LD date properties;
 - technology list, when present;
 - static preview in a `figure` with a descriptive caption, only when a preview exists;
 - explanation section with the H2 “How it works”, when an explanation exists;
