@@ -1,5 +1,8 @@
 # Portfolio Analytics — Implementation Plan
 
+
+> **Current-state clarification (2026-11-07):** Portfolio Analytics now has an implemented, feature-gated first-party tracker, lifecycle API, visit model, server aggregation/reporting, recent-visit/deletion APIs and owner dashboard in this branch. This file preserves the original approved requirements and rollout design; its older statements about implementation pending are historical plan text, not the present implementation status. For current code behavior read [pages/ANALYTICS-ENGINEERING.md](./pages/ANALYTICS-ENGINEERING.md), schema [architecture/DATA-MODEL-CATALOG.md](./architecture/DATA-MODEL-CATALOG.md), and routes [api/ENDPOINT-INVENTORY.md](./api/ENDPOINT-INVENTORY.md). Tracking remains feature/host gated and deployment verification is separate from code presence.
+
 **Status:** Approved implementation baseline · **Implementation:** Phases 1–7 committed; public tracking remains disabled by default  
 **Target branch:** `feat/labs-platform-integration`  
 **Scope:** First-party analytics for the public portfolio homepage, project detail pages, Labs collection and Lab detail pages.  
