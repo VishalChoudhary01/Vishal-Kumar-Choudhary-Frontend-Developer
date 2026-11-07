@@ -66,6 +66,34 @@ test("missing and invalid experiment records are not made indexable by metadata 
   );
 });
 
+test("preview image resolver never serializes a video asset as an Open Graph or structured-data image", () => {
+  assert.equal(
+    buildLabPreviewImageUrl({
+      galleryPreview: {
+        src: "https://cdn.example/preview.mp4",
+        mediaKind: "video",
+        contentType: "video/mp4",
+      },
+    }, SITE_URL),
+    null,
+  );
+  assert.equal(
+    buildLabPreviewImageUrl({
+      galleryPreview: {
+        src: "https://cdn.example/preview.mp4",
+        mediaKind: "video",
+        contentType: "video/mp4",
+      },
+      generatedPoster: {
+        src: "https://cdn.example/preview.webp",
+        mediaKind: "image",
+        contentType: "image/webp",
+      },
+    }, SITE_URL),
+    "https://cdn.example/preview.webp",
+  );
+});
+
 test("preview image resolver accepts public HTTPS and root-relative assets only", () => {
   assert.equal(buildLabPreviewImageUrl(experiment, SITE_URL), experiment.thumbnail.src);
   assert.equal(
@@ -77,7 +105,7 @@ test("preview image resolver accepts public HTTPS and root-relative assets only"
   assert.equal(buildLabPreviewImageUrl({ thumbnail: { src: "http://cdn.example/image.png" } }, SITE_URL), null);
 });
 
-test("collection structured data lists only valid current-page records and records the actual eligible total", () => {
+test("collection structured data lists only eligible current-page records and reports the total published count", () => {
   const jsonLd = buildLabsCollectionJsonLd({
     siteUrl: SITE_URL,
     experiments: [
@@ -106,16 +134,40 @@ test("detail structured data describes visible experiment facts and real interna
   assert.deepEqual(creativeWork.keywords, ["Interface Interactions", "React", "Motion", "Tailwind CSS"]);
   assert.equal(creativeWork.image, experiment.thumbnail.src);
   assert.equal(creativeWork.creator.name, "Vishal Kumar Choudhary");
+  assert.equal(
+    creativeWork.datePublished,
+    undefined,
+  );
+  assert.equal(
+    creativeWork.dateModified,
+    undefined,
+  );
   assert.deepEqual(
     breadcrumb.itemListElement.map((item) => item.item),
     ["https://portfolio.example/", "https://portfolio.example/labs", "https://portfolio.example/labs/magnetic-interaction"],
   );
 });
 
-test("detail structured data does not fabricate date, rating, review or user metrics", () => {
+test("detail structured data includes only valid published and modified timestamps", () => {
+  const withDates = buildLabExperimentJsonLd({
+    siteUrl: SITE_URL,
+    experiment: {
+      ...experiment,
+      publishedAt: "2026-10-01T10:00:00.000Z",
+      updatedAt: "2026-11-07T10:00:00.000Z",
+    },
+  })["@graph"][1];
+  assert.equal(withDates.datePublished, "2026-10-01T10:00:00.000Z");
+  assert.equal(withDates.dateModified, "2026-11-07T10:00:00.000Z");
+
+  const invalidDates = buildLabExperimentJsonLd({
+    siteUrl: SITE_URL,
+    experiment: { ...experiment, publishedAt: "not-a-date", updatedAt: null },
+  })["@graph"][1];
+  assert.equal(invalidDates.datePublished, undefined);
+  assert.equal(invalidDates.dateModified, undefined);
+
   const creativeWork = buildLabExperimentJsonLd({ siteUrl: SITE_URL, experiment })["@graph"][1];
-  assert.equal(creativeWork.datePublished, undefined);
-  assert.equal(creativeWork.dateModified, undefined);
   assert.equal(creativeWork.aggregateRating, undefined);
   assert.equal(creativeWork.review, undefined);
   assert.equal(creativeWork.interactionStatistic, undefined);
