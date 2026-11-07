@@ -11,12 +11,14 @@ This folder is the engineering handover for the complete portfolio platform. Sta
 1. [Current Project Status](./PROJECT-STATUS.md) — current code status, future boundary, release checks and document authority.
 2. [System Architecture](./architecture/SYSTEM-ARCHITECTURE.md) — current frontend/backend/domain responsibilities and major data flows.
 3. [Homepage Engineering](./pages/HOME-PAGE-ENGINEERING.md) — every homepage section, component hierarchy, scroll and Motion reconstruction guide.
-4. [Project Detail Engineering](./pages/PROJECT-DETAIL-ENGINEERING.md) — project route, metadata, fixed template, data contract and optional sections.
-5. [Scroll and Motion Engineering](./architecture/SCROLL-AND-MOTION-ENGINEERING.md) — Lenis/native scroll policy, page-loader reset, sticky/pinned timelines, reduced-motion and QA.
-6. [Theme Toggle Engineering](./architecture/THEME-TOGGLE-ENGINEERING.md) — complete theme state ownership, OLD/NEW snapshot behavior, four transition variants, accessibility, fallbacks and cleanup.
-7. [Labs Runtime and Code Execution](./architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md) — source → compiler → sandbox → immutable artifact → isolated public runtime.
-8. [Data Model Catalogue](./architecture/DATA-MODEL-CATALOG.md) — actual Mongoose collections, fields, constraints and indexes.
-9. [API Endpoint Inventory](./api/ENDPOINT-INVENTORY.md) — all current Route Handler endpoints and methods.
+4. [Contact Form and Email Engineering](./pages/CONTACT-FORM-AND-EMAIL-ENGINEERING.md) — full client validation/submission, server API, email builder, Gmail SMTP and security review.
+5. [Project Detail Engineering](./pages/PROJECT-DETAIL-ENGINEERING.md) — project route, metadata, fixed template, data contract and optional sections.
+6. [Scroll and Motion Engineering](./architecture/SCROLL-AND-MOTION-ENGINEERING.md) — Lenis/native scroll policy, page-loader reset, sticky/pinned timelines, reduced-motion and QA.
+7. [Theme Toggle Engineering](./architecture/THEME-TOGGLE-ENGINEERING.md) — complete theme state ownership, OLD/NEW snapshot behavior, four transition variants, accessibility, fallbacks and cleanup.
+8. [Sound Engineering](./architecture/SOUND-ENGINEERING.md) — shared Web Audio lifecycle, Vee, ThemeToggle and Contact success sounds, audio assets and extension guide.
+9. [Labs Runtime and Code Execution](./architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md) — source → compiler → sandbox → immutable artifact → isolated public runtime.
+10. [Data Model Catalogue](./architecture/DATA-MODEL-CATALOG.md) — actual Mongoose collections, fields, constraints and indexes.
+11. [API Endpoint Inventory](./api/ENDPOINT-INVENTORY.md) — all current Route Handler endpoints and methods.
 
 ## 2. Current-state page guides
 
