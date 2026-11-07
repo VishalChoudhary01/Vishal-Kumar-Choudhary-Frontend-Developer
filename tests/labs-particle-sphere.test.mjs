@@ -171,6 +171,12 @@ test("light and dark themes use distinct particle, sparkle and glow palettes", (
   assert.notEqual(light.sparkleColor, dark.sparkleColor);
   assert.notEqual(light.glowColor, dark.glowColor);
   assert.notEqual(light.glowOpacity, dark.glowOpacity);
+  assert.equal(light.particleColor, "#103b37");
+  assert.equal(light.sparkleColor, "#041816");
+  assert.equal(light.glowColor, "#0a2926");
+  assert.equal(dark.particleColor, "#58b7ae");
+  assert.equal(dark.sparkleColor, "#e1fff9");
+  assert.equal(dark.glowColor, "#0c514b");
   assert.ok(light.orbitOpacityScale > 0 && light.orbitOpacityScale <= 1);
   assert.ok(dark.orbitOpacityScale > 0 && dark.orbitOpacityScale <= 1);
 });
@@ -268,7 +274,8 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.match(rendererSource, /syncThemeColor/);
   assert.match(rendererSource, /getParticleSphereThemePalette/);
   assert.ok(rendererSource.includes('classList.contains("dark")'));
-  assert.ok(rendererSource.includes('getPropertyValue("--brand")'));
+  assert.match(rendererSource, /initialPalette\.particleColor/);
+  assert.match(rendererSource, /palette\.particleColor/);
   assert.match(rendererSource, /uSparkleColor/);
   assert.match(rendererSource, /glow\.material\.color\.set\(palette\.glowColor\)/);
   assert.match(rendererSource, /getSphereScale/);
