@@ -115,7 +115,7 @@ Record the exact commit, commands/tests actually run, deployment URL/environment
 - Google/GitHub callback, login/signup intent and verified-email linking;
 - homepage/project-detail responsive, scroll, Motion, accessibility and light/dark regression.
 
-**Verification performed by this documentation pass:** source/docs inspection and GitHub file updates only. No npm install, tests, lint, build, Playwright/browser QA, Atlas query/migration, SMTP delivery, OAuth, Cloudinary, Blob or Sandbox calls were performed.
+**Verification performed by this documentation pass:** source/docs inspection and GitHub file updates only. No npm install, tests, lint, local build, Playwright/browser QA, Atlas query/migration, SMTP delivery, OAuth, Cloudinary, Blob or Sandbox calls were performed. The latest relevant Vercel status check is reported as failure and links to a `build-rate-limit` upgrade page; no GitHub Actions run or test log was available. Do not treat this as test output or a successful deployment.
 
 ## 8. Documentation authority
 
