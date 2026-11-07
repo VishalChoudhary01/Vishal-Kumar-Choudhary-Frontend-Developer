@@ -68,7 +68,8 @@ export const particleVertexShader = `
     float rimLight = pow(1.0 - abs(viewNormal.z), 2.1);
     float hemisphereFill = 0.24 + 0.76 * max(viewNormal.y * 0.5 + 0.5, 0.0);
     float facing = smoothstep(-0.24, 0.32, viewNormal.z);
-    float layerOpacity = mix(1.0, uInnerParticleOpacity, innerLayer);
+    float surfaceOpacity = mix(0.012, 0.92, facing);
+    float layerOpacity = mix(surfaceOpacity, uInnerParticleOpacity, innerLayer);
     layerOpacity = mix(layerOpacity, 0.68, ambientLayer);
     float depthFade = 1.0 / (1.0 + max(0.0, viewDepth - 4.0) * 0.14);
 
@@ -99,12 +100,14 @@ export const particleVertexShader = `
     vec3 litColor = particleColor * (
       directionalLight * hemisphereFill + rimLight * 0.48
     );
+    vec3 innerLitColor = uInnerParticleColor * (0.72 + hemisphereFill * 0.28);
+    litColor = mix(litColor, innerLitColor, innerLayer);
     vec3 sparkleColor = uSparkleColor * (0.7 + sparkle * 2.4);
 
     vColor = mix(litColor, sparkleColor, clamp(sparkle * 1.3, 0.0, 1.0));
     vColor *= 1.0 + sparkle * 2.4 + uBurst * 0.16 * sphereLayer;
     vOpacity = (
-      mix(0.012, 0.92, facing) * layerOpacity
+      layerOpacity
       + sparkle * 1.1
       + uBurst * 0.08 * sphereLayer
     ) * depthFade;
