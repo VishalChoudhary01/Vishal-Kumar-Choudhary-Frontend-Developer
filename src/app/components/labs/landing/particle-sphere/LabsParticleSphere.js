@@ -11,7 +11,10 @@ import {
 import { createParticleOrbits } from "./particle-orbits";
 import { getParticleCameraDistance } from "./particle-responsive.mjs";
 import { getParticleSphereThemePalette } from "./particle-theme.mjs";
-import { getParticleBurstEnvelope } from "./particle-interaction.mjs";
+import {
+  getParticleBurstEnvelope,
+  PARTICLE_BURST_EXPANSION,
+} from "./particle-interaction.mjs";
 import { PARTICLE_SPHERE_CONFIG } from "./particle-constants";
 import {
   areParticleQualityProfilesEqual,
@@ -200,7 +203,7 @@ export default function LabsParticleSphere() {
         width,
         height,
         fovDegrees: PARTICLE_SPHERE_CONFIG.cameraFov,
-        orbitRadius: 2.2,
+        orbitRadius: 1.92,
         fillRatio: 0.92,
       });
       camera.updateProjectionMatrix();
@@ -288,6 +291,7 @@ export default function LabsParticleSphere() {
           uBrandColor: { value: new THREE.Color(initialBrandColor) },
           uSparkleColor: { value: new THREE.Color(initialPalette.sparkleColor) },
           uBurst: { value: 0 },
+          uBurstExpansion: { value: PARTICLE_BURST_EXPANSION },
           uPointerPosition: { value: new THREE.Vector3() },
           uPointerActive: { value: 0 },
         },
@@ -305,7 +309,7 @@ export default function LabsParticleSphere() {
       // Invisible raycast surface detects clicks and taps on the 3D sphere.
       // It is not rendered and does not alter the visible sphere geometry.
       sphereHitArea = new THREE.Mesh(
-        new THREE.SphereGeometry(1.28, 24, 18),
+        new THREE.SphereGeometry(1.36, 24, 18),
         new THREE.MeshBasicMaterial({
           colorWrite: false,
           depthWrite: false,
@@ -515,7 +519,7 @@ export default function LabsParticleSphere() {
     <div
       ref={mountRef}
       aria-hidden="true"
-      className="absolute inset-0 h-full w-full"
+      className="absolute inset-0 h-full w-full overflow-hidden"
     />
   );
 }
