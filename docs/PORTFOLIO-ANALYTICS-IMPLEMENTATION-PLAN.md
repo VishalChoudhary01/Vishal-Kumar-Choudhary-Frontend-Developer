@@ -1,6 +1,6 @@
 # Portfolio Analytics — Implementation Plan
 
-**Status:** Approved implementation baseline · **Implementation:** Phases 1–4 committed; public tracking remains disabled by default  
+**Status:** Approved implementation baseline · **Implementation:** Phases 1–5 committed; public tracking remains disabled by default  
 **Target branch:** `feat/labs-platform-integration`  
 **Scope:** First-party analytics for the public portfolio homepage, project detail pages, Labs collection and Lab detail pages.  
 **Stack:** Existing Next.js App Router, JavaScript, Tailwind CSS v4, Motion (`motion/react`), MongoDB/Mongoose and Vercel hosting.
@@ -896,3 +896,25 @@ Verified against the Phase 4 implementation and test correction commits:
 - Full `npm run build`: passed, including all existing Labs and Portfolio Analytics suites, SEO validation and Next.js production compilation/static generation.
 
 No production MongoDB aggregation has been run against visitor data yet. The service is ready for the owner-only dashboard/API phase, but the current page remains the Phase 2 status screen until Phase 5 connects and renders these report functions.
+
+
+---
+
+## Phase 5 implementation record — private Portfolio Analytics dashboard
+
+**Status:** Implemented in source; live polling and deletion remain later phases.
+
+The owner-only `/admin/portfolio/analytics` page now:
+- Verifies the Better Auth session and configured Labs owner identity before performing either reporting query. Non-owners continue to receive not-found.
+- Server-renders the selected bounded report and first 25 recent visits using `force-dynamic`, `revalidate = 0` and `fetchCache = "force-no-store"`.
+- Supports 7/30/60-day filters through the private route query string.
+- Renders animated KPI values using the existing MotionNumber component and reduced-motion-aware Motion entrances.
+- Renders an SVG visit trend from the real daily report points.
+- Shows top pages, traffic sources, locations, devices and page-type distribution using the existing theme token system.
+- Displays paginated recent visits with timestamp (IST), page path/type, source hostname/campaign, coarse location, device and visible time.
+- Provides empty, partial-error and full-report-error states without demo or placeholder analytics values.
+- Explains page visits versus tab sessions/people, visible-time semantics, approximate location, UTC reporting buckets and IST timestamp display.
+
+No read API endpoint or automatic polling has been added in this phase. Period changes and cursor pagination are server navigations; Phase 6 will introduce the owner-authorized read endpoint, polling cadence, abort/backoff and live update behavior. Deletion remains Phase 7.
+
+**Verification scope:** A dashboard regression suite checks owner-guard ordering, no-store rendering, report-field mapping, period filters, cursor pagination, theme token usage and isolation from public page shells. Real MongoDB aggregation remains unverified until index provisioning runs against the intended database and actual visit records exist.

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run test:labs-public-hero && npm run test:labs-featured-experiment && npm run test:labs-public-collection && npm run test:labs-source-only && npm run test:portfolio-analytics-foundation && npm run test:portfolio-analytics-ingestion && npm run test:portfolio-analytics-tracker && npm run test:portfolio-analytics-reports && npm run test:labs-public-pagination && npm run test:labs-monaco && npm run test:labs-source-reader && npm run test:labs-source-creator && npm run test:labs-history && npm run test:labs-media && npm run test:labs-analytics && node scripts/validate-seo.cjs && next build",
+    "build": "npm run test:labs-public-hero && npm run test:labs-featured-experiment && npm run test:labs-public-collection && npm run test:labs-source-only && npm run test:portfolio-analytics-foundation && npm run test:portfolio-analytics-ingestion && npm run test:portfolio-analytics-tracker && npm run test:portfolio-analytics-reports && npm run test:portfolio-analytics-dashboard && npm run test:labs-public-pagination && npm run test:labs-monaco && npm run test:labs-source-reader && npm run test:labs-source-creator && npm run test:labs-history && npm run test:labs-media && npm run test:labs-analytics && node scripts/validate-seo.cjs && next build",
     "start": "next start",
     "lint": "eslint",
     "validate:seo": "node scripts/validate-seo.cjs",
@@ -26,7 +26,8 @@
     "db:ensure-portfolio-analytics-indexes": "node scripts/ensure-portfolio-analytics-indexes.mjs",
     "test:portfolio-analytics-ingestion": "node --test tests/portfolio-analytics-ingestion.test.mjs",
     "test:portfolio-analytics-tracker": "node --test tests/portfolio-analytics-tracker.test.mjs",
-    "test:portfolio-analytics-reports": "node --test tests/portfolio-analytics-reports.test.mjs"
+    "test:portfolio-analytics-reports": "node --test tests/portfolio-analytics-reports.test.mjs",
+    "test:portfolio-analytics-dashboard": "node --test tests/portfolio-analytics-dashboard.test.mjs"
   },
   "dependencies": {
     "@better-auth/infra": "^0.4.26",
