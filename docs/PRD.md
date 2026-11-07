@@ -1,6 +1,6 @@
 # Product Requirements Document — Portfolio Platform
 
-**Status:** Approved product requirements baseline. The `feat/labs-platform-integration` branch contains the public Labs/auth foundation, owner source inventory/editor, source lifecycle APIs, immutable version/audit foundations and initial aggregate source-engagement analytics. The dedicated Analytics and Source Library routes, custom published-experiment analytics coverage and owner-only custom experiment metadata editor/PATCH are committed and Preview build-verified. Anonymous route smoke checks pass; authenticated owner editing/browser QA and Atlas-backed event reconciliation remain pending. The initial live Analytics dashboard is committed and Preview-build verified: 10-second visible-tab polling, stale/error handling, MotionNumber totals and a four-series trend chart for instrumented events. Authenticated refresh round-trip and visual/accessibility QA remain pending. Deterministic rankings for instrumented source opens, copies and current active likes plus per-experiment aggregate analytics are now implemented in code; they are included in READY Preview deployment `dpl_ADaqDDWRKP2WjESBaKA2dqgBuv7a`; authenticated Atlas verification remains pending. Public view and preview-event metrics are still not instrumented. A dependency-free Node regression suite now runs before the production build. It has expanded to 12 cases covering rankings, periods, UTC series, custom-artifact eligibility, actor attribution, active likes, collection totals and source-event rate-limit policy. The previous READY Preview passed six tests; the expanded suite and per-user source-event quota changes require a fresh Preview build. Authenticated Atlas reconciliation remains pending. Preview/runtime and media release gates remain governed by the Runtime and Media Plan.  
+**Status:** Approved product requirements baseline; this file describes target behavior, not proof that a requirement is implemented. Current route/code status and the dated supersession decisions are recorded in `PROJECT-STATUS.md`, `pages/LABS-AND-OWNER-WORKSPACE.md` and Section 39 of `LABS-AND-AUTHENTICATION-DESIGN-SPEC.md`. This branch contains the public Labs source-backed custom catalogue, static detail page, owner source/editor lifecycle, isolated owner Run/build infrastructure, artifact delivery endpoint, initial aggregate source-engagement Analytics and optional auth-provider code. Known gaps include owner ID-only enforcement (email fallback remains in code), aggregate-only Analytics (individual active-liker panel remains in code), detail-view/preview event instrumentation, full media-role migration, personal account dashboard/profile/deletion and discovery search/sort. Current-HEAD production build, full suite, authenticated browser QA and external integration checks were not run as part of this document pass.  
 **Version:** 1.3  
 **Scope:** Existing portfolio extension: Labs, authentication, owner-managed source lifecycle, analytics, media and the separately deferred general portfolio CMS/Admin. This PRD records target requirements; branch code or a rendered page alone does not establish production readiness.
 
@@ -68,7 +68,7 @@ Extend the existing developer portfolio into a maintainable platform where the o
 ### Public route behavior
 - Existing public routes and project detail URLs must continue to work.
 - Project detail pages are data-driven by stable slug (for example, `/projects/system-canvas`) using the existing approved detail-page template.
-- Lab entries use stable descriptive URLs (for example, `/lab/animated-gradient-card`).
+- Labs entries use stable descriptive URLs under `/labs/[slug]`.
 - Published content is publicly renderable; draft/unpublished content is private and must not be indexed.
 - CMS mutations trigger appropriate cache revalidation only after successful publication/state changes.
 
@@ -86,16 +86,18 @@ Extend the existing developer portfolio into a maintainable platform where the o
 - Publish/unpublish an exact saved source version; preserve immutable history and restore by creating a new version.
 - Published source is automatically readable by every registered account whose email is verified. There is no per-user source grant/revoke workflow; the owner controls availability through publish/unpublish.
 - Owner Studio **Run** must compile and execute the current unsaved working copy in the isolated preview for supported HTML/CSS/JavaScript, React JS/JSX and React TSX modes. Run is core functionality and must remain available while gallery/media features are implemented.
-- A published experiment detail page runs the exact immutable published artifact in the isolated runtime; it must not leave a blank white canvas while loading or after failure.
-- Gallery cards are static-only: never run experiment code, mount React roots, create experiment iframes or start compiler jobs in the card grid.
+- The public experiment detail page is a static presentation: metadata, engagement, selected static media, explanation and protected source. It does not mount LabWorkspace, LabRuntimeBoundary, an artifact iframe or executable experiment code. This is the accepted 7 November product decision.
+- The immutable artifact delivery Route Handler and publish pipeline remain separate infrastructure. Their presence does not mean that public detail embeds/runs an artifact.
+- Gallery cards and public detail media are static-only: never run experiment code, mount experiment React roots, create experiment iframes or start compiler jobs in the public page.
 - Every card displays an explicitly selected published gallery-preview asset when configured; otherwise a generated static poster from the exact published artifact; otherwise existing LabArtwork/neutral artwork. Uploaded GIF/video is optional and is not required for a code-derived poster.
 - Generated posters are version-bound to the published source/build and captured only after a successful runtime-ready signal. Poster failure does not replace the working code runtime or block a valid release; it uses artwork fallback and exposes retry/regenerate.
-- Uploaded media supports explicit gallery-preview, detail-gallery and runtime-fallback roles. Runtime-fallback is shown only when the detail runtime fails or is unsupported; detail-gallery media supplements but never replaces the interactive runtime. The currently implemented fallback-only attachment model requires migration before these roles ship.
+- Target media roles are gallery-preview, ordered detail-gallery and runtime-fallback. The current model is a separate galleryPreview plus at most one fallback-preview attachment; the full role model and detail-gallery migration are not implemented. Because public detail is static, a failed-runtime fallback surface is not part of the current page.
 - Preview before publication; publish/unpublish with explicit confirmation.
 - Validate source/configuration and dependency allowlists before an experiment becomes eligible for interactive preview.
-- Public pages never expose full source through HTML, client bundles, API responses or predictable asset URLs to guests.
+- Public pages never expose protected source through HTML, client bundles, API responses or predictable asset URLs to guests. The current public detail page's static media is not an executable runtime.
 
 ### FR-03 Discovery
+**Current implementation status:** public GET /api/v1/labs supports validated category and cursor pagination with a fixed page size of 18. Search, technology/tag filters and visitor-selected sort are not implemented.
 - Search by title, description, technology and tags.
 - Filter by category, technology, animation type and tags.
 - Sort by newest, most viewed, most liked and most copied.
@@ -103,8 +105,9 @@ Extend the existing developer portfolio into a maintainable platform where the o
 - No curated collections are required in this baseline.
 
 ### FR-04 Authentication and authorization
+**Current implementation status:** email/password auth and conditional Google/GitHub provider code are present; provider credential/callback configuration and full E2E are pending. Better Auth does not currently expose the full PRD personal profile/account deletion product.
 - Email/password, Google OAuth and GitHub OAuth registration/sign-in. Email/password remains supported alongside both providers.
-- Email verification, password reset, secure session handling, sign-out, profile management and account deletion.
+- Email verification, password reset, secure session handling and sign-out have implementation paths. Profile management and self-service account deletion remain unimplemented PRD targets.
 - Keep `/privacy` available as an informational disclosure; do not require a Terms/Conditions checkbox or Terms consent receipt during registration. Email verification remains a separate account-security requirement.
 - Better Auth with the MongoDB adapter is selected for the Labs authentication implementation. Production session-lifetime/concurrency policy remains an architecture decision.
 - Enforce authorization on the server for every protected read and mutation.
@@ -114,6 +117,7 @@ Extend the existing developer portfolio into a maintainable platform where the o
 - Restore intended navigation/action where safe, but do not automatically repeat unsafe or unintended operations.
 
 ### FR-05 Likes and user dashboard
+**Current implementation status:** verified and anonymous like state exists. The personal user dashboard, recently viewed/accessed activity, profile settings and self-service account management are not implemented; the owner Analytics console is not a user dashboard.
 - Guest likes may be recorded through browser storage/appropriate safeguards; they are not guaranteed unique people or cross-device. Signed-in verified accounts receive persistent likes with one active like per user/experiment.
 - Verified-account likes persist across sessions/devices and enforce one active like per user/experiment server-side.
 - Track verified-account source opens and code-copy actions. Track verified likes/unlikes and guest like actions separately where measurable; never treat a guest action count as unique people. Guests/unverified users cannot view or copy source.
@@ -121,6 +125,7 @@ Extend the existing developer portfolio into a maintainable platform where the o
 - Personal activity is private to the appropriate user. Do not attach anonymous activity to an account without an explicit, disclosed mechanism.
 
 ### FR-06 Analytics
+**Current implementation status:** source opens, code copies, verified like/unlike and anonymous like/unlike events are instrumented. Experiment detail-view, preview-start and preview-interaction events are not implemented. Portfolio page-visit tracking is a separate system and is not a substitute for per-experiment Labs events.
 Track, at minimum:
 - Experiment detail views.
 - Likes and unlikes.
@@ -153,6 +158,7 @@ Track, at minimum:
 - Media required for historical restoration must remain available; deletion must respect historical references.
 
 ### FR-09 Media library
+**Current implementation status:** Labs-specific Cloudinary asset upload/reference and public static galleryPreview/published poster flows exist. The current experiment schema allows only one fallback-preview attachment; the ordered detail-gallery and complete target role migration remain unimplemented. The general Portfolio media library remains deferred.
 - Cloudinary-backed multi-file uploads.
 - Browse, search and filter assets; display dimensions, format, size and metadata.
 - Reuse media across projects and Lab experiments.
@@ -160,13 +166,13 @@ Track, at minimum:
 - Replace assets without silently breaking references.
 - Warn/block deletion when an asset is referenced; removing an item from a gallery must not automatically delete the Cloudinary asset.
 - Support ordered detail galleries and one selected gallery-preview asset per experiment, with captions/alt text and supported image/GIF/video media.
-- Support a separate runtime-fallback asset shown only after code runtime failure/unsupported state.
+- Support a separate runtime-fallback asset as a target role only if/when an interactive detail runtime is separately approved; the currently locked public detail is static and has no runtime-failure state.
 - Generated code-output posters are immutable optimized static image assets bound to the exact published source/artifact version; they are not source files or executable previews.
 - Use server-authorized signed upload flows; secrets remain server-side; validate MIME/type, size and ownership. Preserve asset references from drafts and historical releases.
 
 ### FR-10 Admin experience
 - Responsive dedicated admin area with shared navigation and reusable form/table/panel patterns.
-- Existing Labs owner routes are `/admin/labs/sources` (Source Library), `/admin/labs/sources/[slug]` (source-code workspace), `/admin/labs/sources/import`, and `/admin/labs/experiments/new`. The dedicated Analytics route `/admin/labs/analytics` and metadata editor route `/admin/labs/experiments/[slug]/edit` are implemented. The experiment-specific analytics route `/admin/labs/analytics/[slug]` remains a target addition. These Labs routes are separate from the future general portfolio CMS/Admin routes, which remain deferred.
+- Existing Labs owner routes are `/admin/labs/sources` (Source Library), `/admin/labs/sources/[slug]` (source-code workspace), `/admin/labs/sources/import`, and `/admin/labs/experiments/new`. The Analytics route `/admin/labs/analytics`, experiment-specific analytics route `/admin/labs/analytics/[slug]` and metadata editor route `/admin/labs/experiments/[slug]/edit` are present in the branch. Authenticated owner browser/Atlas verification remains pending. These Labs routes are separate from the future general portfolio CMS/Admin routes, which remain deferred.
 - Provide route-level skeleton/loading states for Labs listing, experiment detail, owner source inventory and owner source editor. Preserve layout/aspect ratios, avoid CLS and do not stack duplicate full-screen loaders over the existing global PageLoader behavior.
 - Provide action-specific pending/success/error/rollback feedback for add, delete, copy, like/unlike, save, restore, publish and unpublish.
 - Use React 19 `useOptimistic` only for reversible server-backed mutations; roll back on server rejection. Local unsaved editor operations remain working-copy state, not optimistic claims of persisted save.
@@ -181,7 +187,7 @@ Track, at minimum:
 - Record likes/unlikes only when the server confirms an actual state transition. Enforce one current like per verified user and experiment.
 - The owner/admin dashboard must show each eligible experiment's source-open count, unique verified accounts opening source, code-copy count, current active verified-account likes, verified like/unlike actions, and guest like actions separately where measurable, with trends over a selected period. Until event instrumentation is implemented, detail views, preview starts and preview interactions must be marked unavailable rather than shown as zero.
 - Provide aggregate rankings by source opens, copies and active verified-account likes, plus daily/monthly trends and a transparent copies-per-source-open formula. The selected date period and filters must apply consistently to cards, charts, rankings and experiment detail. While Analytics is open, refresh aggregates using visible-tab polling; pause when hidden, prevent overlapping requests, use bounded backoff and keep the last successful snapshot visibly marked stale on refresh errors. Reuse the existing MotionNumber/motion/react system for restrained value transitions and respect reduced motion.
-- Admin analytics must not expose individual users' source browsing/copy/like history or email addresses in the first release. Use aggregate reporting and server-derived actor IDs for abuse control/deduplication.
+- **Accepted 7 November privacy decision:** Admin analytics must be aggregate-only and must not expose individual users' names, masked emails, per-user like timestamps, searchable active-liker lists or source/copy/like histories. Current code discrepancy: an active verified-liker identity panel remains on the experiment detail page and must be removed/redesigned. Use aggregate reporting and server-derived actor IDs for abuse control/deduplication.
 - Analytics events must be idempotent, rate-limited, server-validated and privacy-minimized. Never store clipboard contents, full source payloads, passwords, verification tokens or raw email in analytics events.
 - Define and disclose analytics retention, account deletion treatment and event deduplication before production analytics is enabled.
 
@@ -196,12 +202,12 @@ Track, at minimum:
 - Vercel for the Next.js application/deployment.
 
 ### Open decisions requiring repository/architecture validation
-- Final Better Auth session-lifetime/concurrency policy and recovery behavior.
-- Owner identity bootstrap (`LABS_OWNER_USER_ID` singleton or a separately approved persisted role model).
+- Better Auth session-lifetime/concurrency policy and recovery behavior.
+- Owner identity target is locked to singleton LABS_OWNER_USER_ID only. Current owner-access.js still includes LABS_OWNER_EMAIL fallback; remove it after checking deployed owner config. Persisted multi-admin roles remain out of scope.
 - MongoDB hosting, connection lifecycle, source-version migration and data/index migration approach.
-- Source editor dependency/interaction model and exact file/language/byte limits.
+- Monaco is integrated for public read-only source, owner editable source and history read-only; plain-text fallback remains. Current browser acceptance and final-keystroke regression remain pending.
 - Scheduler mechanism, bounded retry policy and operational recovery.
-- Isolated interactive-preview runtime/provider and threat model; stored source management does not authorize source execution.
+- Owner-side isolated Run/build and immutable artifact delivery infrastructure exist. Public detail execution is locked off; any future public-runtime reconsideration requires a new product/security decision.
 - Cache tags/revalidation strategy.
 - Final schemas, event payloads, retention for analytics and user activity.
 - Gallery structure and supported video limits.
