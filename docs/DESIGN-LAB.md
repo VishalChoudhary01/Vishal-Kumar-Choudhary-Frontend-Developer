@@ -173,7 +173,7 @@ Lab editor supports:
 
 ## 13. Owner-managed source workspace
 
-The detailed source-management product and lifecycle contract is owned by `LABS-SOURCE-MANAGEMENT-SPEC.md`. This section adds the design-level expectations without authorizing general CMS/Admin implementation.
+The implemented source-management lifecycle is documented in [Public Labs and Owner Workspace](./pages/LABS-AND-OWNER-WORKSPACE.md) and [Labs Runtime and Code Execution](./architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md). This section adds design expectations without authorizing general CMS/Admin implementation.
 
 - The owner workspace is a protected management surface and is distinct from the compact public experiment source-access section.
 - The first release is for one trusted, manually provisioned owner; do not design a multi-admin permission matrix unless separately approved.
