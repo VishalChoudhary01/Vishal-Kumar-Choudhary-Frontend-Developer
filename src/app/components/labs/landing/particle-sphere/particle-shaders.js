@@ -8,6 +8,10 @@ export const particleVertexShader = `
   uniform float uPixelRatio;
   uniform float uMotionEnabled;
   uniform vec3 uBrandColor;
+  uniform float uSurfaceParticleMix;
+  uniform float uSurfaceParticleBrightness;
+  uniform float uSurfaceParticleOpacityFloor;
+  uniform float uSurfaceParticleSizeScale;
   uniform vec3 uInnerParticleColor;
   uniform float uInnerParticleOpacity;
   uniform vec3 uVolumeColor;
@@ -157,7 +161,7 @@ export const particleVertexShader = `
     float rimLight = pow(1.0 - abs(viewNormal.z), 2.1);
     float hemisphereFill = 0.24 + 0.76 * max(viewNormal.y * 0.5 + 0.5, 0.0);
     float facing = smoothstep(-0.24, 0.32, viewNormal.z);
-    float surfaceOpacity = mix(0.012, 0.92, facing);
+    float surfaceOpacity = mix(uSurfaceParticleOpacityFloor, 0.96, facing);
     float layerOpacity = mix(surfaceOpacity, uInnerParticleOpacity, innerLayer);
     layerOpacity = mix(layerOpacity, uAmbientParticleOpacity, ambientLayer);
 
@@ -203,7 +207,7 @@ export const particleVertexShader = `
       1.0
     );
 
-    float ambientSize = mix(1.0, 1.18, ambientLayer);
+    float ambientSize = mix(uSurfaceParticleSizeScale, 1.18, ambientLayer);
     float burstSize = 1.0 + particleBurst * 0.85;
 
     gl_PointSize = clamp(
@@ -215,7 +219,7 @@ export const particleVertexShader = `
 
     gl_Position = displacedClipPosition;
 
-    vec3 particleColor = mix(uBrandColor, aColor, 0.28);
+    vec3 particleColor = mix(uBrandColor, aColor, uSurfaceParticleMix);
     particleColor = mix(particleColor, uVolumeColor, depthLayer * 0.22);
     particleColor = mix(particleColor, uInnerParticleColor, innerLayer);
 
@@ -235,6 +239,12 @@ export const particleVertexShader = `
       * mix(1.0, 0.74, depthLayer);
     litColor = mix(litColor, innerLitColor, innerLayer);
     litColor = mix(litColor, ambientLitColor, ambientLayer);
+    float surfaceBrightness = mix(
+      uSurfaceParticleBrightness,
+      1.0,
+      max(innerLayer, ambientLayer)
+    );
+    litColor *= surfaceBrightness;
     vec3 sparkleColor = uSparkleColor * (0.7 + sparkle * 2.8);
 
     vColor = mix(litColor, sparkleColor, clamp(sparkle * 1.35, 0.0, 1.0));
