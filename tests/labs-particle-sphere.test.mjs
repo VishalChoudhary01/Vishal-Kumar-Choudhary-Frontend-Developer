@@ -34,6 +34,10 @@ const constantsSource = await readFile(
   new URL("../src/app/components/labs/landing/particle-sphere/particle-constants.js", import.meta.url),
   "utf8",
 );
+const interactionSource = await readFile(
+  new URL("../src/app/components/labs/landing/particle-sphere/particle-interaction.mjs", import.meta.url),
+  "utf8",
+);
 const artworkSource = await readFile(
   new URL("../src/app/components/labs/landing/LabsHeroArtwork.js", import.meta.url),
   "utf8",
@@ -177,7 +181,7 @@ test("sphere world-space size stays fixed while camera framing adapts to mobile"
     width: 1440,
     height: 820,
     fovDegrees: 42,
-    orbitRadius: 1.9,
+    orbitRadius: 1.92,
     fillRatio: 0.92,
   });
 
@@ -185,7 +189,11 @@ test("sphere world-space size stays fixed while camera framing adapts to mobile"
   assert.ok(Number.isFinite(desktopDistance));
   assert.ok(mobileDistance > desktopDistance);
   assert.match(rendererSource, /camera\.position\.z = getParticleCameraDistance/);
-  assert.match(rendererSource, /orbitRadius: 2\.2/);
+  assert.match(rendererSource, /orbitRadius: 1\.92/);
+  assert.ok(constantsSource.includes("radius: 1.22"));
+  assert.match(rendererSource, /particles\.frustumCulled = false/);
+  assert.match(rendererSource, /className="absolute inset-0 h-full w-full overflow-hidden"/);
+  assert.match(artworkSource, /aspect-\[1\.08\/1\] min-h-\[280px\].*overflow-hidden/);
   assert.doesNotMatch(rendererSource, /getSphereScale|getSphereContraction|\.scale\.setScalar/);
 
   for (let index = 0; index < data.surfaceCount; index += 1) {
@@ -416,7 +424,9 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /uniform float uBurst/);
   assert.match(shaderSource, /uniform vec3 uPointerPosition/);
   assert.match(shaderSource, /uniform float uPointerActive/);
-  assert.match(shaderSource, /length\(position\) \* 0\.72 \* uBurst/);
+  assert.match(shaderSource, /uniform float uBurstExpansion/);
+  assert.ok(shaderSource.includes("length(position) * uBurstExpansion * uBurst * burstVariation"));
+  assert.ok(interactionSource.includes("PARTICLE_BURST_EXPANSION = 1.85"));
   assert.match(shaderSource, /pointerInfluence/);
   assert.match(shaderSource, /float sphereLayer = 1\.0 - ambientLayer/);
   assert.equal((shaderSource.match(/float sphereLayer = 1\.0 - ambientLayer/g) || []).length, 1);
