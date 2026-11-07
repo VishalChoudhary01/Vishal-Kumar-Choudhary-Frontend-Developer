@@ -137,6 +137,8 @@ test("tracker is deferred and mounted only in the three public route shells", as
   assert.ok(runtime.includes("LANDING_ATTRIBUTION_KEY"));
   assert.ok(runtime.includes("RELEASE_GRACE_MS"));
   assert.ok(runtime.includes("visit.ended"));
+  assert.ok(runtime.includes("readPortfolioAnalyticsOptOut"));
+  assert.ok(runtime.includes("stopPortfolioVisitTracking"));
 });
 
 test("client feature gate is separate from the server secret", async () => {
