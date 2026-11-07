@@ -2,7 +2,7 @@
 
 **Audited branch:** `feat/labs-platform-integration`  
 **Current-state date:** 2026-11-07  
-**Authority:** This guide describes the routes and behavior present in this branch. The PRD and Labs UX specification remain the target-product authorities; explicit 7 November decisions are collected in Section 39 of `LABS-AND-AUTHENTICATION-DESIGN-SPEC.md`.
+**Authority:** This guide describes the routes and behavior present in this branch. The PRD and retained design documents define product requirements; accepted superseding Labs decisions are recorded in [ADR-018](../DECISIONS.md#adr-018--7-november-labs-catalogue-detail-owner-and-analytics-supersession).
 
 > **Important boundary:** Public Labs is currently a source-backed custom-experiment catalogue with a static detail page. The owner compiler, temporary Run preview, immutable artifact build and public artifact Route Handler are separate capabilities. The public detail route does not mount the interactive published artifact.
 
@@ -61,11 +61,11 @@ The page does **not** mount `LabWorkspace`, `LabRuntimeBoundary`, a runtime ifra
 
 ### 3.1 Static media selection and fallback
 
-The experiment preview renderer uses the release-aware gallery preview policy. The intended precedence is:
-1. owner-selected public `galleryPreview` bound to the current release;
-2. generated static poster bound to the exact ready artifact/source version;
-3. validated thumbnail when available;
-4. explicit “Preview media unavailable” presentation.
+The experiment preview renderer uses the release-aware gallery preview policy. The current public card/detail preview precedence is:
+1. owner-promoted public `galleryPreview` still image whose artifact/version binding matches the currently published release;
+2. the existing generic Labs artwork or neutral placeholder.
+
+An owner promotes an eligible still image from their owned Cloudinary media through the owner-only gallery-preview mutation. The server verifies ownership, readiness, image format/size/signature and the current published artifact/source pointers, copies the image to a public Vercel Blob object, stores its exact release binding and audit record, and never returns the private Cloudinary URL. Replacing, clearing, unpublishing or publishing a new artifact attempts to clean up the old public Blob object. Automatic browser screenshot capture is not implemented; do not describe the current poster flow as an automatically generated screenshot.
 
 Images, GIFs and videos are rendered as media, not as experiment code. The component preserves intrinsic proportions and uses `object-contain`; it does not synthesize experiment-specific artwork. A failed media source can move selection to the next available source. Reduced-motion handling is retained for animated media/poster presentation.
 
@@ -87,7 +87,7 @@ Current source validation in `src/app/lib/labs/source-access.js` includes safe r
 
 Every verified account can read the currently published source. The source-access service no longer performs a `LabSourceGrant` lookup. The legacy model/collection may remain for migration safety, but it is not the current authorization decision. Guest and email-unverified sessions do not receive source bytes. Source responses must remain private/no-store and must never be placed in public HTML, public DTOs or static runtime assets.
 
-The browser source viewer is a protected read-only surface. Session state is revalidated and loaded source is cleared when the session is no longer eligible; see `LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md` for the detailed session and privacy contract.
+The browser source viewer is a protected read-only surface. Session state is revalidated and loaded source is cleared when the session is no longer eligible; see [Authentication and Account Engineering](./AUTHENTICATION-AND-ACCOUNT-ENGINEERING.md) and [Privacy and Data Lifecycle](../architecture/PRIVACY-AND-DATA-LIFECYCLE.md).
 
 ## 5. Engagement and likes
 
@@ -122,7 +122,7 @@ Current event model allowlist:
 
 There are no current event types for experiment detail views, preview starts or preview interactions. Portfolio Analytics has a separate Labs detail route/page-visit classification, but it is not the same as the per-experiment Labs engagement event stream and must not be relabelled as such.
 
-The collection dashboard and `/admin/labs/analytics/[slug]` display the metrics supported by existing event and state records. The charts are single-metric Chart.js views with an HTML data-table alternative; summary counters reuse `MotionNumber`. The live dashboard uses visible-tab polling (10-second initial cadence with bounded backoff), not WebSockets. Polling and data correctness still require current-HEAD authenticated browser and Atlas verification.
+The collection dashboard and `/admin/labs/analytics/[slug]` display the metrics supported by existing event and state records. The charts are single-metric Chart.js views with an HTML data-table alternative; summary counters reuse `MotionNumber`. The trend visualization is a lazy-loaded single-metric Chart.js column chart with UTC daily/weekly buckets, selected metric readouts, semantic colors, a tabular equivalent, reduced-motion handling and a retry state. Live refresh uses visible-tab polling with bounded backoff, not WebSockets. Polling and data correctness still require current-HEAD authenticated browser and Atlas verification.
 
 **Approved privacy target (2026-11-07): aggregate-only owner analytics.** The owner-facing contract must not expose names, masked emails, timestamps tied to individual likes, a searchable liker directory, or per-user source/copy/like histories.
 
@@ -168,7 +168,7 @@ Experiment metadata creation/editing is separate from source code:
 - metadata PATCH may update title, description, explanation, category and technologies;
 - it must not mutate the canonical slug, source files, source-version pointers, publication state, gallery media internals or immutable artifacts.
 
-Labs media uses Cloudinary for uploaded binaries and MongoDB references. Release/build artifacts and generated release posters use Vercel Blob. Current public preview roles are separate from owner-uploaded private assets. The full target media-role migration and ordered detail-gallery UI are pending.
+Labs media uses Cloudinary for uploaded binaries and MongoDB references. Owner-promoted public gallery-preview stills are copied to Vercel Blob and bound to the exact ready artifact/source version. Compiler artifacts use immutable Vercel Blob storage. The current attachment schema still permits only one private `fallback-preview`; the full target media-role migration and ordered detail-gallery UI are pending.
 
 ## 11. Current gaps and release checks
 
