@@ -8,6 +8,7 @@ export const particleVertexShader = `
   uniform float uSqueeze;
   uniform float uPixelRatio;
   uniform float uMotionEnabled;
+  uniform vec3 uBrandColor;
 
   varying vec3 vColor;
   varying float vOpacity;
@@ -17,8 +18,10 @@ export const particleVertexShader = `
     vec3 transformed = position;
     vec3 direction = normalize(position + vec3(0.0001));
 
+    float ambientLayer = step(1.5, aLayer);
+    float sphereLayer = 1.0 - ambientLayer;
     float squeezeVariation = 0.965 + sin(aSeed * 6.28318) * 0.035;
-    float squeeze = uSqueeze * squeezeVariation;
+    float squeeze = uSqueeze * squeezeVariation * sphereLayer;
 
     transformed.x *= 1.0 + 0.065 * squeeze;
     transformed.y *= 1.0 - 0.125 * squeeze;
@@ -36,7 +39,6 @@ export const particleVertexShader = `
     transformed += direction * microDrift;
 
     float ambientPhase = aSeed * 6.28318;
-    float ambientLayer = step(1.5, aLayer);
     vec3 ambientDrift = vec3(
       sin(uTime * 0.24 + ambientPhase),
       cos(uTime * 0.19 + ambientPhase * 1.31),
@@ -51,8 +53,11 @@ export const particleVertexShader = `
     vec3 lightDirection = normalize(vec3(-0.46, 0.38, 0.82));
     float directionalLight = 0.56
       + 0.44 * max(dot(viewNormal, lightDirection), 0.0);
-    float facing = smoothstep(-0.82, 0.18, viewNormal.z);
-    float layerOpacity = aLayer > 1.5 ? 0.72 : mix(0.88, 0.40, aLayer);
+    float facing = smoothstep(-0.24, 0.32, viewNormal.z);
+    float layerOpacity = aLayer > 1.5
+      ? 0.62
+      : (aLayer > 0.5 ? 0.28 : 1.0);
+    float depthFade = 1.0 / (1.0 + max(0.0, viewDepth - 4.0) * 0.14);
 
     float sparkleThreshold = mix(0.972, 0.91, step(1.5, aLayer));
     float sparkleMask = step(sparkleThreshold, fract(aSeed * 37.0));
@@ -75,10 +80,11 @@ export const particleVertexShader = `
 
     gl_Position = projectionMatrix * modelPosition;
 
-    vColor = aColor * (directionalLight + sparkle * 2.8 + pulseHighlight);
-    vOpacity = mix(0.12, 0.84, facing) * layerOpacity
+    vec3 particleColor = mix(uBrandColor, aColor, 0.34);
+    vColor = particleColor * (directionalLight + sparkle * 2.8 + pulseHighlight);
+    vOpacity = (mix(0.012, 0.92, facing) * layerOpacity
       + sparkle * 0.92
-      + pulseHighlight;
+      + pulseHighlight) * depthFade;
     vSparkle = sparkle;
   }
 `;
