@@ -178,6 +178,7 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.match(rendererSource, /cancelAnimationFrame/);
   assert.match(rendererSource, /ResizeObserver/);
   assert.match(rendererSource, /getParticleQualityProfile/);
+  assert.match(rendererSource, /viewportWidth: window\.innerWidth/);
   assert.match(rendererSource, /themeObserver/);
   assert.match(rendererSource, /syncThemeColor/);
   assert.ok(rendererSource.includes("renderer?.dispose()"));
