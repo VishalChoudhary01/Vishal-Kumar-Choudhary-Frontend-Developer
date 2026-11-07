@@ -17,7 +17,7 @@ const spotlightVariants = {
 };
 
 const spotlightItemVariants = {
-  hidden: { opacity: 0, y: 16 },
+  hidden: { opacity: 1, y: 16 },
   visible: {
     opacity: 1,
     y: 0,
