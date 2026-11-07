@@ -10,7 +10,7 @@ RootLayout loads fonts through next/font/google:
 - Manrope, variable --font-manrope, Latin, weights 400/500/600 → body/UI text.
 - Azeret Mono, variable --font-azeret-mono, Latin, weights 400/500 → mono labels/technical metadata.
 
-Root HTML includes these CSS variables, h-full and antialiased. The theme provider wraps the app; AppProviders owns UI providers and global scrolling. Footer is rendered in RootLayout and is shared across public pages, except explicit auth-route suppression in the component.
+Root HTML includes these CSS variables, h-full and antialiased. The theme provider wraps the app; AppProviders owns UI providers and global scrolling. Footer is rendered in RootLayout and is shared across routes except the explicit Labs-auth pathname suppression. Navbar is not mounted in RootLayout: HomePage, ProjectPageView and LabsPageShell insert it with different context/feature props. The route matrix and detailed component contracts live in [Navbar and Footer Engineering](../pages/NAVBAR-AND-FOOTER-ENGINEERING.md).
 
 The root body is flex min-h-full, background token and flex-col. A flex-1 wrapper around route children allows Footer to remain at the end of short pages.
 
@@ -144,8 +144,8 @@ Prefer semantic colors for page UI; use primitive classes only where a fixed sha
             ├── SmoothScroll
             └── PageLoaderProvider
                 └── UIThemeProvider
-                    ├── flex-1 route content
-                    └── global Footer
+                    ├── flex-1 route content (page shells insert Navbar where appropriate)
+                    └── global Footer (except five Labs auth pathnames)
 
 This exact nesting matters:
 - ActionToastProvider makes action feedback available across pages.
@@ -154,7 +154,7 @@ This exact nesting matters:
 - SmoothScroll owns Lenis/native route switching.
 - PageLoaderProvider owns intro state and route scroll reset.
 - UIThemeProvider owns theme context.
-- Footer is global, but may suppress itself on the Labs authentication route list.
+- Footer is root-layout-global, but suppresses itself on the five explicit Labs auth pathnames. Navbar is supplied by page shells, not the root layout. Home, project, Labs, auth, privacy, admin, not-found and global-error distinctions are documented in pages/NAVBAR-AND-FOOTER-ENGINEERING.md.
 
 Individual pages create their own stacking contexts. Use each page/component's local z-index in context; this document deliberately does not invent a global numeric z-index scale where none is centralized.
 
@@ -207,3 +207,14 @@ Key boundary:
 - the toggle's click sound is a separate optional `useUiSound` action documented in [../architecture/SOUND-ENGINEERING.md](../architecture/SOUND-ENGINEERING.md).
 
 Do not add a global background-color fade or a second full-screen overlay. The current hook has explicit shape durations (rectangle 400ms; circle, circle-blur and blinds 700ms); the global `--theme-transition-duration: 520ms` token does not currently control those keyframes.
+
+## 11. Navbar and Footer composition boundary
+
+The root layout mounts only the shared Footer; it does not mount a global Navbar. The Navbar is supplied by HomePage, ProjectPageView and LabsPageShell:
+- homepage uses the full site context with section links, desktop navigation, mobile full-screen menu, social links and Resume;
+- project detail uses project context with logo-to-home, ThemeToggle and social links, but no homepage section nav, hamburger or Resume;
+- public Labs reuses project context, suppresses social links and adds the Labs account control;
+- Labs auth uses AuthFrame's own header/footer and suppresses the root Footer;
+- Privacy, Admin, not-found and ordinary route error content do not insert the portfolio Navbar. The root Footer remains unless the pathname is one of the five Labs auth exclusions; global-error replaces the root layout and therefore has no shared Footer.
+
+For the complete path-condition table, DOM composition and Motion details, use [Navbar and Footer Engineering](../pages/NAVBAR-AND-FOOTER-ENGINEERING.md). Do not turn the local AuthFrame or LabsOwnerNavigation into aliases for the portfolio Navbar/Footer.
