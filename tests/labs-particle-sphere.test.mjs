@@ -377,8 +377,8 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.match(rendererSource, /uSurfaceParticleBrightness/);
   assert.match(rendererSource, /uSurfaceParticleOpacityFloor/);
   assert.match(rendererSource, /uSurfaceParticleSizeScale/);
-  assert.match(rendererSource, /palette\\.surfaceParticleMix/);
-  assert.match(rendererSource, /palette\\.surfaceParticleBrightness/);
+  assert.match(rendererSource, /palette\.surfaceParticleMix/);
+  assert.match(rendererSource, /palette\.surfaceParticleBrightness/);
   assert.match(rendererSource, /uVolumeColor/);
   assert.match(rendererSource, /uVolumeIntensity/);
   assert.match(rendererSource, /uAmbientParticleColor/);
@@ -520,8 +520,8 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /uniform float uSurfaceParticleBrightness/);
   assert.match(shaderSource, /uniform float uSurfaceParticleOpacityFloor/);
   assert.match(shaderSource, /uniform float uSurfaceParticleSizeScale/);
-  assert.match(shaderSource, /mix\\(uBrandColor, aColor, uSurfaceParticleMix\\)/);
-  assert.match(shaderSource, /mix\\(uSurfaceParticleOpacityFloor, 0\\.96, facing\\)/);
+  assert.match(shaderSource, /mix\(uBrandColor, aColor, uSurfaceParticleMix\)/);
+  assert.match(shaderSource, /mix\(uSurfaceParticleOpacityFloor, 0\.96, facing\)/);
   assert.match(shaderSource, /surfaceBrightness/);
   assert.match(shaderSource, /uInnerParticleColor/);
   assert.match(shaderSource, /uInnerParticleOpacity/);
