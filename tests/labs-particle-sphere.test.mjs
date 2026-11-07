@@ -3,6 +3,11 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { createSphereParticleData } from "../src/app/components/labs/landing/particle-sphere/particle-geometry.mjs";
+import {
+  getParticleBurstEnvelope,
+  getOrbitBurstSpeed,
+  isParticleBurstActive,
+} from "../src/app/components/labs/landing/particle-sphere/particle-interaction.mjs";
 import { getParticleCameraDistance } from "../src/app/components/labs/landing/particle-sphere/particle-responsive.mjs";
 import { getParticleSphereThemePalette } from "../src/app/components/labs/landing/particle-sphere/particle-theme.mjs";
 import {
@@ -314,10 +319,38 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.match(rendererSource, /if \(disposed\) return/);
 });
 
+test("particle burst expands quickly and recovers without changing base geometry", () => {
+  assert.equal(getParticleBurstEnvelope(-1), 0);
+  assert.equal(getParticleBurstEnvelope(0), 0);
+  assert.equal(getParticleBurstEnvelope(0.45), 1);
+  assert.equal(getParticleBurstEnvelope(1.35), 0);
+  assert.equal(getParticleBurstEnvelope(Number.NaN), 0);
+
+  assert.equal(getOrbitBurstSpeed(0), 1);
+  assert.equal(getOrbitBurstSpeed(0.45), 1.65);
+  assert.equal(getOrbitBurstSpeed(1.35), 1);
+  assert.equal(isParticleBurstActive(0.8), true);
+  assert.equal(isParticleBurstActive(1.35), false);
+});
+
+test("renderer maps pointer hits to the sphere and restarts burst on a short tap", () => {
+  assert.match(rendererSource, /raycaster\.intersectObject\(sphereHitArea, false\)/);
+  assert.match(rendererSource, /sphereGroup\.worldToLocal\(pointerLocal\)/);
+  assert.match(rendererSource, /addEventListener\("pointerdown"/);
+  assert.match(rendererSource, /addEventListener\("pointerup"/);
+  assert.match(rendererSource, /addEventListener\("pointermove"/);
+  assert.match(rendererSource, /setPointerCapture\?\.\(event\.pointerId\)/);
+  assert.match(rendererSource, /distance <= 12 && hitSphere/);
+  assert.match(rendererSource, /burstStartedAt = elapsed/);
+  assert.match(rendererSource, /touchAction = "pan-y"/);
+  assert.match(rendererSource, /removeEventListener\("pointercancel"/);
+});
+
 test("orbit particles move continuously and retain their orbital path", () => {
   assert.match(orbitSource, /group\.userData\.update = \(elapsed\)/);
   assert.match(orbitSource, /runner\.position\.copy\(getOrbitPoint\(THREE, spec, progress\)\)/);
-  assert.match(orbitSource, /const progress = \(spec\.phase \+ elapsed \* spec\.speed\) % 1/);
+  assert.match(orbitSource, /const burstSpeed = 1 \+ Math\.max\(0, Math\.min\(1, burstAmount\)\) \* 0\.65/);
+  assert.match(orbitSource, /delta \* spec\.speed \* burstSpeed/);
   assert.match(orbitSource, /end: Math\.PI \* 2/);
   assert.match(orbitSource, /orbit-particle-glow/);
   assert.match(rendererSource, /orbitGroup\.userData\.update\?\.\(elapsed\)/);
@@ -351,6 +384,12 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /uSparkleColor/);
   assert.match(shaderSource, /sparkle \* 1\.1/);
   assert.match(shaderSource, /starRays/);
+  assert.match(shaderSource, /uniform float uBurst/);
+  assert.match(shaderSource, /uniform vec3 uPointerPosition/);
+  assert.match(shaderSource, /uniform float uPointerActive/);
+  assert.match(shaderSource, /length\(position\) \* 0\.72 \* uBurst/);
+  assert.match(shaderSource, /pointerInfluence/);
+  assert.match(shaderSource, /float sphereLayer = 1\.0 - ambientLayer/);
   assert.match(shaderSource, /smoothstep\(-0\.24, 0\.32, viewNormal\.z\)/);
   assert.match(shaderSource, /depthFade/);
   assert.match(shaderSource, /rimLight/);
