@@ -10,7 +10,7 @@ const ORBIT_SPECS = [
     end: Math.PI * 2,
     speed: 0.035,
     phase: 0.04,
-    particleSize: 0.024,
+    particleSize: 0.012,
   },
   {
     radiusX: 1.43,
@@ -21,7 +21,7 @@ const ORBIT_SPECS = [
     end: Math.PI * 2,
     speed: 0.046,
     phase: 0.38,
-    particleSize: 0.019,
+    particleSize: 0.01,
   },
   {
     radiusX: 1.7,
@@ -32,7 +32,7 @@ const ORBIT_SPECS = [
     end: Math.PI * 2,
     speed: 0.029,
     phase: 0.72,
-    particleSize: 0.021,
+    particleSize: 0.011,
   },
 ];
 
@@ -85,18 +85,18 @@ export function createParticleOrbits(THREE) {
     const glowMaterial = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
-      opacity: 0.22,
+      opacity: 0.12,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
     });
     glowMaterial.userData.themeRole = "orbit-particle-glow";
 
     const core = new THREE.Mesh(
-      new THREE.SphereGeometry(spec.particleSize, 10, 8),
+      new THREE.SphereGeometry(spec.particleSize, 12, 10),
       coreMaterial,
     );
     const glow = new THREE.Mesh(
-      new THREE.SphereGeometry(spec.particleSize * 3.4, 12, 10),
+      new THREE.SphereGeometry(spec.particleSize * 2.15, 12, 10),
       glowMaterial,
     );
 
