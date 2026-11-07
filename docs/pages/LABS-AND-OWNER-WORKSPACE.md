@@ -30,7 +30,7 @@ The page calls `getPublishedCustomLabExperimentPage({ limit: 18, includeCategory
 
 The page composition is:
 1. `LabsPageShell` resolves the account presentation and shared Labs navigation.
-2. The Labs hero presents the page introduction, conceptual connected-node artwork, real catalogue statistics and auth-aware CTAs. Motion reveals/count-up respect reduced-motion preferences.
+2. The Labs hero presents the page introduction, a lazy-loaded Three.js 3D particle sphere, real catalogue statistics and auth-aware CTAs. Hero text/stat reveals respect reduced motion; the sphere uses static artwork when motion is reduced or WebGL is unavailable.
 3. `resolveFeaturedExperiment` selects only from the eligible published custom experiment collection; a preferred slug is used when eligible, otherwise selection falls back deterministically to the first eligible record.
 4. `FeaturedExperiment` presents that same resolved record using the shared static preview renderer; the hero/spotlight does not maintain a second copied experiment object.
 5. `LabsCollection` renders the collection heading, published-category controls/counts, result summary, card list, Likes and pagination controls.
@@ -46,6 +46,17 @@ Public collection API: `GET /api/v1/labs`.
 The client reveals six cards per interaction and fetches subsequent custom records through the cursor API. The server page is bounded to 18 custom records; category counts are computed across the full eligible collection. The API supports the canonical category and validated cursor only; title/description/technology/tag search and user-selected sorting are not implemented. Two compound MongoDB pagination indexes must be provisioned using `npm run db:ensure-labs-public-indexes` in the intended environment before release.
 
 The four code-owned runtime modules remain code-owned/importable assets for the source/runtime workflows. Their presence in the runtime registry does not make them public catalogue entries.
+
+The hero artwork implementation is isolated under `src/app/components/labs/landing/particle-sphere/` and replaces the earlier SVG orbit illustration in `LabsHeroArtwork.js`.
+
+- `LabsHeroArtwork` lazy-loads the client-only Three.js renderer after the artwork enters the viewport. It does not add Three.js to the homepage route.
+- The scene renders one `THREE.Points` system: 4,400 Fibonacci-distributed surface particles, 480 interior particles and 26 detached ambient particles. Geometry generation is deterministic and renderer-independent in `particle-geometry.mjs`.
+- Custom shaders provide view-space depth shading, soft particle halos, per-particle shimmer and small independent ambient-particle drift.
+- A periodic GPU squeeze deforms particle positions (horizontal expansion with vertical compression) and animates the inner glow/orbits; the pulse recovers to the original spherical silhouette.
+- The renderer caps device pixel ratio, resizes through `ResizeObserver`, pauses RAF when offscreen or the document is hidden, and disposes GPU resources. WebGL initialization/context-loss errors fall back to static sphere artwork.
+- Reduced-motion users receive the static artwork and do not initialize the continuously animated WebGL scene.
+- Unit coverage is in `tests/labs-particle-sphere.test.mjs`; the test is part of the `npm run build` checks through `test:labs-particle-sphere`.
+
 
 ## 3. Public detail — static presentation, not an interactive playground
 
