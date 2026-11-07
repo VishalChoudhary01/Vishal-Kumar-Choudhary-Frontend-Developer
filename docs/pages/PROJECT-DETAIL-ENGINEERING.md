@@ -183,3 +183,60 @@ This means editing a story entry changes what a fixed section displays; changing
 - Do not allow CMS fields to inject JSX, CSS, script, arbitrary section order or layout.
 - Verify gallery lightbox keyboard, focus, close and reduced-motion behavior.
 - Test desktop/mobile snapshot variants and 200% zoom.
+
+
+## 8. Exact shared detail-item reveal contract
+
+Source: src/app/lib/motion/projectPresets.js → PROJECT_ITEM_REVEAL / projectItemReveal(index,reduced).
+
+This is the common reveal used by body story items across context, approach, engineering, motion, responsive and reflection. It is not the same as the project listing-card entrance preset.
+
+Normal mode:
+- initial: opacity 0, x 56px, skewX -3deg, clipPath inset(0 0 0 100%);
+- whileInView: opacity 1, x 0, skewX 0, clipPath inset(0 0 0 0%);
+- viewport: once true, amount 0, margin "0px 0px -8% 0px";
+- transition: .7s, ease [0.16,1,0.3,1];
+- per-item stagger: index × .06s.
+
+The viewport amount is deliberately 0 because the initial clip-path wipe can produce a zero-area element. Motion must trigger when the element is intersecting even when intersection ratio is zero; changing amount to a positive ratio can prevent the reveal from firing in Chromium.
+
+Reduced motion:
+- initial false;
+- duration 0;
+- viewport settings remain so rendering is deterministic, but there is no translation/shear/clip wipe.
+
+Important implementation note: projectItemReveal props spread directly onto the existing motion element; do not wrap every item in another animated container. Extra wrappers change layout, semantics and transform ownership.
+
+## 9. Exact project listing motion presets referenced by detail navigation
+
+Project discovery cards and detail story sections share the same helper file but use different named contracts.
+
+### Card entrance presets
+
+The canonical card component is ProjectPresentation. It has a single parent-card scale settle:
+- once true with margin "-60px 0px";
+- .94 → 1 over .7s with EASE_EDITORIAL;
+- reduced motion omits the scale transform.
+
+Then named ENTRANCE_PRESETS control individual card parts. Two common presets:
+- editorialReveal: category .4s delay .03; title .55s delay .05; description .5s delay .1; media .65s delay .15; meta .45s delay .22; contribution .45s delay .28; features .4s delay .34; actions .4s delay .38. Each uses opacity0 + small Y to opacity1/Y0.
+- productReveal: category .35s delay .02; title .5s delay .04; description .45s delay .08; media .6s delay .12; other fields use the product-specific preset values in projectPresets.js.
+
+### Media hover presets
+
+| Preset | Hover scale | Title-hover scale | Perspective | Max rotate | Max translate | Duration |
+|---|---:|---:|---:|---:|---:|---:|
+| mediaDepth | 1.025 | 1.01 | 1200 | 1.5deg | 10px | .5s |
+| mediaScale | 1.02 | 1.008 | none | 0 | 0 | .45s |
+| interactiveHover | 1.03 | 1.015 | 1400 | 1.2deg | 8px | .55s |
+
+These are discovery-card media hover presets. They are not applied to full-screen project detail gallery items unless their component explicitly imports them.
+
+### Project media scroll preset
+
+softDepth maps media scale from .72 to 1 as its media wrapper moves from the lower viewport toward the center. ProjectMedia uses a dedicated wrapper and useScroll offset ["start end","center center"]. This scroll graph is reversible when scrolling upward and is independent from:
+- ProjectPresentation parent card entrance scale;
+- media hover preset transform;
+- the media's own reveal/visibility.
+
+When recreating ProjectMedia, preserve separate wrapper layers so scroll and hover styles do not overwrite each other.
