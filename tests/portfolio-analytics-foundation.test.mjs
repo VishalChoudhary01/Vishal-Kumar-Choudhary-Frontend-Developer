@@ -96,6 +96,39 @@ test("start payload is strict and returns only normalized allowlisted fields", (
     }),
     /Unexpected request field/,
   );
+  assert.deepEqual(
+    parsePortfolioVisitStartPayload({
+      action: "start",
+      path: "/",
+      tabSessionId: sessionId,
+      idempotencyKey,
+      isInternalNavigation: true,
+      referrerHost: "external.example",
+      utmSource: "github",
+    }),
+    {
+      action: "start",
+      pageType: "home",
+      path: "/",
+      slug: null,
+      tabSessionId: sessionId,
+      idempotencyKey,
+      utmSource: null,
+      utmMedium: null,
+      utmCampaign: null,
+      isInternalNavigation: true,
+    },
+  );
+  assert.throws(
+    () => parsePortfolioVisitStartPayload({
+      action: "start",
+      path: "/",
+      tabSessionId: sessionId,
+      idempotencyKey,
+      referrerHost: "https://attacker.example/private?token=x",
+    }),
+    /Referrer host is invalid/,
+  );
   assert.throws(
     () => parsePortfolioVisitStartPayload({
       action: "start",

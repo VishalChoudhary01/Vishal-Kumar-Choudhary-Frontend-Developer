@@ -201,16 +201,18 @@ export function parsePortfolioVisitStartPayload(payload) {
     throw invalid("Internal navigation flag must be boolean.");
   }
 
+  const isInternalNavigation = payload.isInternalNavigation === true;
+
   return {
     action: "start",
     ...page,
     tabSessionId: payload.tabSessionId.toLowerCase(),
     idempotencyKey: payload.idempotencyKey.toLowerCase(),
-    utmSource: normalizeCampaignValue(payload.utmSource),
-    utmMedium: normalizeCampaignValue(payload.utmMedium),
-    utmCampaign: normalizeCampaignValue(payload.utmCampaign),
-    referrerHost,
-    isInternalNavigation: payload.isInternalNavigation === true,
+    utmSource: isInternalNavigation ? null : normalizeCampaignValue(payload.utmSource),
+    utmMedium: isInternalNavigation ? null : normalizeCampaignValue(payload.utmMedium),
+    utmCampaign: isInternalNavigation ? null : normalizeCampaignValue(payload.utmCampaign),
+    ...(isInternalNavigation ? {} : { referrerHost }),
+    ...(isInternalNavigation ? { isInternalNavigation: true } : {}),
   };
 }
 
