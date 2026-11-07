@@ -2,11 +2,14 @@ import { ORBIT_BURST_SPEED_MULTIPLIER } from "./particle-interaction.mjs";
 
 // Keep each orbit's projected inner edge outside the fixed sphere radius.
 // The orbital radii stay unchanged; only plane inclination is tuned for the landing camera.
+// Desktop planes are kept close to the viewing plane so every orbit clears
+// the sphere's unchanged surface bounds. Mobile retains the original angles.
 const ORBIT_SPECS = [
   {
     radiusX: 1.56,
     radiusY: 1.56,
-    rotation: [0.32, 0.12, -0.15],
+    rotation: [0.92, 0.12, -0.15],
+    desktopRotation: [0.24, 0.12, -0.15],
     opacity: 0.12,
     start: 0,
     end: Math.PI * 2,
@@ -17,7 +20,8 @@ const ORBIT_SPECS = [
   {
     radiusX: 1.43,
     radiusY: 1.43,
-    rotation: [0.16, -0.08, 0.48],
+    rotation: [1.26, -0.34, 0.48],
+    desktopRotation: [0.08, -0.04, 0.48],
     opacity: 0.082,
     start: 0,
     end: Math.PI * 2,
@@ -28,7 +32,8 @@ const ORBIT_SPECS = [
   {
     radiusX: 1.7,
     radiusY: 1.7,
-    rotation: [0.46, 0.4, -0.62],
+    rotation: [0.48, 0.42, -0.62],
+    desktopRotation: [0.3, 0.35, -0.62],
     opacity: 0.058,
     start: 0,
     end: Math.PI * 2,
@@ -48,9 +53,10 @@ function getOrbitPoint(THREE, spec, progress) {
   );
 }
 
-export function createParticleOrbits(THREE) {
+export function createParticleOrbits(THREE, isDesktop = false) {
   const group = new THREE.Group();
   const orbiters = [];
+  const orbitFrames = [];
 
   ORBIT_SPECS.forEach((spec) => {
     const points = [];
@@ -71,7 +77,8 @@ export function createParticleOrbits(THREE) {
     material.userData.themeRole = "orbit-line";
 
     const orbitFrame = new THREE.Group();
-    orbitFrame.rotation.set(...spec.rotation);
+    orbitFrame.rotation.set(...(isDesktop ? spec.desktopRotation : spec.rotation));
+    orbitFrames.push({ orbitFrame, spec });
     orbitFrame.add(new THREE.Line(geometry, material));
 
     const runner = new THREE.Group();
@@ -110,6 +117,15 @@ export function createParticleOrbits(THREE) {
 
     orbiters.push({ runner, spec });
   });
+
+  group.userData.setDesktop = (nextIsDesktop) => {
+    if (typeof nextIsDesktop !== "boolean" || nextIsDesktop === isDesktop) return;
+
+    isDesktop = nextIsDesktop;
+    orbitFrames.forEach(({ orbitFrame, spec }) => {
+      orbitFrame.rotation.set(...(isDesktop ? spec.desktopRotation : spec.rotation));
+    });
+  };
 
   let lastElapsed = 0;
   const progressByRunner = orbiters.map(({ spec }) => spec.phase);
