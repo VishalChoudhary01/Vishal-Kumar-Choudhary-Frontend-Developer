@@ -1,15 +1,18 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 
+import JsonLd from "@/app/components/seo/JsonLd";
 import LabsPageShell from "@/app/components/labs/LabsPageShell";
 import LabDetailHeader from "@/app/components/labs/detail/LabDetailHeader";
 import LabExperimentPreview from "@/app/components/labs/LabExperimentPreview";
 import LabExplanation from "@/app/components/labs/detail/LabExplanation";
 import LabSourceAccess from "@/app/components/labs/detail/LabSourceAccess";
+import { buildSiteUrl } from "@/app/lib/seo/urls";
 import {
-  buildAbsoluteAssetUrl,
-  buildSiteUrl,
-} from "@/app/lib/seo/urls";
+  buildLabExperimentJsonLd,
+  buildLabExperimentMetadata,
+} from "@/app/lib/seo/labs.mjs";
 import { getPublishedCustomLabExperimentBySlug } from "@/app/lib/labs/public-experiments";
 import { getLabsOwnerAccessStatus } from "@/app/lib/labs/owner-access";
 import { toLabsAccountUser } from "@/app/lib/labs/auth-user-presentation.mjs";
@@ -23,45 +26,30 @@ import { getAuthorizedLabSource } from "@/app/lib/labs/source-access";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+const getPublishedExperiment = cache((slug) =>
+  getPublishedCustomLabExperimentBySlug(slug),
+);
+
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const experiment = await getPublishedCustomLabExperimentBySlug(slug);
+  const experiment = await getPublishedExperiment(slug);
 
-  if (!experiment) return {};
+  if (!experiment) {
+    return {
+      title: "Experiment not found — Labs",
+      robots: { index: false, follow: false },
+    };
+  }
 
-  const title = experiment.seo?.title || `${experiment.title} — Labs`;
-  const description =
-    experiment.seo?.description || experiment.description || "";
-  const canonical = `${buildSiteUrl()}/labs/${encodeURIComponent(slug)}`;
-  const image = buildAbsoluteAssetUrl(experiment.thumbnail?.src);
-
-  return {
-    title,
-    description,
-    alternates: { canonical },
-    openGraph: {
-      type: "website",
-      title,
-      description,
-      url: canonical,
-      siteName: "Vishal Kumar Choudhary",
-      images: image
-        ? [{ url: image, alt: experiment.thumbnail?.alt || experiment.title }]
-        : [],
-    },
-    twitter: {
-      card: image ? "summary_large_image" : "summary",
-      title,
-      description,
-      images: image ? [image] : [],
-    },
-  };
+  return buildLabExperimentMetadata({
+    siteUrl: buildSiteUrl(),
+    experiment,
+  });
 }
-
 
 export default async function LabExperimentPage({ params }) {
   const { slug } = await params;
-  const experiment = await getPublishedCustomLabExperimentBySlug(slug);
+  const experiment = await getPublishedExperiment(slug);
 
   if (!experiment) {
     notFound();
@@ -122,32 +110,45 @@ export default async function LabExperimentPage({ params }) {
     console.error("[labs-detail] engagement snapshot failed:", error?.code || "ENGAGEMENT_READ_ERROR");
   }
 
+  const jsonLd = buildLabExperimentJsonLd({
+    siteUrl: buildSiteUrl(),
+    experiment,
+  });
+
   return (
-    <LabsPageShell
+    <>
+      <JsonLd data={jsonLd} />
+      <LabsPageShell
       initialAuthUser={initialAuthUser}
       initialSessionResolved={initialSessionResolved}
       initialIsOwner={initialIsOwner}
     >
       <main className="min-h-screen bg-background pb-24 text-text-primary sm:pb-32">
+        <article aria-labelledby="lab-page-title">
         <LabDetailHeader
           experiment={experiment}
           initialEngagement={initialEngagement}
         />
         {experiment.galleryPreview || experiment.generatedPoster || experiment.thumbnail ? (
           <section
-            aria-label="Experiment media preview"
+            aria-labelledby="lab-preview-heading"
             className="mx-auto mt-0 w-full max-w-[1440px] px-6 sm:px-8 lg:px-20"
           >
-            <div className="flex min-h-[220px] w-full items-center justify-center overflow-hidden rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-2 py-3 sm:px-4 sm:py-5">
-              <LabExperimentPreview
-                experiment={experiment}
-                sizes="(max-width: 1023px) 100vw, 1280px"
-                className="block h-auto max-h-[min(76svh,780px)] w-full object-contain object-center"
-              />
-            </div>
-            <p className="mt-2 text-[10px] text-text-tertiary">
-              Project preview
-            </p>
+            <h2 id="lab-preview-heading" className="sr-only">
+              Preview of {experiment.title}
+            </h2>
+            <figure>
+              <div className="flex min-h-[220px] w-full items-center justify-center overflow-hidden rounded-[var(--radius-sm)] border border-border-subtle bg-surface-2 px-2 py-3 sm:px-4 sm:py-5">
+                <LabExperimentPreview
+                  experiment={experiment}
+                  sizes="(max-width: 1023px) 100vw, 1280px"
+                  className="block h-auto max-h-[min(76svh,780px)] w-full object-contain object-center"
+                />
+              </div>
+              <figcaption className="mt-2 text-[10px] text-text-tertiary">
+                Static preview of {experiment.title}
+              </figcaption>
+            </figure>
           </section>
         ) : null}
         <LabExplanation explanation={experiment.explanation} />
@@ -158,7 +159,9 @@ export default async function LabExperimentPage({ params }) {
           initialAuthState={initialAuthState}
           initialSource={initialSource}
         />
+        </article>
       </main>
-    </LabsPageShell>
+      </LabsPageShell>
+    </>
   );
 }
