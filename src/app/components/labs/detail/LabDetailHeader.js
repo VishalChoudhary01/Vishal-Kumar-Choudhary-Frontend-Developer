@@ -1,10 +1,27 @@
 import Link from "next/link";
 import LabLikeButton from "@/app/components/labs/LabLikeButton";
 
+function parsePublicDate(value) {
+  if (typeof value !== "string" || !value.trim()) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatPublicDate(date) {
+  return new Intl.DateTimeFormat("en", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date);
+}
+
 export default function LabDetailHeader({ experiment, initialEngagement = null }) {
   const technologies = Array.isArray(experiment.technologies)
     ? experiment.technologies.filter(Boolean)
     : [];
+  const publishedAt = parsePublicDate(experiment.publishedAt);
+  const updatedAt = parsePublicDate(experiment.updatedAt);
 
   return (
     <header className="mx-auto w-full max-w-[1440px] px-6 pb-7 pt-[clamp(6.5rem,9vw,8rem)] sm:px-8 sm:pb-9 lg:px-20">
@@ -40,6 +57,31 @@ export default function LabDetailHeader({ experiment, initialEngagement = null }
       <p className="mt-2 text-[11px] leading-5 text-text-tertiary">
         A frontend experiment by Vishal Kumar Choudhary.
       </p>
+
+      {publishedAt || updatedAt ? (
+        <dl className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-text-tertiary">
+          {publishedAt ? (
+            <div className="flex items-baseline gap-1.5">
+              <dt>Published</dt>
+              <dd>
+                <time dateTime={publishedAt.toISOString()}>
+                  {formatPublicDate(publishedAt)}
+                </time>
+              </dd>
+            </div>
+          ) : null}
+          {updatedAt ? (
+            <div className="flex items-baseline gap-1.5">
+              <dt>Updated</dt>
+              <dd>
+                <time dateTime={updatedAt.toISOString()}>
+                  {formatPublicDate(updatedAt)}
+                </time>
+              </dd>
+            </div>
+          ) : null}
+        </dl>
+      ) : null}
 
       {technologies.length ? (
         <p className="mt-5 text-xs leading-6 text-text-muted sm:text-sm">
