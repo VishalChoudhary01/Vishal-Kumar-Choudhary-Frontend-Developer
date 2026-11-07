@@ -3,7 +3,8 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { createSphereParticleData } from "../src/app/components/labs/landing/particle-sphere/particle-geometry.mjs";
-import { getSphereSqueeze, SPHERE_PULSE_PERIOD } from "../src/app/components/labs/landing/particle-sphere/particle-animation.mjs";
+import { getSphereContraction, getSphereScale, getSphereSqueeze, SPHERE_CONTRACTION_MIN_SCALE, SPHERE_PULSE_PERIOD } from "../src/app/components/labs/landing/particle-sphere/particle-animation.mjs";
+import { getParticleSphereThemePalette } from "../src/app/components/labs/landing/particle-sphere/particle-theme.mjs";
 import {
   areParticleQualityProfilesEqual,
   getParticleQualityProfile,
@@ -141,19 +142,37 @@ test("particle geometry is deterministic for a stable seed", () => {
   assert.deepEqual(first.layers, second.layers);
 });
 
-test("sphere squeeze eases in and recovers on a stable pulse cycle", () => {
-  assert.equal(getSphereSqueeze(0), 0);
-  assert.equal(getSphereSqueeze(2.5), 1);
-  assert.equal(getSphereSqueeze(2.5 + SPHERE_PULSE_PERIOD), 1);
-  assert.equal(getSphereSqueeze(7.0), 0);
-  assert.equal(getSphereSqueeze(-1), 0);
-  assert.equal(getSphereSqueeze(Number.NaN), 0);
+test("sphere contracts radially from full size to a smaller sphere and recovers", () => {
+  assert.equal(getSphereContraction(0), 0);
+  assert.equal(getSphereContraction(2.5), 1);
+  assert.equal(getSphereContraction(2.5 + SPHERE_PULSE_PERIOD), 1);
+  assert.equal(getSphereContraction(7.0), 0);
+  assert.equal(getSphereContraction(-1), 0);
+  assert.equal(getSphereContraction(Number.NaN), 0);
 
-  const attack = getSphereSqueeze(2.2);
-  const recovery = getSphereSqueeze(3.4);
+  assert.equal(getSphereScale(0), 1);
+  assert.equal(getSphereScale(2.5), SPHERE_CONTRACTION_MIN_SCALE);
+  assert.equal(getSphereScale(2.5 + SPHERE_PULSE_PERIOD), SPHERE_CONTRACTION_MIN_SCALE);
+  assert.equal(getSphereScale(7.0), 1);
+  assert.equal(getSphereSqueeze(2.5), getSphereContraction(2.5));
+
+  const attack = getSphereContraction(2.2);
+  const recovery = getSphereContraction(3.4);
 
   assert.ok(attack > 0 && attack < 1);
   assert.ok(recovery > 0 && recovery < 1);
+});
+
+test("light and dark themes use distinct particle, sparkle and glow palettes", () => {
+  const light = getParticleSphereThemePalette(false);
+  const dark = getParticleSphereThemePalette(true);
+
+  assert.notEqual(light.particleColor, dark.particleColor);
+  assert.notEqual(light.sparkleColor, dark.sparkleColor);
+  assert.notEqual(light.glowColor, dark.glowColor);
+  assert.notEqual(light.glowOpacity, dark.glowOpacity);
+  assert.ok(light.orbitOpacityScale > 0 && light.orbitOpacityScale <= 1);
+  assert.ok(dark.orbitOpacityScale > 0 && dark.orbitOpacityScale <= 1);
 });
 
 test("particle quality profiles adapt density and pixel ratio to viewport size", () => {
@@ -247,6 +266,11 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.match(rendererSource, /viewportWidth: window\.innerWidth/);
   assert.match(rendererSource, /themeObserver/);
   assert.match(rendererSource, /syncThemeColor/);
+  assert.match(rendererSource, /getSphereScale/);
+  assert.match(rendererSource, /getSphereContraction/);
+  assert.match(rendererSource, /classList\.contains\("dark"\)/);
+  assert.match(rendererSource, /glow\.scale\.setScalar\(sphereScale\)/);
+  assert.match(rendererSource, /orbitGroup\.scale\.setScalar\(sphereScale\)/);
   assert.ok(rendererSource.includes("renderer?.dispose()"));
   assert.match(rendererSource, /webglcontextlost/);
   assert.match(rendererSource, /disposed = false/);
@@ -258,18 +282,24 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /directionalLight/);
   assert.match(shaderSource, /gl_PointCoord/);
   assert.match(shaderSource, /smoothstep/);
-  assert.match(shaderSource, /uSqueeze/);
+  assert.match(shaderSource, /uContraction/);
+  assert.match(shaderSource, /transformed \*= radialScale/);
+  assert.match(shaderSource, /mix\(1\.0, 0\.70, clamp\(uContraction/);
+  assert.doesNotMatch(shaderSource, /transformed\.[xyz] \*=/);
   assert.match(shaderSource, /sparkleMask/);
   assert.match(shaderSource, /sparkleWave/);
   assert.match(shaderSource, /ambientDrift/);
   assert.match(shaderSource, /sparkleThreshold/);
   assert.match(shaderSource, /uBrandColor/);
+  assert.match(shaderSource, /uSparkleColor/);
+  assert.match(shaderSource, /sparkle \* 1\.1/);
+  assert.match(shaderSource, /starRays/);
   assert.match(shaderSource, /smoothstep\(-0\.24, 0\.32, viewNormal\.z\)/);
   assert.match(shaderSource, /depthFade/);
   assert.match(shaderSource, /rimLight/);
   assert.match(shaderSource, /hemisphereFill/);
   assert.match(shaderSource, /aSize \* ambientSize \* uPixelRatio \* \(5\.0 \/ viewDepth\)/);
-  assert.match(shaderSource, /sparkle \* 0\.72/);
+  assert.match(orbitSource, /baseOpacity = spec\.opacity/);
   assert.match(orbitSource, /opacity: 0\.12/);
   assert.match(orbitSource, /opacity: 0\.082/);
   assert.match(orbitSource, /opacity: 0\.058/);
