@@ -26,7 +26,7 @@ The next major product area is the general Portfolio CMS and dynamic Project Det
 | Contact form and Gmail SMTP | Implemented | See pages/CONTACT-FORM-AND-EMAIL-ENGINEERING.md; rate limiting, explicit same-origin validation, request byte cap, idempotency and transporter cleanup remain hardening gaps. |
 | Project detail template | Implemented; data is code-owned | No general Project Detail CMS. Preserve slug/template/gallery/SEO behavior. |
 | Portfolio Analytics | Implemented; feature-gated | Requires explicit enablement and canonical host/HMAC config. Atlas/production and browser verification remain necessary. |
-| Public Labs catalogue | Implemented; source-backed custom experiments only | Requires published custom experiment, published source pointer and exact matching ready artifact. Built-in runtime registry entries are not merged into catalogue. |
+| Public Labs catalogue | Implemented; source-backed custom experiments only | Requires published custom experiment, published source pointer and exact matching ready artifact. Includes canonical collection metadata and CollectionPage/ItemList JSON-LD. Built-in runtime registry entries are not merged into catalogue. |
 | Public Labs detail | Implemented; static/non-executable | Renders metadata, engagement, static preview media, explanation and protected source. Does not mount LabWorkspace, LabRuntimeBoundary or artifact iframe. |
 | Protected source access | Implemented in code | Server-derived verified session and exact published source. LabSourceGrant lookup is no longer used; legacy model/collection remain migration material. Verify no-store/cache isolation and role matrix in deployment. |
 | Guest and verified likes | Implemented in code | Guest counts are browser-scoped actions, not unique people. Verify cookie/TTL behavior and Atlas indexes. |
@@ -120,7 +120,8 @@ Record the exact commit, commands/tests actually run, deployment URL/environment
 ## 8. Documentation authority
 
 - docs/README.md: navigation and source-of-truth rules.
-- pages/HOME-PAGE-ENGINEERING.md: homepage structure and motion.
+- pages/HOME-PAGE-ENGINEERING.md: homepage structure and motion; SEO metadata and Person/WebSite/ProfilePage structured data remain in the server route.
+- SEO-AND-AEO-IMPLEMENTATION.md: cross-route SEO/AEO implementation source of truth.
 - pages/NAVBAR-AND-FOOTER-ENGINEERING.md: page-owned Navbar contexts, global Footer route rules, responsive layout, menu accessibility and Footer/Vee animation.
 - pages/PORTFOLIO-MASCOT-ENGINEERING.md: Vee 3D scene and interactions.
 - pages/CONTACT-FORM-AND-EMAIL-ENGINEERING.md: contact UI/API/email and hardening gaps.
