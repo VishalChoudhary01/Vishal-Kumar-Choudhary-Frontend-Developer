@@ -6,6 +6,9 @@ const ORBIT_SPECS = [
     opacity: 0.12,
     start: -Math.PI * 0.92,
     end: Math.PI * 0.88,
+    speed: 0.035,
+    phase: 0.04,
+    particleSize: 0.024,
   },
   {
     radiusX: 1.43,
@@ -14,6 +17,9 @@ const ORBIT_SPECS = [
     opacity: 0.082,
     start: -Math.PI * 0.76,
     end: Math.PI * 0.98,
+    speed: 0.046,
+    phase: 0.38,
+    particleSize: 0.019,
   },
   {
     radiusX: 1.7,
@@ -22,11 +28,25 @@ const ORBIT_SPECS = [
     opacity: 0.058,
     start: -Math.PI * 0.84,
     end: Math.PI * 0.78,
+    speed: 0.029,
+    phase: 0.72,
+    particleSize: 0.021,
   },
 ];
 
+function getOrbitPoint(THREE, spec, progress) {
+  const angle = spec.start + (spec.end - spec.start) * progress;
+
+  return new THREE.Vector3(
+    Math.cos(angle) * spec.radiusX,
+    Math.sin(angle) * spec.radiusY,
+    Math.sin(angle * 2) * 0.045,
+  );
+}
+
 export function createParticleOrbits(THREE) {
   const group = new THREE.Group();
+  const orbiters = [];
 
   ORBIT_SPECS.forEach((spec) => {
     const points = [];
@@ -34,16 +54,7 @@ export function createParticleOrbits(THREE) {
     const span = spec.end - spec.start;
 
     for (let index = 0; index <= segments; index += 1) {
-      const progress = index / segments;
-      const angle = spec.start + span * progress;
-
-      points.push(
-        new THREE.Vector3(
-          Math.cos(angle) * spec.radiusX,
-          Math.sin(angle) * spec.radiusY,
-          Math.sin(angle * 2) * 0.045,
-        ),
-      );
+      points.push(getOrbitPoint(THREE, spec, index / segments));
     }
 
     const geometry = new THREE.BufferGeometry().setFromPoints(points);
@@ -54,11 +65,55 @@ export function createParticleOrbits(THREE) {
       depthWrite: false,
     });
     material.userData.baseOpacity = spec.opacity;
-    const orbit = new THREE.Line(geometry, material);
+    material.userData.themeRole = "orbit-line";
 
-    orbit.rotation.set(...spec.rotation);
-    group.add(orbit);
+    const orbitFrame = new THREE.Group();
+    orbitFrame.rotation.set(...spec.rotation);
+    orbitFrame.add(new THREE.Line(geometry, material));
+
+    const runner = new THREE.Group();
+    const coreMaterial = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 1,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    coreMaterial.userData.themeRole = "orbit-particle";
+
+    const glowMaterial = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.22,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    glowMaterial.userData.themeRole = "orbit-particle-glow";
+
+    const core = new THREE.Mesh(
+      new THREE.SphereGeometry(spec.particleSize, 10, 8),
+      coreMaterial,
+    );
+    const glow = new THREE.Mesh(
+      new THREE.SphereGeometry(spec.particleSize * 3.4, 10, 8),
+      glowMaterial,
+    );
+
+    runner.add(glow);
+    runner.add(core);
+    runner.position.copy(getOrbitPoint(THREE, spec, spec.phase));
+    orbitFrame.add(runner);
+    group.add(orbitFrame);
+
+    orbiters.push({ runner, spec });
   });
+
+  group.userData.update = (elapsed) => {
+    orbiters.forEach(({ runner, spec }) => {
+      const progress = (spec.phase + elapsed * spec.speed) % 1;
+      runner.position.copy(getOrbitPoint(THREE, spec, progress));
+    });
+  };
 
   return group;
 }
