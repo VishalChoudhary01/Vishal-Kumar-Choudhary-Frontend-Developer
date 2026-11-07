@@ -3,7 +3,7 @@ import { ORBIT_BURST_SPEED_MULTIPLIER } from "./particle-interaction.mjs";
 const ORBIT_SPECS = [
   {
     radiusX: 1.56,
-    radiusY: 1.42,
+    radiusY: 1.56,
     rotation: [0.92, 0.12, -0.15],
     opacity: 0.12,
     start: 0,
@@ -14,7 +14,7 @@ const ORBIT_SPECS = [
   },
   {
     radiusX: 1.43,
-    radiusY: 1.42,
+    radiusY: 1.43,
     rotation: [1.26, -0.34, 0.48],
     opacity: 0.082,
     start: 0,
@@ -25,7 +25,7 @@ const ORBIT_SPECS = [
   },
   {
     radiusX: 1.7,
-    radiusY: 1.42,
+    radiusY: 1.7,
     rotation: [0.48, 0.42, -0.62],
     opacity: 0.058,
     start: 0,
