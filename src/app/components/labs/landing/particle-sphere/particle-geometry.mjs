@@ -56,10 +56,10 @@ export function createSphereParticleData({
     positions[offset + 2] = direction.z * particleRadius;
 
     sizes[index] = isAmbient
-      ? 1.0 + random() * 0.8
+      ? 1.05 + random() * 0.72
       : isInner
-        ? 0.48 + random() * 0.62
-        : 0.78 + random() * 0.92;
+        ? 0.58 + random() * 0.56
+        : 0.9 + random() * 0.88;
     seeds[index] = random();
     layers[index] = layer;
 
