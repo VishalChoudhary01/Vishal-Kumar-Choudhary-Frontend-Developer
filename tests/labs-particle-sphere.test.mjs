@@ -166,7 +166,7 @@ test("particle geometry is deterministic for a stable seed", () => {
 });
 
 test("sphere world-space size stays fixed while camera framing adapts to mobile", () => {
-  const radius = 1.38;
+  const radius = 1.52;
   const data = createSphereParticleData({
     surfaceCount: 180,
     innerCount: 24,
@@ -217,7 +217,9 @@ test("sphere world-space size stays fixed while camera framing adapts to mobile"
   assert.match(rendererSource, /burstCameraDistance = getParticleCameraDistance/);
   assert.match(rendererSource, /getParticleBurstRadius\(PARTICLE_SPHERE_CONFIG\.radius\)/);
   assert.match(rendererSource, /camera\.position\.z \+= \(targetCameraDistance - camera\.position\.z\) \* cameraEase/);
-  assert.ok(constantsSource.includes("radius: 1.38"));
+  assert.ok(constantsSource.includes("radius: 1.52"));
+  assert.match(rendererSource, /new THREE\.SphereGeometry\(PARTICLE_SPHERE_CONFIG\.radius \+ 0\.14/);
+  assert.match(rendererSource, /new THREE\.SphereGeometry\(PARTICLE_SPHERE_CONFIG\.radius \* 0\.68/);
   assert.match(rendererSource, /particles\.frustumCulled = false/);
   assert.match(rendererSource, /className="absolute inset-0 h-full w-full overflow-hidden"/);
   assert.match(artworkSource, /aspect-\[1\.08\/1\] min-h-\[280px\].*overflow-hidden/);
@@ -448,7 +450,7 @@ test("particle burst uses staggered per-particle recovery without changing base 
   assert.equal(getParticleBurstParticleEnvelope(Number.NaN, 0.5), 0);
 
   assert.equal(PARTICLE_BURST_EXPANSION, 3.4);
-  assert.ok(getParticleBurstRadius(1.38) > 7.5);
+  assert.ok(getParticleBurstRadius(1.52) > 8.2);
   assert.throws(() => getParticleBurstRadius(0), RangeError);
   assert.throws(() => getParticleBurstRadius(Number.NaN), RangeError);
   assert.equal(getOrbitBurstSpeed(0), 1);
@@ -510,9 +512,9 @@ test("orbit particles move continuously and retain their orbital path", () => {
   assert.equal(orbitRadii.length, 3);
   orbitRadii.forEach(([radiusX, radiusY]) => {
     assert.equal(radiusX, radiusY);
-    assert.ok(radiusY >= 1.38);
+    assert.ok(radiusY >= 1.7);
   });
-  assert.equal(Math.max(...orbitRadii.map(([radiusX]) => radiusX)), 1.7);
+  assert.equal(Math.max(...orbitRadii.map(([radiusX]) => radiusX)), 1.88);
 
   // Validate the actual perspective projection of each sampled orbit path,
   // not only its orthographic radius. Every ring must clear the sphere's
@@ -527,7 +529,7 @@ test("orbit particles move continuously and retain their orbital path", () => {
     { width: 768, height: 711 },
     { width: 1440, height: 1333 },
   ];
-  const outerSphereRadius = 1.38 * 1.014;
+  const outerSphereRadius = 1.52 * 1.014;
 
   viewportCases.forEach(({ width, height }) => {
     const cameraDistance = getParticleCameraDistance({
@@ -570,6 +572,9 @@ test("orbit particles move continuously and retain their orbital path", () => {
   assert.doesNotMatch(rendererSource, /orbitGroup\.rotation\.y\s*=/);
   assert.match(rendererSource, /orbitGroup\.rotation\.z\s*=\s*Math\.sin/);
 
+  assert.match(orbitSource, /particleSize: 0\.013/);
+  assert.match(orbitSource, /particleSize: 0\.011/);
+  assert.match(orbitSource, /particleSize: 0\.012/);
   assert.match(orbitSource, /orbit-particle-glow/);
   assert.ok(rendererSource.includes("orbitGroup.userData.update?.(elapsed, burstAmount)"));
 });

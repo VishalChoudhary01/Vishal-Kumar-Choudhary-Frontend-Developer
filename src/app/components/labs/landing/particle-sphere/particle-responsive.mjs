@@ -2,7 +2,7 @@ const DEFAULTS = Object.freeze({
   width: 1280,
   height: 720,
   fovDegrees: 42,
-  orbitRadius: 1.72,
+  orbitRadius: 1.88,
   fillRatio: 0.9,
 });
 
