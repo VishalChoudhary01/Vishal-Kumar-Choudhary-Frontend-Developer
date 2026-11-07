@@ -1,14 +1,15 @@
 import Link from "next/link";
 
 const DESTINATIONS = [
-  { href: "/admin/labs/analytics", id: "analytics", label: "Analytics" },
+  { href: "/admin/labs/analytics", id: "analytics", label: "Labs analytics" },
   { href: "/admin/labs/sources", id: "sources", label: "Source Library" },
+  { href: "/admin/portfolio/analytics", id: "portfolio-analytics", label: "Portfolio analytics" },
 ];
 
 export default function LabsOwnerNavigation({ active }) {
   return (
     <nav
-      aria-label="Labs owner navigation"
+      aria-label="Owner navigation"
       className="mt-7 flex flex-wrap items-center gap-1 border-b border-border"
     >
       {DESTINATIONS.map((destination) => {

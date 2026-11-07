@@ -55,6 +55,13 @@ function samePartial(actual, expected) {
   return JSON.stringify(actual || null) === JSON.stringify(expected || null);
 }
 
+const rateLimitIndex = {
+  collection: "portfolio_analytics_rate_limits",
+  key: { expiresAt: 1 },
+  name: "portfolio_analytics_rate_limits_ttl",
+  expireAfterSeconds: 0,
+};
+
 const client = new MongoClient(uri, {
   maxPoolSize: 2,
   serverSelectionTimeoutMS: 10000,
@@ -91,6 +98,25 @@ try {
 
     process.stdout.write(`Ensured ${index.name}\n`);
   }
+  const rateLimitCollection = client
+    .db(databaseName)
+    .collection(rateLimitIndex.collection);
+  await rateLimitCollection.createIndex(rateLimitIndex.key, {
+    name: rateLimitIndex.name,
+    expireAfterSeconds: rateLimitIndex.expireAfterSeconds,
+  });
+  const rateLimitIndexes = await rateLimitCollection.listIndexes().toArray();
+  const rateLimitCreated = rateLimitIndexes.find(
+    (entry) => entry.name === rateLimitIndex.name,
+  );
+  if (
+    !rateLimitCreated ||
+    rateLimitCreated.key?.expiresAt !== 1 ||
+    rateLimitCreated.expireAfterSeconds !== 0
+  ) {
+    throw new Error("MongoDB rate-limit TTL index verification failed.");
+  }
+  process.stdout.write(`Ensured ${rateLimitIndex.name}\n`);
 } finally {
   await client.close();
 }
