@@ -77,8 +77,7 @@ export const particleVertexShader = `
       10.0
     );
     float sparkle = sparkleMask * sparkleWave * uMotionEnabled;
-    sparkle = min(1.0, sparkle + uBurst * 0.26 * step(1.5, aLayer) * 0.0
-      + uBurst * 0.18 * sparkleMask);
+    sparkle = min(1.0, sparkle + uBurst * 0.18 * sparkleMask);
 
     float ambientSize = mix(1.0, 1.18, ambientLayer);
     float burstSize = 1.0 + uBurst * 0.35 * sphereLayer;
