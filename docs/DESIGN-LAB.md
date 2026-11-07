@@ -1,6 +1,6 @@
 # Design Specification — Component Lab
 
-**Status:** Product/design requirements. This document describes desired visual and interaction quality, not a guarantee that every proposed capability is implemented. For current behavior, use [Public Labs and Owner Workspace](./pages/LABS-AND-OWNER-WORKSPACE.md), [Labs Runtime and Code Execution](./architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md), and [ADR-018](./DECISIONS.md#adr-018--7-november-labs-catalogue-detail-owner-and-analytics-supersession). ADR-018 supersedes conflicting older statements: the public detail route is static/non-executable, only source-backed custom experiments appear in the catalogue, owner identity is ID-only target policy, and Analytics is aggregate-only target policy. Automatic browser screenshot capture is not implemented.  
+**Status:** Product/design requirements. This document describes desired visual and interaction quality, not a guarantee that every proposed capability is implemented. For current behavior, use [Public Labs and Owner Workspace](./pages/LABS-AND-OWNER-WORKSPACE.md), [Labs Runtime and Code Execution](./architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md), and [ADR-018](./DECISIONS.md#adr-018--7-november-labs-catalogue-detail-owner-and-analytics-supersession). ADR-018 supersedes conflicting older statements: the public detail route is static/non-executable, only source-backed custom experiments appear in the catalogue, owner identity is ID-only target policy, and Analytics is aggregate-only target policy. Preview selection uses owner-promoted media first, automatic release-build screenshot second and artwork fallback.  
 **Related:** [PRD](./PRD.md), [Admin design](./DESIGN-ADMIN.md), [Analytics design](./DESIGN-ANALYTICS.md), [Current Labs implementation](./pages/LABS-AND-OWNER-WORKSPACE.md), [Motion Lab component specification system](./MOTION-LAB/README.md)
 
 ## 1. Purpose and constraints
@@ -17,7 +17,7 @@ The Lab is a public discovery surface for React components, Motion animations an
 
 ### Experiment cards
 Use a consistent content hierarchy:
-- One visual preview: an owner-promoted public `galleryPreview` still image bound to the exact current published artifact/source version, otherwise generic Labs artwork or a neutral placeholder. Automatic browser screenshot capture is not implemented.
+- One visual preview: an owner-promoted public `galleryPreview` image/GIF/video bound to the exact current published artifact/source version, otherwise an automatic PNG screenshot generated from that immutable artifact during Build & Publish, otherwise generic Labs artwork or a neutral placeholder.
 - Title and concise description.
 - Technology/tag metadata.
 - Relevant engagement counts with clear meaning.
@@ -25,7 +25,7 @@ Use a consistent content hierarchy:
 - Link to a stable experiment detail URL.
 - Do not place full source or privileged configuration in card props or static payloads.
 
-Gallery cards are static-only and must never mount experiment React trees, create runtime iframes, invoke the compiler or start Canvas/animation loops. The selected image is copied from an owned Cloudinary asset to public Vercel Blob after server-side ownership, format, size, signature and release-binding validation. Gallery cards never execute experiment code.
+Gallery cards are static-only and must never mount experiment React trees, create runtime iframes, invoke the compiler or start Canvas/animation loops. Owner-promoted media is copied from an owned Cloudinary asset to public Vercel Blob after server-side ownership, format, size, signature and release-binding validation. If no promoted asset is eligible, the immutable release poster is used. Gallery cards never execute experiment code.
 
 If an explicitly selected GIF/video is used as a card visual, show a still/poster state by default and load animation only when visible/engaged, with reduced-motion support and a cap on simultaneous playback. Video must be muted, inline and `preload="none"`; never autoplay with sound. Use responsive image sizes, lazy loading, stable 4:3 layout and immutable caching. Never serve a poster from a different published source/artifact version.
 
@@ -50,21 +50,21 @@ Recommended content order, subject to existing project layout conventions:
 6. Source access section with permission-aware rendering.
 7. Related navigation only if supported by existing data; do not invent a curated-collection feature.
 
-Maintain stable descriptive URLs, e.g. `/lab/animated-gradient-card`. Slugs must be unique, validated and safe. Published pages have appropriate metadata/canonical behavior; draft/private previews must not be indexed.
+Maintain stable descriptive URLs under `/labs/[slug]`. Slugs must be unique, validated and safe. Published pages have appropriate metadata/canonical behavior; draft/private previews must not be indexed. The current detail page is a static presentation with optional static media, explanation, engagement and protected source; no published artifact executes in the public page.
 
 ## 4. Preview model
 ### Static media previews and generated code posters
 - Images, GIFs and supported video are rendered as media, never executable content.
-- The current card/detail preview choice is an owner-promoted public `galleryPreview` still image bound to the exact published code artifact/source version; otherwise use generic Labs artwork or a neutral placeholder. Automatic screenshot generation is not currently implemented.
-- The current owner-selected still-image poster is not generated from a browser capture. The owner promotion flow validates and copies an owned asset to public storage and binds it to source-version/artifact IDs.
+- The current card/detail preview choice is owner-promoted public `galleryPreview` media bound to the exact published code artifact/source version; otherwise use an automatic PNG screenshot generated from the exact immutable artifact at release build; otherwise use generic Labs artwork or a neutral placeholder.
+- The owner promotion flow validates and copies an owned asset to public storage and binds it to source-version/artifact IDs. The generated screenshot is captured once during the same isolated release build, validated and bound to the exact artifact/source version; capture failure is non-blocking.
 - `detail-gallery` is a future supporting-media role. `runtime-fallback` is a target role only if a public runtime is separately approved; ADR-018 currently keeps the detail page static.
 - Use responsive media sizing, accessible alternatives/captions, lazy loading and reserved aspect ratios. GIF/video animation is visibility/engagement-gated and reduced-motion-aware; video never autoplays with sound.
 - Validate media references and avoid layout shift.
 - The current backend supports only one legacy `fallback-preview` attachment; the three target roles require a reviewed schema/API migration before role controls ship.
 - Respect supported format/size limits once selected in architecture.
 
-### Interactive previews
-Support both repository-managed registered components and owner-created experiments. Owner-created React/JSX projects must compile with the fixed React/ReactDOM, Tailwind CSS v4 and Motion (motion/react) toolchain; standalone HTML/CSS/JavaScript remains supported.
+### Owner-only interactive preview and public static detail
+Owner-created React JS/JSX, React TS/TSX and standalone HTML/CSS/JavaScript projects are built/run in the owner workspace using the fixed compiler toolchain. The temporary Run preview uses the current unsaved working copy; Build & Publish operates on an exact saved immutable version. The public `/labs/[slug]` page does not mount or execute that artifact.
 - The compiler uses a pinned dependency allowlist, local project imports and a deterministic build manifest. No arbitrary package installation, remote script/CDN imports or server-side code.
 - Tailwind v4 utilities are compiled at build time; no Tailwind CDN/browser-time compiler is used.
 - Motion executes inside the isolated browser runtime, respects reduced motion and has no access to the portfolio's MotionProvider or Lenis state.
@@ -75,7 +75,7 @@ Support both repository-managed registered components and owner-created experime
 - Authenticate and authorize preview creation on the server; validate the exact source hash and asset manifest before publication.
 - Include queued/building, iframe-starting, runtime-ready, build-error, runtime-error, timeout, stopped and unsupported states. The iframe load event alone is not a runtime-ready signal.
 - Keep a visible preview skeleton until the current run ID sends a validated ready message; never show a blank white canvas.
-- The owner Run action executes the current unsaved working copy in its isolated temporary preview. Build & Publish compiles the exact saved immutable version and can generate a static screenshot poster. The public detail page remains static/non-executable under ADR-018 and does not embed the published artifact.
+- The owner Run action executes the current unsaved working copy in its isolated temporary preview. Build & Publish compiles the exact saved immutable version and attempts a static screenshot poster. The public detail page remains static/non-executable under ADR-018 and does not embed the published artifact.
 - Owner Run and release builds use isolated Vercel Sandbox; immutable artifacts are stored in Vercel Blob. The public detail route does not embed or execute the published artifact. Treat any earlier interactive-detail proposal below as superseded by ADR-018.
 
 ## 5. Source access and code-copy behavior
@@ -146,8 +146,8 @@ Lab editor supports:
 - Do not load editor, syntax-highlighting, preview runtime or chart libraries in the public homepage bundle.
 - Lazy-load expensive detail-page modules and interactive previews.
 - Use a selected published gallery-preview asset or generated static code-output poster as the lightweight listing-card visual. Never run experiment code, create iframes or compile code in gallery cards.
-- On the experiment detail page, render the actual published interactive runtime as the primary experience; detail-gallery media is supporting content and runtime-fallback media appears only after runtime failure/unsupported state.
-- Lazy-load the detail runtime near its canvas, show runtime skeleton/error/retry states and stop it on navigation away.
+- On the experiment detail page, render a static preview and readable metadata/explanation/source sections; do not mount the artifact runtime or show public-runtime loading/error/retry states.
+- Keep owner editor/compiler/preview dependencies out of public listing and detail bundles.
 - Optimize responsive images and reserve aspect ratio to reduce layout shift.
 - Published Lab pages have deliberate metadata and canonical behavior.
 - Draft/preview pages are private, non-indexable and excluded from public sitemap/search.
@@ -157,12 +157,12 @@ Lab editor supports:
 - [ ] Search/filter/sort/pagination behave predictably and are server-validated.
 - [ ] Only published entries appear in public discovery and SEO surfaces.
 - [ ] Guest pages expose no full source through hidden or serialized payloads.
-- [ ] Full source and restricted interactive previews require server-side authorization.
+- [ ] Full source requires server-side authorization. The interactive Run/preview capability is owner-only and isolated; the public detail page stays static.
 - [ ] Untrusted source never executes in the main application context.
-- [ ] Isolation boundary and threat model are reviewed before interactive execution ships.
+- [ ] Owner Run/build execution remains isolated in the network-denied Sandbox; untrusted source never executes in the main application context.
 - [ ] Gallery cards use selected media or source-version-matched generated posters and execute zero experiment runtimes.
 - [ ] Static previews are responsive, accessible and optimized.
-- [ ] Owner Run still executes current unsaved working copies and public detail pages execute the exact published artifact.
+- [ ] Owner Run still executes current unsaved working copies; Build & Publish stores the exact saved release and non-blocking poster capture; public detail pages never execute the artifact.
 - [ ] Runtime loading/error/retry/fallback states never leave a blank white canvas.
 - [ ] Route skeletons reserve layout space; optimistic actions reconcile and roll back on server errors.
 - [ ] Guests and signed-in-unverified users cannot view/copy source or use source engagement controls; verified users receive published source automatically.
@@ -178,7 +178,7 @@ The implemented source-management lifecycle is documented in [Public Labs and Ow
 - The owner workspace is a protected management surface and is distinct from the compact public experiment source-access section.
 - The first release is for one trusted, manually provisioned owner; do not design a multi-admin permission matrix unless separately approved.
 - Workspace layout should prioritize experiment identity, file tree, editable code area, validation feedback, unsaved state, save-draft action, version history, and explicit publish/unpublish controls.
-- Source files remain text snapshots; media binaries are managed as separate Cloudinary assets. The owner can run a controlled browser build/preview only through the isolated runtime boundary in the Runtime and Media Plan. The workspace is not a terminal, general shell or arbitrary package manager.
+- Source files remain text snapshots; media binaries are managed as separate Cloudinary assets. The owner can run a controlled browser build/preview only through the isolated Vercel Sandbox boundary described in [Labs Runtime and Code Execution](./architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md). The workspace is not a terminal, general shell or arbitrary package manager.
 - File add/rename/delete operations are explicit; deleting a file requires confirmation. Invalid paths, duplicate names, unsupported file types and size failures preserve the current editor input and explain the correction.
 - Save draft and Publish source are separate actions. Publishing requires confirmation of the exact saved version; a save must never publish implicitly.
 - Version history is owner-only, read-only for past snapshots, and supports restore by creating a new draft. It must not edit historical snapshots in place.
@@ -187,7 +187,7 @@ The implemented source-management lifecycle is documented in [Public Labs and Ow
 - The editor and syntax-highlighting code are lazy-loaded only inside the owner route. They must not load on `/`, `/labs` or ordinary experiment pages.
 - Reuse the existing portfolio tokens, typography, focus/keyboard conventions, restrained radius and responsive rules. Do not introduce a new UI system.
 - Owner-created experiments can be Run in the isolated owner workspace and published as immutable artifacts. The public detail page currently remains static/non-executable; it does not mount the artifact runtime. This is the accepted ADR-018 boundary.
-- The public detail page may show optional `detail-gallery` media in addition to the actual interactive runtime. `runtime-fallback` is a separate failure-only role. Gallery-card posters are separately selected media or generated screenshots; neither role can replace the executable detail runtime.
+- The public detail page can show metadata, explanation, static preview media, engagement and protected source. It does not execute a public runtime. `detail-gallery` and `runtime-fallback` remain target media roles only if the data model and product boundary are separately approved.
 - Owner source management does not weaken the compact public source-access gate or change the four existing code-owned demo runtimes.
 
 
@@ -200,7 +200,7 @@ The implemented source-management lifecycle is documented in [Public Labs and Ow
 - In-experiment asset imports are not part of this initial role migration and require a separate compiler/API contract.
 - Detail pages show the actual interactive experiment first/primary, with detail-gallery media as supporting content and runtime-fallback only after a runtime failure/unsupported state.
 - Media remains separate from source code and compiler artifacts. Do not serialize draft media references or unpublished media URLs into public payloads.
-- The exact upload limits and Cloudinary delivery mode are defined by the Runtime and Media Plan after checking the actual account plan.
+- The exact upload limits and Cloudinary delivery mode are defined by [Environment and Release](./operations/ENVIRONMENT-AND-RELEASE.md) and the implementation in `src/app/lib/labs/media-management.js`; verify the actual Cloudinary account plan and environment before deployment.
 
 ### 13.3 Source access, likes and analytics policy
 
