@@ -15,7 +15,7 @@ This document coordinates the next owner-console changes. It does not replace th
 Separate the current owner experience into clear, non-overlapping destinations while extending it without regressing existing behavior:
 
 1. **Analytics** — explain what is happening across Labs, show correctly defined aggregate metrics, trends and experiment rankings, and refresh the dashboard while it is open.
-2. **Source Library** — find experiments, see source-workspace state, initialize a source workspace and open it.
+2. **Source Library** — find experiments, see source-workspace state, create a source workspace through the per-experiment create flow and open it. The former top-level Initialize sources navigation action remains removed.
 3. **Source Workspace** — retain the existing code-file editing, draft/version, preview, audit and publication lifecycle.
 4. **Experiment Details Editor** — edit experiment metadata independently of source files.
 
