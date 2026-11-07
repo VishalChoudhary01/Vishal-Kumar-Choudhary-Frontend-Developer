@@ -117,18 +117,18 @@ export default function LabsIntroduction({
   const prefersReducedMotion = useReducedMotion();
 
   return (
-    <motion.section
+    <div className="relative w-full overflow-hidden">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-0 left-1/2 right-0 top-[68%] z-0 hidden bg-[radial-gradient(ellipse_at_68%_48%,rgba(0,0,0,0.025)_0%,rgba(1,5,4,0.20)_46%,rgba(1,4,3,0.86)_100%),linear-gradient(90deg,transparent_0%,rgba(1,4,3,0.16)_20%,rgba(1,4,3,0.76)_64%,#010302_100%)] dark:block sm:top-[62%] lg:top-0"
+      />
+      <motion.section
       aria-labelledby="labs-heading"
       initial={prefersReducedMotion ? false : "hidden"}
       animate="visible"
       variants={heroContainerVariants}
-      className="relative mx-auto flex w-full max-w-[1440px] flex-col justify-center overflow-hidden px-6 pb-10 pt-[calc(60px+2rem)] sm:px-8 sm:pb-12 sm:pt-[calc(60px+2.5rem)] lg:min-h-[calc(100svh-78px)] lg:px-20 lg:pb-8 lg:pt-[calc(78px+2.25rem)]"
+      className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-col justify-center px-6 pb-10 pt-[calc(60px+2rem)] sm:px-8 sm:pb-12 sm:pt-[calc(60px+2.5rem)] lg:min-h-[calc(100svh-78px)] lg:px-20 lg:pb-8 lg:pt-[calc(78px+2.25rem)]"
     >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 right-0 top-[48%] z-0 hidden w-full bg-[radial-gradient(ellipse_at_76%_48%,rgba(0,0,0,0.22)_0%,rgba(5,12,10,0.12)_42%,transparent_78%)] dark:block dark:w-[60%] dark:bg-[radial-gradient(ellipse_at_68%_48%,rgba(5,18,14,0.045)_0%,rgba(1,6,4,0.18)_42%,transparent_72%),linear-gradient(90deg,transparent_0%,rgba(2,7,5,0.22)_20%,rgba(1,4,3,0.84)_62%,#010302_100%)] lg:top-0"
-      />
-
       <div className="relative z-10 grid grid-cols-1 items-center gap-8 sm:gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:gap-8 xl:gap-12">
         <div className="relative z-10 flex min-w-0 flex-col items-start">
           <motion.p
@@ -183,6 +183,7 @@ export default function LabsIntroduction({
         aria-hidden="true"
         className="mt-8 h-px w-full bg-border-subtle lg:mt-7"
       />
-    </motion.section>
+      </motion.section>
+    </div>
   );
 }
