@@ -1027,3 +1027,22 @@ Opt-out stops new events; it does not delete existing records. Previously collec
 The privacy control is a preference mechanism, not a consent manager. It does not replace the required pre-launch legal-basis/consent review. Tracking remains disabled by default.
 
 Tests cover selected-ID bounds, strict confirmation, inclusive UTC dates, the 65-day cap, filter construction, owner/origin ordering, browser preference persistence, tracker-stop behavior, privacy disclosures and dashboard deletion controls.
+
+
+### Phase 7 verification record
+
+Verified against the Phase 7 implementation, including the privacy opt-out external-store refinement:
+
+- Deletion scope/API tests: 8 passed.
+- Privacy preference and disclosure tests: 5 passed.
+- Public tracker tests: 7 passed.
+- Dashboard tests: 4 passed.
+- Owner polling/read API tests: 10 passed.
+- Reporting tests: 8 passed.
+- Foundation tests: 13 passed.
+- Ingestion tests: 7 passed.
+- Targeted ESLint over the deletion API/service/utilities, privacy preference, deferred tracker, tracker runtime, dashboard, privacy policy and new tests: passed.
+- Full `npm run build`: passed. All build-wired tests passed, SEO validation reported 0 warnings, Next.js production compilation succeeded, and all 12 static pages were generated.
+- Next.js registered `/api/v1/admin/portfolio/analytics/visits` as a dynamic route.
+
+The build verifies application compilation and route registration. It does not verify a destructive operation against the production MongoDB database, browser visual/accessibility behavior, the actual MongoDB TTL monitor delay, or Vercel provider-backup deletion behavior. These remain production-like integration/Phase 8 QA and operational checks. Public tracking flags remain false by default.
