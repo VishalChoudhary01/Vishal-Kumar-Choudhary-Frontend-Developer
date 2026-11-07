@@ -7,6 +7,7 @@ import {
   getParticleBurstEnvelope,
   getParticleBurstRadius,
   getParticleBurstParticleEnvelope,
+  getParticleCameraChoreography,
   PARTICLE_BURST_EXPANSION,
   getOrbitBurstSpeed,
   ORBIT_BURST_SPEED_MULTIPLIER,
@@ -251,6 +252,11 @@ test("light and dark themes use distinct particle, sparkle and glow palettes", (
   assert.equal(dark.sparkleColor, "#e1fff9");
   assert.equal(dark.glowColor, "#061c18");
   assert.equal(dark.glowOpacity, 0.028);
+  assert.equal(light.volumeColor, "#17685e");
+  assert.equal(dark.volumeColor, "#62d8c7");
+  assert.ok(dark.volumeIntensity > light.volumeIntensity);
+  assert.equal(light.ambientParticleOpacity, 0.42);
+  assert.equal(dark.ambientParticleOpacity, 0.62);
   assert.notEqual(light.orbitParticleColor, dark.orbitParticleColor);
   assert.notEqual(light.orbitParticleGlowColor, dark.orbitParticleGlowColor);
   assert.ok(light.orbitParticleOpacity > 0 && light.orbitParticleOpacity <= 1);
@@ -359,6 +365,13 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.match(rendererSource, /palette\.innerParticleColor/);
   assert.match(rendererSource, /palette\.innerParticleOpacity/);
   assert.match(rendererSource, /uSparkleColor/);
+  assert.match(rendererSource, /uVolumeColor/);
+  assert.match(rendererSource, /uVolumeIntensity/);
+  assert.match(rendererSource, /uAmbientParticleColor/);
+  assert.match(rendererSource, /uAmbientParticleOpacity/);
+  assert.match(rendererSource, /uSphereRadius/);
+  assert.match(rendererSource, /palette\\.volumeColor/);
+  assert.match(rendererSource, /palette\\.ambientParticleOpacity/);
   assert.match(rendererSource, /glow\.material\.color\.set\(palette\.glowColor\)/);
   assert.match(rendererSource, /case "orbit-particle"/);
   assert.match(rendererSource, /case "orbit-particle-glow"/);
@@ -396,6 +409,27 @@ test("particle burst uses staggered per-particle recovery without changing base 
   assert.equal(isParticleBurstActive(0.8), true);
   assert.equal(isParticleBurstActive(1.35), true);
   assert.equal(isParticleBurstActive(2.11), false);
+});
+
+test("camera choreography anticipates the burst before delayed pullback and smooth recovery", () => {
+  const idle = getParticleCameraChoreography(-1);
+  const launch = getParticleCameraChoreography(0);
+  const anticipation = getParticleCameraChoreography(0.12);
+  const anticipationRelease = getParticleCameraChoreography(0.28);
+  const delayedPullback = getParticleCameraChoreography(0.14);
+  const fullPullback = getParticleCameraChoreography(0.59);
+  const recovery = getParticleCameraChoreography(1.4);
+  const returned = getParticleCameraChoreography(2.25);
+
+  assert.deepEqual(idle, { anticipation: 0, pullback: 0 });
+  assert.deepEqual(launch, { anticipation: 0, pullback: 0 });
+  assert.equal(anticipation.anticipation, 1);
+  assert.equal(anticipation.pullback, 0);
+  assert.equal(anticipationRelease.anticipation, 0);
+  assert.equal(delayedPullback.pullback, 0);
+  assert.equal(fullPullback.pullback, 1);
+  assert.ok(recovery.pullback > 0);
+  assert.equal(returned.pullback, 0);
 });
 
 test("renderer maps pointer hits to the sphere and restarts burst on a short tap", () => {
@@ -494,7 +528,19 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /depthFade/);
   assert.match(shaderSource, /rimLight/);
   assert.match(shaderSource, /hemisphereFill/);
-  assert.ok(shaderSource.includes("aSize * ambientSize * burstSize * uPixelRatio"));
+  assert.match(shaderSource, /uniform vec3 uVolumeColor/);
+  assert.match(shaderSource, /uniform float uVolumeIntensity/);
+  assert.match(shaderSource, /uniform vec3 uAmbientParticleColor/);
+  assert.match(shaderSource, /uniform float uAmbientParticleOpacity/);
+  assert.match(shaderSource, /uniform float uSphereRadius/);
+  assert.match(shaderSource, /normalizedViewDepth/);
+  assert.match(shaderSource, /nearParticleBoost/);
+  assert.match(shaderSource, /depthAttenuation/);
+  assert.match(shaderSource, /innerVolumeFalloff/);
+  assert.match(shaderSource, /ambientLitColor/);
+  assert.match(shaderSource, /vVolumeGlow/);
+  assert.match(shaderSource, /volumeHalo/);
+  assert.ok(shaderSource.includes("aSize * ambientSize * burstSize * nearParticleBoost * uPixelRatio"));
   assert.ok(shaderSource.includes("* (5.0 / viewDepth)"));
   assert.match(orbitSource, /baseOpacity = spec\.opacity/);
   assert.match(orbitSource, /themeRole = "orbit-particle"/);
