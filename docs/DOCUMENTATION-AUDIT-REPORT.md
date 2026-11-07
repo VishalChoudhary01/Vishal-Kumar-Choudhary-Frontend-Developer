@@ -22,6 +22,8 @@ The docs folder now has a current-state index and linked implementation guides f
 
 The previous flat design/plan docs have been retained to preserve historical decisions. The docs index now explains which documents describe the current code and which remain a target design/plan.
 
+The mascot was separately reverse-engineered after the initial homepage guide and added as [docs/pages/PORTFOLIO-MASCOT-ENGINEERING.md](./pages/PORTFOLIO-MASCOT-ENGINEERING.md). It describes the 3D scene, section/pose mapping, DOM target positioning, footer state, pointer gaze, dialogue, drag, scan targeting and safe agent/human edit steps.
+
 ## 2. New current-state documents
 
 | File | Coverage |
