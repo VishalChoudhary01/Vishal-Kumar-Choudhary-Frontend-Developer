@@ -1,7 +1,7 @@
 # Public Labs and Owner Workspace — Current Engineering Map
 
 **Audited branch:** `feat/labs-platform-integration`  
-**Current-state date:** 2026-11-07  
+**Current-state date:** 2026-11-08  
 **Authority:** This guide describes the routes and behavior present in this branch. The PRD and retained design documents define product requirements; accepted superseding Labs decisions are recorded in [ADR-018](../DECISIONS.md#adr-018--7-november-labs-catalogue-detail-owner-and-analytics-supersession).
 
 > **Important boundary:** Public Labs is currently a source-backed custom-experiment catalogue with a static detail page. The owner compiler, temporary Run preview, immutable artifact build and public artifact Route Handler are separate capabilities. The public detail route does not mount the interactive published artifact.
@@ -21,6 +21,90 @@
 | `/admin/labs/experiments/[slug]/edit` | Edit permitted metadata fields | Owner |
 
 Portfolio Analytics at `/admin/portfolio/analytics` is a separate product and data domain. It must not be merged with Labs source-engagement events.
+
+### 1.1 Public Labs landing hero and particle-sphere artwork
+
+**Route entry:** `src/app/labs/page.js` renders `LabsIntroduction` above the public experiment collection.
+**Hero composition:** `src/app/components/labs/LabsIntroduction.js` owns the copy, CTA/stat region, full-hero root and responsive layout. `src/app/components/labs/landing/LabsHeroArtwork.js` owns the decorative artwork boundary. The actual WebGL renderer and its supporting modules live under `src/app/components/labs/landing/particle-sphere/`.
+
+The hero uses a stacked layout on compact screens and a two-column copy/artwork layout at the desktop breakpoint. The outer wrapper is marked with `data-labs-hero-root`, is positioned relative and clips overflow to the hero bounds. Its dark theme uses one responsive radial background on that wrapper; the artwork does not add a separate full-width overlay. Hero copy/CTA content is layered above the artwork. The copy wrapper ignores pointer events by default while its interactive content explicitly restores them, so the decorative canvas does not block the CTA links.
+
+**Artwork is decorative, not an experiment preview.** The figure and canvas are `aria-hidden`. They do not execute a published Lab experiment, load owner source, create an experiment iframe or use the owner compiler. The visual is a Three.js scene authored for the Labs landing page.
+
+#### Render lifecycle and fallback
+
+- `LabsHeroArtwork` uses `motion/react` `useInView` with `once: true` and a `140px` vertical margin. The animated component is not mounted until the figure approaches the viewport.
+- The renderer is loaded through `next/dynamic` with `ssr: false`. While the dynamic module is loading, a lightweight CSS sphere illustration is shown instead of a blank area.
+- The same CSS artwork is used when the user prefers reduced motion and while the figure has not entered the viewport. Reduced-motion mode therefore does not start the animated Three.js scene.
+- If WebGL setup fails or the browser reports `webglcontextlost`, `LabsParticleSphere` disposes the renderer and scene and switches to its static CSS fallback.
+- The component is a client-side visual only. It is not part of server-rendered experiment content.
+
+#### Full-hero canvas and artwork anchoring
+
+The WebGL mount begins inside the artwork figure, but the renderer deliberately attaches its canvas to the closest `[data-labs-hero-root]` element. This is the key boundary that lets the burst occupy the available Labs hero instead of being clipped to the smaller artwork figure.
+
+The canvas is absolutely positioned over the hero root at `inset: 0`, with the root's width and height. The root's `overflow-hidden` is the final clipping boundary, so the burst can travel across the hero without bleeding into the page above or below it.
+
+The sphere and orbits are not moved to the hero's geometric center when the canvas expands. During resize, the renderer measures both the hero root and the original artwork mount, computes the artwork figure's center relative to the hero canvas, and positions the Three.js `artworkGroup` at that center. It separately calculates the idle camera distance from the artwork figure dimensions, then converts that distance to the larger canvas height. This preserves the sphere's resting on-screen size and its position in the artwork column while the WebGL canvas spans the entire hero.
+
+Burst framing uses the hero canvas dimensions and the calculated burst radius. The camera eases from the idle framing toward that wider hero framing during the interaction and returns as the particles recover. This is a camera/framing change; it does not enlarge the sphere geometry or relocate the orbit group.
+
+#### Scene construction and geometry contract
+
+The scene uses one GPU `THREE.Points` system with a custom `ShaderMaterial`. Particle geometry supplies position, size, stable seed, color and layer attributes. The shader handles depth/facing, the visible surface, inner-volume particles, ambient particles, sparkle, glow, pointer influence and burst displacement.
+
+| Element | Current implementation |
+| --- | --- |
+| Sphere | World-space radius `1.52`; the visible particle shell, interior volume, ambient layer and soft glow are grouped together and rotate gently. |
+| Inner orbit | Circular path radius `1.70`, with its own inclined plane and moving particle runner. |
+| Middle orbit | Circular path radius `1.72`, with its own inclined plane and moving particle runner. |
+| Outer orbit | Circular path radius `1.88`, with its own inclined plane and moving particle runner. |
+
+Each orbit path is constructed from 240 line segments and has a separate moving runner with a restrained glow. The ring planes retain their depth angles while the orbit group receives only a very small camera-axis roll; runners advance along their own paths. During a burst, runner speed can rise to at most `1.65×`, but the sphere and ring paths remain intact around the same artwork center.
+
+The orbit/sphere relationship is a tested geometry invariant, not only a visual assumption. `tests/labs-particle-sphere.test.mjs` samples 241 points along each ring after perspective projection at artwork-size fixtures of 320×296, 375×347, 768×711 and 1440×1333. Every sampled orbit must retain at least `0.06` projected-radius clearance outside the sphere silhouette. If the sphere radius, camera fit or an orbit plane/radius is changed, update the geometry test and recheck all three paths together.
+
+#### Sphere tap and full-area particle burst
+
+The renderer uses an invisible interaction-only sphere as the raycast target; this hit surface does not render and does not modify the visible particle geometry. Pointer movement over the sphere updates the shader's local pointer position. A short pointer press/release that starts and ends on the sphere (maximum movement of 12 CSS pixels) restarts the burst. A drag or a press that begins outside the sphere does not trigger it. Pointer capture is used for an active sphere press, and the canvas keeps `touch-action: pan-y` so normal vertical page scrolling remains available.
+
+The burst is a per-particle shader displacement, not a sphere-scale animation:
+
+- The radial expansion factor is `3.4`, with seed-based stagger so particles do not all launch on the same frame.
+- Outward movement reaches its attack phase over `0.45s`; the stagger window is `0.08s`; each particle then recovers over its configured, seed-varied recovery duration (base recovery setting `1.3s`).
+- The camera has a brief anticipation movement, then begins its wider pullback after the particle impulse starts. The camera tracks the longest staggered recovery and eases back to the idle framing.
+- Orbit runners accelerate during the active burst and settle to their regular speeds as the global burst envelope returns to zero.
+- The base particle geometry is retained. Shader offsets are removed progressively per particle, so the sphere reforms rather than being rebuilt or left scattered.
+
+Because the renderer canvas spans `data-labs-hero-root`, the exploded particles can spread across the available hero area. The sphere itself stays at its artwork-column anchor and remains enclosed by its orbit system; the surrounding burst cloud is the part that fills the wider canvas.
+
+#### Theme, responsive quality and lifecycle
+
+`particle-theme.mjs` supplies separate light/dark palettes for surface particles, inner particles, volume, ambient particles, sparkles, glow and orbit runners. The dark palette uses lighter teal particle tones so the secondary sphere layers remain visible against the dark hero, while the glow and orbit-line opacity remain restrained. A theme-class observer updates the existing material uniforms and orbit materials without recreating the whole scene.
+
+`particle-quality.mjs` selects a bounded quality profile using viewport width plus available `navigator.deviceMemory` and `navigator.hardwareConcurrency` hints. It adjusts surface/inner/ambient point counts, sparkle density/intensity/speed, the pixel-ratio cap and the render-FPS cap. The high desktop profile is 5,200 surface points, 620 inner points and 26 ambient points (60 FPS cap, pixel ratio capped at 1.5). Medium, compact and low profiles reduce these budgets; the lowest compact profile uses 1,600 surface points, 140 inner points and 6 ambient points, with a 30 FPS cap, pixel ratio capped at 1.0, and lower/slower sparkle values. Missing device hints are treated as unknown rather than automatically low-end.
+
+The scene resizes from a `ResizeObserver` on both the full hero root and artwork mount (with a window-resize fallback). An `IntersectionObserver` stops the animation loop when the mount is outside the viewport; `document.visibilitychange` also pauses rendering for a hidden tab. The frame loop uses `requestAnimationFrame`, caps delta time and enforces the selected profile's FPS ceiling. On cleanup, the component cancels the frame, disconnects observers, removes event listeners, disposes geometries/materials/render lists and disposes the WebGL renderer.
+
+#### Source ownership and verification
+
+| Concern | Source |
+| --- | --- |
+| Hero content, layout, root marker and background | `src/app/components/labs/LabsIntroduction.js` |
+| Figure, in-view gate, reduced-motion branch and CSS loading fallback | `src/app/components/labs/landing/LabsHeroArtwork.js` |
+| Three.js scene, hero-root canvas, camera, resize, pointer handling and lifecycle | `src/app/components/labs/landing/particle-sphere/LabsParticleSphere.js` |
+| Sphere world-space configuration | `src/app/components/labs/landing/particle-sphere/particle-constants.js` |
+| Sphere point geometry | `src/app/components/labs/landing/particle-sphere/particle-geometry.mjs` |
+| Orbit radii, planes, paths and moving runners | `src/app/components/labs/landing/particle-sphere/particle-orbits.js` |
+| Camera fit for idle and burst framing | `src/app/components/labs/landing/particle-sphere/particle-responsive.mjs` |
+| Burst envelope, particle recovery and camera choreography | `src/app/components/labs/landing/particle-sphere/particle-interaction.mjs` |
+| Device/viewport quality profiles | `src/app/components/labs/landing/particle-sphere/particle-quality.mjs` |
+| Theme palettes | `src/app/components/labs/landing/particle-sphere/particle-theme.mjs` |
+| Custom GPU shaders | `src/app/components/labs/landing/particle-sphere/particle-shaders.js` |
+| Geometry, projected orbit clearance, renderer, burst, theme and quality regression tests | `tests/labs-particle-sphere.test.mjs` |
+| Hero lazy-loading and reduced-motion behavior | `tests/labs-public-hero.test.mjs` |
+
+**Refactor invariants:** keep the canvas attached to the hero root (not only the figure); keep the artwork group anchored to the measured figure center; preserve the idle camera's figure-sized framing; expand the particle cloud through shader displacement and hero-sized camera framing rather than scaling the sphere; keep all three projected orbit paths clear of the sphere; and retain reduced-motion, WebGL-failure, offscreen-pause and tab-hidden behavior.
 
 ## 2. Public catalogue — source-backed custom experiments only
 

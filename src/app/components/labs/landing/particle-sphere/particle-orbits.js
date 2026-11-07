@@ -1,7 +1,7 @@
 import { ORBIT_BURST_SPEED_MULTIPLIER } from "./particle-interaction.mjs";
 
-// Keep every orbit's projected inner edge outside the fixed sphere radius
-// at every viewport. Orbit radii stay unchanged; only plane inclination is tuned.
+// Keep each enlarged orbit's projected inner edge outside the sphere silhouette
+// across the tested artwork sizes; the perspective-clearance test protects this.
 const ORBIT_SPECS = [
   {
     radiusX: 1.72,
