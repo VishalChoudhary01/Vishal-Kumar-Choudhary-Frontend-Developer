@@ -221,6 +221,8 @@ The original Sections 4–5 grant instructions have been superseded by the verif
 Follow `docs/LABS-SOURCE-MANAGEMENT-SPEC.md` for the target owner capability and migration plan.
 
 ### Current state on `feat/labs-platform-integration`
+
+**Supersession note (2026-11-07):** the live source-access policy below remains current, but the old final line that defers all live source execution describes a former baseline. The owner-side temporary Run, isolated compiler/build, immutable artifact pipeline and artifact-serving Route Handler are now present. The public /labs/[slug] route is nevertheless static/non-executable and does not mount the artifact. The accepted product boundary is recorded in Section 39 of LABS-AND-AUTHENTICATION-DESIGN-SPEC.md. Owner ID-only policy is accepted, but current owner-access.js still has LABS_OWNER_EMAIL fallback; see PROJECT-STATUS.md.
 - `LabSource` is the source head; `LabSourceVersion` stores immutable snapshots and draft/published pointers.
 - `LabSourceGrant` remains as legacy transition state but is not queried by the new source authorization service.
 - The protected source endpoint requires a verified Better Auth session, a canonical Labs experiment slug and a published source snapshot; no grant is required.
@@ -235,7 +237,7 @@ Follow `docs/LABS-SOURCE-MANAGEMENT-SPEC.md` for the target owner capability and
 4. Audit the canonical `magnetic-interaction` source file inventory; do not guess paths or include secrets. Populate the first reviewed draft from the owner editor.
 5. Run the full Guest / Unverified / Verified / Owner, stale-version, like deduplication and private/no-store tests against Atlas.
 6. Complete browser-based keyboard, responsive, focus, contrast and accessibility QA.
-7. Keep live source execution deferred until separately approved and threat-modelled.
+7. Preserve owner Run/build isolation and verify the compiler/artifact threat-model gates. Do not mount an executable runtime on the public detail page under the accepted static-detail decision.
 
 ## 14. OAuth and Terms cleanup implementation status — 5 November 2026
 
