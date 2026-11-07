@@ -4,6 +4,9 @@ const DEFAULT_PROFILE = Object.freeze({
   ambientCount: 26,
   maxPixelRatio: 1.5,
   maxFps: 60,
+  sparkleDensity: 1,
+  sparkleIntensity: 0.9,
+  sparkleSpeed: 0.58,
 });
 
 function finitePositive(value, fallback) {
@@ -37,6 +40,9 @@ export function getParticleQualityProfile({
         ambientCount: compactViewport ? 6 : 12,
         maxPixelRatio: compactViewport ? 1.0 : 1.15,
         maxFps: 30,
+        sparkleDensity: compactViewport ? 0.28 : 0.52,
+        sparkleIntensity: compactViewport ? 0.42 : 0.62,
+        sparkleSpeed: compactViewport ? 0.4 : 0.48,
         tier: "low",
       });
     }
@@ -47,6 +53,9 @@ export function getParticleQualityProfile({
       ambientCount: compactViewport ? 10 : 16,
       maxPixelRatio: compactViewport ? 1.1 : 1.2,
       maxFps: 40,
+      sparkleDensity: compactViewport ? 0.42 : 0.72,
+      sparkleIntensity: compactViewport ? 0.56 : 0.74,
+      sparkleSpeed: compactViewport ? 0.46 : 0.52,
       tier: "compact",
     });
   }
@@ -58,6 +67,9 @@ export function getParticleQualityProfile({
       ambientCount: 18,
       maxPixelRatio: 1.3,
       maxFps: 50,
+      sparkleDensity: 0.86,
+      sparkleIntensity: 0.82,
+      sparkleSpeed: 0.54,
       tier: "medium",
     });
   }
@@ -73,6 +85,9 @@ export function areParticleQualityProfilesEqual(left, right) {
     && left.ambientCount === right.ambientCount
     && left.maxPixelRatio === right.maxPixelRatio
     && left.maxFps === right.maxFps
+    && left.sparkleDensity === right.sparkleDensity
+    && left.sparkleIntensity === right.sparkleIntensity
+    && left.sparkleSpeed === right.sparkleSpeed
     && left.tier === right.tier;
 }
 
