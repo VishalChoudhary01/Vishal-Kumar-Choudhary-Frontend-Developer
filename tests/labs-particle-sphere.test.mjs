@@ -288,6 +288,13 @@ test("particle quality profiles adapt density and pixel ratio to viewport size",
   assert.equal(mobile.surfaceCount, 2600);
   assert.equal(mobile.maxFps, 40);
   assert.ok(mobile.maxPixelRatio < desktop.maxPixelRatio);
+  assert.equal(desktop.sparkleSpeed, 0.36);
+  assert.equal(mobile.sparkleSpeed, 0.3);
+  assert.equal(mobile.sparkleDensity, 0.42);
+  assert.equal(mobile.sparkleIntensity, 0.42);
+  assert.ok(mobile.sparkleSpeed < desktop.sparkleSpeed);
+  assert.ok(mobile.sparkleDensity < desktop.sparkleDensity);
+  assert.ok(mobile.sparkleIntensity < desktop.sparkleIntensity);
 });
 
 test("constrained devices receive a lower particle budget", () => {
@@ -301,6 +308,9 @@ test("constrained devices receive a lower particle budget", () => {
   assert.equal(constrained.surfaceCount, 2600);
   assert.equal(constrained.maxFps, 30);
   assert.ok(constrained.maxPixelRatio <= 1.2);
+  assert.equal(constrained.sparkleDensity, 0.52);
+  assert.equal(constrained.sparkleIntensity, 0.55);
+  assert.equal(constrained.sparkleSpeed, 0.3);
 });
 
 test("low-tier mobile profile updates its budget even when tier label is unchanged", () => {
@@ -320,6 +330,17 @@ test("low-tier mobile profile updates its budget even when tier label is unchang
   assert.notEqual(lowDesktop.surfaceCount, lowMobile.surfaceCount);
   assert.equal(hasParticleBudgetChanged(lowDesktop, lowMobile), true);
   assert.equal(areParticleQualityProfilesEqual(lowDesktop, lowMobile), false);
+  assert.equal(lowMobile.sparkleDensity, 0.28);
+  assert.equal(lowMobile.sparkleIntensity, 0.3);
+  assert.equal(lowMobile.sparkleSpeed, 0.26);
+});
+
+test("sparkle-only profile changes update quality equality without rebuilding particle geometry", () => {
+  const mobile = getParticleQualityProfile({ viewportWidth: 390 });
+  const slowerMobile = { ...mobile, sparkleSpeed: 0.22 };
+
+  assert.equal(hasParticleBudgetChanged(mobile, slowerMobile), false);
+  assert.equal(areParticleQualityProfilesEqual(mobile, slowerMobile), false);
 });
 
 test("equal particle profiles avoid unnecessary geometry replacement", () => {
@@ -373,6 +394,12 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.match(rendererSource, /palette\.innerParticleColor/);
   assert.match(rendererSource, /palette\.innerParticleOpacity/);
   assert.match(rendererSource, /uSparkleColor/);
+  assert.match(rendererSource, /uSparkleDensity: \{ value: qualityProfile\.sparkleDensity \}/);
+  assert.match(rendererSource, /uSparkleIntensity: \{ value: qualityProfile\.sparkleIntensity \}/);
+  assert.match(rendererSource, /uSparkleSpeed: \{ value: qualityProfile\.sparkleSpeed \}/);
+  assert.match(rendererSource, /particleMaterial\.uniforms\.uSparkleDensity\.value = qualityProfile\.sparkleDensity/);
+  assert.match(rendererSource, /particleMaterial\.uniforms\.uSparkleIntensity\.value = qualityProfile\.sparkleIntensity/);
+  assert.match(rendererSource, /particleMaterial\.uniforms\.uSparkleSpeed\.value = qualityProfile\.sparkleSpeed/);
   assert.match(rendererSource, /uSurfaceParticleMix/);
   assert.match(rendererSource, /uSurfaceParticleBrightness/);
   assert.match(rendererSource, /uSurfaceParticleOpacityFloor/);
@@ -470,6 +497,14 @@ test("orbit particles move continuously and retain their orbital path", () => {
   assert.equal(ORBIT_BURST_SPEED_MULTIPLIER, 1.65);
   assert.match(orbitSource, /delta \* spec\.speed \* burstSpeed/);
   assert.match(orbitSource, /end: Math\.PI \* 2/);
+  const orbitRadii = [...orbitSource.matchAll(/radiusX: ([0-9.]+),\s+radiusY: ([0-9.]+)/g)]
+    .map(([, radiusX, radiusY]) => [Number(radiusX), Number(radiusY)]);
+  assert.equal(orbitRadii.length, 3);
+  orbitRadii.forEach(([radiusX, radiusY]) => {
+    assert.equal(radiusX, radiusY);
+    assert.ok(radiusY >= 1.38);
+  });
+  assert.equal(Math.max(...orbitRadii.map(([radiusX]) => radiusX)), 1.7);
   assert.match(orbitSource, /orbit-particle-glow/);
   assert.ok(rendererSource.includes("orbitGroup.userData.update?.(elapsed, burstAmount)"));
 });
@@ -506,6 +541,13 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /sparkleMask/);
   assert.match(shaderSource, /sparkleWave/);
   assert.match(shaderSource, /ambientDrift/);
+  assert.match(shaderSource, /uniform float uSparkleDensity/);
+  assert.match(shaderSource, /uniform float uSparkleIntensity/);
+  assert.match(shaderSource, /uniform float uSparkleSpeed/);
+  assert.match(shaderSource, /sparkleChance = mix\(0\.025, 0\.16, sparkleRandom\) \* uSparkleDensity/);
+  assert.match(shaderSource, /sparkleRate = \(0\.62 \+ hash11\(aSeed \* 17\.4\) \* 2\.1\) \* uSparkleSpeed/);
+  assert.match(shaderSource, /sparkleWave/);
+  assert.match(shaderSource, /uSparkleIntensity/);
   assert.match(shaderSource, /sparkleChance/);
   assert.match(shaderSource, /sparkleRandom/);
   assert.match(shaderSource, /burstGlint/);
