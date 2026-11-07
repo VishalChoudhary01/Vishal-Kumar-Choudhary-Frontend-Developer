@@ -68,6 +68,8 @@ export default function usePortfolioAnalyticsPolling({
   );
 
   const manualRefreshRef = useRef(null);
+  const recentVisitIdsRef = useRef(new Set(initialRecentVisits.map((visit) => visit.id)));
+  const [newVisitIds, setNewVisitIds] = useState(() => new Set());
 
   useEffect(() => {
     let active = true;
@@ -173,6 +175,16 @@ export default function usePortfolioAnalyticsPolling({
 
         if (!active || controller.signal.aborted) return;
 
+        const previousIds = recentVisitIdsRef.current;
+        const incomingIds = new Set(data.visits.map((visit) => visit.id));
+        const insertedIds = new Set(
+          data.visits
+            .filter((visit) => !previousIds.has(visit.id))
+            .map((visit) => visit.id),
+        );
+
+        recentVisitIdsRef.current = incomingIds;
+        setNewVisitIds(insertedIds);
         setRecentVisits(data.visits);
         setNextCursor(data.nextCursor || null);
         setLastRecentUpdatedAt(new Date().toISOString());
@@ -235,8 +247,16 @@ export default function usePortfolioAnalyticsPolling({
     window.addEventListener("focus", handleFocus);
 
     if (visible()) {
-      scheduleSummary(PORTFOLIO_ANALYTICS_POLL_INTERVALS.summary);
-      scheduleRecent(PORTFOLIO_ANALYTICS_POLL_INTERVALS.recent);
+      scheduleSummary(
+        initialReport
+          ? PORTFOLIO_ANALYTICS_POLL_INTERVALS.summary
+          : 0,
+      );
+      scheduleRecent(
+        initialRecentError
+          ? 0
+          : PORTFOLIO_ANALYTICS_POLL_INTERVALS.recent,
+      );
     }
 
     return () => {
@@ -249,7 +269,15 @@ export default function usePortfolioAnalyticsPolling({
       window.removeEventListener("focus", handleFocus);
       manualRefreshRef.current = null;
     };
-  }, [days, cursor]);
+  }, [
+    days,
+    cursor,
+    initialReport,
+    initialRecentVisits,
+    initialNextCursor,
+    initialReportError,
+    initialRecentError,
+  ]);
 
   const refreshNow = useCallback(() => {
     manualRefreshRef.current?.();
@@ -266,6 +294,7 @@ export default function usePortfolioAnalyticsPolling({
     recentRefreshing,
     lastSummaryUpdatedAt,
     lastRecentUpdatedAt,
+    newVisitIds,
     refreshNow,
   };
 }
