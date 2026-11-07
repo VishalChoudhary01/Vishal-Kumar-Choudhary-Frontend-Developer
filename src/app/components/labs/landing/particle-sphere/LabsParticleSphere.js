@@ -236,6 +236,9 @@ export default function LabsParticleSphere() {
       const initialPalette = getParticleSphereThemePalette(
         document.documentElement.classList.contains("dark"),
       );
+      const initialBrandColor = getComputedStyle(document.documentElement)
+        .getPropertyValue("--brand")
+        .trim() || initialPalette.particleColor;
 
       renderer = new THREE.WebGLRenderer({
         alpha: true,
@@ -263,7 +266,7 @@ export default function LabsParticleSphere() {
           uContraction: { value: 0 },
           uPixelRatio: { value: renderer.getPixelRatio() },
           uMotionEnabled: { value: 1 },
-          uBrandColor: { value: new THREE.Color(initialPalette.particleColor) },
+          uBrandColor: { value: new THREE.Color(initialBrandColor) },
           uSparkleColor: { value: new THREE.Color(initialPalette.sparkleColor) },
         },
         vertexShader: particleVertexShader,
@@ -285,14 +288,18 @@ export default function LabsParticleSphere() {
           document.documentElement.classList.contains("dark"),
         );
 
-        particleMaterial.uniforms.uBrandColor.value.set(palette.particleColor);
+        const brandColor = getComputedStyle(document.documentElement)
+          .getPropertyValue("--brand")
+          .trim() || palette.particleColor;
+
+        particleMaterial.uniforms.uBrandColor.value.set(brandColor);
         particleMaterial.uniforms.uSparkleColor.value.set(palette.sparkleColor);
 
         orbitGroup.traverse((object) => {
           const material = object.material;
           if (!material) return;
 
-          material.color.set(palette.particleColor);
+          material.color.set(brandColor);
           material.opacity = (material.userData.baseOpacity ?? material.opacity)
             * palette.orbitOpacityScale;
         });
