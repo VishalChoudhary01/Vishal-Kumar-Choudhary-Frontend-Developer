@@ -26,6 +26,16 @@ const indexes = [
     name: "portfolio_visits_started_at_desc",
   },
   {
+    key: { startedAt: -1, _id: -1 },
+    options: {},
+    name: "portfolio_visits_recent_cursor",
+  },
+  {
+    key: { startedAt: 1, sessionHash: 1 },
+    options: {},
+    name: "portfolio_visits_started_session_distinct",
+  },
+  {
     key: { pageType: 1, startedAt: -1 },
     options: {},
     name: "portfolio_visits_page_type_started_at",

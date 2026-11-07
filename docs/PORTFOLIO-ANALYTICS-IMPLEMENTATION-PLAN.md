@@ -1,6 +1,6 @@
 # Portfolio Analytics — Implementation Plan
 
-**Status:** Approved implementation baseline · **Implementation:** Phases 1–3 committed; public tracking remains disabled by default  
+**Status:** Approved implementation baseline · **Implementation:** Phases 1–4 committed; public tracking remains disabled by default  
 **Target branch:** `feat/labs-platform-integration`  
 **Scope:** First-party analytics for the public portfolio homepage, project detail pages, Labs collection and Lab detail pages.  
 **Stack:** Existing Next.js App Router, JavaScript, Tailwind CSS v4, Motion (`motion/react`), MongoDB/Mongoose and Vercel hosting.
@@ -855,3 +855,30 @@ Verified against branch commit `d0d3dd9c09ff0dac95d09e1b1eb8011f52f412be`:
 - Vercel deployment check for the same commit: `READY`.
 
 The build confirms the tracker is part of the application, but neither the server ingestion flag nor the public client flag is enabled by this implementation. No production visit collection is active until the MongoDB index and privacy/consent release gates are completed.
+
+
+---
+
+## Phase 4 implementation record — reporting aggregation layer
+
+**Status:** Implemented in source; owner dashboard rendering and polling remain in later phases.
+
+Added server-only reporting functions:
+- `getPortfolioAnalyticsReport({ days, now })` supports 7, 30 and 60 UTC calendar-day periods.
+- Overview totals: page visits, exact distinct tab sessions, total visible seconds, average visible seconds per visit and visits with non-zero visible time.
+- Complete UTC daily trend with zero-filled missing dates.
+- Page-type distribution and top 12 page paths.
+- Top 12 source labels across direct, referral hostname, campaign source/medium/campaign and internal navigation.
+- Top countries, city/region combinations and device categories.
+- `getPortfolioRecentVisits({ days, limit, cursor, now })` returns 25 rows by default, clamps page size to 1–50 and uses a stable `startedAt desc, _id desc` cursor. The row projection excludes HMAC session hashes, idempotency hashes, visit UUIDs, raw user-agent and IP data.
+
+Query and performance boundaries:
+- Reporting runs only when a future owner-only dashboard/API calls the server-only reporting service. Public route rendering and tracker code do not import it.
+- The summary uses a date-range-first aggregation with bounded facet lists. Exact distinct tab sessions are counted separately using a disk-allowed grouping stage.
+- Recent visits use the date range and compound cursor sort; only `limit + 1` records are retrieved to detect the next page.
+- Added compound indexes for stable recent cursor sorting and date-bounded distinct tab-session grouping. The explicit MongoDB provisioning script verifies both indexes.
+- UTC is the storage/grouping timezone; display localization belongs in the dashboard presentation layer.
+
+Tests cover supported periods, exact daily bucket counts, zero fill, cursor round-trip/rejection, stable tie-break predicates, limit clamping, bounded report groups, sensitive-field omission and build wiring.
+
+**Not included in Phase 4:** dashboard visuals, owner read APIs, client polling, manual deletion, actual production-database index provisioning, and real-data query-plan/load testing. These remain later phases or operational checks.

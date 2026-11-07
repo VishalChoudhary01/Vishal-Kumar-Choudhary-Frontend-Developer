@@ -146,6 +146,14 @@ portfolioVisitSchema.index(
   { name: "portfolio_visits_started_at_desc" },
 );
 portfolioVisitSchema.index(
+  { startedAt: -1, _id: -1 },
+  { name: "portfolio_visits_recent_cursor" },
+);
+portfolioVisitSchema.index(
+  { startedAt: 1, sessionHash: 1 },
+  { name: "portfolio_visits_started_session_distinct" },
+);
+portfolioVisitSchema.index(
   { pageType: 1, startedAt: -1 },
   { name: "portfolio_visits_page_type_started_at" },
 );
