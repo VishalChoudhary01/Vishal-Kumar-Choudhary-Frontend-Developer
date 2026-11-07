@@ -469,7 +469,7 @@ test("renderer maps pointer hits to the sphere and restarts burst on a short tap
 test("enlarged sphere stays inside circular orbits with the original tilt planes", () => {
   const sphereRadius = 1.52;
   const specs = [...orbitSource.matchAll(
-    /radiusX: ([0-9.]+),\\s+radiusY: ([0-9.]+),\\s+rotation: \\[([0-9., -]+)\\]/g,
+    /radiusX: ([0-9.]+),\s+radiusY: ([0-9.]+),\s+rotation: \[([0-9., -]+)\]/g,
   )].map(([, radiusX, radiusY, rotation]) => ({
     radiusX: Number(radiusX),
     radiusY: Number(radiusY),
