@@ -42,8 +42,14 @@ This is a personal frontend developer portfolio built with Next.js. The site pre
 
 ```text
 final/
-├── implemention Doc/           # Local implementation specifications and notes
-├── performance doc/            # Performance and architecture audits
+├── docs/                       # Maintained product, architecture and implementation documentation
+│   ├── architecture/           # System, data, runtime, privacy, motion, theme and sound
+│   ├── api/                    # Current Route Handler inventory
+│   ├── design/                 # Shared layout and design tokens
+│   ├── future/                 # CMS and OAuth plans (not implemented/configured)
+│   ├── operations/              # Environment, release and Sandbox recovery
+│   ├── pages/                  # Current page/feature engineering guides
+│   └── MOTION-LAB/              # Reusable Motion component specifications
 ├── public/
 │   ├── images/                 # Profile and company imagery
 │   ├── mp3/                    # Interface sound assets
@@ -53,19 +59,10 @@ final/
 ├── src/
 │   └── app/
 │       ├── api/                # Contact and development source-context routes
-│       ├── components/
-│       │   ├── common/         # Shared interface elements
-│       │   ├── errors/         # Error and diagnostic UI
-│       │   ├── layout/         # Navigation and footer
-│       │   ├── mascot/         # Three.js mascot
-│       │   ├── motion/         # Reusable motion components
-│       │   ├── project-detail/ # Project case-study presentation
-│       │   ├── sections/       # Homepage sections
-│       │   ├── seo/            # Structured-data component
-│       │   └── ui/             # Shared UI controls
+│       ├── components/         # Shared UI, errors, layout, mascot, Motion, project detail, sections
 │       ├── data/               # Portfolio, project, and section data
 │       ├── hooks/              # Custom React hooks
-│       ├── lib/                # SEO, scrolling, motion, and utility modules
+│       ├── lib/                # SEO, scrolling, motion, auth, data and utility modules
 │       ├── projects/[slug]/    # Static project detail route
 │       ├── providers/          # App, theme, motion, menu, and loader providers
 │       ├── store/              # Shared UI state
@@ -83,7 +80,7 @@ final/
 └── README.md
 ```
 
-The documentation directory is spelled `implemention Doc` in the current repository. Both documentation folders are local-only and are excluded by `.gitignore`. The root also contains [the performance optimization report](PERFORMANCE-OPTIMIZATION-REPORT.md).
+For the documentation navigation and source-of-truth rules, start with [docs/README.md](docs/README.md). The two documents under `docs/future/` describe approved CMS direction and pending Google/GitHub OAuth configuration; neither is implemented as a finished feature.
 
 ## Getting Started
 
@@ -127,7 +124,7 @@ Project detail pages are generated from the canonical project data. Unknown proj
 
 The Next.js configuration enables the React Compiler, configures responsive image sizes and AVIF/WebP formats, and sets cache and security-related response headers. SEO metadata and structured data are generated from shared project and site data; the SEO validator is also part of the production build command.
 
-Performance audits and historical project notes are available in [`performance doc/`](performance%20doc/) and [`PERFORMANCE-OPTIMIZATION-REPORT.md`](PERFORMANCE-OPTIMIZATION-REPORT.md). These documents describe analysis and baselines; this README makes no claim about current Lighthouse scores or Core Web Vitals.
+No current Lighthouse score or Core Web Vitals result is claimed by this README. Record performance measurements with the tested commit, environment, device profile and methodology in the relevant release evidence.
 
 ## Maintenance Notes
 
