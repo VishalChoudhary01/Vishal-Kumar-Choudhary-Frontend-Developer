@@ -17,12 +17,12 @@ This is a current-state implementation guide. It does not describe a proposed so
 
 The application has a small shared audio utility rather than a dedicated music/audio framework.
 
-The current system has three confirmed playback call sites across two playback paths:
+The current system has four confirmed playback call sites across two playback implementations:
 
 1. **UI sound effects through useUiSound:** a reusable hook that shares one module-level Web Audio AudioContext across hook instances, fetches and decodes each audio source once, and creates a separate BufferSource/GainNode voice for each play.
 2. **Vee welcome voice through native Audio:** the spoken introduction is created directly with new Audio(...), with a manual retry prompt for browsers that block autoplay.
 
-Confirmed useUiSound consumers are Vee's laser scan effect and the Navbar theme toggle click effect. The mascot's spoken welcome bypasses useUiSound and uses native Audio. The SFX consumers share the module-level AudioContext/decode cache but each hook instance owns its own voice list. The native welcome voice does not share the SFX hook's playback object or voice lifecycle.
+Confirmed useUiSound consumers are Vee's laser scan effect, the Navbar theme toggle click effect and the Contact form success modal confirmation effect. The mascot's spoken welcome bypasses useUiSound and uses native Audio. The SFX consumers share the module-level AudioContext/decode cache but each hook instance owns its own voice list. The native welcome voice does not share the SFX hook's playback object or voice lifecycle.
 
 Current sound is event-driven. There is no confirmed ambient music loop, app-wide mute switch, master volume setting, persisted sound preference or global audio-control UI in the audited implementation.
 
@@ -34,11 +34,11 @@ Current sound is event-driven. There is no confirmed ambient music loop, app-wid
 |---|---|
 | src/app/hooks/useUiSound.js | Shared Web Audio hook, AudioContext singleton, decoded-buffer cache, voices, fallback pool, unlock listeners, play/stop API |
 | src/app/components/mascot/PortfolioMascot.js | Vee's laser SFX hook call, separate welcome voice, audio prompt and lifecycle |
-| src/app/components/ui/ThemeToggle.js | Plays the theme toggle click/chop effect directly from the user's click before applying the theme |
+| src/app/components/ui/ThemeToggle.js | Plays the theme toggle click/chop effect directly from the user's click before applying the theme |\n| src/app/components/ui/SuccessModal.js | Plays a confirmation sound when the contact form success dialog opens; stops it when the dialog closes |
 | src/app/providers/AppProviders.js | Confirms current provider tree; no dedicated audio provider is mounted |
 | public/audio/hey-there-im-vee-your.wav | Vee spoken welcome |
 | public/mp3/laser-large-004.mp3 | Vee holographic scan / laser SFX |
-| public/mp3/chop.mp3 | ThemeToggle click/chop SFX |
+| public/mp3/chop.mp3 | ThemeToggle click/chop SFX |\n| public/mp3/confirmation-002.mp3 | Contact form success modal confirmation SFX |
 | public/mp3/* | Additional MP3 files present in public; unassigned status is listed in the asset inventory below |
 
 ### Current provider composition
@@ -255,7 +255,34 @@ The sound is optional. If the browser has not unlocked audio, the file cannot be
 
 This is a separate consumer of useUiSound from the Vee laser effect. It does not make the sound engine theme-aware and does not add a master volume or mute preference.
 
-### 4.3 Vee spoken welcome
+### 4.3 Contact form success confirmation
+
+File: `src/app/components/ui/SuccessModal.js`  
+Asset: `/mp3/confirmation-002.mp3`
+
+The success modal registers the shared hook:
+
+```js
+const {
+  play: playConfirmationSound,
+  stop: stopConfirmationSound,
+} = useUiSound("/mp3/confirmation-002.mp3", {
+  volume: 0.35,
+  interrupt: true,
+});
+```
+
+Playback lifecycle:
+1. The component waits until its client-side `mounted` flag is true.
+2. When `open` changes to true, the effect calls `playConfirmationSound()`.
+3. When `open` becomes false, the effect calls `stopConfirmationSound()`.
+4. The effect cleanup also stops the active voice, including when the modal lifecycle/effect is torn down.
+
+This effect is tied to the success dialog being open, not directly to the API request. ContactForm opens the modal only after `submitContactForm()` resolves successfully. The sound is therefore a success-state confirmation, not a send-attempt sound.
+
+It uses Web Audio via useUiSound, volume 0.35 and interrupt=true. If playback is blocked or the asset cannot be decoded, the form remains successful and the modal remains usable.
+
+### 4.4 Vee spoken welcome
 
 File: src/app/components/mascot/PortfolioMascot.js  
 Asset: /audio/hey-there-im-vee-your.wav
@@ -287,24 +314,24 @@ Cleanup:
 
 This native voice has its own volume and promise handling. It is not governed by the useUiSound decoded-buffer cache, voice count or stop() API.
 
-### 4.4 Other current UI sounds
+### 4.5 Other current UI sounds
 
 The reviewed app shell and main homepage components do not mount a dedicated global audio provider. The homepage intro loader does not contain a useUiSound/new Audio playback call in the inspected source. No application-wide click sound is implied merely by the presence of click-soft.mp3 or other sound files in public.
 
-The currently confirmed playback call sites are the Vee laser SFX, Vee welcome voice and Navbar ThemeToggle chop effect. Additional consumers should be added only after a real call site is verified in source.
+The currently confirmed playback call sites are the Vee laser SFX, ThemeToggle chop effect, Contact success-modal confirmation and Vee welcome voice. Additional consumers should be added only after a real call site is verified in source.
 
 ## 5. Audio asset inventory
 
-The recursive repository tree contains nine audio assets. Three are currently confirmed as active call-site assets:
+The recursive repository tree contains nine audio assets. Four are currently confirmed as active call-site assets:
 
 | Asset | Size | Confirmed current call site | Status |
 |---|---:|---|---|
 | public/audio/hey-there-im-vee-your.wav | 511,244 bytes | Vee welcome voice via native Audio | Active |
 | public/mp3/laser-large-004.mp3 | 6,103 bytes | Vee scan effect via useUiSound | Active |
-| public/mp3/chop.mp3 | 2,550 bytes | ThemeToggle click effect via useUiSound (volume 0.25, interrupt true) | Active |
+| public/mp3/chop.mp3 | 2,550 bytes | ThemeToggle click effect via useUiSound (volume 0.25, interrupt true) | Active |\n| public/mp3/confirmation-002.mp3 | 4,849 bytes | Contact SuccessModal opens: useUiSound (volume 0.35, interrupt true) | Active |
 | public/mp3/book-flip-1.mp3 | 6,730 bytes | None confirmed in this review | Unassigned |
 | public/mp3/click-soft.mp3 | 669 bytes | None confirmed in this review | Unassigned |
-| public/mp3/confirmation-002.mp3 | 4,849 bytes | None confirmed in this review | Unassigned |
+
 | public/mp3/draw-knife-2.mp3 | 4,222 bytes | None confirmed in this review | Unassigned |
 | public/mp3/drop-003.mp3 | 2,132 bytes | None confirmed in this review | Unassigned |
 | public/mp3/tick-004.mp3 | 1,087 bytes | None confirmed in this review | Unassigned |
@@ -342,7 +369,7 @@ Public assets are served as static files. No import statement is required for th
 
 The sound and theme update are sequential, not coupled: a sound failure is swallowed by useUiSound and does not prevent the toggle.
 
-### Vee welcome path
+### Contact success modal path\n\n    ContactForm receives { ok: true }\n      → status=success and modalOpen=true\n      → SuccessModal mounts/opens\n      → useUiSound.play() for /mp3/confirmation-002.mp3 at volume 0.35\n      → close or effect cleanup calls stop()\n\nThe modal's sound is not a separate SMTP event and does not verify email delivery beyond the route's successful sendMail response.\n\n### Vee welcome path
 
     Homepage heroReady
       → lazy-load PortfolioMascot
@@ -360,19 +387,19 @@ These paths are intentionally separate today.
 
 ## 7. Sound behavior matrix
 
-| Behavior | Vee laser SFX (useUiSound) | ThemeToggle SFX (useUiSound) | Vee welcome voice |
+| Behavior | Vee laser SFX | ThemeToggle SFX | Contact success SFX | Vee welcome voice |
 |---|---|---|
-| Playback API | Web Audio BufferSource/GainNode | Web Audio BufferSource/GainNode | HTMLAudioElement via new Audio |
-| Shared AudioContext | Yes | Yes | No |
-| Fetch/decode Promise cache | Yes | Yes | Browser media loading |
-| Volume | 0.16 | 0.25 | Explicit 0.85 |
-| Interrupt/voice limit | interrupt=true | interrupt=true | No custom voice limit |
-| Autoplay handling | Gesture unlock + userActivation guard | Gesture unlock + userActivation guard | play() promise + manual prompt |
-| Retry UI | Not provided by hook | Not provided by hook | Yes |
-| Explicit stop API | Yes | Yes | Managed by audio ref and cleanup |
-| Trigger | Explicit Vee scan action after target/aim setup | User click on ThemeToggle; sound is called before theme toggle | One automatic attempt after WebGL ready; manual retry |
-| Loop/background music | No | No | No |
-| Global mute/master volume | No | No | No |
+| Playback API | Web Audio BufferSource/GainNode | Web Audio BufferSource/GainNode | Web Audio BufferSource/GainNode | HTMLAudioElement via new Audio |
+| Shared AudioContext | Yes | Yes | Yes | No |
+| Fetch/decode Promise cache | Yes | Yes | Yes | Browser media loading |
+| Volume | 0.16 | 0.25 | 0.35 | Explicit 0.85 |
+| Interrupt/voice limit | interrupt=true | interrupt=true | interrupt=true | No custom voice limit |
+| Autoplay handling | Gesture unlock + userActivation guard | Gesture unlock + userActivation guard | Gesture unlock + userActivation guard | play() promise + manual prompt |
+| Retry UI | Not provided by hook | Not provided by hook | Not provided by hook | Yes |
+| Explicit stop API | Yes | Yes | Yes; called on modal close/cleanup | Managed by audio ref and cleanup |
+| Trigger | Explicit Vee scan action after target/aim setup | User click on ThemeToggle; sound is called before theme toggle | Contact success modal opens after API success | One automatic attempt after WebGL ready; manual retry |
+| Loop/background music | No | No | No | No |
+| Global mute/master volume | No | No | No | No |
 
 ## 8. Browser, accessibility and failure behavior
 
