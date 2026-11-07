@@ -20,11 +20,22 @@ function absoluteCanonical(siteUrl, slug) {
 
 /** Resolve only public HTTPS assets or app-root-relative media paths. */
 export function buildLabPreviewImageUrl(experiment, siteUrl) {
-  const preview =
-    experiment?.thumbnail ||
-    experiment?.generatedPoster ||
-    experiment?.galleryPreview ||
-    null;
+  const candidates = [
+    experiment?.thumbnail,
+    experiment?.generatedPoster,
+    experiment?.galleryPreview,
+  ];
+  const preview = candidates.find((candidate) => {
+    if (!candidate || candidate.mediaKind === "video") return false;
+    if (candidate.contentType && ![
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/avif",
+      "image/gif",
+    ].includes(candidate.contentType)) return false;
+    return typeof candidate.src === "string" && candidate.src.trim();
+  }) || null;
   const src = typeof preview?.src === "string" ? preview.src.trim() : "";
   if (!src) return null;
 
@@ -227,6 +238,14 @@ export function buildLabExperimentJsonLd({ siteUrl, experiment } = {}) {
     ...(image ? { image } : {}),
   };
   const breadcrumbId = `${canonical}/#breadcrumb`;
+  const publishedAt = experiment.publishedAt ? new Date(experiment.publishedAt) : null;
+  const updatedAt = experiment.updatedAt ? new Date(experiment.updatedAt) : null;
+  const validPublishedAt =
+    publishedAt && !Number.isNaN(publishedAt.getTime()) ? publishedAt.toISOString() : null;
+  const validUpdatedAt =
+    updatedAt && !Number.isNaN(updatedAt.getTime()) ? updatedAt.toISOString() : null;
+  if (validPublishedAt) creativeWork.datePublished = validPublishedAt;
+  if (validUpdatedAt) creativeWork.dateModified = validUpdatedAt;
 
   return {
     "@context": "https://schema.org",
