@@ -4,6 +4,7 @@ import test from "node:test";
 
 import { createSphereParticleData } from "../src/app/components/labs/landing/particle-sphere/particle-geometry.mjs";
 import { getSphereSqueeze, SPHERE_PULSE_PERIOD } from "../src/app/components/labs/landing/particle-sphere/particle-animation.mjs";
+import { getParticleQualityProfile } from "../src/app/components/labs/landing/particle-sphere/particle-quality.mjs";
 
 const rendererSource = await readFile(
   new URL("../src/app/components/labs/landing/particle-sphere/LabsParticleSphere.js", import.meta.url),
@@ -124,6 +125,32 @@ test("sphere squeeze eases in and recovers on a stable pulse cycle", () => {
   assert.ok(recovery > 0 && recovery < 1);
 });
 
+test("particle quality profiles adapt density and pixel ratio to viewport size", () => {
+  const desktop = getParticleQualityProfile({ viewportWidth: 1440 });
+  const tablet = getParticleQualityProfile({ viewportWidth: 900 });
+  const mobile = getParticleQualityProfile({ viewportWidth: 390 });
+
+  assert.equal(desktop.tier, "high");
+  assert.equal(desktop.surfaceCount, 4400);
+  assert.equal(tablet.tier, "medium");
+  assert.equal(tablet.surfaceCount, 3400);
+  assert.equal(mobile.tier, "compact");
+  assert.equal(mobile.surfaceCount, 2400);
+  assert.ok(mobile.maxPixelRatio < desktop.maxPixelRatio);
+});
+
+test("constrained devices receive a lower particle budget", () => {
+  const constrained = getParticleQualityProfile({
+    viewportWidth: 1440,
+    deviceMemory: 2,
+    hardwareConcurrency: 2,
+  });
+
+  assert.equal(constrained.tier, "low");
+  assert.equal(constrained.surfaceCount, 2800);
+  assert.ok(constrained.maxPixelRatio <= 1.2);
+});
+
 test("particle geometry rejects unsafe counts and invalid radius values", () => {
   assert.throws(
     () => createSphereParticleData({ surfaceCount: -1 }),
@@ -150,6 +177,9 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.match(rendererSource, /document\.hidden/);
   assert.match(rendererSource, /cancelAnimationFrame/);
   assert.match(rendererSource, /ResizeObserver/);
+  assert.match(rendererSource, /getParticleQualityProfile/);
+  assert.match(rendererSource, /themeObserver/);
+  assert.match(rendererSource, /syncThemeColor/);
   assert.ok(rendererSource.includes("renderer?.dispose()"));
   assert.match(rendererSource, /webglcontextlost/);
   assert.match(rendererSource, /disposed = false/);
@@ -166,4 +196,7 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /sparkleWave/);
   assert.match(shaderSource, /ambientDrift/);
   assert.match(shaderSource, /sparkleThreshold/);
+  assert.match(shaderSource, /uBrandColor/);
+  assert.match(shaderSource, /smoothstep\(-0\.24, 0\.32, viewNormal\.z\)/);
+  assert.match(shaderSource, /depthFade/);
 });
