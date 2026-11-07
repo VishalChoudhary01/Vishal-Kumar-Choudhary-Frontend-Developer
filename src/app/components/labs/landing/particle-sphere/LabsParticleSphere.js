@@ -16,6 +16,7 @@ function createParticleGeometry() {
   const data = createSphereParticleData({
     surfaceCount: PARTICLE_SPHERE_CONFIG.surfaceCount,
     innerCount: PARTICLE_SPHERE_CONFIG.innerCount,
+    ambientCount: PARTICLE_SPHERE_CONFIG.ambientCount,
     radius: PARTICLE_SPHERE_CONFIG.radius,
   });
   const geometry = new THREE.BufferGeometry();
