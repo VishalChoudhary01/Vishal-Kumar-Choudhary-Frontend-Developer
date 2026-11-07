@@ -2429,3 +2429,47 @@ This section records the approved UX decisions that connect the public gallery, 
 6. P3: complete responsive, accessibility, security, privacy and performance regression QA.
 
 This is an approved planning order, not evidence that any phase is complete. Do not begin CMS/Admin work until Labs passes its release gates.
+
+## 39. Superseding decisions and implementation boundary — 7 November 2026
+
+This section records the product decisions accepted after the documentation-vs-implementation audit. It supersedes conflicting earlier language in this document, including public-demo catalogue descriptions, the interactive public-detail requirement and the individual-liker exception. Earlier sections remain historical design context where not explicitly superseded here.
+
+### 39.1 Public catalogue eligibility — LOCKED
+
+- The public /labs catalogue contains only eligible MongoDB custom experiments: published experiment metadata, published source pointer and a ready artifact matching the exact source version.
+- The code-owned runtime registry is not merged into public catalogue results.
+- The existing runtime modules may remain as code-owned material for owner import/runtime engineering. Their presence does not make them public catalogue entries.
+- Category and cursor pagination are implemented. Title/description/technology/tag search, technology/tag filters and visitor-selected sorting remain unimplemented PRD targets.
+
+### 39.2 Public detail — LOCKED STATIC PRESENTATION
+
+- Public /labs/[slug] remains a static, non-executable presentation page: metadata, engagement, selected static media, explanation and protected source access.
+- Do not mount LabWorkspace, LabRuntimeBoundary, an artifact iframe or any executable experiment runtime on the public detail route.
+- Owner Run, isolated compilation, immutable artifact publishing and the public artifact Route Handler remain separate infrastructure. Do not delete them because the visitor page is static.
+- This supersedes the interactive-detail statements in Sections 38.1, 38.3 and 38.7 and any earlier detail workspace/runtime examples.
+
+### 39.3 Owner identity — LOCKED ID-ONLY TARGET
+
+- The only owner identity is server-only LABS_OWNER_USER_ID matching the stable Better Auth user ID, with a verified session.
+- Do not support LABS_OWNER_EMAIL as a permanent fallback. Do not support first-user bootstrap, client-supplied roles or persisted multi-admin roles.
+- Current-code discrepancy remains visible until owner-access.js removes the email fallback. Check Preview/Production configuration before changing code to prevent owner lockout.
+
+### 39.4 Owner Analytics privacy — LOCKED AGGREGATE-ONLY
+
+- Owner Analytics shows aggregate metrics, trends and experiment rankings only.
+- Do not expose names, masked emails, per-user like timestamps, searchable active-liker rows or account-level source/copy/like histories.
+- Anonymous guest identities must never be enumerated.
+- This supersedes the narrow active verified-liker identity exception in prior versions of the source-management spec and Analytics detail design. Current code still has that panel; it must be removed/redesigned before implementation is compliant.
+- Keep Portfolio Analytics visit records separate from Labs source engagement. Missing experiment views, preview starts and preview interactions must be labelled unavailable/not instrumented, not zero.
+
+### 39.5 Editor and media current state
+
+- Monaco integration is present for the protected public source viewer and historical versions (read-only), plus the owner source editor (editable), with a plain-text fallback. Older textarea-only/Monaco-not-implemented statements are superseded.
+- The current LabExperiment model uses a separate galleryPreview reference and at most one fallback-preview attachment. Ordered detail-gallery and complete gallery-preview/detail-gallery/runtime-fallback migration remain pending.
+- The public detail page remains static, so a runtime-fallback role is not currently rendered as a failed-runtime recovery surface.
+
+### 39.6 Source-of-truth and release discipline
+
+- Source code proves current implementation; this Section 39 records approved product contract; PROJECT-STATUS.md and the Labs current-state guide record gaps between them.
+- Do not mark an accepted target as implemented just because the documentation decision is locked.
+- These decisions do not authorize non-documentation code changes. Owner fallback removal and active-liker panel removal are code changes and remain outstanding implementation tasks.
