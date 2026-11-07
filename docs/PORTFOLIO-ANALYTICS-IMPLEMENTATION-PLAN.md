@@ -1,6 +1,6 @@
 # Portfolio Analytics — Implementation Plan
 
-**Status:** Approved implementation baseline · **Implementation:** Phase 1 foundation committed; ingestion remains disabled  
+**Status:** Approved implementation baseline · **Implementation:** Phases 1–2 committed; public tracking remains disabled  
 **Target branch:** `feat/labs-platform-integration`  
 **Scope:** First-party analytics for the public portfolio homepage, project detail pages, Labs collection and Lab detail pages.  
 **Stack:** Existing Next.js App Router, JavaScript, Tailwind CSS v4, Motion (`motion/react`), MongoDB/Mongoose and Vercel hosting.
@@ -781,3 +781,30 @@ Portfolio Analytics is complete only when:
 Lifecycle mutations include the temporary tab-session identifier. The server HMACs it and matches both `visitId` and `sessionHash`, so a visit ID alone cannot be used to heartbeat, pause, resume or end another tab's visit. Raw tab-session identifiers are never persisted.
 
 The production-host check uses the hostname from the runtime request URL rather than preferring forwarded-host headers. Resume resets the heartbeat baseline even when the pause beacon was lost, preventing the next heartbeat from counting hidden-tab time.
+
+
+---
+
+## Phase 2 implementation record — ingestion API and private owner page
+
+**Status:** Implemented in source; ingestion remains disabled by the default feature flag.
+
+Added:
+- `POST /api/v1/portfolio/visits` with `start`, `heartbeat`, `pause`, `resume` and `end`.
+- Exact same-origin validation and canonical production-host gating.
+- A streamed 1 KB JSON request limit; unsupported content types, malformed bodies and unknown fields are rejected.
+- Session-scoped and per-action trusted-IP rate buckets. Rate-limit keys are HMACs; raw proxy addresses are never persisted. The separate rate-limit collection has a 15-minute TTL index.
+- Generic bounded errors, private/no-store response headers, Retry-After on rate limits and no visit-ID existence disclosure for lifecycle mutations.
+- An owner-only page at `/admin/portfolio/analytics`. It checks the existing verified Labs owner identity on the server and returns not-found to unauthenticated/non-owner requests. The page is excluded from search indexing.
+- A Portfolio Analytics link in the existing owner navigation only. The public navbar and public routes do not expose this destination.
+
+Verification:
+- Phase 2 ingestion tests: 7 passed.
+- Phase 1 foundation tests: 13 passed.
+- Targeted ESLint: passed.
+- Full production build, existing Labs suites and SEO validation: passed.
+- Vercel check for commit `60f41372285f2b57c54eefc3ec38946e72b1c286`: success.
+
+The public tracker is still not installed. No public page is querying MongoDB or sending analytics requests. `PORTFOLIO_ANALYTICS_ENABLED` remains false by default.
+
+**Operational gate:** run `npm run db:ensure-portfolio-analytics-indexes` against the intended MongoDB database before enabling the public tracker. This provisions both the visit-retention TTL index and the short-lived rate-limit TTL index. 
