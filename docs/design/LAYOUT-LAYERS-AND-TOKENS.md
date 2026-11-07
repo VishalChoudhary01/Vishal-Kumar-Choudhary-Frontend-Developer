@@ -192,3 +192,18 @@ This is a pattern, not a utility that every section must duplicate. Education/he
 - Verify focus ring in both themes and on all interactive card/button states.
 - Test 320/375/768/1024/1440 CSS viewport widths and 200% browser zoom.
 - Verify intro marker before first paint for revisits; new users must still see the intro.
+
+
+## 10. Theme Toggle and page-wide transition ownership
+
+The root UIThemeProvider is the source of the document's light/dark class. The theme button and native View Transition orchestration are documented in [../architecture/THEME-TOGGLE-ENGINEERING.md](../architecture/THEME-TOGGLE-ENGINEERING.md).
+
+Key boundary:
+- next-themes owns resolved theme and the `html.light/html.dark` class;
+- View Transition API captures and animates the page-wide OLD/NEW root snapshots;
+- `useThemeToggle.js` supplies direction/origin attributes and transition CSS;
+- Motion handles only the local Moon/Sun icon and button feedback;
+- Tailwind semantic tokens style the final light/dark page;
+- the toggle's click sound is a separate optional `useUiSound` action documented in [../architecture/SOUND-ENGINEERING.md](../architecture/SOUND-ENGINEERING.md).
+
+Do not add a global background-color fade or a second full-screen overlay. The current hook has explicit shape durations (rectangle 400ms; circle, circle-blur and blinds 700ms); the global `--theme-transition-duration: 520ms` token does not currently control those keyframes.
