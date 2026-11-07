@@ -10,6 +10,7 @@ export const particleVertexShader = `
   uniform vec3 uBrandColor;
   uniform vec3 uSparkleColor;
   uniform float uBurst;
+  uniform float uBurstExpansion;
   uniform vec3 uPointerPosition;
   uniform float uPointerActive;
 
@@ -27,7 +28,7 @@ export const particleVertexShader = `
     // Burst is a temporary radial displacement. The source geometry and
     // resting sphere radius are never changed.
     float burstVariation = 0.78 + fract(aSeed * 19.73) * 0.40;
-    float burstDistance = length(position) * 0.72 * uBurst * burstVariation;
+    float burstDistance = length(position) * uBurstExpansion * uBurst * burstVariation;
     transformed += direction * burstDistance * sphereLayer;
 
     // A local magnetic push affects only particles near the pointer hit.
