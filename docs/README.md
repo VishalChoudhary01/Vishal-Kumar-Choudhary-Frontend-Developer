@@ -29,6 +29,7 @@ This folder is the engineering handover for the complete portfolio platform. Sta
 
 - [System Architecture](./architecture/SYSTEM-ARCHITECTURE.md) — current rendering/backend/persistence/infrastructure boundaries.
 - [Scroll and Motion Engineering](./architecture/SCROLL-AND-MOTION-ENGINEERING.md) — scroll-controller ownership, Motion graph types, breakpoints and test matrix.
+- [Sound Engineering](./architecture/SOUND-ENGINEERING.md) — shared Web Audio hook, native Vee voice, audio asset inventory, browser autoplay policy, call sites and extension guide.
 - [Layout Layers and Design Tokens](./design/LAYOUT-LAYERS-AND-TOKENS.md) — actual fonts, light/dark semantic tokens, Tailwind v4 scan setup, root provider nesting and shared layout layers.
 - [Data Model Catalogue](./architecture/DATA-MODEL-CATALOG.md) — current collections and schema constraints; live Atlas indexes still require environment verification.
 - [Labs Runtime and Code Execution](./architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md) — built-in runtime, Monaco editor, unsaved Run, immutable publishing, artifact security and poster/media lifecycle.
