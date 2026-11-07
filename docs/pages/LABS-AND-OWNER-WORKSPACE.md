@@ -196,3 +196,19 @@ Before release or a new Labs implementation phase:
 - confirm the public homepage and project details are unaffected.
 
 This is a code map and verification checklist, not a claim that those external/release checks have already passed.
+
+## 12. Public SEO and AEO — current implementation
+
+The public collection and detail routes now use the shared SEO/AEO helpers:
+- `src/app/lib/seo/labs.mjs` builds Labs collection/detail metadata, preview image URLs and JSON-LD.
+- `src/app/labs/page.js` uses `buildLabsCollectionMetadata` and emits `CollectionPage` + `ItemList` structured data for the initial server page and actual eligible collection count.
+- `src/app/labs/[slug]/page.js` uses one cached published-experiment lookup for metadata and page rendering; eligible detail pages emit `WebPage`, `CreativeWork` and `BreadcrumbList` JSON-LD. Ineligible records return noindex metadata and `notFound()`.
+- Public experiment DTOs carry actual `publishedAt` and `updatedAt` timestamps; optional structured-data dates are emitted only when those values are valid.
+- The visible detail header contains the experiment title/H1, description, category, creator byline and technologies. Explanation is a normal H2/text section when present. Static media is a figure with caption; preview alt text has a factual experiment fallback.
+- Open Graph/Twitter/JSON-LD image properties are omitted when no valid image preview exists. Video files are not serialized as image URLs.
+- The sitemap enumerates every eligible published Labs detail URL through its cursor pages; drafts, source files and internal/runtime routes are excluded.
+- robots.txt disallows the private /admin area but leaves /api paths crawlable because a public generated poster is served through a Labs API route. Route authorization remains the security boundary.
+
+**AEO contract:** describe only the visible static experiment, author, category, technologies, explanation and available preview. Do not claim that public detail executes an artifact; do not expose protected source bytes in public JSON-LD; do not add fake FAQ, rating, review, SearchAction or hidden keyword content.
+
+**Remaining validation boundary:** the focused suite is included in `npm run build`, but this implementation pass did not run the test suite/build, live crawler/HTML inspection, Google Rich Results testing, Search Console URL inspection or production indexing checks. Labs-wide duplicate SEO-title/description detection is not yet a DB publication validator. See [SEO and AEO Engineering](../SEO-AND-AEO-IMPLEMENTATION.md) for all builders, route rules and gaps.
