@@ -166,7 +166,7 @@ The PRD, Threat Model, Analytics docs, source-management and Monaco plans, owner
 
 **Current code mismatches remain:** owner-access.js still accepts LABS_OWNER_EMAIL as a fallback; the Labs experiment Analytics page still exposes an active verified-liker identity panel. Those two application changes were not made as part of this documentation-only task. Other open requirements include Labs detail-view/preview events, full media-role migration, personal account dashboard/profile/deletion, discovery search/filter/sort and Analytics event-retention policy.
 
-**Navigation check:** docs/README.md now has 59 Markdown links to 44 unique relative targets; all 44 targets were fetched successfully on feat/labs-platform-integration. The previous count of 42 links was an earlier handover snapshot.
+**Navigation check:** docs/README.md now has 61 Markdown links to 45 unique relative targets; all 45 targets were fetched successfully on feat/labs-platform-integration. The previous count of 42 links was an earlier handover snapshot.
 
 No current-HEAD npm install, test, lint, build, browser/Playwright, Atlas, SMTP, OAuth, Cloudinary, Blob or Sandbox verification was performed by this follow-up. Earlier report checks remain historical evidence only.
 
@@ -182,3 +182,12 @@ The original supplied SEO/AEO standard named the homepage and `/projects/[slug]`
 The implementation and exact current strings/route behavior are described in `docs/SEO-AND-AEO-IMPLEMENTATION.md`. Focused tests are added to `tests/labs-seo.test.mjs` and included in the build chain.
 
 **No build/test/browser/search-engine validation was performed in this pass.** The checkout attempt failed because GitHub could not be resolved from the execution environment, and the latest commit has no reported CI statuses. Do not call these pages production-index-verified. Labs duplicate SEO-title/description validation across database records is still an open quality gate.
+
+
+## 14. SEO/AEO implementation follow-up — 7 November 2026
+
+The supplied production SEO/AEO baseline for the homepage and project details was reviewed against the existing implementation. The Labs collection and eligible Labs detail pages were then brought onto the same standard: canonical/indexability metadata, Open Graph/Twitter, server-rendered CollectionPage/ItemList and WebPage/CreativeWork/BreadcrumbList JSON-LD, visible factual author/category/technology/explanation content, safe preview images/alt text, cursor-complete public detail sitemap entries and robots rules that preserve public poster fetching.
+
+A detailed source-of-truth guide was added at `docs/SEO-AND-AEO-IMPLEMENTATION.md`. It records the homepage/project implementation that already existed, the new Labs extension, the static/non-executable Labs detail boundary, limitations and remaining production validation. Focused tests `tests/labs-seo.test.mjs` were added to the build chain.
+
+The current docs index now has 61 Markdown links to 45 unique relative targets; all 45 targets were fetched successfully. Tests/build, live HTML/crawler validation, Rich Results testing and Search Console verification were not run in this pass; do not claim production indexing or search-engine acceptance.
