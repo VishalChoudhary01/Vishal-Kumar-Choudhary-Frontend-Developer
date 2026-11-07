@@ -81,7 +81,7 @@ test("read endpoint checks the owner before querying reporting services and uses
   assert.ok(summaryQuery > ownerCheck);
   assert.ok(recentQuery > ownerCheck);
   assert.ok(route.includes('"Cache-Control": "private, no-store'));
-  assert.ok(route.includes('status: 404'));
+  assert.ok(route.includes("}, 404"));
   assert.ok(route.includes("parsePortfolioAnalyticsReadQuery"));
 });
 
