@@ -20,7 +20,7 @@ The next major product area is the general Portfolio CMS and dynamic Project Det
 
 | Area | Current code status | Verification / gap boundary |
 |---|---|---|
-| Homepage and shared navigation/footer | Implemented | Preserve content, responsive behavior, scroll/motion, accessibility and theme behavior. |
+| Homepage and shared navigation/footer | Implemented | Navbar is page-shell-owned (home/project/Labs contexts); Footer is root-layout-mounted with exact route conditions. See pages/NAVBAR-AND-FOOTER-ENGINEERING.md for route visibility, layout, motion and accessibility contracts. |
 | Vee 3D companion | Implemented | See pages/PORTFOLIO-MASCOT-ENGINEERING.md; rendered/browser QA remains a release check. |
 | Theme and sound systems | Implemented | See architecture/THEME-TOGGLE-ENGINEERING.md and architecture/SOUND-ENGINEERING.md; verify browser/audio lifecycle. |
 | Contact form and Gmail SMTP | Implemented | See pages/CONTACT-FORM-AND-EMAIL-ENGINEERING.md; rate limiting, explicit same-origin validation, request byte cap, idempotency and transporter cleanup remain hardening gaps. |
@@ -121,6 +121,7 @@ Record the exact commit, commands/tests actually run, deployment URL/environment
 
 - docs/README.md: navigation and source-of-truth rules.
 - pages/HOME-PAGE-ENGINEERING.md: homepage structure and motion.
+- pages/NAVBAR-AND-FOOTER-ENGINEERING.md: page-owned Navbar contexts, global Footer route rules, responsive layout, menu accessibility and Footer/Vee animation.
 - pages/PORTFOLIO-MASCOT-ENGINEERING.md: Vee 3D scene and interactions.
 - pages/CONTACT-FORM-AND-EMAIL-ENGINEERING.md: contact UI/API/email and hardening gaps.
 - pages/PROJECT-DETAIL-ENGINEERING.md: fixed project template and content map.
