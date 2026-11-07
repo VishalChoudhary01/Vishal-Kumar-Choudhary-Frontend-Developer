@@ -31,7 +31,7 @@ export function getParticleBurstRadius(sphereRadius) {
 
   const radialReach = PARTICLE_BURST_EXPANSION * PARTICLE_BURST_MAX_VARIATION;
   const tangentialReach = PARTICLE_BURST_TANGENTIAL_STRENGTH
-    * PARTICLE_BURST_TANGENTIAL_VARIATION;
+    * (0.65 + PARTICLE_BURST_TANGENTIAL_VARIATION);
   const driftReach = PARTICLE_BURST_DRIFT_STRENGTH;
 
   return sphereRadius * (
