@@ -44,6 +44,7 @@ This folder contains the maintained product, implementation, architecture, secur
 ## Product and design references
 
 - [Analytics product design](./DESIGN-ANALYTICS.md) — metric definitions, dashboard intent and privacy requirements. Current behavior is documented in the Analytics Engineering guide.
+- [Admin/CMS design](./DESIGN-ADMIN.md) — future general portfolio CMS/admin experience; it is a design reference, not an implemented route.
 - [Labs product design](./DESIGN-LAB.md) — visual/interaction requirements. Current behavior and accepted superseding rules are documented in the Labs engineering guide and ADR-018.
 - [Motion Lab component specifications](./MOTION-LAB/README.md) — design system, engineering standards, agent protocol and individual component specifications.
 
