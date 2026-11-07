@@ -130,32 +130,36 @@ Owner-created experiment metadata is now included through the `LabExperiment` mo
 
 ### 5.3 File tree and editor
 
-The owner can:
-- Add a new text file.
-- Edit the selected file.
-- Rename a file with path validation.
-- Delete a file with confirmation.
-- Reorder files for presentation if required; order must not alter runtime semantics.
-- See language/extension, path, file size and unsaved state.
-- Save a draft, discard unsaved changes, and recover from validation errors without losing the editor contents.
+The current owner workspace uses the shared self-hosted Monaco integration through src/app/components/labs/code/LabCodeEditor.js. The older textarea-only decision below is historical and superseded by the November 2026 integration work.
 
-The editor must be lazy-loaded only on the protected owner page. Monaco is not present in the inspected package manifest. The editor library and version are **OPEN**; do not add Monaco or another large editor dependency without an implementation decision. A lightweight accessible text editor may be used for the first slice if the owner approves the reduced syntax-highlighting experience.
+Current editor surfaces:
+- Public verified-source viewer: read-only Monaco, rendered only after verified-session source authorization.
+- Owner source workspace: editable Monaco with the React working-copy state remaining authoritative.
+- Historical version viewer: read-only Monaco.
+- Plain-text textarea fallback: retained when Monaco or worker loading fails.
 
-Code files remain text snapshots, but the Studio is intended to add a controlled build/preview workflow for owner-authored browser experiments. The editor is not a terminal, server shell, arbitrary package manager or execution console. A separate isolated compiler/runtime must build the exact React/JSX, Tailwind v4, Motion or HTML/CSS/JavaScript project and run it outside the main application origin. See `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`. The existing four code-owned public demos continue through the normal repository/deployment workflow; custom experiments use immutable database-backed releases.
+The editor supports the existing file operations and release lifecycle: add/import/rename/delete/reorder, language selection, path/content validation, dirty state, save/discard, version history, restore-as-new-version, unsaved Run, publish/unpublish and audit. Monaco must remain lazy/client loaded and self-hosted. Preserve the exact last-keystroke value when saving, running or building; do not allow the editor's displayed text to lag behind the React file state.
+
+Do not replace the editor with a textarea-only implementation based on this superseded plan. Browser verification of keyboard navigation, accessibility, theme changes, final-keystroke synchronization and the complete action sequence remains required.
 
 ### 5.3.1 Media library and experiment assets
 
-The owner Studio includes a Labs-specific asset library for still images, animated GIFs and video. It does not expand into a general portfolio media CMS.
+The owner Studio includes a Labs-specific asset workflow for supported still images, animated GIFs and video. It does not expand into a general portfolio media CMS.
 
-- The initial formats are JPEG, PNG, WebP, AVIF, GIF, MP4 and WebM. SVG is excluded until a sanitizer/rasterization decision is approved.
-- Uploads use owner-authorized, short-lived signed Cloudinary upload intents. Provider credentials remain server-only.
-- Verify upload intent, provider response, actual format/signature, dimensions, byte size, video duration and processing status server-side.
-- MongoDB stores LabMediaAsset metadata and references; Cloudinary stores the binary media. Do not put binary media into source files or source-version documents.
-- Asset roles are card cover, detail-page gallery and in-experiment asset. Gallery order, alt text, captions and video poster references are part of the experiment release manifest.
-- Draft assets must not be publicly discoverable. Public delivery is enabled only for assets included in a published release and only after verifying the configured Cloudinary access mode.
-- Do not delete an asset while any draft, published or historical release references it.
-- Exact file size, duration, dimension and quota ceilings are open until checked against the actual Cloudinary account plan. Do not infer or invent account limits.
-- The card cover is only a discovery preview. The public experiment detail page must render the actual interactive runtime, with the optional media gallery as supporting content.
+Current implementation:
+- Upload pipeline uses owner-authorized Cloudinary operations; MongoDB stores LabMediaAsset metadata/references rather than media bytes.
+- Published static gallery art is represented separately by the experiment's galleryPreview reference and is associated with the source/artifact release it represents.
+- The current LabExperiment schema permits at most one mediaAttachments record and constrains its role to fallback-preview.
+- Public LabExperimentPreview renders static image/video media and generated poster/thumbnail fallback; it does not execute an experiment.
+
+Approved target model, not yet implemented:
+- gallery-preview;
+- ordered detail-gallery;
+- runtime-fallback.
+
+Do not describe the current fallback-preview role as the complete target role schema. The public Labs detail page is now static and non-executable, so a runtime-fallback experience is not part of the current page. The target media-role migration and ordered gallery presentation require a separate schema, migration, owner UI and acceptance phase.
+
+The general Portfolio media library, shared asset manager and Project Detail CMS media workflow remain deferred with the Portfolio CMS.
 
 ### 5.4 Validation before save/publish
 
@@ -414,16 +418,19 @@ All mutations call server-only domain use cases and repositories. Never let UI c
 - [ ] Owner editor and its dependencies do not affect homepage/Labs listing loading.
 - [ ] Existing public demos, routes, UI, animation, SEO, accessibility and behavior remain unchanged.
 
-## 13. Open decisions — do not silently assume
+## 13. Decisions, current implementation discrepancies and remaining gates
 
-1. **Owner bootstrap:** **RESOLVED / LOCKED.** Use the singleton server-only `LABS_OWNER_USER_ID` environment allowlist. The owner is the sole privileged administrator for the initial Labs source-management release. Do not add persisted multi-admin roles in this phase.
-2. **Source access policy:** **RESOLVED / LOCKED (2026-11-04).** Every logged-in account with `emailVerified === true` can read all published experiment source automatically. Guests and signed-in unverified accounts cannot read source. No per-user grant, expiry or revoke workflow exists in the target design; publish/unpublish controls availability per experiment.
-3. **Engagement policy:** **RESOLVED / LOCKED (2026-11-04).** Only verified accounts can open source and copy code. Both anonymous visitors and verified accounts can like/unlike once per browser-cookie identity or account per experiment; logged-in unverified users cannot like. Verified likes persist until unlike; anonymous like identity/state expires after 180 days without a visit that refreshes it. The owner dashboard shows per-experiment source-open counts, unique verified-account counts, copy-action counts, current active verified and anonymous likes, and separate like/unlike action counts. The experiment detail analytics page may additionally show current active verified liker accounts (name, masked email and timestamp) for that one experiment. This is current state, not a historical user activity log. Guest totals do not represent unique people; anonymous identities are never enumerated, and individual source-open/copy histories are not exposed.
-4. **Editor:** **RESOLVED for MVP.** Use the lightweight accessible textarea editor; do not add Monaco/CodeMirror in this slice.
-5. **Source import strategy:** **RESOLVED for the first slice.** The owner creates source records and manually adds/pastes allowlisted text files in the owner editor. A bulk repository import and the initial `magnetic-interaction` canonical file inventory remain deferred.
-6. **Version retention:** PRD currently says immutable versions are retained indefinitely. Confirm storage/backup/cost implications before production.
-7. **Analytics retention/privacy:** the Privacy Policy now discloses source opens, copy events, verified likes, anonymous browser likes and aggregate owner analytics (version `2026-11-04.1`). Anonymous like identities/state expire after 180 days without a visit that refreshes the identity. Engagement event records currently have no automatic TTL; retention and account-deletion handling must be reviewed before production release.
-8. **Interactive runtime:** compiler, isolated build provider, artifact storage, separate runtime origin, CSP, network policy, fixed package allowlist and resource limits are specified in the Runtime and Media Plan but remain open implementation decisions until threat-model approval.
-9. **Media:** Labs-specific Cloudinary upload, image/GIF/video handling, asset references and release pinning are in scope. Exact Cloudinary account limits, draft access mode and upload quotas remain open until verified. General portfolio media administration remains deferred.
+1. **Owner bootstrap — accepted target, ID-only.** Use the singleton server-only LABS_OWNER_USER_ID matching the stable Better Auth user ID, and require a verified session. Do not introduce first-user, email, display-name or client-role fallback. **Current code discrepancy:** owner-access.js still permits a verified account whose email matches LABS_OWNER_EMAIL. Remove that fallback only after checking deployed Preview/Production owner variables so the current owner is not locked out.
+2. **Source access — locked.** Every server-authenticated account with emailVerified === true can read all currently published experiment source. Guests and unverified accounts cannot. There is no current per-user grant requirement; LabSourceGrant is legacy migration material.
+3. **Engagement and Analytics privacy — accepted aggregate-only policy.** Owner Analytics may show aggregate totals, trends and experiment rankings only. Do not expose individual names, masked emails, account-linked timestamps, searchable active-liker directories or user-level source/copy/like history. This supersedes the older narrow active-liker identity exception described in previous versions of this spec and in the older source-management phase notes. **Current code discrepancy:** the experiment-specific Analytics page still contains an active verified-liker identity panel; remove/redesign it before claiming the code matches this policy. The public Privacy Policy currently describes aggregate-only reporting.
+4. **Editor — Monaco integration is current.** Public verified source and history are read-only Monaco; the owner editor is editable Monaco, with a plain-text fallback. The earlier textarea-only decision is historical and superseded. See LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md and LABS-DETAIL-PRESENTATION-AND-MONACO-EDITOR-IMPLEMENTATION-PLAN.md.
+5. **Source import — existing import capability remains.** The top-level Initialize sources action was removed from the Source Library page, but the direct /admin/labs/sources/import route, import panel and import APIs remain. Do not restore the removed inventory action without an explicit product decision, and do not claim every import endpoint was deleted.
+6. **Public catalogue — source-backed custom experiments only.** The current /labs page and public list API expose eligible published custom experiments with a published source pointer and ready matching artifact. The code-owned runtime registry is not merged into the public catalogue. This supersedes older built-in-public-demo catalogue descriptions.
+7. **Public experiment detail — static/non-executable.** The current /labs/[slug] route renders metadata, static media, explanation, engagement and protected source. It does not mount LabWorkspace, LabRuntimeBoundary or a published artifact iframe. The compiler, owner Run, immutable build/publish pipeline and artifact Route Handler remain separate infrastructure. This supersedes the old requirement that the public detail page execute the published artifact.
+8. **Media roles — target migration pending.** Current model: galleryPreview plus at most one fallback-preview attachment. Ordered detail-gallery and the full gallery-preview/detail-gallery/runtime-fallback role model are not implemented.
+9. **Analytics instrumentation — current gaps.** Event types are source_open, code_copy, like, unlike, guest_like and guest_unlike. Experiment detail-view, preview-start and preview-interaction event producers are not implemented. Do not render missing metrics as zero; Portfolio Analytics page visits are a separate system.
+10. **Account and discovery gaps.** User dashboard, profile management, self-service account deletion, text search, technology/tag filters and visitor-selected sort are not present in the current route/API implementation. Keep them as approved PRD targets only until explicitly deferred or implemented.
+11. **Version and analytics retention.** Immutable source-version retention and Labs analytics-event retention/account-deletion treatment require an explicit operational/privacy policy. Do not infer a TTL from a model that has no TTL index.
+12. **Release validation.** Verify Preview/Production environment, Atlas collections/indexes, Sandbox/Blob/Cloudinary behavior, source authorization, editor flows and responsive/accessibility QA against the exact current branch head. This documentation update has not run those checks.
 
-Implementation was explicitly authorized and is being maintained on `feat/labs-platform-integration`. Before production release, configure `LABS_OWNER_USER_ID` and the five branch-scoped SMTP variables (`AUTH_SMTP_PORT`, `AUTH_SMTP_USER`, `AUTH_SMTP_PASSWORD`, `AUTH_SMTP_SECURE`, `AUTH_EMAIL_FROM`); verify shared Preview MongoDB/Better Auth settings; validate Atlas indexes/transactions and legacy-data migration; test the Guest / Unverified / Verified / Owner matrix; complete browser accessibility/security QA; and seed the first reviewed source snapshot. The tracked production build and targeted lint have passed; full-repository lint still reports existing errors outside this feature.
+This section supersedes conflicting earlier requirements and planning statements while preserving their history. See docs/PROJECT-STATUS.md for the consolidated current-state map.
