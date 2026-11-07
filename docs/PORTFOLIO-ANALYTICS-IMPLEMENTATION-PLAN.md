@@ -1,6 +1,6 @@
 # Portfolio Analytics — Implementation Plan
 
-**Status:** Proposed implementation baseline · **Implementation:** Not started  
+**Status:** Approved implementation baseline · **Implementation:** Phase 1 foundation committed; ingestion remains disabled  
 **Target branch:** `feat/labs-platform-integration`  
 **Scope:** First-party analytics for the public portfolio homepage, project detail pages, Labs collection and Lab detail pages.  
 **Stack:** Existing Next.js App Router, JavaScript, Tailwind CSS v4, Motion (`motion/react`), MongoDB/Mongoose and Vercel hosting.
