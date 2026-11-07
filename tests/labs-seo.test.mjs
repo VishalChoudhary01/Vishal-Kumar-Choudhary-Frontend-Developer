@@ -1,0 +1,122 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import {
+  buildLabExperimentJsonLd,
+  buildLabExperimentMetadata,
+  buildLabPreviewImageUrl,
+  buildLabsCollectionJsonLd,
+  buildLabsCollectionMetadata,
+} from "../src/app/lib/seo/labs.mjs";
+
+const SITE_URL = "https://portfolio.example";
+const experiment = {
+  slug: "magnetic-interaction",
+  title: "Magnetic Interaction",
+  description: "A frontend experiment exploring pointer-responsive interface motion.",
+  explanation: "The interface responds to pointer position using a restrained magnetic offset.",
+  category: "Interface Interactions",
+  technologies: ["React", "Motion", "Tailwind CSS"],
+  thumbnail: {
+    src: "https://cdn.example/preview.webp",
+    alt: "Magnetic Interaction experiment preview",
+  },
+  seo: {
+    title: "Magnetic Interaction — Frontend Experiment | Vishal Kumar Choudhary",
+    description: "A frontend experiment exploring pointer-responsive interface motion.",
+  },
+};
+
+test("Labs collection metadata is indexable, canonical and explicitly describes the real collection", () => {
+  const metadata = buildLabsCollectionMetadata({ siteUrl: SITE_URL, featuredExperiment: experiment });
+  assert.equal(metadata.title, "Frontend Experiments — Portfolio Labs | Vishal Kumar Choudhary");
+  assert.equal(metadata.alternates.canonical, "https://portfolio.example/labs");
+  assert.deepEqual(metadata.robots, { index: true, follow: true });
+  assert.equal(metadata.openGraph.type, "website");
+  assert.equal(metadata.openGraph.images[0].url, experiment.thumbnail.src);
+  assert.equal(metadata.twitter.card, "summary_large_image");
+});
+
+test("Labs collection metadata works without an experiment preview asset", () => {
+  const metadata = buildLabsCollectionMetadata({ siteUrl: SITE_URL });
+  assert.equal(metadata.alternates.canonical, "https://portfolio.example/labs");
+  assert.equal(metadata.openGraph.images, undefined);
+  assert.equal(metadata.twitter.images, undefined);
+  assert.equal(metadata.twitter.card, "summary");
+});
+
+test("published experiment metadata is unique, canonical and includes available social image", () => {
+  const metadata = buildLabExperimentMetadata({ siteUrl: SITE_URL, experiment });
+  assert.equal(metadata.title, "Magnetic Interaction — Frontend Experiment | Vishal Kumar Choudhary");
+  assert.equal(metadata.alternates.canonical, "https://portfolio.example/labs/magnetic-interaction");
+  assert.deepEqual(metadata.robots, { index: true, follow: true });
+  assert.equal(metadata.openGraph.type, "article");
+  assert.equal(metadata.openGraph.images[0].url, experiment.thumbnail.src);
+  assert.equal(metadata.twitter.card, "summary_large_image");
+});
+
+test("missing and invalid experiment records are not made indexable by metadata helpers", () => {
+  assert.deepEqual(buildLabExperimentMetadata({ siteUrl: SITE_URL, experiment: null }), {
+    title: "Experiment not found — Labs",
+    robots: { index: false, follow: false },
+  });
+  assert.equal(
+    buildLabExperimentJsonLd({ siteUrl: SITE_URL, experiment: { ...experiment, slug: "../private" } }),
+    null,
+  );
+});
+
+test("preview image resolver accepts public HTTPS and root-relative assets only", () => {
+  assert.equal(buildLabPreviewImageUrl(experiment, SITE_URL), experiment.thumbnail.src);
+  assert.equal(
+    buildLabPreviewImageUrl({ thumbnail: { src: "/api/v1/labs/demo/poster.png" } }, SITE_URL),
+    "https://portfolio.example/api/v1/labs/demo/poster.png",
+  );
+  assert.equal(buildLabPreviewImageUrl({ thumbnail: { src: "javascript:alert(1)" } }, SITE_URL), null);
+  assert.equal(buildLabPreviewImageUrl({ thumbnail: { src: "//evil.example/image.png" } }, SITE_URL), null);
+  assert.equal(buildLabPreviewImageUrl({ thumbnail: { src: "http://cdn.example/image.png" } }, SITE_URL), null);
+});
+
+test("collection structured data lists only valid current-page records and records the actual eligible total", () => {
+  const jsonLd = buildLabsCollectionJsonLd({
+    siteUrl: SITE_URL,
+    experiments: [
+      experiment,
+      { slug: "../private", title: "Private draft", description: "Never include this." },
+      { slug: "missing-description", title: "Missing description" },
+    ],
+    totalCount: 31,
+  });
+  assert.equal(jsonLd["@type"], "CollectionPage");
+  assert.equal(jsonLd.url, "https://portfolio.example/labs");
+  assert.equal(jsonLd.mainEntity.numberOfItems, 31);
+  assert.equal(jsonLd.mainEntity.itemListElement.length, 1);
+  assert.equal(jsonLd.mainEntity.itemListElement[0].item.url, "https://portfolio.example/labs/magnetic-interaction");
+});
+
+test("detail structured data describes visible experiment facts and real internal breadcrumbs", () => {
+  const jsonLd = buildLabExperimentJsonLd({ siteUrl: SITE_URL, experiment });
+  const [webPage, creativeWork, breadcrumb] = jsonLd["@graph"];
+  assert.equal(webPage["@type"], "WebPage");
+  assert.equal(webPage.mainEntity["@id"], "https://portfolio.example/labs/magnetic-interaction/#experiment");
+  assert.equal(creativeWork["@type"], "CreativeWork");
+  assert.equal(creativeWork.name, experiment.title);
+  assert.equal(creativeWork.description, experiment.description);
+  assert.equal(creativeWork.genre, experiment.category);
+  assert.deepEqual(creativeWork.keywords, ["Interface Interactions", "React", "Motion", "Tailwind CSS"]);
+  assert.equal(creativeWork.image, experiment.thumbnail.src);
+  assert.equal(creativeWork.creator.name, "Vishal Kumar Choudhary");
+  assert.deepEqual(
+    breadcrumb.itemListElement.map((item) => item.item),
+    ["https://portfolio.example/", "https://portfolio.example/labs", "https://portfolio.example/labs/magnetic-interaction"],
+  );
+});
+
+test("detail structured data does not fabricate date, rating, review or user metrics", () => {
+  const creativeWork = buildLabExperimentJsonLd({ siteUrl: SITE_URL, experiment })["@graph"][1];
+  assert.equal(creativeWork.datePublished, undefined);
+  assert.equal(creativeWork.dateModified, undefined);
+  assert.equal(creativeWork.aggregateRating, undefined);
+  assert.equal(creativeWork.review, undefined);
+  assert.equal(creativeWork.interactionStatistic, undefined);
+});
