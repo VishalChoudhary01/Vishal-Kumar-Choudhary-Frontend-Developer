@@ -1,5 +1,3 @@
-The current sound system is documented in architecture/SOUND-ENGINEERING.md: shared Web Audio hook, Vee's laser SFX, separate native welcome voice, and the public audio asset inventory. No app-wide sound provider or master mute setting is currently implemented.
-
 # Portfolio Platform — Current Project Status
 
 **Audit snapshot:** 2026-11-07  
@@ -12,6 +10,8 @@ The current sound system is documented in architecture/SOUND-ENGINEERING.md: sha
 
 The platform has four substantial existing implementation areas:
 The public homepage also has an interactive 3D companion (Vee), documented separately in pages/PORTFOLIO-MASCOT-ENGINEERING.md, including its Three.js scene, section choreography, scroll-positioning, dialogue, scan actions and extension rules.
+
+The theme system is also documented as a current implementation: next-themes owns theme state, the native View Transition API owns the page-wide cover/reveal, Motion owns the icon interaction, and ThemeToggle plays the chop SFX through useUiSound. See architecture/THEME-TOGGLE-ENGINEERING.md and architecture/SOUND-ENGINEERING.md.
 
 
 1. Public portfolio website and code-driven project detail pages.
