@@ -99,7 +99,7 @@ test("recent cursor predicate provides deterministic startedAt and ObjectId tie-
   assert.deepEqual(buildPortfolioRecentCursorMatch(cursor, FakeObjectId), {
     $or: [
       { startedAt: { $lt: startedAt } },
-      { startedAt, _id: { value: objectId } },
+      { startedAt, _id: { $lt: { value: objectId } } },
     ],
   });
   assert.equal(buildPortfolioRecentCursorMatch(null, FakeObjectId), null);
