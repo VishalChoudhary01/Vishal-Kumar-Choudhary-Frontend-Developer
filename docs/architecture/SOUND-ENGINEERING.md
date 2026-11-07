@@ -34,11 +34,13 @@ Current sound is event-driven. There is no confirmed ambient music loop, app-wid
 |---|---|
 | src/app/hooks/useUiSound.js | Shared Web Audio hook, AudioContext singleton, decoded-buffer cache, voices, fallback pool, unlock listeners, play/stop API |
 | src/app/components/mascot/PortfolioMascot.js | Vee's laser SFX hook call, separate welcome voice, audio prompt and lifecycle |
-| src/app/components/ui/ThemeToggle.js | Plays the theme toggle click/chop effect directly from the user's click before applying the theme |\n| src/app/components/ui/SuccessModal.js | Plays a confirmation sound when the contact form success dialog opens; stops it when the dialog closes |
+| src/app/components/ui/ThemeToggle.js | Plays the theme toggle click/chop effect directly from the user's click before applying the theme |
+| src/app/components/ui/SuccessModal.js | Plays a confirmation sound when the contact form success dialog opens; stops it when the dialog closes |
 | src/app/providers/AppProviders.js | Confirms current provider tree; no dedicated audio provider is mounted |
 | public/audio/hey-there-im-vee-your.wav | Vee spoken welcome |
 | public/mp3/laser-large-004.mp3 | Vee holographic scan / laser SFX |
-| public/mp3/chop.mp3 | ThemeToggle click/chop SFX |\n| public/mp3/confirmation-002.mp3 | Contact form success modal confirmation SFX |
+| public/mp3/chop.mp3 | ThemeToggle click/chop SFX |
+| public/mp3/confirmation-002.mp3 | Contact form success modal confirmation SFX |
 | public/mp3/* | Additional MP3 files present in public; unassigned status is listed in the asset inventory below |
 
 ### Current provider composition
@@ -328,7 +330,8 @@ The recursive repository tree contains nine audio assets. Four are currently con
 |---|---:|---|---|
 | public/audio/hey-there-im-vee-your.wav | 511,244 bytes | Vee welcome voice via native Audio | Active |
 | public/mp3/laser-large-004.mp3 | 6,103 bytes | Vee scan effect via useUiSound | Active |
-| public/mp3/chop.mp3 | 2,550 bytes | ThemeToggle click effect via useUiSound (volume 0.25, interrupt true) | Active |\n| public/mp3/confirmation-002.mp3 | 4,849 bytes | Contact SuccessModal opens: useUiSound (volume 0.35, interrupt true) | Active |
+| public/mp3/chop.mp3 | 2,550 bytes | ThemeToggle click effect via useUiSound (volume 0.25, interrupt true) | Active |
+| public/mp3/confirmation-002.mp3 | 4,849 bytes | Contact SuccessModal opens: useUiSound (volume 0.35, interrupt true) | Active |
 | public/mp3/book-flip-1.mp3 | 6,730 bytes | None confirmed in this review | Unassigned |
 | public/mp3/click-soft.mp3 | 669 bytes | None confirmed in this review | Unassigned |
 
@@ -369,7 +372,17 @@ Public assets are served as static files. No import statement is required for th
 
 The sound and theme update are sequential, not coupled: a sound failure is swallowed by useUiSound and does not prevent the toggle.
 
-### Contact success modal path\n\n    ContactForm receives { ok: true }\n      → status=success and modalOpen=true\n      → SuccessModal mounts/opens\n      → useUiSound.play() for /mp3/confirmation-002.mp3 at volume 0.35\n      → close or effect cleanup calls stop()\n\nThe modal's sound is not a separate SMTP event and does not verify email delivery beyond the route's successful sendMail response.\n\n### Vee welcome path
+### Contact success modal path
+
+    ContactForm receives { ok: true }
+      → status=success and modalOpen=true
+      → SuccessModal mounts/opens
+      → useUiSound.play() for /mp3/confirmation-002.mp3 at volume 0.35
+      → close or effect cleanup calls stop()
+
+The modal's sound is not a separate SMTP event and does not verify email delivery beyond the route's successful sendMail response.
+
+### Vee welcome path
 
     Homepage heroReady
       → lazy-load PortfolioMascot
