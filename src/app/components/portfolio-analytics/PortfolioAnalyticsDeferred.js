@@ -85,6 +85,11 @@ export default function PortfolioAnalyticsDeferred() {
         return;
       }
 
+      if (trackerModulePromise) {
+        void activate();
+        return;
+      }
+
       if (typeof window.requestIdleCallback === "function") {
         idleHandle = window.requestIdleCallback(() => {
           idleHandle = null;

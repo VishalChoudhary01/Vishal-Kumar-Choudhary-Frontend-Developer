@@ -17,13 +17,13 @@ export function readPortfolioAnalyticsOptOut(storage) {
 }
 
 export function writePortfolioAnalyticsOptOut(optedOut, storage) {
-  const target = storage || (
-    typeof window !== "undefined" ? window.localStorage : null
-  );
-
-  if (!target) return false;
-
   try {
+    const target = storage || (
+      typeof window !== "undefined" ? window.localStorage : null
+    );
+
+    if (!target) return false;
+
     if (optedOut) target.setItem(PORTFOLIO_ANALYTICS_OPT_OUT_KEY, "1");
     else target.removeItem(PORTFOLIO_ANALYTICS_OPT_OUT_KEY);
     return true;
