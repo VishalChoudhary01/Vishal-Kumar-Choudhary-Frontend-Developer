@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import LegalDocumentPage from "@/app/components/legal/LegalDocumentPage";
+import PortfolioAnalyticsPrivacyPreference from "@/app/components/portfolio-analytics/PortfolioAnalyticsPrivacyPreference";
 import { PRIVACY_VERSION } from "@/app/lib/legal/policies";
 import { buildSiteUrl } from "@/app/lib/seo/urls";
 
@@ -102,6 +103,9 @@ export default function PrivacyPage() {
           <DataItem title="Engagement analytics">
             The owner dashboard displays aggregate source opens, copy actions, and current likes separately for anonymous browser identities and verified accounts. It does not provide a list of individual visitors&apos; source activity or expose their email addresses. Engagement records do not contain source text, clipboard contents, passwords, authentication tokens, or raw IP addresses.
           </DataItem>
+          <DataItem title="Portfolio page analytics (when enabled)">
+            The portfolio may record a page-visit event for the homepage, project details, Labs collection, and Lab details. A visit record can include the page path and type, visit start/end timestamps, server-calculated visible-page duration, a temporary tab-session pseudonym, a broad device category, approximate country/region/city derived from trusted hosting request metadata, the external referrer hostname, and allowlisted UTM source/medium/campaign values. The full IP address, full referrer URL, raw user-agent string, account ID, and account email are not stored in the visit record. This feature is disabled unless the site owner explicitly enables its Production feature flags.
+          </DataItem>
           <DataItem title="Preferences stored in your browser">
             The website may store local preferences such as theme selection and whether an introductory animation has already been shown. These preferences are kept in browser storage and are used to remember your interface settings.
           </DataItem>
@@ -113,6 +117,7 @@ export default function PrivacyPage() {
           <li>To display the portfolio, operate interactive Labs experiments, and respond to contact messages.</li>
           <li>To create and maintain accounts, verify email addresses, authenticate sign-ins, maintain secure sessions, and deliver password-reset messages.</li>
           <li>To provide verified-account access to published source, remember likes, and measure aggregate experiment engagement.</li>
+          <li>When enabled and not disabled in your browser, to understand aggregate page visits, approximate traffic sources, broad device categories, and visible-page activity across the public portfolio.</li>
           <li>To detect abusive registration activity, protect the service, diagnose errors, and maintain reliability.</li>
           <li>To remember interface preferences and provide a consistent experience.</li>
           <li>To meet legal obligations, handle disputes, and protect the rights, safety, and reliability of the service.</li>
@@ -126,7 +131,7 @@ export default function PrivacyPage() {
         </p>
         <ul className="list-disc space-y-2 pl-5 marker:text-brand">
           <li><strong className="font-semibold text-text-primary">Vercel:</strong> website hosting, deployment, server execution, and associated platform logs.</li>
-          <li><strong className="font-semibold text-text-primary">MongoDB Atlas / MongoDB:</strong> database storage for account, session, verification, rate-limit, protected source, like-state, audit, and engagement-event records.</li>
+          <li><strong className="font-semibold text-text-primary">MongoDB Atlas / MongoDB:</strong> database storage for account, session, verification, rate-limit, protected source, like-state, audit, engagement-event, and (when enabled) portfolio visit records.</li>
           <li><strong className="font-semibold text-text-primary">Better Auth:</strong> authentication libraries and, when configured, the Better Auth Dash infrastructure integration.</li>
           <li><strong className="font-semibold text-text-primary">Email providers:</strong> the configured SMTP provider for authentication messages; the portfolio contact endpoint uses Gmail SMTP.</li>
           <li><strong className="font-semibold text-text-primary">Google:</strong> only if Google sign-in is configured and you choose that sign-in method.</li>
@@ -139,17 +144,19 @@ export default function PrivacyPage() {
 
       <Section id="cookies" title="5. Cookies and browser storage">
         <p>
-          Authentication uses server-managed session cookies so the website can recognise a signed-in account and protect account-only requests. If you choose to like an experiment anonymously, a separate signed, HTTP-only cookie remembers the anonymous like identity in that browser. The anonymous like cookie is created when you use the like control, rather than simply because you visit an experiment page. The site also uses browser storage for interface preferences such as the selected theme and introductory-animation state.
+          Authentication uses server-managed session cookies so the website can recognise a signed-in account and protect account-only requests. If you choose to like an experiment anonymously, a separate signed, HTTP-only cookie remembers the anonymous like identity in that browser. The anonymous like cookie is created when you use the like control, rather than simply because you visit an experiment page. The site also uses browser storage for interface preferences such as the selected theme and introductory-animation state. If you disable optional portfolio analytics below, a simple preference flag is stored in this browser&apos;s local storage; it is not a unique visitor identifier.
         </p>
         <p>
           These storage mechanisms support core functionality. Blocking or deleting them may sign you out, reset preferences, or affect account and Labs features. You can manage cookies and site storage through your browser settings.
         </p>
+        <PortfolioAnalyticsPrivacyPreference />
       </Section>
 
       <Section id="retention" title="6. How long information is kept">
         <ul className="list-disc space-y-2 pl-5 marker:text-brand">
           <li>Account and session records are kept while needed to operate the account, protect the service, and meet applicable obligations. Sessions may expire or be revoked by sign-out or password reset.</li>
           <li>Verification-flow records have a seven-day expiry. Registration rate-limit records are configured for approximately 24-hour expiry.</li>
+          <li>When portfolio page analytics is enabled, visit records are configured to expire 65 days after the visit starts. MongoDB TTL cleanup runs in the background, so an expired record may remain briefly while the database processes it. The owner dashboard also provides manual deletion of selected visits, an eligible date range, or all portfolio visit records.</li>
 
           <li>Verified likes remain active until you unlike the experiment or the account is deleted. Anonymous like identities and their active like state expire after 180 days without a visit that refreshes the identity. Engagement event records are retained for service measurement and integrity; a fixed automatic expiry period is not currently configured.</li>
           <li>Contact messages remain in the receiving email mailbox and associated provider systems until deleted under mailbox retention practices or no longer needed for a legitimate purpose.</li>
@@ -171,13 +178,13 @@ export default function PrivacyPage() {
 
       <Section id="rights" title="8. Your choices and privacy requests">
         <p>
-          You can choose not to submit the Contact form or create a Labs account. You can change browser storage preferences through your browser settings and sign out of Labs when finished.
+          You can choose not to submit the Contact form or create a Labs account. You can change browser storage preferences through your browser settings and sign out of Labs when finished. You can also disable optional portfolio page analytics for this browser using the preference control in the Cookies and browser storage section. The preference applies to this browser profile on this website and does not delete previously collected visit records.
         </p>
         <p>
           You may contact me to request access to, correction of, or deletion of account information; ask about a consent record; withdraw consent where applicable; close an account; or raise a privacy concern. Use the <Link className="text-brand underline-offset-4 hover:underline" href="/#contact">Contact form</Link> and include the email address associated with the request. I may need to verify that you control the account before acting.
         </p>
         <p>
-          Requests are handled under the law applicable to the request. Some information may be retained where a legal obligation, security need, or legitimate dispute requires it.
+          Requests are handled under the law applicable to the request. Some information may be retained where a legal obligation, security need, or legitimate dispute requires it. You may also request removal of portfolio visit records through the Contact form; the site owner can remove selected visit records or a validated date range through the private analytics dashboard.
         </p>
       </Section>
 

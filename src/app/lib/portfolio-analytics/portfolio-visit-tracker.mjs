@@ -4,6 +4,7 @@ import {
   buildPortfolioVisitStartPayload,
   getPortfolioReferrerHost,
 } from "./tracker-payload.mjs";
+import { readPortfolioAnalyticsOptOut } from "./privacy-preference.mjs";
 
 const API_PATH = "/api/v1/portfolio/visits";
 const SESSION_STORAGE_KEY = "vkr:portfolio-analytics:tab-session:v1";
@@ -256,7 +257,8 @@ async function beginVisit(pathname) {
   if (
     activeVisit ||
     !pathname ||
-    document.visibilityState !== "visible"
+    document.visibilityState !== "visible" ||
+    readPortfolioAnalyticsOptOut()
   ) {
     return;
   }
@@ -319,6 +321,13 @@ async function beginVisit(pathname) {
     visit.visitId = visitId;
     markLandingAttributionCaptured();
 
+    if (readPortfolioAnalyticsOptOut()) {
+      visit.ended = true;
+      sendLifecycleForVisit("end", visit, { beacon: true, keepalive: true });
+      if (activeVisit === visit) endVisit({ beacon: true });
+      return;
+    }
+
     if (activeVisit !== visit || visit.ended) {
       sendLifecycleForVisit("end", visit, { beacon: true, keepalive: true });
       return;
@@ -377,12 +386,24 @@ function acquire(pathname) {
  * Module-level lease avoids duplicate visits during React Strict Mode replay
  * and overlapping public route-shell transitions.
  */
+export function stopPortfolioVisitTracking() {
+  if (releaseTimer && typeof window !== "undefined") {
+    window.clearTimeout(releaseTimer);
+    releaseTimer = null;
+  }
+
+  leaseCount = 0;
+  currentPath = null;
+  endVisit({ beacon: true });
+}
+
 export function acquirePortfolioVisitTracking(pathname) {
   if (
     process.env.NEXT_PUBLIC_PORTFOLIO_ANALYTICS_ENABLED !== "true" ||
     typeof window === "undefined" ||
     typeof document === "undefined" ||
-    !isCanonicalProductionHost()
+    !isCanonicalProductionHost() ||
+    readPortfolioAnalyticsOptOut()
   ) {
     return () => {};
   }
