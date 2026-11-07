@@ -30,10 +30,10 @@ The page calls `getPublishedCustomLabExperimentPage({ limit: 18, includeCategory
 
 The page composition is:
 1. `LabsPageShell` resolves the account presentation and shared Labs navigation.
-2. `LabsIntroduction` receives total experiment and active-category counts.
-3. `resolveFeaturedExperiment` selects only from the currently eligible page results.
-4. `FeaturedExperiment` presents the selected experiment when one exists.
-5. `LabsCollection` renders the collection and category/pagination controls.
+2. The Labs hero presents the page introduction, conceptual connected-node artwork, real catalogue statistics and auth-aware CTAs. Motion reveals/count-up respect reduced-motion preferences.
+3. `resolveFeaturedExperiment` selects only from the eligible published custom experiment collection; a preferred slug is used when eligible, otherwise selection falls back deterministically to the first eligible record.
+4. `FeaturedExperiment` presents that same resolved record using the shared static preview renderer; the hero/spotlight does not maintain a second copied experiment object.
+5. `LabsCollection` renders the collection heading, published-category controls/counts, result summary, card list, Likes and pagination controls.
 
 Public collection API: `GET /api/v1/labs`.
 - Fixed page size: 18.
@@ -42,6 +42,8 @@ Public collection API: `GET /api/v1/labs`.
 - Category values are checked against the canonical category list.
 - Search by title/description/technology/tags and visitor-selected sort are not implemented.
 - Do not describe this endpoint as a built-in-plus-custom catalogue or claim search/filter/sort behavior that is not present.
+
+The client reveals six cards per interaction and fetches subsequent custom records through the cursor API. The server page is bounded to 18 custom records; category counts are computed across the full eligible collection. The API supports the canonical category and validated cursor only; title/description/technology/tag search and user-selected sorting are not implemented. Two compound MongoDB pagination indexes must be provisioned using `npm run db:ensure-labs-public-indexes` in the intended environment before release.
 
 The four code-owned runtime modules remain code-owned/importable assets for the source/runtime workflows. Their presence in the runtime registry does not make them public catalogue entries.
 
@@ -62,10 +64,13 @@ The page does **not** mount `LabWorkspace`, `LabRuntimeBoundary`, a runtime ifra
 ### 3.1 Static media selection and fallback
 
 The experiment preview renderer uses the release-aware gallery preview policy. The current public card/detail preview precedence is:
-1. owner-promoted public `galleryPreview` still image whose artifact/version binding matches the currently published release;
-2. the existing generic Labs artwork or neutral placeholder.
+1. owner-promoted public `galleryPreview` image/GIF/video whose artifact/version binding matches the currently published release;
+2. automatic PNG screenshot generated from the exact immutable artifact during its release build;
+3. the existing generic Labs artwork or neutral placeholder when no release-bound media is available.
 
-An owner promotes an eligible still image from their owned Cloudinary media through the owner-only gallery-preview mutation. The server verifies ownership, readiness, image format/size/signature and the current published artifact/source pointers, copies the image to a public Vercel Blob object, stores its exact release binding and audit record, and never returns the private Cloudinary URL. Replacing, clearing, unpublishing or publishing a new artifact attempts to clean up the old public Blob object. Automatic browser screenshot capture is not implemented; do not describe the current poster flow as an automatically generated screenshot.
+The screenshot is captured by `captureReleasePoster()` in the same network-denied release Sandbox after artifact output is built and uploaded. The pinned worker uses Playwright 1.65.0 and Chromium 158.0.8127.18, a 1200×900 viewport, local-only artifact serving and reduced-motion capture; it requires visible output, no browser runtime errors, a valid PNG, an 8 MB maximum and matching capture/browser versions. Its metadata and content hash are stored in `LabBuildArtifact.previewPoster`, separate from `outputFiles`, and the public DTO exposes it only when the current ready artifact/source-version binding and all poster fields validate. Capture failure is recorded as unavailable and does not block a valid release.
+
+An owner can also promote an owned ready image/GIF/video from the experiment's private Cloudinary library through `PUT /api/v1/admin/labs/experiments/[slug]/media/gallery-preview` (body includes `assetId` and optional `altText`; `assetId: null` removes the current selection). The server re-checks asset ownership, authenticated Cloudinary resource metadata, supported media type, configured size, downloaded signature and exact current published artifact/source pointers; it copies the bytes to a public Vercel Blob object, stores the exact release binding and audit record, and never returns the private Cloudinary URL. Replacing, clearing, unpublishing or publishing a new artifact attempts to clean up the old public Blob object. The explicit owner promotion takes precedence over the auto-generated release screenshot.
 
 Images, GIFs and videos are rendered as media, not as experiment code. The component preserves intrinsic proportions and uses `object-contain`; it does not synthesize experiment-specific artwork. A failed media source can move selection to the next available source. Reduced-motion handling is retained for animated media/poster presentation.
 
@@ -98,7 +103,7 @@ The public page receives an initial engagement snapshot server-side using the cu
 - guest state has an `expiresAt` TTL; the published Privacy Policy currently describes a 180-day idle expiry;
 - signed-in unverified accounts do not receive protected source access.
 
-Server-confirmed transitions and event attribution live in the engagement service. Do not count a duplicate state request as a new like transition.
+There is one Like control, which toggles to Unlike when active; Unlike reverses the current state and is not a dislike vote. Server-confirmed transitions and event attribution live in the engagement service. Do not count a duplicate state request as a new like transition. When a verified session is seen with the same guest cookie, active guest likes can be transactionally claimed by the account; an existing account like wins, the guest state is deactivated, retries are idempotent, and the migration does not create a synthetic verified action event.
 
 ## 6. Owner identity and route protection
 
@@ -168,7 +173,7 @@ Experiment metadata creation/editing is separate from source code:
 - metadata PATCH may update title, description, explanation, category and technologies;
 - it must not mutate the canonical slug, source files, source-version pointers, publication state, gallery media internals or immutable artifacts.
 
-Labs media uses Cloudinary for uploaded binaries and MongoDB references. Owner-promoted public gallery-preview stills are copied to Vercel Blob and bound to the exact ready artifact/source version. Compiler artifacts use immutable Vercel Blob storage. The current attachment schema still permits only one private `fallback-preview`; the full target media-role migration and ordered detail-gallery UI are pending.
+Labs media uses Cloudinary for uploaded binaries and MongoDB references. Owner-promoted public gallery-preview images/GIFs/videos are copied to Vercel Blob and bound to the exact ready artifact/source version. Automatic screenshot posters are generated during release builds and stored in the immutable artifact namespace. Compiler artifacts use immutable Vercel Blob storage. The current attachment schema still permits only one private `fallback-preview`; the full target media-role migration and ordered detail-gallery UI are pending.
 
 ## 11. Current gaps and release checks
 
