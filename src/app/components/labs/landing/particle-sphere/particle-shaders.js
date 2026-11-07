@@ -10,6 +10,11 @@ export const particleVertexShader = `
   uniform vec3 uBrandColor;
   uniform vec3 uInnerParticleColor;
   uniform float uInnerParticleOpacity;
+  uniform vec3 uVolumeColor;
+  uniform float uVolumeIntensity;
+  uniform vec3 uAmbientParticleColor;
+  uniform float uAmbientParticleOpacity;
+  uniform float uSphereRadius;
   uniform vec3 uSparkleColor;
   uniform float uBurst;
   uniform float uBurstTime;
@@ -28,6 +33,7 @@ export const particleVertexShader = `
   varying vec3 vColor;
   varying float vOpacity;
   varying float vSparkle;
+  varying float vVolumeGlow;
   varying vec2 vTrailDirection;
   varying float vTrailStrength;
 
@@ -153,8 +159,30 @@ export const particleVertexShader = `
     float facing = smoothstep(-0.24, 0.32, viewNormal.z);
     float surfaceOpacity = mix(0.012, 0.92, facing);
     float layerOpacity = mix(surfaceOpacity, uInnerParticleOpacity, innerLayer);
-    layerOpacity = mix(layerOpacity, 0.68, ambientLayer);
-    float depthFade = 1.0 / (1.0 + max(0.0, viewDepth - 4.0) * 0.14);
+    layerOpacity = mix(layerOpacity, uAmbientParticleOpacity, ambientLayer);
+
+    // Separate near and far particles to strengthen volume without adding
+    // geometry. Distant points become smaller, dimmer and more atmospheric.
+    float normalizedViewDepth = clamp((viewDepth - 2.8) / 6.2, 0.0, 1.0);
+    float depthLayer = smoothstep(0.12, 0.92, normalizedViewDepth);
+    float nearParticleBoost = mix(1.12, 0.82, depthLayer);
+    float depthAttenuation = 1.0 / (
+      1.0 + max(0.0, viewDepth - 3.4) * 0.2
+    );
+    float depthFade = mix(1.0, 0.56, depthLayer) * depthAttenuation;
+
+    // The interior gets a soft radial light falloff, while ambient particles
+    // retain their own lower-opacity atmospheric palette.
+    float normalizedRadius = clamp(
+      length(position) / max(uSphereRadius, 0.001),
+      0.0,
+      1.0
+    );
+    float innerVolumeFalloff = exp(-normalizedRadius * 1.45);
+    float volumeContribution = innerLayer
+      * uVolumeIntensity
+      * innerVolumeFalloff;
+    vVolumeGlow = clamp(volumeContribution + (1.0 - depthLayer) * 0.12, 0.0, 1.0);
 
     // Sparkle frequency, phase, chance and intensity are independently
     // seeded, so points glint at different moments instead of flashing together.
@@ -179,7 +207,7 @@ export const particleVertexShader = `
     float burstSize = 1.0 + particleBurst * 0.85;
 
     gl_PointSize = clamp(
-      aSize * ambientSize * burstSize * uPixelRatio
+      aSize * ambientSize * burstSize * nearParticleBoost * uPixelRatio
         * (5.0 / viewDepth) * (1.0 + sparkle * 2.0),
       1.0,
       12.0 * uPixelRatio
@@ -188,12 +216,25 @@ export const particleVertexShader = `
     gl_Position = displacedClipPosition;
 
     vec3 particleColor = mix(uBrandColor, aColor, 0.28);
+    particleColor = mix(particleColor, uVolumeColor, depthLayer * 0.22);
     particleColor = mix(particleColor, uInnerParticleColor, innerLayer);
+
     vec3 litColor = particleColor * (
       directionalLight * hemisphereFill + rimLight * 0.48
     );
-    vec3 innerLitColor = uInnerParticleColor * (0.72 + hemisphereFill * 0.28);
+    vec3 innerVolumeColor = mix(
+      uInnerParticleColor,
+      uVolumeColor,
+      0.24 + innerVolumeFalloff * 0.34
+    );
+    vec3 innerLitColor = innerVolumeColor * (
+      0.54 + hemisphereFill * 0.34 + innerVolumeFalloff * 0.22
+    );
+    vec3 ambientLitColor = uAmbientParticleColor
+      * (0.66 + hemisphereFill * 0.24)
+      * mix(1.0, 0.74, depthLayer);
     litColor = mix(litColor, innerLitColor, innerLayer);
+    litColor = mix(litColor, ambientLitColor, ambientLayer);
     vec3 sparkleColor = uSparkleColor * (0.7 + sparkle * 2.8);
 
     vColor = mix(litColor, sparkleColor, clamp(sparkle * 1.35, 0.0, 1.0));
@@ -212,6 +253,7 @@ export const particleFragmentShader = `
   varying vec3 vColor;
   varying float vOpacity;
   varying float vSparkle;
+  varying float vVolumeGlow;
   varying vec2 vTrailDirection;
   varying float vTrailStrength;
 
@@ -224,6 +266,9 @@ export const particleFragmentShader = `
 
     float core = 1.0 - smoothstep(0.10, 0.88, distanceFromCenter);
     float halo = exp(-distanceFromCenter * distanceFromCenter * 6.2) * 0.24;
+    float volumeHalo = exp(-distanceFromCenter * distanceFromCenter * 4.2)
+      * vVolumeGlow
+      * 0.34;
     float sparkleHalo = exp(-distanceFromCenter * distanceFromCenter * 4.8)
       * vSparkle
       * 1.05;
@@ -246,6 +291,7 @@ export const particleFragmentShader = `
     float alpha = (
       core * 0.78
       + halo
+      + volumeHalo
       + sparkleHalo
       + starRays
       + trailTail
