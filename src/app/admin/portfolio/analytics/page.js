@@ -89,10 +89,12 @@ export default async function PortfolioAnalyticsPage({ searchParams }) {
         </header>
 
         <PortfolioAnalyticsDashboard
+          key={days + ":" + (cursor || "first")}
           report={report}
           recentVisits={recent?.visits || []}
           nextCursor={recent?.nextCursor || null}
           days={days}
+          cursor={cursor}
           reportError={reportError}
           recentError={recentError}
         />
