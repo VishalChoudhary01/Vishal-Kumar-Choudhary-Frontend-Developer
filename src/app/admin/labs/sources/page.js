@@ -5,6 +5,7 @@ import { ArrowLeft, FileCode2 } from "lucide-react";
 import LabSourceInventory from "@/app/components/labs/admin/LabSourceInventory";
 import LabsOwnerAccessNotice from "@/app/components/labs/admin/LabsOwnerAccessNotice";
 import LabsOwnerNavigation from "@/app/components/labs/admin/LabsOwnerNavigation";
+import { toLabsAccountUser } from "@/app/lib/labs/auth-user-presentation.mjs";
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
 import { getLabsOwnerAccessStatus } from "@/app/lib/labs/owner-access";
 
@@ -43,7 +44,7 @@ export default async function LabsSourceLibraryPage({ searchParams }) {
           Back to Labs
         </Link>
 
-        <LabsOwnerNavigation active="sources" />
+        <LabsOwnerNavigation active="sources" user={toLabsAccountUser(session.user)} />
 
         <div className="mt-5 flex justify-end">
           <Link

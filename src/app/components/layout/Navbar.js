@@ -25,6 +25,7 @@ export default function Navbar({
   hideSocialLinks = false,
   initialAuthUser = null,
   initialSessionResolved = false,
+  initialIsOwner = false,
 }) {
   const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
@@ -400,6 +401,7 @@ export default function Navbar({
               <LabsAccountControl
                 initialUser={initialAuthUser}
                 initialSessionResolved={initialSessionResolved}
+                initialIsOwner={initialIsOwner}
                 scrolled={scrolled}
               />
             ) : null}

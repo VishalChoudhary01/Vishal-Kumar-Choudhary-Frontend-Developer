@@ -11,6 +11,8 @@ import {
   buildSiteUrl,
 } from "@/app/lib/seo/urls";
 import { getPublishedCustomLabExperimentBySlug } from "@/app/lib/labs/public-experiments";
+import { getLabsOwnerAccessStatus } from "@/app/lib/labs/owner-access";
+import { toLabsAccountUser } from "@/app/lib/labs/auth-user-presentation.mjs";
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
 import {
   getLabEngagementSnapshot,
@@ -71,6 +73,7 @@ export default async function LabExperimentPage({ params }) {
   let initialUserId = null;
   let initialAuthUser = null;
   let initialSessionResolved = false;
+  let initialIsOwner = false;
   let initialAuthState = "guest";
   let initialSource = null;
   let currentSession = null;
@@ -80,13 +83,10 @@ export default async function LabExperimentPage({ params }) {
     currentSession = session;
     initialSessionResolved = true;
     initialUserId = session?.user?.id || null;
-    initialAuthUser = initialUserId
-      ? {
-          id: initialUserId,
-          email: session.user.email || "",
-          emailVerified: session.user.emailVerified === true,
-        }
-      : null;
+    initialAuthUser = toLabsAccountUser(session?.user);
+    initialIsOwner = session?.user
+      ? getLabsOwnerAccessStatus(session.user) === "owner"
+      : false;
 
     if (initialUserId && session.user.emailVerified === true) {
       initialAuthState = "verified";
@@ -126,6 +126,7 @@ export default async function LabExperimentPage({ params }) {
     <LabsPageShell
       initialAuthUser={initialAuthUser}
       initialSessionResolved={initialSessionResolved}
+      initialIsOwner={initialIsOwner}
     >
       <main className="min-h-screen bg-background pb-24 text-text-primary sm:pb-32">
         <LabDetailHeader

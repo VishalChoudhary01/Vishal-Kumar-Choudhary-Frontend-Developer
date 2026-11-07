@@ -6,6 +6,8 @@ import { LAB_CATEGORIES } from "@/app/lib/labs/categories.mjs";
 import { resolveFeaturedExperiment } from "@/app/lib/labs/featured-experiment.mjs";
 import { buildSiteUrl } from "@/app/lib/seo/urls";
 import { cookies } from "next/headers";
+import { getLabsOwnerAccessStatus } from "@/app/lib/labs/owner-access";
+import { toLabsAccountUser } from "@/app/lib/labs/auth-user-presentation.mjs";
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
 import { isAuthRuntimeConfigured } from "@/app/lib/auth/auth";
 import {
@@ -100,7 +102,11 @@ export default async function LabsPage() {
   const featuredExperiment = resolveFeaturedExperiment(experiments);
 
   return (
-    <LabsPageShell>
+    <LabsPageShell
+      initialAuthUser={toLabsAccountUser(session?.user)}
+      initialSessionResolved={sessionResolved}
+      initialIsOwner={session?.user ? getLabsOwnerAccessStatus(session.user) === "owner" : false}
+    >
       <main className="min-h-screen bg-background text-text-primary">
         <LabsIntroduction
           experimentCount={totalExperimentCount}

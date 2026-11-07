@@ -9,6 +9,7 @@ export default function LabsPageShell({
   children,
   initialAuthUser = null,
   initialSessionResolved = false,
+  initialIsOwner = false,
 }) {
   const { isLoading, heroReady, completeLoading } = usePageLoader();
 
@@ -26,6 +27,7 @@ export default function LabsPageShell({
           hideSocialLinks
           initialAuthUser={initialAuthUser}
           initialSessionResolved={initialSessionResolved}
+          initialIsOwner={initialIsOwner}
         />
         {children}
       </div>

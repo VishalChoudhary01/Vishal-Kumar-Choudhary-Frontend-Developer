@@ -4,6 +4,7 @@ import { ArrowLeft, Copy, Eye, Heart, Users } from "lucide-react";
 import LabsEngagementTrendChart from "@/app/components/labs/admin/LabsEngagementTrendChart";
 import LabsOwnerAccessNotice from "@/app/components/labs/admin/LabsOwnerAccessNotice";
 import LabsOwnerNavigation from "@/app/components/labs/admin/LabsOwnerNavigation";
+import { toLabsAccountUser } from "@/app/lib/labs/auth-user-presentation.mjs";
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
 import { getLabsOwnerAccessStatus } from "@/app/lib/labs/owner-access";
 import {
@@ -100,7 +101,7 @@ export default async function LabsExperimentAnalyticsPage({ params, searchParams
         <Link href="/admin/labs/analytics" className="inline-flex items-center gap-2 text-xs font-medium text-text-secondary hover:text-text-primary">
           <ArrowLeft size={14} aria-hidden="true" /> All analytics
         </Link>
-        <LabsOwnerNavigation active="analytics" />
+        <LabsOwnerNavigation active="analytics" user={toLabsAccountUser(session.user)} />
 
         <header className="mt-8 border-b border-border pb-6">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">EXPERIMENT ANALYTICS</p>

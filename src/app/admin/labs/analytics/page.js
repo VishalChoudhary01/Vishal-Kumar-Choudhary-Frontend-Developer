@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { ThemeToggle } from "@/app/components/ui/ThemeToggle";
 
 import LabsLiveAnalyticsDashboard from "@/app/components/labs/admin/LabsLiveAnalyticsDashboard";
 import LabsOwnerAccessNotice from "@/app/components/labs/admin/LabsOwnerAccessNotice";
 import LabsOwnerNavigation from "@/app/components/labs/admin/LabsOwnerNavigation";
+import { toLabsAccountUser } from "@/app/lib/labs/auth-user-presentation.mjs";
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
 import { getLabsOwnerAccessStatus } from "@/app/lib/labs/owner-access";
 import { getLabsOwnerAnalytics } from "@/app/lib/labs/owner-analytics";
@@ -46,7 +46,7 @@ export default async function LabsAnalyticsPage({ searchParams }) {
           Back to Labs
         </Link>
 
-        <LabsOwnerNavigation active="analytics" />
+        <LabsOwnerNavigation active="analytics" user={toLabsAccountUser(session.user)} />
 
         <header className="mt-8 flex flex-wrap items-start justify-between gap-5 border-b border-border pb-6">
           <div className="min-w-0">
@@ -61,9 +61,6 @@ export default async function LabsAnalyticsPage({ searchParams }) {
             </p>
           </div>
 
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center">
-            <ThemeToggle />
-          </div>
         </header>
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">

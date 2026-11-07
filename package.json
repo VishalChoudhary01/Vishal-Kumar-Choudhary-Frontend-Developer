@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run test:labs-public-hero && npm run test:labs-featured-experiment && npm run test:labs-public-collection && npm run test:labs-source-only && npm run test:portfolio-analytics-foundation && npm run test:portfolio-analytics-ingestion && npm run test:portfolio-analytics-tracker && npm run test:portfolio-analytics-reports && npm run test:portfolio-analytics-dashboard && npm run test:portfolio-analytics-polling && npm run test:portfolio-analytics-deletion && npm run test:portfolio-analytics-privacy && npm run test:labs-public-pagination && npm run test:labs-monaco && npm run test:labs-source-reader && npm run test:labs-source-creator && npm run test:labs-history && npm run test:labs-media && npm run test:labs-analytics && node scripts/validate-seo.cjs && next build",
+    "build": "npm run test:labs-public-hero && npm run test:labs-featured-experiment && npm run test:labs-public-collection && npm run test:labs-source-only && npm run test:labs-owner-navigation && npm run test:portfolio-analytics-foundation && npm run test:portfolio-analytics-ingestion && npm run test:portfolio-analytics-tracker && npm run test:portfolio-analytics-reports && npm run test:portfolio-analytics-dashboard && npm run test:portfolio-analytics-polling && npm run test:portfolio-analytics-deletion && npm run test:portfolio-analytics-privacy && npm run test:labs-public-pagination && npm run test:labs-monaco && npm run test:labs-source-reader && npm run test:labs-source-creator && npm run test:labs-history && npm run test:labs-media && npm run test:labs-analytics && node scripts/validate-seo.cjs && next build",
     "start": "next start",
     "lint": "eslint",
     "validate:seo": "node scripts/validate-seo.cjs",
@@ -30,7 +30,8 @@
     "test:portfolio-analytics-dashboard": "node --test tests/portfolio-analytics-dashboard.test.mjs",
     "test:portfolio-analytics-polling": "node --test tests/portfolio-analytics-polling.test.mjs",
     "test:portfolio-analytics-deletion": "node --test tests/portfolio-analytics-deletion.test.mjs",
-    "test:portfolio-analytics-privacy": "node --test tests/portfolio-analytics-privacy.test.mjs"
+    "test:portfolio-analytics-privacy": "node --test tests/portfolio-analytics-privacy.test.mjs",
+    "test:labs-owner-navigation": "node --test tests/labs-owner-navigation.test.mjs tests/labs-account-control.test.mjs"
   },
   "dependencies": {
     "@better-auth/infra": "^0.4.26",

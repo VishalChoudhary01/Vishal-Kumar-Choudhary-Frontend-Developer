@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import PortfolioAnalyticsDashboard from "@/app/components/portfolio-analytics/PortfolioAnalyticsDashboard";
-import { ThemeToggle } from "@/app/components/ui/ThemeToggle";
 import LabsOwnerNavigation from "@/app/components/labs/admin/LabsOwnerNavigation";
+import { toLabsAccountUser } from "@/app/lib/labs/auth-user-presentation.mjs";
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
 import { isLabsOwner } from "@/app/lib/labs/owner-access";
 import {
@@ -73,7 +73,7 @@ export default async function PortfolioAnalyticsPage({ searchParams }) {
           Back to Labs analytics
         </Link>
 
-        <LabsOwnerNavigation active="portfolio-analytics" />
+        <LabsOwnerNavigation active="portfolio-analytics" user={toLabsAccountUser(session.user)} />
 
         <header className="mt-8 flex flex-wrap items-start justify-between gap-5 border-b border-border pb-6">
           <div className="min-w-0">
@@ -82,9 +82,6 @@ export default async function PortfolioAnalyticsPage({ searchParams }) {
             <p className="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">
               Understand how visitors reach and explore your homepage, projects and Labs.
             </p>
-          </div>
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center">
-            <ThemeToggle />
           </div>
         </header>
 

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
+import { toLabsAccountUser } from "@/app/lib/labs/auth-user-presentation.mjs";
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
 import { getLabsOwnerAccessStatus } from "@/app/lib/labs/owner-access";
 import LabsOwnerAccessNotice from "@/app/components/labs/admin/LabsOwnerAccessNotice";
@@ -36,7 +37,7 @@ export default async function ImportRuntimePage() {
         >
           ← Source Library
         </Link>
-        <LabsOwnerNavigation active="sources" />
+        <LabsOwnerNavigation active="sources" user={toLabsAccountUser(session.user)} />
         <header className="mt-8 border-b border-border pb-5">
           <p className="text-xs font-semibold uppercase tracking-[0.15em] text-brand">
             SOURCE LIBRARY

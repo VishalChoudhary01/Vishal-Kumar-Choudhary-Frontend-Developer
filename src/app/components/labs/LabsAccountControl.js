@@ -3,14 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChartNoAxesCombined, Code2, LogOut, MailCheck, UserRound } from "lucide-react";
+import { BarChart3, ChartNoAxesCombined, Code2, LogOut, MailCheck } from "lucide-react";
+import Image from "next/image";
 
+import { getLabsAccountDisplayName, getLabsAccountInitials } from "@/app/lib/labs/auth-user-presentation.mjs";
 import { authClient } from "@/app/lib/auth/client";
 import { publishAuthEvent, subscribeAuthEvents } from "@/app/lib/auth/session-events";
 
 export default function LabsAccountControl({
   initialUser = null,
   initialSessionResolved = false,
+  initialIsOwner = false,
   scrolled = false,
 }) {
   const router = useRouter();
@@ -24,7 +27,10 @@ export default function LabsAccountControl({
   );
   const [isPending, setIsPending] = useState(!initialSessionResolved);
   const initialSessionKnownRef = useRef(initialSessionResolved);
-  const [ownerStatus, setOwnerStatus] = useState({ userId: null, isOwner: false });
+  const [ownerStatus, setOwnerStatus] = useState(() => ({
+    userId: initialIsOwner && initialUser?.id ? initialUser.id : null,
+    isOwner: initialIsOwner && Boolean(initialUser?.id),
+  }));
   const [logoutError, setLogoutError] = useState("");
 
   const returnTo = pathname?.startsWith("/labs") ? pathname : "/labs";
@@ -173,7 +179,7 @@ export default function LabsAccountControl({
       <div
         aria-hidden="true"
         className={[
-          "h-8 w-[112px] animate-pulse bg-surface-2/70 motion-reduce:animate-none",
+          "hidden h-8 w-[112px] animate-pulse bg-surface-2/70 motion-reduce:animate-none lg:block",
           scrolled ? "rounded-full" : "rounded-sm",
         ].join(" ")}
       />
@@ -185,7 +191,7 @@ export default function LabsAccountControl({
     const isSignupPage = pathname === "/labs/signup";
 
     return (
-      <div className="flex shrink-0 items-center gap-1.5">
+      <div className="hidden shrink-0 items-center gap-1.5 lg:flex">
         {!isLoginPage ? (
           <Link
             href={signInHref}
@@ -214,9 +220,14 @@ export default function LabsAccountControl({
   }
 
   const isVerified = session.user.emailVerified === true;
+  const displayName = getLabsAccountDisplayName(session.user);
+  const accountInitials = getLabsAccountInitials(displayName);
+  const avatarUrl = typeof session.user.image === "string" && session.user.image.startsWith("https://")
+    ? session.user.image
+    : "";
 
   return (
-    <div className="relative flex h-10 w-10 shrink-0 items-center justify-center">
+    <div className="relative flex h-10 shrink-0 items-center justify-center">
       <button
         ref={triggerRef}
         type="button"
@@ -224,9 +235,16 @@ export default function LabsAccountControl({
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
-        className="flex h-9 w-9 items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        className="flex h-9 max-w-[190px] items-center gap-2 rounded-full border border-border px-1.5 pr-3 text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       >
-        <UserRound size={17} aria-hidden="true" />
+        {avatarUrl ? (
+          <Image src={avatarUrl} alt="" width={28} height={28} unoptimized referrerPolicy="no-referrer" className="h-7 w-7 shrink-0 rounded-full border border-border object-cover" />
+        ) : (
+          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-surface-2 text-[10px] font-semibold text-text-secondary" aria-hidden="true">
+            {accountInitials}
+          </span>
+        )}
+        <span className="max-w-[118px] truncate text-xs font-semibold">{displayName}</span>
       </button>
 
       {open ? (
@@ -236,9 +254,19 @@ export default function LabsAccountControl({
           aria-label="Account"
           className="absolute right-0 top-full z-[70] mt-2 w-[248px] rounded-sm border border-border bg-surface-elevated p-2 text-text-primary shadow-[var(--shadow-md)]"
         >
-          <p className="truncate px-3 py-2 text-xs text-text-secondary" title={session.user.email}>
-            {session.user.email}
-          </p>
+          <div className="flex items-center gap-3 border-b border-border px-3 py-3">
+            {avatarUrl ? (
+              <Image src={avatarUrl} alt="" width={36} height={36} unoptimized referrerPolicy="no-referrer" className="h-9 w-9 shrink-0 rounded-full border border-border object-cover" />
+            ) : (
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface-2 text-xs font-semibold text-text-secondary" aria-hidden="true">
+                {accountInitials}
+              </span>
+            )}
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-text-primary">{displayName}</p>
+              <p className="truncate text-xs text-text-tertiary" title={session.user.email}>{session.user.email}</p>
+            </div>
+          </div>
           {!isVerified ? (
             <Link
               href={verifyHref}
@@ -260,6 +288,15 @@ export default function LabsAccountControl({
               >
                 <ChartNoAxesCombined size={15} aria-hidden="true" />
                 Labs analytics
+              </Link>
+              <Link
+                href="/admin/portfolio/analytics"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="flex min-h-10 w-full items-center gap-2 px-3 text-left text-sm transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand"
+              >
+                <BarChart3 size={15} aria-hidden="true" />
+                Portfolio analytics
               </Link>
               <Link
                 href="/admin/labs/sources"
