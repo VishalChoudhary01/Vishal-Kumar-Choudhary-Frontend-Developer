@@ -272,7 +272,7 @@ export default function LabsParticleSphere() {
       // intentionally allowed to pass beyond this envelope and reach the full
       // hero canvas rather than remaining contained around the sphere.
       burstCameraDistance = getParticleCameraDistance({
-        width: height,
+        width,
         height,
         fovDegrees: PARTICLE_SPHERE_CONFIG.cameraFov,
         orbitRadius: getParticleBurstRadius(PARTICLE_SPHERE_CONFIG.radius),
