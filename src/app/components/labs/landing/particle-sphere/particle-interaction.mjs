@@ -1,6 +1,17 @@
 export const PARTICLE_BURST_OUTWARD_SECONDS = 0.45;
 export const PARTICLE_BURST_RECOVERY_SECONDS = 0.9;
 export const PARTICLE_BURST_EXPANSION = 1.85;
+export const PARTICLE_BURST_MAX_VARIATION = 1.18;
+export const PARTICLE_BURST_CAMERA_PADDING = 0.2;
+
+export function getParticleBurstRadius(sphereRadius) {
+  if (!Number.isFinite(sphereRadius) || sphereRadius <= 0) {
+    throw new RangeError("sphereRadius must be a positive finite number.");
+  }
+
+  return sphereRadius * (1 + PARTICLE_BURST_EXPANSION * PARTICLE_BURST_MAX_VARIATION)
+    + PARTICLE_BURST_CAMERA_PADDING;
+}
 export const ORBIT_BURST_SPEED_MULTIPLIER = 1.65;
 
 function clamp01(value) {
