@@ -432,6 +432,7 @@ export default function PortfolioAnalyticsDashboard({
             </Link>
           ))}
         </nav>
+        </div>
       </div>
 
       {reportError || recentError ? (
