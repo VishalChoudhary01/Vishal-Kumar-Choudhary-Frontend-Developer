@@ -117,16 +117,16 @@ export default function LabsIntroduction({
   const prefersReducedMotion = useReducedMotion();
 
   return (
-    <div className="relative w-full overflow-hidden dark:bg-[radial-gradient(ellipse_120%_85%_at_100%_82%,rgba(1,3,2,0.96)_0%,rgba(1,4,3,0.62)_34%,rgba(1,4,3,0.24)_58%,rgba(1,4,3,0.06)_78%,transparent_100%)] lg:dark:bg-[radial-gradient(ellipse_95%_130%_at_100%_50%,rgba(1,3,2,0.98)_0%,rgba(1,4,3,0.70)_38%,rgba(1,4,3,0.24)_68%,transparent_100%)]">
+    <div data-labs-hero-root="" className="relative w-full overflow-hidden dark:bg-[radial-gradient(ellipse_120%_85%_at_100%_82%,rgba(1,3,2,0.96)_0%,rgba(1,4,3,0.62)_34%,rgba(1,4,3,0.24)_58%,rgba(1,4,3,0.06)_78%,transparent_100%)] lg:dark:bg-[radial-gradient(ellipse_95%_130%_at_100%_50%,rgba(1,3,2,0.98)_0%,rgba(1,4,3,0.70)_38%,rgba(1,4,3,0.24)_68%,transparent_100%)]">
       <motion.section
       aria-labelledby="labs-heading"
       initial={prefersReducedMotion ? false : "hidden"}
       animate="visible"
       variants={heroContainerVariants}
-      className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-col justify-center px-6 pb-10 pt-[calc(60px+2rem)] sm:px-8 sm:pb-12 sm:pt-[calc(60px+2.5rem)] lg:min-h-[calc(100svh-78px)] lg:px-20 lg:pb-8 lg:pt-[calc(78px+2.25rem)]"
+      className="pointer-events-none relative z-10 mx-auto flex w-full max-w-[1440px] flex-col justify-center px-6 pb-10 pt-[calc(60px+2rem)] sm:px-8 sm:pb-12 sm:pt-[calc(60px+2.5rem)] lg:min-h-[calc(100svh-78px)] lg:px-20 lg:pb-8 lg:pt-[calc(78px+2.25rem)]"
     >
-      <div className="relative z-10 grid grid-cols-1 items-center gap-8 sm:gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:gap-8 xl:gap-12">
-        <div className="relative z-10 flex min-w-0 flex-col items-start">
+      <div className="pointer-events-none relative z-10 grid grid-cols-1 items-center gap-8 sm:gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:gap-8 xl:gap-12">
+        <div className="pointer-events-auto relative z-10 flex min-w-0 flex-col items-start">
           <motion.p
             variants={heroItemVariants}
             className="mb-4 font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-brand sm:mb-5 sm:text-[10px]"
