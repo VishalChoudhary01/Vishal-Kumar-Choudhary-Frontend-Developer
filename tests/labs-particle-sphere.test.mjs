@@ -72,6 +72,31 @@ test("interior particles are distributed inside the sphere", () => {
   }
 });
 
+test("ambient particles remain outside the sphere and use their own layer", () => {
+  const data = createSphereParticleData({
+    surfaceCount: 100,
+    innerCount: 20,
+    ambientCount: 30,
+    radius: 1.14,
+    seed: 9001,
+  });
+
+  assert.equal(data.count, 150);
+  assert.equal(data.ambientCount, 30);
+
+  for (let index = 120; index < 150; index += 1) {
+    const offset = index * 3;
+    const x = data.positions[offset];
+    const y = data.positions[offset + 1];
+    const z = data.positions[offset + 2];
+    const actualRadius = Math.sqrt(x * x + y * y + z * z);
+
+    assert.ok(actualRadius >= 1.14 * 1.28);
+    assert.ok(actualRadius <= 1.14 * 1.70);
+    assert.equal(data.layers[index], 2);
+  }
+});
+
 test("particle geometry is deterministic for a stable seed", () => {
   const options = { surfaceCount: 80, innerCount: 20, seed: 12345 };
   const first = createSphereParticleData(options);
@@ -136,4 +161,6 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /uSqueeze/);
   assert.match(shaderSource, /sparkleMask/);
   assert.match(shaderSource, /sparkleWave/);
+  assert.match(shaderSource, /ambientDrift/);
+  assert.match(shaderSource, /sparkleThreshold/);
 });
