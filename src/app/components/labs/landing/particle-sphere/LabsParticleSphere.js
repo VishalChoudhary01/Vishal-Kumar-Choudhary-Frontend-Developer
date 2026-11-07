@@ -338,6 +338,11 @@ export default function LabsParticleSphere() {
           uBrandColor: { value: new THREE.Color(initialBrandColor) },
           uInnerParticleColor: { value: new THREE.Color(initialPalette.innerParticleColor) },
           uInnerParticleOpacity: { value: initialPalette.innerParticleOpacity },
+          uVolumeColor: { value: new THREE.Color(initialPalette.volumeColor) },
+          uVolumeIntensity: { value: initialPalette.volumeIntensity },
+          uAmbientParticleColor: { value: new THREE.Color(initialPalette.ambientParticleColor) },
+          uAmbientParticleOpacity: { value: initialPalette.ambientParticleOpacity },
+          uSphereRadius: { value: PARTICLE_SPHERE_CONFIG.radius },
           uSparkleColor: { value: new THREE.Color(initialPalette.sparkleColor) },
           uBurst: { value: 0 },
           uBurstTime: { value: -1 },
@@ -395,6 +400,10 @@ export default function LabsParticleSphere() {
         particleMaterial.uniforms.uBrandColor.value.set(brandColor);
         particleMaterial.uniforms.uInnerParticleColor.value.set(palette.innerParticleColor);
         particleMaterial.uniforms.uInnerParticleOpacity.value = palette.innerParticleOpacity;
+        particleMaterial.uniforms.uVolumeColor.value.set(palette.volumeColor);
+        particleMaterial.uniforms.uVolumeIntensity.value = palette.volumeIntensity;
+        particleMaterial.uniforms.uAmbientParticleColor.value.set(palette.ambientParticleColor);
+        particleMaterial.uniforms.uAmbientParticleOpacity.value = palette.ambientParticleOpacity;
         particleMaterial.uniforms.uSparkleColor.value.set(palette.sparkleColor);
 
         orbitGroup.traverse((object) => {
