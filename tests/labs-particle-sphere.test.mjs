@@ -217,9 +217,13 @@ test("light and dark themes use distinct particle, sparkle and glow palettes", (
   assert.notEqual(light.glowColor, dark.glowColor);
   assert.notEqual(light.glowOpacity, dark.glowOpacity);
   assert.equal(light.particleColor, "#103b37");
+  assert.equal(light.innerParticleColor, "#0b2926");
+  assert.equal(light.innerParticleOpacity, 0.58);
   assert.equal(light.sparkleColor, "#041816");
   assert.equal(light.glowColor, "#0a2926");
   assert.equal(dark.particleColor, "#58b7ae");
+  assert.equal(dark.innerParticleColor, "#bafff3");
+  assert.equal(dark.innerParticleOpacity, 0.88);
   assert.equal(dark.sparkleColor, "#e1fff9");
   assert.equal(dark.glowColor, "#061c18");
   assert.equal(dark.glowOpacity, 0.028);
@@ -326,6 +330,10 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.ok(rendererSource.includes('classList.contains("dark")'));
   assert.match(rendererSource, /initialPalette\.particleColor/);
   assert.match(rendererSource, /palette\.particleColor/);
+  assert.match(rendererSource, /uInnerParticleColor/);
+  assert.match(rendererSource, /uInnerParticleOpacity/);
+  assert.match(rendererSource, /palette\.innerParticleColor/);
+  assert.match(rendererSource, /palette\.innerParticleOpacity/);
   assert.match(rendererSource, /uSparkleColor/);
   assert.match(rendererSource, /glow\.material\.color\.set\(palette\.glowColor\)/);
   assert.match(rendererSource, /case "orbit-particle"/);
@@ -414,6 +422,11 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /ambientDrift/);
   assert.match(shaderSource, /sparkleThreshold/);
   assert.match(shaderSource, /uBrandColor/);
+  assert.match(shaderSource, /uInnerParticleColor/);
+  assert.match(shaderSource, /uInnerParticleOpacity/);
+  assert.match(shaderSource, /innerLayer/);
+  assert.match(shaderSource, /mix\(surfaceOpacity, uInnerParticleOpacity, innerLayer\)/);
+  assert.match(shaderSource, /innerLitColor/);
   assert.match(shaderSource, /uSparkleColor/);
   assert.match(shaderSource, /sparkle \* 1\.1/);
   assert.match(shaderSource, /starRays/);
