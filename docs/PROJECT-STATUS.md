@@ -9,6 +9,8 @@
 ## 1. Product boundary
 
 The platform has four substantial existing implementation areas:
+The public homepage also has an interactive 3D companion (Vee), documented separately in pages/PORTFOLIO-MASCOT-ENGINEERING.md, including its Three.js scene, section choreography, scroll-positioning, dialogue, scan actions and extension rules.
+
 
 1. Public portfolio website and code-driven project detail pages.
 2. First-party Portfolio Analytics, separate from Labs engagement analytics.
