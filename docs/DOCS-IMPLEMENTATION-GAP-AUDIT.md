@@ -338,3 +338,17 @@ The current docs/README.md has 59 Markdown links and 44 unique relative targets.
 ### 11.5 Verification boundary
 
 This follow-up used repository source/document inspection and GitHub file updates. It did not run npm install, tests, lint, production build, browser/Playwright QA, Atlas queries/migrations, SMTP delivery, OAuth callback flows, Cloudinary, Vercel Blob or Vercel Sandbox calls. Do not claim current-HEAD release verification from this documentation pass.
+
+## 12. SEO/AEO implementation audit — 7 November 2026
+
+The supplied SEO/AEO specification was written for the homepage and `/projects/[slug]`. The repository already contained the homepage and project implementation: canonical metadata, Open Graph/Twitter, homepage WebSite/ProfilePage/Person JSON-LD, per-project CreativeWork JSON-LD, project static params and 404 handling, robots and sitemap. The new public Labs extension has now been implemented:
+
+- `/labs`: factual collection title/description, canonical, index/follow, Open Graph/Twitter and server CollectionPage/ItemList JSON-LD.
+- `/labs/[slug]`: unique-by-experiment title/description derived from actual record, canonical, Open Graph/Twitter, WebPage/CreativeWork/BreadcrumbList JSON-LD and noindex + 404 for ineligible/missing records.
+- visible AEO facts: H1/title, description, creator byline, category, technology labels, optional explanation, static figure/caption; public detail remains non-executable and no source bytes enter public schema.
+- image URL helper filters video assets, uses only HTTPS or root-relative paths, and skips unavailable preview media; public image alt fallback is supplied.
+- public experiment DTO now carries real `publishedAt` and `updatedAt` values; sitemap enumerates all eligible public Labs detail routes by cursor.
+- robots disallows /admin only and intentionally does not block /api poster images.
+- focused `tests/labs-seo.test.mjs` checks metadata, schema, date handling, route wiring, sitemap and robots policy and is part of the build test chain.
+
+Remaining SEO/AEO gaps are database-wide duplicate title/description detection and actual production HTML, crawler, Rich Results and Search Console validation. No claim of live indexing or ranking is supported. The complete current implementation is documented in `SEO-AND-AEO-IMPLEMENTATION.md`.
