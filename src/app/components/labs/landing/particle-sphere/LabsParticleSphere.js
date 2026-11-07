@@ -173,7 +173,7 @@ export default function LabsParticleSphere() {
       camera.updateProjectionMatrix();
 
       const nextProfile = getParticleQualityProfile({
-        viewportWidth: width,
+        viewportWidth: window.innerWidth,
         deviceMemory: window.navigator.deviceMemory,
         hardwareConcurrency: window.navigator.hardwareConcurrency,
       });
@@ -231,7 +231,7 @@ export default function LabsParticleSphere() {
       mount.appendChild(renderer.domElement);
 
       qualityProfile = getParticleQualityProfile({
-        viewportWidth: mount.getBoundingClientRect().width || window.innerWidth,
+        viewportWidth: window.innerWidth,
         deviceMemory: window.navigator.deviceMemory,
         hardwareConcurrency: window.navigator.hardwareConcurrency,
       });
