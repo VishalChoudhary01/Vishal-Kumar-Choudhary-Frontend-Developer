@@ -23,7 +23,6 @@ export const particleVertexShader = `
 
     float ambientLayer = step(1.5, aLayer);
     float sphereLayer = 1.0 - ambientLayer;
-    float sphereLayer = 1.0 - ambientLayer;
 
     // Burst is a temporary radial displacement. The source geometry and
     // resting sphere radius are never changed.
