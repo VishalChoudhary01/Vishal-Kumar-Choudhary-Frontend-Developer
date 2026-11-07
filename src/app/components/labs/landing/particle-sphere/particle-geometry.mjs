@@ -25,17 +25,19 @@ function assertCount(value, name, maximum) {
 export function createSphereParticleData({
   surfaceCount = 4400,
   innerCount = 480,
+  ambientCount = 0,
   radius = 1.14,
   seed = 0x51f15e,
 } = {}) {
   assertCount(surfaceCount, "surfaceCount", 16000);
   assertCount(innerCount, "innerCount", 4000);
+  assertCount(ambientCount, "ambientCount", 128);
 
   if (!Number.isFinite(radius) || radius <= 0 || radius > 10) {
     throw new RangeError("radius must be a finite number greater than 0 and at most 10.");
   }
 
-  const totalCount = surfaceCount + innerCount;
+  const totalCount = surfaceCount + innerCount + ambientCount;
   const positions = new Float32Array(totalCount * 3);
   const sizes = new Float32Array(totalCount);
   const seeds = new Float32Array(totalCount);
@@ -43,7 +45,9 @@ export function createSphereParticleData({
   const layers = new Float32Array(totalCount);
   const random = createRandom(seed);
 
-  const writeParticle = (index, direction, particleRadius, isInner) => {
+  const writeParticle = (index, direction, particleRadius, layer) => {
+    const isInner = layer === 1;
+    const isAmbient = layer === 2;
     const offset = index * 3;
     const variation = random();
 
@@ -51,13 +55,15 @@ export function createSphereParticleData({
     positions[offset + 1] = direction.y * particleRadius;
     positions[offset + 2] = direction.z * particleRadius;
 
-    sizes[index] = isInner
-      ? 0.48 + random() * 0.62
-      : 0.78 + random() * 0.92;
+sizes[index] = isAmbient
+      ? 1.0 + random() * 0.8
+      : isInner
+        ? 0.48 + random() * 0.62
+        : 0.78 + random() * 0.92;
     seeds[index] = random();
-    layers[index] = isInner ? 1 : 0;
+    layers[index] = layer;
 
-    if (variation > 0.991) {
+    if (isAmbient || variation > 0.991) {
       colors[offset] = 0.56;
       colors[offset + 1] = 0.86;
       colors[offset + 2] = 0.81;
@@ -83,7 +89,7 @@ export function createSphereParticleData({
     };
     const radiusVariation = radius * (0.986 + random() * 0.028);
 
-    writeParticle(index, direction, radiusVariation, false);
+    writeParticle(index, direction, radiusVariation, 0);
   }
 
   for (let index = 0; index < innerCount; index += 1) {
@@ -98,7 +104,22 @@ export function createSphereParticleData({
     };
     const volumeRadius = radius * (0.16 + Math.cbrt(random()) * 0.68);
 
-    writeParticle(particleIndex, direction, volumeRadius, true);
+    writeParticle(particleIndex, direction, volumeRadius, 1);
+  }
+
+  for (let index = 0; index < ambientCount; index += 1) {
+    const particleIndex = surfaceCount + innerCount + index;
+    const y = random() * 2 - 1;
+    const horizontalRadius = Math.sqrt(Math.max(0, 1 - y * y));
+    const angle = random() * Math.PI * 2;
+    const direction = {
+      x: Math.cos(angle) * horizontalRadius,
+      y,
+      z: Math.sin(angle) * horizontalRadius,
+    };
+    const ambientRadius = radius * (1.28 + random() * 0.42);
+
+    writeParticle(particleIndex, direction, ambientRadius, 2);
   }
 
   return {
@@ -110,6 +131,7 @@ export function createSphereParticleData({
     count: totalCount,
     surfaceCount,
     innerCount,
+    ambientCount,
     radius,
   };
 }
