@@ -6,6 +6,10 @@ export function getParticleSphereThemePalette(isDark) {
       glowColor: "#0c514b",
       glowOpacity: 0.055,
       orbitOpacityScale: 1,
+      orbitParticleColor: "#e1fff9",
+      orbitParticleGlowColor: "#69bdb9",
+      orbitParticleOpacity: 0.96,
+      orbitParticleGlowOpacity: 0.24,
     });
   }
 
@@ -15,5 +19,9 @@ export function getParticleSphereThemePalette(isDark) {
     glowColor: "#0a2926",
     glowOpacity: 0.09,
     orbitOpacityScale: 0.92,
+    orbitParticleColor: "#041816",
+    orbitParticleGlowColor: "#0a2926",
+    orbitParticleOpacity: 0.9,
+    orbitParticleGlowOpacity: 0.3,
   });
 }
