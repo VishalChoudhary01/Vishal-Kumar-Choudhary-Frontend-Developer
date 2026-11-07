@@ -150,7 +150,8 @@ Landing: /admin/labs/analytics
 - client LabsLiveAnalyticsDashboard refreshes;
 - summary cards use MotionNumber;
 - event rankings link to experiment detail;
-- chart is a single-metric Chart.js canvas selected by the user, with data table alternative;
+- chart is a lazy-loaded single-metric Chart.js column canvas selected by the user, with UTC daily/weekly buckets, semantic metric colors, hover/selection readouts, a data-table alternative and retryable load failure;
+- the chart respects reduced-motion preferences; live refresh uses visible-tab polling with bounded backoff rather than WebSockets;
 - polling begins at 10 seconds and backs off to maximum 60 seconds on failures;
 - loading/empty/error/retry feedback must be retained.
 
