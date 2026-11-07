@@ -59,7 +59,7 @@ Better Auth provider login endpoints are dispatched through the catch-all route.
 | GET | /api/v1/admin/labs/analytics | Owner | Aggregated Labs dashboard data for the selected allowed day range. |
 | GET | /api/v1/admin/labs/analytics/[slug] | Owner | Aggregated metrics for one experiment. The page additionally loads active verified likes through owner-analytics service. |
 
-The dashboard page uses initial server report plus client polling. API query period validation belongs to owner analytics read-query logic; do not accept arbitrary days.
+The dashboard page uses initial server report plus client polling. API query period validation belongs to owner analytics read-query logic; do not accept arbitrary days. The experiment-specific detail route is implemented. Its current UI still has an active verified-liker identity panel; the accepted 7 November target is aggregate-only, so this panel and any user-identifying response fields must be removed/redesigned before privacy compliance is claimed.
 
 ## 5. Owner experiment metadata
 
