@@ -4,13 +4,15 @@
 **Repository:** `VishalChoudhary01/Vishal-Kumar-Choudhary-Frontend-Developer`  
 **Branch audited:** `feat/labs-platform-integration`  
 **Source snapshot at audit start:** `fb6f85917d4bdc477e01a200889cf370bd2fe59a`  
-**Scope:** Read-only comparison of documentation and current repository implementation. No application behavior or source code was changed.
+**Scope:** Initial read-only comparison of documentation and current repository implementation. No application behavior or source code was changed. A corrective documentation pass followed on 2026-11-07; see Section 11 for accepted decisions and updated status.
 
 > This report is a findings register, not a declaration that all features are release-ready. It separates implementation gaps, documentation mismatches, product decisions and external verification still required.
 
 ---
 
 ## 1. Executive result
+
+> **Point-in-time note:** Sections 1–10 preserve the original audit findings as observed before follow-up decision and documentation commits. They are historical findings, not all outstanding today. The 7 November follow-up in Section 11 records what is now decided, what documentation has been reconciled, and what still requires application-code or deployment work.
 
 The repository has substantial engineering documentation, but it is **not yet a fully consistent reverse-engineering handover**. A developer or AI agent can understand most major systems, but several important docs currently describe different behaviors for the same feature. There are also approved PRD requirements that are not implemented, and a number of current-state guides need to be corrected before they can safely be used as the sole implementation authority.
 
@@ -19,10 +21,10 @@ The most important issue is the public Labs detail runtime:
 - The current public Labs listing is source-backed custom experiments only.
 - The current public detail page is a **static presentation page**; it does not mount the published artifact iframe or execute the experiment runtime.
 - The runtime compiler, immutable artifact storage and public artifact Route Handler exist, but the page does not wire that runtime into the visitor-facing detail route.
-- The PRD and one approved UX section still say the detail page must run the exact published artifact.
+- The earlier PRD and UX specification versions said the detail page must run the exact published artifact; that requirement is now superseded by the accepted 7 November static-detail decision in Section 39 of the Labs UX specification and ADR-018.
 - The newer Runtime and Media Plan explicitly says the public detail page must remain static and must not mount an executable runtime.
 
-That is a product-contract conflict, not simply a missing line in a guide. It needs one explicit decision before more Labs detail work is authorized.
+The product decision is now resolved in favor of static/non-executable public detail. The remaining task is to keep older phase notes clearly superseded and preserve owner Run/build/artifact infrastructure separately.
 
 There are also security-policy conflicts (owner identity), media-role migration gaps, analytics instrumentation gaps, missing PRD account/discovery features, stale implementation-plan statements and unverified deployment behavior.
 
@@ -67,11 +69,7 @@ This was a repository-source/document audit. It did not run npm install, the tes
 - `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md`, Section 6, says the public detail page is static and must not mount `LabWorkspace`, `LabRuntimeBoundary`, an artifact iframe or executable runtime.
 - `pages/LABS-AND-OWNER-WORKSPACE.md` and `architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md` currently describe a runtime iframe on public detail, which does not match the current page source.
 
-**Required decision:**
-1. Keep the current static detail-page product contract, and reconcile PRD/UX/current-state guides to say that the public detail page presents metadata, static media, likes and protected source only; or
-2. Approve a new integration phase to mount the exact published runtime, with readiness, timeout, failed/unsupported, retry and fallback states, and then revise the static-detail plan.
-
-Do not implement the second behavior by assumption. Gallery cards must remain static in either option.
+**Accepted decision (2026-11-07):** keep static public detail. PRD FR-02, Labs UX Section 39, current Labs guide and runtime guide now record the accepted contract. Do not mount the artifact iframe unless the decision is explicitly reopened. Gallery cards remain static.
 
 ### GAP-02 — Public Labs catalogue eligibility is incorrectly described in current docs
 
@@ -84,7 +82,7 @@ Do not implement the second behavior by assumption. Gallery cards must remain st
 - `PROJECT-STATUS.md` says the public Labs collection/detail should validate built-in demos and custom runtime.
 - Older sections in the Labs UX spec and other plans still describe public code-owned demos.
 
-**Required correction:** public discovery is currently custom-source-only. Keep the four code-owned runtime modules as code-owned/owner-import material where needed, but do not describe them as public catalogue entries. Add the 7 November source-only decision to the UX spec's supersession section and update the current Labs guide/status/runtime guide accordingly.
+**Accepted decision and docs corrected (2026-11-07):** public discovery is source-backed custom-only. Code-owned runtime registry entries remain code-owned material and are not public catalogue entries. The Labs UX Section 39, Labs public page redesign Section 15, current Labs guide and Project Status now identify this rule as authoritative.
 
 ### GAP-03 — Owner identity code does not match the locked owner decision
 
@@ -97,7 +95,7 @@ Do not implement the second behavior by assumption. Gallery cards must remain st
 
 The email fallback is also described in `pages/LABS-AND-OWNER-WORKSPACE.md` and `operations/ENVIRONMENT-AND-RELEASE.md`.
 
-**Required decision:** either remove the email fallback and enforce the locked ID-only decision, or explicitly amend the owner-identity decision because email bootstrap is now intentionally supported. Verify Preview/Production configuration before changing code so the active owner is not locked out. Do not silently describe the two policies as identical.
+**Accepted target decision (2026-11-07):** LABS_OWNER_USER_ID only. The current owner-access.js still accepts LABS_OWNER_EMAIL as a fallback; remove that branch after confirming deployed owner provisioning. The new auth guide, Threat Model, environment runbook, ADR-018 and Project Status disclose this mismatch. Do not claim ID-only enforcement until the source code is aligned.
 
 ### GAP-04 — Analytics event coverage does not meet all PRD metrics
 
@@ -209,7 +207,7 @@ These are not necessarily bugs. They are either target PRD requirements not impl
 
 ### 6.1 Owner identity
 
-Resolve GAP-03 (ID-only owner identity vs ID-or-email fallback) before relying on the lock statement in the source-management spec. Check which owner variable is configured in each deployment before any code change.
+The target decision is now accepted: LABS_OWNER_USER_ID only. The code still allows LABS_OWNER_EMAIL as a fallback. Remove that branch after confirming which owner ID is provisioned in Preview/Production; do not re-open the policy silently or risk locking out the owner.
 
 ### 6.2 Contact endpoint hardening
 
@@ -261,41 +259,31 @@ This does not mean none of these functions work; it means the committed automate
 
 ## 8. Documentation structure and navigation observations
 
-- `docs/README.md` has 49 relative Markdown links; the audit found zero missing link targets.
-- The root README does not directly index every active Labs implementation plan. Some are referenced by other specs; a compact “active Labs plans and release runbooks” section would make those documents easier to discover.
-- The current page guides do not yet provide standalone current-state page guides for the authentication route group, Privacy Policy page and shared error page. Those areas are described in auth/legal plans and current code, but not with the same route → component → state → API → error/accessibility map used for Contact and Labs.
+- The initial audit snapshot had 49 README links. After the corrective pass, docs/README.md contains 55 Markdown links to 42 unique relative targets; all 42 current targets were re-fetched successfully.
+- The index now directly links the new authentication, privacy/data-lifecycle and error/not-found guides. Remaining Labs implementation plans are reachable from the Labs specs and runbooks.
+- The initial audit found no standalone current-state guides for authentication, Privacy Policy/data lifecycle and shared error surfaces. The follow-up pass added pages/AUTHENTICATION-AND-ACCOUNT-ENGINEERING.md, architecture/PRIVACY-AND-DATA-LIFECYCLE.md and pages/ERROR-AND-NOT-FOUND-ENGINEERING.md.
 - The Motion Lab reference library is clearly a set of future component specifications. Add this status explicitly to the main README/Project Status so its 120 component spec files cannot be mistaken for implemented UI components.
 
 ---
 
-## 9. Recommended correction order
+## 9. Corrective order after the 7 November decisions
 
-Do not fix every missing PRD feature at once. First make the source of truth unambiguous.
+The three policy decisions that previously blocked documentation reconciliation have been accepted:
+1. Public Labs catalogue is source-backed custom experiments only; public detail is static/non-executable.
+2. Owner identity target is singleton LABS_OWNER_USER_ID only.
+3. Owner Labs Analytics is aggregate-only; no individual active verified-liker identity data.
 
-### Phase A — Lock the conflicting behavior
-1. Decide public experiment detail: static detail or exact published interactive runtime.
-2. Decide owner bootstrap: `LABS_OWNER_USER_ID` only or explicit verified-email fallback.
-3. Decide the narrow owner-only active verified-liker identity exception.
-4. Confirm search/filter/sort, user dashboard/profile/deletion, media roles, schedule and analytics instrumentation as current scope or deferred.
+Documentation has been reconciled across the current Labs guide, runtime/Monaco plans, source-management spec, PRD, Threat Model, Analytics design/current guide, environment runbook, owner-console plan, ADR log, README and Project Status. Section 39 of the Labs UX specification and ADR-018 provide the supersession record.
 
-### Phase B — Correct documentation before more code
-1. Reconcile `LABS-AND-OWNER-WORKSPACE.md`, `PROJECT-STATUS.md`, `LABS-RUNTIME-AND-CODE-EXECUTION.md` to match the chosen public detail behavior and current source-only catalogue.
-2. Update the Labs UX spec's supersession section with the 7 November source-only decision and Google/GitHub implementation status.
-3. Mark old textarea and pre-Monaco source-editor statements superseded.
-4. Correct Threat Model's legacy-grant statement and Analytics' stale chart checklist.
-5. Update PRD implementation-status wording for Analytics detail route, while preserving target requirements that remain unimplemented.
-6. Reconcile the active liker privacy exception and owner identity rule in Decisions.
-7. Refresh the audit metrics/counts and README navigation.
+Remaining implementation order:
+- **P0 security/privacy alignment:** remove LABS_OWNER_EMAIL fallback after validating deployed owner config; remove/redesign active verified-liker identity panel and ensure API/DTO output is aggregate-only.
+- **P1 metric scope:** decide and implement or explicitly defer experiment detail-view metrics; define whether preview-start/interactions have a meaningful signal while public detail is static; keep Portfolio Analytics visits separate.
+- **P1 data model:** design and implement ordered detail-gallery and complete target media-role schema; current model remains galleryPreview plus one fallback-preview attachment.
+- **P1 product gaps:** decide scope for search/filter/sort and personal dashboard/profile/account deletion; implement only after explicit authorization.
+- **Release verification:** run the exact current-HEAD test/build and authenticated Preview/Atlas/browser checks. This documentation task did not run them.
+- **Separate security hardening:** implement contact route protections recorded in the contact guide.
 
-### Phase C — Only then authorize implementation
-Prioritize security and release gates before new product scope:
-- owner authorization resolution;
-- exact current-HEAD Preview/browser regression of Source Library, editor, Run/Save/Restore/Publish and public Labs;
-- runtime contract decision and tests;
-- media-role migration plan;
-- event-retention/detail-view/preview-instrumentation contract;
-- contact hardening;
-- then explicitly approved PRD gaps.
+Do not treat documentation updates or accepted decisions as completed application-code changes.
 
 ---
 
@@ -306,3 +294,47 @@ The platform is much further along than a simple portfolio: it has detailed page
 **The biggest immediate risk is not a missing feature alone; it is that an AI agent could follow a stale document and implement the wrong public Labs behavior or owner authorization rule.**
 
 Resolve the P0 conflicts and reconcile the current-state guides before using the documents as a “rebuild from scratch” package. Then decide which PRD requirements are still in scope versus explicitly deferred. No code implementation should start from an ambiguous contract.
+
+
+## 11. Corrective documentation pass — 7 November 2026
+
+### 11.1 Accepted decisions and resolved documentation conflicts
+
+| Finding | Follow-up status | Authoritative record |
+|---|---|---|
+| Public Labs detail runtime conflict | Decision accepted: public detail remains static/non-executable. Older interactive-detail requirements are superseded. | LABS-AND-AUTHENTICATION-DESIGN-SPEC.md §39; PRD FR-02; pages/LABS-AND-OWNER-WORKSPACE.md; architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md |
+| Public catalogue built-in/custom conflict | Decision accepted: source-backed published custom experiments only. Built-in runtime registry entries are not merged into /labs. | LABS-AND-AUTHENTICATION-DESIGN-SPEC.md §39; LABS-PUBLIC-PAGE-REDESIGN-PLAN.md §15; PROJECT-STATUS.md |
+| Owner ID/email mismatch | Target decision accepted: LABS_OWNER_USER_ID only. Current owner-access.js still has LABS_OWNER_EMAIL fallback; code alignment remains P0. | ADR-018; Threat Model §4/§10; pages/AUTHENTICATION-AND-ACCOUNT-ENGINEERING.md |
+| Active verified-liker identity panel | Target decision accepted: aggregate-only; individual account identities/timestamps/search are not allowed. Current Analytics detail UI still has the panel; code alignment remains P0. | ADR-018; DESIGN-ANALYTICS.md §8; architecture/PRIVACY-AND-DATA-LIFECYCLE.md |
+| Monaco state | Current branch integrates read-only public/history and editable owner Monaco with plain-text fallback. Historical textarea/not-implemented statements are superseded. | LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md §7; LABS-DETAIL-PRESENTATION-AND-MONACO-EDITOR-IMPLEMENTATION-PLAN.md §14 |
+| Legacy source grant lookup | Current source-access service no longer queries LabSourceGrant. The model/collection remains legacy migration material. | pages/LABS-AND-OWNER-WORKSPACE.md §4; Threat Model §4/§10 |
+
+### 11.2 New standalone implementation guides
+
+Added and linked from docs/README.md:
+- pages/AUTHENTICATION-AND-ACCOUNT-ENGINEERING.md — Better Auth, verification, password reset, optional OAuth, return paths, owner/source authorization and unimplemented account capabilities.
+- architecture/PRIVACY-AND-DATA-LIFECYCLE.md — account, verification, source engagement, likes, page visits, cookies, providers, retention and deletion gaps.
+- pages/ERROR-AND-NOT-FOUND-ENGINEERING.md — root App Router 404/500 boundaries, production-safe messaging, development diagnostics and guarded chunk-load recovery.
+
+Also corrected/reconciled the Labs current-state guide/runtime guide, PRD, Threat Model, Analytics docs, source-management and Monaco plans, owner-console plan, Labs auth/source-access runbook, public page redesign plan, ADR log, environment runbook, Project Status and README.
+
+### 11.3 Remaining known gaps
+
+The documentation is more consistent, but this is not a full PRD implementation:
+- owner email fallback still exists in code despite the ID-only target;
+- individual verified-liker panel still exists in code despite aggregate-only target;
+- Labs detail-view and preview event instrumentation are absent;
+- ordered detail-gallery and complete attachment-role migration are absent;
+- personal account dashboard/profile/self-service deletion are absent;
+- public Labs search/expanded filters/user-selected sort are absent;
+- Labs analytics event retention and account-deletion treatment are not settled;
+- contact endpoint hardening remains open;
+- provider credentials, database indexes and third-party services were not exercised in this documentation pass.
+
+### 11.4 Navigation verification
+
+The current docs/README.md has 55 Markdown links and 42 unique relative targets. All 42 targets were fetched successfully on feat/labs-platform-integration. The earlier 49-link count remains the initial audit snapshot.
+
+### 11.5 Verification boundary
+
+This follow-up used repository source/document inspection and GitHub file updates. It did not run npm install, tests, lint, production build, browser/Playwright QA, Atlas queries/migrations, SMTP delivery, OAuth callback flows, Cloudinary, Vercel Blob or Vercel Sandbox calls. Do not claim current-HEAD release verification from this documentation pass.
