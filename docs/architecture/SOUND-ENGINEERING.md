@@ -401,7 +401,7 @@ These paths are intentionally separate today.
 ## 7. Sound behavior matrix
 
 | Behavior | Vee laser SFX | ThemeToggle SFX | Contact success SFX | Vee welcome voice |
-|---|---|---|
+|---|---|---|---|---|
 | Playback API | Web Audio BufferSource/GainNode | Web Audio BufferSource/GainNode | Web Audio BufferSource/GainNode | HTMLAudioElement via new Audio |
 | Shared AudioContext | Yes | Yes | Yes | No |
 | Fetch/decode Promise cache | Yes | Yes | Yes | Browser media loading |
