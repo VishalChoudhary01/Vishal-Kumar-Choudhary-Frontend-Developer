@@ -370,8 +370,8 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.match(rendererSource, /uAmbientParticleColor/);
   assert.match(rendererSource, /uAmbientParticleOpacity/);
   assert.match(rendererSource, /uSphereRadius/);
-  assert.match(rendererSource, /palette\\.volumeColor/);
-  assert.match(rendererSource, /palette\\.ambientParticleOpacity/);
+  assert.match(rendererSource, /palette\.volumeColor/);
+  assert.match(rendererSource, /palette\.ambientParticleOpacity/);
   assert.match(rendererSource, /glow\.material\.color\.set\(palette\.glowColor\)/);
   assert.match(rendererSource, /case "orbit-particle"/);
   assert.match(rendererSource, /case "orbit-particle-glow"/);
