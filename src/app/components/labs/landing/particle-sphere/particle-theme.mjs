@@ -2,6 +2,8 @@ export function getParticleSphereThemePalette(isDark) {
   if (isDark) {
     return Object.freeze({
       particleColor: "#58b7ae",
+      innerParticleColor: "#c9fff4",
+      innerParticleOpacity: 0.78,
       sparkleColor: "#e1fff9",
       glowColor: "#061c18",
       glowOpacity: 0.028,
@@ -15,6 +17,8 @@ export function getParticleSphereThemePalette(isDark) {
 
   return Object.freeze({
     particleColor: "#103b37",
+    innerParticleColor: "#0b2926",
+    innerParticleOpacity: 0.34,
     sparkleColor: "#041816",
     glowColor: "#0a2926",
     glowOpacity: 0.09,
