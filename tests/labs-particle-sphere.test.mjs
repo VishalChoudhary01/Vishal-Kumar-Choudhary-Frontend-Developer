@@ -182,13 +182,32 @@ test("sphere world-space size stays fixed while camera framing adapts to mobile"
     width: 1440,
     height: 820,
     fovDegrees: 42,
-    orbitRadius: 1.92,
-    fillRatio: 0.92,
+    orbitRadius: 2.02,
+    fillRatio: 0.94,
+  });
+  const burstRadius = getParticleBurstRadius(radius);
+  const mobileBurstDistance = getParticleCameraDistance({
+    width: 375,
+    height: 520,
+    fovDegrees: 42,
+    orbitRadius: burstRadius,
+    fillRatio: 0.9,
+  });
+  const desktopBurstDistance = getParticleCameraDistance({
+    width: 1440,
+    height: 820,
+    fovDegrees: 42,
+    orbitRadius: burstRadius,
+    fillRatio: 0.9,
   });
 
   assert.ok(Number.isFinite(mobileDistance));
   assert.ok(Number.isFinite(desktopDistance));
+  assert.ok(Number.isFinite(mobileBurstDistance));
+  assert.ok(Number.isFinite(desktopBurstDistance));
   assert.ok(mobileDistance > desktopDistance);
+  assert.ok(mobileBurstDistance > mobileDistance);
+  assert.ok(desktopBurstDistance > desktopDistance);
   assert.match(rendererSource, /idleCameraDistance = getParticleCameraDistance/);
   assert.match(rendererSource, /orbitRadius: 2\.02/);
   assert.match(rendererSource, /burstCameraDistance = getParticleCameraDistance/);
