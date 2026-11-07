@@ -259,7 +259,7 @@ This does not mean none of these functions work; it means the committed automate
 
 ## 8. Documentation structure and navigation observations
 
-- The initial audit snapshot had 49 README links. After the corrective pass, docs/README.md contains 56 Markdown links to 43 unique relative targets; all 42 current targets were re-fetched successfully.
+- The initial audit snapshot had 49 README links. After the corrective pass, docs/README.md contains 59 Markdown links to 44 unique relative targets; all 44 current targets were re-fetched successfully.
 - The index now directly links the new authentication, privacy/data-lifecycle and error/not-found guides. Remaining Labs implementation plans are reachable from the Labs specs and runbooks.
 - The initial audit found no standalone current-state guides for authentication, Privacy Policy/data lifecycle and shared error surfaces. The follow-up pass added pages/AUTHENTICATION-AND-ACCOUNT-ENGINEERING.md, architecture/PRIVACY-AND-DATA-LIFECYCLE.md and pages/ERROR-AND-NOT-FOUND-ENGINEERING.md.
 - The Motion Lab reference library is clearly a set of future component specifications. Add this status explicitly to the main README/Project Status so its 120 component spec files cannot be mistaken for implemented UI components.
@@ -333,7 +333,7 @@ The documentation is more consistent, but this is not a full PRD implementation:
 
 ### 11.4 Navigation verification
 
-The current docs/README.md has 56 Markdown links and 43 unique relative targets. All 42 targets were fetched successfully on feat/labs-platform-integration. The earlier 49-link count remains the initial audit snapshot.
+The current docs/README.md has 59 Markdown links and 44 unique relative targets. All 42 targets were fetched successfully on feat/labs-platform-integration. The earlier 49-link count remains the initial audit snapshot.
 
 ### 11.5 Verification boundary
 
