@@ -9,6 +9,10 @@ export const PARTICLE_BURST_PARTICLE_RECOVERY_VARIATION = 0.16;
 export const PARTICLE_BURST_TANGENTIAL_STRENGTH = 0.22;
 export const PARTICLE_BURST_TANGENTIAL_VARIATION = 1.35;
 export const PARTICLE_BURST_DRIFT_STRENGTH = 0.055;
+export const PARTICLE_CAMERA_ANTICIPATION_SECONDS = 0.12;
+export const PARTICLE_CAMERA_ANTICIPATION_RELEASE_SECONDS = 0.28;
+export const PARTICLE_CAMERA_PULLBACK_DELAY_SECONDS = 0.14;
+export const PARTICLE_CAMERA_ANTICIPATION_DISTANCE_RATIO = 0.024;
 export const ORBIT_BURST_SPEED_MULTIPLIER = 1.65;
 
 function clamp01(value) {
@@ -95,6 +99,34 @@ export function getParticleBurstEnvelope(elapsedSeconds) {
   if (recoveryProgress >= maxRecovery) return 0;
 
   return 1 - smoothstep(0, maxRecovery, recoveryProgress);
+}
+
+/**
+ * Camera choreography intentionally trails the particle impulse. A small
+ * anticipation move draws the camera inward first; the wide pullback starts
+ * after the particles have begun moving and follows their longer recovery.
+ */
+export function getParticleCameraChoreography(elapsedSeconds) {
+  if (!Number.isFinite(elapsedSeconds) || elapsedSeconds < 0) {
+    return { anticipation: 0, pullback: 0 };
+  }
+
+  const anticipationIn = smoothstep(
+    0,
+    PARTICLE_CAMERA_ANTICIPATION_SECONDS,
+    elapsedSeconds,
+  );
+  const anticipationOut = 1 - smoothstep(
+    PARTICLE_CAMERA_ANTICIPATION_SECONDS,
+    PARTICLE_CAMERA_ANTICIPATION_RELEASE_SECONDS,
+    elapsedSeconds,
+  );
+  const anticipation = anticipationIn * anticipationOut;
+  const pullback = getParticleBurstEnvelope(
+    elapsedSeconds - PARTICLE_CAMERA_PULLBACK_DELAY_SECONDS,
+  );
+
+  return { anticipation, pullback };
 }
 
 export function getOrbitBurstSpeed(elapsedSeconds) {
