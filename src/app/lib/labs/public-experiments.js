@@ -26,6 +26,12 @@ function isPublicBlobUrl(value) {
   }
 }
 
+function toPublicDate(value) {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
 function toPublicExperiment(experiment, artifact) {
   const storedPreview = experiment.galleryPreview;
   let galleryPreview = null;
@@ -88,10 +94,31 @@ function toPublicExperiment(experiment, artifact) {
       }
     : null;
 
-  const { galleryVisual, thumbnail } = resolveGalleryPreviewSelection({
-    uploadedPreview: galleryPreview,
-    generatedPoster,
-  });
+  const { galleryVisual: selectedGalleryVisual, thumbnail: selectedThumbnail } =
+    resolveGalleryPreviewSelection({
+      uploadedPreview: galleryPreview,
+      generatedPoster,
+    });
+  const galleryVisual = selectedGalleryVisual
+    ? {
+        ...selectedGalleryVisual,
+        alt:
+          typeof selectedGalleryVisual.alt === "string" && selectedGalleryVisual.alt.trim()
+            ? selectedGalleryVisual.alt.trim()
+            : selectedGalleryVisual.mediaKind === "video"
+              ? `Video preview of ${experiment.title}`
+              : `Preview image of ${experiment.title}`,
+      }
+    : null;
+  const thumbnail = selectedThumbnail
+    ? {
+        ...selectedThumbnail,
+        alt:
+          typeof selectedThumbnail.alt === "string" && selectedThumbnail.alt.trim()
+            ? selectedThumbnail.alt.trim()
+            : `Screenshot preview of ${experiment.title}`,
+      }
+    : null;
 
   return {
     slug: experiment.slug,
@@ -104,9 +131,11 @@ function toPublicExperiment(experiment, artifact) {
     generatedPoster,
     thumbnail,
     seo: {
-      title: experiment.title + " — Labs",
+      title: `${experiment.title} — Frontend Experiment | Vishal Kumar Choudhary`,
       description: experiment.description,
     },
+    publishedAt: toPublicDate(experiment.publishedAt),
+    updatedAt: toPublicDate(experiment.updatedAt),
     demo: {
       runtimeKey: "published-artifact",
       runtimeUrl:
