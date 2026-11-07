@@ -2,123 +2,137 @@
 
 **Audit snapshot:** 2026-11-07  
 **Audited branch:** feat/labs-platform-integration  
-**Purpose:** Current implementation map. Read this before maintenance or new feature work.
+**Purpose:** Current implementation map and handover entry point.
 
-> This status describes code present on the audited branch. It is not proof that every workflow has passed production browser QA, database migration verification, provider integration testing or release acceptance. Source code is the authority for current behavior.
-
-> **Documentation audit:** The full docs-vs-code gap review is recorded in [DOCS-IMPLEMENTATION-GAP-AUDIT.md](./DOCS-IMPLEMENTATION-GAP-AUDIT.md). Its P0 findings include the public Labs detail runtime contract conflict and the owner identity ID/email fallback discrepancy. Resolve those decisions before further Labs detail/runtime or authorization changes.
+> This page separates implementation, accepted decisions and verification. It describes repository code present on the audited branch; it does not certify Preview/Production credentials, Atlas state, browser behavior or release readiness. Source code remains authoritative for current behavior.
 
 ## 1. Product boundary
 
-The platform has four substantial existing implementation areas:
-The public homepage also has an interactive 3D companion (Vee), documented separately in pages/PORTFOLIO-MASCOT-ENGINEERING.md, including its Three.js scene, section choreography, scroll-positioning, dialogue, scan actions and extension rules.
+The repository contains four substantial implementation areas:
+1. Public portfolio website: homepage, navigation/footer, Vee 3D companion, theme and sound systems, contact form and code-driven project detail pages.
+2. First-party Portfolio Analytics, separate from Labs Engagement Analytics.
+3. Public Labs: source-backed custom catalogue, static detail presentation, likes and verified protected-source access.
+4. Owner-only Labs: experiment metadata, Source Library, Monaco source editor, immutable versions/audit, isolated Run, build/publish pipeline, artifact delivery infrastructure, media and engagement Analytics.
 
-The theme system is also documented as a current implementation: next-themes owns theme state, the native View Transition API owns the page-wide cover/reveal, Motion owns the icon interaction, and ThemeToggle plays the chop SFX through useUiSound. See architecture/THEME-TOGGLE-ENGINEERING.md and architecture/SOUND-ENGINEERING.md.
-
-The homepage Contact flow has a dedicated engineering guide covering controlled client state, field validation, JSON API, independent server validation, HTML/text email building, Gmail SMTP, success modal and known hardening gaps: pages/CONTACT-FORM-AND-EMAIL-ENGINEERING.md. Contact success also plays confirmation-002.mp3, now listed as an active consumer in architecture/SOUND-ENGINEERING.md.
-
-
-1. Public portfolio website and code-driven project detail pages.
-2. First-party Portfolio Analytics, separate from Labs engagement analytics.
-3. Public Labs discovery/detail experience and isolated experiment runtime.
-4. Owner-only Labs workspace: experiment metadata, source library/editor, version lifecycle, publishing, media and Labs analytics.
-
-The major future product area is the Portfolio CMS, including dynamic project-detail content. Google and GitHub OAuth code is present behind provider credential gates; provider configuration and end-to-end acceptance must be checked per environment before calling it finished.
+The next major product area is the general Portfolio CMS and dynamic Project Detail CMS. Both remain approved future work, not implemented routes. Education remains code-owned/static.
 
 ## 2. Current capability status
 
-| Area | Code status on audited branch | Verification boundary |
+| Area | Current code status | Verification / gap boundary |
 |---|---|---|
-| Public homepage sections and shared navigation/footer | IMPLEMENTED | Preserve section composition, data, responsive and motion behavior. Re-run screenshot, accessibility, scroll and cross-theme checks after changes. |
-| Project detail template | IMPLEMENTED | Content still comes from code-owned project data. Verify each slug/template and gallery before release. |
-| Public Labs collection/detail pages | IMPLEMENTED | Validate built-in demos and custom published artifact loading in browser. |
-| Lab owner metadata CRUD | IMPLEMENTED | Owner-only routes and model are present; Atlas/browser validation remains a separate gate. |
-| Source inventory and source editor | IMPLEMENTED | Owner source page currently has no visible Initialize sources action. Direct import route and importer endpoint remain in the repository. |
-| Source draft/version/restore/publish lifecycle | IMPLEMENTED | Verify exact version pointer changes, build artifact links, audit events and rollback behavior against configured storage/database. |
-| Isolated unsaved preview Run | IMPLEMENTED | Compiler/sandbox code is present. Deployment credentials, limits and browser execution must be verified in the target environment. |
-| Published immutable runtime delivery | IMPLEMENTED | Artifact route and CSP/opaque iframe boundary are present. Test actual published detail-page runtime and recovery. |
-| Labs media upload and gallery poster paths | IMPLEMENTED — VERIFICATION PENDING | Cloudinary and Blob credentials/presets plus exact media references must be checked. Automatic release poster capture exists in compiler code, but capture can return unavailable; not every experiment is guaranteed to have a generated poster. |
-| Labs engagement and Labs Analytics | IMPLEMENTED | Event semantics are distinct from portfolio visits. Atlas-backed attribution, trend accuracy, refresh and privacy require verification. |
-| Portfolio Analytics | IMPLEMENTED; FEATURE-GATED | Tracking is disabled unless PORTFOLIO_ANALYTICS_ENABLED=true and required host/HMAC settings are valid. Verify only on configured canonical production host. |
-| Email/password authentication | IMPLEMENTED | Requires Mongo/Auth secret and SMTP delivery configuration. Verify registration, email verification, sign-in, reset, logout and expired sessions in target deployment. |
-| Google OAuth | CODE PRESENT; CONFIGURATION / E2E VERIFICATION PENDING | Provider enters Better Auth config only when both Google client credentials exist. Verify provider console, callback URL, safe account linking, account-creation policy and browser flow. |
-| GitHub OAuth | CODE PRESENT; CONFIGURATION / E2E VERIFICATION PENDING | Provider enters Better Auth config only when both GitHub client credentials exist. Custom profile loader requires a verified email. Verify scopes, callback, linking and browser flow. |
-| General Portfolio CMS | PLANNED — APPROVED | Not implemented. |
-| Dynamic Project Detail CMS | PLANNED — APPROVED | Not implemented. Existing template/sections remain code-controlled. |
+| Homepage and shared navigation/footer | Implemented | Preserve content, responsive behavior, scroll/motion, accessibility and theme behavior. |
+| Vee 3D companion | Implemented | See pages/PORTFOLIO-MASCOT-ENGINEERING.md; rendered/browser QA remains a release check. |
+| Theme and sound systems | Implemented | See architecture/THEME-TOGGLE-ENGINEERING.md and architecture/SOUND-ENGINEERING.md; verify browser/audio lifecycle. |
+| Contact form and Gmail SMTP | Implemented | See pages/CONTACT-FORM-AND-EMAIL-ENGINEERING.md; rate limiting, explicit same-origin validation, request byte cap, idempotency and transporter cleanup remain hardening gaps. |
+| Project detail template | Implemented; data is code-owned | No general Project Detail CMS. Preserve slug/template/gallery/SEO behavior. |
+| Portfolio Analytics | Implemented; feature-gated | Requires explicit enablement and canonical host/HMAC config. Atlas/production and browser verification remain necessary. |
+| Public Labs catalogue | Implemented; source-backed custom experiments only | Requires published custom experiment, published source pointer and exact matching ready artifact. Built-in runtime registry entries are not merged into catalogue. |
+| Public Labs detail | Implemented; static/non-executable | Renders metadata, engagement, static preview media, explanation and protected source. Does not mount LabWorkspace, LabRuntimeBoundary or artifact iframe. |
+| Protected source access | Implemented in code | Server-derived verified session and exact published source. LabSourceGrant lookup is no longer used; legacy model/collection remain migration material. Verify no-store/cache isolation and role matrix in deployment. |
+| Guest and verified likes | Implemented in code | Guest counts are browser-scoped actions, not unique people. Verify cookie/TTL behavior and Atlas indexes. |
+| Owner metadata CRUD | Implemented in code | Create/edit/delete and separate metadata editor; authenticated Atlas/browser regression pending. |
+| Source Library and Monaco editor | Implemented in code | Monaco is read-only for public protected source/history and editable in owner workspace; text fallback remains. Verify action sequence and final-keystroke synchronization. |
+| Source version/restore/audit | Implemented in code | Verify Atlas data, immutable pointers and audit writes. |
+| Owner unsaved Run | Implemented in code | Temporary isolated Vercel Sandbox flow; credentials, limits and browser execution are deployment gates. |
+| Build & Publish/artifact delivery | Separate infrastructure implemented | Compiler, Blob artifact storage and public artifact Route Handler exist. Public detail does not embed the runtime. Verify pointer/CSP/path behavior in Preview. |
+| Static gallery preview/poster pipeline | Implemented in code | Poster capture can be unavailable; not every experiment is guaranteed to have one. Exact release binding and Cloudinary/Blob config require verification. |
+| Complete Labs media-role model | Not implemented | Current schema is galleryPreview plus at most one fallback-preview attachment. Ordered detail-gallery and full role migration are pending. |
+| Labs Engagement Analytics | Implemented in part | Event types: source_open, code_copy, like, unlike, guest_like, guest_unlike. Charts/polling exist; Atlas attribution and browser QA pending. |
+| Labs detail-view/preview analytics | Not implemented | No experiment-view, preview-start or preview-interaction event producers. Portfolio page visits are separate and cannot substitute. |
+| Aggregate-only Labs Analytics privacy | Accepted target; code mismatch | Detail Analytics still exposes active verified-liker names/masked emails/timestamps/search. Remove/redesign before claiming compliance. |
+| Owner ID-only authorization | Accepted target; code mismatch | owner-access.js still accepts LABS_OWNER_EMAIL as fallback to LABS_OWNER_USER_ID. Remove only after checking deployed owner provisioning. |
+| Email/password auth | Implemented in code | Requires MongoDB/Better Auth secret and SMTP configuration; verify deployed flows. |
+| Google/GitHub OAuth | Code present behind credential gates | Provider app config, callback URLs, linking and full login/signup E2E remain pending per environment. |
+| Personal user dashboard/profile/account deletion | Not implemented | Approved PRD target only; no complete self-service dashboard or account deletion route found. |
+| Extended Labs discovery search/filter/sort | Not implemented | Current public API supports category and cursor pagination only, fixed page size 18. |
+| Portfolio CMS and Project Detail CMS | Approved future work | Not implemented; existing public layout/sections remain code-controlled. |
 
-## 3. Sources page correction
+## 3. Accepted Labs decisions — 7 November 2026
 
-Current page: /admin/labs/sources.
+Recorded in Section 39 of LABS-AND-AUTHENTICATION-DESIGN-SPEC.md:
 
-The current src/app/admin/labs/sources/page.js renders owner navigation and LabSourceInventory. The former top-level Initialize sources link and its FileCode2 import were removed in commit 063df83c543a4bec0d996c5029928d07a07c66d5.
+1. **Public catalogue:** source-backed custom experiments only; code-owned runtime modules are not automatically public catalogue entries.
+2. **Public detail:** static, non-executable. Do not mount LabWorkspace, LabRuntimeBoundary or artifact iframe on /labs/[slug]. Keep owner Run, build/publish and artifact-serving infrastructure separate.
+3. **Owner identity:** target owner is selected only by server-only LABS_OWNER_USER_ID matching stable Better Auth user ID, with a verified session. No email/first-user/client-role fallback.
+4. **Owner Analytics privacy:** aggregate-only. No individual names, masked emails, per-user like timestamps, searchable liker directory or user-level source/copy/like history.
+5. **Monaco:** integrated for protected public source and version history (read-only), and owner editing (editable), with a plain-text fallback.
 
-This is a UI-trigger removal, not deletion of the import workflow:
-- /admin/labs/sources/import still exists as a direct owner-protected route.
-- src/app/components/labs/admin/LabRuntimeImportPanel.js remains.
-- POST /api/v1/admin/labs/sources/import-runtime remains.
+Accepted decisions are not proof the code already matches. The owner email fallback and active verified-liker identity panel remain current code gaps.
+
+## 4. Source Library action removal
+
+The former top-level Initialize sources action and its FileCode2 import were removed from /admin/labs/sources. This was a UI-trigger removal, not deletion of every import path:
+- /admin/labs/sources/import remains as a direct owner-protected route;
+- LabRuntimeImportPanel.js remains;
+- POST /api/v1/admin/labs/sources/import-runtime remains;
 - POST /api/v1/admin/labs/sources/import-magnetic-button remains.
 
-Do not reintroduce the removed page action unless an explicit product decision changes.
+Do not reintroduce the removed navigation action without an explicit decision. Do not claim the direct route or endpoints were deleted.
 
-## 4. Architectural facts to preserve
+## 5. Architecture facts to preserve
 
-- Frontend: Next.js App Router, React, JavaScript, Tailwind CSS v4, Motion (motion/react).
-- Backend: Next.js Route Handlers and server-only modules. No separate general-purpose Express API server is in the current baseline.
-- Database: MongoDB/Mongoose. Better Auth uses its MongoDB adapter.
-- Media/storage: Cloudinary authenticated media uploads; Vercel Blob for built/published artifact delivery and release-bound poster storage.
-- Isolated compiler: Vercel Sandbox and the repository's Labs compiler toolchain.
-- Public portfolio/project routes use Lenis smooth scrolling. /labs and /admin route roots use native browser document scrolling.
-- Portfolio analytics records page visits in portfolio_visits. Labs engagement uses separate collections such as lab_analytics_events, lab_likes and lab_guest_likes.
-- Source access requires a Better Auth session with verified email and an exact published source. Per-user grant records are not part of the current source-access decision.
+- Frontend: Next.js App Router, React, JavaScript, Tailwind CSS v4 and Motion (motion/react).
+- Backend: Next.js Route Handlers and server-only modules; no separate general-purpose Express API server in the baseline.
+- Persistence: MongoDB/Mongoose for application models; Better Auth MongoDB adapter for authentication.
+- Media/storage: Cloudinary for uploaded media; Vercel Blob for immutable build artifacts and generated release posters.
+- Isolated compiler/preview: Vercel Sandbox and the Labs compiler toolchain.
+- Public portfolio/project routes use Lenis where configured; /labs and /admin use native document scrolling.
+- Portfolio Analytics uses portfolio_visits. Labs engagement uses lab_analytics_events, lab_likes and lab_guest_likes. Keep domains separate.
+- Published-source access requires a verified Better Auth session and the exact published source pointer.
+- Public Labs detail is static. Artifact route capability is not public page integration.
 
-## 5. Required release verification
+## 6. Remaining implementation work
 
-Do not treat “the page renders” or “the build succeeds” as proof of release readiness. For each affected feature, record:
+### P0 — align code with accepted security/privacy decisions
+- Remove LABS_OWNER_EMAIL fallback from owner-access.js after verifying Preview/Production owner configuration.
+- Remove/redesign active verified-liker identity panel in /admin/labs/analytics/[slug]; ensure aggregate DTOs do not expose names, emails, per-user timestamps or user search.
+- Confirm private/no-store responses and cross-user cache isolation.
 
-1. Source/code implementation and commit.
-2. Automated tests actually run and their result.
-3. Database/Atlas collection and index checks performed.
-4. Owner and non-owner direct-route/API authorization checks.
-5. Browser QA for success, loading, empty and failure states.
-6. Desktop/tablet/mobile and keyboard/reduced-motion checks where UI changes.
-7. Deployment commit/URL and environment configuration validated.
-8. Security/privacy and rollback implications.
+### P1 — close or explicitly defer Labs requirements
+- Decide whether detail-view/preview-start/interaction metrics remain in scope under static public detail. Define “preview” precisely if retained; keep portfolio page visits separate.
+- Implement or explicitly defer discovery search/filter/sort.
+- Implement or explicitly defer personal dashboard/profile/account deletion.
+- Plan and migrate complete media-role schema and ordered detail gallery.
+- Define Analytics event retention, deduplication and account-deletion handling.
 
-### Verification tasks to retain
+### P2 — future product scope
+- General Portfolio CMS.
+- Dynamic Project Detail CMS using structured fields while keeping layout, sections, typography, Motion and responsive behavior code-controlled.
+- Any public interactive runtime requires a new explicit product/security decision; current public detail remains static.
 
-- Run clean install, full test suite, lint and production build against exact branch HEAD.
-- Verify the active Atlas database has required collections/indexes and owner identity settings.
-- Verify source operations: create, import (where used), file add/edit/rename/delete, draft save, version history, restore, unsaved Run, publish, unpublish and audit.
-- Verify public Lab runtime loads the exact published artifact and has a visible failure/retry state; do not accept an unexplained blank canvas.
-- Verify Cloudinary upload presets/quotas and Blob artifact storage/public poster access.
-- Verify both analytics systems independently, including metrics, time windows, polling, error states and privacy boundaries.
-- Verify email delivery and complete password lifecycle.
-- Verify Google/GitHub provider credentials and full login/signup/linking journeys per Preview/Production.
-- Recheck main-page scroll and motion interactions, including Lenis/native-scroll route transitions.
+## 7. Required release verification
 
-## 6. Future implementation scope
+Record the exact commit, commands/tests actually run, deployment URL/environment, Atlas checks, browser checks, and rollback/security implications. Retain these gates:
+- clean install, complete test suite, lint and production build against exact branch HEAD;
+- Atlas collections/indexes, TTL indexes, owner identity variables and legacy migration checks;
+- Guest / unverified / verified / owner direct-route/API authorization;
+- source no-store behavior and cross-user cache isolation;
+- source add/edit/rename/delete/import, Save Draft, history, restore, unsaved Run, publish/unpublish and audit;
+- Monaco load/fallback, final-keystroke synchronization and keyboard/accessibility QA;
+- Sandbox, Blob and Cloudinary permissions/quota/media/artifact checks;
+- both analytics systems independently, including time windows, polling, errors, privacy and event attribution;
+- SMTP verification/reset delivery and password lifecycle;
+- Google/GitHub callback, login/signup intent and verified-email linking;
+- homepage/project-detail responsive, scroll, Motion, accessibility and light/dark regression.
 
-### Portfolio CMS
-Approved content to become dynamic: Hero/introduction, About, Skills, Experience, Project listing and project-specific structured story/content, project links, media/gallery metadata, featured and publication state.
+**Verification performed by this documentation pass:** source/docs inspection and GitHub file updates only. No npm install, tests, lint, build, Playwright/browser QA, Atlas query/migration, SMTP delivery, OAuth, Cloudinary, Blob or Sandbox calls were performed.
 
-### Project Detail CMS
-Populate the existing approved project-detail sections through structured fields. Keep actual layout, section components, typography, animation, interactions and responsive presentation in code. Education remains code-owned/static.
+## 8. Documentation authority
 
-### Authentication providers
-Google/GitHub configuration and tests should be completed as an authentication milestone, not mixed into the CMS content model.
+- docs/README.md: navigation and source-of-truth rules.
+- pages/HOME-PAGE-ENGINEERING.md: homepage structure and motion.
+- pages/PORTFOLIO-MASCOT-ENGINEERING.md: Vee 3D scene and interactions.
+- pages/CONTACT-FORM-AND-EMAIL-ENGINEERING.md: contact UI/API/email and hardening gaps.
+- pages/PROJECT-DETAIL-ENGINEERING.md: fixed project template and content map.
+- pages/LABS-AND-OWNER-WORKSPACE.md: current Labs catalogue/detail/source/editor/analytics.
+- pages/AUTHENTICATION-AND-ACCOUNT-ENGINEERING.md: Better Auth flows, owner policy and account gaps.
+- pages/ANALYTICS-ENGINEERING.md: Portfolio Analytics vs Labs Engagement Analytics.
+- pages/ERROR-AND-NOT-FOUND-ENGINEERING.md: shared App Router error surfaces.
+- architecture/PRIVACY-AND-DATA-LIFECYCLE.md: privacy data map, disclosures and retention gaps.
+- architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md: owner Run/build/artifact infrastructure and static public-detail boundary.
+- architecture/DATA-MODEL-CATALOG.md: model declarations, fields and indexes.
+- api/ENDPOINT-INVENTORY.md: current Route Handler inventory.
+- DOCS-IMPLEMENTATION-GAP-AUDIT.md: discrepancies and corrective audit history.
+- future/PORTFOLIO-CMS-AND-PROJECT-DETAIL-CMS.md and future/GOOGLE-GITHUB-OAUTH.md: future work.
 
-## 7. Document authority
-
-- Current repository paths and implementations: truth for what code does now.
-- pages/HOME-PAGE-ENGINEERING.md: homepage section composition, exact section implementation and scroll/motion engineering.
-- pages/PROJECT-DETAIL-ENGINEERING.md: project template and section implementation.
-- pages/LABS-AND-OWNER-WORKSPACE.md: public Labs and owner workflows.
-- pages/ANALYTICS-ENGINEERING.md: two analytics domains and their separation.
-- architecture/DATA-MODEL-CATALOG.md: schema/collection catalogue.
-- api/ENDPOINT-INVENTORY.md: current route handler inventory.
-- architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md: compiler, preview and published runtime.
-- architecture/SCROLL-AND-MOTION-ENGINEERING.md: global scroll/motion architecture.
-- future/PORTFOLIO-CMS-AND-PROJECT-DETAIL-CMS.md: approved future scope.
-- future/GOOGLE-GITHUB-OAUTH.md: provider configuration and verification checklist.
-
-Older flat documents under docs/ are retained as design requirements, historical implementation plans, security references or setup runbooks. When they contradict the current code status, this status document and the relevant current-state engineering document identify the newer implementation record. Do not delete historical decisions merely to make the folder smaller.
+Older specs and phased plans remain decision history. When they conflict with dated accepted decisions and current-state guides, follow the supersession record and update the owning document before implementation.
