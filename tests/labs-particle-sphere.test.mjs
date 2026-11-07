@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { createSphereParticleData } from "../src/app/components/labs/landing/particle-sphere/particle-geometry.mjs";
-import { getSphereContraction, getSphereScale, getSphereSqueeze, SPHERE_CONTRACTION_MIN_SCALE, SPHERE_PULSE_PERIOD } from "../src/app/components/labs/landing/particle-sphere/particle-animation.mjs";
+import { getParticleCameraDistance } from "../src/app/components/labs/landing/particle-sphere/particle-responsive.mjs";
 import { getParticleSphereThemePalette } from "../src/app/components/labs/landing/particle-sphere/particle-theme.mjs";
 import {
   areParticleQualityProfilesEqual,
@@ -142,25 +142,46 @@ test("particle geometry is deterministic for a stable seed", () => {
   assert.deepEqual(first.layers, second.layers);
 });
 
-test("sphere contracts radially from full size to a smaller sphere and recovers", () => {
-  assert.equal(getSphereContraction(0), 0);
-  assert.equal(getSphereContraction(2.5), 1);
-  assert.equal(getSphereContraction(2.5 + SPHERE_PULSE_PERIOD), 1);
-  assert.equal(getSphereContraction(7.0), 0);
-  assert.equal(getSphereContraction(-1), 0);
-  assert.equal(getSphereContraction(Number.NaN), 0);
+test("sphere world-space size stays fixed while camera framing adapts to mobile", () => {
+  const radius = 1.14;
+  const data = createSphereParticleData({
+    surfaceCount: 180,
+    innerCount: 24,
+    radius,
+    seed: 742,
+  });
 
-  assert.equal(getSphereScale(0), 1);
-  assert.equal(getSphereScale(2.5), SPHERE_CONTRACTION_MIN_SCALE);
-  assert.equal(getSphereScale(2.5 + SPHERE_PULSE_PERIOD), SPHERE_CONTRACTION_MIN_SCALE);
-  assert.equal(getSphereScale(7.0), 1);
-  assert.equal(getSphereSqueeze(2.5), getSphereContraction(2.5));
+  const mobileDistance = getParticleCameraDistance({
+    width: 375,
+    height: 520,
+    fovDegrees: 42,
+    orbitRadius: 1.9,
+    fillRatio: 0.92,
+  });
+  const desktopDistance = getParticleCameraDistance({
+    width: 1440,
+    height: 820,
+    fovDegrees: 42,
+    orbitRadius: 1.9,
+    fillRatio: 0.92,
+  });
 
-  const attack = getSphereContraction(2.2);
-  const recovery = getSphereContraction(3.4);
+  assert.ok(Number.isFinite(mobileDistance));
+  assert.ok(Number.isFinite(desktopDistance));
+  assert.ok(mobileDistance > desktopDistance);
+  assert.match(rendererSource, /camera\.position\.z = getParticleCameraDistance/);
+  assert.doesNotMatch(rendererSource, /getSphereScale|getSphereContraction|\.scale\.setScalar/);
 
-  assert.ok(attack > 0 && attack < 1);
-  assert.ok(recovery > 0 && recovery < 1);
+  for (let index = 0; index < data.surfaceCount; index += 1) {
+    const offset = index * 3;
+    const x = data.positions[offset];
+    const y = data.positions[offset + 1];
+    const z = data.positions[offset + 2];
+    const currentRadius = Math.sqrt(x * x + y * y + z * z);
+
+    assert.ok(currentRadius >= radius * 0.986 - 0.0001);
+    assert.ok(currentRadius <= radius * 1.014 + 0.0001);
+  }
 });
 
 test("light and dark themes use distinct particle, sparkle and glow palettes", () => {
@@ -278,14 +299,44 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.match(rendererSource, /palette\.particleColor/);
   assert.match(rendererSource, /uSparkleColor/);
   assert.match(rendererSource, /glow\.material\.color\.set\(palette\.glowColor\)/);
-  assert.match(rendererSource, /getSphereScale/);
-  assert.match(rendererSource, /getSphereContraction/);
-  assert.match(rendererSource, /glow\.scale\.setScalar\(sphereScale\)/);
-  assert.match(rendererSource, /orbitGroup\.scale\.setScalar\(sphereScale\)/);
+  assert.match(rendererSource, /getParticleCameraDistance/);
+  assert.match(rendererSource, /orbitGroup\.userData\.update\?\.\(elapsed\)/);
+  assert.doesNotMatch(rendererSource, /uContraction|getSphereScale|getSphereContraction|\.scale\.setScalar/);
   assert.ok(rendererSource.includes("renderer?.dispose()"));
   assert.match(rendererSource, /webglcontextlost/);
   assert.match(rendererSource, /disposed = false/);
   assert.match(rendererSource, /if \(disposed\) return/);
+});
+
+test("orbit particles move continuously and retain their orbital path", () => {
+  assert.match(orbitSource, /group\.userData\.update = \(elapsed\)/);
+  assert.match(orbitSource, /runner\.position\.copy\(getOrbitPoint\(THREE, spec, progress\)\)/);
+  assert.match(orbitSource, /const progress = \(spec\.phase \+ elapsed \* spec\.speed\) % 1/);
+  assert.match(orbitSource, /end: Math\.PI \* 2/);
+  assert.match(orbitSource, /orbit-particle-glow/);
+  assert.match(rendererSource, /orbitGroup\.userData\.update\?\.\(elapsed\)/);
+});
+
+test("Labs hero keeps its content layout and adds a dark-only right artwork gradient", async () => {
+  const heroSource = await readFile(
+    new URL("../src/app/components/labs/LabsIntroduction.js", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(heroSource, /dark:bg-\[radial-gradient\(ellipse_at_68%_48%/);
+  assert.match(heroSource, /dark:w-\[68%\]/);
+  assert.match(heroSource, /A space for|labs-heading/);
+  assert.match(heroSource, /Published experiments/);
+  assert.match(heroSource, /LabsHeroArtwork/);
+});
+
+test("orbit particles move continuously and retain their orbital path", () => {
+  assert.match(orbitSource, /group\.userData\.update = \(elapsed\)/);
+  assert.match(orbitSource, /runner\.position\.copy\(getOrbitPoint\(THREE, spec, progress\)\)/);
+  assert.match(orbitSource, /const progress = \(spec\.phase \+ elapsed \* spec\.speed\) % 1/);
+  assert.match(orbitSource, /end: Math\.PI \* 2/);
+  assert.match(orbitSource, /orbit-particle-glow/);
+  assert.match(rendererSource, /orbitGroup\.userData\.update\?\.\(elapsed\)/);
 });
 
 test("particle shader provides depth shading and soft point halos", () => {
@@ -293,10 +344,8 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /directionalLight/);
   assert.match(shaderSource, /gl_PointCoord/);
   assert.match(shaderSource, /smoothstep/);
-  assert.match(shaderSource, /uContraction/);
-  assert.match(shaderSource, /transformed \*= radialScale/);
+  assert.doesNotMatch(shaderSource, /uContraction|radialScale|contractionHighlight/);
   assert.doesNotMatch(shaderSource, /transformed\.[xyz] \*=/);
-  assert.match(shaderSource, /mix\(1\.0, 0\.70, clamp\(uContraction/);
   assert.match(shaderSource, /sparkleMask/);
   assert.match(shaderSource, /sparkleWave/);
   assert.match(shaderSource, /ambientDrift/);
