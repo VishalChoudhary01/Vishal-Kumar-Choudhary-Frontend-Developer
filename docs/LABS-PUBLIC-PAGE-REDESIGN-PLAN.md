@@ -512,3 +512,27 @@ The first-viewport review identified excess vertical spacing and an overly dashb
 - Mobile remains content-first and naturally stacked, without forcing a viewport-height hero.
 
 Acceptance: 1440×900 and 1920×1080 desktop first-view checks, tablet width, 390×844 mobile, both themes, reduced motion, keyboard action focus, no horizontal overflow and no navbar changes.
+
+
+## 15. Public Labs source-only catalogue decision — 7 November 2026
+
+**Status:** Locked requirement; implementation is committed in the source-only gallery changes.
+
+The public `/labs` experience must contain only owner-managed MongoDB custom experiments that pass all existing publication gates:
+
+1. `LabExperiment.kind === "custom"` and `status === "published"`.
+2. Matching `LabSource` record with `published === true`, a valid `publishedVersionId` and `publishedArtifactId`.
+3. Matching `LabBuildArtifact` with `status === "ready"`, the exact experiment slug and the exact published source version.
+
+This supersedes the earlier Phase 0/4 note that included four code-owned catalogue demos. Legacy code-owned definitions and runtime modules remain available to owner-side migration/source-management tools, but are not part of public discovery.
+
+- Hero statistics, featured selection, category counts, gallery cards and Load more results derive only from the eligible custom-source page.
+- Public detail route `/labs/[slug]` resolves only through `getPublishedCustomLabExperimentBySlug`; a legacy code-owned-only slug returns not-found.
+- Public sitemap Lab URLs derive from the same source + exact-ready-artifact eligibility query.
+- `LabExperimentPreview` displays only owner-promoted release media, the exact-release generated poster or a validated source-derived thumbnail. It must not import or render `LabArtwork` or per-slug hard-coded artwork.
+- If no valid source media exists, show a neutral “Preview media unavailable” state; do not fabricate an experiment image.
+- The hero illustration is separate conceptual brand artwork, not an experiment preview. Its wrapper stretches to the grid track, uses a sparse abstract field and 68–92 second loops, and renders a static composition for reduced-motion users.
+
+The source-backed slugs supplied for review (MagneticButton Component, Magnetic Interaction 2, Fluid Gradient Playground and SpotlightDock) should appear automatically when their MongoDB records satisfy the existing published-source/exact-ready-artifact checks. Do not hard-code their slugs or display metadata into the public page.
+
+**Regression gates:** Public listing, detail, featured item, category counts, pagination and sitemap contain no code-owned experiment records; Likes remain keyed to actual source-backed slugs; no private source content is serialized in the listing; preview media is tied to the current release; navbar, source access, owner source management and publication behavior remain otherwise unchanged.
