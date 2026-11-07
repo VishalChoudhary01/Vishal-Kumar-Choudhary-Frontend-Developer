@@ -152,3 +152,20 @@ The contact form was reverse-engineered from its client component tree through `
 The audit also found that `SuccessModal.js` plays `/mp3/confirmation-002.mp3` at volume 0.35 with `interrupt: true`; the sound inventory was corrected to show four active audio assets/call sites. This was missed by the earlier sound-only audit and is now linked to the contact form success lifecycle.
 
 No application code was changed. Contact-specific rate-limit/same-origin/body-size/idempotency hardening and the stale Resend configuration template remain separate implementation/configuration tasks.
+
+## 12. Follow-up documentation reconciliation — 7 November 2026
+
+The metrics and audited commit recorded above describe the earlier handover pass, not the latest documentation state. A subsequent docs-vs-code follow-up added these current-state guides:
+- pages/AUTHENTICATION-AND-ACCOUNT-ENGINEERING.md;
+- architecture/PRIVACY-AND-DATA-LIFECYCLE.md;
+- pages/ERROR-AND-NOT-FOUND-ENGINEERING.md.
+
+The Labs current-state/runtime guides now distinguish the public static detail page from the separate owner Run/build/publish/artifact-serving infrastructure. Section 39 of LABS-AND-AUTHENTICATION-DESIGN-SPEC.md and ADR-018 in DECISIONS.md record the accepted source-backed custom-only catalogue, static/non-executable public detail, LABS_OWNER_USER_ID-only owner target and aggregate-only owner Analytics privacy policy.
+
+The PRD, Threat Model, Analytics docs, source-management and Monaco plans, owner-console plan, environment runbook and Labs auth/source-access runbook were reconciled. Historical phase notes remain for provenance but are labelled as superseded where they would otherwise imply current behavior.
+
+**Current code mismatches remain:** owner-access.js still accepts LABS_OWNER_EMAIL as a fallback; the Labs experiment Analytics page still exposes an active verified-liker identity panel. Those two application changes were not made as part of this documentation-only task. Other open requirements include Labs detail-view/preview events, full media-role migration, personal account dashboard/profile/deletion, discovery search/filter/sort and Analytics event-retention policy.
+
+**Navigation check:** docs/README.md now has 55 Markdown links to 42 unique relative targets; all 42 targets were fetched successfully on feat/labs-platform-integration. The previous count of 42 links was an earlier handover snapshot.
+
+No current-HEAD npm install, test, lint, build, browser/Playwright, Atlas, SMTP, OAuth, Cloudinary, Blob or Sandbox verification was performed by this follow-up. Earlier report checks remain historical evidence only.
