@@ -522,6 +522,8 @@ test("orbit particles move continuously and retain their orbital path", () => {
   assert.doesNotMatch(orbitSource, /desktopRotation|setDesktop/);
   assert.match(rendererSource, /createParticleOrbits\(THREE\)/);
   assert.doesNotMatch(rendererSource, /setDesktop/);
+  assert.doesNotMatch(rendererSource, /orbitGroup\.rotation\.y\s*=/);
+  assert.match(rendererSource, /orbitGroup\.rotation\.z\s*=\s*Math\.sin/);
 
   assert.match(orbitSource, /orbit-particle-glow/);
   assert.ok(rendererSource.includes("orbitGroup.userData.update?.(elapsed, burstAmount)"));
