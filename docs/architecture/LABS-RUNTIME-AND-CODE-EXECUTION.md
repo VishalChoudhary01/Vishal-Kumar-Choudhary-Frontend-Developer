@@ -105,11 +105,15 @@ Unpublish removes current public source/artifact eligibility without rewriting h
 
 ## 6. Compiler project preparation and build output
 
-The React preparation step currently defines entry contracts for JavaScript (index.html, src/main.jsx, src/App.jsx, src/index.css) and TypeScript (index.html, src/main.tsx, src/App.tsx, src/index.css).
+The compiler has separate source modes; do not treat every source snapshot as a React project:
 
-The generated entry imports React, createRoot, the prepared App and CSS. The compiler runs the repository's pinned sandbox toolchain and emits a build manifest/static output. The server validates that output before recording or serving an artifact.
+- **React JavaScript/JSX:** complete React entries use `index.html`, `src/main.jsx`, `src/App.jsx` and `src/index.css`. The owner can also use a single-file JSX adapter, which creates temporary entry files without overwriting saved source.
+- **React TypeScript/TSX:** complete entries use `index.html`, `src/main.tsx`, `src/App.tsx` and `src/index.css`. The platform generates a strict TypeScript config and runs `tsc --noEmit` before the Vite build; Vite transpilation alone is not treated as type validation.
+- **Standalone HTML/CSS/JavaScript:** remains a separate non-React mode. A nested single HTML entry can be promoted to the build root with local relative asset paths rewritten. If only CSS/JS is supplied, the compiler can generate a minimal HTML entry. Multiple HTML pages require an explicit `index.html`.
 
-Compiler dependency versions belong to the relevant compiler package manifest/lockfile. Do not upgrade browser/compiler packages without re-running preview, publication, artifact-integrity and browser acceptance tests.
+The React generated entry imports React, `createRoot`, the prepared App and CSS. All project modes run through the repository's pinned Vite toolchain inside the isolated sandbox and emit a validated build manifest/static output. The compiler accepts a bounded text-file allowlist, denies runtime asset imports, remote/CDN executable imports and arbitrary package installation, and does not execute owner-provided package scripts or server-side code. The exact fixed import allowlist and pinned versions are documented in [`tools/labs-compiler/README.md`](../../tools/labs-compiler/README.md).
+
+Compiler dependency versions belong to the compiler package manifest/lockfile and the immutable compiler snapshot. Do not upgrade compiler/browser packages without re-running preview, type-checking, publication, poster capture, artifact-integrity and browser acceptance tests.
 
 ## 7. Immutable artifact delivery endpoint — infrastructure only
 
@@ -149,10 +153,11 @@ The runtime UI bridge is designed to validate the expected iframe window and art
 ## 8. Gallery poster and media relationships
 
 The current data model separates:
-1. galleryPreview: a public static preview reference, release-bound to artifact/source version;
-2. mediaAttachments: at most one attachment, with the only allowed role currently fallback-preview.
+1. `galleryPreview`: optional public image/GIF/video promoted from the owner's private media library and bound to the current artifact/source version;
+2. `LabBuildArtifact.previewPoster`: automatic static PNG screenshot metadata for the exact compiled release, separate from `outputFiles`;
+3. `mediaAttachments`: at most one private attachment, with the only allowed role currently `fallback-preview`.
 
-The shared LabExperimentPreview renders only static media/artwork with contain fitting; it never runs the experiment. The public `galleryPreview` is an owner-promoted still image stored in Vercel Blob and bound to the corresponding published artifact/source version. Automatic screenshot capture is not part of the current implementation. The existing private attachment remains a separate `fallback-preview` role.
+The public preview selection order is owner-promoted `galleryPreview`, matching generated `previewPoster`, then generic Labs artwork/neutral fallback. The generated poster is captured inside the network-denied release Sandbox by `captureReleasePoster()` using Playwright 1.65.0 / Chromium 158.0.8127.18 at 1200×900; it must pass visible-output, no-runtime-error, PNG signature, size, dimension, browser-version and SHA-256 checks. Poster metadata is exposed publicly only when it matches the currently published artifact and source version. Capture failure is stored as unavailable and does not fail an otherwise valid release. The current owner media promotion route validates the owned Cloudinary asset and copies its bytes to public Vercel Blob; stale preview IDs are not rendered.
 
 The wider approved target media model includes gallery-preview, ordered detail-gallery and runtime-fallback roles. That target schema/UI migration is not complete. Do not use fallback-preview as if it were the final runtime-fallback role. A true runtime-fallback UI is also not applicable to the currently static detail page.
 
