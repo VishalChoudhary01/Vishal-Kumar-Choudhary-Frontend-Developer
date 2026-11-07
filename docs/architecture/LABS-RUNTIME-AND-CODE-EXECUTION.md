@@ -4,7 +4,7 @@
 **Current-state date:** 2026-11-07  
 **Status:** Owner-side isolated Run, immutable build/publish infrastructure and the public artifact Route Handler are present in code. The visitor-facing public Labs detail page is static and non-executable; it does not mount that artifact runtime.
 
-> This document distinguishes runtime infrastructure from route integration. An artifact-serving endpoint does not prove that a page embeds it. The accepted 7 November contract is recorded in Section 39 of LABS-AND-AUTHENTICATION-DESIGN-SPEC.md. Older interactive-detail statements are superseded.
+> This document distinguishes runtime infrastructure from route integration. An artifact-serving endpoint does not prove that a page embeds it. The accepted 7 November contract is recorded in [ADR-018](../DECISIONS.md#adr-018--7-november-labs-catalogue-detail-owner-and-analytics-supersession). Older interactive-detail statements are superseded.
 
 ## 1. Execution and presentation boundaries
 
@@ -12,7 +12,7 @@
 |---|---|---|---|
 | Static public Labs detail | Published custom experiment metadata and release-bound static media | Normal Next.js page and LabExperimentPreview; no experiment JavaScript is executed by the detail page | Public |
 | Owner unsaved Run | Current unsaved source working copy | Temporary isolated Vercel Sandbox and temporary preview URL | Owner-only |
-| Immutable release build | Exact saved LabSourceVersion | Compiler sandbox creates immutable output files and optional generated poster | Owner publish workflow |
+| Immutable release build | Exact saved LabSourceVersion | Compiler sandbox creates immutable output files and a ready artifact | Owner publish workflow |
 | Artifact delivery endpoint | Exact published slug/artifact ID and immutable output path | Application Route Handler validates published pointers and returns the matching Blob asset under restrictive response policy | Publicly addressable only for a currently published matching artifact; not embedded by the public detail page |
 | Code-owned runtime modules | Reviewed repository-owned modules | Runtime registry/owner import source material | Not entries in the current public catalogue |
 
@@ -94,12 +94,12 @@ Publishing starts from an exact saved LabSourceVersion, not mutable editor state
 5. Output is validated: manifest, entry file, file count, total bytes and content/build hashes.
 6. A unique artifact ID is created.
 7. Output files are uploaded to Vercel Blob under immutable version/build/artifact-scoped keys; overwriting an existing release key is not allowed.
-8. Optional poster capture is attempted against the built release.
-9. A LabBuildArtifact record stores exact source-version linkage, hashes, entry URL, output manifest, compiler metadata and optional poster status.
+8. A LabBuildArtifact record stores exact source-version linkage, hashes, entry URL, output manifest and compiler metadata.
+9. Public gallery-preview media is managed separately through the owner promotion flow; it is not an automatic browser screenshot from this publish sequence.
 10. Only after successful build/artifact persistence does the publish lifecycle update the source's published source/artifact pointers and experiment publication eligibility.
 11. The owner action is recorded in the source audit log.
 
-A poster capture failure is represented as unavailable with a reason code; it is not evidence that the compiler output itself failed. Poster generation must never replace the unsaved Run action or silently use a poster from a different source/artifact version.
+Automatic browser screenshot capture is not implemented as part of the current publish path. The current gallery-preview workflow is an owner-selected still image promoted from an owned Cloudinary asset to a public Vercel Blob object, with exact artifact/source-version binding. Keep that media operation separate from compiler success, Run and immutable artifact creation.
 
 Unpublish removes current public source/artifact eligibility without rewriting historical snapshots or immutable artifact bytes. Restore creates a new immutable version based on an older version; it does not edit old history.
 
@@ -152,7 +152,7 @@ The current data model separates:
 1. galleryPreview: a public static preview reference, release-bound to artifact/source version;
 2. mediaAttachments: at most one attachment, with the only allowed role currently fallback-preview.
 
-The shared LabExperimentPreview selects available static preview media and renders image/GIF/video with contain fitting; it never runs the experiment. Generated poster metadata is bound to the corresponding published artifact/source version. Capture is performed within the build/publish toolchain rather than from the visitor's page.
+The shared LabExperimentPreview renders only static media/artwork with contain fitting; it never runs the experiment. The public `galleryPreview` is an owner-promoted still image stored in Vercel Blob and bound to the corresponding published artifact/source version. Automatic screenshot capture is not part of the current implementation. The existing private attachment remains a separate `fallback-preview` role.
 
 The wider approved target media model includes gallery-preview, ordered detail-gallery and runtime-fallback roles. That target schema/UI migration is not complete. Do not use fallback-preview as if it were the final runtime-fallback role. A true runtime-fallback UI is also not applicable to the currently static detail page.
 
@@ -203,13 +203,13 @@ For a failed release build:
 5. Confirm immutable Blob upload succeeded.
 6. Confirm LabBuildArtifact linkage to the exact source version.
 7. Confirm publication pointer changes occur only after all required artifact steps succeed.
-8. Confirm poster capture outcome independently from compiler outcome.
+8. Confirm any separate owner gallery-preview promotion outcome independently from compiler outcome.
 
 For a public static preview media failure:
-1. Check current selected galleryPreview release binding.
-2. Check generated poster artifact/source IDs and availability.
-3. Check thumbnail eligibility.
-4. Confirm fallback/unavailable state is visible and does not mount a runtime iframe.
+1. Check the current selected galleryPreview release binding.
+2. Confirm the public Blob object is available and its artifact/source version matches the current published pointers.
+3. Confirm the generic Labs artwork/neutral placeholder appears if no valid galleryPreview exists.
+4. Confirm the page remains static and does not mount a runtime iframe.
 
 ## 12. Non-negotiable invariants
 
