@@ -12,7 +12,7 @@ This is a reverse-engineering guide. It records current component responsibiliti
 
 ### Server route
 
-src/app/page.js is the route-level server entry. It builds homepage metadata and structured data using portfolio profile/social links, then renders HomePage. Keep metadata/JSON-LD concerns in the server route; do not move database or client animation logic into it.
+src/app/page.js is the route-level server entry. It builds homepage metadata and structured data using portfolio profile/social links, then renders HomePage. Keep metadata/JSON-LD concerns in the server route; do not move database or client animation logic into it. The exact title, description, canonical, Open Graph/Twitter and WebSite/ProfilePage/Person graph are recorded in [SEO and AEO Engineering](../SEO-AND-AEO-IMPLEMENTATION.md).
 
 ### Client page shell
 
@@ -476,3 +476,7 @@ See design/LAYOUT-LAYERS-AND-TOKENS.md for actual font, semantic theme tokens, r
 ### Shared navigation/footer detail pointer
 
 This homepage guide documents how its Navbar and Footer participate in the home composition. The complete reusable route/context contract (including project, Labs, Labs auth, Privacy, Admin, not-found and global-error behavior) is maintained in [Navbar and Footer Engineering](./NAVBAR-AND-FOOTER-ENGINEERING.md). Keep page composition here and shared-shell behavior in that guide to avoid duplicate/conflicting route rules.
+
+### SEO/AEO implementation pointer
+
+The homepage's metadata and Person/WebSite/ProfilePage JSON-LD are server-rendered in `src/app/page.js` using `lib/seo/metadata.js` and `lib/seo/jsonld.js`. See [SEO and AEO Engineering](../SEO-AND-AEO-IMPLEMENTATION.md) for current metadata strings, canonical and social fields, sitemap/robots and cross-route rules.
