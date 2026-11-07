@@ -211,7 +211,7 @@ export function parsePortfolioVisitStartPayload(payload) {
     utmSource: isInternalNavigation ? null : normalizeCampaignValue(payload.utmSource),
     utmMedium: isInternalNavigation ? null : normalizeCampaignValue(payload.utmMedium),
     utmCampaign: isInternalNavigation ? null : normalizeCampaignValue(payload.utmCampaign),
-    ...(isInternalNavigation ? {} : { referrerHost }),
+    ...(!isInternalNavigation && referrerHost ? { referrerHost } : {}),
     ...(isInternalNavigation ? { isInternalNavigation: true } : {}),
   };
 }
