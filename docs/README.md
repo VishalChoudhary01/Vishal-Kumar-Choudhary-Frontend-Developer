@@ -1,111 +1,69 @@
-# Portfolio Documentation — Source of Truth
+# Portfolio Documentation
 
-**Audited branch:** feat/labs-platform-integration  
-**Audit date:** 2026-11-07  
-**Current status:** [PROJECT-STATUS.md](./PROJECT-STATUS.md)
+**Audited branch:** `feat/labs-platform-integration`  
+**Documentation baseline:** 7 November 2026
 
-This folder is the engineering handover for the complete portfolio platform. Start with the current status and current-state engineering guides. Older design specifications and phased implementation plans are retained where they preserve useful decisions/history; they must not be read as proof that an item is still planned or still pending.
+This folder contains the maintained product, implementation, architecture, security and operations documentation for the portfolio. It is intentionally organized around one current-state guide per domain. Superseded plans, duplicate audits and phase-by-phase implementation logs have been removed; useful current decisions and unresolved gaps are recorded in the canonical documents below.
 
-## 1. Read this first
+## Start here
 
-1. [Current Project Status](./PROJECT-STATUS.md) — current code status, future boundary, release checks and document authority.
-2. [Documentation vs Implementation Gap Audit](./DOCS-IMPLEMENTATION-GAP-AUDIT.md) — discrepancies, missing capabilities, stale claims, accepted decisions and outstanding code gaps.
-3. [Documentation Audit and Handover Report](./DOCUMENTATION-AUDIT-REPORT.md) — audit history, new guides, prior validation evidence and follow-up reconciliation.
-4. [System Architecture](./architecture/SYSTEM-ARCHITECTURE.md) — current frontend/backend/domain responsibilities and major data flows.
-5. [Homepage Engineering](./pages/HOME-PAGE-ENGINEERING.md) — every homepage section, component hierarchy, scroll and Motion reconstruction guide.
-6. [Navbar and Footer Engineering](./pages/NAVBAR-AND-FOOTER-ENGINEERING.md) — global Footer mount, page-owned Navbar contexts, exact route visibility, responsive navigation, mobile-menu behavior and Footer/Vee motion.
-7. [SEO and AEO Engineering](./SEO-AND-AEO-IMPLEMENTATION.md) — current homepage/project metadata, Labs collection/detail metadata, JSON-LD, sitemap, robots, semantic answer content and remaining validation gates.
-8. [Contact Form and Email Engineering](./pages/CONTACT-FORM-AND-EMAIL-ENGINEERING.md) — full client validation/submission, server API, email builder, Gmail SMTP and security review.
-9. [Project Detail Engineering](./pages/PROJECT-DETAIL-ENGINEERING.md) — project route, metadata, fixed template, data contract and optional sections.
-10. [Scroll and Motion Engineering](./architecture/SCROLL-AND-MOTION-ENGINEERING.md) — Lenis/native scroll policy, page-loader reset, sticky/pinned timelines, reduced-motion and QA.
-11. [Theme Toggle Engineering](./architecture/THEME-TOGGLE-ENGINEERING.md) — complete theme state ownership, OLD/NEW snapshot behavior, four transition variants, accessibility, fallbacks and cleanup.
-12. [Sound Engineering](./architecture/SOUND-ENGINEERING.md) — shared Web Audio lifecycle, Vee, ThemeToggle and Contact success sounds, audio assets and extension guide.
-13. [Labs Runtime and Code Execution](./architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md) — owner Run, compiler, immutable artifact delivery infrastructure and the static/non-executable public detail boundary.
-14. [Data Model Catalogue](./architecture/DATA-MODEL-CATALOG.md) — actual Mongoose collections, fields, constraints and indexes.
-15. [API Endpoint Inventory](./api/ENDPOINT-INVENTORY.md) — all current Route Handler endpoints and methods.
-16. [Authentication and Account Engineering](./pages/AUTHENTICATION-AND-ACCOUNT-ENGINEERING.md) — current Better Auth flows, social-provider gates, owner identity policy and unimplemented account features.
-17. [Privacy and Data Lifecycle](./architecture/PRIVACY-AND-DATA-LIFECYCLE.md) — source-derived data map, cookies, retention, public disclosure and privacy gaps.
-18. [Error and Not-Found Engineering](./pages/ERROR-AND-NOT-FOUND-ENGINEERING.md) — root App Router error boundaries, diagnostics and guarded chunk recovery.
+1. [Project status](./PROJECT-STATUS.md) — implemented capabilities, accepted decisions, known gaps and release verification.
+2. [Product requirements](./PRD.md) — product scope and acceptance requirements; a requirement is not proof of implementation.
+3. [Architecture decisions](./DECISIONS.md) — approved and superseding decisions.
+4. [System architecture](./architecture/SYSTEM-ARCHITECTURE.md) — current application boundaries and request/data flows.
+5. [API endpoint inventory](./api/ENDPOINT-INVENTORY.md) — current route handlers, methods and access requirements.
+6. [Data model catalogue](./architecture/DATA-MODEL-CATALOG.md) — current Mongoose collections, fields, indexes and relationships.
+7. [SEO and AEO](./SEO-AND-AEO-IMPLEMENTATION.md) — current homepage, project and public Labs metadata, structured data, sitemap and semantic-content rules.
 
-## 2. Current-state page guides
+## Current implementation guides
 
-- [Homepage](./pages/HOME-PAGE-ENGINEERING.md) — hero, About, Education, Skills, Experience, Projects and Contact, including animation/scroll reconstruction.
-- [Navbar and Footer](./pages/NAVBAR-AND-FOOTER-ENGINEERING.md) — shared shell, route-by-route conditional rendering, desktop/mobile navigation and footer composition.
-- [SEO and AEO Engineering](./SEO-AND-AEO-IMPLEMENTATION.md) — current code-derived SEO/AEO contract for homepage, projects and public Labs.
-- [Contact Form and Email Engineering](./pages/CONTACT-FORM-AND-EMAIL-ENGINEERING.md) — client form state/validation, POST API, server validation, email composition, Gmail SMTP, privacy, errors and hardening checklist.
-- [Vee Mascot](./pages/PORTFOLIO-MASCOT-ENGINEERING.md) — homepage companion 3D scene, scroll-based position/poses, section reactions and interactive scan system.
-- [Project Detail](./pages/PROJECT-DETAIL-ENGINEERING.md) — server/static route behavior, hero, snapshot, context, approach, design, engineering, motion, responsive, showcase, reflection, navigation.
-- [Public Labs and Owner Workspace](./pages/LABS-AND-OWNER-WORKSPACE.md) — source-backed catalogue, static public detail, protected source, likes, owner workspace, Analytics and current code gaps.
-- [Authentication and Account Engineering](./pages/AUTHENTICATION-AND-ACCOUNT-ENGINEERING.md) — Better Auth configuration, verification, reset, OAuth, owner authorization and account-scope gaps.
-- [Error and Not-Found Engineering](./pages/ERROR-AND-NOT-FOUND-ENGINEERING.md) — shared 404/500 screens, development diagnostics and chunk-load recovery.
-- [Analytics Engineering](./pages/ANALYTICS-ENGINEERING.md) — separate Portfolio Analytics and Labs Engagement Analytics contracts.
+### Public portfolio
+- [Homepage](./pages/HOME-PAGE-ENGINEERING.md)
+- [Navbar and footer](./pages/NAVBAR-AND-FOOTER-ENGINEERING.md)
+- [Project detail pages](./pages/PROJECT-DETAIL-ENGINEERING.md)
+- [Vee mascot](./pages/PORTFOLIO-MASCOT-ENGINEERING.md)
+- [Contact form and email](./pages/CONTACT-FORM-AND-EMAIL-ENGINEERING.md)
+- [Error and not-found handling](./pages/ERROR-AND-NOT-FOUND-ENGINEERING.md)
 
-## 3. Architecture and engineering references
+### Labs and analytics
+- [Public Labs and owner workspace](./pages/LABS-AND-OWNER-WORKSPACE.md)
+- [Labs runtime and code execution](./architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md)
+- [Analytics engineering](./pages/ANALYTICS-ENGINEERING.md)
+- [Authentication and account engineering](./pages/AUTHENTICATION-AND-ACCOUNT-ENGINEERING.md)
 
-- [System Architecture](./architecture/SYSTEM-ARCHITECTURE.md) — current rendering/backend/persistence/infrastructure boundaries.
-- [Scroll and Motion Engineering](./architecture/SCROLL-AND-MOTION-ENGINEERING.md) — scroll-controller ownership, Motion graph types, breakpoints and test matrix.
-- [Theme Toggle Engineering](./architecture/THEME-TOGGLE-ENGINEERING.md) — next-themes ownership, OLD/NEW snapshot rules, rectangle/circle/circle-blur/blinds transitions, fallback and click sound.
-- [Sound Engineering](./architecture/SOUND-ENGINEERING.md) — shared Web Audio hook, Vee voice/laser, ThemeToggle click and Contact success confirmation, complete active/unassigned asset inventory, autoplay policy and extension guide.
-- [Layout Layers and Design Tokens](./design/LAYOUT-LAYERS-AND-TOKENS.md) — actual fonts, light/dark semantic tokens, Tailwind v4 scan setup, root provider nesting and shared layout layers. Navbar/Footer route and component detail is in [Navbar and Footer Engineering](./pages/NAVBAR-AND-FOOTER-ENGINEERING.md).
-- [Data Model Catalogue](./architecture/DATA-MODEL-CATALOG.md) — current collections and schema constraints; live Atlas indexes still require environment verification.
-- [Labs Runtime and Code Execution](./architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md) — built-in runtime, Monaco editor, unsaved Run, immutable publishing, artifact security and poster/media lifecycle.
-- [API Endpoint Inventory](./api/ENDPOINT-INVENTORY.md) — route/method/auth/access index for all 36 handlers.
-- [Environment and Release](./operations/ENVIRONMENT-AND-RELEASE.md) — local setup, actual env variable use, scripts, build gates, release QA and known stale .env.example contact configuration.
+### Shared engineering
+- [Scroll and Motion](./architecture/SCROLL-AND-MOTION-ENGINEERING.md)
+- [Theme toggle](./architecture/THEME-TOGGLE-ENGINEERING.md)
+- [Sound](./architecture/SOUND-ENGINEERING.md)
+- [Privacy and data lifecycle](./architecture/PRIVACY-AND-DATA-LIFECYCLE.md)
+- [Layout layers and design tokens](./design/LAYOUT-LAYERS-AND-TOKENS.md)
+- [Threat model](./THREAT-MODEL.md)
+- [Environment and release](./operations/ENVIRONMENT-AND-RELEASE.md)
+- [Labs Run recovery](./operations/LABS-PREVIEW-RECOVERY.md)
 
-## 4. Future implementation — explicitly not part of current implementation
+## Product and design references
 
-- [Portfolio CMS and Project Detail CMS](./future/PORTFOLIO-CMS-AND-PROJECT-DETAIL-CMS.md) — approved content boundary, current source-field mapping and future data/version/cache gates. It is not implemented.
-- [Google and GitHub OAuth](./future/GOOGLE-GITHUB-OAUTH.md) — provider code exists behind credential checks; Preview/Production configuration and complete E2E acceptance remain pending.
+- [Analytics product design](./DESIGN-ANALYTICS.md) — metric definitions, dashboard intent and privacy requirements. Current behavior is documented in the Analytics Engineering guide.
+- [Labs product design](./DESIGN-LAB.md) — visual/interaction requirements. Current behavior and accepted superseding rules are documented in the Labs engineering guide and ADR-018.
+- [Motion Lab component specifications](./MOTION-LAB/README.md) — design system, engineering standards, agent protocol and individual component specifications.
 
-## 5. Existing product, design and security authorities
+## Explicit future scope
 
-These original flat documents remain important for decisions and detailed requirements. Read them together with the current-state guide above.
+Only the following detailed future implementation plans are retained:
+- [Portfolio CMS and Project Detail CMS](./future/PORTFOLIO-CMS-AND-PROJECT-DETAIL-CMS.md) — approved future content-management boundary; not implemented.
+- [Google and GitHub OAuth configuration](./future/GOOGLE-GITHUB-OAUTH.md) — provider configuration and end-to-end verification; code is present behind credential gates, but deployment verification remains pending.
 
-- [Product Requirements](./PRD.md)
-- [Decisions](./DECISIONS.md)
-- [Admin/CMS Design](./DESIGN-ADMIN.md) — future general Portfolio CMS/admin design requirements, not proof that these proposed routes currently exist.
-- [Analytics Design](./DESIGN-ANALYTICS.md) — Labs analytics semantics and dashboard requirements; current implementation state is in pages/ANALYTICS-ENGINEERING.md.
-- [Labs Design](./DESIGN-LAB.md)
-- [Labs and Authentication Design Spec](./LABS-AND-AUTHENTICATION-DESIGN-SPEC.md)
-- [Labs Authentication and Source Access Runbook](./LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md)
-- [Labs Source Management Specification](./LABS-SOURCE-MANAGEMENT-SPEC.md)
-- [Labs Owner Console Coordination Plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md)
-- [Labs Experiment Studio Runtime and Media Plan](./LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md)
-- [Labs Gallery, Engagement and Live UI Implementation](./LABS-GALLERY-ENGAGEMENT-AND-LIVE-UI-IMPLEMENTATION.md)
-- [Threat Model](./THREAT-MODEL.md)
-- [Database and Media Setup Plan](./DATABASE-AND-MEDIA-SETUP-PLAN.md)
-- [Foundation Audit](./FOUNDATION-AUDIT.md)
-- [Motion Lab Component Specification System](./MOTION-LAB/README.md)
+## Source-of-truth and maintenance rules
 
-## 6. Legacy planning/contract documents
+1. Source code is authoritative for what exists and how it behaves.
+2. `PROJECT-STATUS.md` is the current status and verification authority.
+3. Page and architecture engineering guides own detailed current implementation behavior.
+4. `PRD.md` and the design documents define product requirements, not implementation evidence.
+5. `DECISIONS.md` records accepted decisions. ADR-018 supersedes older conflicting Labs statements, including the former interactive public-detail requirement.
+6. `ENDPOINT-INVENTORY.md` owns the route/method index; `DATA-MODEL-CATALOG.md` owns the current schema catalogue. Avoid copying full endpoint or schema definitions into overview documents.
+7. Keep implementation status separate from test, browser, provider, database and deployment verification. Never mark external verification complete based on code presence alone.
+8. When a feature changes, update its owning guide and update `PROJECT-STATUS.md` only when capability status, a known gap or verification state changes.
+9. Update PRD/design documents only when an approved product requirement changes. Update ADRs only when a decision changes.
+10. Preserve the public homepage, project-detail composition, SEO, accessibility, responsive behavior and Motion/scroll contracts during Labs or admin work.
 
-- [Implementation Plan](./IMPLEMENTATION-PLAN.md) — original phase plan; use PROJECT-STATUS.md for present implementation state.
-- [Portfolio Analytics Implementation Plan](./PORTFOLIO-ANALYTICS-IMPLEMENTATION-PLAN.md) — original first-party analytics design/rollout plan; actual code and current behavior are documented in pages/ANALYTICS-ENGINEERING.md.
-- [Architecture Responsibility Contract](./ARCHITECTURE.md) — original target responsibility rules; current implemented topology is in architecture/SYSTEM-ARCHITECTURE.md.
-- [Project Structure Proposal](./PROJECT-STRUCTURE.md) — conceptual target structure; current repository tree is listed in architecture/SYSTEM-ARCHITECTURE.md.
-- [API Contracts](./API-CONTRACTS.md) — detailed domain contract notes; current route/method index is api/ENDPOINT-INVENTORY.md.
-
-## 7. Source-of-truth rules
-
-1. Current source code is the authority for what exists and how it behaves.
-2. PROJECT-STATUS.md is the navigation/status authority; page/architecture engineering guides are the current implementation explanation.
-3. PRD and approved decisions define what should exist, not proof that it has been implemented.
-4. Domain docs own detailed invariants. API inventory owns the route index; it should not duplicate every internal schema field.
-5. Mark implementation and verification separately. Code present does not mean Preview/Production/browser/Atlas integration has passed.
-6. Accepted decisions in Section 39 of LABS-AND-AUTHENTICATION-DESIGN-SPEC.md supersede earlier conflicting Labs catalogue/runtime/owner/Analytics statements; PROJECT-STATUS.md and current-state guides record any remaining code mismatch.
-7. Record unresolved discrepancies as explicit audit items. Do not silently reconcile by guessing.
-8. Portfolio CMS and Project Detail CMS remain future work. Education remains code-owned/static.
-9. Do not change public composition, animation, responsive design, project slug behavior or runtime security while implementing docs.
-
-## 8. Documentation change control
-
-When a feature changes:
-1. update the owning current-state engineering document;
-2. update PROJECT-STATUS.md when status or verification changes;
-3. update API inventory for route/method changes;
-4. update DATA-MODEL-CATALOG.md for schema/collection/index changes;
-5. update scroll/motion docs for changes to interaction/scroll ownership;
-6. update PRD/DECISIONS only when an approved product decision changes;
-7. link superseded plans rather than silently deleting historical context.
-
-Do not implement CMS, OAuth provider setup, new APIs, new models or UI changes as part of a documentation update.
+Portfolio CMS/Project Detail CMS and Google/GitHub OAuth remain future/configuration work as stated above. This documentation cleanup does not authorize feature implementation or deployment.
