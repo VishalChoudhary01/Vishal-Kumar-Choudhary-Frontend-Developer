@@ -1,5 +1,8 @@
 # Design Specification — Admin Dashboard and CMS
 
+
+> **Current-state clarification (2026-11-07):** The general Portfolio CMS/Admin routes and editor screens described here are future design requirements, not implemented routes. The current Labs owner workspace is a separate implemented system and is documented in [pages/LABS-AND-OWNER-WORKSPACE.md](./pages/LABS-AND-OWNER-WORKSPACE.md). The approved future Portfolio CMS and Project Detail CMS boundary is [future/PORTFOLIO-CMS-AND-PROJECT-DETAIL-CMS.md](./future/PORTFOLIO-CMS-AND-PROJECT-DETAIL-CMS.md). Do not mistake the proposed route list below for the current App Router tree.
+
 **Status:** Design requirements; visual implementation pending  
 **Related:** [PRD](./PRD.md), [Implementation plan](./IMPLEMENTATION-PLAN.md)
 
