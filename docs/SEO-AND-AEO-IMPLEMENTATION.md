@@ -197,7 +197,7 @@ Labs auth pages already use `noindex, nofollow` metadata. They are not included 
 - Write direct factual descriptions; keep experiment facts attributable to the actual experiment record.
 - Make who/what/category/technologies/how information visible without hover or a fake question/answer section.
 - Use internal canonical links to each real eligible experiment.
-- Keep Motion, hover and preview playback as enhancement; core text remains normal HTML.
+- Keep Motion, hover and preview playback as enhancement; core text remains normal HTML. Labs hero and featured text, plus collection-card content, begin at opacity 1 so a Motion entrance never hides answer-critical copy in the initial HTML. Their entrance only adds a small upward positional movement. Published experiment counts also begin with the actual value before the count-up animation.
 - Do not add a meta name “aeo”, hidden prompt/keyword blocks, fake FAQ entries, fake SearchAction, reviews, aggregate ratings or unsupported claims.
 - Treat source-access authorization accurately. Public page metadata does not imply public source-code access.
 - Keep Portfolio visits and Labs engagement analytics out of CreativeWork markup. Analytics counts are not evidence of reviews/ratings or product popularity.
