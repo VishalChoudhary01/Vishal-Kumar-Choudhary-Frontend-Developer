@@ -10,7 +10,6 @@ import {
   getParticleBurstParticleEnvelope,
   getParticleCameraChoreography,
   PARTICLE_BURST_EXPANSION,
-  PARTICLE_BURST_CAMERA_FRAMING_EXPANSION,
   getOrbitBurstSpeed,
   ORBIT_BURST_SPEED_MULTIPLIER,
   isParticleBurstActive,
@@ -448,8 +447,7 @@ test("particle burst uses staggered per-particle recovery without changing base 
   assert.equal(getParticleBurstParticleEnvelope(Number.NaN, 0.5), 0);
 
   assert.equal(PARTICLE_BURST_EXPANSION, 3.4);
-  assert.equal(PARTICLE_BURST_CAMERA_FRAMING_EXPANSION, 1.85);
-  assert.ok(getParticleBurstRadius(1.38) > 4.8);
+  assert.ok(getParticleBurstRadius(1.38) > 7.5);
   assert.throws(() => getParticleBurstRadius(0), RangeError);
   assert.throws(() => getParticleBurstRadius(Number.NaN), RangeError);
   assert.equal(getOrbitBurstSpeed(0), 1);
