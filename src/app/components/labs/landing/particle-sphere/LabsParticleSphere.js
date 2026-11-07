@@ -413,6 +413,7 @@ export default function LabsParticleSphere() {
           x: event.clientX,
           y: event.clientY,
         };
+        renderer.domElement.setPointerCapture?.(event.pointerId);
         setPointerFromEvent(event);
       };
 
@@ -431,6 +432,9 @@ export default function LabsParticleSphere() {
         }
 
         pointerDown = null;
+        if (renderer.domElement.hasPointerCapture?.(event.pointerId)) {
+          renderer.domElement.releasePointerCapture?.(event.pointerId);
+        }
       };
 
       handlePointerCancel = () => {
