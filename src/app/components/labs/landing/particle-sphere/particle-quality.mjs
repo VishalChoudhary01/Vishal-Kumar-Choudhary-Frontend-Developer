@@ -1,8 +1,9 @@
 const DEFAULT_PROFILE = Object.freeze({
-  surfaceCount: 4400,
-  innerCount: 480,
+  surfaceCount: 5200,
+  innerCount: 620,
   ambientCount: 26,
   maxPixelRatio: 1.5,
+  maxFps: 60,
 });
 
 function finitePositive(value, fallback) {
@@ -29,24 +30,56 @@ export function getParticleQualityProfile({
   if (compactViewport || constrainedDevice) {
     const isLowestTier = constrainedDevice && (memory === null || memory <= 2 || cores <= 2);
 
+    if (isLowestTier) {
+      return Object.freeze({
+        surfaceCount: compactViewport ? 1600 : 2600,
+        innerCount: compactViewport ? 140 : 300,
+        ambientCount: compactViewport ? 6 : 12,
+        maxPixelRatio: compactViewport ? 1.0 : 1.15,
+        maxFps: 30,
+        tier: "low",
+      });
+    }
+
     return Object.freeze({
-      surfaceCount: compactViewport ? (isLowestTier ? 1800 : 2400) : 2800,
-      innerCount: compactViewport ? (isLowestTier ? 160 : 220) : 280,
-      ambientCount: compactViewport ? 8 : 12,
+      surfaceCount: compactViewport ? 2600 : 3200,
+      innerCount: compactViewport ? 240 : 360,
+      ambientCount: compactViewport ? 10 : 16,
       maxPixelRatio: compactViewport ? 1.1 : 1.2,
-      tier: isLowestTier ? "low" : "compact",
+      maxFps: 40,
+      tier: "compact",
     });
   }
 
   if (mediumViewport) {
     return Object.freeze({
-      surfaceCount: 3400,
-      innerCount: 360,
+      surfaceCount: 4000,
+      innerCount: 460,
       ambientCount: 18,
       maxPixelRatio: 1.3,
+      maxFps: 50,
       tier: "medium",
     });
   }
 
   return Object.freeze({ ...DEFAULT_PROFILE, tier: "high" });
+}
+
+export function areParticleQualityProfilesEqual(left, right) {
+  if (!left || !right) return false;
+
+  return left.surfaceCount === right.surfaceCount
+    && left.innerCount === right.innerCount
+    && left.ambientCount === right.ambientCount
+    && left.maxPixelRatio === right.maxPixelRatio
+    && left.maxFps === right.maxFps
+    && left.tier === right.tier;
+}
+
+export function hasParticleBudgetChanged(left, right) {
+  if (!left || !right) return true;
+
+  return left.surfaceCount !== right.surfaceCount
+    || left.innerCount !== right.innerCount
+    || left.ambientCount !== right.ambientCount;
 }
