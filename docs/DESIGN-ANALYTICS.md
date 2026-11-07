@@ -3,7 +3,7 @@
 **Owner privacy boundary — accepted 2026-11-07:** Public like responses expose only combined active count and the current visitor's state. Owner Analytics is aggregate-only: do not show individual names, masked emails, per-user like timestamps, searchable active-liker rows or source/copy/like histories. Anonymous likes remain aggregate-only. The current experiment-detail UI still contains the older identity panel; remove/redesign it before claiming the interface matches this decision.
 
 This document defines the analytics experience and metric semantics; delivery order is in [the Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md).  
-**Related:** [PRD](./PRD.md), [Admin design](./DESIGN-ADMIN.md), [Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md), [Labs Gallery/Engagement implementation](./LABS-GALLERY-ENGAGEMENT-AND-LIVE-UI-IMPLEMENTATION.md)
+**Related:** [PRD](./PRD.md), [Admin design](./DESIGN-ADMIN.md), [Analytics Engineering](./pages/ANALYTICS-ENGINEERING.md), [Labs and Owner Workspace](./pages/LABS-AND-OWNER-WORKSPACE.md)
 
 ## 1. Purpose
 Give the portfolio owner reliable insight into Lab discovery and engagement, without presenting estimates as exact people counts or implying actions prove downstream outcomes. Analytics are private to the singleton owner/admin. For the first source-engagement release, reporting is aggregate per experiment and reporting period. The 7 November decision removes the previous active verified-liker identity exception. There is no individual historical source-view/copy/like timeline and no individual current-like identity list. Anonymous browser identities are aggregate-only.
