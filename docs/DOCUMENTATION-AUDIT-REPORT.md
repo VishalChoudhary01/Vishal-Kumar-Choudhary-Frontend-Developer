@@ -181,7 +181,7 @@ The original supplied SEO/AEO standard named the homepage and `/projects/[slug]`
 
 The implementation and exact current strings/route behavior are described in `docs/SEO-AND-AEO-IMPLEMENTATION.md`. Focused tests are added to `tests/labs-seo.test.mjs` and included in the build chain.
 
-**No build/test/browser/search-engine validation was performed in this pass.** The checkout attempt failed because GitHub could not be resolved from the execution environment, and the latest commit has no reported CI statuses. Do not call these pages production-index-verified. Labs duplicate SEO-title/description validation across database records is still an open quality gate.
+**No build/test/browser/search-engine validation was performed in this pass.** The checkout attempt failed because GitHub could not be resolved from the execution environment. The latest relevant Vercel commit check is **failure**, linking to Vercel's `build-rate-limit` upgrade page; no GitHub Actions workflow run or test log was available. This is not evidence of an assertion failure, nor is it a successful build. Do not call these pages production-index-verified. Labs duplicate SEO-title/description validation across database records is still an open quality gate.
 
 
 ## 14. SEO/AEO implementation follow-up — 7 November 2026
