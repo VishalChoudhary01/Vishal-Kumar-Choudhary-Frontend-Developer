@@ -23,8 +23,8 @@ This is a Labs-specific owner console, not authorization to build the deferred g
 
 ### Out of scope for this plan
 
-- Gallery-card poster promotion, public like identity/DTO, current verified-liker attribution and the shared Chart.js/toast behavior are tracked in `LABS-GALLERY-ENGAGEMENT-AND-LIVE-UI-IMPLEMENTATION.md`; this owner-console coordination plan does not redefine those contracts.
-- Replacing the public Labs listing, its four code-owned demos or their existing detail-page interactions.
+- Gallery-card poster promotion, public like response behavior and shared Chart.js/toast behavior are tracked in `LABS-GALLERY-ENGAGEMENT-AND-LIVE-UI-IMPLEMENTATION.md`. The 7 November aggregate-only Analytics privacy decision supersedes any earlier active-liker identity exception; current panel removal is an implementation gap.
+- Reopening the accepted source-backed custom-only public catalogue or the static/non-executable public detail decision.
 - Replacing the current source editor or changing its storage/version model for visual convenience.
 - Changing the locked owner identity or verified-account source-access policy.
 - Building a general portfolio CMS, portfolio-wide analytics or multi-admin role management.
@@ -237,7 +237,7 @@ Work in small phases with separate reviewable commits. Do not begin a later phas
 - All direct routes and all relevant APIs independently enforce the owner guard.
 - Existing source inventory filters, source create/open/delete and import entry points still work.
 - Existing source editor URL and owner sign-in return destination continue to work.
-- No public Labs route, public demo or shared homepage layout changes.
+- No change to the accepted source-backed custom-only public Labs catalogue, static detail presentation or shared homepage layout.
 
 ### Phase 2 — Correct the analytics catalogue and event coverage
 
@@ -368,7 +368,7 @@ No implementation should start by installing three chart libraries or building a
 | Complete daily date buckets | Code committed / build-verified | Analytics now emits a complete UTC date series with zero-activity days; zero-value days render zero-height bars and the empty state checks actual activity | 
 | Live polling, MotionNumber and multi-series chart | Code committed / Preview build-verified on commit `e2673785bd882a0b787318e9551d49b8e9e9468b` | Visible-tab 10-second polling, visibility pause, abort/no-overlap, bounded backoff, stale-data preservation and manual refresh. MotionNumber supports locale grouping; chart shows four instrumented series and an accessible daily table |
 | Instrumented-event rankings | Code committed / Preview build-verified | Collection analytics adds deterministic top-five rankings for source opens and code copies in the selected period, plus current active likes; zero-value entries are omitted and ties resolve by title then slug |
-| Per-experiment analytics API/detail route | Code committed / Preview build-verified | Adds owner-only `GET /api/v1/admin/labs/analytics/:slug` and `/admin/labs/analytics/[slug]`; aggregate-only output includes period metrics, current active likes and UTC daily series for published built-in or eligible custom experiments |
+| Per-experiment analytics API/detail route | Code/route present; verification pending | Adds owner-only `GET /api/v1/admin/labs/analytics/:slug` and `/admin/labs/analytics/[slug]`; aggregate metrics and UTC daily series exist. The current page also renders an active verified-liker identity panel, which must be removed/redesigned to meet the 7 November aggregate-only privacy decision |
 | Analytics detail return-path protection | Code committed / Preview build-verified / page smoke-tested | Exact slug route is allowlisted through owner login/verification handling; API response remains private/no-store and exposes no raw events or account identifiers |
 | Pure analytics regression tests | Previous READY Preview: 6 passed; expanded suite: build pending | The earlier test-gated deployment reported 6 passed / 0 failed. The current branch adds actor attribution, active-like separation, collection totals and fixed-window rate policy cases, bringing the suite to 12; the expanded run needs a fresh Preview build |
 | Reporting-period upper bound | Code committed / Preview build-verified | Collection event aggregation matches `since <= occurredAt <= generatedAt`, preventing future-dated records from inflating period totals |
@@ -501,7 +501,7 @@ The current `src/app/lib/labs/owner-access.js` accepts either `LABS_OWNER_USER_I
 
 Every implementation PR in this plan must explicitly confirm:
 
-- [ ] The four existing code-owned public demos and their public routes remain unchanged.
+- [ ] The public Labs catalogue remains source-backed custom-only and public detail remains static/non-executable.
 - [ ] Public Labs listing/detail, category filtering, likes, source CTA and verified-user source access remain functional.
 - [ ] Guests and signed-in unverified users cannot access protected source; every verified account can access published source automatically.
 - [ ] Owner access still depends on the server-side singleton `LABS_OWNER_USER_ID` and a verified session; no client role/email shortcut is introduced.
