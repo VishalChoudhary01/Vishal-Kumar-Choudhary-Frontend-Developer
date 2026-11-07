@@ -237,7 +237,7 @@ It covers:
 - route-level helper/JSON-LD integration;
 - visible AEO copy, semantic detail structure, sitemap enumeration and robots poster-path policy.
 
-**Execution status:** The suite and production build were not run in this environment because the branch could not be cloned from GitHub (network DNS unavailable); the latest GitHub commit returned no CI status checks. Do not describe the implementation as build-verified or production-index-verified until the tests, build and deployed crawler checks pass.
+**Execution status:** The focused test suite and production build were not run locally because the repository checkout could not be fetched from this execution environment (GitHub DNS resolution failed). The latest relevant Vercel commit check is reported as **failure** and links to Vercel's `build-rate-limit` upgrade page; no GitHub Actions workflow run or test log was available for that commit. This is an infrastructure check result, not a reported assertion failure or successful build. Do not describe the implementation as build-verified or production-index-verified until tests, build and deployed crawler checks pass.
 
 ## 11. Change rules
 
