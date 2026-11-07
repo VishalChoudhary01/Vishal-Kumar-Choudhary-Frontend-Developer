@@ -136,6 +136,8 @@ export function buildLabExperimentMetadata({ siteUrl, experiment } = {}) {
       url: canonical,
       siteName: SITE_NAME,
       authors: [`${base}/`],
+      ...(experiment.publishedAt ? { publishedTime: experiment.publishedAt } : {}),
+      ...(experiment.updatedAt ? { modifiedTime: experiment.updatedAt } : {}),
       ...(images ? { images } : {}),
     },
     twitter: {
