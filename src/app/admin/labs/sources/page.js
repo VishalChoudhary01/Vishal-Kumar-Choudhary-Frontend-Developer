@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, FileCode2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import LabSourceInventory from "@/app/components/labs/admin/LabSourceInventory";
 import LabsOwnerAccessNotice from "@/app/components/labs/admin/LabsOwnerAccessNotice";
@@ -45,16 +45,6 @@ export default async function LabsSourceLibraryPage({ searchParams }) {
         </Link>
 
         <LabsOwnerNavigation active="sources" user={toLabsAccountUser(session.user)} />
-
-        <div className="mt-5 flex justify-end">
-          <Link
-            href="/admin/labs/sources/import"
-            className="inline-flex h-9 items-center gap-2 border border-brand/40 bg-brand-soft/30 px-3 text-xs font-semibold text-brand transition-colors hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-          >
-            <FileCode2 size={14} aria-hidden="true" />
-            Initialize sources
-          </Link>
-        </div>
 
         <LabSourceInventory />
       </div>
