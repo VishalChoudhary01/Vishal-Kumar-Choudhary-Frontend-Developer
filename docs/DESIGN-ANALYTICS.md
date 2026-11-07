@@ -168,9 +168,9 @@ The first live release now uses the existing owner analytics GET endpoint with v
 The collection event query bounds both ends of the selected reporting window (`since <= occurredAt <= generatedAt`) to prevent future-dated events from inflating totals. Pure ranking, period normalization, UTC daily-series and custom-artifact eligibility helpers have a Node-native regression suite that runs before the production build. The previous READY Preview ran six tests; this branch now extends the suite to twelve cases covering actor attribution, active-like attribution, collection totals and source-event rate-limit policy. The latest rate-limited event-write changes require a fresh Preview build before being marked verified; authenticated Atlas reconciliation remains pending. The refresh transport must return the same normalized aggregate shape so a later push transport can be evaluated without rewriting charts. WebSockets are not required for the first release; any future upgrade must document hosting, cross-instance fanout, reconnect/replay, authorization and fallback behavior before adding infrastructure.
 
 
-### Chart redesign — replacement plan (2026-11-06)
+### Chart redesign — implementation record (2026-11-06)
 
-**Decision:** replace the current four-series SVG graph with a lazy-loaded **Chart.js canvas column chart**, showing one selected metric at a time. Use the direct chart.js package, not an additional React wrapper in the first implementation. Chart.js 4.6.1 is MIT-licensed and provides canvas rendering, bar charts, responsive sizing, axes and tooltip primitives. Keep the dependency isolated to the private Analytics route. This is a library decision for historical daily analytics; no package has been installed yet.
+**Decision and implementation:** the four-series SVG proposal was replaced by a lazy-loaded **Chart.js canvas column chart** showing one selected metric at a time. The branch contains the Chart.js implementation on the private Analytics routes. The earlier wording that the package had not yet been installed was a planning snapshot and is superseded; current-HEAD build and authenticated browser QA still require verification.
 
 **Why the current chart is rejected**
 - Source opens, copies and like actions can differ by orders of magnitude. Overlaying all four on one Y-axis makes lower-volume measures appear flat or invisible.
@@ -261,22 +261,23 @@ Use existing semantic theme tokens and the admin design system. Keep series iden
 
 - [x] Server-side owner aggregate endpoint exists for the initial source-engagement metrics.
 - [x] Initial source-open, copy and like/unlike event records exist.
-- [ ] Add qualifying experiment-detail view instrumentation and a documented deduplication policy.
-- [ ] Instrument preview start/interactions after runtime lifecycle approval.
+- [ ] Add qualifying experiment-detail view instrumentation and a documented deduplication policy. A Portfolio Analytics page visit for /labs/[slug] is separate and does not satisfy this Labs event requirement.
+- [ ] Decide whether preview-start/interactions remain applicable under the static public-detail contract; no public runtime starts on /labs/[slug] today.
 - [x] Separate Analytics and Source Library routes (Preview build verified; authenticated owner UI QA remains pending).
 - [x] Add visible-tab 10-second polling, no-overlap/abort/backoff and truthful stale/error state (Preview build verified; authenticated refresh round-trip remains pending).
 - [x] Add complete UTC date buckets including zero-activity days.
-- [x] Existing four-series SVG baseline is code/build verified but explicitly temporary and rejected as the final chart.
-- [ ] Replace it with the selected single-metric Chart.js canvas design after the compatibility spike and chart acceptance gate pass.
+- [x] Replace the temporary four-series SVG with the selected single-metric Chart.js canvas design (current code integration present; exact current-HEAD browser accessibility/responsive verification remains pending).
 - [x] Add deterministic rankings for currently instrumented source opens, copies and current active likes (Preview build verified; authenticated Atlas reconciliation pending).
-- [x] Add owner-only aggregate experiment analytics API and `/admin/labs/analytics/[slug]` detail page (Preview build verified; authenticated Atlas reconciliation pending).
+- [x] Add owner-only aggregate experiment analytics API and `/admin/labs/analytics/[slug]` detail page (code/route present; authenticated Atlas reconciliation and browser QA pending).
 - [ ] Add public experiment-view and preview-event instrumentation before ranking by views or showing those metrics.
 - [ ] Verify chart accessibility, responsive layout, reduced motion and light/dark semantic contrast in an authenticated browser.
 - [ ] Approve retention/account-deletion policy before production analytics release.
 
 
-## 8. Implemented chart and current-state liker view
+## 8. Implemented chart and Analytics privacy alignment
 
 The detail page's activity chart uses one selected measure at a time. Its data table is the accessible text equivalent and remains available when Chart.js fails to load. Shorter periods use UTC daily buckets; longer periods use deterministic UTC weekly buckets. Chart colors distinguish semantic activity categories but labels and values remain present so color is not the only signal. Motion is disabled or reduced under the user's reduced-motion preference.
 
-The owner-only verified-liker panel reads active `LabLike` state, resolves account metadata through Better Auth's MongoDB `user` collection, masks email addresses in the UI, and paginates/searches by name or email. It is intentionally a current-state list: an unlike removes that account from the active list. Historical like/unlike counts remain aggregate event metrics. Anonymous guests are never enumerated.
+**Privacy decision adopted 2026-11-07:** Analytics is aggregate-only. Do not display active verified-liker names, masked email addresses, per-user like timestamps, search or pagination of individual accounts. Do not expose individual source-open, copy or like histories. Anonymous guests must never be enumerated.
+
+**Current code discrepancy:** the current detail page still resolves LabLike records to user metadata and renders an active verified-liker identity panel. Remove/redesign this panel and ensure the server response DTO contains aggregates only before declaring the UI compliant. This paragraph supersedes the earlier identity-list exception in this design document.
