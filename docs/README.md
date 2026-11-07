@@ -49,6 +49,7 @@ A new requirement must be added to the PRD, with affected design/implementation 
 
 
 ## Engineering architecture documents
+- [Portfolio Analytics implementation plan](./PORTFOLIO-ANALYTICS-IMPLEMENTATION-PLAN.md) — phased first-party visit tracking, IP-derived approximate location, visible-time heartbeats, MongoDB retention/deletion, owner dashboard polling and public-page performance budgets.
 - [System architecture and frontend/backend boundaries](./ARCHITECTURE.md) — source-of-truth rules for route handlers, business logic, data access, schemas, middleware, security and API contracts.
 - [Proposed project structure](./PROJECT-STRUCTURE.md) — recommended folder/module boundaries to reconcile against the actual repository before implementation.
 - [API contracts and domain schemas](./API-CONTRACTS.md) — endpoint inventory, request/response conventions, validation and permission expectations.
