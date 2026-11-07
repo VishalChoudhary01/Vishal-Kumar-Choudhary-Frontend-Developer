@@ -397,15 +397,13 @@ Do not ship a phase that weakens a gate from an earlier phase. Use a Preview dep
 
 ## 13. Current implementation status summary
 
-**Already implemented:** isolated React code Run preview; private draft/version workflow; exact-version Build & Publish; immutable artifact upload; poster capture during publish; artifact-bound public poster delivery; uploaded image/GIF/video promotion and media precedence; public custom listing query; owner poster status display; static public detail page; Like/engagement; protected source access/copy.
+**Already implemented in source:** isolated React code Run preview; private draft/version workflow; exact-version Build & Publish; immutable artifact upload; poster capture during publish; artifact-bound public poster delivery; uploaded image/GIF/video promotion and media precedence; public custom listing query; owner poster status display; static public detail page; Like/engagement; protected source access/copy; shared Monaco for public source, owner editing and version history.
 
 **Phase 1 implementation committed:** public media DTO now includes promoted upload dimensions and the known 1200×900 generated-poster dimensions; newly promoted media is normalized to `contain`; the shared renderer uses `object-contain`, measures browser intrinsic dimensions for legacy uploads and keeps broken-media fallbacks; the detail page no longer forces a 4:3/16:9 wrapper and instead uses natural height with a responsive maximum; detail header/explanation spacing was tightened; six media selection/dimension regression tests are included in every production build. Browser verification for portrait/landscape/square/GIF/video on the deployed Preview remains pending.
 
-**Implemented:** shared Monaco foundation, protected public read-only source viewer, and editable owner source creator. **Still planned:** read-only version-history viewer and remaining authenticated browser interaction, performance and accessibility QA.
+**Superseded phase snapshot:** the paragraphs describing the shared Monaco foundation only, the version-history viewer as planned, and package/wrapper integration as not yet implemented are historical phase notes. Later 6–7 November implementation commits integrated Monaco into all three surfaces: public protected source (read-only), owner editor (editable) and version history (read-only). The current-state summary at the top of this plan and the runtime/media plan take precedence.
 
-**Not yet implemented by this plan:** Monaco package installation, local worker delivery, Monaco wrapper, any Monaco integration, and the new detail layout/media sizing changes.
-
-This plan is the acceptance contract for the next implementation work. Update its status table after each phase is completed; do not mark a phase complete from a source-only change without its stated verification.
+**Current status:** Monaco package/local assets/wrapper and all three integrations are present in source. Current-HEAD Preview/browser QA for final-keystroke synchronization, keyboard accessibility, file switching, editor action preservation and theme/fallback behavior remains a release gate. This plan is both design history and acceptance checklist; do not claim verification until performed.
 
 
 ### Phase 1 implementation progress — 6 November 2026
@@ -644,3 +642,19 @@ Vercel has a `READY` Git Preview for the version-history Monaco UI commit:
 A second Preview `dpl_42Dy8FHJ8A8NymU1JxWRWjue4Y8J` is READY for the initial history test file commit `47e74bb5b62687c7f87c380525d7538c868ea384`. The subsequent `package.json` build-script commit `2372ae486315c701e05c67ed8858d00967191cd2` produced an ERROR because the first version of the new Restore ancestry test asserted against the UI file instead of the source-management service. That assertion was corrected in `175e31ae9d0e95d9574453cafed324deecb889b5`; the current branch clean-checkout production build, including every test suite, now passes. No Vercel deployment is listed yet for the corrected test commit or later documentation commits, so the exact current HEAD still needs a fresh READY Preview before release acceptance.
 
 The Preview is protected by Vercel Authentication. Owner must open it while signed in to complete the Phase 5 modal/file-switch/restore browser matrix. Production has not been changed.
+
+## 14. Current implementation reconciliation — 7 November 2026
+
+The implementation state table near the beginning of this plan is the current summary. Some older phase logs below record the point in time when Monaco had not yet been integrated or the detail-page media layout had not yet landed. They are retained as history and are not current implementation instructions.
+
+Current branch state:
+- Shared LabCodeEditor and self-hosted Monaco assets are integrated.
+- Protected public source reader is read-only Monaco.
+- Owner Source Creator is editable Monaco; React files state remains authoritative.
+- Historical source-version viewer is read-only Monaco.
+- Plain-text fallback remains for Monaco/worker failure.
+- Public /labs/[slug] remains static/non-executable. The detail route does not mount LabWorkspace, LabRuntimeBoundary or a published artifact iframe.
+- Owner Run, Build & Publish, immutable artifacts and artifact delivery endpoint remain separate infrastructure.
+- The full media-role migration (ordered detail-gallery and gallery-preview/detail-gallery/runtime-fallback attachment roles) remains pending; the current schema is galleryPreview plus at most one fallback-preview attachment.
+
+Do not revert the current editor to textarea-only based on old phase notes. Do not add public experiment execution based on old ADR/runtime goals. See Section 39 of LABS-AND-AUTHENTICATION-DESIGN-SPEC.md for accepted 7 November product decisions and PROJECT-STATUS.md for current code mismatches.
