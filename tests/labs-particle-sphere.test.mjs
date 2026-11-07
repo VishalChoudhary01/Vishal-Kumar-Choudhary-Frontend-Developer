@@ -506,17 +506,23 @@ test("orbit particles move continuously and retain their orbital path", () => {
   });
   assert.equal(Math.max(...orbitRadii.map(([radiusX]) => radiusX)), 1.7);
 
-  // A tilted circular orbit projects to an ellipse. Keep its minor axis
-  // beyond the sphere's maximum surface-particle radius so the sphere reads
-  // as contained by every desktop orbit without increasing orbit size.
-  const orbitRotations = [...orbitSource.matchAll(/rotation: \\[([0-9., -]+)\\]/g)]
+  // Desktop uses flatter planes so each projected orbit encloses the
+  // unchanged sphere surface. Mobile retains the original orbit angles.
+  const desktopRotations = [...orbitSource.matchAll(/desktopRotation: \\[([0-9., -]+)\\]/g)]
     .map(([, rotation]) => rotation.split(",").map(Number));
-  assert.equal(orbitRotations.length, orbitRadii.length);
+  const mobileRotations = [...orbitSource.matchAll(/rotation: \\[([0-9., -]+)\\]/g)]
+    .map(([, rotation]) => rotation.split(",").map(Number));
+  assert.equal(desktopRotations.length, orbitRadii.length);
+  assert.equal(mobileRotations.length, orbitRadii.length);
   orbitRadii.forEach(([radius], index) => {
-    const [rotationX, rotationY] = orbitRotations[index];
+    const [rotationX, rotationY] = desktopRotations[index];
     const projectedMinorRadius = radius * Math.abs(Math.cos(rotationX) * Math.cos(rotationY));
-    assert.ok(projectedMinorRadius >= 1.38 * 1.014);
+    assert.ok(projectedMinorRadius > 1.38 * 1.014);
   });
+  assert.match(orbitSource, /createParticleOrbits\(THREE, isDesktop = false\)/);
+  assert.match(orbitSource, /group\.userData\.setDesktop/);
+  assert.match(rendererSource, /createParticleOrbits\(THREE, window\.innerWidth >= 768\)/);
+  assert.match(rendererSource, /orbitGroup\?\.userData\.setDesktop\?\.\(window\.innerWidth >= 768\)/);
 
   assert.match(orbitSource, /orbit-particle-glow/);
   assert.ok(rendererSource.includes("orbitGroup.userData.update?.(elapsed, burstAmount)"));
