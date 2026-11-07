@@ -14,22 +14,24 @@ This folder is the engineering handover for the complete portfolio platform. Sta
 4. [System Architecture](./architecture/SYSTEM-ARCHITECTURE.md) — current frontend/backend/domain responsibilities and major data flows.
 5. [Homepage Engineering](./pages/HOME-PAGE-ENGINEERING.md) — every homepage section, component hierarchy, scroll and Motion reconstruction guide.
 6. [Navbar and Footer Engineering](./pages/NAVBAR-AND-FOOTER-ENGINEERING.md) — global Footer mount, page-owned Navbar contexts, exact route visibility, responsive navigation, mobile-menu behavior and Footer/Vee motion.
-7. [Contact Form and Email Engineering](./pages/CONTACT-FORM-AND-EMAIL-ENGINEERING.md) — full client validation/submission, server API, email builder, Gmail SMTP and security review.
-8. [Project Detail Engineering](./pages/PROJECT-DETAIL-ENGINEERING.md) — project route, metadata, fixed template, data contract and optional sections.
-9. [Scroll and Motion Engineering](./architecture/SCROLL-AND-MOTION-ENGINEERING.md) — Lenis/native scroll policy, page-loader reset, sticky/pinned timelines, reduced-motion and QA.
-10. [Theme Toggle Engineering](./architecture/THEME-TOGGLE-ENGINEERING.md) — complete theme state ownership, OLD/NEW snapshot behavior, four transition variants, accessibility, fallbacks and cleanup.
-11. [Sound Engineering](./architecture/SOUND-ENGINEERING.md) — shared Web Audio lifecycle, Vee, ThemeToggle and Contact success sounds, audio assets and extension guide.
-12. [Labs Runtime and Code Execution](./architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md) — owner Run, compiler, immutable artifact delivery infrastructure and the static/non-executable public detail boundary.
-13. [Data Model Catalogue](./architecture/DATA-MODEL-CATALOG.md) — actual Mongoose collections, fields, constraints and indexes.
-14. [API Endpoint Inventory](./api/ENDPOINT-INVENTORY.md) — all current Route Handler endpoints and methods.
-15. [Authentication and Account Engineering](./pages/AUTHENTICATION-AND-ACCOUNT-ENGINEERING.md) — current Better Auth flows, social-provider gates, owner identity policy and unimplemented account features.
-16. [Privacy and Data Lifecycle](./architecture/PRIVACY-AND-DATA-LIFECYCLE.md) — source-derived data map, cookies, retention, public disclosure and privacy gaps.
-17. [Error and Not-Found Engineering](./pages/ERROR-AND-NOT-FOUND-ENGINEERING.md) — root App Router error boundaries, diagnostics and guarded chunk recovery.
+7. [SEO and AEO Engineering](./SEO-AND-AEO-IMPLEMENTATION.md) — current homepage/project metadata, Labs collection/detail metadata, JSON-LD, sitemap, robots, semantic answer content and remaining validation gates.
+8. [Contact Form and Email Engineering](./pages/CONTACT-FORM-AND-EMAIL-ENGINEERING.md) — full client validation/submission, server API, email builder, Gmail SMTP and security review.
+9. [Project Detail Engineering](./pages/PROJECT-DETAIL-ENGINEERING.md) — project route, metadata, fixed template, data contract and optional sections.
+10. [Scroll and Motion Engineering](./architecture/SCROLL-AND-MOTION-ENGINEERING.md) — Lenis/native scroll policy, page-loader reset, sticky/pinned timelines, reduced-motion and QA.
+11. [Theme Toggle Engineering](./architecture/THEME-TOGGLE-ENGINEERING.md) — complete theme state ownership, OLD/NEW snapshot behavior, four transition variants, accessibility, fallbacks and cleanup.
+12. [Sound Engineering](./architecture/SOUND-ENGINEERING.md) — shared Web Audio lifecycle, Vee, ThemeToggle and Contact success sounds, audio assets and extension guide.
+13. [Labs Runtime and Code Execution](./architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md) — owner Run, compiler, immutable artifact delivery infrastructure and the static/non-executable public detail boundary.
+14. [Data Model Catalogue](./architecture/DATA-MODEL-CATALOG.md) — actual Mongoose collections, fields, constraints and indexes.
+15. [API Endpoint Inventory](./api/ENDPOINT-INVENTORY.md) — all current Route Handler endpoints and methods.
+16. [Authentication and Account Engineering](./pages/AUTHENTICATION-AND-ACCOUNT-ENGINEERING.md) — current Better Auth flows, social-provider gates, owner identity policy and unimplemented account features.
+17. [Privacy and Data Lifecycle](./architecture/PRIVACY-AND-DATA-LIFECYCLE.md) — source-derived data map, cookies, retention, public disclosure and privacy gaps.
+18. [Error and Not-Found Engineering](./pages/ERROR-AND-NOT-FOUND-ENGINEERING.md) — root App Router error boundaries, diagnostics and guarded chunk recovery.
 
 ## 2. Current-state page guides
 
 - [Homepage](./pages/HOME-PAGE-ENGINEERING.md) — hero, About, Education, Skills, Experience, Projects and Contact, including animation/scroll reconstruction.
 - [Navbar and Footer](./pages/NAVBAR-AND-FOOTER-ENGINEERING.md) — shared shell, route-by-route conditional rendering, desktop/mobile navigation and footer composition.
+- [SEO and AEO Engineering](./SEO-AND-AEO-IMPLEMENTATION.md) — current code-derived SEO/AEO contract for homepage, projects and public Labs.
 - [Contact Form and Email Engineering](./pages/CONTACT-FORM-AND-EMAIL-ENGINEERING.md) — client form state/validation, POST API, server validation, email composition, Gmail SMTP, privacy, errors and hardening checklist.
 - [Vee Mascot](./pages/PORTFOLIO-MASCOT-ENGINEERING.md) — homepage companion 3D scene, scroll-based position/poses, section reactions and interactive scan system.
 - [Project Detail](./pages/PROJECT-DETAIL-ENGINEERING.md) — server/static route behavior, hero, snapshot, context, approach, design, engineering, motion, responsive, showcase, reflection, navigation.
