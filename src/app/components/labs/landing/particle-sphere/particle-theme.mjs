@@ -10,10 +10,10 @@ export function getParticleSphereThemePalette(isDark) {
   }
 
   return Object.freeze({
-    particleColor: "#176b68",
-    sparkleColor: "#00a293",
-    glowColor: "#70bdb3",
-    glowOpacity: 0.075,
+    particleColor: "#103b37",
+    sparkleColor: "#041816",
+    glowColor: "#0a2926",
+    glowOpacity: 0.09,
     orbitOpacityScale: 0.92,
   });
 }
