@@ -35,7 +35,7 @@ Do not expose owner APIs by removing the owner check or relying on navigation hi
 | POST | /api/labs/register | Public, rate-limited | Validates email/password, safe returnTo, delivery config and registration attempt; uses generic response to reduce account enumeration; starts verification flow and Better Auth registration. |
 | POST | /api/labs/verification/resend | Public flow endpoint, rate limited by auth/provider controls | Validate email, create a verification flow and request a new email verification message where configured. |
 | GET | /api/labs/verification/status?flow=... | Public flow token lookup | Returns whether the verification flow has been marked verified before its expiry. Flow ID must be a UUID; response is no-store. |
-| POST | /api/contact | Public, server validates | Validates contact form data, then sends via Gmail SMTP. Config missing returns 503; malformed body 400; validation errors 422; mail errors 500. |
+| POST | /api/contact | Public, server validates | Accepts name, email, projectType and message JSON; independently validates then sends owner notification via Gmail SMTP. Config missing 503; malformed JSON 400; validation 422; SMTP failure 500. Current handler has no explicit same-origin check or route-level rate limiter. See [Contact Form and Email Engineering](../pages/CONTACT-FORM-AND-EMAIL-ENGINEERING.md). |
 | GET | /api/health/database | Operational diagnostic | Tests configured database connectivity. Review current response before exposing this route publicly. |
 | GET | /api/source-snapshot?path=... | Development only | Reads source file line array for error diagnostics. Always returns 404 in production; path must remain inside src and traversal is rejected. |
 
