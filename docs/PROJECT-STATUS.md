@@ -6,6 +6,8 @@
 
 > This status describes code present on the audited branch. It is not proof that every workflow has passed production browser QA, database migration verification, provider integration testing or release acceptance. Source code is the authority for current behavior.
 
+> **Documentation audit:** The full docs-vs-code gap review is recorded in [DOCS-IMPLEMENTATION-GAP-AUDIT.md](./DOCS-IMPLEMENTATION-GAP-AUDIT.md). Its P0 findings include the public Labs detail runtime contract conflict and the owner identity ID/email fallback discrepancy. Resolve those decisions before further Labs detail/runtime or authorization changes.
+
 ## 1. Product boundary
 
 The platform has four substantial existing implementation areas:
