@@ -1,76 +1,91 @@
-**Status:** The Labs integration branch now contains the single-metric Chart.js analytics chart, live Motion-based toast queue, public combined-like contract, verified-account like migration, owner-only active verified-liker drilldown, release-bound public gallery poster promotion and gallery publication-readiness diagnostics. The gallery poster is an owner-selected static still image promoted from private Cloudinary storage to public Vercel Blob; automatic screenshot generation and public GIF/video posters remain deferred. These are committed code paths, not a new verified release: clean install, tests, lint, production build, Atlas-backed integration, authenticated browser QA and a new Vercel Preview for the current branch head remain outstanding. Existing source/runtime recovery and Cloudinary setup gates also remain in force. The Labs analytics calculation suite has 12 existing Node-native cases, but it has not been rerun against the complete current branch changes in this task. General portfolio CMS/Admin remains deferred.  
-**Primary Labs branch:** `feat/labs-platform-integration`
+# Portfolio Documentation — Source of Truth
 
-This documentation defines the proposed portfolio platform extension. It is not proof that any feature has been implemented or that infrastructure decisions have been validated against the current repository.
+**Audited branch:** feat/labs-platform-integration  
+**Audit date:** 2026-11-07  
+**Current status:** [PROJECT-STATUS.md](./PROJECT-STATUS.md)
 
-## Source-of-truth order
-1. `PRD.md` — product scope, users, requirements, constraints, acceptance criteria.
-2. `IMPLEMENTATION-PLAN.md` — phases, dependencies, verification gates, definition of done.
-3. `DESIGN-ADMIN.md` — admin and portfolio CMS experience.
-4. `DESIGN-ANALYTICS.md` — analytics dashboard, event definitions, interpretation.
-5. LABS-AND-AUTHENTICATION-DESIGN-SPEC.md — detailed Labs page/auth UX and repository-aligned implementation guide. This is the detailed UX authority for the public Labs route and authentication screen decisions.
-6. `LABS-SOURCE-MANAGEMENT-SPEC.md` — owner-only protected source lifecycle, automatic verified-account access, source versions, likes, engagement analytics, audit and migration plan.
-7. `LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md` — coordination plan for separating Analytics and Source Library, metadata editing, live refresh, current implementation gaps, phase order and preservation gates. It links to rather than duplicates the detailed analytics/source specifications.
-8. `LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md` — source of truth for owner Run, isolated compiler/runtime, immutable published artifacts, runtime and media release gates.
-9. `LABS-GALLERY-ENGAGEMENT-AND-LIVE-UI-IMPLEMENTATION.md` — current code record for gallery eligibility, explicit public still-image posters, combined likes, anonymous identity, owner liker drilldown, Chart.js and toast behavior.
-10. `DESIGN-LAB.md` — public Labs UX requirements, gallery card hierarchy, runtime/source interactions, accessibility and performance expectations.
-10. Existing project-level source-of-truth documents and current implementation — authoritative for current behavior and technical conventions. Inspect before changing code.
-11. [Motion Lab component specification system](./MOTION-LAB/README.md) — locked visual design system, Motion engineering standard, mandatory AI-agent protocol, component inventory and one build-ready specification per component.
+This folder is the engineering handover for the complete portfolio platform. Start with the current status and current-state engineering guides. Older design specifications and phased implementation plans are retained where they preserve useful decisions/history; they must not be read as proof that an item is still planned or still pending.
 
-## Locked baseline
-- Preserve the current public portfolio home page, project detail pages, education section, design, responsive behavior, animation, SEO, accessibility, and functionality.
-- Dynamic CMS-managed content: hero/introduction, about, skills, experience, projects, project details, media/gallery metadata, project links, featured and publication state.
-- Education content remains static in code. Layout, design system, typography, animation and interactions remain code-controlled.
-- Next.js App Router, JavaScript, Tailwind CSS v4, Motion (`motion/react`), MongoDB, Cloudinary and Vercel are the chosen baseline technologies.
-- Email/password and Google sign-in are required. Better Auth with the MongoDB adapter is the selected Labs authentication foundation. Google OAuth credentials, SMTP delivery configuration and the final session-lifetime policy remain deployment/release requirements. First-party Terms and Privacy pages are integrated at `/terms` and `/privacy`; server-owned policy versions are recorded at sign-up.
-- Guests can browse published Lab entries and interact with demos explicitly designated public. Full source remains protected; restricted/untrusted interactive previews require the approved authentication/isolation policy.
-- Admin has portfolio CMS, Lab management, analytics, media library, drafts/publishing, scheduled publication, and immutable content-version history.
-- Cloudinary-backed advanced media library with usage tracking and reference-safe replacement/deletion.
-- Never execute untrusted experiment code inside the main application runtime. The secure isolation mechanism and hosting remain architecture decisions.
-- No feature work begins until the repository and existing design are inspected and a baseline regression check is recorded.
+## 1. Read this first
 
-## Documents
-- [Product requirements](./PRD.md)
-- [Implementation plan](./IMPLEMENTATION-PLAN.md)
-- [Admin design](./DESIGN-ADMIN.md)
-- [Analytics design](./DESIGN-ANALYTICS.md)
-- [Lab design](./DESIGN-LAB.md)
-- [Motion Lab component specification system](./MOTION-LAB/README.md) — global visual and motion standards plus 120 individual component build specifications.
+1. [Current Project Status](./PROJECT-STATUS.md) — current code status, future boundary, release checks and document authority.
+2. [System Architecture](./architecture/SYSTEM-ARCHITECTURE.md) — current frontend/backend/domain responsibilities and major data flows.
+3. [Homepage Engineering](./pages/HOME-PAGE-ENGINEERING.md) — every homepage section, component hierarchy, scroll and Motion reconstruction guide.
+4. [Project Detail Engineering](./pages/PROJECT-DETAIL-ENGINEERING.md) — project route, metadata, fixed template, data contract and optional sections.
+5. [Scroll and Motion Engineering](./architecture/SCROLL-AND-MOTION-ENGINEERING.md) — Lenis/native scroll policy, page-loader reset, sticky/pinned timelines, reduced-motion and QA.
+6. [Labs Runtime and Code Execution](./architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md) — source → compiler → sandbox → immutable artifact → isolated public runtime.
+7. [Data Model Catalogue](./architecture/DATA-MODEL-CATALOG.md) — actual Mongoose collections, fields, constraints and indexes.
+8. [API Endpoint Inventory](./api/ENDPOINT-INVENTORY.md) — all current Route Handler endpoints and methods.
 
-- [Labs and authentication UX + implementation guide](./LABS-AND-AUTHENTICATION-DESIGN-SPEC.md) — detailed Labs page design, auth flows, current stack/repository baseline, proposed components/hooks/state ownership and feature implementation guidance.
-- [Labs owner-managed source lifecycle](./LABS-SOURCE-MANAGEMENT-SPEC.md) — protected owner workspace, source snapshots/versions, automatic verified-user access, likes/copy/open analytics, auditing, migration and rollout phases.
-- [Labs Owner Console — Analytics and Source Management Plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md) — non-duplicative route separation, experiment metadata editing, current gaps, live polling, implementation sequence and functionality-preservation gates.
-- [Labs Experiment Studio runtime and media plan](./LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md) — owner Run regression gates, isolated HTML/React runtime, immutable artifacts, static gallery posters, media-role migration, skeletons, optimistic interactions and phased rollout.
-- [Labs Gallery, Engagement and Live UI implementation](./LABS-GALLERY-ENGAGEMENT-AND-LIVE-UI-IMPLEMENTATION.md) — implemented public gallery eligibility/posters, public like privacy and identity, owner verified-liker analytics, Chart.js trend chart and queued action toasts; includes unverified release gates.
-- [Database and media setup plan](./DATABASE-AND-MEDIA-SETUP-PLAN.md) — MongoDB Atlas, Mongoose, Cloudinary, environment variables, security, testing and deployment setup.
+## 2. Current-state page guides
 
-## Change control
-A new requirement must be added to the PRD, with affected design/implementation documents updated together. Explicitly mark unselected decisions as **OPEN**; do not silently invent choices. Any change that can affect existing public routes or rendering requires a documented impact assessment and regression evidence.
+- [Homepage](./pages/HOME-PAGE-ENGINEERING.md) — hero, About, Education, Skills, Experience, Projects and Contact, including animation/scroll reconstruction.
+- [Project Detail](./pages/PROJECT-DETAIL-ENGINEERING.md) — server/static route behavior, hero, snapshot, context, approach, design, engineering, motion, responsive, showcase, reflection, navigation.
+- [Public Labs and Owner Workspace](./pages/LABS-AND-OWNER-WORKSPACE.md) — public listing/detail, likes/source, owner analytics, inventory/editor, experiment metadata and media.
+- [Analytics Engineering](./pages/ANALYTICS-ENGINEERING.md) — separate Portfolio Analytics and Labs Engagement Analytics contracts.
 
+## 3. Architecture and engineering references
 
-## Engineering architecture documents
-- [Portfolio Analytics implementation plan](./PORTFOLIO-ANALYTICS-IMPLEMENTATION-PLAN.md) — phased first-party visit tracking, IP-derived approximate location, visible-time heartbeats, MongoDB retention/deletion, owner dashboard polling and public-page performance budgets.
-- [System architecture and frontend/backend boundaries](./ARCHITECTURE.md) — source-of-truth rules for route handlers, business logic, data access, schemas, middleware, security and API contracts.
-- [Proposed project structure](./PROJECT-STRUCTURE.md) — recommended folder/module boundaries to reconcile against the actual repository before implementation.
-- [API contracts and domain schemas](./API-CONTRACTS.md) — endpoint inventory, request/response conventions, validation and permission expectations.
+- [System Architecture](./architecture/SYSTEM-ARCHITECTURE.md) — current rendering/backend/persistence/infrastructure boundaries.
+- [Scroll and Motion Engineering](./architecture/SCROLL-AND-MOTION-ENGINEERING.md) — scroll-controller ownership, Motion graph types, breakpoints and test matrix.
+- [Data Model Catalogue](./architecture/DATA-MODEL-CATALOG.md) — current collections and schema constraints; live Atlas indexes still require environment verification.
+- [Labs Runtime and Code Execution](./architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md) — built-in runtime, Monaco editor, unsaved Run, immutable publishing, artifact security and poster/media lifecycle.
+- [API Endpoint Inventory](./api/ENDPOINT-INVENTORY.md) — route/method/auth/access index for all 36 handlers.
+- [Environment and Release](./operations/ENVIRONMENT-AND-RELEASE.md) — local setup, actual env variable use, scripts, build gates, release QA and known stale .env.example contact configuration.
 
-## Stack decisions and implementation boundaries
-- Frontend remains Next.js App Router + JavaScript + Tailwind CSS v4 + Motion (motion/react).
-- TanStack Query (React Query) is approved conditionally for client-side server state when useful; it is not installed in the inspected package manifest and must not be assumed. It does not replace Server Components or server-side authorization.
-- Initial backend decision: use Next.js server-side modules, Route Handlers and Server Actions where appropriate; **do not add a separate Express server by default**. Express remains an open option only if a validated deployment/runtime boundary requires a separate API service or worker.
-- MongoDB is the application database; Cloudinary stores media assets. Better Auth with the MongoDB adapter is selected for Labs. Session-lifetime policy, SMTP vendor/operations, scheduling and isolated execution infrastructure remain open.
-- Architecture documents define intended boundaries, not verified facts about the current repository. Phase 0 must inspect and adapt the proposed tree to actual conventions.
+## 4. Future implementation — explicitly not part of current implementation
 
+- [Portfolio CMS and Project Detail CMS](./future/PORTFOLIO-CMS-AND-PROJECT-DETAIL-CMS.md) — approved content boundary, current source-field mapping and future data/version/cache gates. It is not implemented.
+- [Google and GitHub OAuth](./future/GOOGLE-GITHUB-OAUTH.md) — provider code exists behind credential checks; Preview/Production configuration and complete E2E acceptance remain pending.
 
-## Current Labs implementation status
+## 5. Existing product, design and security authorities
 
-The `feat/labs-platform-integration` branch is the active Labs implementation branch. The owner source inventory/editor, source lifecycle and initial aggregate analytics foundations exist. The dedicated Analytics and Source Library routes are committed and Preview build-verified. Custom experiment metadata editing, initial custom analytics coverage, confirmed source creation handoff and the first live Analytics dashboard are code/build verified; authenticated owner and Atlas-backed tests, event-to-screen polling verification, ranking/detail Preview build verification and visual/accessibility QA remain outstanding. The 5 November 2026 browser review also surfaced a blank detail runtime and missing custom gallery visuals; see the runtime/media plan for mandatory recovery and verification gates. See:
-- [Labs and authentication UX/implementation baseline](./LABS-AND-AUTHENTICATION-DESIGN-SPEC.md), especially Section 36.
-- [Labs authentication and protected-source setup/provisioning runbook](./LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md).
-- [Labs owner-managed source lifecycle specification](./LABS-SOURCE-MANAGEMENT-SPEC.md) — owner identity, source file editor, immutable snapshots, draft/publish/restore, automatic verified-user access, source engagement metrics, audit, migration and implementation phases.
-- [Labs Owner Console plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md) — next owner-console work and preservation checklist.
+These original flat documents remain important for decisions and detailed requirements. Read them together with the current-state guide above.
 
-CMS/Admin remains deferred until Labs is complete. Existing public portfolio routes and demos must remain usable when authentication configuration is absent.
+- [Product Requirements](./PRD.md)
+- [Decisions](./DECISIONS.md)
+- [Admin/CMS Design](./DESIGN-ADMIN.md) — future general Portfolio CMS/admin design requirements, not proof that these proposed routes currently exist.
+- [Analytics Design](./DESIGN-ANALYTICS.md) — Labs analytics semantics and dashboard requirements; current implementation state is in pages/ANALYTICS-ENGINEERING.md.
+- [Labs Design](./DESIGN-LAB.md)
+- [Labs and Authentication Design Spec](./LABS-AND-AUTHENTICATION-DESIGN-SPEC.md)
+- [Labs Authentication and Source Access Runbook](./LABS-AUTHENTICATION-AND-SOURCE-ACCESS.md)
+- [Labs Source Management Specification](./LABS-SOURCE-MANAGEMENT-SPEC.md)
+- [Labs Owner Console Coordination Plan](./LABS-OWNER-CONSOLE-ANALYTICS-AND-SOURCE-MANAGEMENT-PLAN.md)
+- [Labs Experiment Studio Runtime and Media Plan](./LABS-EXPERIMENT-STUDIO-RUNTIME-AND-MEDIA-PLAN.md)
+- [Labs Gallery, Engagement and Live UI Implementation](./LABS-GALLERY-ENGAGEMENT-AND-LIVE-UI-IMPLEMENTATION.md)
+- [Threat Model](./THREAT-MODEL.md)
+- [Database and Media Setup Plan](./DATABASE-AND-MEDIA-SETUP-PLAN.md)
+- [Foundation Audit](./FOUNDATION-AUDIT.md)
+- [Motion Lab Component Specification System](./MOTION-LAB/README.md)
 
+## 6. Legacy planning/contract documents
 
-First-party legal pages are maintained at `/terms` and `/privacy`. Their policy versions are server-owned in `src/app/lib/legal/policies.js`; increment the relevant version whenever published legal text changes materially.
+- [Implementation Plan](./IMPLEMENTATION-PLAN.md) — original phase plan; use PROJECT-STATUS.md for present implementation state.
+- [Portfolio Analytics Implementation Plan](./PORTFOLIO-ANALYTICS-IMPLEMENTATION-PLAN.md) — original first-party analytics design/rollout plan; actual code and current behavior are documented in pages/ANALYTICS-ENGINEERING.md.
+- [Architecture Responsibility Contract](./ARCHITECTURE.md) — original target responsibility rules; current implemented topology is in architecture/SYSTEM-ARCHITECTURE.md.
+- [Project Structure Proposal](./PROJECT-STRUCTURE.md) — conceptual target structure; current repository tree is listed in architecture/SYSTEM-ARCHITECTURE.md.
+- [API Contracts](./API-CONTRACTS.md) — detailed domain contract notes; current route/method index is api/ENDPOINT-INVENTORY.md.
+
+## 7. Source-of-truth rules
+
+1. Current source code is the authority for what exists and how it behaves.
+2. PROJECT-STATUS.md is the navigation/status authority; page/architecture engineering guides are the current implementation explanation.
+3. PRD and approved decisions define what should exist, not proof that it has been implemented.
+4. Domain docs own detailed invariants. API inventory owns the route index; it should not duplicate every internal schema field.
+5. Mark implementation and verification separately. Code present does not mean Preview/Production/browser/Atlas integration has passed.
+6. Record unresolved discrepancies as explicit audit items. Do not silently reconcile by guessing.
+7. Portfolio CMS and Project Detail CMS remain future work. Education remains code-owned/static.
+8. Do not change public composition, animation, responsive design, project slug behavior or runtime security while implementing docs.
+
+## 8. Documentation change control
+
+When a feature changes:
+1. update the owning current-state engineering document;
+2. update PROJECT-STATUS.md when status or verification changes;
+3. update API inventory for route/method changes;
+4. update DATA-MODEL-CATALOG.md for schema/collection/index changes;
+5. update scroll/motion docs for changes to interaction/scroll ownership;
+6. update PRD/DECISIONS only when an approved product decision changes;
+7. link superseded plans rather than silently deleting historical context.
+
+Do not implement CMS, OAuth provider setup, new APIs, new models or UI changes as part of a documentation update.
