@@ -11,7 +11,11 @@ import {
 import { createParticleOrbits } from "./particle-orbits";
 import { getSphereSqueeze } from "./particle-animation.mjs";
 import { PARTICLE_SPHERE_CONFIG } from "./particle-constants";
-import { getParticleQualityProfile } from "./particle-quality.mjs";
+import {
+  areParticleQualityProfilesEqual,
+  getParticleQualityProfile,
+  hasParticleBudgetChanged,
+} from "./particle-quality.mjs";
 
 function createParticleGeometry(profile) {
   const data = createSphereParticleData({
@@ -61,6 +65,7 @@ export default function LabsParticleSphere() {
     let isInView = true;
     let elapsed = 0;
     let previousTime = 0;
+    let lastRenderTime = 0;
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
@@ -88,10 +93,14 @@ export default function LabsParticleSphere() {
 
       animationFrame = requestAnimationFrame(renderFrame);
 
+      const frameInterval = 1000 / (qualityProfile?.maxFps ?? 60);
+      if (lastRenderTime && time - lastRenderTime < frameInterval) return;
+
       const delta = previousTime
         ? Math.min((time - previousTime) / 1000, PARTICLE_SPHERE_CONFIG.maxDelta)
         : 0;
       previousTime = time;
+      lastRenderTime = time;
       elapsed += delta;
 
       if (particleMaterial) {
@@ -123,6 +132,7 @@ export default function LabsParticleSphere() {
 
       isRunning = true;
       previousTime = 0;
+      lastRenderTime = 0;
       animationFrame = requestAnimationFrame(renderFrame);
     };
 
@@ -178,11 +188,16 @@ export default function LabsParticleSphere() {
         hardwareConcurrency: window.navigator.hardwareConcurrency,
       });
 
-      if (!qualityProfile || qualityProfile.tier !== nextProfile.tier) {
-        const previousGeometry = particles?.geometry;
+      if (!areParticleQualityProfilesEqual(qualityProfile, nextProfile)) {
+        const shouldReplaceGeometry = hasParticleBudgetChanged(
+          qualityProfile,
+          nextProfile,
+        );
+        const previousGeometry = shouldReplaceGeometry ? particles?.geometry : null;
+
         qualityProfile = nextProfile;
 
-        if (particles) {
+        if (particles && shouldReplaceGeometry) {
           particles.geometry = createParticleGeometry(qualityProfile);
           previousGeometry?.dispose();
         }
@@ -211,6 +226,12 @@ export default function LabsParticleSphere() {
     };
 
     try {
+      qualityProfile = getParticleQualityProfile({
+        viewportWidth: window.innerWidth,
+        deviceMemory: window.navigator.deviceMemory,
+        hardwareConcurrency: window.navigator.hardwareConcurrency,
+      });
+
       renderer = new THREE.WebGLRenderer({
         alpha: true,
         antialias: true,
@@ -219,7 +240,7 @@ export default function LabsParticleSphere() {
         depth: true,
       });
       renderer.setPixelRatio(
-        Math.min(window.devicePixelRatio || 1, PARTICLE_SPHERE_CONFIG.maxPixelRatio),
+        Math.min(window.devicePixelRatio || 1, qualityProfile.maxPixelRatio),
       );
       renderer.setClearColor(0x000000, 0);
       renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -230,11 +251,6 @@ export default function LabsParticleSphere() {
 
       mount.appendChild(renderer.domElement);
 
-      qualityProfile = getParticleQualityProfile({
-        viewportWidth: window.innerWidth,
-        deviceMemory: window.navigator.deviceMemory,
-        hardwareConcurrency: window.navigator.hardwareConcurrency,
-      });
       particleGeometry = createParticleGeometry(qualityProfile);
       particleMaterial = new THREE.ShaderMaterial({
         uniforms: {
