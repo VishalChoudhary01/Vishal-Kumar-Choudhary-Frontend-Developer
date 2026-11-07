@@ -267,12 +267,12 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.match(rendererSource, /themeObserver/);
   assert.match(rendererSource, /syncThemeColor/);
   assert.match(rendererSource, /getParticleSphereThemePalette/);
-  assert.match(rendererSource, /classList\\.contains\\("dark"\\)/);
+  assert.ok(rendererSource.includes('classList.contains("dark")'));
+  assert.ok(rendererSource.includes('getPropertyValue("--brand")'));
   assert.match(rendererSource, /uSparkleColor/);
   assert.match(rendererSource, /glow\.material\.color\.set\(palette\.glowColor\)/);
   assert.match(rendererSource, /getSphereScale/);
   assert.match(rendererSource, /getSphereContraction/);
-  assert.match(rendererSource, /classList\.contains\("dark"\)/);
   assert.match(rendererSource, /glow\.scale\.setScalar\(sphereScale\)/);
   assert.match(rendererSource, /orbitGroup\.scale\.setScalar\(sphereScale\)/);
   assert.ok(rendererSource.includes("renderer?.dispose()"));
