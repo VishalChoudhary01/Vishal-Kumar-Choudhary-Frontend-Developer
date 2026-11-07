@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import {
   PORTFOLIO_ANALYTICS_OPT_OUT_KEY,
   PORTFOLIO_ANALYTICS_PREFERENCE_EVENT,
@@ -8,30 +8,31 @@ import {
   writePortfolioAnalyticsOptOut,
 } from "@/app/lib/portfolio-analytics/privacy-preference.mjs";
 
+function subscribeToPreference(onChange) {
+  window.addEventListener("storage", onChange);
+  window.addEventListener(PORTFOLIO_ANALYTICS_PREFERENCE_EVENT, onChange);
+
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(PORTFOLIO_ANALYTICS_PREFERENCE_EVENT, onChange);
+  };
+}
+
+function getPreferenceSnapshot() {
+  return readPortfolioAnalyticsOptOut();
+}
+
+function getServerPreferenceSnapshot() {
+  return false;
+}
+
 export default function PortfolioAnalyticsPrivacyPreference() {
-  const [optedOut, setOptedOut] = useState(false);
-  const [ready, setReady] = useState(false);
+  const optedOut = useSyncExternalStore(
+    subscribeToPreference,
+    getPreferenceSnapshot,
+    getServerPreferenceSnapshot,
+  );
   const [storageUnavailable, setStorageUnavailable] = useState(false);
-
-  useEffect(() => {
-    setOptedOut(readPortfolioAnalyticsOptOut());
-    setReady(true);
-
-    const syncPreference = (event) => {
-      if (event?.type === "storage" && event.key !== PORTFOLIO_ANALYTICS_OPT_OUT_KEY) {
-        return;
-      }
-      setOptedOut(readPortfolioAnalyticsOptOut());
-    };
-
-    window.addEventListener("storage", syncPreference);
-    window.addEventListener(PORTFOLIO_ANALYTICS_PREFERENCE_EVENT, syncPreference);
-
-    return () => {
-      window.removeEventListener("storage", syncPreference);
-      window.removeEventListener(PORTFOLIO_ANALYTICS_PREFERENCE_EVENT, syncPreference);
-    };
-  }, []);
 
   const updatePreference = (nextValue) => {
     const saved = writePortfolioAnalyticsOptOut(nextValue);
@@ -41,7 +42,6 @@ export default function PortfolioAnalyticsPrivacyPreference() {
     }
 
     setStorageUnavailable(false);
-    setOptedOut(nextValue);
     window.dispatchEvent(new Event(PORTFOLIO_ANALYTICS_PREFERENCE_EVENT));
   };
 
@@ -62,8 +62,7 @@ export default function PortfolioAnalyticsPrivacyPreference() {
         <label className="inline-flex min-h-10 shrink-0 cursor-pointer items-center gap-3 text-sm text-text-primary">
           <input
             type="checkbox"
-            checked={ready && optedOut}
-            disabled={!ready}
+            checked={optedOut}
             onChange={(event) => updatePreference(event.target.checked)}
             className="size-4 accent-[var(--brand)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
           />
@@ -75,11 +74,9 @@ export default function PortfolioAnalyticsPrivacyPreference() {
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs">
         <p className={optedOut ? "text-success" : "text-text-tertiary"}>
-          {ready
-            ? optedOut
-              ? "Analytics are disabled for this browser profile."
-              : "Analytics preference: allowed if the site feature is enabled."
-            : "Reading this browser’s preference…"}
+          {optedOut
+            ? "Analytics are disabled for this browser profile."
+            : "Analytics preference: allowed if the site feature is enabled."}
         </p>
         {storageUnavailable ? (
           <p role="alert" className="text-warning">
