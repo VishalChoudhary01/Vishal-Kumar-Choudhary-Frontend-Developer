@@ -109,19 +109,23 @@ The detail page is a project presentation, not a playground. It shows:
 
 It must not mount LabWorkspace, LabRuntimeBoundary, an artifact iframe or any executable experiment runtime. The owner source creator's Run preview remains available. Do not delete compiler/runtime infrastructure as part of the public detail-page change.
 
-## 7. Monaco source reader/editor — planned, not yet implemented
+## 7. Monaco source reader/editor — integrated in branch; acceptance verification pending
 
-The phased implementation plan is **[here](./LABS-DETAIL-PRESENTATION-AND-MONACO-EDITOR-IMPLEMENTATION-PLAN.md)**.
+The phased implementation history is documented in [the detail/Monaco implementation plan](./LABS-DETAIL-PRESENTATION-AND-MONACO-EDITOR-IMPLEMENTATION-PLAN.md). The earlier heading and wording that described Monaco as not implemented are superseded by the 6–7 November implementation phases below.
 
-Mandatory non-regression rules:
-- Public source reader: read-only Monaco, loaded only after existing verified-email authorization succeeds.
-- Owner creator: editable Monaco.
-- Historical version viewer: read-only Monaco.
-- Existing React `files` state remains authoritative; Monaco is only the editor surface.
+Current branch integration:
+- Shared editor surface: src/app/components/labs/code/LabCodeEditor.js.
+- Public protected source reader: read-only Monaco, reached only after the existing verified-email source authorization succeeds.
+- Owner Source Creator: editable Monaco in the protected owner source workspace.
+- Historical source-version view: read-only Monaco.
+- Monaco is loaded client-side and self-hosted; a plain-text fallback retains access if Monaco or its worker cannot load.
+- React files state remains authoritative; Monaco is an input/view surface and must not become a second source-of-truth store.
 - Save Draft, Run and Build & Publish must use the exact current text, including the final keystroke.
-- Add/import/rename/remove/reorder, language selection, validation, dirty state, discard, history, restore, Run/console, publish/unpublish, audit and delete behavior must remain intact.
-- Monaco is client-only, lazy-loaded and self-hosted; it is independent of compiler sandbox dependencies.
-- A usable plain-text fallback remains if Monaco or its worker fails to load.
+- File add/import/rename/remove/reorder, language selection, validation, dirty state, discard, history, restore, Run/console, publish/unpublish, audit and deletion behavior must remain intact.
+
+**Status distinction:** Monaco integration is present in this branch. This does not mean the current-HEAD browser acceptance has passed. Verify load/fallback, file switching, final-keystroke synchronization, keyboard/accessibility behavior, editor actions and theme behavior in a deployed Preview.
+
+Current product boundary: Monaco's public use is a protected source reader, not an executable public experiment preview. The public Labs detail page remains static/non-executable under the 7 November decision.
 
 ## 8. Preview release verification gates
 
