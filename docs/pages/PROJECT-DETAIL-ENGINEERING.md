@@ -19,7 +19,7 @@ The route:
 - creates server-rendered CreativeWork JSON-LD via JsonLd/buildProjectJsonLd;
 - computes previous/next navigation from the canonical order in portfolio.projects.
 
-The page's SEO/media metadata is derived from project.seo and project.media. The visible client UI is mounted by ProjectPageView.
+The page's SEO/media metadata is derived from project.seo and project.media. The visible client UI is mounted by ProjectPageView. The current dynamic title/description/canonical, Open Graph/Twitter fields and server-rendered CreativeWork + creator JSON-LD are documented in [SEO and AEO Engineering](../SEO-AND-AEO-IMPLEMENTATION.md).
 
 ProjectPageView inserts the shared Navbar with `context="project"`: logo-to-home, social links from small breakpoints upward and ThemeToggle remain; homepage section navigation, hamburger menu, Resume and Labs account control are omitted. RootLayout supplies the shared Footer after the project page; homepage section links are hidden there, while socials, Privacy Policy and metadata remain. See [Navbar and Footer Engineering](./NAVBAR-AND-FOOTER-ENGINEERING.md) for the full route/context contract.
 
@@ -242,3 +242,7 @@ softDepth maps media scale from .72 to 1 as its media wrapper moves from the low
 - the media's own reveal/visibility.
 
 When recreating ProjectMedia, preserve separate wrapper layers so scroll and hover styles do not overwrite each other.
+
+## 10. SEO/AEO implementation pointer
+
+The current SEO implementation derives each page's title, description, canonical URL, Open Graph/Twitter metadata and CreativeWork JSON-LD from the canonical project record and its media. Preserve the single data source, conditional image/date/technology properties and proper 404. See [SEO and AEO Engineering](../SEO-AND-AEO-IMPLEMENTATION.md) for the full cross-route rules and current verification gaps.
