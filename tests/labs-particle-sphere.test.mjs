@@ -290,7 +290,6 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /transformed \*= radialScale/);
   assert.doesNotMatch(shaderSource, /transformed\.[xyz] \*=/);
   assert.match(shaderSource, /mix\(1\.0, 0\.70, clamp\(uContraction/);
-  assert.doesNotMatch(shaderSource, /transformed\.[xyz] \*=/);
   assert.match(shaderSource, /sparkleMask/);
   assert.match(shaderSource, /sparkleWave/);
   assert.match(shaderSource, /ambientDrift/);
