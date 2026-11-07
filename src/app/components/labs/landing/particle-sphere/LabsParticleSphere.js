@@ -9,7 +9,7 @@ import {
   particleVertexShader,
 } from "./particle-shaders";
 import { createParticleOrbits } from "./particle-orbits";
-import { getSphereContraction, getSphereScale } from "./particle-animation.mjs";
+import { getParticleCameraDistance } from "./particle-responsive.mjs";
 import { getParticleSphereThemePalette } from "./particle-theme.mjs";
 import { PARTICLE_SPHERE_CONFIG } from "./particle-constants";
 import {
@@ -106,24 +106,18 @@ export default function LabsParticleSphere() {
 
       if (particleMaterial) {
         particleMaterial.uniforms.uTime.value = elapsed;
-        particleMaterial.uniforms.uContraction.value = getSphereContraction(elapsed);
       }
 
       sphereGroup.rotation.y = elapsed * PARTICLE_SPHERE_CONFIG.rotationSpeed;
       sphereGroup.rotation.x = Math.sin(elapsed * 0.16) * 0.035;
       sphereGroup.rotation.z = Math.sin(elapsed * 0.11) * 0.018;
 
-      const sphereScale = getSphereScale(elapsed);
-
       if (orbitGroup) {
         orbitGroup.rotation.y = -elapsed * PARTICLE_SPHERE_CONFIG.orbitSpeed;
         orbitGroup.rotation.z = Math.sin(elapsed * 0.08) * 0.012;
-        orbitGroup.scale.setScalar(sphereScale);
+        orbitGroup.userData.update?.(elapsed);
       }
 
-      if (glow) {
-        glow.scale.setScalar(sphereScale);
-      }
 
       renderer.render(scene, camera);
     };
@@ -181,6 +175,13 @@ export default function LabsParticleSphere() {
       const height = Math.max(1, Math.round(bounds.height));
 
       camera.aspect = width / height;
+      camera.position.z = getParticleCameraDistance({
+        width,
+        height,
+        fovDegrees: PARTICLE_SPHERE_CONFIG.cameraFov,
+        orbitRadius: 1.9,
+        fillRatio: 0.92,
+      });
       camera.updateProjectionMatrix();
 
       const nextProfile = getParticleQualityProfile({
@@ -261,7 +262,6 @@ export default function LabsParticleSphere() {
       particleMaterial = new THREE.ShaderMaterial({
         uniforms: {
           uTime: { value: 0 },
-          uContraction: { value: 0 },
           uPixelRatio: { value: renderer.getPixelRatio() },
           uMotionEnabled: { value: 1 },
           uBrandColor: { value: new THREE.Color(initialBrandColor) },
@@ -295,9 +295,22 @@ export default function LabsParticleSphere() {
           const material = object.material;
           if (!material) return;
 
-          material.color.set(brandColor);
-          material.opacity = (material.userData.baseOpacity ?? material.opacity)
-            * palette.orbitOpacityScale;
+          switch (material.userData.themeRole) {
+            case "orbit-line":
+              material.color.set(brandColor);
+              material.opacity = material.userData.baseOpacity * palette.orbitOpacityScale;
+              break;
+            case "orbit-particle":
+              material.color.set(palette.orbitParticleColor);
+              material.opacity = palette.orbitParticleOpacity;
+              break;
+            case "orbit-particle-glow":
+              material.color.set(palette.orbitParticleGlowColor);
+              material.opacity = palette.orbitParticleGlowOpacity;
+              break;
+            default:
+              break;
+          }
         });
 
         if (glow) {
