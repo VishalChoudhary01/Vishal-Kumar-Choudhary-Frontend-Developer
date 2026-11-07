@@ -1,5 +1,8 @@
 # System Architecture and Responsibility Boundaries
 
+
+> **Current-state clarification (2026-11-07):** This file is the original responsibility-boundary/target architecture contract. It is not the current repository topology map. For what is implemented today, read [architecture/SYSTEM-ARCHITECTURE.md](./architecture/SYSTEM-ARCHITECTURE.md). For the current route, data model, scroll/motion and runtime maps, use the corresponding current-state guides linked from [README.md](./README.md). Where this older target document describes a proposal (for example TanStack Query, jobs or modules), do not infer that the dependency or architecture exists in the running code.
+
 **Status:** Target architecture contract; must be reconciled against the actual repository in Phase 0.  
 **Version:** 1.0  
 **Related:** PRD.md, PROJECT-STRUCTURE.md, API-CONTRACTS.md, IMPLEMENTATION-PLAN.md
