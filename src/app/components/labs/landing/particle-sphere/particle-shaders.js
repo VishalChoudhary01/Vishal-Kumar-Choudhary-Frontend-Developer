@@ -202,6 +202,7 @@ export const particleVertexShader = `
       layerOpacity
       + sparkle * 1.15
       + particleBurst * 0.12
+      + uBurst * 0.04 * sphereLayer
     ) * depthFade;
     vSparkle = sparkle;
   }
