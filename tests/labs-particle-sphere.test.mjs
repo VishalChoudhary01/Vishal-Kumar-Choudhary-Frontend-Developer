@@ -5,6 +5,7 @@ import test from "node:test";
 import { createSphereParticleData } from "../src/app/components/labs/landing/particle-sphere/particle-geometry.mjs";
 import {
   getParticleBurstEnvelope,
+  PARTICLE_BURST_EXPANSION,
   getOrbitBurstSpeed,
   ORBIT_BURST_SPEED_MULTIPLIER,
   isParticleBurstActive,
@@ -27,6 +28,14 @@ const shaderSource = await readFile(
 );
 const orbitSource = await readFile(
   new URL("../src/app/components/labs/landing/particle-sphere/particle-orbits.js", import.meta.url),
+  "utf8",
+);
+const constantsSource = await readFile(
+  new URL("../src/app/components/labs/landing/particle-sphere/particle-constants.js", import.meta.url),
+  "utf8",
+);
+const artworkSource = await readFile(
+  new URL("../src/app/components/labs/landing/LabsHeroArtwork.js", import.meta.url),
   "utf8",
 );
 
@@ -149,7 +158,7 @@ test("particle geometry is deterministic for a stable seed", () => {
 });
 
 test("sphere world-space size stays fixed while camera framing adapts to mobile", () => {
-  const radius = 1.14;
+  const radius = 1.22;
   const data = createSphereParticleData({
     surfaceCount: 180,
     innerCount: 24,
@@ -161,7 +170,7 @@ test("sphere world-space size stays fixed while camera framing adapts to mobile"
     width: 375,
     height: 520,
     fovDegrees: 42,
-    orbitRadius: 1.9,
+    orbitRadius: 1.92,
     fillRatio: 0.92,
   });
   const desktopDistance = getParticleCameraDistance({
@@ -329,6 +338,7 @@ test("particle burst expands quickly and recovers without changing base geometry
   assert.equal(getParticleBurstEnvelope(1.35), 0);
   assert.equal(getParticleBurstEnvelope(Number.NaN), 0);
 
+  assert.equal(PARTICLE_BURST_EXPANSION, 1.85);
   assert.equal(getOrbitBurstSpeed(0), 1);
   assert.equal(getOrbitBurstSpeed(0.45), 1.65);
   assert.equal(getOrbitBurstSpeed(1.35), 1);
