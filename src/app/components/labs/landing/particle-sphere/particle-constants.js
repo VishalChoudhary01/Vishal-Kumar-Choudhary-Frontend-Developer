@@ -6,7 +6,7 @@ export const PARTICLE_SPHERE_CONFIG = Object.freeze({
   cameraFov: 42,
   cameraDistance: 4.55,
   maxPixelRatio: 1.5,
-  rotationSpeed: 0.075,
-  orbitSpeed: 0.012,
+  rotationSpeed: 0.062,
+  orbitSpeed: 0.009,
   maxDelta: 0.05,
 });
