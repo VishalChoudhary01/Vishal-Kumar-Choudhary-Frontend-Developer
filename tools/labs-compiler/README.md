@@ -1,6 +1,6 @@
-# Labs isolated React compiler
+# Labs isolated experiment compiler
 
-Private build worker for Labs React experiments. Run only inside an ephemeral Vercel Sandbox with outbound networking denied. Owner-authored source must never execute in a Next.js Route Handler or the main portfolio process.
+Private build worker for Labs React and standalone HTML/CSS/JavaScript experiments. Run only inside an ephemeral Vercel Sandbox with outbound networking denied. Owner-authored source must never execute in a Next.js Route Handler or the main portfolio process.
 
 ## Pinned toolchain
 
@@ -15,9 +15,17 @@ Private build worker for Labs React experiments. Run only inside an ephemeral Ve
 
 ## Input contract
 
-The worker receives `files.json` (relative source paths and text content) and an empty `assets.json`. Runtime asset imports are disabled. Optional images, GIFs and videos are uploaded media. They remain private until the owner explicitly promotes one to public gallery media. A promoted image/GIF/video takes precedence over the generated screenshot; with no promoted upload, the screenshot generated from the exact published artifact is shown.
+The worker receives `files.json` (relative source paths and text content) and an empty `assets.json`. Runtime asset imports are disabled. Optional images, GIFs and videos are uploaded media; they remain private until the owner explicitly promotes an eligible asset to public gallery media. A release-matching promoted asset takes precedence over the generated screenshot; with no promoted asset, the screenshot captured from the exact published artifact is selected, then the public Labs artwork/neutral fallback is used if capture is unavailable.
 
-Required React layout:
+## Supported project modes
+
+- **React JavaScript/JSX:** complete React entry files or a supported single-file JSX adapter; generated entry files do not overwrite saved source.
+- **React TypeScript/TSX:** complete TSX entry files or supported single-file adapter; the platform generates a fixed strict TypeScript config and runs `tsc --noEmit` before the Vite bundle.
+- **Standalone HTML/CSS/JavaScript:** remains a separate mode; nested HTML entry promotion and local relative asset path rewriting are supported. If only CSS/JS is supplied, the platform can construct a minimal HTML entry. It is never silently wrapped in React.
+
+All modes use the fixed, pinned compiler image and the same isolated build boundary. No owner-provided package manifest, arbitrary package installation, custom build script, server-side code or runtime asset import is allowed.
+
+## React entry contract
 - `index.html` with a root element and module script `./src/main.jsx`.
 - `src/main.jsx` mounting the application with ReactDOM `createRoot`.
 - `src/App.jsx` exporting the default component.
@@ -35,4 +43,4 @@ The generated document uses a restrictive Content Security Policy. Preview sessi
 
 Run `npm install` followed by `npm run test:smoke`. The test compiles a single `src/new-file.js` file marked as JSX using React state, Motion, lucide-react icons and Tailwind v4 utilities. It verifies emitted HTML/JS/CSS, the build hash, CSP and rejection of an unsupported package.
 
-The smoke test also verifies the uploaded image/GIF/video precedence against the generated screenshot. The release capture worker uses the pinned Playwright 1.65.0 + Chromium 158.0.8127.18 browser, local-only artifact serving, blocked external requests, reduced-motion capture, and strict PNG/hash validation. The browser executable and required Linux libraries must be pre-installed in the immutable compiler snapshot; capture never installs them during publish. This is not a substitute for deployed owner publish/browser QA, accessibility QA or the full release-pipeline checks.
+The immutable release build calls the poster capture worker after compiled output is uploaded. It uses Playwright 1.65.0 + Chromium 158.0.8127.18, a local-only artifact server, blocked external requests, reduced-motion capture and strict PNG/signature/dimensions/size/hash validation. The result is stored as `LabBuildArtifact.previewPoster`, separate from `outputFiles`, and is bound to the exact source version and artifact. Capture is attempted once per release build, never on owner Run or a public page request; failure is non-blocking and leaves the poster unavailable so the gallery can fall back to generic artwork. The browser executable and required Linux libraries must be pre-installed in the immutable compiler snapshot. This is not a substitute for deployed owner publish/browser QA, accessibility QA or the full release-pipeline checks.
