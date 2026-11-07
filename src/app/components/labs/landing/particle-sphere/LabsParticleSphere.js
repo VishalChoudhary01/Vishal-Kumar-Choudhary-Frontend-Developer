@@ -14,6 +14,8 @@ import { getParticleSphereThemePalette } from "./particle-theme.mjs";
 import {
   getParticleBurstEnvelope,
   getParticleBurstRadius,
+  getParticleCameraChoreography,
+  PARTICLE_CAMERA_ANTICIPATION_DISTANCE_RATIO,
   PARTICLE_BURST_EXPANSION,
   PARTICLE_BURST_STAGGER_SECONDS,
   PARTICLE_BURST_OUTWARD_SECONDS,
@@ -133,12 +135,19 @@ export default function LabsParticleSphere() {
 
       const burstTime = Number.isFinite(burstStartedAt) ? elapsed - burstStartedAt : -1;
       const burstAmount = getParticleBurstEnvelope(burstTime);
-      const targetCameraDistance = THREE.MathUtils.lerp(
+      const cameraChoreography = getParticleCameraChoreography(burstTime);
+      const burstCameraTarget = THREE.MathUtils.lerp(
         idleCameraDistance,
         burstCameraDistance,
-        burstAmount,
+        cameraChoreography.pullback,
       );
-      const cameraEase = 1 - Math.exp(-delta * 12);
+      const targetCameraDistance = burstCameraTarget
+        - idleCameraDistance
+          * PARTICLE_CAMERA_ANTICIPATION_DISTANCE_RATIO
+          * cameraChoreography.anticipation;
+      const cameraPullingBack = targetCameraDistance > camera.position.z;
+      const cameraFollowSpeed = cameraPullingBack ? 8 : 5.2;
+      const cameraEase = 1 - Math.exp(-delta * cameraFollowSpeed);
       camera.position.z += (targetCameraDistance - camera.position.z) * cameraEase;
 
       if (particleMaterial) {
@@ -234,12 +243,16 @@ export default function LabsParticleSphere() {
         fillRatio: 0.9,
       });
       const resizeBurstTime = Number.isFinite(burstStartedAt) ? elapsed - burstStartedAt : -1;
-      const activeBurst = getParticleBurstEnvelope(resizeBurstTime);
-      camera.position.z = THREE.MathUtils.lerp(
+      const resizeCameraChoreography = getParticleCameraChoreography(resizeBurstTime);
+      const resizeBurstCameraTarget = THREE.MathUtils.lerp(
         idleCameraDistance,
         burstCameraDistance,
-        activeBurst,
+        resizeCameraChoreography.pullback,
       );
+      camera.position.z = resizeBurstCameraTarget
+        - idleCameraDistance
+          * PARTICLE_CAMERA_ANTICIPATION_DISTANCE_RATIO
+          * resizeCameraChoreography.anticipation;
       camera.updateProjectionMatrix();
 
       const nextProfile = getParticleQualityProfile({
