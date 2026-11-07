@@ -18,6 +18,10 @@ const shaderSource = await readFile(
   new URL("../src/app/components/labs/landing/particle-sphere/particle-shaders.js", import.meta.url),
   "utf8",
 );
+const orbitSource = await readFile(
+  new URL("../src/app/components/labs/landing/particle-sphere/particle-orbits.js", import.meta.url),
+  "utf8",
+);
 
 test("particle geometry creates the configured number of surface and interior points", () => {
   const data = createSphereParticleData({
@@ -99,6 +103,29 @@ test("ambient particles remain outside the sphere and use their own layer", () =
     assert.ok(actualRadius >= 1.14 * 1.28);
     assert.ok(actualRadius <= 1.14 * 1.70);
     assert.equal(data.layers[index], 2);
+  }
+});
+
+test("particle point sizes stay within the tuned visual ranges", () => {
+  const data = createSphereParticleData({
+    surfaceCount: 120,
+    innerCount: 24,
+    ambientCount: 12,
+  });
+
+  for (let index = 0; index < data.surfaceCount; index += 1) {
+    assert.ok(data.sizes[index] >= 0.9);
+    assert.ok(data.sizes[index] < 1.78);
+  }
+
+  for (let index = data.surfaceCount; index < data.surfaceCount + data.innerCount; index += 1) {
+    assert.ok(data.sizes[index] >= 0.58);
+    assert.ok(data.sizes[index] < 1.14);
+  }
+
+  for (let index = data.surfaceCount + data.innerCount; index < data.count; index += 1) {
+    assert.ok(data.sizes[index] >= 1.05);
+    assert.ok(data.sizes[index] < 1.77);
   }
 });
 
@@ -216,6 +243,7 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.match(rendererSource, /areParticleQualityProfilesEqual/);
   assert.match(rendererSource, /hasParticleBudgetChanged/);
   assert.match(rendererSource, /frameInterval = 1000 \/\s*\(qualityProfile\?\.maxFps/);
+  assert.match(rendererSource, /lastRenderTime = 0/);
   assert.match(rendererSource, /viewportWidth: window\.innerWidth/);
   assert.match(rendererSource, /themeObserver/);
   assert.match(rendererSource, /syncThemeColor/);
@@ -241,4 +269,8 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /rimLight/);
   assert.match(shaderSource, /hemisphereFill/);
   assert.match(shaderSource, /aSize \* ambientSize \* uPixelRatio \* \(5\.0 \/ viewDepth\)/);
+  assert.match(shaderSource, /sparkle \* 0\.72/);
+  assert.match(orbitSource, /opacity: 0\.12/);
+  assert.match(orbitSource, /opacity: 0\.082/);
+  assert.match(orbitSource, /opacity: 0\.058/);
 });
