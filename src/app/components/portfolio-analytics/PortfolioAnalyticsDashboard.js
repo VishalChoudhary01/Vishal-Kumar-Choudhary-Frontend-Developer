@@ -10,12 +10,14 @@ import {
   Laptop,
   Monitor,
   MousePointer2,
+  RefreshCw,
   Smartphone,
   Tablet,
   Users,
 } from "lucide-react";
 
 import MotionNumber from "@/app/components/motion/MotionNumber/MotionNumber";
+import usePortfolioAnalyticsPolling from "@/app/hooks/portfolio-analytics/usePortfolioAnalyticsPolling";
 
 const numberFormat = new Intl.NumberFormat("en-IN");
 
@@ -258,7 +260,7 @@ function BreakdownCard({ title, description, items, labelFor }) {
   );
 }
 
-function RecentVisitsTable({ visits, nextCursor, days, error }) {
+function RecentVisitsTable({ visits, nextCursor, days, error, newVisitIds = new Set() }) {
   const nextHref = nextCursor
     ? "/admin/portfolio/analytics?days=" + days + "&cursor=" + encodeURIComponent(nextCursor)
     : null;
@@ -292,8 +294,15 @@ function RecentVisitsTable({ visits, nextCursor, days, error }) {
               <tbody>
                 {visits.map((visit) => {
                   const DeviceIcon = getDeviceIcon(visit.deviceType);
+                  const isNew = newVisitIds.has(visit.id);
                   return (
-                    <tr key={visit.id} className="border-t border-border align-middle">
+                    <motion.tr
+                      key={visit.id}
+                      initial={isNew ? { opacity: 0, y: 10 } : false}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.28, ease: "easeOut" }}
+                      className="border-t border-border align-middle"
+                    >
                       <td className="max-w-[260px] px-5 py-4">
                         <span className="block truncate font-medium text-text-primary">{getPageLabel(visit.pageType)}</span>
                         <span className="mt-1 block truncate font-mono text-[10px] text-text-tertiary">{visit.path}</span>
@@ -315,7 +324,7 @@ function RecentVisitsTable({ visits, nextCursor, days, error }) {
                           {formatDate(visit.startedAt, { year: "numeric", hour: "2-digit", minute: "2-digit" })}
                         </time>
                       </td>
-                    </tr>
+                    </motion.tr>
                   );
                 })}
               </tbody>
@@ -341,13 +350,36 @@ function RecentVisitsTable({ visits, nextCursor, days, error }) {
 }
 
 export default function PortfolioAnalyticsDashboard({
-  report,
-  recentVisits = [],
-  nextCursor = null,
+  report: initialReport,
+  recentVisits: initialRecentVisits = [],
+  nextCursor: initialNextCursor = null,
   days = 30,
-  reportError = "",
-  recentError = "",
+  cursor = null,
+  reportError: initialReportError = "",
+  recentError: initialRecentError = "",
 }) {
+  const {
+    report,
+    recentVisits,
+    nextCursor,
+    reportError,
+    recentError,
+    refreshing,
+    summaryRefreshing,
+    recentRefreshing,
+    lastSummaryUpdatedAt,
+    refreshNow,
+    newVisitIds,
+  } = usePortfolioAnalyticsPolling({
+    days,
+    cursor,
+    initialReport,
+    initialRecentVisits,
+    initialNextCursor,
+    initialReportError,
+    initialRecentError,
+  });
+  const reduceMotion = useReducedMotion();
   const overview = report?.overview || {
     totalVisits: 0,
     uniqueTabSessions: 0,
@@ -362,8 +394,30 @@ export default function PortfolioAnalyticsDashboard({
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-text-tertiary">Reporting period</p>
           <p className="mt-1 text-sm text-text-secondary">Page visits and visible activity across your public portfolio.</p>
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-text-tertiary">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-success" aria-hidden="true" />
+              Auto-refresh while this tab is visible
+            </span>
+            <span>Summary 10s · Recent visits 30s</span>
+            {lastSummaryUpdatedAt ? (
+              <time dateTime={lastSummaryUpdatedAt}>
+                Updated {formatDate(lastSummaryUpdatedAt, { year: "numeric", hour: "2-digit", minute: "2-digit" })}
+              </time>
+            ) : null}
+          </div>
         </div>
-        <nav aria-label="Portfolio analytics reporting period" className="flex items-center gap-1 border border-border bg-surface-1 p-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={refreshNow}
+            disabled={refreshing}
+            className="inline-flex h-8 items-center gap-2 border border-border px-3 text-xs font-semibold text-text-secondary transition-colors hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <RefreshCw size={13} className={refreshing && !reduceMotion ? "animate-spin" : ""} aria-hidden="true" />
+            Refresh now
+          </button>
+          <nav aria-label="Portfolio analytics reporting period" className="flex items-center gap-1 border border-border bg-surface-1 p-1">
           {[7, 30, 60].map((period) => (
             <Link
               key={period}
@@ -380,9 +434,14 @@ export default function PortfolioAnalyticsDashboard({
         </nav>
       </div>
 
-      {reportError ? (
-        <div className="border border-warning/40 bg-warning/10 px-4 py-3 text-xs leading-5 text-warning" role="alert">
-          {reportError} Recent visits are shown separately when available.
+      {reportError || recentError ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 border border-warning/40 bg-warning/10 px-4 py-3 text-xs leading-5 text-warning" role="status">
+          <span>
+            {reportError || recentError} Showing the last successful data where available.
+          </span>
+          <button type="button" onClick={refreshNow} className="font-semibold underline underline-offset-2">
+            Retry now
+          </button>
         </div>
       ) : null}
 
@@ -444,7 +503,17 @@ export default function PortfolioAnalyticsDashboard({
         </article>
       </section>
 
-      <RecentVisitsTable visits={recentVisits} nextCursor={nextCursor} days={days} error={recentError} />
+      <div className="flex flex-wrap items-center justify-between gap-3 -mb-3 text-[11px] text-text-tertiary">
+        <span>{recentRefreshing ? "Refreshing recent visits…" : "Recent visits refresh every 30 seconds"}</span>
+        {summaryRefreshing ? <span>Updating summary…</span> : null}
+      </div>
+      <RecentVisitsTable
+        visits={recentVisits}
+        nextCursor={nextCursor}
+        days={days}
+        error={recentError}
+        newVisitIds={newVisitIds}
+      />
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4 text-[11px] text-text-tertiary">
         <span>{report?.generatedAt ? "Last generated " + formatDate(report.generatedAt, { year: "numeric", hour: "2-digit", minute: "2-digit" }) : "Analytics summary unavailable"}</span>
