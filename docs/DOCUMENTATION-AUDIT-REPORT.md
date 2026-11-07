@@ -24,6 +24,8 @@ The previous flat design/plan docs have been retained to preserve historical dec
 
 The mascot was separately reverse-engineered after the initial homepage guide and added as [docs/pages/PORTFOLIO-MASCOT-ENGINEERING.md](./pages/PORTFOLIO-MASCOT-ENGINEERING.md). It describes the 3D scene, section/pose mapping, DOM target positioning, footer state, pointer gaze, dialogue, drag, scan targeting and safe agent/human edit steps.
 
+The sound system was subsequently audited and documented in [docs/architecture/SOUND-ENGINEERING.md](./architecture/SOUND-ENGINEERING.md), including useUiSound, AudioContext sharing, decode cache, fallback pool, confirmed call sites, nine audio assets and extension/QA rules.
+
 ## 2. New current-state documents
 
 | File | Coverage |
