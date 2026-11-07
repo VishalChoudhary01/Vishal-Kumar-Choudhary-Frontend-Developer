@@ -266,6 +266,10 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.match(rendererSource, /viewportWidth: window\.innerWidth/);
   assert.match(rendererSource, /themeObserver/);
   assert.match(rendererSource, /syncThemeColor/);
+  assert.match(rendererSource, /getParticleSphereThemePalette/);
+  assert.match(rendererSource, /classList\\.contains\\("dark"\\)/);
+  assert.match(rendererSource, /uSparkleColor/);
+  assert.match(rendererSource, /glow\.material\.color\.set\(palette\.glowColor\)/);
   assert.match(rendererSource, /getSphereScale/);
   assert.match(rendererSource, /getSphereContraction/);
   assert.match(rendererSource, /classList\.contains\("dark"\)/);
@@ -284,6 +288,7 @@ test("particle shader provides depth shading and soft point halos", () => {
   assert.match(shaderSource, /smoothstep/);
   assert.match(shaderSource, /uContraction/);
   assert.match(shaderSource, /transformed \*= radialScale/);
+  assert.doesNotMatch(shaderSource, /transformed\.[xyz] \*=/);
   assert.match(shaderSource, /mix\(1\.0, 0\.70, clamp\(uContraction/);
   assert.doesNotMatch(shaderSource, /transformed\.[xyz] \*=/);
   assert.match(shaderSource, /sparkleMask/);
