@@ -408,13 +408,17 @@ export default function LabsParticleSphere() {
       handlePointerDown = (event) => {
         if (event.pointerType === "mouse" && event.button !== 0) return;
 
+        const startedOnSphere = setPointerFromEvent(event);
         pointerDown = {
           pointerId: event.pointerId,
           x: event.clientX,
           y: event.clientY,
+          startedOnSphere,
         };
-        renderer.domElement.setPointerCapture?.(event.pointerId);
-        setPointerFromEvent(event);
+
+        if (startedOnSphere) {
+          renderer.domElement.setPointerCapture?.(event.pointerId);
+        }
       };
 
       handlePointerUp = (event) => {
@@ -426,7 +430,7 @@ export default function LabsParticleSphere() {
         );
         const hitSphere = setPointerFromEvent(event);
 
-        if (distance <= 12 && hitSphere) {
+        if (distance <= 12 && pointerDown.startedOnSphere && hitSphere) {
           // A new tap restarts the current burst rather than stacking forces.
           burstStartedAt = elapsed;
         }
@@ -437,9 +441,13 @@ export default function LabsParticleSphere() {
         }
       };
 
-      handlePointerCancel = () => {
+      handlePointerCancel = (event) => {
         pointerDown = null;
         particleMaterial.uniforms.uPointerActive.value = 0;
+
+        if (renderer.domElement.hasPointerCapture?.(event.pointerId)) {
+          renderer.domElement.releasePointerCapture?.(event.pointerId);
+        }
       };
 
       handlePointerLeave = () => {
