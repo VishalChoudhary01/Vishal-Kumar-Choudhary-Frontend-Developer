@@ -202,6 +202,6 @@ Labs Engagement Analytics:
 - verify guest cookies are HTTP-only/secure and hashed identities never appear in API response;
 - verify migration after verified login;
 - verify active like count vs event-window count;
-- verify active verified-liker identity panel is owner-only/masked;
+- verify no user-identifying active-liker panel or per-user event history is exposed; owner responses remain aggregate-only;
 - verify the Chart.js table equivalent, selection and failure retry;
 - verify 10-second poll/backoff does not run indefinitely in hidden tab.
