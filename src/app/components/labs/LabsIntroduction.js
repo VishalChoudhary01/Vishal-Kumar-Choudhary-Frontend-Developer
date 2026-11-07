@@ -120,7 +120,7 @@ export default function LabsIntroduction({
     <div className="relative w-full overflow-hidden">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 left-1/2 right-0 top-[68%] z-0 hidden bg-[radial-gradient(ellipse_at_68%_48%,rgba(0,0,0,0.025)_0%,rgba(1,5,4,0.20)_46%,rgba(1,4,3,0.86)_100%),linear-gradient(90deg,transparent_0%,rgba(1,4,3,0.16)_20%,rgba(1,4,3,0.76)_64%,#010302_100%)] dark:block sm:top-[62%] lg:top-0"
+        className="pointer-events-none absolute bottom-0 left-0 right-0 top-[68%] z-0 hidden bg-[radial-gradient(ellipse_130%_110%_at_100%_50%,rgba(1,3,2,0.98)_0%,rgba(1,4,3,0.82)_34%,rgba(1,4,3,0.42)_62%,rgba(1,4,3,0.10)_84%,transparent_100%)] dark:block sm:top-[62%] lg:top-0"
       />
       <motion.section
       aria-labelledby="labs-heading"
@@ -179,10 +179,6 @@ export default function LabsIntroduction({
         </div>
       </div>
 
-      <div
-        aria-hidden="true"
-        className="mt-8 h-px w-full bg-border-subtle lg:mt-7"
-      />
       </motion.section>
     </div>
   );
