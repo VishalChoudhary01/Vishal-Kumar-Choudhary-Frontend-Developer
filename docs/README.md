@@ -21,6 +21,7 @@ This folder is the engineering handover for the complete portfolio platform. Sta
 ## 2. Current-state page guides
 
 - [Homepage](./pages/HOME-PAGE-ENGINEERING.md) — hero, About, Education, Skills, Experience, Projects and Contact, including animation/scroll reconstruction.
+- [Contact Form and Email Engineering](./pages/CONTACT-FORM-AND-EMAIL-ENGINEERING.md) — client form state/validation, POST API, server validation, email composition, Gmail SMTP, privacy, errors and hardening checklist.
 - [Vee Mascot](./pages/PORTFOLIO-MASCOT-ENGINEERING.md) — homepage companion 3D scene, scroll-based position/poses, section reactions and interactive scan system.
 - [Project Detail](./pages/PROJECT-DETAIL-ENGINEERING.md) — server/static route behavior, hero, snapshot, context, approach, design, engineering, motion, responsive, showcase, reflection, navigation.
 - [Public Labs and Owner Workspace](./pages/LABS-AND-OWNER-WORKSPACE.md) — public listing/detail, likes/source, owner analytics, inventory/editor, experiment metadata and media.
@@ -31,7 +32,7 @@ This folder is the engineering handover for the complete portfolio platform. Sta
 - [System Architecture](./architecture/SYSTEM-ARCHITECTURE.md) — current rendering/backend/persistence/infrastructure boundaries.
 - [Scroll and Motion Engineering](./architecture/SCROLL-AND-MOTION-ENGINEERING.md) — scroll-controller ownership, Motion graph types, breakpoints and test matrix.
 - [Theme Toggle Engineering](./architecture/THEME-TOGGLE-ENGINEERING.md) — next-themes ownership, OLD/NEW snapshot rules, rectangle/circle/circle-blur/blinds transitions, fallback and click sound.
-- [Sound Engineering](./architecture/SOUND-ENGINEERING.md) — shared Web Audio hook, Vee voice/laser and ThemeToggle click sound, complete asset inventory, autoplay policy and extension guide.
+- [Sound Engineering](./architecture/SOUND-ENGINEERING.md) — shared Web Audio hook, Vee voice/laser, ThemeToggle click and Contact success confirmation, complete active/unassigned asset inventory, autoplay policy and extension guide.
 - [Layout Layers and Design Tokens](./design/LAYOUT-LAYERS-AND-TOKENS.md) — actual fonts, light/dark semantic tokens, Tailwind v4 scan setup, root provider nesting and shared layout layers.
 - [Data Model Catalogue](./architecture/DATA-MODEL-CATALOG.md) — current collections and schema constraints; live Atlas indexes still require environment verification.
 - [Labs Runtime and Code Execution](./architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md) — built-in runtime, Monaco editor, unsaved Run, immutable publishing, artifact security and poster/media lifecycle.
