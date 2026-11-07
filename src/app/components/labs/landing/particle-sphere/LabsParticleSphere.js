@@ -289,6 +289,8 @@ export default function LabsParticleSphere() {
           uPixelRatio: { value: renderer.getPixelRatio() },
           uMotionEnabled: { value: 1 },
           uBrandColor: { value: new THREE.Color(initialBrandColor) },
+          uInnerParticleColor: { value: new THREE.Color(initialPalette.innerParticleColor) },
+          uInnerParticleOpacity: { value: initialPalette.innerParticleOpacity },
           uSparkleColor: { value: new THREE.Color(initialPalette.sparkleColor) },
           uBurst: { value: 0 },
           uBurstExpansion: { value: PARTICLE_BURST_EXPANSION },
@@ -335,6 +337,8 @@ export default function LabsParticleSphere() {
         const brandColor = palette.particleColor;
 
         particleMaterial.uniforms.uBrandColor.value.set(brandColor);
+        particleMaterial.uniforms.uInnerParticleColor.value.set(palette.innerParticleColor);
+        particleMaterial.uniforms.uInnerParticleOpacity.value = palette.innerParticleOpacity;
         particleMaterial.uniforms.uSparkleColor.value.set(palette.sparkleColor);
 
         orbitGroup.traverse((object) => {
