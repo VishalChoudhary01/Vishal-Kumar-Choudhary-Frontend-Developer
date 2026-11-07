@@ -46,12 +46,12 @@ test("unreadable browser storage fails closed for optional analytics", () => {
   };
   assert.equal(readPortfolioAnalyticsOptOut(blockedStorage), true);
 
-  const blockedWindowStorage = Object.defineProperty({}, "localStorage", {
+  const blockedStorageGetter = Object.defineProperty({}, "getItem", {
     get() {
       throw new Error("Storage is blocked");
     },
   });
-  assert.equal(readPortfolioAnalyticsOptOut(blockedWindowStorage.localStorage), true);
+  assert.equal(readPortfolioAnalyticsOptOut(blockedStorageGetter), true);
 });
 
 test("privacy preference uses a named same-origin event and does not generate an identifier", async () => {
