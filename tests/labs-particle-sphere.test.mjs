@@ -255,13 +255,14 @@ test("light and dark themes use distinct particle, sparkle and glow palettes", (
   assert.equal(dark.surfaceParticleOpacityFloor, 0.1);
   assert.equal(light.surfaceParticleSizeScale, 1);
   assert.equal(dark.surfaceParticleSizeScale, 1.16);
-  assert.equal(dark.innerParticleColor, "#bafff3");
+  assert.equal(dark.innerParticleColor, "#8ae7d8");
   assert.equal(dark.innerParticleOpacity, 0.88);
   assert.equal(dark.sparkleColor, "#e1fff9");
   assert.equal(dark.glowColor, "#061c18");
   assert.equal(dark.glowOpacity, 0.028);
   assert.equal(light.volumeColor, "#17685e");
-  assert.equal(dark.volumeColor, "#62d8c7");
+  assert.equal(dark.volumeColor, "#56ccb9");
+  assert.equal(dark.volumeIntensity, 0.38);
   assert.ok(dark.volumeIntensity > light.volumeIntensity);
   assert.equal(light.ambientParticleOpacity, 0.42);
   assert.equal(dark.ambientParticleOpacity, 0.62);
@@ -506,23 +507,21 @@ test("orbit particles move continuously and retain their orbital path", () => {
   });
   assert.equal(Math.max(...orbitRadii.map(([radiusX]) => radiusX)), 1.7);
 
-  // Desktop uses flatter planes so each projected orbit encloses the
-  // unchanged sphere surface. Mobile retains the original orbit angles.
-  const desktopRotations = [...orbitSource.matchAll(/desktopRotation: \\[([0-9., -]+)\\]/g)]
+  // All viewport sizes use the same orbit planes. Their projected minor axes
+  // must clear the widest possible surface-particle radius without enlarging
+  // any orbit or shrinking the sphere.
+  const orbitRotations = [...orbitSource.matchAll(/rotation: \[([0-9., -]+)\]/g)]
     .map(([, rotation]) => rotation.split(",").map(Number));
-  const mobileRotations = [...orbitSource.matchAll(/rotation: \\[([0-9., -]+)\\]/g)]
-    .map(([, rotation]) => rotation.split(",").map(Number));
-  assert.equal(desktopRotations.length, orbitRadii.length);
-  assert.equal(mobileRotations.length, orbitRadii.length);
+  assert.equal(orbitRotations.length, orbitRadii.length);
   orbitRadii.forEach(([radius], index) => {
-    const [rotationX, rotationY] = desktopRotations[index];
+    const [rotationX, rotationY] = orbitRotations[index];
     const projectedMinorRadius = radius * Math.abs(Math.cos(rotationX) * Math.cos(rotationY));
     assert.ok(projectedMinorRadius > 1.38 * 1.014);
   });
-  assert.match(orbitSource, /createParticleOrbits\(THREE, isDesktop = false\)/);
-  assert.match(orbitSource, /group\.userData\.setDesktop/);
-  assert.match(rendererSource, /createParticleOrbits\(THREE, window\.innerWidth >= 768\)/);
-  assert.match(rendererSource, /orbitGroup\?\.userData\.setDesktop\?\.\(window\.innerWidth >= 768\)/);
+  assert.match(orbitSource, /createParticleOrbits\(THREE\)/);
+  assert.doesNotMatch(orbitSource, /desktopRotation|setDesktop/);
+  assert.match(rendererSource, /createParticleOrbits\(THREE\)/);
+  assert.doesNotMatch(rendererSource, /setDesktop/);
 
   assert.match(orbitSource, /orbit-particle-glow/);
   assert.ok(rendererSource.includes("orbitGroup.userData.update?.(elapsed, burstAmount)"));
