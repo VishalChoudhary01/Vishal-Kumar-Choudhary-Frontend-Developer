@@ -100,7 +100,7 @@ test("ingestion API is feature gated, same-origin, bounded and rate limited", as
   assert.ok(route.includes("resumePortfolioVisit"));
   assert.ok(route.includes("endPortfolioVisit"));
   assert.ok(route.includes('"Cache-Control": "private, no-store'));
-  assert.ok(route.includes('status: 429'));
+  assert.ok(route.includes("429,"));
 });
 
 test("rate limit storage uses scoped HMAC keys and a short TTL, never raw IP", async () => {
@@ -111,6 +111,8 @@ test("rate limit storage uses scoped HMAC keys and a short TTL, never raw IP", a
   assert.ok(rateLimit.includes("createHmac"));
   assert.ok(rateLimit.includes("x-vercel-forwarded-for"));
   assert.ok(rateLimit.includes("portfolio_analytics_rate_limits"));
+  assert.ok(rateLimit.includes("IP_LIMITS[action]"));
+  assert.ok(rateLimit.includes("ipMaximum"));
   assert.ok(rateLimit.includes("RECORD_TTL_MS"));
   assert.ok(!/\b(?:ipAddress|rawIp|clientIp)\s*:/.test(rateLimit));
   assert.ok(indexes.includes("portfolio_analytics_rate_limits_ttl"));

@@ -136,11 +136,11 @@ export async function consumePortfolioVisitRateLimit({
   const address = trustedAddress(request);
   if (!address) return { ...sessionResult, scope: "session" };
 
-  const ipKey = hashKey(secret, "ip:all", address);
+  const ipKey = hashKey(secret, "ip:" + action, address);
   const ipResult = await consumeBucket(
     collection,
     ipKey,
-    180,
+    ipMaximum,
     now,
   );
 
