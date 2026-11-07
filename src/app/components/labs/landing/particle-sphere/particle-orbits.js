@@ -1,3 +1,5 @@
+import { ORBIT_BURST_SPEED_MULTIPLIER } from "./particle-interaction.mjs";
+
 const ORBIT_SPECS = [
   {
     radiusX: 1.56,
@@ -112,7 +114,7 @@ export function createParticleOrbits(THREE) {
 
   group.userData.update = (elapsed, burstAmount = 0) => {
     const delta = Math.max(0, elapsed - lastElapsed);
-    const burstSpeed = 1 + Math.max(0, Math.min(1, burstAmount)) * 0.65;
+    const burstSpeed = 1 + Math.max(0, Math.min(1, burstAmount)) * (ORBIT_BURST_SPEED_MULTIPLIER - 1);
     lastElapsed = elapsed;
 
     orbiters.forEach(({ runner, spec }, index) => {
