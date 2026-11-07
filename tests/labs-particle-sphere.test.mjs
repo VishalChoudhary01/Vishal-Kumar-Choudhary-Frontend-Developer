@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import * as THREE from "three";
 
 import { createSphereParticleData } from "../src/app/components/labs/landing/particle-sphere/particle-geometry.mjs";
 import {
@@ -255,14 +256,14 @@ test("light and dark themes use distinct particle, sparkle and glow palettes", (
   assert.equal(dark.surfaceParticleOpacityFloor, 0.1);
   assert.equal(light.surfaceParticleSizeScale, 1);
   assert.equal(dark.surfaceParticleSizeScale, 1.16);
-  assert.equal(dark.innerParticleColor, "#8ae7d8");
-  assert.equal(dark.innerParticleOpacity, 0.88);
+  assert.equal(dark.innerParticleColor, "#a2f2e4");
+  assert.equal(dark.innerParticleOpacity, 0.92);
   assert.equal(dark.sparkleColor, "#e1fff9");
   assert.equal(dark.glowColor, "#061c18");
   assert.equal(dark.glowOpacity, 0.028);
   assert.equal(light.volumeColor, "#17685e");
-  assert.equal(dark.volumeColor, "#56ccb9");
-  assert.equal(dark.volumeIntensity, 0.38);
+  assert.equal(dark.volumeColor, "#67dccb");
+  assert.equal(dark.volumeIntensity, 0.42);
   assert.ok(dark.volumeIntensity > light.volumeIntensity);
   assert.equal(light.ambientParticleOpacity, 0.42);
   assert.equal(dark.ambientParticleOpacity, 0.62);
@@ -507,16 +508,54 @@ test("orbit particles move continuously and retain their orbital path", () => {
   });
   assert.equal(Math.max(...orbitRadii.map(([radiusX]) => radiusX)), 1.7);
 
-  // All viewport sizes use the same orbit planes. Their projected minor axes
-  // must clear the widest possible surface-particle radius without enlarging
-  // any orbit or shrinking the sphere.
+  // Validate the actual perspective projection of each sampled orbit path,
+  // not only its orthographic radius. Every ring must clear the sphere's
+  // apparent silhouette at supported mobile and desktop artwork sizes.
   const orbitRotations = [...orbitSource.matchAll(/rotation: \[([0-9., -]+)\]/g)]
     .map(([, rotation]) => rotation.split(",").map(Number));
   assert.equal(orbitRotations.length, orbitRadii.length);
-  orbitRadii.forEach(([radius], index) => {
-    const [rotationX, rotationY] = orbitRotations[index];
-    const projectedMinorRadius = radius * Math.abs(Math.cos(rotationX) * Math.cos(rotationY));
-    assert.ok(projectedMinorRadius > 1.38 * 1.014);
+
+  const viewportCases = [
+    { width: 320, height: 296 },
+    { width: 375, height: 347 },
+    { width: 768, height: 711 },
+    { width: 1440, height: 1333 },
+  ];
+  const outerSphereRadius = 1.38 * 1.014;
+
+  viewportCases.forEach(({ width, height }) => {
+    const cameraDistance = getParticleCameraDistance({
+      width,
+      height,
+      fovDegrees: 42,
+      orbitRadius: 2.02,
+      fillRatio: 0.94,
+    });
+    const sphereScreenRadius = cameraDistance * outerSphereRadius
+      / Math.sqrt(cameraDistance ** 2 - outerSphereRadius ** 2);
+
+    orbitRadii.forEach(([radius], orbitIndex) => {
+      const rotation = new THREE.Euler(...orbitRotations[orbitIndex], "XYZ");
+      let minimumScreenRadius = Number.POSITIVE_INFINITY;
+
+      for (let segment = 0; segment <= 240; segment += 1) {
+        const angle = (Math.PI * 2 * segment) / 240;
+        const point = new THREE.Vector3(
+          Math.cos(angle) * radius,
+          Math.sin(angle) * radius,
+          Math.sin(angle * 2) * 0.045,
+        ).applyEuler(rotation);
+
+        const projectedRadius = cameraDistance * Math.hypot(point.x, point.y)
+          / (cameraDistance - point.z);
+        minimumScreenRadius = Math.min(minimumScreenRadius, projectedRadius);
+      }
+
+      assert.ok(
+        minimumScreenRadius >= sphereScreenRadius + 0.06,
+        "Orbit " + (orbitIndex + 1) + " must visibly enclose the sphere at " + width + "px",
+      );
+    });
   });
   assert.match(orbitSource, /createParticleOrbits\(THREE\)/);
   assert.doesNotMatch(orbitSource, /desktopRotation|setDesktop/);
