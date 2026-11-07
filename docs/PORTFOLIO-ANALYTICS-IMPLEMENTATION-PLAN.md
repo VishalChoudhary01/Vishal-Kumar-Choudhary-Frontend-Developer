@@ -774,3 +774,10 @@ Portfolio Analytics is complete only when:
 - [MDN Navigator.sendBeacon](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon) — small analytics payload delivery during page lifecycle.
 - [MDN visibilitychange](https://developer.mozilla.org/en-US/docs/Web/API/Document/visibilitychange_event) — visibility lifecycle and hidden-state handling.
 - [MongoDB TTL Indexes](https://www.mongodb.com/docs/manual/core/index-ttl/) — background TTL deletion behavior and delayed expiry.
+
+
+### Phase 1 security refinement
+
+Lifecycle mutations include the temporary tab-session identifier. The server HMACs it and matches both `visitId` and `sessionHash`, so a visit ID alone cannot be used to heartbeat, pause, resume or end another tab's visit. Raw tab-session identifiers are never persisted.
+
+The production-host check uses the hostname from the runtime request URL rather than preferring forwarded-host headers. Resume resets the heartbeat baseline even when the pause beacon was lost, preventing the next heartbeat from counting hidden-tab time.

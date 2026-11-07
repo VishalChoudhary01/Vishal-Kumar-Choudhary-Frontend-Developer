@@ -33,9 +33,13 @@ function getEnabledConfig(request) {
     throw serviceError("PORTFOLIO_ANALYTICS_DISABLED", "Portfolio Analytics is disabled.");
   }
 
-  const host =
-    request?.headers?.get?.("x-forwarded-host") ||
-    request?.headers?.get?.("host");
+  let host = null;
+  try {
+    // Use the runtime request URL, not a forwarded-host header.
+    host = new URL(request?.url || "").hostname;
+  } catch {
+    host = null;
+  }
 
   if (!isPortfolioAnalyticsHostAllowed({ host })) {
     throw serviceError("PORTFOLIO_ANALYTICS_HOST_NOT_ALLOWED", "Tracking is not enabled for this host.");
@@ -53,10 +57,12 @@ function createHash(secret, context, value) {
 }
 
 function getRequestOwnHosts(request) {
-  const hosts = [
-    request?.headers?.get?.("host"),
-    request?.headers?.get?.("x-forwarded-host"),
-  ];
+  const hosts = [];
+  try {
+    hosts.push(new URL(request?.url || "").hostname);
+  } catch {
+    // Missing runtime URL leaves only the configured canonical host.
+  }
 
   try {
     const configuredUrl = process.env.NEXT_PUBLIC_SITE_URL;
@@ -66,6 +72,17 @@ function getRequestOwnHosts(request) {
   }
 
   return hosts.filter(Boolean);
+}
+
+function getSessionScopedFilter(parsed, secret) {
+  return {
+    visitId: parsed.visitId,
+    sessionHash: createHash(
+      secret,
+      "portfolio-analytics:session:v1",
+      parsed.tabSessionId,
+    ),
+  };
 }
 
 function buildVisitRecord({ parsed, request, secret, now }) {
@@ -208,7 +225,7 @@ function elapsedSecondsExpression(now) {
  * the same interval. A too-frequent request is ignored.
  */
 export async function heartbeatPortfolioVisit(payload, request, now = new Date()) {
-  getEnabledConfig(request);
+  const config = getEnabledConfig(request);
   const parsed = parsePortfolioVisitLifecyclePayload(payload);
   if (parsed.action !== "heartbeat") {
     throw serviceError("INVALID_LIFECYCLE_ACTION", "Heartbeat action is required.");
@@ -222,7 +239,7 @@ export async function heartbeatPortfolioVisit(payload, request, now = new Date()
   await connectToDatabase();
   const document = await PortfolioVisit.findOneAndUpdate(
     {
-      visitId: parsed.visitId,
+      ...getSessionScopedFilter(parsed, config.hmacSecret),
       status: "active",
       lastHeartbeatAt: {
         $lte: new Date(timestamp.getTime() - MINIMUM_HEARTBEAT_INTERVAL_MS),
@@ -250,7 +267,7 @@ export async function heartbeatPortfolioVisit(payload, request, now = new Date()
 }
 
 export async function pausePortfolioVisit(payload, request, now = new Date()) {
-  getEnabledConfig(request);
+  const config = getEnabledConfig(request);
   const parsed = parsePortfolioVisitLifecyclePayload(payload);
   if (parsed.action !== "pause") {
     throw serviceError("INVALID_LIFECYCLE_ACTION", "Pause action is required.");
@@ -263,7 +280,7 @@ export async function pausePortfolioVisit(payload, request, now = new Date()) {
 
   await connectToDatabase();
   const document = await PortfolioVisit.findOneAndUpdate(
-    { visitId: parsed.visitId, status: "active" },
+    { ...getSessionScopedFilter(parsed, config.hmacSecret), status: "active" },
     [
       {
         $set: {
@@ -288,7 +305,7 @@ export async function pausePortfolioVisit(payload, request, now = new Date()) {
 }
 
 export async function resumePortfolioVisit(payload, request, now = new Date()) {
-  getEnabledConfig(request);
+  const config = getEnabledConfig(request);
   const parsed = parsePortfolioVisitLifecyclePayload(payload);
   if (parsed.action !== "resume") {
     throw serviceError("INVALID_LIFECYCLE_ACTION", "Resume action is required.");
@@ -301,7 +318,10 @@ export async function resumePortfolioVisit(payload, request, now = new Date()) {
 
   await connectToDatabase();
   const document = await PortfolioVisit.findOneAndUpdate(
-    { visitId: parsed.visitId, status: "paused" },
+    {
+      ...getSessionScopedFilter(parsed, config.hmacSecret),
+      status: { $in: ["active", "paused"] },
+    },
     {
       $set: {
         status: "active",
@@ -318,7 +338,7 @@ export async function resumePortfolioVisit(payload, request, now = new Date()) {
 }
 
 export async function endPortfolioVisit(payload, request, now = new Date()) {
-  getEnabledConfig(request);
+  const config = getEnabledConfig(request);
   const parsed = parsePortfolioVisitLifecyclePayload(payload);
   if (parsed.action !== "end") {
     throw serviceError("INVALID_LIFECYCLE_ACTION", "End action is required.");
@@ -331,7 +351,10 @@ export async function endPortfolioVisit(payload, request, now = new Date()) {
 
   await connectToDatabase();
   const document = await PortfolioVisit.findOneAndUpdate(
-    { visitId: parsed.visitId, status: { $in: ["active", "paused"] } },
+    {
+      ...getSessionScopedFilter(parsed, config.hmacSecret),
+      status: { $in: ["active", "paused"] },
+    },
     [
       {
         $set: {

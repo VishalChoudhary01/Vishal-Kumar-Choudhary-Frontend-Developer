@@ -169,7 +169,7 @@ export function parsePortfolioVisitStartPayload(payload) {
 
 export function parsePortfolioVisitLifecyclePayload(payload) {
   assertPlainObject(payload);
-  assertOnlyKeys(payload, ["action", "visitId"]);
+  assertOnlyKeys(payload, ["action", "visitId", "tabSessionId"]);
 
   if (!["heartbeat", "pause", "resume", "end"].includes(payload.action)) {
     throw invalid("Unsupported visit lifecycle action.");
@@ -177,10 +177,14 @@ export function parsePortfolioVisitLifecyclePayload(payload) {
   if (typeof payload.visitId !== "string" || !UUID_PATTERN.test(payload.visitId)) {
     throw invalid("A valid visit identifier is required.");
   }
+  if (typeof payload.tabSessionId !== "string" || !UUID_PATTERN.test(payload.tabSessionId)) {
+    throw invalid("A valid tab session identifier is required.");
+  }
 
   return {
     action: payload.action,
     visitId: payload.visitId.toLowerCase(),
+    tabSessionId: payload.tabSessionId.toLowerCase(),
   };
 }
 

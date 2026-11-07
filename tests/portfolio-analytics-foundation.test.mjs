@@ -109,12 +109,13 @@ test("start payload is strict and returns only normalized allowlisted fields", (
 
 test("lifecycle payload accepts only a server-issued visit reference and known action", () => {
   assert.deepEqual(
-    parsePortfolioVisitLifecyclePayload({ action: "heartbeat", visitId }),
-    { action: "heartbeat", visitId },
+    parsePortfolioVisitLifecyclePayload({ action: "heartbeat", visitId, tabSessionId: sessionId }),
+    { action: "heartbeat", visitId, tabSessionId: sessionId },
   );
   for (const payload of [
-    { action: "heartbeat", visitId, activeSeconds: 500 },
-    { action: "resume", visitId, country: "IN" },
+    { action: "heartbeat", visitId, tabSessionId: sessionId, activeSeconds: 500 },
+    { action: "resume", visitId, tabSessionId: sessionId, country: "IN" },
+    { action: "pause", visitId },
     { action: "delete", visitId },
     { action: "end", visitId: "not-a-uuid" },
   ]) {
@@ -283,6 +284,9 @@ test("model, service and index script enforce privacy, server lifecycle and TTL 
   assert.ok(!/\b(?:ipAddress|rawIp|userAgent|tabSessionId|idempotencyKey)\s*:/.test(model));
 
   assert.ok(service.includes("createHmac"));
+  assert.ok(service.includes("getSessionScopedFilter"));
+  assert.ok(service.includes('host = new URL(request?.url || "").hostname'));
+  assert.ok(service.includes('status: { $in: ["active", "paused"] }'));
   assert.ok(service.includes("startKeyHash"));
   assert.ok(service.includes("sessionHash"));
   assert.ok(service.includes("$setOnInsert"));
