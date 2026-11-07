@@ -918,3 +918,19 @@ The owner-only `/admin/portfolio/analytics` page now:
 No read API endpoint or automatic polling has been added in this phase. Period changes and cursor pagination are server navigations; Phase 6 will introduce the owner-authorized read endpoint, polling cadence, abort/backoff and live update behavior. Deletion remains Phase 7.
 
 **Verification scope:** A dashboard regression suite checks owner-guard ordering, no-store rendering, report-field mapping, period filters, cursor pagination, theme token usage and isolation from public page shells. Real MongoDB aggregation remains unverified until index provisioning runs against the intended database and actual visit records exist.
+
+
+### Phase 5 verification record
+
+Verified after the dashboard regression assertion correction:
+
+- Dashboard tests: 4 passed.
+- Reporting tests: 8 passed.
+- Foundation tests: 13 passed.
+- Ingestion tests: 7 passed.
+- Tracker tests: 7 passed.
+- Targeted ESLint on the private dashboard route, dashboard component and dashboard tests: passed.
+- Full `npm run build`: passed, including all portfolio analytics and existing Labs tests, SEO validation and Next.js production compilation/static generation.
+- Next.js build output registered `/admin/portfolio/analytics` as a dynamic route.
+
+No live MongoDB read has been validated against the production visitor collection yet. The dashboard safely renders empty states until eligible visit records exist. Automatic refresh is still Phase 6; deletion controls are Phase 7.
