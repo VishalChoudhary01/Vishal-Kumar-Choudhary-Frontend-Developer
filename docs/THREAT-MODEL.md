@@ -65,19 +65,25 @@ Risk levels are initial qualitative assessments, not measured probabilities. The
 
 ## 4. Required authorization matrix
 
-| Capability | Guest | Registered, email unverified | Registered, email verified | Owner/Admin |
+| Capability | Guest | Registered, email unverified | Registered, email verified | Labs Owner |
 |---|---|---|---|---|
-| Read published portfolio/Lab metadata and public demos | Allow | Allow | Allow | Allow |
-| Read full source of a published experiment | Deny | Deny | Allow automatically | Allow |
-| Copy published source | Deny | Deny | Allow | Allow |
-| Like/unlike public experiment | Best-effort anonymous/browser-scoped like where supported | Same best-effort public-like capability; no account linkage | Own account, one persistent active like per experiment | Own account under same invariant |
-| Read own dashboard/activity | Deny | Deny | Own records only | Own records only |
-| Read aggregate source-engagement analytics | Deny | Deny | Deny | Allow |
-| Read/write source drafts, versions and publication | Deny | Deny | Deny | Allow after owner guard |
-| Upload/manage media library | Deny | Deny | Deny | Allow after server-side checks |
-| Assign Owner/Admin role | Deny | Deny | Deny | No self-service assignment; singleton owner comes only from trusted `LABS_OWNER_USER_ID` provisioning |
+| Read public portfolio and eligible Labs metadata/static media | Allow | Allow | Allow | Allow |
+| Read protected published source | Deny | Deny | Allow automatically | Allow |
+| Copy protected published source | Deny | Deny | Allow | Allow |
+| Like/unlike | Anonymous/browser-scoped where supported | Deny | Own account, one active like per experiment | Own account under same invariant |
+| Read personal dashboard/activity | Not implemented | Not implemented | PRD target only; no current route | Not an owner Analytics substitute |
+| Read Labs aggregate engagement Analytics | Deny | Deny | Deny | Allow |
+| Read/write owner drafts, source versions and publication | Deny | Deny | Deny | Allow |
+| Manage Labs media | Deny | Deny | Deny | Allow after server-side authorization |
+| Become owner/admin | Deny | Deny | Deny | No self-service assignment; server-side identity provisioning only |
 
-This matrix is the approved target source-access contract. The current implementation still has a legacy per-user grant lookup; remove it before claiming this policy is live. Interactive preview remains separately blocked pending the isolation gate.
+**Accepted owner target (2026-11-07):** singleton server-only LABS_OWNER_USER_ID must match the stable Better Auth user ID, and the session must be verified. No email, first-user or client-role fallback is part of the target.
+
+**Current-code discrepancy:** owner-access.js still accepts a verified LABS_OWNER_EMAIL match as an alternative to the ID. The target policy is not enforced until that fallback is removed. Inspect deployed Preview/Production owner variables before changing the code.
+
+**Current source access:** source-access.js requires a server-derived verified session, canonical currently published experiment and exact published snapshot. It no longer performs a LabSourceGrant lookup. LabSourceGrant remains a legacy model/collection until a reviewed migration retires it. This supersedes the older statement that the current endpoint still uses a per-user grant lookup.
+
+Public Labs catalogue/detail behavior is also narrower than older threat-model rows imply: current /labs is a source-backed custom catalogue and /labs/[slug] is static/non-executable. The runtime artifact endpoint exists separately; it is not embedded by the current detail page.
 
 ## 5. Required defensive patterns
 
@@ -114,14 +120,16 @@ This matrix is the approved target source-access contract. The current implement
 
 ## 6. Privacy and analytics constraints
 
-- Collect only the event fields needed for approved metrics.
-- Do not put full source, credentials, message bodies or unnecessary personal data into analytics.
-- Source-open and code-copy events are verified-account-only. Verified likes are persistent state transitions; public guest/unverified like actions may be counted separately where measurable as anonymous actions, not unique people.
-- Aggregate source opens, unique verified accounts, copies, active likes and like/unlike transitions by experiment. Do not expose user-level source activity in the first admin dashboard.
-- A copy event records a successful Clipboard API write acknowledgement accepted by the server; it does not prove the source was pasted, run or used.
-- A source-open event represents a successful authorized source response, not a public experiment detail-page view.
-- Verified like/unlike events are recorded only for server-confirmed changes to the unique user/experiment like state. Guest-like action events are separate best-effort counts and must not be represented as unique people.
-- Event retention, event deduplication window, account-deletion treatment and Privacy Policy wording are release gates. Do not invent retention periods; disclose the selected policy before enabling production analytics.
+- Collect only fields required for approved metrics and security controls.
+- Do not place full source, credentials, clipboard text, contact-message bodies, passwords or unnecessary personal data in analytics.
+- Source-open and code-copy events are verified-account-only. A source-open event represents a successful authorized source response, not a public detail-page view. A code-copy event represents a successful Clipboard API acknowledgement accepted by the server, not proof that code was pasted/run/shipped.
+- Verified likes are persistent current state; like/unlike events represent server-confirmed state transitions. Guest-like actions are separate best-effort counts and must never be described as unique people.
+- Current Labs event model supports source_open, code_copy, like, unlike, guest_like and guest_unlike. Experiment detail views, preview starts and preview interactions are not currently instrumented.
+- Portfolio page visits are stored in a separate portfolio_visits domain. They are not a substitute for per-experiment Labs detail-view events or source-open events.
+- **Accepted owner Analytics target (2026-11-07): aggregate-only.** Owner views may show totals, rankings and trends; they must not expose individual names, masked email addresses, per-user like timestamps, a searchable active-liker directory or individual source/copy/like histories. Anonymous identities must never be enumerated.
+- **Current-code discrepancy:** the experiment-specific Labs Analytics page still contains an active verified-liker identity panel. Remove/redesign it before describing the implementation as compliant with the accepted target and current Privacy Policy.
+- Event retention, event deduplication window and account-deletion treatment are open release gates. The Labs event model does not declare a TTL index; do not invent a retention period or imply automatic expiry.
+- The current public Privacy Policy describes aggregate engagement only. The owner UI must be brought into alignment rather than weakening the disclosure to match an unapproved identity panel.
 
 ## 7. Security verification gates
 
@@ -161,19 +169,26 @@ These are intentionally unresolved until evidence and explicit review:
 The highest-risk feature is untrusted interactive source execution, followed by private-content authorization/cache isolation and admin authentication. These features require explicit security gates. The current document is a threat-model draft, not evidence that the application has implemented or passed these controls. Do not start production implementation of the sandbox, auth, or private CMS until the relevant decisions and tests are approved.
 
 
-## 10. Labs authentication and protected-source implementation status — 2026-11-03
+## 10. Labs authentication and protected-source implementation status — reviewed 2026-11-07
 
-The Labs foundation uses Better Auth with the MongoDB adapter. Email/password, email verification, password reset, optional Google sign-in, server-side sessions, privacy-safe registration handling, trusted-origin validation and rate limiting are implemented. The current source endpoint still uses a legacy per-experiment grant lookup; the approved migration removes that lookup and grants published-source reads to every verified account automatically.
+The Labs foundation uses Better Auth with the MongoDB adapter. Email/password registration, email verification, password reset, server-side session resolution, optional Google/GitHub provider configuration, generic registration handling, trusted-origin validation and rate limiting have implementation paths in the branch. Provider console settings, deployed credentials, SMTP delivery, Atlas indexes and full browser E2E remain separate verification gates.
 
-Remaining release/security gates:
-- Configure production secrets, the trusted proxy IP header, SMTP sender, actual HTTPS Terms/Privacy URLs and version identifiers. Registration remains disabled if required delivery/legal configuration is absent.
-- Configure Google OAuth and verify callback, trusted origin and verified-account linking behavior.
-- Verify session cookies, origin checks, session expiration, tab synchronization and password-reset revocation in the deployed environment.
-- Provision and publish an Atlas source snapshot; test Guest / signed-in-unverified denial and automatic Verified Registered User access without a grant. Confirm Owner can access drafts through a separate owner guard.
-- Test direct requests, IDOR attempts, malformed source paths, oversized snapshots, no-store headers, and absence of source in anonymous HTML/RSC/public caches.
-- The current repository is public and existing demo runtimes ship client-side code. Protected source snapshots must be kept separate from public runtime code; a protected viewer does not make source code in a public repository or a browser bundle confidential.
-- No build/browser/security test evidence has been produced from this connected GitHub-only editing session. Do not describe the feature as production-certified or mark the security verification gate as passed.
+Protected source access no longer uses a per-user LabSourceGrant lookup. Every account with a server-verified emailVerified === true may read an exact currently published source snapshot; guests and signed-in unverified accounts are denied source bytes. The legacy grant model/collection remains migration material and should not be dropped until its usage/data has been inspected and a reviewed migration is ready.
 
+Owner policy target is LABS_OWNER_USER_ID only. Current owner-access.js still supports LABS_OWNER_EMAIL as a fallback; remove it only after checking deployed owner provisioning. Do not claim that ID-only enforcement is already live.
+
+The public Labs route currently lists eligible source-backed custom experiments only. The public detail page is static/non-executable and does not embed the artifact iframe. The compiler, owner Run, immutable publish pipeline and artifact-serving route exist separately.
+
+Remaining security/release gates:
+- Configure and verify deployment secrets, trusted proxy IP header, SMTP and actual auth origin for each environment.
+- Configure Google/GitHub provider credentials and verify callback, login-only vs explicit signup intent, and verified-email linking.
+- Verify session cookies, origin checks, expiry, tab synchronization and password-reset revocation in deployed browser flows.
+- Check Atlas collections/indexes, legacy grants and migration readiness.
+- Test Guest / unverified / verified / owner direct page/API permissions and source no-store/cache isolation.
+- Test source path traversal, malformed payloads, size limits, rate limits, secret rejection and safe logs.
+- Remove the active verified-liker identity panel to meet the accepted aggregate-only Analytics privacy contract.
+- Resolve event-retention/account-deletion policy before production analytics is treated as complete.
+- Do not claim production certification from this repository documentation review; no current-HEAD build/browser/security suite or external provider exercise was performed here.
 
 ## 11. Consent and verification data boundary
 
