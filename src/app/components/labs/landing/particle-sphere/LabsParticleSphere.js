@@ -161,7 +161,10 @@ export default function LabsParticleSphere() {
       sphereGroup.rotation.z = Math.sin(elapsed * 0.11) * 0.018;
 
       if (orbitGroup) {
-        orbitGroup.rotation.y = -elapsed * PARTICLE_SPHERE_CONFIG.orbitSpeed;
+        // Keep the orbit planes at a stable depth angle so their projected
+        // inner edges continue to enclose the sphere at every elapsed time.
+        // The individual runners still travel along their paths; this gentle
+        // roll is around the camera axis and does not reduce orbit clearance.
         orbitGroup.rotation.z = Math.sin(elapsed * 0.08) * 0.012;
         orbitGroup.userData.update?.(elapsed, burstAmount);
       }
