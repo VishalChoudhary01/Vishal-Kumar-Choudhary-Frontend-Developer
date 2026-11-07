@@ -223,8 +223,6 @@ export default function LabsParticleSphere() {
     const resize = () => {
       if (!renderer || !mount) return;
 
-      orbitGroup?.userData.setDesktop?.(window.innerWidth >= 768);
-
       const bounds = mount.getBoundingClientRect();
       const width = Math.max(1, Math.round(bounds.width));
       const height = Math.max(1, Math.round(bounds.height));
@@ -402,7 +400,7 @@ export default function LabsParticleSphere() {
       sphereHitArea.userData.interactionOnly = true;
       sphereGroup.add(sphereHitArea);
 
-      orbitGroup = createParticleOrbits(THREE, window.innerWidth >= 768);
+      orbitGroup = createParticleOrbits(THREE);
       scene.add(orbitGroup);
 
       const syncThemeColor = () => {
