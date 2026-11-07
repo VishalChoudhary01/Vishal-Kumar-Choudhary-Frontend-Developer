@@ -333,7 +333,7 @@ The documentation is more consistent, but this is not a full PRD implementation:
 
 ### 11.4 Navigation verification
 
-The current docs/README.md has 59 Markdown links and 44 unique relative targets. All 42 targets were fetched successfully on feat/labs-platform-integration. The earlier 49-link count remains the initial audit snapshot.
+The current docs/README.md has 59 Markdown links and 44 unique relative targets. All 44 targets were fetched successfully on feat/labs-platform-integration. The earlier 49-link count remains the initial audit snapshot.
 
 ### 11.5 Verification boundary
 
