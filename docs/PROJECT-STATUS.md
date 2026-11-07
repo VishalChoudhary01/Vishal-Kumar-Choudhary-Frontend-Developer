@@ -1,3 +1,5 @@
+The current sound system is documented in architecture/SOUND-ENGINEERING.md: shared Web Audio hook, Vee's laser SFX, separate native welcome voice, and the public audio asset inventory. No app-wide sound provider or master mute setting is currently implemented.
+
 # Portfolio Platform — Current Project Status
 
 **Audit snapshot:** 2026-11-07  
