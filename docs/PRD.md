@@ -28,8 +28,8 @@ Extend the existing developer portfolio into a maintainable platform where the o
 
 ## 4. Users and permissions
 ### Guest
-- View public portfolio pages and published Lab listing/detail pages.
-- View permitted static media previews and explicitly public demos. Guests receive no source bytes, including partial snippets.
+- View public portfolio pages and eligible published custom Labs listing/detail pages.
+- View permitted static media previews and non-executable detail presentation. The current public catalogue does not include code-owned built-in demo entries; guests receive no protected source bytes, including partial snippets.
 - Search, filter, sort, paginate/load more, and view published experiment metadata.
 - Cannot view or copy source. May like public experiments through the existing best-effort anonymous mechanism where available.
 - Cannot access private drafts, full source, restricted interactive previews, user-only features, or admin pages.
@@ -248,16 +248,16 @@ The platform is acceptable only when:
 4. Guests cannot retrieve full source, interactive-preview access or draft content by direct URL/API manipulation.
 5. Registered users can authenticate, manage their account and use the specified dashboard.
 6. Admin authorization is server-enforced and cannot be self-assigned through registration or client state.
-7. Lab search/filter/sort/pagination and permitted previews work with accessible loading/empty/error states; gallery cards remain static-only and public detail pages render the actual published isolated runtime.
+7. Current public Labs listing/detail remains source-backed custom-only and static/non-executable. Gallery cards/detail media never execute experiment code. Category/cursor pagination works; search, expanded filters and visitor-selected sort remain PRD gaps until implemented or explicitly deferred.
 8. Owner Run executes the current unsaved working copy in the isolated preview for supported static HTML/CSS/JS and React JSX/TSX modes; failures preserve the working copy and prior published release.
 9. Gallery cards use an explicit published media preview, otherwise a version-matched generated code-output poster, otherwise artwork; no experiment runtime executes in the gallery.
 10. Poster generation is bound to the exact published source/artifact version and safely falls back without breaking an otherwise valid release.
-11. The detail runtime displays skeleton/ready/error/retry/fallback states and never leaves an unexplained blank white canvas.
+11. The current public detail page is static and has no detail-runtime loading/error state. Owner Run and compiler preview provide explicit readiness/error behavior inside the owner workspace. A future public executable runtime requires a new product/security decision.
 12. Verified source access is direct when a verified session is already known; guest source CTA shows Sign in and Create account; server-side verified-session authorization remains mandatory.
 13. Optimistic reversible actions roll back on rejection; destructive/publishing operations never report success before server confirmation; copy analytics follows successful clipboard acknowledgement.
-8. Analytics metrics match written definitions and separate guest/authenticated activity where possible.
-9. Version restore creates a new version; old snapshots remain immutable; schedules target exact versions.
-10. Media replacement/deletion checks all required references, including version-history references.
+14. Analytics metrics match written definitions, separate Portfolio visits from Labs events, and expose aggregate-only owner data.
+15. Version restore creates a new version; old snapshots remain immutable; schedules target exact versions.
+16. Media replacement/deletion checks all required references, including version-history references.
 11. Scheduled publication works without an open browser tab, has bounded automatic retries/recovery, and revalidates cache after success.
 12. Automated and manual regression checks show no unintended public UI, route, SEO, accessibility, behavior or performance regressions.
 13. Security review covers authorization, draft isolation, preview sandbox, upload handling, redirects and analytics abuse controls.
