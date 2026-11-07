@@ -3,8 +3,8 @@ export function getParticleSphereThemePalette(isDark) {
     return Object.freeze({
       particleColor: "#58b7ae",
       sparkleColor: "#e1fff9",
-      glowColor: "#0c514b",
-      glowOpacity: 0.055,
+      glowColor: "#061c18",
+      glowOpacity: 0.028,
       orbitOpacityScale: 1,
       orbitParticleColor: "#e1fff9",
       orbitParticleGlowColor: "#69bdb9",
