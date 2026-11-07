@@ -169,3 +169,16 @@ The PRD, Threat Model, Analytics docs, source-management and Monaco plans, owner
 **Navigation check:** docs/README.md now has 59 Markdown links to 44 unique relative targets; all 44 targets were fetched successfully on feat/labs-platform-integration. The previous count of 42 links was an earlier handover snapshot.
 
 No current-HEAD npm install, test, lint, build, browser/Playwright, Atlas, SMTP, OAuth, Cloudinary, Blob or Sandbox verification was performed by this follow-up. Earlier report checks remain historical evidence only.
+
+## 13. SEO/AEO extension for public Labs — 7 November 2026
+
+The original supplied SEO/AEO standard named the homepage and `/projects/[slug]` as indexable routes. The current implementation retains those contracts and extends the same metadata/semantic/structured-data rules to public Labs:
+- `/labs`: canonical collection metadata, explicit index/follow, Open Graph/Twitter, server-rendered CollectionPage/ItemList JSON-LD.
+- `/labs/[slug]`: dynamic per-experiment metadata, Open Graph/Twitter, WebPage/CreativeWork/BreadcrumbList JSON-LD, visible author/category/technology/explanation information and static media.
+- sitemap: all eligible Labs detail URLs included through cursor pagination; no drafts, private sources or owner/runtime routes.
+- robots: private /admin disallowed; public /api path remains crawlable because public poster imagery is served through a Labs API route.
+- safe JSON-LD serialization, preview image filtering, alt fallback and actual published/modified dates are included.
+
+The implementation and exact current strings/route behavior are described in `docs/SEO-AND-AEO-IMPLEMENTATION.md`. Focused tests are added to `tests/labs-seo.test.mjs` and included in the build chain.
+
+**No build/test/browser/search-engine validation was performed in this pass.** The checkout attempt failed because GitHub could not be resolved from the execution environment, and the latest commit has no reported CI statuses. Do not call these pages production-index-verified. Labs duplicate SEO-title/description validation across database records is still an open quality gate.
