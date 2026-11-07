@@ -51,15 +51,17 @@ export const particleVertexShader = `
 
     vec3 viewNormal = normalize(mat3(modelViewMatrix) * direction);
     vec3 lightDirection = normalize(vec3(-0.46, 0.38, 0.82));
-    float directionalLight = 0.56
-      + 0.44 * max(dot(viewNormal, lightDirection), 0.0);
+    float directionalLight = 0.50
+      + 0.50 * max(dot(viewNormal, lightDirection), 0.0);
+    float rimLight = pow(1.0 - abs(viewNormal.z), 2.1);
+    float hemisphereFill = 0.24 + 0.76 * max(viewNormal.y * 0.5 + 0.5, 0.0);
     float facing = smoothstep(-0.24, 0.32, viewNormal.z);
     float layerOpacity = aLayer > 1.5
       ? 0.62
       : (aLayer > 0.5 ? 0.28 : 1.0);
     float depthFade = 1.0 / (1.0 + max(0.0, viewDepth - 4.0) * 0.14);
 
-    float sparkleThreshold = mix(0.972, 0.91, step(1.5, aLayer));
+    float sparkleThreshold = mix(0.978, 0.925, step(1.5, aLayer));
     float sparkleMask = step(sparkleThreshold, fract(aSeed * 37.0));
     float sparkleRate = 0.56 + fract(aSeed * 17.4) * 1.1;
     float sparkleWave = pow(
@@ -68,22 +70,22 @@ export const particleVertexShader = `
     );
     float sparkle = sparkleMask * sparkleWave * uMotionEnabled;
 
-    float pulseHighlight = squeeze * (0.08 + 0.12 * facing);
+    float pulseHighlight = squeeze * (0.07 + 0.10 * facing);
 
     float ambientSize = mix(1.0, 1.18, ambientLayer);
 
     gl_PointSize = clamp(
-      aSize * ambientSize * uPixelRatio * (4.2 / viewDepth) * (1.0 + sparkle * 1.15),
+      aSize * ambientSize * uPixelRatio * (5.0 / viewDepth) * (1.0 + sparkle * 0.85),
       1.0,
-      7.0 * uPixelRatio
+      6.5 * uPixelRatio
     );
 
     gl_Position = projectionMatrix * modelPosition;
 
     vec3 particleColor = mix(uBrandColor, aColor, 0.34);
-    vColor = particleColor * (directionalLight + sparkle * 2.8 + pulseHighlight);
+    vColor = particleColor * (directionalLight * hemisphereFill + rimLight * 0.42 + sparkle * 2.2 + pulseHighlight);
     vOpacity = (mix(0.012, 0.92, facing) * layerOpacity
-      + sparkle * 0.92
+      + sparkle * 0.72
       + pulseHighlight) * depthFade;
     vSparkle = sparkle;
   }
@@ -102,7 +104,7 @@ export const particleFragmentShader = `
     float halo = exp(-distanceFromCenter * distanceFromCenter * 30.0) * 0.22;
     float sparkleHalo = exp(-distanceFromCenter * distanceFromCenter * 16.0)
       * vSparkle
-      * 0.48;
+      * 0.32;
     float alpha = (core * 0.76 + halo + sparkleHalo) * vOpacity;
 
     if (alpha < 0.012) discard;
