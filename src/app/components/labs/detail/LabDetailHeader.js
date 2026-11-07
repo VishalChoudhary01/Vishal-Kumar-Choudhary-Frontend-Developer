@@ -27,7 +27,7 @@ export default function LabDetailHeader({ experiment, initialEngagement = null }
         </p>
       ) : null}
 
-      <h1 className="mt-3 max-w-5xl font-display text-[clamp(2.75rem,6vw,5.5rem)] font-normal leading-[0.96] tracking-[-0.05em] text-text-primary">
+      <h1 id="lab-page-title" className="mt-3 max-w-5xl font-display text-[clamp(2.75rem,6vw,5.5rem)] font-normal leading-[0.96] tracking-[-0.05em] text-text-primary">
         {experiment.title}
       </h1>
 
@@ -37,8 +37,13 @@ export default function LabDetailHeader({ experiment, initialEngagement = null }
         </p>
       ) : null}
 
+      <p className="mt-2 text-[11px] leading-5 text-text-tertiary">
+        A frontend experiment by Vishal Kumar Choudhary.
+      </p>
+
       {technologies.length ? (
         <p className="mt-5 text-xs leading-6 text-text-muted sm:text-sm">
+          <span className="font-medium text-text-secondary">Technologies:</span>{" "}
           {technologies.join(" · ")}
         </p>
       ) : null}
