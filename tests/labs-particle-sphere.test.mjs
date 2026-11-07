@@ -150,7 +150,7 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.match(rendererSource, /document\.hidden/);
   assert.match(rendererSource, /cancelAnimationFrame/);
   assert.match(rendererSource, /ResizeObserver/);
-  assert.match(rendererSource, /renderer\\?\.dispose\(\)/);
+  assert.match(rendererSource, /renderer\??\.dispose\(\)/);
   assert.match(rendererSource, /webglcontextlost/);
   assert.match(rendererSource, /disposed = false/);
   assert.match(rendererSource, /if \(disposed\) return/);
