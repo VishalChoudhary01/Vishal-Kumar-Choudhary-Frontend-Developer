@@ -93,6 +93,8 @@ Current route implementation src/app/api/contact/route.js requires:
 
 It creates a Gmail SMTP Nodemailer transporter using smtp.gmail.com, port 465, secure true. GMAIL_APP_PASSWORD is a Google App Password, not the normal account password.
 
+The complete contact lifecycle—including client validation and status, POST /api/contact request/response contract, email template, replyTo semantics and current hardening gaps—is documented in [Contact Form and Email Engineering](../pages/CONTACT-FORM-AND-EMAIL-ENGINEERING.md).
+
 ### Public domain
 
 NEXT_PUBLIC_SITE_URL is used for canonical site metadata and Portfolio Analytics host validation. In deployed auth flows, BETTER_AUTH_URL/trusted origins must be exact and match provider callback configuration.
