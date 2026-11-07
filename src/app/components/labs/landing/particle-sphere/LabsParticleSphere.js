@@ -11,6 +11,7 @@ import {
 import { createParticleOrbits } from "./particle-orbits";
 import { getParticleCameraDistance } from "./particle-responsive.mjs";
 import { getParticleSphereThemePalette } from "./particle-theme.mjs";
+import { getParticleBurstEnvelope } from "./particle-interaction.mjs";
 import { PARTICLE_SPHERE_CONFIG } from "./particle-constants";
 import {
   areParticleQualityProfilesEqual,
@@ -60,6 +61,14 @@ export default function LabsParticleSphere() {
     let intersectionObserver;
     let themeObserver;
     let handleContextLost;
+    let handlePointerMove;
+    let handlePointerDown;
+    let handlePointerUp;
+    let handlePointerCancel;
+    let handlePointerLeave;
+    let sphereHitArea;
+    let pointerDown = null;
+    let burstStartedAt = Number.NEGATIVE_INFINITY;
     let disposed = false;
     let animationFrame = 0;
     let isRunning = false;
@@ -67,6 +76,10 @@ export default function LabsParticleSphere() {
     let elapsed = 0;
     let previousTime = 0;
     let lastRenderTime = 0;
+
+    const raycaster = new THREE.Raycaster();
+    const pointerNdc = new THREE.Vector2();
+    const pointerLocal = new THREE.Vector3();
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
@@ -104,8 +117,11 @@ export default function LabsParticleSphere() {
       lastRenderTime = time;
       elapsed += delta;
 
+      const burstAmount = getParticleBurstEnvelope(elapsed - burstStartedAt);
+
       if (particleMaterial) {
         particleMaterial.uniforms.uTime.value = elapsed;
+        particleMaterial.uniforms.uBurst.value = burstAmount;
       }
 
       sphereGroup.rotation.y = elapsed * PARTICLE_SPHERE_CONFIG.rotationSpeed;
@@ -115,7 +131,7 @@ export default function LabsParticleSphere() {
       if (orbitGroup) {
         orbitGroup.rotation.y = -elapsed * PARTICLE_SPHERE_CONFIG.orbitSpeed;
         orbitGroup.rotation.z = Math.sin(elapsed * 0.08) * 0.012;
-        orbitGroup.userData.update?.(elapsed);
+        orbitGroup.userData.update?.(elapsed, burstAmount);
       }
 
 
@@ -142,6 +158,11 @@ export default function LabsParticleSphere() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("resize", resize);
       renderer?.domElement?.removeEventListener("webglcontextlost", handleContextLost);
+      renderer?.domElement?.removeEventListener("pointermove", handlePointerMove);
+      renderer?.domElement?.removeEventListener("pointerdown", handlePointerDown);
+      renderer?.domElement?.removeEventListener("pointerup", handlePointerUp);
+      renderer?.domElement?.removeEventListener("pointercancel", handlePointerCancel);
+      renderer?.domElement?.removeEventListener("pointerleave", handlePointerLeave);
 
       const disposeObjects = (root) => {
         root?.traverse((object) => {
@@ -266,6 +287,9 @@ export default function LabsParticleSphere() {
           uMotionEnabled: { value: 1 },
           uBrandColor: { value: new THREE.Color(initialBrandColor) },
           uSparkleColor: { value: new THREE.Color(initialPalette.sparkleColor) },
+          uBurst: { value: 0 },
+          uPointerPosition: { value: new THREE.Vector3() },
+          uPointerActive: { value: 0 },
         },
         vertexShader: particleVertexShader,
         fragmentShader: particleFragmentShader,
@@ -277,6 +301,20 @@ export default function LabsParticleSphere() {
 
       particles = new THREE.Points(particleGeometry, particleMaterial);
       sphereGroup.add(particles);
+
+      // Invisible raycast surface detects clicks and taps on the 3D sphere.
+      // It is not rendered and does not alter the visible sphere geometry.
+      sphereHitArea = new THREE.Mesh(
+        new THREE.SphereGeometry(1.28, 24, 18),
+        new THREE.MeshBasicMaterial({
+          colorWrite: false,
+          depthWrite: false,
+          transparent: true,
+          opacity: 0,
+        }),
+      );
+      sphereHitArea.userData.interactionOnly = true;
+      sphereGroup.add(sphereHitArea);
 
       orbitGroup = createParticleOrbits(THREE);
       scene.add(orbitGroup);
@@ -339,6 +377,80 @@ export default function LabsParticleSphere() {
       );
       sphereGroup.add(glow);
       syncThemeColor();
+
+      const setPointerFromEvent = (event) => {
+        const bounds = renderer.domElement.getBoundingClientRect();
+        if (!bounds.width || !bounds.height) return false;
+
+        pointerNdc.set(
+          ((event.clientX - bounds.left) / bounds.width) * 2 - 1,
+          -((event.clientY - bounds.top) / bounds.height) * 2 + 1,
+        );
+        raycaster.setFromCamera(pointerNdc, camera);
+
+        const hit = raycaster.intersectObject(sphereHitArea, false)[0];
+        if (!hit) {
+          particleMaterial.uniforms.uPointerActive.value = 0;
+          return false;
+        }
+
+        pointerLocal.copy(hit.point);
+        sphereGroup.worldToLocal(pointerLocal);
+        particleMaterial.uniforms.uPointerPosition.value.copy(pointerLocal);
+        particleMaterial.uniforms.uPointerActive.value = 1;
+        return true;
+      };
+
+      handlePointerMove = (event) => {
+        setPointerFromEvent(event);
+      };
+
+      handlePointerDown = (event) => {
+        if (event.pointerType === "mouse" && event.button !== 0) return;
+
+        pointerDown = {
+          pointerId: event.pointerId,
+          x: event.clientX,
+          y: event.clientY,
+        };
+        setPointerFromEvent(event);
+      };
+
+      handlePointerUp = (event) => {
+        if (!pointerDown || pointerDown.pointerId !== event.pointerId) return;
+
+        const distance = Math.hypot(
+          event.clientX - pointerDown.x,
+          event.clientY - pointerDown.y,
+        );
+        const hitSphere = setPointerFromEvent(event);
+
+        if (distance <= 12 && hitSphere) {
+          // A new tap restarts the current burst rather than stacking forces.
+          burstStartedAt = elapsed;
+        }
+
+        pointerDown = null;
+      };
+
+      handlePointerCancel = () => {
+        pointerDown = null;
+        particleMaterial.uniforms.uPointerActive.value = 0;
+      };
+
+      handlePointerLeave = () => {
+        if (!pointerDown) {
+          particleMaterial.uniforms.uPointerActive.value = 0;
+        }
+      };
+
+      renderer.domElement.style.touchAction = "pan-y";
+      renderer.domElement.style.cursor = "pointer";
+      renderer.domElement.addEventListener("pointermove", handlePointerMove, { passive: true });
+      renderer.domElement.addEventListener("pointerdown", handlePointerDown, { passive: true });
+      renderer.domElement.addEventListener("pointerup", handlePointerUp, { passive: true });
+      renderer.domElement.addEventListener("pointercancel", handlePointerCancel, { passive: true });
+      renderer.domElement.addEventListener("pointerleave", handlePointerLeave, { passive: true });
 
       resize();
 
