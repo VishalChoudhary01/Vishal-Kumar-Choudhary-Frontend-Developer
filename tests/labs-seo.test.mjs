@@ -261,5 +261,5 @@ test("SEO-critical Labs text and collection cards remain visible before Motion e
   assert.match(labsHeroSource, /hidden: \{ opacity: 1, y: 14 \}/);
   assert.match(labsHeroSource, /useMotionValue\(value\)/);
   assert.match(labsFeaturedSource, /hidden: \{ opacity: 1, y: 16 \}/);
-  assert.match(labsCollectionSource, /initial=\{reducedMotion \? false : \{ opacity: 1, y: 16 \} \}/);
+  assert.match(labsCollectionSource, /initial=\{reducedMotion \? false : \{ opacity: 1, y: 16 \}\s*\}/);
 });
