@@ -329,7 +329,10 @@ The client also opens SuccessModal after { ok: true }; the modal plays /mp3/conf
 
 - Navbar.js reads scrollY with Motion and toggles scrolled appearance after 24px. Active hash/section follows configured navigation entries. It supports site/project contexts, desktop nav, shared mobile-menu context, social links, theme toggle, resume action and optional Labs account control.
 - MobileMenuProvider.js owns open/toggle/close state so menu trigger and menu use the same source of truth.
-- Footer.js is global in root layout; it uses an in-view gate (once, amount .18, margin -4%) before reveal. It has reduced-motion handling and route-specific suppression for auth pages.
+- Footer.js is global in root layout; it uses an in-view gate (once, amount .18, margin -4%) before reveal. It has reduced-motion handling, homepage-only footer links and suppression on the five Labs auth routes.
+- Navbar itself is not in RootLayout: HomePage, ProjectPageView and LabsPageShell insert different Navbar contexts. Project detail has no homepage section menu; Labs uses project context with socials hidden and LabsAccountControl enabled.
+- The Labs auth route group uses AuthFrame instead of Navbar and has its own mini-footer; the root Footer returns null on those five routes. Privacy/Admin/not-found retain the root Footer but do not insert the portfolio Navbar; global-error replaces the root layout.
+- **Detailed shared-shell source of truth:** [Navbar and Footer Engineering](./NAVBAR-AND-FOOTER-ENGINEERING.md) records the route matrix, DOM layers, full responsive/menu interactions and Footer/Vee shutter/atmosphere motion.
 
 ## 12. Data contract (current static source)
 
@@ -469,3 +472,7 @@ Footer:
 - homepage-only hash navigation is hidden on project detail routes where anchors do not exist;
 - footer is suppressed on the explicit Labs auth path list.
 See design/LAYOUT-LAYERS-AND-TOKENS.md for actual font, semantic theme tokens, root layers and global CSS.
+
+### Shared navigation/footer detail pointer
+
+This homepage guide documents how its Navbar and Footer participate in the home composition. The complete reusable route/context contract (including project, Labs, Labs auth, Privacy, Admin, not-found and global-error behavior) is maintained in [Navbar and Footer Engineering](./NAVBAR-AND-FOOTER-ENGINEERING.md). Keep page composition here and shared-shell behavior in that guide to avoid duplicate/conflicting route rules.
