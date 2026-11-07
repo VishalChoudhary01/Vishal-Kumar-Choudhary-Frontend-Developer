@@ -5,10 +5,11 @@ export const particleVertexShader = `
   attribute float aLayer;
 
   uniform float uTime;
-  uniform float uSqueeze;
+  uniform float uContraction;
   uniform float uPixelRatio;
   uniform float uMotionEnabled;
   uniform vec3 uBrandColor;
+  uniform vec3 uSparkleColor;
 
   varying vec3 vColor;
   varying float vOpacity;
@@ -20,16 +21,15 @@ export const particleVertexShader = `
 
     float ambientLayer = step(1.5, aLayer);
     float sphereLayer = 1.0 - ambientLayer;
-    float squeezeVariation = 0.965 + sin(aSeed * 6.28318) * 0.035;
-    float squeeze = uSqueeze * squeezeVariation * sphereLayer;
 
-    transformed.x *= 1.0 + 0.065 * squeeze;
-    transformed.y *= 1.0 - 0.125 * squeeze;
-    transformed.z *= 1.0 + 0.035 * squeeze;
+    // Contract all three axes by the same factor: the sphere stays spherical.
+    float radialScale = mix(1.0, 0.70, clamp(uContraction, 0.0, 1.0) * sphereLayer);
+    transformed *= radialScale;
 
     float radialRipple = sin(position.y * 7.5 - uTime * 2.4)
-      * 0.008
-      * squeeze
+      * 0.005
+      * uContraction
+      * sphereLayer
       * uMotionEnabled;
     transformed += direction * radialRipple;
 
@@ -57,36 +57,44 @@ export const particleVertexShader = `
     float hemisphereFill = 0.24 + 0.76 * max(viewNormal.y * 0.5 + 0.5, 0.0);
     float facing = smoothstep(-0.24, 0.32, viewNormal.z);
     float layerOpacity = aLayer > 1.5
-      ? 0.62
+      ? 0.68
       : (aLayer > 0.5 ? 0.28 : 1.0);
     float depthFade = 1.0 / (1.0 + max(0.0, viewDepth - 4.0) * 0.14);
 
-    float sparkleThreshold = mix(0.978, 0.925, step(1.5, aLayer));
+    // More particles are eligible to twinkle, but their timings remain independent.
+    float sparkleThreshold = mix(0.958, 0.90, step(1.5, aLayer));
     float sparkleMask = step(sparkleThreshold, fract(aSeed * 37.0));
-    float sparkleRate = 0.56 + fract(aSeed * 17.4) * 1.1;
+    float sparkleRate = 0.68 + fract(aSeed * 17.4) * 1.45;
     float sparkleWave = pow(
       max(0.0, sin(uTime * sparkleRate + aSeed * 31.4)),
-      18.0
+      10.0
     );
     float sparkle = sparkleMask * sparkleWave * uMotionEnabled;
 
-    float pulseHighlight = squeeze * (0.07 + 0.10 * facing);
-
+    float contractionHighlight = uContraction * 0.06 * sphereLayer;
     float ambientSize = mix(1.0, 1.18, ambientLayer);
 
     gl_PointSize = clamp(
-      aSize * ambientSize * uPixelRatio * (5.0 / viewDepth) * (1.0 + sparkle * 0.85),
+      aSize * ambientSize * uPixelRatio * (5.0 / viewDepth) * (1.0 + sparkle * 1.75),
       1.0,
-      6.5 * uPixelRatio
+      8.0 * uPixelRatio
     );
 
     gl_Position = projectionMatrix * modelPosition;
 
-    vec3 particleColor = mix(uBrandColor, aColor, 0.34);
-    vColor = particleColor * (directionalLight * hemisphereFill + rimLight * 0.42 + sparkle * 2.2 + pulseHighlight);
-    vOpacity = (mix(0.012, 0.92, facing) * layerOpacity
-      + sparkle * 0.72
-      + pulseHighlight) * depthFade;
+    vec3 particleColor = mix(uBrandColor, aColor, 0.28);
+    vec3 litColor = particleColor * (
+      directionalLight * hemisphereFill + rimLight * 0.48 + contractionHighlight
+    );
+    vec3 sparkleColor = uSparkleColor * (0.7 + sparkle * 2.4);
+
+    vColor = mix(litColor, sparkleColor, clamp(sparkle * 1.3, 0.0, 1.0));
+    vColor *= 1.0 + sparkle * 2.4;
+    vOpacity = (
+      mix(0.012, 0.92, facing) * layerOpacity
+      + sparkle * 1.1
+      + contractionHighlight
+    ) * depthFade;
     vSparkle = sparkle;
   }
 `;
@@ -100,15 +108,21 @@ export const particleFragmentShader = `
     vec2 centered = gl_PointCoord - vec2(0.5);
     float distanceFromCenter = length(centered);
 
-    float core = 1.0 - smoothstep(0.08, 0.46, distanceFromCenter);
-    float halo = exp(-distanceFromCenter * distanceFromCenter * 30.0) * 0.22;
-    float sparkleHalo = exp(-distanceFromCenter * distanceFromCenter * 16.0)
+    float core = 1.0 - smoothstep(0.05, 0.44, distanceFromCenter);
+    float halo = exp(-distanceFromCenter * distanceFromCenter * 25.0) * 0.24;
+    float sparkleHalo = exp(-distanceFromCenter * distanceFromCenter * 10.0)
       * vSparkle
-      * 0.32;
-    float alpha = (core * 0.76 + halo + sparkleHalo) * vOpacity;
+      * 0.92;
+
+    float rayX = 1.0 - smoothstep(0.0, 0.045, abs(centered.x));
+    float rayY = 1.0 - smoothstep(0.0, 0.045, abs(centered.y));
+    float rayFade = 1.0 - smoothstep(0.08, 0.5, distanceFromCenter);
+    float starRays = max(rayX, rayY) * rayFade * vSparkle * 0.48;
+
+    float alpha = (core * 0.78 + halo + sparkleHalo + starRays) * vOpacity;
 
     if (alpha < 0.012) discard;
 
-    gl_FragColor = vec4(vColor * (1.0 + vSparkle * 1.4), alpha);
+    gl_FragColor = vec4(vColor * (1.0 + vSparkle * 2.0), alpha);
   }
 `;
