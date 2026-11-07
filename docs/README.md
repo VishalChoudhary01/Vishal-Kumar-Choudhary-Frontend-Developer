@@ -29,8 +29,9 @@ This folder is the engineering handover for the complete portfolio platform. Sta
 
 - [System Architecture](./architecture/SYSTEM-ARCHITECTURE.md) — current rendering/backend/persistence/infrastructure boundaries.
 - [Scroll and Motion Engineering](./architecture/SCROLL-AND-MOTION-ENGINEERING.md) — scroll-controller ownership, Motion graph types, breakpoints and test matrix.
-- [Sound Engineering](./architecture/SOUND-ENGINEERING.md) — shared Web Audio hook, native Vee voice, audio asset inventory, browser autoplay policy, call sites and extension guide.
-- [Layout Layers and Design Tokens](./design/LAYOUT-LAYERS-AND-TOKENS.md) — actual fonts, light/dark semantic tokens, Tailwind v4 scan setup, root provider nesting and shared layout layers.
+- [Theme Toggle Engineering](./architecture/THEME-TOGGLE-ENGINEERING.md) — next-themes ownership, OLD/NEW snapshot rules, rectangle/circle/circle-blur/blinds transitions, fallback and click sound.
+- [Sound Engineering](./architecture/SOUND-ENGINEERING.md) — shared Web Audio hook, Vee voice/laser and ThemeToggle click sound, complete asset inventory, autoplay policy and extension guide.
+- [Layout Layers and Design Tokens](./design/LAYOUT-LAYERS-AND-TOKENS.md) — actual fonts, light/dark semantic tokens, Tailwind v4 scan setup, root provider nesting and shared layout layers.\n\nTheme toggle uses the root theme provider and semantic styling described above; its full snapshot transition contract is documented in [Theme Toggle Engineering](./architecture/THEME-TOGGLE-ENGINEERING.md).
 - [Data Model Catalogue](./architecture/DATA-MODEL-CATALOG.md) — current collections and schema constraints; live Atlas indexes still require environment verification.
 - [Labs Runtime and Code Execution](./architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md) — built-in runtime, Monaco editor, unsaved Run, immutable publishing, artifact security and poster/media lifecycle.
 - [API Endpoint Inventory](./api/ENDPOINT-INVENTORY.md) — route/method/auth/access index for all 36 handlers.
