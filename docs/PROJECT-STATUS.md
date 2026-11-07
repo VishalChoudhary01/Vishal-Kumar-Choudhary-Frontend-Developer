@@ -35,7 +35,7 @@ The next major product area is the general Portfolio CMS and dynamic Project Det
 | Source version/restore/audit | Implemented in code | Verify Atlas data, immutable pointers and audit writes. |
 | Owner unsaved Run | Implemented in code | Temporary isolated Vercel Sandbox flow; credentials, limits and browser execution are deployment gates. |
 | Build & Publish/artifact delivery | Separate infrastructure implemented | Compiler, Blob artifact storage and public artifact Route Handler exist. Public detail does not embed the runtime. Verify pointer/CSP/path behavior in Preview. |
-| Static gallery preview/poster pipeline | Implemented in code | Poster capture can be unavailable; not every experiment is guaranteed to have one. Exact release binding and Cloudinary/Blob config require verification. |
+| Static gallery preview/poster pipeline | Owner-selected poster promotion implemented in code | An owner can promote an owned still image as the public gallery preview, bound to the exact published artifact/source version. Automatic browser screenshot capture is not implemented; generic/neutral artwork remains the fallback. Verify Cloudinary/Blob configuration and deletion cleanup in the target environment. |
 | Complete Labs media-role model | Not implemented | Current schema is galleryPreview plus at most one fallback-preview attachment. Ordered detail-gallery and full role migration are pending. |
 | Labs Engagement Analytics | Implemented in part | Event types: source_open, code_copy, like, unlike, guest_like, guest_unlike. Charts/polling exist; Atlas attribution and browser QA pending. |
 | Labs detail-view/preview analytics | Not implemented | No experiment-view, preview-start or preview-interaction event producers. Portfolio page visits are separate and cannot substitute. |
@@ -49,7 +49,7 @@ The next major product area is the general Portfolio CMS and dynamic Project Det
 
 ## 3. Accepted Labs decisions — 7 November 2026
 
-Recorded in Section 39 of LABS-AND-AUTHENTICATION-DESIGN-SPEC.md:
+Recorded in ADR-018 of [DECISIONS.md](./DECISIONS.md):
 
 1. **Public catalogue:** source-backed custom experiments only; code-owned runtime modules are not automatically public catalogue entries.
 2. **Public detail:** static, non-executable. Do not mount LabWorkspace, LabRuntimeBoundary or artifact iframe on /labs/[slug]. Keep owner Run, build/publish and artifact-serving infrastructure separate.
@@ -120,6 +120,7 @@ Record the exact commit, commands/tests actually run, deployment URL/environment
 ## 8. Documentation authority
 
 - docs/README.md: navigation and source-of-truth rules.
+- docs/DECISIONS.md: accepted Labs supersession decision (ADR-018).
 - pages/HOME-PAGE-ENGINEERING.md: homepage structure and motion; SEO metadata and Person/WebSite/ProfilePage structured data remain in the server route.
 - SEO-AND-AEO-IMPLEMENTATION.md: cross-route SEO/AEO implementation source of truth.
 - pages/NAVBAR-AND-FOOTER-ENGINEERING.md: page-owned Navbar contexts, global Footer route rules, responsive layout, menu accessibility and Footer/Vee animation.
@@ -134,7 +135,7 @@ Record the exact commit, commands/tests actually run, deployment URL/environment
 - architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md: owner Run/build/artifact infrastructure and static public-detail boundary.
 - architecture/DATA-MODEL-CATALOG.md: model declarations, fields and indexes.
 - api/ENDPOINT-INVENTORY.md: current Route Handler inventory.
-- DOCS-IMPLEMENTATION-GAP-AUDIT.md: discrepancies and corrective audit history.
-- future/PORTFOLIO-CMS-AND-PROJECT-DETAIL-CMS.md and future/GOOGLE-GITHUB-OAUTH.md: future work.
+- operations/LABS-PREVIEW-RECOVERY.md: Vercel Sandbox snapshot incident, recovery and deployment QA.
+- future/PORTFOLIO-CMS-AND-PROJECT-DETAIL-CMS.md and future/GOOGLE-GITHUB-OAUTH.md: retained future/configuration plans.
 
-Older specs and phased plans remain decision history. When they conflict with dated accepted decisions and current-state guides, follow the supersession record and update the owning document before implementation.
+Product/design references define intent; current-state guides define the implemented behavior. ADR-018 supersedes conflicting Labs plans. The current guides and project status are maintained; retired phase logs and audit snapshots are not part of the active documentation set.
