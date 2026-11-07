@@ -26,12 +26,12 @@ test("dashboard maps real report fields and shows a real empty state", async () 
     "overview.uniqueTabSessions",
     "overview.averageActiveSeconds",
     "overview.totalActiveSeconds",
-    "report.daily",
-    "report.topPages",
-    "report.sources",
-    "report.cities",
-    "report.devices",
-    "report.pageTypes",
+    "report?.daily",
+    "report?.topPages",
+    "report?.sources",
+    "report?.cities",
+    "report?.devices",
+    "report?.pageTypes",
   ]) {
     assert.ok(dashboard.includes(field), field);
   }
