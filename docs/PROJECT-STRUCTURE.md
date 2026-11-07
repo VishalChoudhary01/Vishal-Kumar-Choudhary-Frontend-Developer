@@ -1,5 +1,8 @@
 # Project Structure and Module Ownership
 
+
+> **Current-state clarification (2026-11-07):** This file remains a conceptual target module structure, not a verified representation of the repository tree. The actual current module map is in [architecture/SYSTEM-ARCHITECTURE.md](./architecture/SYSTEM-ARCHITECTURE.md). Do not create or move folders simply to match this proposal; adapt only after an explicit architecture decision.
+
 **Status:** Proposed target structure, not a claim about the current repository.  
 **Mandatory first step:** Phase 0 must inspect the real tree and adapt this proposal to existing conventions. Do not create every directory in advance or move unrelated files.
 
