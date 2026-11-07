@@ -359,3 +359,7 @@ Remaining SEO/AEO gaps are database-wide duplicate title/description detection a
 The SEO/AEO code extension is recorded in `docs/SEO-AND-AEO-IMPLEMENTATION.md` and cross-linked from the README, Project Status, homepage guide, project-detail guide, Labs guide, and handover report. The updated README contains 61 Markdown links to 45 unique relative targets. All 45 current targets were fetched successfully on `feat/labs-platform-integration`.
 
 This documentation refresh does not claim the new test suite or production build passed; see the SEO/AEO guide's verification boundary.
+
+## 14. Latest CI verification note — 7 November 2026
+
+The latest relevant Labs SEO/AEO presentation commit has a Vercel status check marked **failure**, with its target linking to the Vercel `build-rate-limit` upgrade page. No GitHub Actions workflow run or test log was returned for that commit. The focused SEO tests and production build therefore remain unverified; this signal does not identify an assertion failure and must not be recorded as a passing build.
