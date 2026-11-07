@@ -49,6 +49,9 @@ export default function LabsParticleSphere() {
     let orbitGroup;
     let glow;
     let resizeObserver;
+    let intersectionObserver;
+    let handleContextLost;
+    let disposed = false;
     let animationFrame = 0;
     let isRunning = false;
     let isInView = true;
@@ -117,6 +120,41 @@ export default function LabsParticleSphere() {
       isRunning = true;
       previousTime = 0;
       animationFrame = requestAnimationFrame(renderFrame);
+    };
+
+    const disposeScene = () => {
+      if (disposed) return;
+      disposed = true;
+
+      stop();
+      resizeObserver?.disconnect();
+      intersectionObserver?.disconnect();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("resize", resize);
+      renderer?.domElement?.removeEventListener("webglcontextlost", handleContextLost);
+
+      const disposeObjects = (root) => {
+        root?.traverse((object) => {
+          object.geometry?.dispose();
+
+          if (object.material) {
+            const materials = Array.isArray(object.material)
+              ? object.material
+              : [object.material];
+
+            materials.forEach((material) => material.dispose());
+          }
+        });
+      };
+
+      disposeObjects(sphereGroup);
+      disposeObjects(orbitGroup);
+      renderer?.renderLists?.dispose();
+      renderer?.dispose();
+
+      if (renderer?.domElement?.parentNode === mount) {
+        mount.removeChild(renderer.domElement);
+      }
     };
 
     const resize = () => {
@@ -202,8 +240,6 @@ export default function LabsParticleSphere() {
         window.addEventListener("resize", resize, { passive: true });
       }
 
-      let intersectionObserver;
-
       if (typeof IntersectionObserver !== "undefined") {
         intersectionObserver = new IntersectionObserver(
           ([entry]) => {
@@ -220,58 +256,19 @@ export default function LabsParticleSphere() {
         intersectionObserver.observe(mount);
       }
 
+      handleContextLost = (event) => {
+        event.preventDefault();
+        disposeScene();
+        setWebglFailed(true);
+      };
+      renderer.domElement.addEventListener("webglcontextlost", handleContextLost, false);
+
       document.addEventListener("visibilitychange", handleVisibilityChange);
       start();
 
-      return () => {
-        stop();
-        resizeObserver?.disconnect();
-        intersectionObserver?.disconnect();
-        window.removeEventListener("resize", resize);
-        document.removeEventListener("visibilitychange", handleVisibilityChange);
-
-        sphereGroup.traverse((object) => {
-          if (object.geometry) object.geometry.dispose();
-
-          if (object.material) {
-            const materials = Array.isArray(object.material)
-              ? object.material
-              : [object.material];
-
-            materials.forEach((material) => material.dispose());
-          }
-        });
-
-        orbitGroup?.traverse((object) => {
-          if (object.geometry) object.geometry.dispose();
-
-          if (object.material) {
-            const materials = Array.isArray(object.material)
-              ? object.material
-              : [object.material];
-
-            materials.forEach((material) => material.dispose());
-          }
-        });
-
-        particleGeometry?.dispose();
-        particleMaterial?.dispose();
-        renderer?.renderLists?.dispose();
-        renderer?.dispose();
-
-        if (renderer?.domElement?.parentNode === mount) {
-          mount.removeChild(renderer.domElement);
-        }
-      };
+      return disposeScene;
     } catch {
-      stop();
-      resizeObserver?.disconnect();
-      renderer?.dispose();
-
-      if (renderer?.domElement?.parentNode === mount) {
-        mount.removeChild(renderer.domElement);
-      }
-
+      disposeScene();
       setWebglFailed(true);
       return undefined;
     }
