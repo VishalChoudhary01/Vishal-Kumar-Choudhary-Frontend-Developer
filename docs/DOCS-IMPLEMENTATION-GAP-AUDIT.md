@@ -259,7 +259,7 @@ This does not mean none of these functions work; it means the committed automate
 
 ## 8. Documentation structure and navigation observations
 
-- The initial audit snapshot had 49 README links. After the corrective pass, docs/README.md contains 61 Markdown links to 45 unique relative targets; all 44 current targets were re-fetched successfully.
+- The initial audit snapshot had 49 README links. After the corrective pass, docs/README.md contains 61 Markdown links to 45 unique relative targets; all 45 current targets were re-fetched successfully.
 - The index now directly links the new authentication, privacy/data-lifecycle and error/not-found guides. Remaining Labs implementation plans are reachable from the Labs specs and runbooks.
 - The initial audit found no standalone current-state guides for authentication, Privacy Policy/data lifecycle and shared error surfaces. The follow-up pass added pages/AUTHENTICATION-AND-ACCOUNT-ENGINEERING.md, architecture/PRIVACY-AND-DATA-LIFECYCLE.md and pages/ERROR-AND-NOT-FOUND-ENGINEERING.md.
 - The Motion Lab reference library is clearly a set of future component specifications. Add this status explicitly to the main README/Project Status so its 120 component spec files cannot be mistaken for implemented UI components.
