@@ -1,18 +1,12 @@
 /**
- * Public Labs content.
- *
- * Keep this presentation data separate from portfolio.projects. This module
- * contains only public, code-owned display metadata and validated demo
- * configuration. It must never contain source code, drafts, user data or
- * private source-access policy.
+ * Legacy code-owned experiment definitions retained for owner-side source
+ * management and migration compatibility. They are not part of the public
+ * Labs catalogue; public discovery uses MongoDB-published source records.
  */
 
-export const LAB_CATEGORIES = [
-  { id: "motion-animation", name: "Motion & Animation", label: "Motion" },
-  { id: "css-experiments", name: "CSS Experiments", label: "CSS" },
-  { id: "interface-interactions", name: "Interface Interactions", label: "Interactions" },
-  { id: "creative-coding", name: "Creative Coding", label: "Creative Coding" },
-];
+import { LAB_CATEGORIES } from "@/app/lib/labs/categories.mjs";
+
+export { LAB_CATEGORIES };
 
 const ASPECT_RATIOS = new Set(["16:9", "4:3", "1:1", "3:4"]);
 const CONTROL_TYPES = new Set(["range", "number", "toggle", "select", "color"]);
@@ -226,8 +220,6 @@ export const publishedLabExperiments = [
     },
   },
 ];
-
-export const FEATURED_LAB_EXPERIMENT_SLUG = "magnetic-interaction";
 
 function sanitizeAspectRatio(value) {
   if (!value || typeof value !== "object") return undefined;

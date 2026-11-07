@@ -1,5 +1,5 @@
 import { projects } from "./data/projectsSeo";
-import { publishedLabExperiments } from "./data/labsExperiments";
+import { getPublishedCustomLabExperimentPage } from "./lib/labs/public-experiments";
 import { buildSiteUrl } from "./lib/seo/urls";
 
 /*
@@ -8,7 +8,10 @@ import { buildSiteUrl } from "./lib/seo/urls";
  * Only published Labs records belong here. Private drafts, source URLs and
  * preview/internal routes must never be added to the public sitemap.
  */
-export default function sitemap() {
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export default async function sitemap() {
   const base = buildSiteUrl();
 
   const urls = [
@@ -47,19 +50,23 @@ export default function sitemap() {
     });
   }
 
-  for (const experiment of publishedLabExperiments) {
-    const slug = experiment?.slug;
-    if (!slug) continue;
-
-    urls.push({
-      url: `${base}/labs/${encodeURIComponent(slug)}`,
-      lastModified:
-        experiment.updatedAt && experiment.updatedAt !== ""
-          ? new Date(experiment.updatedAt)
-          : undefined,
-      changeFrequency: "monthly",
-      priority: 0.65,
-    });
+  // Lab detail URLs use the same MongoDB published-source and exact-ready artifact/version eligibility as the public collection.
+  let cursor = null;
+  try {
+    do {
+      const page = await getPublishedCustomLabExperimentPage({ cursor, limit: 24 });
+      for (const experiment of page.experiments) {
+        if (!experiment?.slug) continue;
+        urls.push({
+          url: `${base}/labs/${encodeURIComponent(experiment.slug)}`,
+          changeFrequency: "monthly",
+          priority: 0.65,
+        });
+      }
+      cursor = page.nextCursor;
+    } while (cursor);
+  } catch (error) {
+    console.error("[sitemap] published Labs URLs unavailable:", error?.code || "PUBLIC_LABS_SITEMAP_ERROR");
   }
 
   return urls;

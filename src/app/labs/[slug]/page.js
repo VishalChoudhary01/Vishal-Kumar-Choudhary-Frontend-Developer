@@ -7,10 +7,6 @@ import LabExperimentPreview from "@/app/components/labs/LabExperimentPreview";
 import LabExplanation from "@/app/components/labs/detail/LabExplanation";
 import LabSourceAccess from "@/app/components/labs/detail/LabSourceAccess";
 import {
-  getPublishedLabExperimentBySlug,
-  publishedLabExperiments,
-} from "@/app/data/labsExperiments";
-import {
   buildAbsoluteAssetUrl,
   buildSiteUrl,
 } from "@/app/lib/seo/urls";
@@ -25,17 +21,9 @@ import { getAuthorizedLabSource } from "@/app/lib/labs/source-access";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export async function generateStaticParams() {
-  return publishedLabExperiments.map((experiment) => ({
-    slug: experiment.slug,
-  }));
-}
-
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const experiment =
-    getPublishedLabExperimentBySlug(slug) ||
-    await getPublishedCustomLabExperimentBySlug(slug);
+  const experiment = await getPublishedCustomLabExperimentBySlug(slug);
 
   if (!experiment) return {};
 
@@ -71,9 +59,7 @@ export async function generateMetadata({ params }) {
 
 export default async function LabExperimentPage({ params }) {
   const { slug } = await params;
-  const experiment =
-    getPublishedLabExperimentBySlug(slug) ||
-    await getPublishedCustomLabExperimentBySlug(slug);
+  const experiment = await getPublishedCustomLabExperimentBySlug(slug);
 
   if (!experiment) {
     notFound();
