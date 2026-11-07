@@ -279,6 +279,7 @@ export default function LabsParticleSphere() {
           attributeFilter: ["class"],
         });
       }
+      syncThemeColor();
 
       glow = new THREE.Mesh(
         new THREE.SphereGeometry(0.94, 28, 20),
