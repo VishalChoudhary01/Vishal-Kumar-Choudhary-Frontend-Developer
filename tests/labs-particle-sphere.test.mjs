@@ -380,30 +380,26 @@ test("orbit particles move continuously and retain their orbital path", () => {
   assert.ok(rendererSource.includes("orbitGroup.userData.update?.(elapsed, burstAmount)"));
 });
 
-test("Labs hero keeps its content layout and adds a dark-only right artwork gradient", async () => {
+test("Labs hero applies one responsive dark radial background without a separate overlay", async () => {
   const heroSource = await readFile(
     new URL("../src/app/components/labs/LabsIntroduction.js", import.meta.url),
     "utf8",
   );
 
-  assert.ok(heroSource.includes("absolute bottom-0 left-0 right-0 top-[68%]"));
-  assert.ok(heroSource.includes("ellipse_130%_110%_at_100%_50%"));
-  assert.match(heroSource, /dark:block/);
-  assert.match(heroSource, /bg-\[radial-gradient/);
+  assert.match(
+    heroSource,
+    /<div className="relative w-full overflow-hidden dark:bg-\[radial-gradient\(/,
+  );
+  assert.match(heroSource, /lg:dark:bg-\[radial-gradient\(/);
+  assert.doesNotMatch(heroSource, /aria-hidden="true"\s+className="pointer-events-none absolute/);
   assert.doesNotMatch(heroSource, /linear-gradient\(90deg/);
+  assert.doesNotMatch(heroSource, /bottom-0 left-0 right-0 top-\[68%\]/);
   assert.doesNotMatch(heroSource, /mt-8 h-px w-full bg-border-subtle/);
+
   assert.match(heroSource, /grid w-full max-w-\[25rem\] grid-cols-2 gap-6 border-t border-border-subtle/);
   assert.match(heroSource, /A space for|labs-heading/);
   assert.match(heroSource, /Published experiments/);
   assert.match(heroSource, /LabsHeroArtwork/);
-
-  const artworkSource = await readFile(
-    new URL("../src/app/components/labs/landing/LabsHeroArtwork.js", import.meta.url),
-    "utf8",
-  );
-  assert.match(artworkSource, /dark:opacity-\[0\.035\]/);
-  assert.match(artworkSource, /rgba\(3,18,13,0\.04\)/);
-  assert.ok(artworkSource.includes("dark:bg-[#030b08]/[0.018]"));
 });
 
 test("particle shader provides depth shading and soft point halos", () => {
