@@ -270,6 +270,12 @@ export default function LabsParticleSphere() {
 
         qualityProfile = nextProfile;
 
+        if (particleMaterial) {
+          particleMaterial.uniforms.uSparkleDensity.value = qualityProfile.sparkleDensity;
+          particleMaterial.uniforms.uSparkleIntensity.value = qualityProfile.sparkleIntensity;
+          particleMaterial.uniforms.uSparkleSpeed.value = qualityProfile.sparkleSpeed;
+        }
+
         if (particles && shouldReplaceGeometry) {
           particles.geometry = createParticleGeometry(qualityProfile);
           previousGeometry?.dispose();
@@ -348,6 +354,9 @@ export default function LabsParticleSphere() {
           uAmbientParticleOpacity: { value: initialPalette.ambientParticleOpacity },
           uSphereRadius: { value: PARTICLE_SPHERE_CONFIG.radius },
           uSparkleColor: { value: new THREE.Color(initialPalette.sparkleColor) },
+          uSparkleDensity: { value: qualityProfile.sparkleDensity },
+          uSparkleIntensity: { value: qualityProfile.sparkleIntensity },
+          uSparkleSpeed: { value: qualityProfile.sparkleSpeed },
           uBurst: { value: 0 },
           uBurstTime: { value: -1 },
           uBurstExpansion: { value: PARTICLE_BURST_EXPANSION },
