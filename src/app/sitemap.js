@@ -23,7 +23,6 @@ export default async function sitemap() {
     },
     {
       url: `${base}/labs`,
-      lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.75,
     },
@@ -57,8 +56,16 @@ export default async function sitemap() {
       const page = await getPublishedCustomLabExperimentPage({ cursor, limit: 24 });
       for (const experiment of page.experiments) {
         if (!experiment?.slug) continue;
+        const changedAt = experiment.updatedAt || experiment.publishedAt;
+        const lastModified = changedAt ? new Date(changedAt) : null;
+        const validLastModified =
+          lastModified && !Number.isNaN(lastModified.getTime())
+            ? lastModified
+            : undefined;
+
         urls.push({
           url: `${base}/labs/${encodeURIComponent(experiment.slug)}`,
+          ...(validLastModified ? { lastModified: validLastModified } : {}),
           changeFrequency: "monthly",
           priority: 0.65,
         });
