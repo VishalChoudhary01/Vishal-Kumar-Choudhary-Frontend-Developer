@@ -20,6 +20,9 @@ export const particleVertexShader = `
   uniform float uAmbientParticleOpacity;
   uniform float uSphereRadius;
   uniform vec3 uSparkleColor;
+  uniform float uSparkleDensity;
+  uniform float uSparkleIntensity;
+  uniform float uSparkleSpeed;
   uniform float uBurst;
   uniform float uBurstTime;
   uniform float uBurstExpansion;
@@ -191,18 +194,18 @@ export const particleVertexShader = `
     // Sparkle frequency, phase, chance and intensity are independently
     // seeded, so points glint at different moments instead of flashing together.
     float sparkleRandom = hash11(aSeed * 113.17 + 17.3);
-    float sparkleChance = mix(0.025, 0.16, sparkleRandom);
+    float sparkleChance = mix(0.025, 0.16, sparkleRandom) * uSparkleDensity;
     float sparkleMask = step(1.0 - sparkleChance, hash11(aSeed * 37.0 + 3.9));
-    float sparkleRate = 0.62 + hash11(aSeed * 17.4) * 2.1;
+    float sparkleRate = (0.62 + hash11(aSeed * 17.4) * 2.1) * uSparkleSpeed;
     float sparklePhase = aSeed * 31.4 + sparkleRandom * 6.28318;
     float sparkleWave = pow(
       max(0.0, sin(uTime * sparkleRate + sparklePhase)),
-      14.0
+      10.0
     );
     float burstGlint = particleBurst * sparkleMask
       * (0.18 + sparkleRandom * 0.72);
     float sparkle = clamp(
-      (sparkleMask * sparkleWave + burstGlint) * uMotionEnabled,
+      (sparkleMask * sparkleWave + burstGlint) * uMotionEnabled * uSparkleIntensity,
       0.0,
       1.0
     );
