@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import {
   Activity,
@@ -18,6 +19,7 @@ import {
 
 import MotionNumber from "@/app/components/motion/MotionNumber/MotionNumber";
 import usePortfolioAnalyticsPolling from "@/app/hooks/portfolio-analytics/usePortfolioAnalyticsPolling";
+import PortfolioAnalyticsDeletionControls from "@/app/components/portfolio-analytics/PortfolioAnalyticsDeletionControls";
 
 const numberFormat = new Intl.NumberFormat("en-IN");
 
@@ -260,7 +262,15 @@ function BreakdownCard({ title, description, items, labelFor }) {
   );
 }
 
-function RecentVisitsTable({ visits, nextCursor, days, error, newVisitIds = new Set() }) {
+function RecentVisitsTable({
+  visits,
+  nextCursor,
+  days,
+  error,
+  newVisitIds = new Set(),
+  selectedVisitIds = new Set(),
+  onToggleVisit,
+}) {
   const nextHref = nextCursor
     ? "/admin/portfolio/analytics?days=" + days + "&cursor=" + encodeURIComponent(nextCursor)
     : null;
@@ -283,6 +293,9 @@ function RecentVisitsTable({ visits, nextCursor, days, error, newVisitIds = new 
             <table className="w-full min-w-[900px] border-collapse text-left text-xs">
               <thead className="bg-surface-2 text-[10px] uppercase tracking-[0.12em] text-text-tertiary">
                 <tr>
+                  <th className="w-10 px-3 py-3 font-medium">
+                    <span className="sr-only">Select</span>
+                  </th>
                   <th className="px-5 py-3 font-medium">Page</th>
                   <th className="px-4 py-3 font-medium">Source</th>
                   <th className="px-4 py-3 font-medium">Location</th>
@@ -303,6 +316,15 @@ function RecentVisitsTable({ visits, nextCursor, days, error, newVisitIds = new 
                       transition={{ duration: 0.28, ease: "easeOut" }}
                       className="border-t border-border align-middle"
                     >
+                      <td className="px-3 py-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedVisitIds.has(visit.id)}
+                          onChange={(event) => onToggleVisit?.(visit.id, event.target.checked)}
+                          aria-label={"Select visit for " + visit.path}
+                          className="size-4 accent-[var(--brand)] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand"
+                        />
+                      </td>
                       <td className="max-w-[260px] px-5 py-4">
                         <span className="block truncate font-medium text-text-primary">{getPageLabel(visit.pageType)}</span>
                         <span className="mt-1 block truncate font-mono text-[10px] text-text-tertiary">{visit.path}</span>
@@ -380,6 +402,7 @@ export default function PortfolioAnalyticsDashboard({
     initialRecentError,
   });
   const reduceMotion = useReducedMotion();
+  const [selectedVisitIds, setSelectedVisitIds] = useState(() => new Set());
   const overview = report?.overview || {
     totalVisits: 0,
     uniqueTabSessions: 0,
@@ -387,6 +410,25 @@ export default function PortfolioAnalyticsDashboard({
     totalActiveSeconds: 0,
   };
   const daily = report?.daily || [];
+
+  const toggleVisitSelection = (visitId, selected) => {
+    setSelectedVisitIds((current) => {
+      const next = new Set(current);
+      if (selected) {
+        if (next.size >= 25) return current;
+        next.add(visitId);
+      } else {
+        next.delete(visitId);
+      }
+      return next;
+    });
+  };
+
+  const handleDeletionComplete = (result) => {
+    setSelectedVisitIds(new Set());
+    refreshNow();
+    return result;
+  };
 
   return (
     <div className="mt-7 space-y-6">
@@ -508,12 +550,19 @@ export default function PortfolioAnalyticsDashboard({
         <span>{recentRefreshing ? "Refreshing recent visits…" : "Recent visits refresh every 30 seconds"}</span>
         {summaryRefreshing ? <span>Updating summary…</span> : null}
       </div>
+      <PortfolioAnalyticsDeletionControls
+        selectedVisitIds={[...selectedVisitIds]}
+        onClearSelection={() => setSelectedVisitIds(new Set())}
+        onDeleted={handleDeletionComplete}
+      />
       <RecentVisitsTable
         visits={recentVisits}
         nextCursor={nextCursor}
         days={days}
         error={recentError}
         newVisitIds={newVisitIds}
+        selectedVisitIds={selectedVisitIds}
+        onToggleVisit={toggleVisitSelection}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4 text-[11px] text-text-tertiary">
