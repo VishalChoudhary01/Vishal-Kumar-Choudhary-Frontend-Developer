@@ -1,10 +1,16 @@
+import { cache } from "react";
+
+import JsonLd from "@/app/components/seo/JsonLd";
 import LabsPageShell from "@/app/components/labs/LabsPageShell";
 import LabsIntroduction from "@/app/components/labs/LabsIntroduction";
 import FeaturedExperiment from "@/app/components/labs/FeaturedExperiment";
 import LabsCollection from "@/app/components/labs/LabsCollection";
-import { LAB_CATEGORIES } from "@/app/lib/labs/categories.mjs";
 import { resolveFeaturedExperiment } from "@/app/lib/labs/featured-experiment.mjs";
 import { buildSiteUrl } from "@/app/lib/seo/urls";
+import {
+  buildLabsCollectionJsonLd,
+  buildLabsCollectionMetadata,
+} from "@/app/lib/seo/labs.mjs";
 import { cookies } from "next/headers";
 import { getLabsOwnerAccessStatus } from "@/app/lib/labs/owner-access";
 import { toLabsAccountUser } from "@/app/lib/labs/auth-user-presentation.mjs";
@@ -19,37 +25,29 @@ import { getPublishedCustomLabExperimentPage } from "@/app/lib/labs/public-exper
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const PAGE_TITLE = "Labs — Frontend Experiments";
-const PAGE_DESCRIPTION =
-  "Frontend experiments exploring motion, interface interactions, CSS, and creative coding.";
+const getInitialLabsPage = cache(() =>
+  getPublishedCustomLabExperimentPage({
+    limit: 18,
+    includeCategoryCounts: true,
+  }),
+);
 
-export function generateMetadata() {
-  const canonical = `${buildSiteUrl()}/labs`;
-
-  return {
-    title: PAGE_TITLE,
-    description: PAGE_DESCRIPTION,
-    alternates: { canonical },
-    openGraph: {
-      type: "website",
-      title: PAGE_TITLE,
-      description: PAGE_DESCRIPTION,
-      url: canonical,
-      siteName: "Vishal Kumar Choudhary",
-    },
-    twitter: {
-      card: "summary",
-      title: PAGE_TITLE,
-      description: PAGE_DESCRIPTION,
-    },
-  };
+export async function generateMetadata() {
+  try {
+    const customPage = await getInitialLabsPage();
+    const featuredExperiment = resolveFeaturedExperiment(customPage.experiments);
+    return buildLabsCollectionMetadata({
+      siteUrl: buildSiteUrl(),
+      featuredExperiment,
+    });
+  } catch (error) {
+    console.error("[labs-page] SEO metadata unavailable:", error?.code || "LABS_METADATA_ERROR");
+    return buildLabsCollectionMetadata({ siteUrl: buildSiteUrl() });
+  }
 }
 
 export default async function LabsPage() {
-  const customPage = await getPublishedCustomLabExperimentPage({
-    limit: 18,
-    includeCategoryCounts: true,
-  });
+  const customPage = await getInitialLabsPage();
   const experiments = customPage.experiments;
   const totalExperimentCount = customPage.totalCount;
   const categoryCounts = customPage.categoryCounts;
@@ -100,9 +98,16 @@ export default async function LabsPage() {
 
   // Resolve the spotlight only from the currently eligible source-backed page.
   const featuredExperiment = resolveFeaturedExperiment(experiments);
+  const jsonLd = buildLabsCollectionJsonLd({
+    siteUrl: buildSiteUrl(),
+    experiments,
+    totalCount: totalExperimentCount,
+  });
 
   return (
-    <LabsPageShell
+    <>
+      <JsonLd data={jsonLd} />
+      <LabsPageShell
       initialAuthUser={toLabsAccountUser(session?.user)}
       initialSessionResolved={sessionResolved}
       initialIsOwner={session?.user ? getLabsOwnerAccessStatus(session.user) === "owner" : false}
@@ -126,6 +131,7 @@ export default async function LabsPage() {
           engagementBySlug={engagementBySlug}
         />
       </main>
-    </LabsPageShell>
+      </LabsPageShell>
+    </>
   );
 }
