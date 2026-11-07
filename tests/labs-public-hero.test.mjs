@@ -76,7 +76,7 @@ test("unknown auth state is neutral and never exposes guest auth actions", () =>
 
 test("hero stats use an in-view one-time MotionValue animation and reduced-motion fallback", () => {
   assert.match(componentSource, /useInView\(statRef, \{ once: true/);
-  assert.match(componentSource, /useMotionValue\(0\)/);
+  assert.match(componentSource, /useMotionValue\(value\)/);
   assert.match(componentSource, /useTransform\(count/);
   assert.match(componentSource, /animate\(count, value/);
   assert.match(componentSource, /prefersReducedMotion \|\| value <= 0/);
