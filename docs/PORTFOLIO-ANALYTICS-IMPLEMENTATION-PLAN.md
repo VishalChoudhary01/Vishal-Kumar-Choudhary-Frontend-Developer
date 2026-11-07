@@ -970,3 +970,21 @@ Performance boundaries:
 Tests cover strict query validation, independent intervals, exponential backoff, visibility eligibility, owner check before read queries, no-store response contract, abort behavior, stale-data preservation, manual refresh wiring and new-row-only animation.
 
 **Operational boundary:** Actual API reads still depend on the MongoDB indexes being provisioned and the public tracker being deliberately enabled after the privacy gate. The analytics dashboard can display an empty state until real visit records are collected. No production data collection flag was enabled by Phase 6.
+
+
+### Phase 6 verification and JSX build-fix record
+
+The initial Phase 6 build exposed a malformed JSX boundary in the dashboard reporting-period header. The period navigation's nested wrapper was missing a closing element. The JSX structure has been corrected in `PortfolioAnalyticsDashboard.js`; the polling API status assertion was also corrected to match the route's positional `404` response.
+
+Verified on the corrected dashboard commit:
+- Polling/read API tests: 10 passed.
+- Dashboard tests: 4 passed.
+- Reporting tests: 8 passed.
+- Visit foundation tests: 13 passed.
+- Ingestion tests: 7 passed.
+- Tracker tests: 7 passed.
+- Existing Labs and SEO suites: passed; SEO validation reported 0 warnings.
+- Targeted ESLint: passed.
+- Full `npm run build`: passed. Next.js compiled successfully and generated all 12 static pages; `/admin/portfolio/analytics` and `/api/v1/admin/portfolio/analytics` were registered as dynamic routes.
+
+The corrected verification command exited with code 0. Public analytics tracking remains disabled by default.
