@@ -8,6 +8,8 @@ export const particleVertexShader = `
   uniform float uPixelRatio;
   uniform float uMotionEnabled;
   uniform vec3 uBrandColor;
+  uniform vec3 uInnerParticleColor;
+  uniform float uInnerParticleOpacity;
   uniform vec3 uSparkleColor;
   uniform float uBurst;
   uniform float uBurstExpansion;
@@ -23,6 +25,7 @@ export const particleVertexShader = `
     vec3 direction = normalize(position + vec3(0.0001));
 
     float ambientLayer = step(1.5, aLayer);
+    float innerLayer = step(0.5, aLayer) * (1.0 - ambientLayer);
     float sphereLayer = 1.0 - ambientLayer;
 
     // Burst is a temporary radial displacement. The source geometry and
@@ -65,9 +68,8 @@ export const particleVertexShader = `
     float rimLight = pow(1.0 - abs(viewNormal.z), 2.1);
     float hemisphereFill = 0.24 + 0.76 * max(viewNormal.y * 0.5 + 0.5, 0.0);
     float facing = smoothstep(-0.24, 0.32, viewNormal.z);
-    float layerOpacity = aLayer > 1.5
-      ? 0.68
-      : (aLayer > 0.5 ? 0.28 : 1.0);
+    float layerOpacity = mix(1.0, uInnerParticleOpacity, innerLayer);
+    layerOpacity = mix(layerOpacity, 0.68, ambientLayer);
     float depthFade = 1.0 / (1.0 + max(0.0, viewDepth - 4.0) * 0.14);
 
     float sparkleThreshold = mix(0.958, 0.90, step(1.5, aLayer));
@@ -93,6 +95,7 @@ export const particleVertexShader = `
     gl_Position = projectionMatrix * modelPosition;
 
     vec3 particleColor = mix(uBrandColor, aColor, 0.28);
+    particleColor = mix(particleColor, uInnerParticleColor, innerLayer);
     vec3 litColor = particleColor * (
       directionalLight * hemisphereFill + rimLight * 0.48
     );
