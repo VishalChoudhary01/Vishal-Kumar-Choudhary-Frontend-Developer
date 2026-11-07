@@ -117,11 +117,7 @@ export default function LabsIntroduction({
   const prefersReducedMotion = useReducedMotion();
 
   return (
-    <div className="relative w-full overflow-hidden">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 left-0 right-0 top-[68%] z-0 hidden bg-[radial-gradient(ellipse_130%_110%_at_100%_50%,rgba(1,3,2,0.98)_0%,rgba(1,4,3,0.82)_34%,rgba(1,4,3,0.42)_62%,rgba(1,4,3,0.10)_84%,transparent_100%)] dark:block sm:top-[62%] lg:top-0"
-      />
+    <div className="relative w-full overflow-hidden dark:bg-[radial-gradient(ellipse_120%_85%_at_100%_82%,rgba(1,3,2,0.96)_0%,rgba(1,4,3,0.62)_34%,rgba(1,4,3,0.24)_58%,rgba(1,4,3,0.06)_78%,transparent_100%)] lg:dark:bg-[radial-gradient(ellipse_95%_130%_at_100%_50%,rgba(1,3,2,0.98)_0%,rgba(1,4,3,0.70)_38%,rgba(1,4,3,0.24)_68%,transparent_100%)]">
       <motion.section
       aria-labelledby="labs-heading"
       initial={prefersReducedMotion ? false : "hidden"}
