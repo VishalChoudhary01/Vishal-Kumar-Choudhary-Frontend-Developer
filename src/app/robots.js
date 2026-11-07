@@ -19,7 +19,7 @@ export default function robots() {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/admin/"],
+        disallow: ["/admin", "/admin/"],
       },
     ],
     sitemap: `${base}/sitemap.xml`,
