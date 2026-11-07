@@ -75,7 +75,7 @@ Support both repository-managed registered components and owner-created experime
 - Authenticate and authorize preview creation on the server; validate the exact source hash and asset manifest before publication.
 - Include queued/building, iframe-starting, runtime-ready, build-error, runtime-error, timeout, stopped and unsupported states. The iframe load event alone is not a runtime-ready signal.
 - Keep a visible preview skeleton until the current run ID sends a validated ready message; never show a blank white canvas.
-- The owner Run action executes the current unsaved working copy and must remain functional while gallery posters/media are developed. The published detail page executes the exact published artifact.
+- The owner Run action executes the current unsaved working copy in its isolated temporary preview. Build & Publish compiles the exact saved immutable version and can generate a static screenshot poster. The public detail page remains static/non-executable under ADR-018 and does not embed the published artifact.
 - Owner Run and release builds use isolated Vercel Sandbox; immutable artifacts are stored in Vercel Blob. The public detail route does not embed or execute the published artifact. Treat any earlier interactive-detail proposal below as superseded by ADR-018.
 
 ## 5. Source access and code-copy behavior
@@ -211,16 +211,14 @@ The detailed source-management product and lifecycle contract is owned by `LABS-
 - Do not show individual user names, emails or per-user source browsing/copy history in the first release.
 - Analytics retention, event deduplication and account deletion behavior must be approved and disclosed before events are enabled in Production.
 
-### 13.1 Owner workspace design items still open
+### 13.1 Remaining design and verification considerations
 
-- Exact route/navigation placement within a future protected admin shell.
-- Editor package and syntax-highlighting language support; Monaco is not installed in the inspected package manifest.
-- Whether the first editor provides a lightweight textarea/code editor or a new editor dependency after bundle/accessibility review.
-- Exact desktop file-tree/editor split and mobile file-navigation treatment.
-- Diff presentation and whether version comparison is side-by-side or unified.
-- Whether source import from repository files is supported in the first release or source is authored through the owner workspace.
+- Responsive behavior of the owner file tree and editor navigation on narrow screens.
+- Final visual treatment for source-version comparison/diff review.
+- Keyboard, focus, high-zoom and reduced-motion QA for the integrated Monaco editor and its plain-text fallback.
+- Verify the existing direct import route and owner protections; do not add a second source-import workflow without an approved requirement.
 
-Do not invent these items as locked decisions. The source-management specification defines security/data contracts; final visual composition must be reviewed as a separate design slice before implementation.
+These are design/verification considerations, not claims that the source workspace or Monaco integration is absent.
 
 ### 13.2 Owner entry point and public demo separation
 
@@ -230,44 +228,9 @@ Do not invent these items as locked decisions. The source-management specificati
 - Do not imply that Save/Publish source executes code or updates the live demo. Any live preview of stored source is a separate isolated-preview design and security gate.
 
 
-## 14. Public Labs page redesign reference
+## 14. Current implementation pointer
 
-The phased public discovery-page redesign is tracked in **[Labs Public Page Redesign — Phased Plan](./LABS-PUBLIC-PAGE-REDESIGN-PLAN.md)**. It defines the hero, featured experiment, collection/card hierarchy, authentication-aware hero actions, reduced-motion statistics animation, category navigation and catalogue scaling.
-
-The existing Labs navbar is explicitly out of scope. The public route must continue to show only eligible published experiments, with the shared preview-media precedence and no executable source in gallery cards. The redesign plan does not replace this document's runtime, source-access, publication, engagement, privacy or media contracts.
-
-
-## 15. Phase 1 public Labs hero implementation record
-
-The hero implementation is now present on `feat/labs-platform-integration`. It adds the animated connected-node illustration, responsive hero layout, one-time real-data statistics count-up and server-resolved auth-state CTAs. The detailed behavior, file list and pending acceptance checks are recorded in **[Labs Public Page Redesign — Phased Plan](./LABS-PUBLIC-PAGE-REDESIGN-PLAN.md)**.
-
-This implementation does not modify the shared navbar or any experiment, detail-page, source-access, publishing, media, Like or owner-workspace behavior. It is not considered accepted/release-ready until the automated, build and browser verification gates in the phased plan pass.
-
-
-## 16. Phase 2 — featured experiment spotlight
-
-The public spotlight now resolves its selected slug against the same combined eligible experiment collection used by the gallery. The display metadata and preview are never maintained as a separate copied object. If the preferred slug is unavailable, the resolver chooses the first valid experiment in the approved collection; an empty/invalid collection returns no spotlight.
-
-The responsive editorial spotlight uses the shared non-executable LabExperimentPreview renderer and the exact upload → matching generated poster → artwork fallback policy. Its in-view Motion reveal respects reduced-motion preferences. The source changes and pending verification gates are documented in the Labs Public Page Redesign phased plan.
-
-This phase also fixes the shared image error handler in LabExperimentPreview, allowing its existing fallback selection to proceed after an image load failure. It does not enable source execution in the spotlight or change the navbar.
-
-## 17. Phase 3 — public Labs collection presentation
-
-The public collection has a unified heading/filter/results/card hierarchy. Category filter labels and counts are derived from categories present in the current published collection. Category navigation remains a small horizontally scrollable control rather than a virtualized list. Experiment cards retain slug-backed detail links, the shared static preview renderer and the existing LikeButton/engagement flow. The six-item progressive reveal remains in place.
-
-Cards now use restrained in-view Motion reveals and improved preview/content/technology hierarchy. Built-in artwork typography uses container-relative sizing so it scales with the card preview rather than the browser viewport. Reduced-motion behavior is provided through the existing hook.
-
-Implementation files, tests and outstanding QA gates are tracked in the Labs Public Page Redesign phased plan. The navbar, detail page, runtime and source-access behavior remain unchanged.
-
-## 18. Phase 4 — paginated public collection
-
-The public catalogue is designed for bounded loading: the first Labs route response contains all code-owned built-ins plus at most 18 eligible custom experiments. Further custom pages use a cursor endpoint with a fixed 18-record page size. Each page is filtered against the current published source and exact ready build artifact/version before applying its limit.
-
-Pagination order uses publication date and immutable record ID. Category counts are computed from the full eligible custom collection and merged with built-in counts, so the first page is not mistaken for the catalogue total. Category navigation remains unvirtualized. On the client, the current category page is cached and six cards are progressively revealed before the next server page is requested.
-
-Required operational step: provision the two compound MongoDB indexes using `npm run db:ensure-labs-public-indexes` and verify them in the intended environment. Tests, large-data boundary checks, index verification, production build and browser QA remain outstanding. Full implementation details are tracked in the Labs Public Page Redesign phased plan.
-
+The Labs landing-page composition (hero, real-data statistics, featured experiment, category controls, collection cards and cursor pagination) and current implementation status are documented in [Public Labs and Owner Workspace](./pages/LABS-AND-OWNER-WORKSPACE.md). Media precedence, owner promotion and automatic release-poster capture are documented there and in [Labs Runtime and Code Execution](./architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md). The public detail route remains static/non-executable under ADR-018. Current-commit tests, database indexes, deployment, browser, accessibility and reduced-motion verification remain release checks; phased implementation history is not maintained in this design document.
 
 ## Motion Lab component specification authority
 
