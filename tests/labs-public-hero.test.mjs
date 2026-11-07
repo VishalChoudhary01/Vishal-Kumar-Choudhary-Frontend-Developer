@@ -92,7 +92,8 @@ test("Labs route resolves authentication on the server and treats unavailable au
 test("hero illustration is decorative and respects reduced motion", () => {
   assert.match(artworkSource, /aria-hidden="true"/);
   assert.match(artworkSource, /useReducedMotion/);
-  assert.match(artworkSource, /reducedMotion \? false/);
+  assert.ok(artworkSource.includes("initial={false}"));
+  assert.ok(artworkSource.includes("animate={reducedMotion"));
   assert.match(artworkSource, /strokeDasharray/);
 });
 
