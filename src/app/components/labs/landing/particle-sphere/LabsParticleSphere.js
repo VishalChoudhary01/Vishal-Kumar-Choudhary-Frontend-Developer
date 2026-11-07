@@ -236,9 +236,7 @@ export default function LabsParticleSphere() {
       const initialPalette = getParticleSphereThemePalette(
         document.documentElement.classList.contains("dark"),
       );
-      const initialBrandColor = getComputedStyle(document.documentElement)
-        .getPropertyValue("--brand")
-        .trim() || initialPalette.particleColor;
+      const initialBrandColor = initialPalette.particleColor;
 
       renderer = new THREE.WebGLRenderer({
         alpha: true,
@@ -288,9 +286,7 @@ export default function LabsParticleSphere() {
           document.documentElement.classList.contains("dark"),
         );
 
-        const brandColor = getComputedStyle(document.documentElement)
-          .getPropertyValue("--brand")
-          .trim() || palette.particleColor;
+        const brandColor = palette.particleColor;
 
         particleMaterial.uniforms.uBrandColor.value.set(brandColor);
         particleMaterial.uniforms.uSparkleColor.value.set(palette.sparkleColor);
