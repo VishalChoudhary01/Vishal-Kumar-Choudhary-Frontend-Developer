@@ -127,3 +127,19 @@ The absence of those checks is intentional and must not be represented as passed
 ## 9. Handover entry point
 
 A new developer/AI agent should start at docs/README.md, then docs/PROJECT-STATUS.md. For homepage recreation use pages/HOME-PAGE-ENGINEERING.md and architecture/SCROLL-AND-MOTION-ENGINEERING.md. For project detail recreation use pages/PROJECT-DETAIL-ENGINEERING.md. For backend/runtime/schema work use api/ENDPOINT-INVENTORY.md, architecture/DATA-MODEL-CATALOG.md and architecture/LABS-RUNTIME-AND-CODE-EXECUTION.md.
+
+
+## 10. Theme Toggle implementation notes consolidated from the uploaded working baseline
+
+The uploaded `THEME-TOGGLE-WORKING-IMPLEMENTATION-NOTES.md` was read and compared against the actual repository files. Its locked visual requirement (page-wide cover/reveal, NEW snapshot for light→dark, OLD snapshot for dark→light, all four variants, fallback and temporary-state cleanup) has been carried into [architecture/THEME-TOGGLE-ENGINEERING.md](./architecture/THEME-TOGGLE-ENGINEERING.md).
+
+Repository-specific differences are documented rather than silently copied from the sample:
+- actual filenames use `.js`, not the uploaded example's `.jsx`;
+- icon animation is inline in `ThemeToggle.js`; no standalone `ActionSwapIcon` file exists;
+- current icons use `react-icons` (IoIosSunny and IoMoon), not the Lucide example;
+- the current toggle includes the `/mp3/chop.mp3` sound at volume 0.25 through `useUiSound`;
+- root provider nesting and semantic tokens follow the current portfolio `layout.js` and `globals.css`, not the simplified uploaded sample.
+
+The Sound Engineering guide was updated so `chop.mp3` is marked active, and the Layout/Token guide now points to the theme transition contract.
+
+This was a documentation-only reconciliation. No application behavior was changed. Browser acceptance for all four variants and cross-browser View Transition rendering remains a manual verification task.
