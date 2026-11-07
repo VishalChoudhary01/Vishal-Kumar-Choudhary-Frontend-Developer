@@ -234,6 +234,10 @@ test("Labs public collection and detail expose answer-ready visible information 
   assert.match(labsHeroSource, /Frontend Developer/);
   assert.match(labsDetailHeader, /<h1 id="lab-page-title"/);
   assert.match(labsDetailHeader, /A frontend experiment by Vishal Kumar Choudhary/);
+  assert.match(labsDetailHeader, /Published/);
+  assert.match(labsDetailHeader, /Updated/);
+  assert.match(labsDetailHeader, /<time dateTime=\{publishedAt\.toISOString\(\)\}>/);
+  assert.match(labsDetailHeader, /<time dateTime=\{updatedAt\.toISOString\(\)\}>/);
   assert.match(labsDetailHeader, /experiment\.category/);
   assert.match(labsDetailHeader, /technologies\.join/);
   assert.match(labsExplanation, /How it works/);
