@@ -3,7 +3,7 @@
 **Status:** Phase 1 draft for review; not a security certification.  
 **Scope:** Existing Next.js portfolio extended with admin CMS, Component Lab, authentication, user dashboard, media library, analytics and scheduled publishing.  
 **Branch:** `feat/labs-public-page`  
-**Related:** PRD.md, ARCHITECTURE.md, API-CONTRACTS.md, FOUNDATION-AUDIT.md, DECISIONS.md
+**Related:** [PRD](./PRD.md), [System Architecture](./architecture/SYSTEM-ARCHITECTURE.md), [API Endpoint Inventory](./api/ENDPOINT-INVENTORY.md), [Project Status](./PROJECT-STATUS.md), [Decisions](./DECISIONS.md)
 
 ## 1. Security objectives
 
