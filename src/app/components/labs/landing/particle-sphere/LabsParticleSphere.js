@@ -131,7 +131,8 @@ export default function LabsParticleSphere() {
       lastRenderTime = time;
       elapsed += delta;
 
-      const burstAmount = getParticleBurstEnvelope(elapsed - burstStartedAt);
+      const burstTime = Number.isFinite(burstStartedAt) ? elapsed - burstStartedAt : -1;
+      const burstAmount = getParticleBurstEnvelope(burstTime);
       const targetCameraDistance = THREE.MathUtils.lerp(
         idleCameraDistance,
         burstCameraDistance,
@@ -143,7 +144,7 @@ export default function LabsParticleSphere() {
       if (particleMaterial) {
         particleMaterial.uniforms.uTime.value = elapsed;
         particleMaterial.uniforms.uBurst.value = burstAmount;
-        particleMaterial.uniforms.uBurstTime.value = elapsed - burstStartedAt;
+        particleMaterial.uniforms.uBurstTime.value = burstTime;
       }
 
       sphereGroup.rotation.y = elapsed * PARTICLE_SPHERE_CONFIG.rotationSpeed;
@@ -232,7 +233,8 @@ export default function LabsParticleSphere() {
         orbitRadius: getParticleBurstRadius(PARTICLE_SPHERE_CONFIG.radius),
         fillRatio: 0.9,
       });
-      const activeBurst = getParticleBurstEnvelope(elapsed - burstStartedAt);
+      const resizeBurstTime = Number.isFinite(burstStartedAt) ? elapsed - burstStartedAt : -1;
+      const activeBurst = getParticleBurstEnvelope(resizeBurstTime);
       camera.position.z = THREE.MathUtils.lerp(
         idleCameraDistance,
         burstCameraDistance,
