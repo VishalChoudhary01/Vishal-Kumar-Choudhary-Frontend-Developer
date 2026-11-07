@@ -336,6 +336,10 @@ export default function LabsParticleSphere() {
           uPixelRatio: { value: renderer.getPixelRatio() },
           uMotionEnabled: { value: 1 },
           uBrandColor: { value: new THREE.Color(initialBrandColor) },
+          uSurfaceParticleMix: { value: initialPalette.surfaceParticleMix },
+          uSurfaceParticleBrightness: { value: initialPalette.surfaceParticleBrightness },
+          uSurfaceParticleOpacityFloor: { value: initialPalette.surfaceParticleOpacityFloor },
+          uSurfaceParticleSizeScale: { value: initialPalette.surfaceParticleSizeScale },
           uInnerParticleColor: { value: new THREE.Color(initialPalette.innerParticleColor) },
           uInnerParticleOpacity: { value: initialPalette.innerParticleOpacity },
           uVolumeColor: { value: new THREE.Color(initialPalette.volumeColor) },
@@ -398,6 +402,10 @@ export default function LabsParticleSphere() {
         const brandColor = palette.particleColor;
 
         particleMaterial.uniforms.uBrandColor.value.set(brandColor);
+        particleMaterial.uniforms.uSurfaceParticleMix.value = palette.surfaceParticleMix;
+        particleMaterial.uniforms.uSurfaceParticleBrightness.value = palette.surfaceParticleBrightness;
+        particleMaterial.uniforms.uSurfaceParticleOpacityFloor.value = palette.surfaceParticleOpacityFloor;
+        particleMaterial.uniforms.uSurfaceParticleSizeScale.value = palette.surfaceParticleSizeScale;
         particleMaterial.uniforms.uInnerParticleColor.value.set(palette.innerParticleColor);
         particleMaterial.uniforms.uInnerParticleOpacity.value = palette.innerParticleOpacity;
         particleMaterial.uniforms.uVolumeColor.value.set(palette.volumeColor);
