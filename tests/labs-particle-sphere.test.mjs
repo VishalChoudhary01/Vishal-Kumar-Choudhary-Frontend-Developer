@@ -5,6 +5,7 @@ import test from "node:test";
 import { createSphereParticleData } from "../src/app/components/labs/landing/particle-sphere/particle-geometry.mjs";
 import {
   getParticleBurstEnvelope,
+  getParticleBurstRadius,
   PARTICLE_BURST_EXPANSION,
   getOrbitBurstSpeed,
   ORBIT_BURST_SPEED_MULTIPLIER,
@@ -162,7 +163,7 @@ test("particle geometry is deterministic for a stable seed", () => {
 });
 
 test("sphere world-space size stays fixed while camera framing adapts to mobile", () => {
-  const radius = 1.22;
+  const radius = 1.38;
   const data = createSphereParticleData({
     surfaceCount: 180,
     innerCount: 24,
@@ -174,7 +175,7 @@ test("sphere world-space size stays fixed while camera framing adapts to mobile"
     width: 375,
     height: 520,
     fovDegrees: 42,
-    orbitRadius: 1.92,
+    orbitRadius: 2.02,
     fillRatio: 0.92,
   });
   const desktopDistance = getParticleCameraDistance({
@@ -188,9 +189,12 @@ test("sphere world-space size stays fixed while camera framing adapts to mobile"
   assert.ok(Number.isFinite(mobileDistance));
   assert.ok(Number.isFinite(desktopDistance));
   assert.ok(mobileDistance > desktopDistance);
-  assert.match(rendererSource, /camera\.position\.z = getParticleCameraDistance/);
-  assert.match(rendererSource, /orbitRadius: 1\.92/);
-  assert.ok(constantsSource.includes("radius: 1.22"));
+  assert.match(rendererSource, /idleCameraDistance = getParticleCameraDistance/);
+  assert.match(rendererSource, /orbitRadius: 2\.02/);
+  assert.match(rendererSource, /burstCameraDistance = getParticleCameraDistance/);
+  assert.match(rendererSource, /getParticleBurstRadius\(PARTICLE_SPHERE_CONFIG\.radius\)/);
+  assert.match(rendererSource, /camera\.position\.z \+= \(targetCameraDistance - camera\.position\.z\) \* cameraEase/);
+  assert.ok(constantsSource.includes("radius: 1.38"));
   assert.match(rendererSource, /particles\.frustumCulled = false/);
   assert.match(rendererSource, /className="absolute inset-0 h-full w-full overflow-hidden"/);
   assert.match(artworkSource, /aspect-\[1\.08\/1\] min-h-\[280px\].*overflow-hidden/);
@@ -355,6 +359,10 @@ test("particle burst expands quickly and recovers without changing base geometry
   assert.equal(getParticleBurstEnvelope(Number.NaN), 0);
 
   assert.equal(PARTICLE_BURST_EXPANSION, 1.85);
+  assert.equal(getParticleBurstRadius(1.38), 1.38 * (1 + 1.85 * 1.18) + 0.2);
+  assert.ok(getParticleBurstRadius(1.38) > 4.5);
+  assert.throws(() => getParticleBurstRadius(0), RangeError);
+  assert.throws(() => getParticleBurstRadius(Number.NaN), RangeError);
   assert.equal(getOrbitBurstSpeed(0), 1);
   assert.equal(getOrbitBurstSpeed(0.45), 1.65);
   assert.equal(getOrbitBurstSpeed(1.35), 1);
