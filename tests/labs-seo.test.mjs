@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFile } from "node:fs/promises";
 
 import {
   buildLabExperimentJsonLd,
@@ -10,6 +11,34 @@ import {
 } from "../src/app/lib/seo/labs.mjs";
 
 const SITE_URL = "https://portfolio.example";
+const labsCollectionRoute = await readFile(
+  new URL("../src/app/labs/page.js", import.meta.url),
+  "utf8",
+);
+const labsDetailRoute = await readFile(
+  new URL("../src/app/labs/[slug]/page.js", import.meta.url),
+  "utf8",
+);
+const labsHeroSource = await readFile(
+  new URL("../src/app/components/labs/LabsIntroduction.js", import.meta.url),
+  "utf8",
+);
+const labsDetailHeader = await readFile(
+  new URL("../src/app/components/labs/detail/LabDetailHeader.js", import.meta.url),
+  "utf8",
+);
+const labsExplanation = await readFile(
+  new URL("../src/app/components/labs/detail/LabExplanation.js", import.meta.url),
+  "utf8",
+);
+const sitemapSource = await readFile(
+  new URL("../src/app/sitemap.js", import.meta.url),
+  "utf8",
+);
+const robotsSource = await readFile(
+  new URL("../src/app/robots.js", import.meta.url),
+  "utf8",
+);
 const experiment = {
   slug: "magnetic-interaction",
   title: "Magnetic Interaction",
@@ -171,4 +200,46 @@ test("detail structured data includes only valid published and modified timestam
   assert.equal(creativeWork.aggregateRating, undefined);
   assert.equal(creativeWork.review, undefined);
   assert.equal(creativeWork.interactionStatistic, undefined);
+});
+
+
+test("Labs collection route wires dynamic metadata and server-rendered CollectionPage JSON-LD", () => {
+  assert.match(labsCollectionRoute, /export async function generateMetadata\(\)/);
+  assert.match(labsCollectionRoute, /buildLabsCollectionMetadata/);
+  assert.match(labsCollectionRoute, /buildLabsCollectionJsonLd/);
+  assert.match(labsCollectionRoute, /<JsonLd data=\{jsonLd\} \/>/);
+  assert.match(labsCollectionRoute, /getPublishedCustomLabExperimentPage/);
+});
+
+test("Labs detail route wires canonical metadata, noindex missing records and server-rendered detail JSON-LD", () => {
+  assert.match(labsDetailRoute, /buildLabExperimentMetadata/);
+  assert.match(labsDetailRoute, /buildLabExperimentJsonLd/);
+  assert.match(labsDetailRoute, /robots: \{ index: false, follow: false \}/);
+  assert.match(labsDetailRoute, /notFound\(\)/);
+  assert.match(labsDetailRoute, /<JsonLd data=\{jsonLd\} \/>/);
+  assert.match(labsDetailRoute, /<article aria-labelledby="lab-page-title">/);
+  assert.doesNotMatch(labsDetailRoute, /<iframe|LabWorkspace|LabRuntimeBoundary/);
+});
+
+test("Labs public collection and detail expose answer-ready visible information with real links", () => {
+  assert.match(labsHeroSource, /Published frontend experiments by Vishal Kumar Choudhary/);
+  assert.match(labsHeroSource, /Frontend Developer/);
+  assert.match(labsDetailHeader, /<h1 id="lab-page-title"/);
+  assert.match(labsDetailHeader, /A frontend experiment by Vishal Kumar Choudhary/);
+  assert.match(labsDetailHeader, /experiment\.category/);
+  assert.match(labsDetailHeader, /technologies\.join/);
+  assert.match(labsExplanation, /How it works/);
+  assert.match(labsExplanation, /\{explanation\}/);
+});
+
+test("sitemap includes eligible published Labs pages through all cursor pages and only uses real data dates", () => {
+  assert.match(sitemapSource, /getPublishedCustomLabExperimentPage\(\{ cursor, limit: 24 \}\)/);
+  assert.match(sitemapSource, /cursor = page\.nextCursor/);
+  assert.match(sitemapSource, /experiment\.updatedAt \|\| experiment\.publishedAt/);
+  assert.match(sitemapSource, /\/labs\/\$\{encodeURIComponent\(experiment\.slug\)\}/);
+});
+
+test("robots keeps private admin paths out of crawl discovery without blocking public Labs poster routes", () => {
+  assert.match(robotsSource, /disallow: \["\/admin", "\/admin\/"\]/);
+  assert.doesNotMatch(robotsSource, /"\/api\//);
 });
