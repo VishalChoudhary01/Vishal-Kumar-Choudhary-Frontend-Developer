@@ -13,6 +13,8 @@ The public homepage also has an interactive 3D companion (Vee), documented separ
 
 The theme system is also documented as a current implementation: next-themes owns theme state, the native View Transition API owns the page-wide cover/reveal, Motion owns the icon interaction, and ThemeToggle plays the chop SFX through useUiSound. See architecture/THEME-TOGGLE-ENGINEERING.md and architecture/SOUND-ENGINEERING.md.
 
+The homepage Contact flow has a dedicated engineering guide covering controlled client state, field validation, JSON API, independent server validation, HTML/text email building, Gmail SMTP, success modal and known hardening gaps: pages/CONTACT-FORM-AND-EMAIL-ENGINEERING.md. Contact success also plays confirmation-002.mp3, now listed as an active consumer in architecture/SOUND-ENGINEERING.md.
+
 
 1. Public portfolio website and code-driven project detail pages.
 2. First-party Portfolio Analytics, separate from Labs engagement analytics.
