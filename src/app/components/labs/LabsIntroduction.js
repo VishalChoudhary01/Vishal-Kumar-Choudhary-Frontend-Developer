@@ -123,7 +123,7 @@ export default function LabsIntroduction({
       initial={prefersReducedMotion ? false : "hidden"}
       animate="visible"
       variants={heroContainerVariants}
-      className="pointer-events-none relative z-10 mx-auto flex w-full max-w-[1440px] flex-col justify-center px-6 pb-10 pt-[calc(60px+2rem)] sm:px-8 sm:pb-12 sm:pt-[calc(60px+2.5rem)] lg:min-h-[calc(100svh-78px)] lg:px-20 lg:pb-8 lg:pt-[calc(78px+2.25rem)]"
+      className="pointer-events-none relative z-10 mx-auto flex w-full max-w-[1440px] flex-col justify-center px-4 pb-9 pt-[calc(60px+1.75rem)] sm:px-8 sm:pb-12 sm:pt-[calc(60px+2.5rem)] lg:min-h-[calc(100svh-78px)] lg:px-16 lg:pb-8 lg:pt-[calc(78px+2.25rem)] xl:px-20"
     >
       <div className="relative z-10 grid grid-cols-1 items-center gap-8 sm:gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:gap-8 xl:gap-12">
         <div className="relative z-10 flex min-w-0 flex-col items-start">
@@ -137,7 +137,7 @@ export default function LabsIntroduction({
           <motion.h1
             id="labs-heading"
             variants={heroItemVariants}
-            className="max-w-[10ch] font-display text-[clamp(3.2rem,6.2vw,6.35rem)] font-normal leading-[0.89] tracking-[-0.065em] text-text-primary"
+            className="max-w-[11ch] font-display text-[clamp(2.55rem,8vw,3.25rem)] font-normal leading-[0.92] tracking-[-0.06em] text-text-primary sm:text-[clamp(3.2rem,6.2vw,6.35rem)] sm:leading-[0.89] sm:tracking-[-0.065em]"
           >
             A space for
             <span className="block text-brand">experiments.</span>
@@ -145,7 +145,7 @@ export default function LabsIntroduction({
 
           <motion.p
             variants={heroItemVariants}
-            className="mt-5 max-w-[31rem] text-sm leading-6 text-text-secondary sm:mt-6 sm:text-[15px] sm:leading-7"
+            className="mt-4 max-w-[31rem] text-[13px] leading-6 text-text-secondary sm:mt-6 sm:text-[15px] sm:leading-7"
           >
             Published frontend experiments by Vishal Kumar Choudhary, a
             Frontend Developer, exploring motion and animation, CSS,
@@ -163,7 +163,7 @@ export default function LabsIntroduction({
 
           <motion.div
             variants={heroItemVariants}
-            className="mt-8 grid w-full max-w-[25rem] grid-cols-2 gap-6 border-t border-border-subtle pt-4 sm:mt-9 sm:gap-8"
+            className="mt-7 grid w-full max-w-[25rem] grid-cols-2 gap-4 border-t border-border-subtle pt-4 sm:mt-9 sm:gap-8"
           >
             <AnimatedLabStat value={experimentCount} label="Published experiments" />
             <AnimatedLabStat value={categoryCount} label="Active disciplines" />
