@@ -12,6 +12,8 @@ export const particleVertexShader = `
   uniform float uSurfaceParticleBrightness;
   uniform float uSurfaceParticleOpacityFloor;
   uniform float uSurfaceParticleSizeScale;
+  uniform float uSurfaceShimmerIntensity;
+  uniform float uSurfaceShimmerOpacity;
   uniform vec3 uInnerParticleColor;
   uniform float uInnerParticleOpacity;
   uniform vec3 uVolumeColor;
@@ -56,6 +58,7 @@ export const particleVertexShader = `
     float ambientLayer = step(1.5, aLayer);
     float innerLayer = step(0.5, aLayer) * (1.0 - ambientLayer);
     float sphereLayer = 1.0 - ambientLayer;
+    float surfaceLayer = 1.0 - innerLayer - ambientLayer;
 
     // Each particle launches at a slightly different time and recovers at
     // its own rate. Its source position remains unchanged.
@@ -216,12 +219,27 @@ export const particleVertexShader = `
       1.0
     );
 
+    // Regular surface points receive a slow, soft shimmer. Star particles are
+    // excluded so their sharper, brighter glints remain visually distinct.
+    float shimmerRandom = hash11(aSeed * 59.13 + 7.2);
+    float shimmerRate = 0.34 + shimmerRandom * 0.52;
+    float shimmerPhase = aSeed * 19.7 + shimmerRandom * 6.28318;
+    float shimmerWave = pow(
+      0.5 + 0.5 * sin(uTime * shimmerRate + shimmerPhase),
+      3.2
+    );
+    float surfaceShimmer = shimmerWave
+      * (1.0 - sparkleMask)
+      * surfaceLayer
+      * uSurfaceShimmerIntensity
+      * uMotionEnabled;
+
     float ambientSize = mix(uSurfaceParticleSizeScale, 1.18, ambientLayer);
     float burstSize = 1.0 + particleBurst * 0.85;
 
     gl_PointSize = clamp(
       aSize * ambientSize * burstSize * nearParticleBoost * uPixelRatio
-        * (5.0 / viewDepth) * (1.0 + sparkle * 2.0 * uSparkleSizeScale),
+        * (5.0 / viewDepth) * (1.0 + surfaceShimmer * 0.28 + sparkle * 2.0 * uSparkleSizeScale),
       1.0,
       12.0 * uPixelRatio
     );
@@ -253,13 +271,14 @@ export const particleVertexShader = `
       1.0,
       max(innerLayer, ambientLayer)
     );
-    litColor *= surfaceBrightness;
+    litColor *= surfaceBrightness * (1.0 + surfaceShimmer * 0.42);
     vec3 sparkleColor = uSparkleColor * (0.7 + sparkle * 3.2);
 
     vColor = mix(litColor, sparkleColor, clamp(sparkle * 1.35, 0.0, 1.0));
     vColor *= 1.0 + sparkle * 3.4 + particleBurst * 0.22;
     vOpacity = (
       layerOpacity
+      + surfaceShimmer * uSurfaceShimmerOpacity
       + sparkle * 1.15
       + particleBurst * 0.12
       + uBurst * 0.04 * sphereLayer

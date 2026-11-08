@@ -206,7 +206,7 @@ export default function StaticParticleSphereArtwork() {
                     ? "fill-[#031b17] dark:fill-[#f3fffc]"
                     : particle.inner
                       ? "fill-[#0b2926] dark:fill-[#d3fff7]"
-                      : "fill-[#0a3d37] dark:fill-[#a4f4e9]"
+                      : "fill-[#062d29] dark:fill-[#c0fff5]"
                 }
                 opacity={particle.opacity}
               />

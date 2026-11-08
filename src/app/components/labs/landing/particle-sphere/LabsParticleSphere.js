@@ -355,6 +355,8 @@ export default function LabsParticleSphere() {
           uSurfaceParticleBrightness: { value: initialPalette.surfaceParticleBrightness },
           uSurfaceParticleOpacityFloor: { value: initialPalette.surfaceParticleOpacityFloor },
           uSurfaceParticleSizeScale: { value: initialPalette.surfaceParticleSizeScale },
+          uSurfaceShimmerIntensity: { value: initialPalette.surfaceShimmerIntensity },
+          uSurfaceShimmerOpacity: { value: initialPalette.surfaceShimmerOpacity },
           uInnerParticleColor: { value: new THREE.Color(initialPalette.innerParticleColor) },
           uInnerParticleOpacity: { value: initialPalette.innerParticleOpacity },
           uVolumeColor: { value: new THREE.Color(initialPalette.volumeColor) },
@@ -441,6 +443,8 @@ export default function LabsParticleSphere() {
         particleMaterial.uniforms.uSurfaceParticleBrightness.value = palette.surfaceParticleBrightness;
         particleMaterial.uniforms.uSurfaceParticleOpacityFloor.value = palette.surfaceParticleOpacityFloor;
         particleMaterial.uniforms.uSurfaceParticleSizeScale.value = palette.surfaceParticleSizeScale;
+        particleMaterial.uniforms.uSurfaceShimmerIntensity.value = palette.surfaceShimmerIntensity;
+        particleMaterial.uniforms.uSurfaceShimmerOpacity.value = palette.surfaceShimmerOpacity;
         particleMaterial.uniforms.uInnerParticleColor.value.set(palette.innerParticleColor);
         particleMaterial.uniforms.uInnerParticleOpacity.value = palette.innerParticleOpacity;
         particleMaterial.uniforms.uVolumeColor.value.set(palette.volumeColor);
