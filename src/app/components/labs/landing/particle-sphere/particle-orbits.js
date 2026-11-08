@@ -1,39 +1,38 @@
 import { ORBIT_BURST_SPEED_MULTIPLIER } from "./particle-interaction.mjs";
 
-// Circular paths enclose the sphere while retaining each established tilt plane.
 const ORBIT_SPECS = [
   {
-    radiusX: 1.72,
-    radiusY: 1.72,
-    rotation: [0.92, 0.0, 0.0],
+    radiusX: 1.56,
+    radiusY: 0.91,
+    rotation: [0.92, 0.12, -0.15],
     opacity: 0.12,
     start: 0,
     end: Math.PI * 2,
     speed: 0.035,
     phase: 0.04,
-    particleSize: 0.013,
+    particleSize: 0.012,
   },
   {
-    radiusX: 1.88,
-    radiusY: 1.88,
-    rotation: [0.0, 0.92, 0.0],
+    radiusX: 1.43,
+    radiusY: 0.73,
+    rotation: [1.26, -0.34, 0.48],
     opacity: 0.082,
     start: 0,
     end: Math.PI * 2,
     speed: 0.046,
     phase: 0.38,
-    particleSize: 0.011,
+    particleSize: 0.01,
   },
   {
-    radiusX: 2.04,
-    radiusY: 2.04,
-    rotation: [0.0, -0.92, 0.0],
+    radiusX: 1.7,
+    radiusY: 0.82,
+    rotation: [0.48, 0.42, -0.62],
     opacity: 0.058,
     start: 0,
     end: Math.PI * 2,
     speed: 0.029,
     phase: 0.72,
-    particleSize: 0.012,
+    particleSize: 0.011,
   },
 ];
 
@@ -43,7 +42,7 @@ function getOrbitPoint(THREE, spec, progress) {
   return new THREE.Vector3(
     Math.cos(angle) * spec.radiusX,
     Math.sin(angle) * spec.radiusY,
-    0,
+    Math.sin(angle * 2) * 0.045,
   );
 }
 

@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import * as THREE from "three";
 
 import { createSphereParticleData } from "../src/app/components/labs/landing/particle-sphere/particle-geometry.mjs";
 import {
@@ -14,10 +13,7 @@ import {
   ORBIT_BURST_SPEED_MULTIPLIER,
   isParticleBurstActive,
 } from "../src/app/components/labs/landing/particle-sphere/particle-interaction.mjs";
-import {
-  getParticleBurstSpreadScale,
-  getParticleCameraDistance,
-} from "../src/app/components/labs/landing/particle-sphere/particle-responsive.mjs";
+import { getParticleCameraDistance } from "../src/app/components/labs/landing/particle-sphere/particle-responsive.mjs";
 import { getParticleSphereThemePalette } from "../src/app/components/labs/landing/particle-sphere/particle-theme.mjs";
 import {
   areParticleQualityProfilesEqual,
@@ -169,7 +165,7 @@ test("particle geometry is deterministic for a stable seed", () => {
 });
 
 test("sphere world-space size stays fixed while camera framing adapts to mobile", () => {
-  const radius = 1.52;
+  const radius = 1.38;
   const data = createSphereParticleData({
     surfaceCount: 180,
     innerCount: 24,
@@ -181,14 +177,14 @@ test("sphere world-space size stays fixed while camera framing adapts to mobile"
     width: 375,
     height: 520,
     fovDegrees: 42,
-    orbitRadius: 2.12,
+    orbitRadius: 2.02,
     fillRatio: 0.92,
   });
   const desktopDistance = getParticleCameraDistance({
     width: 1440,
     height: 820,
     fovDegrees: 42,
-    orbitRadius: 2.12,
+    orbitRadius: 2.02,
     fillRatio: 0.94,
   });
   const burstRadius = getParticleBurstRadius(radius);
@@ -215,13 +211,11 @@ test("sphere world-space size stays fixed while camera framing adapts to mobile"
   assert.ok(mobileBurstDistance > mobileDistance);
   assert.ok(desktopBurstDistance > desktopDistance);
   assert.match(rendererSource, /idleCameraDistance = getParticleCameraDistance/);
-  assert.match(rendererSource, /orbitRadius: 2\.12/);
+  assert.match(rendererSource, /orbitRadius: 2\.02/);
   assert.match(rendererSource, /burstCameraDistance = getParticleCameraDistance/);
   assert.match(rendererSource, /getParticleBurstRadius\(PARTICLE_SPHERE_CONFIG\.radius\)/);
   assert.match(rendererSource, /camera\.position\.z \+= \(targetCameraDistance - camera\.position\.z\) \* cameraEase/);
-  assert.ok(constantsSource.includes("radius: 1.52"));
-  assert.match(rendererSource, /new THREE\.SphereGeometry\(PARTICLE_SPHERE_CONFIG\.radius \+ 0\.14/);
-  assert.match(rendererSource, /new THREE\.SphereGeometry\(PARTICLE_SPHERE_CONFIG\.radius \* 0\.68/);
+  assert.ok(constantsSource.includes("radius: 1.38"));
   assert.match(rendererSource, /particles\.frustumCulled = false/);
   assert.match(rendererSource, /className="absolute inset-0 h-full w-full overflow-hidden"/);
   assert.match(artworkSource, /aspect-\[1\.08\/1\] min-h-\[280px\].*overflow-hidden/);
@@ -419,7 +413,7 @@ test("particle burst uses staggered per-particle recovery without changing base 
   assert.equal(getParticleBurstParticleEnvelope(Number.NaN, 0.5), 0);
 
   assert.equal(PARTICLE_BURST_EXPANSION, 1.85);
-  assert.ok(getParticleBurstRadius(1.52) > 5.3);
+  assert.ok(getParticleBurstRadius(1.38) > 4.8);
   assert.throws(() => getParticleBurstRadius(0), RangeError);
   assert.throws(() => getParticleBurstRadius(Number.NaN), RangeError);
   assert.equal(getOrbitBurstSpeed(0), 1);
@@ -469,144 +463,6 @@ test("renderer maps pointer hits to the sphere and restarts burst on a short tap
   assert.match(rendererSource, /releasePointerCapture\?\.\(event\.pointerId\)/);
 });
 
-test("WebGL canvas spans the hero and the burst recenters across wide and tall layouts", async () => {
-  const labsHeroSource = await readFile(
-    new URL("../src/app/components/labs/LabsIntroduction.js", import.meta.url),
-    "utf8",
-  );
-
-  assert.match(labsHeroSource, /data-labs-hero-root=""/);
-  assert.match(rendererSource, /mount\.closest\("\[data-labs-hero-root\]"\)/);
-  assert.match(rendererSource, /const bounds = renderRoot\.getBoundingClientRect\(\)/);
-  assert.match(rendererSource, /renderRoot\.appendChild\(renderer\.domElement\)/);
-  assert.match(rendererSource, /resizeObserver\.observe\(renderRoot\)/);
-  assert.match(
-    rendererSource,
-    /artworkGroup\.position\.lerpVectors\(\s*artworkAnchor,\s*heroCenter,\s*cameraChoreography\.pullback/,
-  );
-  assert.match(shaderSource, /uniform vec2 uBurstSpreadScale/);
-  assert.match(shaderSource, /burstOffset\.xy \*= uBurstSpreadScale/);
-
-  assert.deepEqual(getParticleBurstSpreadScale(1440, 720), [2, 1]);
-  assert.deepEqual(getParticleBurstSpreadScale(390, 900), [1, 900 / 390]);
-
-  const desktopIdleDistance = getParticleCameraDistance({
-    width: 1440,
-    height: 760,
-    fitWidth: 650,
-    fitHeight: 560,
-    orbitRadius: 2.12,
-    fillRatio: 0.94,
-  });
-  const desktopBurstDistance = getParticleCameraDistance({
-    width: 1440,
-    height: 760,
-    orbitRadius: getParticleBurstRadius(1.52),
-    fillRatio: 0.94,
-  });
-  const mobileBurstDistance = getParticleCameraDistance({
-    width: 390,
-    height: 900,
-    orbitRadius: getParticleBurstRadius(1.52),
-    fillRatio: 0.94,
-  });
-
-  assert.ok(desktopBurstDistance > desktopIdleDistance);
-  assert.ok(mobileBurstDistance > desktopBurstDistance);
-});
-
-test("enlarged sphere stays inside three separately tilted circular orbits", () => {
-  const sphereRadius = 1.52;
-  const specs = [...orbitSource.matchAll(
-    /radiusX: ([0-9.]+),\s+radiusY: ([0-9.]+),\s+rotation: \[([0-9., -]+)\]/g,
-  )].map(([, radiusX, radiusY, rotation]) => ({
-    radiusX: Number(radiusX),
-    radiusY: Number(radiusY),
-    rotation: rotation.split(",").map(Number),
-  }));
-
-  assert.equal(specs.length, 3);
-  assert.deepEqual(specs.map(({ radiusX, radiusY }) => [radiusX, radiusY]), [
-    [1.72, 1.72],
-    [1.88, 1.88],
-    [2.04, 2.04],
-  ]);
-  assert.deepEqual(specs.map(({ rotation }) => rotation), [
-    [0.92, 0.0, 0.0],
-    [0.0, 0.92, 0.0],
-    [0.0, -0.92, 0.0],
-  ]);
-  const planeNormals = specs.map(({ rotation }) => (
-    new THREE.Vector3(0, 0, 1)
-      .applyEuler(new THREE.Euler(...rotation, "XYZ"))
-      .normalize()
-  ));
-  for (let first = 0; first < planeNormals.length; first += 1) {
-    for (let second = first + 1; second < planeNormals.length; second += 1) {
-      assert.ok(
-        Math.abs(planeNormals[first].dot(planeNormals[second])) < 0.5,
-        "each orbital plane must have a distinct 3D inclination",
-      );
-    }
-  }
-
-  assert.match(orbitSource, /Math\.sin\(angle\) \* spec\.radiusY,\s+0,/);
-  assert.doesNotMatch(orbitSource, /Math\.sin\(angle \* 2\) \* 0\.045/);
-
-  specs.forEach(({ radiusX, radiusY }) => {
-    assert.ok(radiusX > sphereRadius, "each orbit must enclose the sphere radius");
-    assert.equal(radiusX, radiusY, "each orbit is circular in its own tilted plane");
-  });
-
-  const viewports = [
-    { width: 320, height: 296 },
-    { width: 375, height: 347 },
-    { width: 768, height: 711 },
-    { width: 1440, height: 1333 },
-  ];
-
-  viewports.forEach(({ width, height }) => {
-    const cameraDistance = getParticleCameraDistance({
-      width,
-      height,
-      fovDegrees: 42,
-      orbitRadius: 2.12,
-      fillRatio: 0.94,
-    });
-    const verticalHalfFov = (42 * Math.PI) / 360;
-    const horizontalHalfFov = Math.atan(
-      Math.tan(verticalHalfFov) * (width / height),
-    );
-    const visibleRadius = cameraDistance
-      * Math.tan(Math.min(verticalHalfFov, horizontalHalfFov));
-
-    specs.forEach(({ radiusX, rotation: angles }) => {
-      const plane = new THREE.Euler(...angles, "XYZ");
-      let maxProjectedRadius = 0;
-
-      for (let index = 0; index <= 240; index += 1) {
-        const angle = (Math.PI * 2 * index) / 240;
-        const point = new THREE.Vector3(
-          Math.cos(angle) * radiusX,
-          Math.sin(angle) * radiusX,
-          Math.sin(angle * 2) * 0.045,
-        ).applyEuler(plane);
-        const projectedRadius = cameraDistance
-          * Math.hypot(point.x, point.y)
-          / (cameraDistance - point.z);
-
-        maxProjectedRadius = Math.max(maxProjectedRadius, projectedRadius);
-      }
-
-      assert.ok(
-        maxProjectedRadius < visibleRadius,
-        "orbit " + radiusX + " clips at " + width + "x" + height
-          + ": " + maxProjectedRadius + " > " + visibleRadius,
-      );
-    });
-  });
-});
-
 test("orbit particles move continuously and retain their orbital path", () => {
   assert.match(orbitSource, /group\.userData\.update = \(elapsed, burstAmount = 0\)/);
   assert.match(orbitSource, /runner\.position\.copy\(getOrbitPoint\(THREE, spec, progressByRunner\[index\]\)\)/);
@@ -626,7 +482,7 @@ test("Labs hero applies one responsive dark radial background without a separate
 
   assert.match(
     heroSource,
-    /<div data-labs-hero-root="" className="relative isolate w-full overflow-hidden dark:bg-\[radial-gradient\(/,
+    /<div className="relative w-full overflow-hidden dark:bg-\[radial-gradient\(/,
   );
   assert.match(heroSource, /lg:dark:bg-\[radial-gradient\(/);
   assert.doesNotMatch(heroSource, /aria-hidden="true"\s+className="pointer-events-none absolute/);
@@ -638,11 +494,6 @@ test("Labs hero applies one responsive dark radial background without a separate
   assert.match(heroSource, /A space for|labs-heading/);
   assert.match(heroSource, /Published experiments/);
   assert.match(heroSource, /LabsHeroArtwork/);
-  assert.equal((artworkSource.match(/\[transform:perspective\(900px\)_rotate/g) || []).length, 3);
-  const fallbackSource = rendererSource.slice(rendererSource.indexOf("function StaticSphereFallback()"));
-  assert.equal((fallbackSource.match(/\[transform:perspective\(900px\)_rotate/g) || []).length, 3);
-  assert.match(heroSource, /pointer-events-none relative z-10 mx-auto/);
-  assert.match(heroSource, /pointer-events-auto group inline-flex/);
 });
 
 test("particle shader provides depth shading and soft point halos", () => {

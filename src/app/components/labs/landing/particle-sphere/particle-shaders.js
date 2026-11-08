@@ -23,7 +23,6 @@ export const particleVertexShader = `
   uniform float uBurst;
   uniform float uBurstTime;
   uniform float uBurstExpansion;
-  uniform vec2 uBurstSpreadScale;
   uniform float uBurstStagger;
   uniform float uBurstOutwardSeconds;
   uniform float uBurstRecoverySeconds;
@@ -106,7 +105,6 @@ export const particleVertexShader = `
       * burstDistance
       * uBurstDriftStrength
       * driftVariation;
-    burstOffset.xy *= uBurstSpreadScale;
     transformed += burstOffset;
 
     // A local magnetic push affects only particles near the pointer hit.
