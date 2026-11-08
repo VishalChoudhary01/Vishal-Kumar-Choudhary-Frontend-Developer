@@ -27,6 +27,7 @@ import {
   PARTICLE_BURST_DRIFT_STRENGTH,
 } from "./particle-interaction.mjs";
 import { PARTICLE_SPHERE_CONFIG } from "./particle-constants";
+import StaticParticleSphereArtwork from "./StaticParticleSphereArtwork";
 import {
   areParticleQualityProfilesEqual,
   getParticleQualityProfile,
@@ -70,7 +71,6 @@ export default function LabsParticleSphere() {
     let particles;
     let qualityProfile;
     let orbitGroup;
-    let glow;
     let resizeObserver;
     let intersectionObserver;
     let themeObserver;
@@ -436,10 +436,6 @@ export default function LabsParticleSphere() {
           }
         });
 
-        if (glow) {
-          glow.material.color.set(palette.glowColor);
-          glow.material.opacity = palette.glowOpacity;
-        }
       };
 
       if (typeof MutationObserver !== "undefined") {
@@ -450,17 +446,6 @@ export default function LabsParticleSphere() {
         });
       }
 
-      glow = new THREE.Mesh(
-        new THREE.SphereGeometry(0.94, 28, 20),
-        new THREE.MeshBasicMaterial({
-          color: initialPalette.glowColor,
-          transparent: true,
-          opacity: initialPalette.glowOpacity,
-          side: THREE.BackSide,
-          depthWrite: false,
-        }),
-      );
-      sphereGroup.add(glow);
       syncThemeColor();
 
       const setPointerFromEvent = (event) => {
@@ -593,7 +578,7 @@ export default function LabsParticleSphere() {
   }, []);
 
   if (webglFailed) {
-    return <StaticSphereFallback />;
+    return <StaticParticleSphereArtwork />;
   }
 
   return (
@@ -602,19 +587,5 @@ export default function LabsParticleSphere() {
       aria-hidden="true"
       className="absolute inset-0 h-full w-full overflow-hidden"
     />
-  );
-}
-
-function StaticSphereFallback() {
-  return (
-    <div
-      aria-hidden="true"
-      className="absolute inset-0 overflow-hidden"
-    >
-      <div className="absolute inset-[12%] rounded-full bg-[radial-gradient(circle_at_48%_48%,rgba(23,107,104,0.14),transparent_68%)] dark:bg-[radial-gradient(circle_at_48%_48%,rgba(105,189,185,0.20),transparent_68%)]" />
-      <div className="absolute left-1/2 top-1/2 aspect-square w-[62%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-brand/25 bg-[radial-gradient(circle_at_34%_28%,rgba(23,107,104,0.14),rgba(23,107,104,0.04)_48%,transparent_74%)] shadow-[inset_-18px_-14px_42px_rgba(0,0,0,0.12),0_0_58px_rgba(23,107,104,0.08)] dark:bg-[radial-gradient(circle_at_34%_28%,rgba(145,231,221,0.22),rgba(15,65,60,0.20)_48%,transparent_74%)] dark:shadow-[inset_-18px_-14px_42px_rgba(0,0,0,0.30),0_0_58px_rgba(65,190,178,0.16)]" />
-      <div className="absolute left-1/2 top-1/2 aspect-square w-[56%] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-55 [background-image:radial-gradient(circle,rgba(23,107,104,0.66)_0.8px,transparent_1.4px)] [background-size:8px_8px] [mask-image:radial-gradient(circle,black_40%,transparent_72%)] dark:opacity-75 dark:[background-image:radial-gradient(circle,rgba(190,255,248,0.86)_0.8px,transparent_1.4px)]" />
-      <div className="absolute left-1/2 top-1/2 aspect-[1.6/1] w-[88%] -translate-x-1/2 -translate-y-1/2 rotate-[-22deg] rounded-[50%] border border-brand/20 dark:border-brand/30" />
-    </div>
   );
 }

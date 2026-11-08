@@ -1,6 +1,6 @@
 import { ORBIT_BURST_SPEED_MULTIPLIER } from "./particle-interaction.mjs";
 
-const ORBIT_SPECS = [
+export const ORBIT_SPECS = [
   {
     radiusX: 1.56,
     radiusY: 0.91,

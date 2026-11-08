@@ -16,6 +16,14 @@ const artworkSource = await readFile(
   new URL("../src/app/components/labs/landing/LabsHeroArtwork.js", import.meta.url),
   "utf8",
 );
+const staticArtworkSource = await readFile(
+  new URL("../src/app/components/labs/landing/particle-sphere/StaticParticleSphereArtwork.js", import.meta.url),
+  "utf8",
+);
+const orbitSource = await readFile(
+  new URL("../src/app/components/labs/landing/particle-sphere/particle-orbits.js", import.meta.url),
+  "utf8",
+);
 
 test("guest hero actions offer account creation and sign in with a Labs return destination", () => {
   assert.deepEqual(getLabsHeroActions({ authState: "guest" }), [
@@ -96,7 +104,20 @@ test("hero artwork is decorative, lazy-loads Three.js and respects reduced motio
   assert.match(artworkSource, /ssr:\s*false/);
   assert.match(artworkSource, /<LabsParticleSphere\s*\/>/);
   assert.match(artworkSource, /reducedMotion\s*\|\|\s*!isInView/);
-  assert.match(artworkSource, /StaticSphereArtwork/);
+  assert.match(artworkSource, /StaticParticleSphereArtwork/);
+  assert.match(staticArtworkSource, /data-static-particle-sphere=""/);
+});
+
+test("initial artwork is a particle-only sphere with three live orbit definitions", () => {
+  assert.match(artworkSource, /StaticParticleSphereArtwork/);
+  assert.match(staticArtworkSource, /createSphereParticleData/);
+  assert.match(staticArtworkSource, /STATIC_PARTICLES\.map/);
+  assert.match(staticArtworkSource, /STATIC_ORBITS\.map/);
+  assert.match(staticArtworkSource, /<svg/);
+  assert.match(orbitSource, /export const ORBIT_SPECS/);
+  assert.doesNotMatch(staticArtworkSource, /bg-\[radial-gradient/);
+  assert.doesNotMatch(staticArtworkSource, /rounded-full border/);
+  assert.match(staticArtworkSource, /data-static-particle-sphere=""/);
 });
 
 test("hero artwork is visible at rest, fills its grid column and animates slowly", () => {
