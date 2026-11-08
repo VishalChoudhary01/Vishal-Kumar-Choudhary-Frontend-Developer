@@ -21,6 +21,7 @@ const EMPTY_LINKS = [];
 
 export default function Navbar({
   context = "site",
+  solidScrolledSurface = false,
   showLabsAccount = false,
   hideSocialLinks = false,
   initialAuthUser = null,
@@ -288,11 +289,11 @@ export default function Navbar({
             ? [
               "top-0.5 mx-2.5 h-[56px] rounded-full",
               "border-border",
-              "bg-surface-elevated/85",
+              solidScrolledSurface ? "bg-surface-elevated/95" : "bg-surface-elevated/85",
               "shadow-[0_1px_2px_rgb(0_0_0/0.04),0_8px_24px_-12px_rgb(0_0_0/0.12),0_16px_40px_-20px_rgb(0_0_0/0.08)]",
               "md:top-1",
               "lg:top-3 lg:mx-18 lg:h-[68px]",
-              "lg:bg-surface-elevated/60",
+              solidScrolledSurface ? "lg:bg-surface-elevated/95" : "lg:bg-surface-elevated/60",
               "lg:shadow-[0_1px_2px_rgb(0_0_0/0.04),0_10px_28px_-14px_rgb(0_0_0/0.14),0_20px_48px_-24px_rgb(0_0_0/0.1)]",
             ]
             : [
