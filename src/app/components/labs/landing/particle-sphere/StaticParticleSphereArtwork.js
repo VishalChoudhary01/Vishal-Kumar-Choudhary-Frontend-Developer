@@ -88,8 +88,9 @@ function createStaticParticles() {
       ...projected,
       radius,
       opacity: isBright ? Math.max(0.72, opacity) : opacity,
-      fill: isAmbient || isBright ? "#dffff8" : isInner ? "#0e655e" : "#168f84",
       bright: isBright,
+      ambient: isAmbient,
+      inner: isInner,
     });
   }
 
@@ -173,7 +174,7 @@ export default function StaticParticleSphereArtwork() {
           </filter>
         </defs>
 
-        <g fill="none" stroke="#1a4a43" strokeWidth="1.1">
+        <g fill="none" stroke="#0a3d37" className="dark:[&>path]:stroke-[#78d9cf]" strokeWidth="1.1">
           {STATIC_ORBITS.map((orbit) => (
             <path
               key={orbit.key}
@@ -191,7 +192,7 @@ export default function StaticParticleSphereArtwork() {
                   cx={particle.x}
                   cy={particle.y}
                   r={particle.radius * 3.1}
-                  fill="#c9fff4"
+                  className="fill-[#031b17] dark:fill-[#f3fffc]"
                   opacity="0.22"
                   filter="url(#static-particle-glow)"
                 />
@@ -200,7 +201,13 @@ export default function StaticParticleSphereArtwork() {
                 cx={particle.x}
                 cy={particle.y}
                 r={particle.radius}
-                fill={particle.fill}
+                className={
+                  particle.bright || particle.ambient
+                    ? "fill-[#031b17] dark:fill-[#f3fffc]"
+                    : particle.inner
+                      ? "fill-[#0b2926] dark:fill-[#d3fff7]"
+                      : "fill-[#0a3d37] dark:fill-[#a4f4e9]"
+                }
                 opacity={particle.opacity}
               />
             </g>

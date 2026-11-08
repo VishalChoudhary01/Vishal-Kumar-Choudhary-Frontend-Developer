@@ -100,6 +100,11 @@ export default function LabsParticleSphere() {
     const artworkAnchor = new THREE.Vector3();
 
     const scene = new THREE.Scene();
+    const sphereAmbientLight = new THREE.AmbientLight(0xffffff, 0.78);
+    const sphereKeyLight = new THREE.DirectionalLight(0xffffff, 1.05);
+    sphereKeyLight.position.set(-3.5, 4.5, 5.5);
+    scene.add(sphereAmbientLight, sphereKeyLight);
+
     const camera = new THREE.PerspectiveCamera(
       PARTICLE_SPHERE_CONFIG.cameraFov,
       1,
@@ -358,6 +363,9 @@ export default function LabsParticleSphere() {
           uAmbientParticleOpacity: { value: initialPalette.ambientParticleOpacity },
           uSphereRadius: { value: PARTICLE_SPHERE_CONFIG.radius },
           uSparkleColor: { value: new THREE.Color(initialPalette.sparkleColor) },
+          uSparkleChanceScale: { value: initialPalette.sparkleChanceScale },
+          uSparkleIntensity: { value: initialPalette.sparkleIntensity },
+          uSparkleSizeScale: { value: initialPalette.sparkleSizeScale },
           uBurst: { value: 0 },
           uBurstTime: { value: -1 },
           uBurstExpansion: { value: PARTICLE_BURST_EXPANSION },
@@ -381,8 +389,10 @@ export default function LabsParticleSphere() {
         blending: THREE.AdditiveBlending,
       });
 
-      sphereShellMaterial = new THREE.MeshBasicMaterial({
+      sphereShellMaterial = new THREE.MeshPhongMaterial({
         color: initialPalette.centerSphereColor,
+        specular: initialPalette.centerSphereSpecular,
+        shininess: initialPalette.centerSphereShininess,
         transparent: true,
         opacity: initialPalette.centerSphereOpacity,
         depthWrite: false,
@@ -438,7 +448,12 @@ export default function LabsParticleSphere() {
         particleMaterial.uniforms.uAmbientParticleColor.value.set(palette.ambientParticleColor);
         particleMaterial.uniforms.uAmbientParticleOpacity.value = palette.ambientParticleOpacity;
         particleMaterial.uniforms.uSparkleColor.value.set(palette.sparkleColor);
+        particleMaterial.uniforms.uSparkleChanceScale.value = palette.sparkleChanceScale;
+        particleMaterial.uniforms.uSparkleIntensity.value = palette.sparkleIntensity;
+        particleMaterial.uniforms.uSparkleSizeScale.value = palette.sparkleSizeScale;
         sphereShellMaterial.color.set(palette.centerSphereColor);
+        sphereShellMaterial.specular.set(palette.centerSphereSpecular);
+        sphereShellMaterial.shininess = palette.centerSphereShininess;
         sphereShellMaterial.opacity = palette.centerSphereOpacity;
 
         orbitGroup.traverse((object) => {

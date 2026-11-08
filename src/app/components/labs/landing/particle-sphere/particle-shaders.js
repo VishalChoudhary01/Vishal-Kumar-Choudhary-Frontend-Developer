@@ -20,6 +20,9 @@ export const particleVertexShader = `
   uniform float uAmbientParticleOpacity;
   uniform float uSphereRadius;
   uniform vec3 uSparkleColor;
+  uniform float uSparkleChanceScale;
+  uniform float uSparkleIntensity;
+  uniform float uSparkleSizeScale;
   uniform float uBurst;
   uniform float uBurstTime;
   uniform float uBurstExpansion;
@@ -193,7 +196,11 @@ export const particleVertexShader = `
     // Sparkle frequency, phase, chance and intensity are independently
     // seeded, so points glint at different moments instead of flashing together.
     float sparkleRandom = hash11(aSeed * 113.17 + 17.3);
-    float sparkleChance = mix(0.025, 0.16, sparkleRandom);
+    float sparkleChance = clamp(
+      mix(0.025, 0.16, sparkleRandom) * uSparkleChanceScale,
+      0.0,
+      0.32
+    );
     float sparkleMask = step(1.0 - sparkleChance, hash11(aSeed * 37.0 + 3.9));
     float sparkleRate = 0.62 + hash11(aSeed * 17.4) * 2.1;
     float sparklePhase = aSeed * 31.4 + sparkleRandom * 6.28318;
@@ -204,7 +211,7 @@ export const particleVertexShader = `
     float burstGlint = particleBurst * sparkleMask
       * (0.18 + sparkleRandom * 0.72);
     float sparkle = clamp(
-      (sparkleMask * sparkleWave + burstGlint) * uMotionEnabled,
+      (sparkleMask * sparkleWave + burstGlint) * uSparkleIntensity * uMotionEnabled,
       0.0,
       1.0
     );
@@ -214,7 +221,7 @@ export const particleVertexShader = `
 
     gl_PointSize = clamp(
       aSize * ambientSize * burstSize * nearParticleBoost * uPixelRatio
-        * (5.0 / viewDepth) * (1.0 + sparkle * 2.0),
+        * (5.0 / viewDepth) * (1.0 + sparkle * 2.0 * uSparkleSizeScale),
       1.0,
       12.0 * uPixelRatio
     );
@@ -247,10 +254,10 @@ export const particleVertexShader = `
       max(innerLayer, ambientLayer)
     );
     litColor *= surfaceBrightness;
-    vec3 sparkleColor = uSparkleColor * (0.7 + sparkle * 2.8);
+    vec3 sparkleColor = uSparkleColor * (0.7 + sparkle * 3.2);
 
     vColor = mix(litColor, sparkleColor, clamp(sparkle * 1.35, 0.0, 1.0));
-    vColor *= 1.0 + sparkle * 2.8 + particleBurst * 0.22;
+    vColor *= 1.0 + sparkle * 3.4 + particleBurst * 0.22;
     vOpacity = (
       layerOpacity
       + sparkle * 1.15

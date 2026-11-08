@@ -108,6 +108,9 @@ test("hero artwork is decorative, lazy-loads Three.js and respects reduced motio
   assert.match(staticArtworkSource, /data-static-particle-sphere=""/);
   assert.ok(staticArtworkSource.includes("w-[48%]"));
   assert.ok(staticArtworkSource.includes("dark:bg-[radial-gradient"));
+  assert.ok(staticArtworkSource.includes("dark:fill-[#a4f4e9]"));
+  assert.ok(staticArtworkSource.includes("dark:fill-[#f3fffc]"));
+  assert.ok(staticArtworkSource.includes('inner: isInner'));
 });
 
 test("initial artwork reuses the particle sphere and shows its translucent center shell", () => {
