@@ -14,8 +14,17 @@ function normalizeNumber(value) {
     return Number.isFinite(numericValue) ? numericValue : 0;
 }
 
-function formatNumber(value, minDigits) {
-    return String(Math.trunc(value)).padStart(minDigits, "0");
+function formatNumber(value, minDigits, locale) {
+    const integer = Math.trunc(value);
+
+    if (typeof locale === "string" && locale.trim()) {
+        return new Intl.NumberFormat(locale, {
+            minimumIntegerDigits: Math.min(21, Math.max(1, Number(minDigits) || 1)),
+            maximumFractionDigits: 0,
+        }).format(integer);
+    }
+
+    return String(integer).padStart(minDigits, "0");
 }
 
 export default function MotionNumber({
@@ -26,6 +35,7 @@ export default function MotionNumber({
     className = "",
     digitClassName = "",
     duration = MOTION_NUMBER_DEFAULTS.duration,
+    locale,
     ariaLabel,
 }) {
     const reduced = useReducedMotion();
@@ -47,12 +57,12 @@ export default function MotionNumber({
     const direction =
         numericValue >= valueHistory.previous ? 1 : -1;
 
-    const formattedValue = formatNumber(numericValue, minDigits);
+    const formattedValue = formatNumber(numericValue, minDigits, locale);
 
     return (
         <span
             className={cn(
-                "pointer-events-none inline-flex items-center font-mono tabular-nums",
+                "pointer-events-none inline-flex h-[1em] shrink-0 items-center align-middle leading-none font-mono tabular-nums",
                 className,
             )}
             /*
@@ -63,7 +73,7 @@ export default function MotionNumber({
              * the live value into the accessibility tree.
              */
             role="img"
-            aria-label={ariaLabel || `${prefix}${numericValue}${suffix}`}
+            aria-label={ariaLabel || `${prefix}${formattedValue}${suffix}`}
         >
             {prefix && (
                 <span aria-hidden="true">
@@ -79,7 +89,7 @@ export default function MotionNumber({
                     <span
                         key={index}
                         className={cn(
-                            "relative inline-block h-[1em] min-w-[0.62em] overflow-hidden",
+                            "relative inline-flex h-[1em] min-w-[0.62em] shrink-0 items-center justify-center overflow-hidden",
                             digitClassName,
                         )}
                     >

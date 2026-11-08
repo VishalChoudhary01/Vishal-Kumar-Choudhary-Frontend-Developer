@@ -1,43 +1,64 @@
 "use client";
+
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import Lenis from "lenis";
+import { shouldUseLenis } from "./scroll-policy.mjs";
 
-const SmoothScroll = ({ children }) => {
-    useEffect(() => {
-        const lenis = new Lenis({
-            duration: 1.3,
-            smoothWheel: true,
-            wheelMultiplier: 0.9,
-            touchMultiplier: 1,
-            syncTouch: false,
-        })
+export default function SmoothScroll({ children }) {
+  const pathname = usePathname();
+  const useLenis = shouldUseLenis(pathname);
 
-        /*
-         * Expose the instance so route changes can reset the scroll
-         * through Lenis itself. Resetting only `window.scrollY` leaves
-         * Lenis animating back toward its previous target, so a newly
-         * opened page could keep the previous page's scroll position.
-         */
-        window.lenis = lenis
+  useEffect(() => {
+    /*
+     * Public portfolio and project details retain Lenis. Labs and private
+     * owner/admin pages use native document scrolling so wheel events remain
+     * with the page and naturally hand off from editors and controls.
+     */
+    if (!useLenis) {
+      const activeLenis = window.lenis;
 
-        let rafId
-        function raf(time) {
-            lenis.raf(time)
-            rafId = requestAnimationFrame(raf)
-        }
+      if (activeLenis) {
+        activeLenis.destroy();
+        window.lenis = undefined;
+      }
 
-        rafId = requestAnimationFrame(raf)
+      return undefined;
+    }
 
-        return () => {
-            cancelAnimationFrame(rafId)
-            if (window.lenis === lenis) {
-                window.lenis = undefined
-            }
-            lenis.destroy()
-        }
+    const lenis = new Lenis({
+      duration: 1.3,
+      smoothWheel: true,
+      wheelMultiplier: 0.9,
+      touchMultiplier: 1,
+      syncTouch: false,
+    });
 
-    }, [])
-    return children
+    /*
+     * Keep the existing global reference for route-reset and in-page
+     * navigation helpers on the portfolio routes that use Lenis.
+     */
+    window.lenis = lenis;
+
+    let rafId = 0;
+
+    function raf(time) {
+      lenis.raf(time);
+      rafId = window.requestAnimationFrame(raf);
+    }
+
+    rafId = window.requestAnimationFrame(raf);
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+
+      if (window.lenis === lenis) {
+        window.lenis = undefined;
+      }
+
+      lenis.destroy();
+    };
+  }, [useLenis]);
+
+  return children;
 }
-
-export default SmoothScroll

@@ -24,6 +24,7 @@ export default function MobileMenu({ navLinks = [], socialLinks = [], activeHref
 
   useEffect(() => {
     const scrollY = window.scrollY;
+    const lockedPathname = window.location.pathname;
 
     document.body.style.overflow = "hidden";
     document.body.style.position = "fixed";
@@ -43,11 +44,18 @@ export default function MobileMenu({ navLinks = [], socialLinks = [], activeHref
       document.body.style.top = "";
       document.body.style.width = "";
 
-      window.scrollTo({
-        top: scrollY,
-        left: 0,
-        behavior: "auto",
-      });
+      /*
+       * Restore the captured position only when this menu closes on the same
+       * route. If navigation happened while the menu was open, applying the
+       * previous page's frozen offset to the new route causes a visible jump.
+       */
+      if (window.location.pathname === lockedPathname) {
+        window.scrollTo({
+          top: scrollY,
+          left: 0,
+          behavior: "auto",
+        });
+      }
     };
   }, []);
 
