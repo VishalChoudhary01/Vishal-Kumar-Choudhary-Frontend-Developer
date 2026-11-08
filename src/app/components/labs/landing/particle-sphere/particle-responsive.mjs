@@ -11,8 +11,8 @@ function positiveOr(value, fallback) {
 }
 
 /**
- * Fits the complete orbit envelope into the available canvas without
- * changing the sphere's world-space radius or particle coordinates.
+ * Fits an orbit envelope to either the complete viewport or a smaller
+ * target rectangle while retaining the viewport's actual camera projection.
  */
 export function getParticleCameraDistance({
   width,
@@ -20,6 +20,8 @@ export function getParticleCameraDistance({
   fovDegrees = DEFAULTS.fovDegrees,
   orbitRadius = DEFAULTS.orbitRadius,
   fillRatio = DEFAULTS.fillRatio,
+  fitWidth = width,
+  fitHeight = height,
 } = {}) {
   const safeWidth = positiveOr(width, DEFAULTS.width);
   const safeHeight = positiveOr(height, DEFAULTS.height);
@@ -27,10 +29,22 @@ export function getParticleCameraDistance({
   const safeRadius = positiveOr(orbitRadius, DEFAULTS.orbitRadius);
   const safeFill = Math.min(0.96, Math.max(0.5, positiveOr(fillRatio, DEFAULTS.fillRatio)));
 
-  const aspect = safeWidth / safeHeight;
+  const safeFitWidth = positiveOr(fitWidth, safeWidth);
+  const safeFitHeight = positiveOr(fitHeight, safeHeight);
   const verticalHalfFov = (safeFov * Math.PI) / 360;
-  const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * aspect);
-  const limitingHalfFov = Math.min(verticalHalfFov, horizontalHalfFov);
+  const focalLength = safeHeight / (2 * Math.tan(verticalHalfFov));
+  const fitHalfSize = Math.min(safeFitWidth, safeFitHeight) / 2;
 
-  return safeRadius / (Math.tan(limitingHalfFov) * safeFill);
+  return (focalLength * safeRadius) / (fitHalfSize * safeFill);
+}
+
+
+export function getParticleBurstSpreadScale(width, height) {
+  const safeWidth = positiveOr(width, DEFAULTS.width);
+  const safeHeight = positiveOr(height, DEFAULTS.height);
+  const aspect = safeWidth / safeHeight;
+
+  return aspect >= 1
+    ? [aspect, 1]
+    : [1, 1 / aspect];
 }
