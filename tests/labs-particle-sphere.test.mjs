@@ -243,15 +243,15 @@ test("light and dark themes use distinct particle, sparkle and translucent spher
   assert.equal(light.sparkleHaloColor, "#0b5548");
   assert.ok(light.sparkleColor !== light.particleColor);
   assert.equal(light.glowColor, "#0a2926");
-  assert.equal(dark.particleColor, "#d5fff9");
+  assert.equal(dark.particleColor, "#bffff4");
   assert.equal(dark.centerSphereColor, "#8ce8dc");
   assert.equal(dark.centerSphereOpacity, 0.075);
   assert.equal(light.surfaceParticleMix, 0);
   assert.equal(dark.surfaceParticleMix, 0);
   assert.equal(light.surfaceParticleBrightness, 1.45);
-  assert.equal(dark.surfaceParticleBrightness, 1.2);
+  assert.equal(dark.surfaceParticleBrightness, 1.38);
   assert.equal(light.surfaceParticleOpacityFloor, 0.88);
-  assert.equal(dark.surfaceParticleOpacityFloor, 0.74);
+  assert.equal(dark.surfaceParticleOpacityFloor, 0.86);
   assert.equal(light.surfaceParticleSizeScale, 1.55);
   assert.equal(light.surfaceDepthFadeFloor, 1);
   assert.equal(dark.surfaceParticleSizeScale, 1.95);
@@ -259,7 +259,7 @@ test("light and dark themes use distinct particle, sparkle and translucent spher
   assert.equal(light.depthBrightnessNear, 1.12);
   assert.equal(light.depthBrightnessFar, 0.74);
   assert.equal(dark.depthBrightnessNear, 1.12);
-  assert.equal(dark.depthBrightnessFar, 0.74);
+  assert.equal(dark.depthBrightnessFar, 0.86);
   assert.equal(dark.innerParticleColor, "#75dcd1");
   assert.equal(dark.ambientParticleColor, "#4eaaa2");
   assert.equal(dark.innerParticleOpacity, 0.98);
@@ -475,6 +475,7 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.ok(shaderSource.includes("uniform float uDepthBrightnessFar"));
   assert.ok(shaderSource.includes("float depthBrightness = mix(uDepthBrightnessNear, uDepthBrightnessFar, depthLayer)"));
   assert.ok(shaderSource.includes("litColor *= surfaceBrightness * depthBrightness"));
+  assert.ok(shaderSource.includes("litColor = mix(litColor, particleColor, surfaceLayer * 0.42)"));
   assert.ok(shaderSource.indexOf("litColor *= surfaceBrightness * depthBrightness") < shaderSource.indexOf("vec3 sparkleColor = uSparkleColor"));
   assert.ok(shaderSource.includes("float surfaceShimmer = shimmerWave"));
   assert.ok(shaderSource.includes("(1.0 - sparkleMask)"));

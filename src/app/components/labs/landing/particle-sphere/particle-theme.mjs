@@ -1,17 +1,17 @@
 export function getParticleSphereThemePalette(isDark) {
   if (isDark) {
     return Object.freeze({
-      particleColor: "#d5fff9",
+      particleColor: "#bffff4",
       particleBlending: "normal",
       centerSphereColor: "#8ce8dc",
       centerSphereOpacity: 0.075,
       surfaceParticleMix: 0,
-      surfaceParticleBrightness: 1.2,
-      surfaceParticleOpacityFloor: 0.74,
+      surfaceParticleBrightness: 1.38,
+      surfaceParticleOpacityFloor: 0.86,
       surfaceParticleSizeScale: 1.95,
       surfaceDepthFadeFloor: 0.99,
       depthBrightnessNear: 1.12,
-      depthBrightnessFar: 0.74,
+      depthBrightnessFar: 0.86,
       innerParticleColor: "#75dcd1",
       innerParticleOpacity: 0.98,
       volumeColor: "#267d72",
