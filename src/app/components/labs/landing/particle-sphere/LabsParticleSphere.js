@@ -13,9 +13,6 @@ import { getParticleCameraDistance } from "./particle-responsive.mjs";
 import { getParticleSphereThemePalette } from "./particle-theme.mjs";
 import {
   getParticleBurstEnvelope,
-  getParticleBurstRadius,
-  getParticleCameraChoreography,
-  PARTICLE_CAMERA_ANTICIPATION_DISTANCE_RATIO,
   PARTICLE_BURST_EXPANSION,
   PARTICLE_BURST_STAGGER_SECONDS,
   PARTICLE_BURST_OUTWARD_SECONDS,
@@ -68,6 +65,7 @@ export default function LabsParticleSphere() {
     let renderer;
     let particleGeometry;
     let particleMaterial;
+    let sphereShellMaterial;
     let particles;
     let qualityProfile;
     let orbitGroup;
@@ -105,7 +103,6 @@ export default function LabsParticleSphere() {
 
     camera.position.set(0, 0, PARTICLE_SPHERE_CONFIG.cameraDistance);
     let idleCameraDistance = PARTICLE_SPHERE_CONFIG.cameraDistance;
-    let burstCameraDistance = PARTICLE_SPHERE_CONFIG.cameraDistance;
 
     const sphereGroup = new THREE.Group();
     scene.add(sphereGroup);
@@ -135,21 +132,6 @@ export default function LabsParticleSphere() {
 
       const burstTime = Number.isFinite(burstStartedAt) ? elapsed - burstStartedAt : -1;
       const burstAmount = getParticleBurstEnvelope(burstTime);
-      const cameraChoreography = getParticleCameraChoreography(burstTime);
-      const burstCameraTarget = THREE.MathUtils.lerp(
-        idleCameraDistance,
-        burstCameraDistance,
-        cameraChoreography.pullback,
-      );
-      const targetCameraDistance = burstCameraTarget
-        - idleCameraDistance
-          * PARTICLE_CAMERA_ANTICIPATION_DISTANCE_RATIO
-          * cameraChoreography.anticipation;
-      const cameraPullingBack = targetCameraDistance > camera.position.z;
-      const cameraFollowSpeed = cameraPullingBack ? 8 : 5.2;
-      const cameraEase = 1 - Math.exp(-delta * cameraFollowSpeed);
-      camera.position.z += (targetCameraDistance - camera.position.z) * cameraEase;
-
       if (particleMaterial) {
         particleMaterial.uniforms.uTime.value = elapsed;
         particleMaterial.uniforms.uBurst.value = burstAmount;
@@ -163,7 +145,7 @@ export default function LabsParticleSphere() {
       if (orbitGroup) {
         orbitGroup.rotation.y = -elapsed * PARTICLE_SPHERE_CONFIG.orbitSpeed;
         orbitGroup.rotation.z = Math.sin(elapsed * 0.08) * 0.012;
-        orbitGroup.userData.update?.(elapsed, burstAmount);
+        orbitGroup.userData.update?.(elapsed);
       }
 
 
@@ -232,27 +214,10 @@ export default function LabsParticleSphere() {
         width,
         height,
         fovDegrees: PARTICLE_SPHERE_CONFIG.cameraFov,
-        orbitRadius: 2.02,
+        orbitRadius: 2.26,
         fillRatio: 0.94,
       });
-      burstCameraDistance = getParticleCameraDistance({
-        width,
-        height,
-        fovDegrees: PARTICLE_SPHERE_CONFIG.cameraFov,
-        orbitRadius: getParticleBurstRadius(PARTICLE_SPHERE_CONFIG.radius),
-        fillRatio: 0.9,
-      });
-      const resizeBurstTime = Number.isFinite(burstStartedAt) ? elapsed - burstStartedAt : -1;
-      const resizeCameraChoreography = getParticleCameraChoreography(resizeBurstTime);
-      const resizeBurstCameraTarget = THREE.MathUtils.lerp(
-        idleCameraDistance,
-        burstCameraDistance,
-        resizeCameraChoreography.pullback,
-      );
-      camera.position.z = resizeBurstCameraTarget
-        - idleCameraDistance
-          * PARTICLE_CAMERA_ANTICIPATION_DISTANCE_RATIO
-          * resizeCameraChoreography.anticipation;
+      camera.position.z = idleCameraDistance;
       camera.updateProjectionMatrix();
 
       const nextProfile = getParticleQualityProfile({
@@ -370,6 +335,20 @@ export default function LabsParticleSphere() {
         blending: THREE.AdditiveBlending,
       });
 
+      sphereShellMaterial = new THREE.MeshBasicMaterial({
+        color: initialPalette.centerSphereColor,
+        transparent: true,
+        opacity: initialPalette.centerSphereOpacity,
+        depthWrite: false,
+        side: THREE.FrontSide,
+      });
+      const sphereShell = new THREE.Mesh(
+        new THREE.SphereGeometry(PARTICLE_SPHERE_CONFIG.radius * 0.94, 40, 32),
+        sphereShellMaterial,
+      );
+      sphereShell.renderOrder = -1;
+      sphereGroup.add(sphereShell);
+
       particles = new THREE.Points(particleGeometry, particleMaterial);
       // Burst positions extend beyond the resting geometry bounds. Let the
       // GPU clip individual points against the fixed canvas rather than
@@ -380,7 +359,7 @@ export default function LabsParticleSphere() {
       // Invisible raycast surface detects clicks and taps on the 3D sphere.
       // It is not rendered and does not alter the visible sphere geometry.
       sphereHitArea = new THREE.Mesh(
-        new THREE.SphereGeometry(1.52, 24, 18),
+        new THREE.SphereGeometry(PARTICLE_SPHERE_CONFIG.radius + 0.14, 24, 18),
         new THREE.MeshBasicMaterial({
           colorWrite: false,
           depthWrite: false,
@@ -413,6 +392,8 @@ export default function LabsParticleSphere() {
         particleMaterial.uniforms.uAmbientParticleColor.value.set(palette.ambientParticleColor);
         particleMaterial.uniforms.uAmbientParticleOpacity.value = palette.ambientParticleOpacity;
         particleMaterial.uniforms.uSparkleColor.value.set(palette.sparkleColor);
+        sphereShellMaterial.color.set(palette.centerSphereColor);
+        sphereShellMaterial.opacity = palette.centerSphereOpacity;
 
         orbitGroup.traverse((object) => {
           const material = object.material;

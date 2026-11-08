@@ -2,6 +2,8 @@ export function getParticleSphereThemePalette(isDark) {
   if (isDark) {
     return Object.freeze({
       particleColor: "#8ce8dc",
+      centerSphereColor: "#8ce8dc",
+      centerSphereOpacity: 0.16,
       surfaceParticleMix: 0.08,
       surfaceParticleBrightness: 1.45,
       surfaceParticleOpacityFloor: 0.1,
@@ -25,6 +27,8 @@ export function getParticleSphereThemePalette(isDark) {
 
   return Object.freeze({
     particleColor: "#103b37",
+    centerSphereColor: "#0b2926",
+    centerSphereOpacity: 0.12,
     surfaceParticleMix: 0.28,
     surfaceParticleBrightness: 1,
     surfaceParticleOpacityFloor: 0.012,

@@ -5,12 +5,8 @@ import test from "node:test";
 import { createSphereParticleData } from "../src/app/components/labs/landing/particle-sphere/particle-geometry.mjs";
 import {
   getParticleBurstEnvelope,
-  getParticleBurstRadius,
   getParticleBurstParticleEnvelope,
-  getParticleCameraChoreography,
   PARTICLE_BURST_EXPANSION,
-  getOrbitBurstSpeed,
-  ORBIT_BURST_SPEED_MULTIPLIER,
   isParticleBurstActive,
 } from "../src/app/components/labs/landing/particle-sphere/particle-interaction.mjs";
 import { getParticleCameraDistance } from "../src/app/components/labs/landing/particle-sphere/particle-responsive.mjs";
@@ -164,7 +160,7 @@ test("particle geometry is deterministic for a stable seed", () => {
   assert.deepEqual(first.layers, second.layers);
 });
 
-test("sphere world-space size stays fixed while camera framing adapts to mobile", () => {
+test("sphere and enlarged orbit framing stays fixed throughout particle bursts", () => {
   const radius = 1.38;
   const data = createSphereParticleData({
     surfaceCount: 180,
@@ -177,49 +173,36 @@ test("sphere world-space size stays fixed while camera framing adapts to mobile"
     width: 375,
     height: 520,
     fovDegrees: 42,
-    orbitRadius: 2.02,
+    orbitRadius: 2.26,
     fillRatio: 0.92,
   });
   const desktopDistance = getParticleCameraDistance({
     width: 1440,
     height: 820,
     fovDegrees: 42,
-    orbitRadius: 2.02,
+    orbitRadius: 2.26,
     fillRatio: 0.94,
-  });
-  const burstRadius = getParticleBurstRadius(radius);
-  const mobileBurstDistance = getParticleCameraDistance({
-    width: 375,
-    height: 520,
-    fovDegrees: 42,
-    orbitRadius: burstRadius,
-    fillRatio: 0.9,
-  });
-  const desktopBurstDistance = getParticleCameraDistance({
-    width: 1440,
-    height: 820,
-    fovDegrees: 42,
-    orbitRadius: burstRadius,
-    fillRatio: 0.9,
   });
 
   assert.ok(Number.isFinite(mobileDistance));
   assert.ok(Number.isFinite(desktopDistance));
-  assert.ok(Number.isFinite(mobileBurstDistance));
-  assert.ok(Number.isFinite(desktopBurstDistance));
   assert.ok(mobileDistance > desktopDistance);
-  assert.ok(mobileBurstDistance > mobileDistance);
-  assert.ok(desktopBurstDistance > desktopDistance);
   assert.match(rendererSource, /idleCameraDistance = getParticleCameraDistance/);
-  assert.match(rendererSource, /orbitRadius: 2\.02/);
-  assert.match(rendererSource, /burstCameraDistance = getParticleCameraDistance/);
-  assert.match(rendererSource, /getParticleBurstRadius\(PARTICLE_SPHERE_CONFIG\.radius\)/);
-  assert.match(rendererSource, /camera\.position\.z \+= \(targetCameraDistance - camera\.position\.z\) \* cameraEase/);
+  assert.ok(rendererSource.includes("orbitRadius: 2.26"));
+  assert.ok(rendererSource.includes("camera.position.z = idleCameraDistance"));
+  assert.ok(!rendererSource.includes("burstCameraDistance"));
+  assert.ok(!rendererSource.includes("getParticleCameraChoreography"));
+  assert.ok(!rendererSource.includes("camera.position.z +="));
   assert.ok(constantsSource.includes("radius: 1.38"));
-  assert.match(rendererSource, /particles\.frustumCulled = false/);
+  assert.ok(orbitSource.includes("radiusX: 1.74") && orbitSource.includes("radiusY: 1.02"));
+  assert.ok(orbitSource.includes("radiusX: 1.60") && orbitSource.includes("radiusY: 0.82"));
+  assert.ok(orbitSource.includes("radiusX: 1.90") && orbitSource.includes("radiusY: 0.92"));
+  assert.ok(rendererSource.includes("particles.frustumCulled = false"));
   assert.match(rendererSource, /className="absolute inset-0 h-full w-full overflow-hidden"/);
-  assert.match(artworkSource, /aspect-\[1\.08\/1\] min-h-\[280px\].*overflow-hidden/);
-  assert.doesNotMatch(rendererSource, /getSphereScale|getSphereContraction|\.scale\.setScalar/);
+  assert.ok(artworkSource.includes("aspect-[1.08/1] min-h-[280px]") && artworkSource.includes("overflow-hidden"));
+  assert.ok(!rendererSource.includes("getSphereScale"));
+  assert.ok(!rendererSource.includes("getSphereContraction"));
+  assert.ok(!rendererSource.includes(".scale.setScalar"));
 
   for (let index = 0; index < data.surfaceCount; index += 1) {
     const offset = index * 3;
@@ -233,7 +216,7 @@ test("sphere world-space size stays fixed while camera framing adapts to mobile"
   }
 });
 
-test("light and dark themes use distinct particle, sparkle and glow palettes", () => {
+test("light and dark themes use distinct particle, sparkle and translucent sphere palettes", () => {
   const light = getParticleSphereThemePalette(false);
   const dark = getParticleSphereThemePalette(true);
 
@@ -242,11 +225,15 @@ test("light and dark themes use distinct particle, sparkle and glow palettes", (
   assert.notEqual(light.glowColor, dark.glowColor);
   assert.notEqual(light.glowOpacity, dark.glowOpacity);
   assert.equal(light.particleColor, "#103b37");
+  assert.equal(light.centerSphereColor, "#0b2926");
+  assert.equal(light.centerSphereOpacity, 0.12);
   assert.equal(light.innerParticleColor, "#0b2926");
   assert.equal(light.innerParticleOpacity, 0.58);
   assert.equal(light.sparkleColor, "#041816");
   assert.equal(light.glowColor, "#0a2926");
   assert.equal(dark.particleColor, "#8ce8dc");
+  assert.equal(dark.centerSphereColor, "#8ce8dc");
+  assert.equal(dark.centerSphereOpacity, 0.16);
   assert.equal(light.surfaceParticleMix, 0.28);
   assert.equal(dark.surfaceParticleMix, 0.08);
   assert.equal(light.surfaceParticleBrightness, 1);
@@ -388,11 +375,16 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.match(rendererSource, /palette\.ambientParticleOpacity/);
   assert.doesNotMatch(rendererSource, /new THREE\.SphereGeometry\(0\.94/);
   assert.doesNotMatch(rendererSource, /let glow;/);
+  assert.ok(rendererSource.includes("new THREE.SphereGeometry(PARTICLE_SPHERE_CONFIG.radius * 0.94, 40, 32)"));
+  assert.ok(rendererSource.includes("sphereShellMaterial.color.set(palette.centerSphereColor)"));
+  assert.ok(rendererSource.includes("sphereShellMaterial.opacity = palette.centerSphereOpacity"));
   assert.match(rendererSource, /case "orbit-particle"/);
   assert.match(rendererSource, /case "orbit-particle-glow"/);
   assert.match(rendererSource, /getParticleCameraDistance/);
-  assert.match(rendererSource, /orbitGroup\.userData\.update\?\.\(elapsed, burstAmount\)/);
-  assert.doesNotMatch(rendererSource, /uContraction|getSphereScale|getSphereContraction|\.scale\.setScalar/);
+  assert.ok(rendererSource.includes("orbitGroup.userData.update?.(elapsed)"));
+  assert.ok(!rendererSource.includes("getSphereScale"));
+  assert.ok(!rendererSource.includes("getSphereContraction"));
+  assert.ok(!rendererSource.includes(".scale.setScalar"));
   assert.ok(rendererSource.includes("renderer?.dispose()"));
   assert.match(rendererSource, /webglcontextlost/);
   assert.match(rendererSource, /disposed = false/);
@@ -414,37 +406,20 @@ test("particle burst uses staggered per-particle recovery without changing base 
   assert.equal(getParticleBurstParticleEnvelope(Number.NaN, 0.5), 0);
 
   assert.equal(PARTICLE_BURST_EXPANSION, 1.85);
-  assert.ok(getParticleBurstRadius(1.38) > 4.8);
-  assert.throws(() => getParticleBurstRadius(0), RangeError);
-  assert.throws(() => getParticleBurstRadius(Number.NaN), RangeError);
-  assert.equal(getOrbitBurstSpeed(0), 1);
-  assert.equal(getOrbitBurstSpeed(0.45), 1.65);
-  assert.ok(getOrbitBurstSpeed(1.35) > 1);
-  assert.equal(getOrbitBurstSpeed(2.11), 1);
   assert.equal(isParticleBurstActive(0.8), true);
   assert.equal(isParticleBurstActive(1.35), true);
   assert.equal(isParticleBurstActive(2.11), false);
 });
 
-test("camera choreography anticipates the burst before delayed pullback and smooth recovery", () => {
-  const idle = getParticleCameraChoreography(-1);
-  const launch = getParticleCameraChoreography(0);
-  const anticipation = getParticleCameraChoreography(0.12);
-  const anticipationRelease = getParticleCameraChoreography(0.28);
-  const delayedPullback = getParticleCameraChoreography(0.14);
-  const fullPullback = getParticleCameraChoreography(0.59);
-  const recovery = getParticleCameraChoreography(1.4);
-  const returned = getParticleCameraChoreography(2.25);
-
-  assert.deepEqual(idle, { anticipation: 0, pullback: 0 });
-  assert.deepEqual(launch, { anticipation: 0, pullback: 0 });
-  assert.equal(anticipation.anticipation, 1);
-  assert.equal(anticipation.pullback, 0);
-  assert.equal(anticipationRelease.anticipation, 0);
-  assert.equal(delayedPullback.pullback, 0);
-  assert.equal(fullPullback.pullback, 1);
-  assert.ok(recovery.pullback > 0);
-  assert.equal(returned.pullback, 0);
+test("particle bursts leave the camera and orbital paths at their resting size", () => {
+  assert.ok(rendererSource.includes("camera.position.z = idleCameraDistance"));
+  assert.ok(!rendererSource.includes("burstCameraDistance"));
+  assert.ok(!rendererSource.includes("getParticleCameraChoreography"));
+  assert.ok(!rendererSource.includes("camera.position.z +="));
+  assert.ok(rendererSource.includes("orbitGroup.userData.update?.(elapsed)"));
+  assert.ok(orbitSource.includes("group.userData.update = (elapsed) =>"));
+  assert.ok(!orbitSource.includes("burstSpeed"));
+  assert.ok(!orbitSource.includes("ORBIT_BURST_SPEED_MULTIPLIER"));
 });
 
 test("renderer maps pointer hits to the sphere and restarts burst on a short tap", () => {
@@ -464,15 +439,15 @@ test("renderer maps pointer hits to the sphere and restarts burst on a short tap
   assert.match(rendererSource, /releasePointerCapture\?\.\(event\.pointerId\)/);
 });
 
-test("orbit particles move continuously and retain their orbital path", () => {
-  assert.match(orbitSource, /group\.userData\.update = \(elapsed, burstAmount = 0\)/);
-  assert.match(orbitSource, /runner\.position\.copy\(getOrbitPoint\(THREE, spec, progressByRunner\[index\]\)\)/);
-  assert.match(orbitSource, /ORBIT_BURST_SPEED_MULTIPLIER - 1/);
-  assert.equal(ORBIT_BURST_SPEED_MULTIPLIER, 1.65);
-  assert.match(orbitSource, /delta \* spec\.speed \* burstSpeed/);
+test("orbit particles move continuously without burst-linked speed changes", () => {
+  assert.ok(orbitSource.includes("group.userData.update = (elapsed) =>"));
+  assert.match(orbitSource, /runner\.position\.copy\(getOrbitPoint/);
+  assert.ok(!orbitSource.includes("ORBIT_BURST_SPEED_MULTIPLIER"));
+  assert.ok(!orbitSource.includes("burstSpeed"));
+  assert.ok(orbitSource.includes("delta * spec.speed"));
   assert.match(orbitSource, /end: Math\.PI \* 2/);
   assert.match(orbitSource, /orbit-particle-glow/);
-  assert.ok(rendererSource.includes("orbitGroup.userData.update?.(elapsed, burstAmount)"));
+  assert.ok(rendererSource.includes("orbitGroup.userData.update?.(elapsed)"));
 });
 
 test("Labs hero applies one responsive dark radial background without a separate overlay", async () => {

@@ -1,9 +1,7 @@
-import { ORBIT_BURST_SPEED_MULTIPLIER } from "./particle-interaction.mjs";
-
 export const ORBIT_SPECS = [
   {
-    radiusX: 1.56,
-    radiusY: 0.91,
+    radiusX: 1.74,
+    radiusY: 1.02,
     rotation: [0.92, 0.12, -0.15],
     opacity: 0.12,
     start: 0,
@@ -13,8 +11,8 @@ export const ORBIT_SPECS = [
     particleSize: 0.012,
   },
   {
-    radiusX: 1.43,
-    radiusY: 0.73,
+    radiusX: 1.60,
+    radiusY: 0.82,
     rotation: [1.26, -0.34, 0.48],
     opacity: 0.082,
     start: 0,
@@ -24,8 +22,8 @@ export const ORBIT_SPECS = [
     particleSize: 0.01,
   },
   {
-    radiusX: 1.7,
-    radiusY: 0.82,
+    radiusX: 1.90,
+    radiusY: 0.92,
     rotation: [0.48, 0.42, -0.62],
     opacity: 0.058,
     start: 0,
@@ -112,13 +110,12 @@ export function createParticleOrbits(THREE) {
   let lastElapsed = 0;
   const progressByRunner = orbiters.map(({ spec }) => spec.phase);
 
-  group.userData.update = (elapsed, burstAmount = 0) => {
+  group.userData.update = (elapsed) => {
     const delta = Math.max(0, elapsed - lastElapsed);
-    const burstSpeed = 1 + Math.max(0, Math.min(1, burstAmount)) * (ORBIT_BURST_SPEED_MULTIPLIER - 1);
     lastElapsed = elapsed;
 
     orbiters.forEach(({ runner, spec }, index) => {
-      progressByRunner[index] = (progressByRunner[index] + delta * spec.speed * burstSpeed) % 1;
+      progressByRunner[index] = (progressByRunner[index] + delta * spec.speed) % 1;
       runner.position.copy(getOrbitPoint(THREE, spec, progressByRunner[index]));
     });
   };

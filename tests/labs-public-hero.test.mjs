@@ -106,17 +106,20 @@ test("hero artwork is decorative, lazy-loads Three.js and respects reduced motio
   assert.match(artworkSource, /reducedMotion\s*\|\|\s*!isInView/);
   assert.match(artworkSource, /StaticParticleSphereArtwork/);
   assert.match(staticArtworkSource, /data-static-particle-sphere=""/);
+  assert.ok(staticArtworkSource.includes("w-[70%]"));
+  assert.ok(staticArtworkSource.includes("dark:bg-[radial-gradient"));
 });
 
-test("initial artwork is a particle-only sphere with three live orbit definitions", () => {
+test("initial artwork reuses the particle sphere and shows its translucent center shell", () => {
   assert.match(artworkSource, /StaticParticleSphereArtwork/);
   assert.match(staticArtworkSource, /createSphereParticleData/);
   assert.match(staticArtworkSource, /STATIC_PARTICLES\.map/);
   assert.match(staticArtworkSource, /STATIC_ORBITS\.map/);
   assert.match(staticArtworkSource, /<svg/);
   assert.match(orbitSource, /export const ORBIT_SPECS/);
-  assert.doesNotMatch(staticArtworkSource, /bg-\[radial-gradient/);
-  assert.doesNotMatch(staticArtworkSource, /rounded-full border/);
+  assert.ok(staticArtworkSource.includes("dark:bg-[radial-gradient"));
+  assert.ok(staticArtworkSource.includes("rounded-full border"));
+  assert.ok(staticArtworkSource.includes("dark:bg-[radial-gradient"));
   assert.match(staticArtworkSource, /data-static-particle-sphere=""/);
 });
 

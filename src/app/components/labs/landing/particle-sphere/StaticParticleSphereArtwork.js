@@ -160,6 +160,7 @@ export default function StaticParticleSphereArtwork() {
       data-static-particle-sphere=""
       className="pointer-events-none absolute inset-0 overflow-hidden"
     >
+      <div className="absolute left-1/2 top-1/2 aspect-square w-[70%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#0b2926]/20 bg-[radial-gradient(circle_at_38%_32%,rgba(22,143,132,0.13),rgba(10,41,38,0.10)_58%,rgba(10,41,38,0.035)_82%)] dark:border-[#8ce8dc]/22 dark:bg-[radial-gradient(circle_at_38%_32%,rgba(140,232,220,0.22),rgba(98,216,199,0.16)_58%,rgba(98,216,199,0.055)_82%)]" />
       <svg
         aria-hidden="true"
         viewBox="0 0 600 600"
