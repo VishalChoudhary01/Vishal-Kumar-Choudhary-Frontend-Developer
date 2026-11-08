@@ -192,7 +192,7 @@ export default function StaticParticleSphereArtwork() {
                   cx={particle.x}
                   cy={particle.y}
                   r={particle.radius * 3.1}
-                  className="fill-[#00100d] dark:fill-[#f3fffc]"
+                  className="fill-[#001b16] dark:fill-[#d4f5ed]"
                   opacity="0.22"
                   filter="url(#static-particle-glow)"
                 />
@@ -205,8 +205,8 @@ export default function StaticParticleSphereArtwork() {
                   particle.bright || particle.ambient
                     ? "fill-[#031b17] dark:fill-[#f3fffc]"
                     : particle.inner
-                      ? "fill-[#001d19] dark:fill-[#e0fff8]"
-                      : "fill-[#001713] dark:fill-[#e8fffa] opacity-[0.62] dark:opacity-[0.78]"
+                      ? "fill-[#00352e] dark:fill-[#58ad9f]"
+                      : "fill-[#002b25] dark:fill-[#348f83] opacity-[0.62] dark:opacity-[0.78]"
                 }
                 opacity={particle.opacity}
               />

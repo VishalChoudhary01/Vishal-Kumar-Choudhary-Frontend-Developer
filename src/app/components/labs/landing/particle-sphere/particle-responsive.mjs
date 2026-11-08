@@ -68,3 +68,24 @@ export function getParticleBurstSpreadScale({
     Math.min(5, Math.max(1, verticalReach / (safeArtworkHeight / 2))),
   ];
 }
+
+/**
+ * Shifts the perspective projection center to the artwork figure while
+ * keeping the camera optical axis aligned with the sphere center.
+ */
+export function getParticleCameraProjectionShift({
+  width,
+  height,
+  offsetX = 0,
+  offsetY = 0,
+} = {}) {
+  const safeWidth = positiveOr(width, DEFAULTS.width);
+  const safeHeight = positiveOr(height, DEFAULTS.height);
+  const safeOffsetX = Number.isFinite(offsetX) ? offsetX : 0;
+  const safeOffsetY = Number.isFinite(offsetY) ? offsetY : 0;
+
+  return {
+    x: -(safeOffsetX * 2) / safeWidth,
+    y: (safeOffsetY * 2) / safeHeight,
+  };
+}

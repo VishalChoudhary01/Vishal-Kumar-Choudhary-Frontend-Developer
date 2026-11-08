@@ -12,6 +12,7 @@ import { createParticleOrbits } from "./particle-orbits";
 import {
   getParticleBurstSpreadScale,
   getParticleCameraDistance,
+  getParticleCameraProjectionShift,
 } from "./particle-responsive.mjs";
 import { getParticleSphereThemePalette } from "./particle-theme.mjs";
 import {
@@ -240,8 +241,6 @@ export default function LabsParticleSphere() {
         orbitRadius: 2.26,
         fillRatio: 0.94,
       });
-      camera.position.z = idleCameraDistance;
-      camera.updateProjectionMatrix();
 
       const worldUnitsPerPixel = (
         2 * idleCameraDistance
@@ -253,6 +252,22 @@ export default function LabsParticleSphere() {
         0,
       );
       artworkGroup.position.copy(artworkAnchor);
+
+      // Aim the camera at the sphere itself, then shift the projection center
+      // to keep the artwork in its existing right-hand hero column.
+      camera.position.set(artworkAnchor.x, artworkAnchor.y, idleCameraDistance);
+      camera.lookAt(artworkAnchor);
+      camera.updateProjectionMatrix();
+      const projectionShift = getParticleCameraProjectionShift({
+        width,
+        height,
+        offsetX: artworkOffsetX,
+        offsetY: artworkOffsetY,
+      });
+      camera.projectionMatrix.elements[8] = projectionShift.x;
+      camera.projectionMatrix.elements[9] = projectionShift.y;
+      camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
+      camera.updateMatrixWorld();
 
       const [spreadX, spreadY] = getParticleBurstSpreadScale({
         heroWidth: width,
@@ -389,7 +404,9 @@ export default function LabsParticleSphere() {
         transparent: true,
         depthTest: true,
         depthWrite: false,
-        blending: THREE.AdditiveBlending,
+        blending: initialPalette.particleBlending === "normal"
+          ? THREE.NormalBlending
+          : THREE.AdditiveBlending,
       });
 
       sphereShellMaterial = new THREE.MeshPhongMaterial({
@@ -433,11 +450,17 @@ export default function LabsParticleSphere() {
       artworkGroup.add(orbitGroup);
 
       const syncThemeColor = () => {
-        const palette = getParticleSphereThemePalette(
-          document.documentElement.classList.contains("dark"),
-        );
+        const isDark = document.documentElement.classList.contains("dark");
+        const palette = getParticleSphereThemePalette(isDark);
 
         const brandColor = palette.particleColor;
+        const blending = palette.particleBlending === "normal"
+          ? THREE.NormalBlending
+          : THREE.AdditiveBlending;
+        if (particleMaterial.blending !== blending) {
+          particleMaterial.blending = blending;
+          particleMaterial.needsUpdate = true;
+        }
 
         particleMaterial.uniforms.uBrandColor.value.set(brandColor);
         particleMaterial.uniforms.uSurfaceParticleMix.value = palette.surfaceParticleMix;

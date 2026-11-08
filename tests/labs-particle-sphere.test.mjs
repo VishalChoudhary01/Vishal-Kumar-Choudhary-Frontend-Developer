@@ -12,6 +12,7 @@ import {
 import {
   getParticleBurstSpreadScale,
   getParticleCameraDistance,
+  getParticleCameraProjectionShift,
 } from "../src/app/components/labs/landing/particle-sphere/particle-responsive.mjs";
 import { getParticleSphereThemePalette } from "../src/app/components/labs/landing/particle-sphere/particle-theme.mjs";
 import {
@@ -192,7 +193,8 @@ test("sphere and enlarged orbit framing stays fixed throughout particle bursts",
   assert.ok(mobileDistance > desktopDistance);
   assert.match(rendererSource, /idleCameraDistance = getParticleCameraDistance/);
   assert.ok(rendererSource.includes("orbitRadius: 2.26"));
-  assert.ok(rendererSource.includes("camera.position.z = idleCameraDistance"));
+  assert.ok(rendererSource.includes("camera.position.set(artworkAnchor.x, artworkAnchor.y, idleCameraDistance)"));
+  assert.ok(rendererSource.includes("camera.lookAt(artworkAnchor)"));
   assert.ok(!rendererSource.includes("burstCameraDistance"));
   assert.ok(!rendererSource.includes("getParticleCameraChoreography"));
   assert.ok(!rendererSource.includes("camera.position.z +="));
@@ -227,29 +229,31 @@ test("light and dark themes use distinct particle, sparkle and translucent spher
   assert.notEqual(light.sparkleColor, dark.sparkleColor);
   assert.notEqual(light.glowColor, dark.glowColor);
   assert.notEqual(light.glowOpacity, dark.glowOpacity);
-  assert.equal(light.particleColor, "#001713");
+  assert.equal(light.particleBlending, "normal");
+  assert.equal(dark.particleBlending, "additive");
+  assert.equal(light.particleColor, "#002b25");
   assert.equal(light.centerSphereColor, "#0b2926");
   assert.equal(light.centerSphereOpacity, 0.1);
-  assert.equal(light.innerParticleColor, "#001d19");
+  assert.equal(light.innerParticleColor, "#00352e");
   assert.equal(light.innerParticleOpacity, 0.82);
-  assert.equal(light.sparkleColor, "#031b17");
+  assert.equal(light.sparkleColor, "#00221c");
   assert.equal(light.glowColor, "#0a2926");
-  assert.equal(dark.particleColor, "#e8fffa");
+  assert.equal(dark.particleColor, "#348f83");
   assert.equal(dark.centerSphereColor, "#8ce8dc");
   assert.equal(dark.centerSphereOpacity, 0.13);
   assert.equal(light.surfaceParticleMix, 0);
   assert.equal(dark.surfaceParticleMix, 0);
-  assert.equal(light.surfaceParticleBrightness, 1.55);
-  assert.equal(dark.surfaceParticleBrightness, 2.35);
-  assert.equal(light.surfaceParticleOpacityFloor, 0.2);
-  assert.equal(dark.surfaceParticleOpacityFloor, 0.42);
-  assert.equal(light.surfaceParticleSizeScale, 1.28);
-  assert.equal(light.surfaceDepthFadeFloor, 0.84);
+  assert.equal(light.surfaceParticleBrightness, 1.35);
+  assert.equal(dark.surfaceParticleBrightness, 1.48);
+  assert.equal(light.surfaceParticleOpacityFloor, 0.48);
+  assert.equal(dark.surfaceParticleOpacityFloor, 0.48);
+  assert.equal(light.surfaceParticleSizeScale, 1.34);
+  assert.equal(light.surfaceDepthFadeFloor, 0.9);
   assert.equal(dark.surfaceParticleSizeScale, 1.7);
-  assert.equal(dark.surfaceDepthFadeFloor, 0.9);
-  assert.equal(dark.innerParticleColor, "#e0fff8");
+  assert.equal(dark.surfaceDepthFadeFloor, 0.94);
+  assert.equal(dark.innerParticleColor, "#58ad9f");
   assert.equal(dark.innerParticleOpacity, 0.98);
-  assert.equal(dark.sparkleColor, "#f3fffc");
+  assert.equal(dark.sparkleColor, "#d4f5ed");
   assert.equal(dark.sparkleChanceScale, 1.45);
   assert.equal(dark.sparkleIntensity, 1.5);
   assert.equal(dark.sparkleSizeScale, 1.3);
@@ -262,11 +266,11 @@ test("light and dark themes use distinct particle, sparkle and translucent spher
   assert.equal(light.surfaceShimmerOpacity, 0.024);
   assert.equal(dark.glowColor, "#061c18");
   assert.equal(dark.glowOpacity, 0.028);
-  assert.equal(light.volumeColor, "#06473d");
-  assert.equal(dark.volumeColor, "#a6fff2");
+  assert.equal(light.volumeColor, "#075447");
+  assert.equal(dark.volumeColor, "#267d72");
   assert.ok(dark.volumeIntensity > light.volumeIntensity);
   assert.equal(light.ambientParticleOpacity, 0.72);
-  assert.equal(dark.ambientParticleOpacity, 0.9);
+  assert.equal(dark.ambientParticleOpacity, 0.82);
   assert.notEqual(light.orbitParticleColor, dark.orbitParticleColor);
   assert.notEqual(light.orbitParticleGlowColor, dark.orbitParticleGlowColor);
   assert.ok(light.orbitParticleOpacity > 0 && light.orbitParticleOpacity <= 1);
@@ -351,6 +355,26 @@ test("particle geometry rejects unsafe counts and invalid radius values", () => 
   );
 });
 
+test("camera projection keeps the sphere optically round while shifting it into the artwork column", () => {
+  const desktop = getParticleCameraProjectionShift({
+    width: 1840,
+    height: 797,
+    offsetX: 430,
+    offsetY: 0,
+  });
+  const mobile = getParticleCameraProjectionShift({
+    width: 390,
+    height: 1080,
+    offsetX: 0,
+    offsetY: 180,
+  });
+
+  assert.ok(Math.abs(desktop.x + (860 / 1840)) < 0.000001);
+  assert.equal(desktop.y, 0);
+  assert.ok(Math.abs(mobile.x) < 0.000001);
+  assert.ok(Math.abs(mobile.y - (360 / 1080)) < 0.000001);
+});
+
 test("renderer uses one GPU point system and pauses when it cannot be seen", () => {
   assert.match(rendererSource, /new THREE\.Points\(particleGeometry, particleMaterial\)/);
   assert.match(rendererSource, /requestAnimationFrame/);
@@ -378,6 +402,13 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.match(rendererSource, /uSurfaceParticleMix/);
   assert.match(rendererSource, /uSurfaceParticleBrightness/);
   assert.match(rendererSource, /uSurfaceParticleOpacityFloor/);
+  assert.ok(rendererSource.includes("camera.position.set(artworkAnchor.x, artworkAnchor.y, idleCameraDistance)"));
+  assert.ok(rendererSource.includes("camera.lookAt(artworkAnchor)"));
+  assert.ok(rendererSource.includes("camera.projectionMatrix.elements[8] = projectionShift.x"));
+  assert.ok(rendererSource.includes("camera.projectionMatrix.elements[9] = projectionShift.y"));
+  assert.ok(rendererSource.includes("camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert()"));
+  assert.ok(rendererSource.includes("THREE.NormalBlending"));
+  assert.ok(rendererSource.includes("initialPalette.particleBlending"));
   assert.match(rendererSource, /uSurfaceDepthFadeFloor/);
   assert.match(rendererSource, /uSurfaceParticleSizeScale/);
   assert.match(rendererSource, /palette\.surfaceParticleMix/);
@@ -443,7 +474,8 @@ test("particle burst uses staggered per-particle recovery without changing base 
 });
 
 test("particle bursts leave the camera and orbital paths at their resting size", () => {
-  assert.ok(rendererSource.includes("camera.position.z = idleCameraDistance"));
+  assert.ok(rendererSource.includes("camera.position.set(artworkAnchor.x, artworkAnchor.y, idleCameraDistance)"));
+  assert.ok(rendererSource.includes("camera.lookAt(artworkAnchor)"));
   assert.ok(!rendererSource.includes("burstCameraDistance"));
   assert.ok(!rendererSource.includes("getParticleCameraChoreography"));
   assert.ok(!rendererSource.includes("camera.position.z +="));
