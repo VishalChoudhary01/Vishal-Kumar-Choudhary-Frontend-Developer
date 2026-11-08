@@ -107,13 +107,13 @@ test("hero artwork is decorative, lazy-loads Three.js and respects reduced motio
   assert.match(artworkSource, /StaticParticleSphereArtwork/);
   assert.match(staticArtworkSource, /data-static-particle-sphere=""/);
   assert.ok(staticArtworkSource.includes("dark:bg-[radial-gradient"));
-  assert.ok(staticArtworkSource.includes("dark:fill-[#348f83]"));
+  assert.ok(staticArtworkSource.includes("dark:fill-[#55bfb2]"));
   assert.ok(staticArtworkSource.includes("w-[40%]"));
   assert.ok(staticArtworkSource.includes("circle_at_50%_50%"));
   assert.ok(!staticArtworkSource.includes("circle_at_38%_32%"));
-  assert.ok(staticArtworkSource.includes("fill-[#002b25]"));
-  assert.ok(staticArtworkSource.includes("dark:opacity-[0.78]"));
-  assert.ok(staticArtworkSource.includes("dark:fill-[#d4f5ed]"));
+  assert.ok(staticArtworkSource.includes("fill-[#001f1a]"));
+  assert.ok(staticArtworkSource.includes("dark:opacity-[0.94]"));
+  assert.ok(staticArtworkSource.includes("dark:fill-[#58cbbf]"));
   assert.ok(staticArtworkSource.includes('inner: isInner'));
 });
 
