@@ -27,6 +27,18 @@ const filterHookSource = await readFile(
   new URL("../src/app/hooks/labs/useLabCategoryFilter.js", import.meta.url),
   "utf8",
 );
+const likeButtonSource = await readFile(
+  new URL("../src/app/components/labs/LabLikeButton.js", import.meta.url),
+  "utf8",
+);
+const shellSource = await readFile(
+  new URL("../src/app/components/labs/LabsPageShell.js", import.meta.url),
+  "utf8",
+);
+const navbarSource = await readFile(
+  new URL("../src/app/components/layout/Navbar.js", import.meta.url),
+  "utf8",
+);
 
 test("category options include only categories represented by published entries", () => {
   const options = buildLabCategoryOptions(
@@ -109,7 +121,6 @@ test("progressive loading remains bounded to six items per action", () => {
   assert.match(loadMoreSource, /requestPublicPage/);
 });
 
-
 test("server collection summary prevents the current page from understating global counts", () => {
   const options = buildLabCategoryOptions(
     [{ slug: "magnetic-interaction", category: "Interface Interactions" }],
@@ -128,4 +139,30 @@ test("server collection summary prevents the current page from understating glob
     { ...categories[2], count: 12 },
     { ...categories[3], count: 4 },
   ]);
+});
+
+test("experiment like action is grouped with its card but stays outside the navigation link", () => {
+  assert.ok(collectionSource.includes("aria-labelledby={titleId}"));
+  assert.ok(collectionSource.includes("id={titleId}"));
+  assert.ok(collectionSource.includes('role="group"'));
+  assert.ok(collectionSource.includes("aria-label={`Actions for ${experiment.title}`}"));
+  assert.ok(collectionSource.includes("experimentTitle={experiment.title}"));
+  assert.ok(collectionSource.indexOf("</Link>") < collectionSource.indexOf('role="group"'));
+  assert.ok(collectionSource.indexOf('role="group"') < collectionSource.indexOf("<LabLikeButton"));
+  assert.ok(likeButtonSource.includes("aria-label={data?.liked ? `Unlike ${experimentTitle}` : `Like ${experimentTitle}`}"));
+  assert.ok(likeButtonSource.includes('compact ? "h-11 min-w-[5.5rem] px-3 sm:h-9 sm:min-w-0 sm:px-2.5"'));
+});
+
+test("collection cards use one column on mobile, two on tablet and three on wide desktop", () => {
+  assert.ok(collectionSource.includes("grid-cols-1 items-stretch gap-x-5"));
+  assert.ok(collectionSource.includes("sm:grid-cols-2"));
+  assert.ok(collectionSource.includes("xl:grid-cols-3"));
+  assert.ok(collectionSource.includes("(max-width: 1279px) 50vw"));
+  assert.ok(collectionSource.includes("text-[clamp(2.15rem,7vw,2.6rem)]"));
+});
+
+test("the Labs-only navbar uses a solid scrolled surface without changing the default navbar", () => {
+  assert.ok(shellSource.includes("solidScrolledSurface"));
+  assert.ok(navbarSource.includes('solidScrolledSurface ? "bg-surface-elevated/95"'));
+  assert.ok(navbarSource.includes('solidScrolledSurface ? "lg:bg-surface-elevated/95"'));
 });
