@@ -1,7 +1,7 @@
 # Public Labs and Owner Workspace — Current Engineering Map
 
 **Audited branch:** `feat/labs-platform-integration`  
-**Current-state date:** 2026-11-07  
+**Current-state date:** 2026-11-08  
 **Authority:** This guide describes the routes and behavior present in this branch. The PRD and retained design documents define product requirements; accepted superseding Labs decisions are recorded in [ADR-018](../DECISIONS.md#adr-018--7-november-labs-catalogue-detail-owner-and-analytics-supersession).
 
 > **Important boundary:** Public Labs is currently a source-backed custom-experiment catalogue with a static detail page. The owner compiler, temporary Run preview, immutable artifact build and public artifact Route Handler are separate capabilities. The public detail route does not mount the interactive published artifact.
@@ -154,6 +154,8 @@ The collection dashboard and `/admin/labs/analytics/[slug]` display the metrics 
 **Current implementation mismatch:** the experiment analytics detail page currently includes a panel that resolves active verified `LabLike` records to Better Auth user names and masked emails and paginates/searches that list. This panel must be removed or redesigned to show aggregates only before the implementation can be called compliant with the accepted privacy decision. The current public Privacy Policy already describes aggregate-only reporting.
 
 ## 8. Source Library and the removed Initialize action
+
+The Sources inventory now lists owner-created MongoDB experiments only. The four code-owned runtime entries — `magnetic-interaction`, `scroll-driven-text-reveal`, `gradient-bloom` and `generative-particle-field` — are intentionally omitted from this owner-created inventory. Their definitions in `labsExperiments.js`, runtime components, lazy registry entries and the Magnetic Button source-project generator remain in the codebase; this display change does not delete source files, runtime behavior or saved database history.
 
 `/admin/labs/sources` renders the source inventory. The former top-level Initialize sources navigation action and its icon import were removed. This change removed the visible page trigger; it did not delete every import capability.
 

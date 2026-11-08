@@ -266,7 +266,7 @@ export default function LabSourceInventory() {
             Experiment workspace
           </h2>
           <p className="mt-1 max-w-2xl text-xs leading-5 text-text-tertiary">
-            Use New gallery experiment to create a new public card. Create source on a built-in row only adds protected code to that existing card. New custom cards stay private until their exact saved version is successfully built and published.
+            Only owner-created experiments appear here. New gallery experiments stay private until their exact saved source version is successfully built and published.
           </p>
         </div>
         <div className="flex items-center gap-2">

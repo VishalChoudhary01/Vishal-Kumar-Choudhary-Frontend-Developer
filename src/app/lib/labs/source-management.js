@@ -269,27 +269,6 @@ export async function listOwnerLabSources({ user }) {
     };
   }
 
-  const builtInItems = publishedLabExperiments.map((experiment) => {
-    const head = headBySlug.get(experiment.slug) || null;
-    const versionInfo = versionBySlug.get(experiment.slug);
-
-    return {
-      slug: experiment.slug,
-      title: experiment.title,
-      description: experiment.description,
-      category: experiment.category,
-      isCustom: false,
-      hasSource: Boolean(head),
-      published: head?.published === true,
-      draftVersionId: head?.draftVersionId || null,
-      publishedVersionId: head?.publishedVersionId || null,
-      legacyVersion: head?.version || null,
-      latestVersion: versionInfo?.latestVersion || null,
-      versionCount: versionInfo?.versionCount || 0,
-      updatedAt: head?.updatedAt ? new Date(head.updatedAt).toISOString() : null,
-    };
-  });
-
   const customItems = customExperiments.map((experiment) => {
     const head = headBySlug.get(experiment.slug) || null;
     const versionInfo = versionBySlug.get(experiment.slug);
@@ -315,7 +294,7 @@ export async function listOwnerLabSources({ user }) {
     };
   });
 
-  return [...builtInItems, ...customItems];
+  return customItems;
 }
 
 export async function createOwnerLabSource({ user, slug }) {
