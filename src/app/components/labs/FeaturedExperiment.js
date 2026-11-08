@@ -48,10 +48,10 @@ export default function FeaturedExperiment({ experiment }) {
       whileInView="visible"
       viewport={{ once: true, amount: 0.18 }}
       variants={spotlightVariants}
-      className="mx-auto w-full max-w-[1440px] px-6 pb-20 sm:px-8 sm:pb-24 lg:px-20 lg:pb-28"
+      className="mx-auto w-full max-w-[1440px] px-4 pb-16 sm:px-8 sm:pb-24 lg:px-16 lg:pb-28 xl:px-20"
     >
       <div className="border-y border-border-subtle py-7 sm:py-9 lg:py-11">
-        <div className="mb-7 flex flex-wrap items-center justify-between gap-3 sm:mb-9">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 sm:mb-9">
           <motion.div variants={spotlightItemVariants} className="flex items-center gap-3">
             <span className="h-px w-7 bg-brand sm:w-10" />
             <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-brand sm:text-[10px]">
@@ -68,7 +68,7 @@ export default function FeaturedExperiment({ experiment }) {
           ) : null}
         </div>
 
-        <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1.12fr)_minmax(300px,0.88fr)] lg:gap-12 xl:gap-16">
+        <div className="grid grid-cols-1 items-center gap-7 sm:gap-9 lg:grid-cols-[minmax(0,1.12fr)_minmax(300px,0.88fr)] lg:gap-10 xl:gap-16">
           <motion.div variants={spotlightItemVariants} className="min-w-0">
             <Link
               href={href}
@@ -102,20 +102,20 @@ export default function FeaturedExperiment({ experiment }) {
 
             <h2
               id="featured-lab-title"
-              className="mt-4 max-w-[12ch] font-display text-[clamp(2.7rem,5.2vw,5.25rem)] font-normal leading-[0.92] tracking-[-0.06em] text-text-primary"
+              className="mt-3 max-w-[14ch] font-display text-[clamp(2.1rem,7vw,2.9rem)] font-normal leading-[0.94] tracking-[-0.055em] text-text-primary sm:mt-4 sm:max-w-[12ch] sm:text-[clamp(2.7rem,5.2vw,5.25rem)] sm:leading-[0.92] sm:tracking-[-0.06em]"
             >
               {experiment.title}
               <span className="text-brand">.</span>
             </h2>
 
             {experiment.description ? (
-              <p className="mt-5 max-w-xl text-sm leading-7 text-text-secondary sm:mt-6 sm:text-base sm:leading-8">
+              <p className="mt-4 max-w-xl text-[13px] leading-6 text-text-secondary sm:mt-6 sm:text-base sm:leading-8">
                 {experiment.description}
               </p>
             ) : null}
 
             {technologies.length ? (
-              <div className="mt-7 w-full border-t border-border-subtle pt-4 sm:mt-8">
+              <div className="mt-6 w-full border-t border-border-subtle pt-4 sm:mt-8">
                 <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.18em] text-text-muted sm:text-[9px]">
                   Built with
                 </p>
