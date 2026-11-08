@@ -318,6 +318,9 @@ export const particleFragmentShader = `
     float acrossTrail = abs(dot(centered, perpendicular));
 
     float core = 1.0 - smoothstep(0.10, 0.88, distanceFromCenter);
+    float diamondDistance = abs(centered.x) + abs(centered.y);
+    float diamondCore = 1.0 - smoothstep(0.16, 0.96, diamondDistance);
+    float sparkleCore = mix(core, diamondCore, clamp(vSparkle * 1.2, 0.0, 1.0));
     float halo = exp(-distanceFromCenter * distanceFromCenter * 6.2) * 0.24;
     float volumeHalo = exp(-distanceFromCenter * distanceFromCenter * 4.2)
       * vVolumeGlow
@@ -336,23 +339,27 @@ export const particleFragmentShader = `
       * vTrailStrength
       * 0.48;
 
-    float rayX = 1.0 - smoothstep(0.0, 0.04, abs(centered.x));
-    float rayY = 1.0 - smoothstep(0.0, 0.04, abs(centered.y));
-    float rayFade = 1.0 - smoothstep(0.08, 0.72, distanceFromCenter);
-    float starRays = max(rayX, rayY) * rayFade * vSparkle * 0.58;
+    float rayX = 1.0 - smoothstep(0.0, 0.028, abs(centered.x));
+    float rayY = 1.0 - smoothstep(0.0, 0.028, abs(centered.y));
+    float rayFade = 1.0 - smoothstep(0.06, 0.86, distanceFromCenter);
+    float starRays = max(rayX, rayY) * rayFade * vSparkle * 0.92;
+    float diagonalRay = 1.0 - smoothstep(0.0, 0.035, abs(abs(centered.x) - abs(centered.y)));
+    float diagonalFade = 1.0 - smoothstep(0.18, 0.62, distanceFromCenter);
+    float diagonalStarRays = diagonalRay * diagonalFade * vSparkle * 0.16;
 
     float alpha = (
-      core * 0.78
+      mix(core, sparkleCore, clamp(vSparkle * 1.2, 0.0, 1.0)) * 0.78
       + halo
       + volumeHalo
       + sparkleHalo
       + starRays
+      + diagonalStarRays
       + trailTail
     ) * vOpacity;
 
     if (alpha < 0.012) discard;
 
-    float sparkleRim = smoothstep(0.08, 0.24, distanceFromCenter)
+    float sparkleRim = smoothstep(0.08, 0.24, diamondDistance)
       * (1.0 - smoothstep(0.58, 0.9, distanceFromCenter))
       * vSparkle;
     vec3 sparkleTint = mix(vColor, uSparkleHaloColor, sparkleRim * 0.72);

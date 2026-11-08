@@ -254,21 +254,27 @@ export default function StaticParticleSphereArtwork({ className = "" } = {}) {
                   filter="url(#static-particle-glow)"
                 />
               ) : null}
-              <circle
-                cx={particle.x}
-                cy={particle.y}
-                r={particle.radius}
-                className={
-                  particle.bright
-                    ? "fill-[#000000] dark:fill-[#fbfffe]"
-                    : particle.ambient
+              {particle.bright ? (
+                <path
+                  d={`M ${particle.x} ${particle.y - particle.radius * 2.8} L ${particle.x + particle.radius * 0.28} ${particle.y - particle.radius * 0.28} L ${particle.x + particle.radius * 2.8} ${particle.y} L ${particle.x + particle.radius * 0.28} ${particle.y + particle.radius * 0.28} L ${particle.x} ${particle.y + particle.radius * 2.8} L ${particle.x - particle.radius * 0.28} ${particle.y + particle.radius * 0.28} L ${particle.x - particle.radius * 2.8} ${particle.y} L ${particle.x - particle.radius * 0.28} ${particle.y - particle.radius * 0.28} Z`}
+                  className="fill-[#000000] dark:fill-[#fbfffe]"
+                  opacity={particle.opacity}
+                />
+              ) : (
+                <circle
+                  cx={particle.x}
+                  cy={particle.y}
+                  r={particle.radius}
+                  className={
+                    particle.ambient
                       ? "fill-[#0d5d53] dark:fill-[#4eaaa2]"
-                    : particle.inner
-                      ? "fill-[#0b5148] dark:fill-[#75dcd1]"
-                      : "fill-[#087b6f] dark:fill-[#d5fff9] opacity-[0.96] dark:opacity-[0.98]"
-                }
-                opacity={particle.opacity}
-              />
+                      : particle.inner
+                        ? "fill-[#0b5148] dark:fill-[#75dcd1]"
+                        : "fill-[#087b6f] dark:fill-[#d5fff9] opacity-[0.96] dark:opacity-[0.98]"
+                  }
+                  opacity={particle.opacity}
+                />
+              )}
             </g>
           ))}
         </g>

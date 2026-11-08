@@ -457,6 +457,10 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.ok(rendererSource.includes("uSparkleHaloColor.value.set(palette.sparkleHaloColor)"));
   assert.ok(shaderSource.includes("uniform vec3 uSparkleHaloColor"));
   assert.ok(shaderSource.includes("uniform float uSparkleFragmentBoost"));
+  assert.ok(shaderSource.includes("float diamondDistance = abs(centered.x) + abs(centered.y)"));
+  assert.ok(shaderSource.includes("float diamondCore = 1.0 - smoothstep(0.16, 0.96, diamondDistance)"));
+  assert.ok(shaderSource.includes("float starRays = max(rayX, rayY) * rayFade * vSparkle * 0.92"));
+  assert.ok(shaderSource.includes("diagonalStarRays"));
   assert.ok(shaderSource.includes("float sparkleRim = smoothstep"));
   assert.ok(rendererSource.includes("uSurfaceShimmerIntensity.value = palette.surfaceShimmerIntensity"));
   assert.ok(rendererSource.includes("uSurfaceShimmerOpacity.value = palette.surfaceShimmerOpacity"));

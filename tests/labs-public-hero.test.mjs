@@ -134,6 +134,9 @@ test("hero artwork is decorative, lazy-loads Three.js and respects reduced motio
   assert.ok(staticArtworkSource.includes("const surfaceRadius = (0.28 + data.sizes[index] * 0.22) * 1.15"));
   assert.ok(staticArtworkSource.includes("dark:opacity-[0.98]"));
   assert.ok(staticArtworkSource.includes("dark:fill-[#d5fff9]"));
+  assert.ok(staticArtworkSource.includes("particle.radius * 2.8"));
+  assert.ok(staticArtworkSource.includes("particle.bright ? ("));
+  assert.ok(staticArtworkSource.includes("L ${particle.x + particle.radius * 2.8}"));
   assert.ok(staticArtworkSource.includes('inner: isInner'));
 });
 
