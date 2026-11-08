@@ -79,4 +79,50 @@ export function createParticleOrbits(THREE) {
       transparent: true,
       opacity: 1,
       depthWrite: false,
-      blending: THREE.A...[truncated]
+      blending: THREE.AdditiveBlending,
+    });
+    coreMaterial.userData.themeRole = "orbit-particle";
+
+    const glowMaterial = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.12,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    glowMaterial.userData.themeRole = "orbit-particle-glow";
+
+    const core = new THREE.Mesh(
+      new THREE.SphereGeometry(spec.particleSize, 12, 10),
+      coreMaterial,
+    );
+    const glow = new THREE.Mesh(
+      new THREE.SphereGeometry(spec.particleSize * 2.15, 12, 10),
+      glowMaterial,
+    );
+
+    runner.add(glow);
+    runner.add(core);
+    runner.position.copy(getOrbitPoint(THREE, spec, spec.phase));
+    orbitFrame.add(runner);
+    group.add(orbitFrame);
+
+    orbiters.push({ runner, spec });
+  });
+
+  let lastElapsed = 0;
+  const progressByRunner = orbiters.map(({ spec }) => spec.phase);
+
+  group.userData.update = (elapsed, burstAmount = 0) => {
+    const delta = Math.max(0, elapsed - lastElapsed);
+    const burstSpeed = 1 + Math.max(0, Math.min(1, burstAmount)) * (ORBIT_BURST_SPEED_MULTIPLIER - 1);
+    lastElapsed = elapsed;
+
+    orbiters.forEach(({ runner, spec }, index) => {
+      progressByRunner[index] = (progressByRunner[index] + delta * spec.speed * burstSpeed) % 1;
+      runner.position.copy(getOrbitPoint(THREE, spec, progressByRunner[index]));
+    });
+  };
+
+  return group;
+}

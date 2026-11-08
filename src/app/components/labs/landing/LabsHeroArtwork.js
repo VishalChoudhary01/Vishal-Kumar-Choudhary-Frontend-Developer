@@ -20,4 +20,36 @@ function StaticSphereArtwork() {
 }
 
 const LabsParticleSphere = dynamic(
-  () => import("./particle-...[truncated]
+  () => import("./particle-sphere/LabsParticleSphere"),
+  {
+    ssr: false,
+    loading: () => <StaticSphereArtwork />,
+  },
+);
+
+export default function LabsHeroArtwork() {
+  const artworkRef = useRef(null);
+  const isInView = useInView(artworkRef, {
+    once: true,
+    margin: "140px 0px",
+  });
+  const reducedMotion = useReducedMotion();
+
+  return (
+    <figure
+      ref={artworkRef}
+      aria-hidden="true"
+      className="pointer-events-none relative isolate mx-auto aspect-[1.08/1] min-h-[280px] w-full max-w-[39rem] overflow-hidden"
+    >
+      <div className="pointer-events-none absolute inset-[8%] rounded-full bg-[radial-gradient(ellipse_at_50%_48%,var(--brand-soft),transparent_70%)] opacity-55 dark:opacity-[0.035]" />
+      <div className="pointer-events-none absolute left-[22%] top-[20%] h-[18%] w-[18%] rounded-full bg-brand/[0.06] blur-3xl dark:bg-[#030b08]/[0.018]" />
+      <div className="pointer-events-none absolute bottom-[16%] right-[14%] h-[23%] w-[23%] rounded-full bg-brand/[0.06] blur-3xl dark:bg-[#030b08]/[0.018]" />
+
+      {reducedMotion || !isInView ? (
+        <StaticSphereArtwork />
+      ) : (
+        <LabsParticleSphere />
+      )}
+    </figure>
+  );
+}
