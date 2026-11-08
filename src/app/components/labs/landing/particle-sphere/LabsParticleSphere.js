@@ -354,6 +354,7 @@ export default function LabsParticleSphere() {
           uSurfaceParticleMix: { value: initialPalette.surfaceParticleMix },
           uSurfaceParticleBrightness: { value: initialPalette.surfaceParticleBrightness },
           uSurfaceParticleOpacityFloor: { value: initialPalette.surfaceParticleOpacityFloor },
+          uSurfaceDepthFadeFloor: { value: initialPalette.surfaceDepthFadeFloor },
           uSurfaceParticleSizeScale: { value: initialPalette.surfaceParticleSizeScale },
           uSurfaceShimmerIntensity: { value: initialPalette.surfaceShimmerIntensity },
           uSurfaceShimmerOpacity: { value: initialPalette.surfaceShimmerOpacity },
@@ -442,6 +443,7 @@ export default function LabsParticleSphere() {
         particleMaterial.uniforms.uSurfaceParticleMix.value = palette.surfaceParticleMix;
         particleMaterial.uniforms.uSurfaceParticleBrightness.value = palette.surfaceParticleBrightness;
         particleMaterial.uniforms.uSurfaceParticleOpacityFloor.value = palette.surfaceParticleOpacityFloor;
+        particleMaterial.uniforms.uSurfaceDepthFadeFloor.value = palette.surfaceDepthFadeFloor;
         particleMaterial.uniforms.uSurfaceParticleSizeScale.value = palette.surfaceParticleSizeScale;
         particleMaterial.uniforms.uSurfaceShimmerIntensity.value = palette.surfaceShimmerIntensity;
         particleMaterial.uniforms.uSurfaceShimmerOpacity.value = palette.surfaceShimmerOpacity;

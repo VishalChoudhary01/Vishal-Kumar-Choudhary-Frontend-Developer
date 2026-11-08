@@ -11,6 +11,7 @@ export const particleVertexShader = `
   uniform float uSurfaceParticleMix;
   uniform float uSurfaceParticleBrightness;
   uniform float uSurfaceParticleOpacityFloor;
+  uniform float uSurfaceDepthFadeFloor;
   uniform float uSurfaceParticleSizeScale;
   uniform float uSurfaceShimmerIntensity;
   uniform float uSurfaceShimmerOpacity;
@@ -182,6 +183,14 @@ export const particleVertexShader = `
       1.0 + max(0.0, viewDepth - 3.4) * 0.2
     );
     float depthFade = mix(1.0, 0.56, depthLayer) * depthAttenuation;
+    float surfaceDepthFade = mix(
+      1.0,
+      uSurfaceDepthFadeFloor,
+      depthLayer
+    ) * (
+      1.0 / (1.0 + max(0.0, viewDepth - 3.4) * 0.08)
+    );
+    depthFade = mix(depthFade, surfaceDepthFade, surfaceLayer);
 
     // The interior gets a soft radial light falloff, while ambient particles
     // retain their own lower-opacity atmospheric palette.
