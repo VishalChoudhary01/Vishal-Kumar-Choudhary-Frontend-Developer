@@ -79,12 +79,12 @@ function LabCard({ experiment, index, total, engagement }) {
               ease: [0.16, 1, 0.3, 1],
             }
       }
-      className="group/card flex h-full min-w-0 flex-col border-b border-border-subtle pb-5"
+      className="group/card flex h-full min-w-0 flex-col"
     >
       <Link
         href={`/labs/${experiment.slug}`}
-        aria-label={`Explore ${experiment.title}`}
-        className="flex min-w-0 flex-1 flex-col focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
+        aria-label={`Preview ${experiment.title}`}
+        className="block min-w-0 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
       >
         <div className="relative aspect-[4/3] overflow-hidden border border-border-subtle bg-surface-2">
           <LabExperimentPreview
@@ -109,53 +109,56 @@ function LabCard({ experiment, index, total, engagement }) {
             ↗
           </span>
         </div>
-
-        <div className="flex min-w-0 flex-1 flex-col pt-4 sm:pt-5">
-          <h3
-            id={titleId}
-            className="min-w-0 max-w-[19ch] font-display text-[clamp(1.45rem,2vw,2rem)] font-normal leading-[1.04] tracking-[-0.04em] text-text-primary transition-colors duration-200 group-hover/card:text-brand motion-reduce:transition-none"
-          >
-            {experiment.title}
-          </h3>
-
-          {experiment.description ? (
-            <p className="mt-3 line-clamp-3 min-h-[4.5rem] text-[13px] leading-6 text-text-secondary sm:text-sm">
-              {experiment.description}
-            </p>
-          ) : null}
-
-          <div className="mt-auto flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5 pt-5">
-            {technologies.map((technology, technologyIndex) => (
-              <span
-                key={technology}
-                className="inline-flex min-w-0 items-center gap-2 font-mono text-[9px] uppercase tracking-[0.08em] text-text-muted sm:text-[10px]"
-              >
-                {technologyIndex > 0 ? (
-                  <span aria-hidden="true" className="text-brand/70">/</span>
-                ) : null}
-                <span className="max-w-[13ch] truncate">{technology}</span>
-              </span>
-            ))}
-          </div>
-        </div>
       </Link>
 
-      <div
-        role="group"
-        aria-label={`Actions for ${experiment.title}`}
-        className="mt-auto flex min-h-12 items-center justify-between gap-3 border-t border-border-subtle pt-3"
-      >
-        <span className="font-mono text-[8px] uppercase tracking-[0.12em] text-text-muted sm:text-[9px] sm:tracking-[0.14em]">
-          Experiment / {String(index + 1).padStart(2, "0")}
-        </span>
-        <LabLikeButton
-          slug={experiment.slug}
-          experimentTitle={experiment.title}
-          initialData={engagement}
-          loadOnMount={!engagement}
-          skipGuestCookieCleanup
-          compact
-        />
+      <div className="flex min-w-0 flex-1 flex-col pt-4 sm:pt-5">
+        <div
+          role="group"
+          aria-label={`Actions for ${experiment.title}`}
+          className="flex min-w-0 items-start justify-between gap-3"
+        >
+          <Link
+            href={`/labs/${experiment.slug}`}
+            aria-labelledby={titleId}
+            className="min-w-0 flex-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
+          >
+            <h3
+              id={titleId}
+              className="min-w-0 max-w-[19ch] font-display text-[clamp(1.45rem,2vw,2rem)] font-normal leading-[1.04] tracking-[-0.04em] text-text-primary transition-colors duration-200 group-hover/card:text-brand motion-reduce:transition-none"
+            >
+              {experiment.title}
+            </h3>
+          </Link>
+
+          <LabLikeButton
+            slug={experiment.slug}
+            experimentTitle={experiment.title}
+            initialData={engagement}
+            loadOnMount={!engagement}
+            skipGuestCookieCleanup
+            compact
+          />
+        </div>
+
+        {experiment.description ? (
+          <p className="mt-3 line-clamp-3 min-h-[4.5rem] text-[13px] leading-6 text-text-secondary sm:text-sm">
+            {experiment.description}
+          </p>
+        ) : null}
+
+        <div className="mt-auto flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5 pt-5">
+          {technologies.map((technology, technologyIndex) => (
+            <span
+              key={technology}
+              className="inline-flex min-w-0 items-center gap-2 font-mono text-[9px] uppercase tracking-[0.08em] text-text-muted sm:text-[10px]"
+            >
+              {technologyIndex > 0 ? (
+                <span aria-hidden="true" className="text-brand/70">/</span>
+              ) : null}
+              <span className="max-w-[13ch] truncate">{technology}</span>
+            </span>
+          ))}
+        </div>
       </div>
     </motion.article>
   );

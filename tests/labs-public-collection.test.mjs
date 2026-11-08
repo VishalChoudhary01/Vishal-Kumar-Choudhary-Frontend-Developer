@@ -141,14 +141,19 @@ test("server collection summary prevents the current page from understating glob
   ]);
 });
 
-test("experiment like action is grouped with its card but stays outside the navigation link", () => {
+test("experiment like action sits beside the title without a separate footer row", () => {
   assert.ok(collectionSource.includes("aria-labelledby={titleId}"));
   assert.ok(collectionSource.includes("id={titleId}"));
   assert.ok(collectionSource.includes('role="group"'));
   assert.ok(collectionSource.includes("aria-label={`Actions for ${experiment.title}`}"));
-  assert.ok(collectionSource.includes("experimentTitle={experiment.title}"));
-  assert.ok(collectionSource.indexOf("</Link>") < collectionSource.indexOf('role="group"'));
+  assert.ok(collectionSource.includes('className="flex min-w-0 items-start justify-between gap-3"'));
+  assert.equal(collectionSource.split("href={`/labs/${experiment.slug}`}").length - 1, 2);
   assert.ok(collectionSource.indexOf('role="group"') < collectionSource.indexOf("<LabLikeButton"));
+  assert.ok(collectionSource.indexOf('role="group"') < collectionSource.indexOf("{experiment.description ?"));
+  assert.ok(!collectionSource.includes('Experiment / {String(index + 1).padStart(2, "0")}'));
+  assert.ok(!collectionSource.includes("border-t border-border-subtle pt-3"));
+  assert.ok(!collectionSource.includes("border-b border-border-subtle pb-5"));
+  assert.ok(collectionSource.includes("experimentTitle={experiment.title}"));
   assert.ok(likeButtonSource.includes("aria-label={data?.liked ? `Unlike ${experimentTitle}` : `Like ${experimentTitle}`}"));
   assert.ok(likeButtonSource.includes('compact ? "h-11 min-w-[5.5rem] px-3 sm:h-9 sm:min-w-0 sm:px-2.5"'));
 });
