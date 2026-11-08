@@ -165,7 +165,7 @@ test("particle geometry is deterministic for a stable seed", () => {
 });
 
 test("sphere and enlarged orbit framing stays fixed throughout particle bursts", () => {
-  const radius = 1.75;
+  const radius = 1.8375;
   const data = createSphereParticleData({
     surfaceCount: 180,
     innerCount: 24,
@@ -177,14 +177,14 @@ test("sphere and enlarged orbit framing stays fixed throughout particle bursts",
     width: 375,
     height: 520,
     fovDegrees: 42,
-    orbitRadius: 2.26,
+    orbitRadius: 2.373,
     fillRatio: 0.92,
   });
   const desktopDistance = getParticleCameraDistance({
     width: 1440,
     height: 820,
     fovDegrees: 42,
-    orbitRadius: 2.26,
+    orbitRadius: 2.373,
     fillRatio: 0.94,
   });
 
@@ -192,16 +192,16 @@ test("sphere and enlarged orbit framing stays fixed throughout particle bursts",
   assert.ok(Number.isFinite(desktopDistance));
   assert.ok(mobileDistance > desktopDistance);
   assert.match(rendererSource, /idleCameraDistance = getParticleCameraDistance/);
-  assert.ok(rendererSource.includes("orbitRadius: 2.26"));
+  assert.ok(rendererSource.includes("orbitRadius: 2.373"));
   assert.ok(rendererSource.includes("camera.position.set(artworkAnchor.x, artworkAnchor.y, idleCameraDistance)"));
   assert.ok(rendererSource.includes("camera.lookAt(artworkAnchor)"));
   assert.ok(!rendererSource.includes("burstCameraDistance"));
   assert.ok(!rendererSource.includes("getParticleCameraChoreography"));
   assert.ok(!rendererSource.includes("camera.position.z +="));
-  assert.ok(constantsSource.includes("radius: 1.75"));
-  assert.ok(orbitSource.includes("radiusX: 2.20") && orbitSource.includes("radiusY: 1.29"));
-  assert.ok(orbitSource.includes("radiusX: 2.02") && orbitSource.includes("radiusY: 1.04"));
-  assert.ok(orbitSource.includes("radiusX: 2.40") && orbitSource.includes("radiusY: 1.16"));
+  assert.ok(constantsSource.includes("radius: 1.8375"));
+  assert.ok(orbitSource.includes("radiusX: 2.31") && orbitSource.includes("radiusY: 1.3545"));
+  assert.ok(orbitSource.includes("radiusX: 2.121") && orbitSource.includes("radiusY: 1.092"));
+  assert.ok(orbitSource.includes("radiusX: 2.52") && orbitSource.includes("radiusY: 1.218"));
   assert.ok(orbitSource.includes("rotation: [0.92, 0.12, -0.15]"));
   assert.ok(orbitSource.includes("rotation: [1.26, -0.34, 0.48]"));
   assert.ok(orbitSource.includes("rotation: [0.48, 0.42, -0.62]"));
@@ -242,7 +242,7 @@ test("light and dark themes use distinct particle, sparkle and translucent spher
   assert.equal(light.sparkleColor, "#000000");
   assert.equal(light.sparkleHaloColor, "#0b5548");
   assert.equal(light.glowColor, "#0a2926");
-  assert.equal(dark.particleColor, "#94f1e7");
+  assert.equal(dark.particleColor, "#9af5ea");
   assert.equal(dark.centerSphereColor, "#8ce8dc");
   assert.equal(dark.centerSphereOpacity, 0.13);
   assert.equal(light.surfaceParticleMix, 0);
@@ -255,13 +255,13 @@ test("light and dark themes use distinct particle, sparkle and translucent spher
   assert.equal(light.surfaceDepthFadeFloor, 1);
   assert.equal(dark.surfaceParticleSizeScale, 1.7);
   assert.equal(dark.surfaceDepthFadeFloor, 0.99);
-  assert.equal(dark.innerParticleColor, "#82e6db");
+  assert.equal(dark.innerParticleColor, "#91eee4");
   assert.equal(dark.innerParticleOpacity, 0.98);
-  assert.equal(dark.sparkleColor, "#f0fffc");
-  assert.equal(dark.sparkleHaloColor, "#d8fff8");
+  assert.equal(dark.sparkleColor, "#fbfffe");
+  assert.equal(dark.sparkleHaloColor, "#edfffb");
   assert.equal(dark.sparkleChanceScale, 1.3);
   assert.equal(dark.sparkleIntensity, 1.2);
-  assert.equal(dark.sparkleSizeScale, 1.8);
+  assert.equal(dark.sparkleSizeScale, 2.0);
   assert.equal(light.sparkleVertexBoost, 0);
   assert.equal(light.sparkleFragmentBoost, 0);
   assert.equal(dark.sparkleVertexBoost, 3.4);
@@ -281,7 +281,7 @@ test("light and dark themes use distinct particle, sparkle and translucent spher
   assert.ok(dark.volumeIntensity > light.volumeIntensity);
   assert.equal(light.ambientParticleOpacity, 0.9);
   assert.equal(light.ambientParticleColor, "#00281f");
-  assert.equal(dark.ambientParticleColor, "#8ceee3");
+  assert.equal(dark.ambientParticleColor, "#99f4eb");
   assert.equal(dark.ambientParticleOpacity, 0.86);
   assert.notEqual(light.orbitParticleColor, dark.orbitParticleColor);
   assert.notEqual(light.orbitParticleGlowColor, dark.orbitParticleGlowColor);
@@ -551,7 +551,7 @@ test("particle burst spans the entire Labs hero while the sphere stays at the ar
     height: 760,
     fitWidth: 620,
     fitHeight: 560,
-    orbitRadius: 2.26,
+    orbitRadius: 2.373,
     fillRatio: 0.94,
   });
   assert.ok(Number.isFinite(cameraDistance));

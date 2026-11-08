@@ -187,7 +187,7 @@ export default function StaticParticleSphereArtwork({ className = "" } = {}) {
         fitWidth: Math.max(1, artworkBounds.width),
         fitHeight: artworkHeight,
         fovDegrees: PARTICLE_SPHERE_CONFIG.cameraFov,
-        orbitRadius: 2.26,
+        orbitRadius: 2.373,
         fillRatio: 0.94,
       });
 
@@ -246,7 +246,7 @@ export default function StaticParticleSphereArtwork({ className = "" } = {}) {
                   cx={particle.x}
                   cy={particle.y}
                   r={particle.radius * 3.1}
-                  className="fill-[#0b5548] dark:fill-[#d8fff8]"
+                  className="fill-[#0b5548] dark:fill-[#edfffb]"
                   opacity="0.22"
                   filter="url(#static-particle-glow)"
                 />
@@ -257,12 +257,12 @@ export default function StaticParticleSphereArtwork({ className = "" } = {}) {
                 r={particle.radius}
                 className={
                   particle.bright
-                    ? "fill-[#000000] dark:fill-[#f0fffc]"
+                    ? "fill-[#000000] dark:fill-[#fbfffe]"
                     : particle.ambient
-                      ? "fill-[#001710] dark:fill-[#8ceee3]"
+                      ? "fill-[#001710] dark:fill-[#99f4eb]"
                     : particle.inner
-                      ? "fill-[#001c16] dark:fill-[#82e6db]"
-                      : "fill-[#00140f] dark:fill-[#f0fffc] opacity-[0.96] dark:opacity-[0.98]"
+                      ? "fill-[#001c16] dark:fill-[#91eee4]"
+                      : "fill-[#00140f] dark:fill-[#9af5ea] opacity-[0.96] dark:opacity-[0.98]"
                 }
                 opacity={particle.opacity}
               />

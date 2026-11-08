@@ -1,7 +1,7 @@
 export function getParticleSphereThemePalette(isDark) {
   if (isDark) {
     return Object.freeze({
-      particleColor: "#94f1e7",
+      particleColor: "#9af5ea",
       particleBlending: "normal",
       centerSphereColor: "#8ce8dc",
       centerSphereOpacity: 0.13,
@@ -10,17 +10,17 @@ export function getParticleSphereThemePalette(isDark) {
       surfaceParticleOpacityFloor: 0.74,
       surfaceParticleSizeScale: 1.7,
       surfaceDepthFadeFloor: 0.99,
-      innerParticleColor: "#82e6db",
+      innerParticleColor: "#91eee4",
       innerParticleOpacity: 0.98,
       volumeColor: "#267d72",
       volumeIntensity: 0.38,
-      ambientParticleColor: "#8ceee3",
+      ambientParticleColor: "#99f4eb",
       ambientParticleOpacity: 0.86,
-      sparkleColor: "#f0fffc",
-      sparkleHaloColor: "#d8fff8",
+      sparkleColor: "#fbfffe",
+      sparkleHaloColor: "#edfffb",
       sparkleChanceScale: 1.3,
       sparkleIntensity: 1.2,
-      sparkleSizeScale: 1.8,
+      sparkleSizeScale: 2.0,
       sparkleVertexBoost: 3.4,
       sparkleFragmentBoost: 2.2,
       surfaceShimmerIntensity: 0.36,
@@ -35,6 +35,7 @@ export function getParticleSphereThemePalette(isDark) {
     });
   }
 
+  return Object.freeze({
   return Object.freeze({
     particleColor: "#00140f",
     particleBlending: "normal",

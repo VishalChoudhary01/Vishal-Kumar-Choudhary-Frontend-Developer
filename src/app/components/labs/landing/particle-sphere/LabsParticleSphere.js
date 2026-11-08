@@ -252,7 +252,7 @@ export default function LabsParticleSphere({ onRendererStateChange } = {}) {
         fitWidth: artworkWidth,
         fitHeight: artworkHeight,
         fovDegrees: PARTICLE_SPHERE_CONFIG.cameraFov,
-        orbitRadius: 2.26,
+        orbitRadius: 2.373,
         fillRatio: 0.94,
       });
 
