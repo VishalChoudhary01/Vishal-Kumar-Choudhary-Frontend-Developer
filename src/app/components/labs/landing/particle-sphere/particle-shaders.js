@@ -281,7 +281,7 @@ export const particleVertexShader = `
     litColor = mix(litColor, ambientLitColor, ambientLayer);
     // Keep ordinary surface points visibly teal instead of letting directional
     // lighting reduce them to nearly-black pinpricks.
-    litColor = mix(litColor, particleColor, surfaceLayer * 0.42);
+    litColor = mix(litColor, particleColor, surfaceLayer * 0.62);
     float surfaceBrightness = mix(
       uSurfaceParticleBrightness,
       1.0,

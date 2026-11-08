@@ -127,14 +127,14 @@ test("hero artwork is decorative, lazy-loads Three.js and respects reduced motio
   assert.ok(staticArtworkSource.includes("w-[40%]"));
   assert.ok(staticArtworkSource.includes("circle_at_50%_50%"));
   assert.ok(!staticArtworkSource.includes("circle_at_38%_32%"));
-  assert.ok(staticArtworkSource.includes("fill-[#087b6f]"));
+  assert.ok(staticArtworkSource.includes("fill-[#0a8a7c]"));
   assert.ok(staticArtworkSource.includes("fill-[#0b5148] dark:fill-[#75dcd1]"));
-  assert.ok(staticArtworkSource.includes("depthBrightness = 0.74 + normalizedDepth * 0.38"));
+  assert.ok(staticArtworkSource.includes("depthBrightness = 0.84 + normalizedDepth * 0.28"));
   assert.ok(staticArtworkSource.includes("baseOpacity * depthBrightness"));
-  assert.ok(staticArtworkSource.includes("0.64 + seed * 0.16"));
+  assert.ok(staticArtworkSource.includes("0.72 + seed * 0.18"));
   assert.ok(staticArtworkSource.includes("const surfaceRadius = (0.28 + data.sizes[index] * 0.22) * 1.15"));
   assert.ok(staticArtworkSource.includes("dark:opacity-[0.98]"));
-  assert.ok(staticArtworkSource.includes("dark:fill-[#bffff4]"));
+  assert.ok(staticArtworkSource.includes("dark:fill-[#ccfff7]"));
   assert.ok(staticArtworkSource.includes("particle.radius * 2.8"));
   assert.ok(staticArtworkSource.includes("particle.bright ? ("));
   assert.ok(staticArtworkSource.includes("L ${particle.x + particle.radius * 2.8}"));

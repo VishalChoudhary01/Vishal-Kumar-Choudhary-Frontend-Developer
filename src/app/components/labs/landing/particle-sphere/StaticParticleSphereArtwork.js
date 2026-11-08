@@ -73,12 +73,12 @@ function createStaticParticles(cameraDistance) {
     const isAmbient = layer === 2;
     const isInner = layer === 1;
     const isBright = !isInner && !isAmbient && seed > 0.985;
-    const depthBrightness = 0.74 + normalizedDepth * 0.38;
+    const depthBrightness = 0.84 + normalizedDepth * 0.28;
     const baseOpacity = isAmbient
       ? 0.54 + seed * 0.18
       : isInner
         ? 0.16 + seed * 0.1
-        : 0.64 + seed * 0.16;
+        : 0.72 + seed * 0.18;
     const opacity = baseOpacity * depthBrightness;
     const surfaceRadius = (0.28 + data.sizes[index] * 0.22) * 1.15;
     const radius = isAmbient
@@ -270,7 +270,7 @@ export default function StaticParticleSphereArtwork({ className = "" } = {}) {
                       ? "fill-[#0d5d53] dark:fill-[#4eaaa2]"
                       : particle.inner
                         ? "fill-[#0b5148] dark:fill-[#75dcd1]"
-                        : "fill-[#087b6f] dark:fill-[#bffff4] opacity-[0.96] dark:opacity-[0.98]"
+                        : "fill-[#0a8a7c] dark:fill-[#ccfff7] opacity-[0.96] dark:opacity-[0.98]"
                   }
                   opacity={particle.opacity}
                 />
