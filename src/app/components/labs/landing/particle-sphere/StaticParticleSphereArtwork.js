@@ -71,10 +71,10 @@ function createStaticParticles() {
     const isInner = layer === 1;
     const isBright = !isInner && !isAmbient && seed > 0.985;
     const opacity = isAmbient
-      ? 0.36 + seed * 0.22
+      ? 0.44 + seed * 0.25
       : isInner
-        ? 0.075 + seed * 0.085
-        : 0.14 + normalizedDepth * 0.16 + seed * 0.07;
+        ? 0.12 + seed * 0.12
+        : 0.3 + normalizedDepth * 0.26 + seed * 0.1;
     const radius = isAmbient
       ? 0.7 + data.sizes[index] * 0.28
       : isInner
@@ -87,7 +87,7 @@ function createStaticParticles() {
       key: index,
       ...projected,
       radius,
-      opacity: isBright ? Math.max(0.72, opacity) : opacity,
+      opacity: isBright ? Math.max(0.82, opacity) : opacity,
       bright: isBright,
       ambient: isAmbient,
       inner: isInner,
@@ -192,7 +192,7 @@ export default function StaticParticleSphereArtwork() {
                   cx={particle.x}
                   cy={particle.y}
                   r={particle.radius * 3.1}
-                  className="fill-[#001b16] dark:fill-[#d4f5ed]"
+                  className="fill-[#001b16] dark:fill-[#58cbbf]"
                   opacity="0.22"
                   filter="url(#static-particle-glow)"
                 />
@@ -203,10 +203,10 @@ export default function StaticParticleSphereArtwork() {
                 r={particle.radius}
                 className={
                   particle.bright || particle.ambient
-                    ? "fill-[#031b17] dark:fill-[#f3fffc]"
+                    ? "fill-[#031b17] dark:fill-[#78d9cf]"
                     : particle.inner
-                      ? "fill-[#00352e] dark:fill-[#58ad9f]"
-                      : "fill-[#002b25] dark:fill-[#348f83] opacity-[0.62] dark:opacity-[0.78]"
+                      ? "fill-[#00352e] dark:fill-[#45ad9f]"
+                      : "fill-[#002b25] dark:fill-[#55bfb2] opacity-[0.9] dark:opacity-[0.94]"
                 }
                 opacity={particle.opacity}
               />
@@ -231,7 +231,7 @@ export default function StaticParticleSphereArtwork() {
                 cx={orbit.runner.x}
                 cy={orbit.runner.y}
                 r="5.2"
-                fill="#9cf8e9"
+                fill="#59cbbd"
                 opacity="0.34"
                 filter="url(#static-particle-glow)"
               />
@@ -239,7 +239,7 @@ export default function StaticParticleSphereArtwork() {
                 cx={orbit.runner.x}
                 cy={orbit.runner.y}
                 r="1.6"
-                fill="#f0fffc"
+                fill="#78d9cf"
                 opacity="0.96"
               />
             </g>
