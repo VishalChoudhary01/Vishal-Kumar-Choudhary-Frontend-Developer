@@ -78,3 +78,11 @@ test("shared preview error callback advances through validated preview fallbacks
   assert.match(previewSource, /onError=\{\(\) => markPreviewFailed\(activePreview\.src\)\}/);
   assert.doesNotMatch(previewSource, /setFailedSrc/);
 });
+
+test("featured experiment typography and preview layout adapt across breakpoints", () => {
+  assert.ok(spotlightSource.includes("grid-cols-1 items-center gap-7 sm:gap-9"));
+  assert.ok(spotlightSource.includes("lg:grid-cols-[minmax(0,1.12fr)_minmax(300px,0.88fr)]"));
+  assert.ok(spotlightSource.includes("text-[clamp(2.1rem,7vw,2.9rem)]"));
+  assert.ok(spotlightSource.includes("sm:text-[clamp(2.7rem,5.2vw,5.25rem)]"));
+  assert.ok(spotlightSource.includes("text-[13px] leading-6"));
+});
