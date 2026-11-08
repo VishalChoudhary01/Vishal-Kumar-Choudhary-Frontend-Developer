@@ -384,9 +384,12 @@ export default function LabsParticleSphere() {
           uAmbientParticleOpacity: { value: initialPalette.ambientParticleOpacity },
           uSphereRadius: { value: PARTICLE_SPHERE_CONFIG.radius },
           uSparkleColor: { value: new THREE.Color(initialPalette.sparkleColor) },
+          uSparkleHaloColor: { value: new THREE.Color(initialPalette.sparkleHaloColor) },
           uSparkleChanceScale: { value: initialPalette.sparkleChanceScale },
           uSparkleIntensity: { value: initialPalette.sparkleIntensity },
           uSparkleSizeScale: { value: initialPalette.sparkleSizeScale },
+          uSparkleVertexBoost: { value: initialPalette.sparkleVertexBoost },
+          uSparkleFragmentBoost: { value: initialPalette.sparkleFragmentBoost },
           uBurst: { value: 0 },
           uBurstTime: { value: -1 },
           uBurstExpansion: { value: PARTICLE_BURST_EXPANSION },
@@ -478,9 +481,12 @@ export default function LabsParticleSphere() {
         particleMaterial.uniforms.uAmbientParticleColor.value.set(palette.ambientParticleColor);
         particleMaterial.uniforms.uAmbientParticleOpacity.value = palette.ambientParticleOpacity;
         particleMaterial.uniforms.uSparkleColor.value.set(palette.sparkleColor);
+        particleMaterial.uniforms.uSparkleHaloColor.value.set(palette.sparkleHaloColor);
         particleMaterial.uniforms.uSparkleChanceScale.value = palette.sparkleChanceScale;
         particleMaterial.uniforms.uSparkleIntensity.value = palette.sparkleIntensity;
         particleMaterial.uniforms.uSparkleSizeScale.value = palette.sparkleSizeScale;
+        particleMaterial.uniforms.uSparkleVertexBoost.value = palette.sparkleVertexBoost;
+        particleMaterial.uniforms.uSparkleFragmentBoost.value = palette.sparkleFragmentBoost;
         sphereShellMaterial.color.set(palette.centerSphereColor);
         sphereShellMaterial.opacity = palette.centerSphereOpacity;
 

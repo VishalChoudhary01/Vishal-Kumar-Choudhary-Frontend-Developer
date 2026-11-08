@@ -80,7 +80,7 @@ function createStaticParticles() {
       : isInner
         ? 0.24 + data.sizes[index] * 0.18
         : isBright
-          ? 1.0 + seed * 0.9
+          ? 1.35 + seed * 1.05
           : 0.28 + data.sizes[index] * 0.22;
 
     particles.push({
@@ -192,7 +192,7 @@ export default function StaticParticleSphereArtwork() {
                   cx={particle.x}
                   cy={particle.y}
                   r={particle.radius * 3.1}
-                  className="fill-[#000e0a] dark:fill-[#67d8cb]"
+                  className="fill-[#0b5548] dark:fill-[#a1f2e8]"
                   opacity="0.22"
                   filter="url(#static-particle-glow)"
                 />
@@ -202,11 +202,13 @@ export default function StaticParticleSphereArtwork() {
                 cy={particle.y}
                 r={particle.radius}
                 className={
-                  particle.bright || particle.ambient
-                    ? "fill-[#001710] dark:fill-[#67d8cb]"
+                  particle.bright
+                    ? "fill-[#000000] dark:fill-[#7ce7db]"
+                    : particle.ambient
+                      ? "fill-[#001710] dark:fill-[#78e2d6]"
                     : particle.inner
-                      ? "fill-[#001c16] dark:fill-[#55c6b8]"
-                      : "fill-[#00140f] dark:fill-[#67d8cb] opacity-[0.96] dark:opacity-[0.98]"
+                      ? "fill-[#001c16] dark:fill-[#6ad9cc]"
+                      : "fill-[#00140f] dark:fill-[#7ce7db] opacity-[0.96] dark:opacity-[0.98]"
                 }
                 opacity={particle.opacity}
               />

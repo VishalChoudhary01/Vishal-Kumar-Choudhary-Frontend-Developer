@@ -165,7 +165,7 @@ test("particle geometry is deterministic for a stable seed", () => {
 });
 
 test("sphere and enlarged orbit framing stays fixed throughout particle bursts", () => {
-  const radius = 1.52;
+  const radius = 1.75;
   const data = createSphereParticleData({
     surfaceCount: 180,
     innerCount: 24,
@@ -198,10 +198,10 @@ test("sphere and enlarged orbit framing stays fixed throughout particle bursts",
   assert.ok(!rendererSource.includes("burstCameraDistance"));
   assert.ok(!rendererSource.includes("getParticleCameraChoreography"));
   assert.ok(!rendererSource.includes("camera.position.z +="));
-  assert.ok(constantsSource.includes("radius: 1.52"));
-  assert.ok(orbitSource.includes("radiusX: 1.91") && orbitSource.includes("radiusY: 1.12"));
-  assert.ok(orbitSource.includes("radiusX: 1.76") && orbitSource.includes("radiusY: 0.90"));
-  assert.ok(orbitSource.includes("radiusX: 2.09") && orbitSource.includes("radiusY: 1.01"));
+  assert.ok(constantsSource.includes("radius: 1.75"));
+  assert.ok(orbitSource.includes("radiusX: 2.20") && orbitSource.includes("radiusY: 1.29"));
+  assert.ok(orbitSource.includes("radiusX: 2.02") && orbitSource.includes("radiusY: 1.04"));
+  assert.ok(orbitSource.includes("radiusX: 2.40") && orbitSource.includes("radiusY: 1.16"));
   assert.ok(orbitSource.includes("rotation: [0.92, 0.12, -0.15]"));
   assert.ok(orbitSource.includes("rotation: [1.26, -0.34, 0.48]"));
   assert.ok(orbitSource.includes("rotation: [0.48, 0.42, -0.62]"));
@@ -239,9 +239,10 @@ test("light and dark themes use distinct particle, sparkle and translucent spher
   assert.equal(light.centerSphereOpacity, 0.1);
   assert.equal(light.innerParticleColor, "#001c16");
   assert.equal(light.innerParticleOpacity, 0.94);
-  assert.equal(light.sparkleColor, "#03251e");
+  assert.equal(light.sparkleColor, "#000000");
+  assert.equal(light.sparkleHaloColor, "#0b5548");
   assert.equal(light.glowColor, "#0a2926");
-  assert.equal(dark.particleColor, "#67d8cb");
+  assert.equal(dark.particleColor, "#7ce7db");
   assert.equal(dark.centerSphereColor, "#8ce8dc");
   assert.equal(dark.centerSphereOpacity, 0.13);
   assert.equal(light.surfaceParticleMix, 0);
@@ -254,15 +255,21 @@ test("light and dark themes use distinct particle, sparkle and translucent spher
   assert.equal(light.surfaceDepthFadeFloor, 1);
   assert.equal(dark.surfaceParticleSizeScale, 1.7);
   assert.equal(dark.surfaceDepthFadeFloor, 0.99);
-  assert.equal(dark.innerParticleColor, "#55c6b8");
+  assert.equal(dark.innerParticleColor, "#6ad9cc");
   assert.equal(dark.innerParticleOpacity, 0.98);
   assert.equal(dark.sparkleColor, "#72d8cd");
+  assert.equal(dark.sparkleHaloColor, "#a1f2e8");
   assert.equal(dark.sparkleChanceScale, 1.3);
   assert.equal(dark.sparkleIntensity, 1.2);
   assert.equal(dark.sparkleSizeScale, 1.3);
+  assert.equal(light.sparkleVertexBoost, 0);
+  assert.equal(light.sparkleFragmentBoost, 0);
+  assert.equal(dark.sparkleVertexBoost, 3.4);
+  assert.equal(dark.sparkleFragmentBoost, 2.2);
+  assert.ok(light.sparkleSizeScale > 1);
   assert.equal(light.sparkleChanceScale, 0.86);
-  assert.equal(light.sparkleIntensity, 0.9);
-  assert.equal(light.sparkleSizeScale, 0.92);
+  assert.equal(light.sparkleIntensity, 1.15);
+  assert.equal(light.sparkleSizeScale, 1.8);
   assert.equal(dark.surfaceShimmerIntensity, 0.36);
   assert.equal(dark.surfaceShimmerOpacity, 0.045);
   assert.equal(light.surfaceShimmerIntensity, 0.24);
@@ -274,7 +281,7 @@ test("light and dark themes use distinct particle, sparkle and translucent spher
   assert.ok(dark.volumeIntensity > light.volumeIntensity);
   assert.equal(light.ambientParticleOpacity, 0.9);
   assert.equal(light.ambientParticleColor, "#00281f");
-  assert.equal(dark.ambientParticleColor, "#62cfbf");
+  assert.equal(dark.ambientParticleColor, "#78e2d6");
   assert.equal(dark.ambientParticleOpacity, 0.86);
   assert.notEqual(light.orbitParticleColor, dark.orbitParticleColor);
   assert.notEqual(light.orbitParticleGlowColor, dark.orbitParticleGlowColor);
@@ -441,6 +448,10 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.ok(rendererSource.includes("uSparkleIntensity.value = palette.sparkleIntensity"));
   assert.ok(rendererSource.includes("uSparkleChanceScale.value = palette.sparkleChanceScale"));
   assert.ok(rendererSource.includes("uSparkleSizeScale.value = palette.sparkleSizeScale"));
+  assert.ok(rendererSource.includes("uSparkleHaloColor.value.set(palette.sparkleHaloColor)"));
+  assert.ok(shaderSource.includes("uniform vec3 uSparkleHaloColor"));
+  assert.ok(shaderSource.includes("uniform float uSparkleFragmentBoost"));
+  assert.ok(shaderSource.includes("float sparkleRim = smoothstep"));
   assert.ok(rendererSource.includes("uSurfaceShimmerIntensity.value = palette.surfaceShimmerIntensity"));
   assert.ok(rendererSource.includes("uSurfaceShimmerOpacity.value = palette.surfaceShimmerOpacity"));
   assert.ok(rendererSource.includes("uSurfaceDepthFadeFloor.value = palette.surfaceDepthFadeFloor"));

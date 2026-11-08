@@ -26,6 +26,8 @@ export const particleVertexShader = `
   uniform float uSparkleChanceScale;
   uniform float uSparkleIntensity;
   uniform float uSparkleSizeScale;
+  uniform float uSparkleVertexBoost;
+  uniform float uSparkleFragmentBoost;
   uniform float uBurst;
   uniform float uBurstTime;
   uniform float uBurstExpansion;
@@ -284,7 +286,7 @@ export const particleVertexShader = `
     vec3 sparkleColor = uSparkleColor * (0.7 + sparkle * 3.2);
 
     vColor = mix(litColor, sparkleColor, clamp(sparkle * 1.35, 0.0, 1.0));
-    vColor *= 1.0 + sparkle * 3.4 + particleBurst * 0.22;
+    vColor *= 1.0 + sparkle * uSparkleVertexBoost + particleBurst * 0.22;
     vOpacity = (
       layerOpacity
       + surfaceShimmer * uSurfaceShimmerOpacity
@@ -301,6 +303,8 @@ export const particleFragmentShader = `
   varying float vOpacity;
   varying float vSparkle;
   varying float vVolumeGlow;
+  uniform vec3 uSparkleHaloColor;
+  uniform float uSparkleFragmentBoost;
   varying vec2 vTrailDirection;
   varying float vTrailStrength;
 
@@ -318,7 +322,7 @@ export const particleFragmentShader = `
       * 0.34;
     float sparkleHalo = exp(-distanceFromCenter * distanceFromCenter * 4.8)
       * vSparkle
-      * 1.05;
+      * 1.25;
 
     // A tapered streak follows the projected movement direction and fades
     // behind the particle core. It remains inside the existing point sprite.
@@ -346,7 +350,11 @@ export const particleFragmentShader = `
 
     if (alpha < 0.012) discard;
 
-    vec3 trailColor = vColor * (0.78 + trailTail * 0.7);
-    gl_FragColor = vec4(trailColor * (1.0 + vSparkle * 2.2), alpha);
+    float sparkleRim = smoothstep(0.08, 0.24, distanceFromCenter)
+      * (1.0 - smoothstep(0.58, 0.9, distanceFromCenter))
+      * vSparkle;
+    vec3 sparkleTint = mix(vColor, uSparkleHaloColor, sparkleRim * 0.72);
+    vec3 trailColor = sparkleTint * (0.78 + trailTail * 0.7);
+    gl_FragColor = vec4(trailColor * (1.0 + vSparkle * uSparkleFragmentBoost), alpha);
   }
 `;
