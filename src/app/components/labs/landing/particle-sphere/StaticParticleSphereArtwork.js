@@ -12,9 +12,9 @@ const FOCAL_LENGTH = VIEW_SIZE / (2 * Math.tan(
 ));
 
 const STATIC_PARTICLE_DATA = createSphereParticleData({
-  surfaceCount: 5200,
-  innerCount: 620,
-  ambientCount: 26,
+  surfaceCount: 1120,
+  innerCount: 220,
+  ambientCount: 20,
   radius: PARTICLE_SPHERE_CONFIG.radius,
   seed: 0x51f15e,
 });

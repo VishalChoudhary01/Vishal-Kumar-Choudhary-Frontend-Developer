@@ -11,8 +11,6 @@ const LabsParticleSphere = dynamic(
   () => import("./particle-sphere/LabsParticleSphere"),
   {
     ssr: false,
-    // The parent keeps the matching static artwork mounted while this chunk
-    // loads, so there is never an empty frame between the two renderers.
     loading: () => null,
   },
 );
@@ -35,7 +33,9 @@ export default function LabsHeroArtwork() {
       aria-hidden="true"
       className="relative isolate mx-auto aspect-[1.08/1] min-h-[280px] w-full max-w-[39rem] overflow-hidden"
     >
-      <StaticParticleSphereArtwork className={webglReady ? "opacity-0" : "opacity-100"} />
+      <StaticParticleSphereArtwork
+        className={webglReady && !reducedMotion ? "opacity-0" : "opacity-100"}
+      />
       {!reducedMotion && isInView ? (
         <LabsParticleSphere onRendererStateChange={handleRendererStateChange} />
       ) : null}
