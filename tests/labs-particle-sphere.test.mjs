@@ -243,7 +243,7 @@ test("light and dark themes use distinct particle, sparkle and translucent spher
   assert.equal(light.sparkleHaloColor, "#0b5548");
   assert.ok(light.sparkleColor !== light.particleColor);
   assert.equal(light.glowColor, "#0a2926");
-  assert.equal(dark.particleColor, "#b0fff5");
+  assert.equal(dark.particleColor, "#c2fff8");
   assert.equal(dark.centerSphereColor, "#8ce8dc");
   assert.equal(dark.centerSphereOpacity, 0.075);
   assert.equal(light.surfaceParticleMix, 0);
@@ -608,9 +608,14 @@ test("Labs hero applies one responsive dark radial background without a separate
 
   assert.match(
     heroSource,
-    /<div data-labs-hero-root="" className="relative isolate w-full overflow-hidden dark:bg-\[radial-gradient\(/,
+    /<div data-labs-hero-root="" className="relative isolate w-full overflow-hidden bg-\[radial-gradient\(/,
   );
+  assert.match(heroSource, /dark:bg-\[radial-gradient\(/);
+  assert.match(heroSource, /lg:bg-\[radial-gradient\(/);
   assert.match(heroSource, /lg:dark:bg-\[radial-gradient\(/);
+  assert.ok(heroSource.includes("rgba(214,222,219,0.34)"));
+  assert.ok(heroSource.includes("rgba(0,1,1,0.99)"));
+  assert.ok(heroSource.includes("rgba(0,2,2,0.84)"));
   assert.doesNotMatch(heroSource, /aria-hidden="true"\s+className="pointer-events-none absolute/);
   assert.doesNotMatch(heroSource, /linear-gradient\(90deg/);
   assert.doesNotMatch(heroSource, /bottom-0 left-0 right-0 top-\[68%\]/);

@@ -117,7 +117,7 @@ export default function LabsIntroduction({
   const prefersReducedMotion = useReducedMotion();
 
   return (
-    <div data-labs-hero-root="" className="relative isolate w-full overflow-hidden dark:bg-[radial-gradient(ellipse_120%_85%_at_100%_82%,rgba(1,3,2,0.96)_0%,rgba(1,4,3,0.62)_34%,rgba(1,4,3,0.24)_58%,rgba(1,4,3,0.06)_78%,transparent_100%)] lg:dark:bg-[radial-gradient(ellipse_95%_130%_at_100%_50%,rgba(1,3,2,0.98)_0%,rgba(1,4,3,0.70)_38%,rgba(1,4,3,0.24)_68%,transparent_100%)]">
+    <div data-labs-hero-root="" className="relative isolate w-full overflow-hidden bg-[radial-gradient(ellipse_120%_85%_at_100%_82%,rgba(214,222,219,0.34)_0%,rgba(226,232,229,0.18)_40%,rgba(240,243,241,0.05)_72%,transparent_100%)] dark:bg-[radial-gradient(ellipse_125%_90%_at_100%_82%,rgba(0,1,1,0.99)_0%,rgba(0,2,2,0.82)_34%,rgba(0,2,2,0.42)_60%,rgba(0,2,2,0.10)_82%,transparent_100%)] lg:bg-[radial-gradient(ellipse_105%_140%_at_100%_50%,rgba(214,222,219,0.32)_0%,rgba(226,232,229,0.17)_42%,rgba(240,243,241,0.05)_72%,transparent_100%)] lg:dark:bg-[radial-gradient(ellipse_105%_140%_at_100%_50%,rgba(0,1,1,0.995)_0%,rgba(0,2,2,0.84)_38%,rgba(0,2,2,0.42)_68%,rgba(0,2,2,0.10)_88%,transparent_100%)]">
       <motion.section
       aria-labelledby="labs-heading"
       initial={prefersReducedMotion ? false : "hidden"}
