@@ -165,7 +165,7 @@ test("particle geometry is deterministic for a stable seed", () => {
 });
 
 test("sphere and enlarged orbit framing stays fixed throughout particle bursts", () => {
-  const radius = 1.38;
+  const radius = 1.52;
   const data = createSphereParticleData({
     surfaceCount: 180,
     innerCount: 24,
@@ -198,10 +198,13 @@ test("sphere and enlarged orbit framing stays fixed throughout particle bursts",
   assert.ok(!rendererSource.includes("burstCameraDistance"));
   assert.ok(!rendererSource.includes("getParticleCameraChoreography"));
   assert.ok(!rendererSource.includes("camera.position.z +="));
-  assert.ok(constantsSource.includes("radius: 1.38"));
-  assert.ok(orbitSource.includes("radiusX: 1.74") && orbitSource.includes("radiusY: 1.02"));
-  assert.ok(orbitSource.includes("radiusX: 1.60") && orbitSource.includes("radiusY: 0.82"));
-  assert.ok(orbitSource.includes("radiusX: 1.90") && orbitSource.includes("radiusY: 0.92"));
+  assert.ok(constantsSource.includes("radius: 1.52"));
+  assert.ok(orbitSource.includes("radiusX: 1.91") && orbitSource.includes("radiusY: 1.12"));
+  assert.ok(orbitSource.includes("radiusX: 1.76") && orbitSource.includes("radiusY: 0.90"));
+  assert.ok(orbitSource.includes("radiusX: 2.09") && orbitSource.includes("radiusY: 1.01"));
+  assert.ok(orbitSource.includes("rotation: [0.92, 0.12, -0.15]"));
+  assert.ok(orbitSource.includes("rotation: [1.26, -0.34, 0.48]"));
+  assert.ok(orbitSource.includes("rotation: [0.48, 0.42, -0.62]"));
   assert.ok(rendererSource.includes("particles.frustumCulled = false"));
   assert.match(rendererSource, /className="absolute inset-0 h-full w-full overflow-hidden"/);
   assert.ok(artworkSource.includes("aspect-[1.08/1] min-h-[280px]") && artworkSource.includes("overflow-hidden"));
