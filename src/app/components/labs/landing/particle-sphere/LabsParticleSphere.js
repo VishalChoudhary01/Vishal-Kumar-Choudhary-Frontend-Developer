@@ -343,7 +343,7 @@ export default function LabsParticleSphere() {
         side: THREE.FrontSide,
       });
       const sphereShell = new THREE.Mesh(
-        new THREE.SphereGeometry(PARTICLE_SPHERE_CONFIG.radius * 0.94, 40, 32),
+        new THREE.SphereGeometry(PARTICLE_SPHERE_CONFIG.radius * 0.8, 40, 32),
         sphereShellMaterial,
       );
       sphereShell.renderOrder = -1;

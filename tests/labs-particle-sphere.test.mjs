@@ -375,7 +375,7 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.match(rendererSource, /palette\.ambientParticleOpacity/);
   assert.doesNotMatch(rendererSource, /new THREE\.SphereGeometry\(0\.94/);
   assert.doesNotMatch(rendererSource, /let glow;/);
-  assert.ok(rendererSource.includes("new THREE.SphereGeometry(PARTICLE_SPHERE_CONFIG.radius * 0.94, 40, 32)"));
+  assert.ok(rendererSource.includes("new THREE.SphereGeometry(PARTICLE_SPHERE_CONFIG.radius * 0.8, 40, 32)"));
   assert.ok(rendererSource.includes("sphereShellMaterial.color.set(palette.centerSphereColor)"));
   assert.ok(rendererSource.includes("sphereShellMaterial.opacity = palette.centerSphereOpacity"));
   assert.match(rendererSource, /case "orbit-particle"/);
