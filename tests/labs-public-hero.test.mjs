@@ -106,7 +106,7 @@ test("hero artwork is decorative, lazy-loads Three.js and respects reduced motio
   assert.match(artworkSource, /reducedMotion\s*\|\|\s*!isInView/);
   assert.match(artworkSource, /StaticParticleSphereArtwork/);
   assert.match(staticArtworkSource, /data-static-particle-sphere=""/);
-  assert.ok(staticArtworkSource.includes("w-[60%]"));
+  assert.ok(staticArtworkSource.includes("w-[48%]"));
   assert.ok(staticArtworkSource.includes("dark:bg-[radial-gradient"));
 });
 

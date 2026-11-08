@@ -9,7 +9,10 @@ import {
   PARTICLE_BURST_EXPANSION,
   isParticleBurstActive,
 } from "../src/app/components/labs/landing/particle-sphere/particle-interaction.mjs";
-import { getParticleCameraDistance } from "../src/app/components/labs/landing/particle-sphere/particle-responsive.mjs";
+import {
+  getParticleBurstSpreadScale,
+  getParticleCameraDistance,
+} from "../src/app/components/labs/landing/particle-sphere/particle-responsive.mjs";
 import { getParticleSphereThemePalette } from "../src/app/components/labs/landing/particle-sphere/particle-theme.mjs";
 import {
   areParticleQualityProfilesEqual,
@@ -375,7 +378,7 @@ test("renderer uses one GPU point system and pauses when it cannot be seen", () 
   assert.match(rendererSource, /palette\.ambientParticleOpacity/);
   assert.doesNotMatch(rendererSource, /new THREE\.SphereGeometry\(0\.94/);
   assert.doesNotMatch(rendererSource, /let glow;/);
-  assert.ok(rendererSource.includes("new THREE.SphereGeometry(PARTICLE_SPHERE_CONFIG.radius * 0.8, 40, 32)"));
+  assert.ok(rendererSource.includes("new THREE.SphereGeometry(PARTICLE_SPHERE_CONFIG.radius * 0.64, 40, 32)"));
   assert.ok(rendererSource.includes("sphereShellMaterial.color.set(palette.centerSphereColor)"));
   assert.ok(rendererSource.includes("sphereShellMaterial.opacity = palette.centerSphereOpacity"));
   assert.match(rendererSource, /case "orbit-particle"/);
@@ -422,6 +425,58 @@ test("particle bursts leave the camera and orbital paths at their resting size",
   assert.ok(!orbitSource.includes("ORBIT_BURST_SPEED_MULTIPLIER"));
 });
 
+test("particle burst spans the entire Labs hero while the sphere stays at the artwork anchor", async () => {
+  const labsHeroSource = await readFile(
+    new URL("../src/app/components/labs/LabsIntroduction.js", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(labsHeroSource, /data-labs-hero-root=""/);
+  assert.ok(labsHeroSource.includes("pointer-events-none relative z-10"));
+  assert.ok(labsHeroSource.includes("pointer-events-auto group inline-flex"));
+  assert.ok(rendererSource.includes('mount.closest("[data-labs-hero-root]")'));
+  assert.ok(rendererSource.includes("renderRoot.appendChild(renderer.domElement)"));
+  assert.ok(rendererSource.includes("renderRoot.getBoundingClientRect()"));
+  assert.ok(rendererSource.includes("artworkBounds = mount.getBoundingClientRect()"));
+  assert.ok(rendererSource.includes("artworkGroup.position.copy(artworkAnchor)"));
+  assert.ok(rendererSource.includes("resizeObserver.observe(renderRoot)"));
+  assert.ok(rendererSource.includes("uBurstSpreadScale: { value: new THREE.Vector2(1, 1) }"));
+  assert.ok(shaderSource.includes("uniform vec2 uBurstSpreadScale"));
+  assert.ok(shaderSource.includes("burstOffset.xy *= uBurstSpreadScale"));
+
+  const desktopScale = getParticleBurstSpreadScale({
+    heroWidth: 1440,
+    heroHeight: 760,
+    artworkWidth: 620,
+    artworkHeight: 560,
+    artworkOffsetX: 245,
+    artworkOffsetY: 0,
+  });
+  const mobileScale = getParticleBurstSpreadScale({
+    heroWidth: 390,
+    heroHeight: 1280,
+    artworkWidth: 350,
+    artworkHeight: 330,
+    artworkOffsetX: 0,
+    artworkOffsetY: 430,
+  });
+
+  assert.ok(desktopScale[0] > 3);
+  assert.ok(desktopScale[1] > 1);
+  assert.ok(mobileScale[0] > 1);
+  assert.equal(mobileScale[1], 5);
+
+  const cameraDistance = getParticleCameraDistance({
+    width: 1440,
+    height: 760,
+    fitWidth: 620,
+    fitHeight: 560,
+    orbitRadius: 2.26,
+    fillRatio: 0.94,
+  });
+  assert.ok(Number.isFinite(cameraDistance));
+});
+
 test("renderer maps pointer hits to the sphere and restarts burst on a short tap", () => {
   assert.match(rendererSource, /raycaster\.intersectObject\(sphereHitArea, false\)/);
   assert.match(rendererSource, /sphereGroup\.worldToLocal\(pointerLocal\)/);
@@ -458,7 +513,7 @@ test("Labs hero applies one responsive dark radial background without a separate
 
   assert.match(
     heroSource,
-    /<div className="relative w-full overflow-hidden dark:bg-\[radial-gradient\(/,
+    /<div data-labs-hero-root="" className="relative isolate w-full overflow-hidden dark:bg-\[radial-gradient\(/,
   );
   assert.match(heroSource, /lg:dark:bg-\[radial-gradient\(/);
   assert.doesNotMatch(heroSource, /aria-hidden="true"\s+className="pointer-events-none absolute/);

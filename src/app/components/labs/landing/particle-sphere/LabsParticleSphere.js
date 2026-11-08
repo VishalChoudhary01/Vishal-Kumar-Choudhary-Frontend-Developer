@@ -9,7 +9,10 @@ import {
   particleVertexShader,
 } from "./particle-shaders";
 import { createParticleOrbits } from "./particle-orbits";
-import { getParticleCameraDistance } from "./particle-responsive.mjs";
+import {
+  getParticleBurstSpreadScale,
+  getParticleCameraDistance,
+} from "./particle-responsive.mjs";
 import { getParticleSphereThemePalette } from "./particle-theme.mjs";
 import {
   getParticleBurstEnvelope,
@@ -62,6 +65,8 @@ export default function LabsParticleSphere() {
 
     if (!mount) return undefined;
 
+    const renderRoot = mount.closest("[data-labs-hero-root]") ?? mount;
+
     let renderer;
     let particleGeometry;
     let particleMaterial;
@@ -92,6 +97,7 @@ export default function LabsParticleSphere() {
     const raycaster = new THREE.Raycaster();
     const pointerNdc = new THREE.Vector2();
     const pointerLocal = new THREE.Vector3();
+    const artworkAnchor = new THREE.Vector3();
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
@@ -104,8 +110,11 @@ export default function LabsParticleSphere() {
     camera.position.set(0, 0, PARTICLE_SPHERE_CONFIG.cameraDistance);
     let idleCameraDistance = PARTICLE_SPHERE_CONFIG.cameraDistance;
 
+    const artworkGroup = new THREE.Group();
+    scene.add(artworkGroup);
+
     const sphereGroup = new THREE.Group();
-    scene.add(sphereGroup);
+    artworkGroup.add(sphereGroup);
 
     const stop = () => {
       isRunning = false;
@@ -197,28 +206,60 @@ export default function LabsParticleSphere() {
       renderer?.renderLists?.dispose();
       renderer?.dispose();
 
-      if (renderer?.domElement?.parentNode === mount) {
-        mount.removeChild(renderer.domElement);
+      if (renderer?.domElement?.parentNode === renderRoot) {
+        renderRoot.removeChild(renderer.domElement);
       }
     };
 
     const resize = () => {
-      if (!renderer || !mount) return;
+      if (!renderer || !mount || !renderRoot) return;
 
-      const bounds = mount.getBoundingClientRect();
+      const bounds = renderRoot.getBoundingClientRect();
+      const artworkBounds = mount.getBoundingClientRect();
       const width = Math.max(1, Math.round(bounds.width));
       const height = Math.max(1, Math.round(bounds.height));
+      const artworkWidth = Math.max(1, artworkBounds.width);
+      const artworkHeight = Math.max(1, artworkBounds.height);
+      const artworkOffsetX = artworkBounds.left + artworkBounds.width / 2
+        - (bounds.left + bounds.width / 2);
+      const artworkOffsetY = artworkBounds.top + artworkBounds.height / 2
+        - (bounds.top + bounds.height / 2);
 
       camera.aspect = width / height;
       idleCameraDistance = getParticleCameraDistance({
         width,
         height,
+        fitWidth: artworkWidth,
+        fitHeight: artworkHeight,
         fovDegrees: PARTICLE_SPHERE_CONFIG.cameraFov,
         orbitRadius: 2.26,
         fillRatio: 0.94,
       });
       camera.position.z = idleCameraDistance;
       camera.updateProjectionMatrix();
+
+      const worldUnitsPerPixel = (
+        2 * idleCameraDistance
+        * Math.tan((PARTICLE_SPHERE_CONFIG.cameraFov * Math.PI) / 360)
+      ) / height;
+      artworkAnchor.set(
+        artworkOffsetX * worldUnitsPerPixel,
+        -artworkOffsetY * worldUnitsPerPixel,
+        0,
+      );
+      artworkGroup.position.copy(artworkAnchor);
+
+      const [spreadX, spreadY] = getParticleBurstSpreadScale({
+        heroWidth: width,
+        heroHeight: height,
+        artworkWidth,
+        artworkHeight,
+        artworkOffsetX,
+        artworkOffsetY,
+      });
+      if (particleMaterial) {
+        particleMaterial.uniforms.uBurstSpreadScale.value.set(spreadX, spreadY);
+      }
 
       const nextProfile = getParticleQualityProfile({
         viewportWidth: window.innerWidth,
@@ -289,10 +330,14 @@ export default function LabsParticleSphere() {
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.domElement.setAttribute("aria-hidden", "true");
       renderer.domElement.style.display = "block";
+      renderer.domElement.style.position = "absolute";
+      renderer.domElement.style.inset = "0";
       renderer.domElement.style.width = "100%";
       renderer.domElement.style.height = "100%";
+      renderer.domElement.style.zIndex = "0";
+      renderer.domElement.style.pointerEvents = "auto";
 
-      mount.appendChild(renderer.domElement);
+      renderRoot.appendChild(renderer.domElement);
 
       particleGeometry = createParticleGeometry(qualityProfile);
       particleMaterial = new THREE.ShaderMaterial({
@@ -316,6 +361,7 @@ export default function LabsParticleSphere() {
           uBurst: { value: 0 },
           uBurstTime: { value: -1 },
           uBurstExpansion: { value: PARTICLE_BURST_EXPANSION },
+          uBurstSpreadScale: { value: new THREE.Vector2(1, 1) },
           uBurstStagger: { value: PARTICLE_BURST_STAGGER_SECONDS },
           uBurstOutwardSeconds: { value: PARTICLE_BURST_OUTWARD_SECONDS },
           uBurstRecoverySeconds: { value: PARTICLE_BURST_RECOVERY_SECONDS },
@@ -343,7 +389,7 @@ export default function LabsParticleSphere() {
         side: THREE.FrontSide,
       });
       const sphereShell = new THREE.Mesh(
-        new THREE.SphereGeometry(PARTICLE_SPHERE_CONFIG.radius * 0.8, 40, 32),
+        new THREE.SphereGeometry(PARTICLE_SPHERE_CONFIG.radius * 0.64, 40, 32),
         sphereShellMaterial,
       );
       sphereShell.renderOrder = -1;
@@ -371,7 +417,7 @@ export default function LabsParticleSphere() {
       sphereGroup.add(sphereHitArea);
 
       orbitGroup = createParticleOrbits(THREE);
-      scene.add(orbitGroup);
+      artworkGroup.add(orbitGroup);
 
       const syncThemeColor = () => {
         const palette = getParticleSphereThemePalette(
@@ -520,6 +566,7 @@ export default function LabsParticleSphere() {
       if (typeof ResizeObserver !== "undefined") {
         resizeObserver = new ResizeObserver(resize);
         resizeObserver.observe(mount);
+        if (renderRoot !== mount) resizeObserver.observe(renderRoot);
       } else {
         window.addEventListener("resize", resize, { passive: true });
       }
