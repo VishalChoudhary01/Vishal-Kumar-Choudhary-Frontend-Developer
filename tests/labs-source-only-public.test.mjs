@@ -86,10 +86,10 @@ test("owner source inventory lists owner-created experiments without legacy runt
   assert.ok(listEnd > listStart);
 
   const inventoryService = ownerSourceManagement.slice(listStart, listEnd);
-  assert.match(inventoryService, /const customItems = customExperiments\\.map/);
+  assert.match(inventoryService, /const customItems = customExperiments[.]map/);
   assert.match(inventoryService, /isCustom: true/);
   assert.match(inventoryService, /return customItems;/);
-  assert.doesNotMatch(inventoryService, /builtInItems|publishedLabExperiments\\.map/);
+  assert.doesNotMatch(inventoryService, /builtInItems|publishedLabExperiments[.]map/);
   assert.match(ownerSourceInventory, /Only owner-created experiments appear here/);
   assert.doesNotMatch(ownerSourceInventory, /Create source on a built-in row/);
 });
@@ -113,6 +113,6 @@ test("removing legacy rows from the inventory preserves their code-owned source 
   assert.match(gradientBloomRuntime, /radial-gradient/);
   assert.match(generativeParticleFieldRuntime, /createParticles/);
   assert.match(magneticButtonSourceProject, /getMagneticButtonSourceProjectFiles/);
-  assert.match(magneticButtonSourceProject, /runtime\\/experiments\\/magnetic-interaction\\/index\\.js/);
+  assert.ok(magneticButtonSourceProject.includes("runtime/experiments/magnetic-interaction/index.js"));
 });
 
