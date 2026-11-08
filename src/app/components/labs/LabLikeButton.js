@@ -31,6 +31,7 @@ function applyLikeTransition(current, nextLiked) {
 
 export default function LabLikeButton({
   slug,
+  experimentTitle = "this experiment",
   initialData = null,
   compact = false,
   loadOnMount = true,
@@ -176,15 +177,15 @@ export default function LabLikeButton({
         disabled={isDisabled}
         aria-busy={isPending}
         aria-pressed={data?.liked === true}
-        aria-label={data?.liked ? "Unlike this experiment" : "Like this experiment"}
-        title={message || (data?.likeAllowed ? "Like this experiment" : data?.actorType === "unverified" ? "Verify your email to like" : "Like unavailable")}
+        aria-label={data?.liked ? `Unlike ${experimentTitle}` : `Like ${experimentTitle}`}
+        title={message || (data?.likeAllowed ? `Like ${experimentTitle}` : data?.actorType === "unverified" ? "Verify your email to like" : "Like unavailable")}
         className={[
           "inline-flex h-9 items-center gap-2 rounded-sm border px-3 text-xs font-semibold transition-colors motion-reduce:transition-none",
           data?.liked
             ? "border-brand bg-brand-soft text-brand"
             : "border-border text-text-secondary hover:border-brand hover:text-brand",
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50",
-          compact ? "h-8 px-2.5" : "",
+          compact ? "h-11 min-w-[5.5rem] px-3 sm:h-9 sm:min-w-0 sm:px-2.5" : "",
         ].join(" ")}
       >
         {isPending ? (
