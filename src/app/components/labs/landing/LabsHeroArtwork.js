@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useInView } from "motion/react";
 
@@ -11,7 +11,9 @@ const LabsParticleSphere = dynamic(
   () => import("./particle-sphere/LabsParticleSphere"),
   {
     ssr: false,
-    loading: () => <StaticParticleSphereArtwork />,
+    // The parent keeps the matching static artwork mounted while this chunk
+    // loads, so there is never an empty frame between the two renderers.
+    loading: () => null,
   },
 );
 
@@ -22,6 +24,10 @@ export default function LabsHeroArtwork() {
     margin: "140px 0px",
   });
   const reducedMotion = useReducedMotion();
+  const [webglReady, setWebglReady] = useState(false);
+  const handleRendererStateChange = useCallback((ready) => {
+    setWebglReady(Boolean(ready));
+  }, []);
 
   return (
     <figure
@@ -29,11 +35,10 @@ export default function LabsHeroArtwork() {
       aria-hidden="true"
       className="relative isolate mx-auto aspect-[1.08/1] min-h-[280px] w-full max-w-[39rem] overflow-hidden"
     >
-      {reducedMotion || !isInView ? (
-        <StaticParticleSphereArtwork />
-      ) : (
-        <LabsParticleSphere />
-      )}
+      <StaticParticleSphereArtwork className={webglReady ? "opacity-0" : "opacity-100"} />
+      {!reducedMotion && isInView ? (
+        <LabsParticleSphere onRendererStateChange={handleRendererStateChange} />
+      ) : null}
     </figure>
   );
 }
