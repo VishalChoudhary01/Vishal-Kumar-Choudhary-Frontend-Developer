@@ -23,6 +23,7 @@ export default function LabsPageShell({
       >
         <Navbar
           context="project"
+          solidScrolledSurface
           showLabsAccount
           hideSocialLinks
           initialAuthUser={initialAuthUser}
