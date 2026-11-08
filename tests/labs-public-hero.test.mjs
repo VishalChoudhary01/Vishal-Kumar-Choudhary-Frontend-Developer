@@ -165,4 +165,9 @@ test("hero artwork is visible at rest, fills its grid column and animates slowly
   assert.doesNotMatch(artworkSource, /Interaction field|VKr \/ Labs|Explore · Build · Refine|Creative systems/);
 });
 
-
+test("Labs hero typography and container scale from mobile through desktop", () => {
+  assert.ok(componentSource.includes("px-4 pb-9 pt-[calc(60px+1.75rem)]"));
+  assert.ok(componentSource.includes("text-[clamp(2.55rem,8vw,3.25rem)]"));
+  assert.ok(componentSource.includes("sm:text-[clamp(3.2rem,6.2vw,6.35rem)]"));
+  assert.ok(componentSource.includes("text-[13px] leading-6"));
+});
