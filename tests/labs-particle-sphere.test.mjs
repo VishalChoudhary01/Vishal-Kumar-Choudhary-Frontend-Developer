@@ -234,7 +234,7 @@ test("light and dark themes use distinct particle, sparkle and translucent spher
   assert.notEqual(light.glowOpacity, dark.glowOpacity);
   assert.equal(light.particleBlending, "normal");
   assert.equal(dark.particleBlending, "normal");
-  assert.equal(light.particleColor, "#0b6258");
+  assert.equal(light.particleColor, "#087b6f");
   assert.equal(light.centerSphereColor, "#0b2926");
   assert.equal(light.centerSphereOpacity, 0.1);
   assert.equal(light.innerParticleColor, "#0b5148");
@@ -243,7 +243,7 @@ test("light and dark themes use distinct particle, sparkle and translucent spher
   assert.equal(light.sparkleHaloColor, "#0b5548");
   assert.ok(light.sparkleColor !== light.particleColor);
   assert.equal(light.glowColor, "#0a2926");
-  assert.equal(dark.particleColor, "#c2fff8");
+  assert.equal(dark.particleColor, "#d5fff9");
   assert.equal(dark.centerSphereColor, "#8ce8dc");
   assert.equal(dark.centerSphereOpacity, 0.075);
   assert.equal(light.surfaceParticleMix, 0);
@@ -252,9 +252,9 @@ test("light and dark themes use distinct particle, sparkle and translucent spher
   assert.equal(dark.surfaceParticleBrightness, 1.2);
   assert.equal(light.surfaceParticleOpacityFloor, 0.88);
   assert.equal(dark.surfaceParticleOpacityFloor, 0.74);
-  assert.equal(light.surfaceParticleSizeScale, 1.34);
+  assert.equal(light.surfaceParticleSizeScale, 1.55);
   assert.equal(light.surfaceDepthFadeFloor, 1);
-  assert.equal(dark.surfaceParticleSizeScale, 1.7);
+  assert.equal(dark.surfaceParticleSizeScale, 1.95);
   assert.equal(dark.surfaceDepthFadeFloor, 0.99);
   assert.equal(light.depthBrightnessNear, 1.12);
   assert.equal(light.depthBrightnessFar, 0.74);

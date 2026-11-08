@@ -1,14 +1,14 @@
 export function getParticleSphereThemePalette(isDark) {
   if (isDark) {
     return Object.freeze({
-      particleColor: "#c2fff8",
+      particleColor: "#d5fff9",
       particleBlending: "normal",
       centerSphereColor: "#8ce8dc",
       centerSphereOpacity: 0.075,
       surfaceParticleMix: 0,
       surfaceParticleBrightness: 1.2,
       surfaceParticleOpacityFloor: 0.74,
-      surfaceParticleSizeScale: 1.7,
+      surfaceParticleSizeScale: 1.95,
       surfaceDepthFadeFloor: 0.99,
       depthBrightnessNear: 1.12,
       depthBrightnessFar: 0.74,
@@ -38,14 +38,14 @@ export function getParticleSphereThemePalette(isDark) {
   }
 
   return Object.freeze({
-    particleColor: "#0b6258",
+    particleColor: "#087b6f",
     particleBlending: "normal",
     centerSphereColor: "#0b2926",
     centerSphereOpacity: 0.1,
     surfaceParticleMix: 0,
     surfaceParticleBrightness: 1.45,
     surfaceParticleOpacityFloor: 0.88,
-    surfaceParticleSizeScale: 1.34,
+    surfaceParticleSizeScale: 1.55,
     surfaceDepthFadeFloor: 1,
     depthBrightnessNear: 1.12,
     depthBrightnessFar: 0.74,

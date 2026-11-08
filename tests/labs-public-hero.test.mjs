@@ -127,12 +127,13 @@ test("hero artwork is decorative, lazy-loads Three.js and respects reduced motio
   assert.ok(staticArtworkSource.includes("w-[40%]"));
   assert.ok(staticArtworkSource.includes("circle_at_50%_50%"));
   assert.ok(!staticArtworkSource.includes("circle_at_38%_32%"));
-  assert.ok(staticArtworkSource.includes("fill-[#0b6258]"));
+  assert.ok(staticArtworkSource.includes("fill-[#087b6f]"));
   assert.ok(staticArtworkSource.includes("fill-[#0b5148] dark:fill-[#75dcd1]"));
   assert.ok(staticArtworkSource.includes("depthBrightness = 0.74 + normalizedDepth * 0.38"));
   assert.ok(staticArtworkSource.includes("baseOpacity * depthBrightness"));
+  assert.ok(staticArtworkSource.includes("const surfaceRadius = (0.28 + data.sizes[index] * 0.22) * 1.15"));
   assert.ok(staticArtworkSource.includes("dark:opacity-[0.98]"));
-  assert.ok(staticArtworkSource.includes("dark:fill-[#c2fff8]"));
+  assert.ok(staticArtworkSource.includes("dark:fill-[#d5fff9]"));
   assert.ok(staticArtworkSource.includes('inner: isInner'));
 });
 
