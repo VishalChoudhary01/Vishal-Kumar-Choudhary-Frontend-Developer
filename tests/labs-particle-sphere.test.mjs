@@ -626,7 +626,7 @@ test("Labs hero applies one responsive dark radial background without a separate
   assert.doesNotMatch(heroSource, /bottom-0 left-0 right-0 top-\[68%\]/);
   assert.doesNotMatch(heroSource, /mt-8 h-px w-full bg-border-subtle/);
 
-  assert.match(heroSource, /grid w-full max-w-\[25rem\] grid-cols-2 gap-6 border-t border-border-subtle/);
+  assert.match(heroSource, /grid w-full max-w-\[25rem\] grid-cols-2 gap-4 border-t border-border-subtle pt-4 sm:mt-9 sm:gap-8/);
   assert.match(heroSource, /A space for|labs-heading/);
   assert.match(heroSource, /Published experiments/);
   assert.match(heroSource, /LabsHeroArtwork/);
