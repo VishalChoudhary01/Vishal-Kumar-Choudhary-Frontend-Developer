@@ -101,10 +101,13 @@ export default function LabsParticleSphere() {
     const artworkAnchor = new THREE.Vector3();
 
     const scene = new THREE.Scene();
-    const sphereAmbientLight = new THREE.AmbientLight(0xffffff, 0.78);
-    const sphereKeyLight = new THREE.DirectionalLight(0xffffff, 1.05);
-    sphereKeyLight.position.set(-3.5, 4.5, 5.5);
-    scene.add(sphereAmbientLight, sphereKeyLight);
+    const sphereAmbientLight = new THREE.AmbientLight(0xffffff, 0.42);
+    const sphereHemisphereLight = new THREE.HemisphereLight(
+      0x8abeb4,
+      0x071c18,
+      0.62,
+    );
+    scene.add(sphereAmbientLight, sphereHemisphereLight);
 
     const camera = new THREE.PerspectiveCamera(
       PARTICLE_SPHERE_CONFIG.cameraFov,
@@ -409,17 +412,15 @@ export default function LabsParticleSphere() {
           : THREE.AdditiveBlending,
       });
 
-      sphereShellMaterial = new THREE.MeshPhongMaterial({
+      sphereShellMaterial = new THREE.MeshLambertMaterial({
         color: initialPalette.centerSphereColor,
-        specular: initialPalette.centerSphereSpecular,
-        shininess: initialPalette.centerSphereShininess,
         transparent: true,
         opacity: initialPalette.centerSphereOpacity,
         depthWrite: false,
         side: THREE.FrontSide,
       });
       const sphereShell = new THREE.Mesh(
-        new THREE.SphereGeometry(PARTICLE_SPHERE_CONFIG.radius * 0.64, 40, 32),
+        new THREE.SphereGeometry(PARTICLE_SPHERE_CONFIG.radius * 0.5, 40, 32),
         sphereShellMaterial,
       );
       sphereShell.renderOrder = -1;
@@ -481,8 +482,6 @@ export default function LabsParticleSphere() {
         particleMaterial.uniforms.uSparkleIntensity.value = palette.sparkleIntensity;
         particleMaterial.uniforms.uSparkleSizeScale.value = palette.sparkleSizeScale;
         sphereShellMaterial.color.set(palette.centerSphereColor);
-        sphereShellMaterial.specular.set(palette.centerSphereSpecular);
-        sphereShellMaterial.shininess = palette.centerSphereShininess;
         sphereShellMaterial.opacity = palette.centerSphereOpacity;
 
         orbitGroup.traverse((object) => {
