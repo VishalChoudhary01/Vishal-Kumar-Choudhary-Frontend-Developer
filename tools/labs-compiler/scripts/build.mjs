@@ -239,7 +239,9 @@ async function main() {
     "default-src " + quote + "none" + quote,
     "script-src " + quote + "self" + quote + " " + quote + "unsafe-inline" + quote,
     "style-src " + quote + "self" + quote + " " + quote + "unsafe-inline" + quote,
-    "img-src " + quote + "self" + quote + " data: blob:",
+    // External images are requested by the viewer's browser, not by the sandbox.
+    // This does not enable external scripts, styles, fonts, media or fetch requests.
+    "img-src " + quote + "self" + quote + " https: data: blob:",
     "font-src " + quote + "self" + quote + " data:",
     "media-src " + quote + "self" + quote + " data: blob:",
     "connect-src " + quote + "none" + quote,
