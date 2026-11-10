@@ -96,3 +96,36 @@ test("Better Auth resolves origins per request and carries Vercel deployment con
   assert.ok(source.includes("vercelURL: process.env.VERCEL_URL"));
   assert.ok(source.includes("vercelBranchURL: process.env.VERCEL_BRANCH_URL"));
 });
+
+test("verification and password-reset callbacks await SMTP delivery instead of hiding failures", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const source = await readFile(
+    new URL("../src/app/lib/auth/auth.js", import.meta.url),
+    "utf8",
+  );
+
+  assert.ok(source.includes("async function deliverAuthEmail(message)"));
+  assert.ok(source.includes('deliveryError.code = "AUTH_EMAIL_DELIVERY_FAILED"'));
+  assert.match(source, /sendResetPassword: async \(\{ user, url \}\) => \{\s*await deliverAuthEmail\(/);
+  assert.match(source, /sendVerificationEmail: async \(\{ user, url \}\) => \{\s*await deliverAuthEmail\(/);
+  assert.equal(source.includes("scheduleEmail("), false);
+  assert.equal(source.includes('import { after } from "next/server"'), false);
+});
+
+test("registration and verification resend surface email delivery failures without exposing account existence", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [registration, resend] = await Promise.all([
+    readFile(new URL("../src/app/api/labs/register/route.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/api/labs/verification/resend/route.js", import.meta.url), "utf8"),
+  ]);
+
+  for (const source of [registration, resend]) {
+    assert.ok(source.includes("export const maxDuration = 30"));
+    assert.ok(source.includes('"AUTH_EMAIL_DELIVERY_FAILED"'));
+    assert.ok(source.includes("Email delivery is temporarily unavailable"));
+    assert.ok(source.includes("503"));
+  }
+  assert.ok(resend.includes("const sendResult = await auth.api.sendVerificationEmail"));
+  assert.ok(!resend.includes("Keep the same client-visible result for existing and unknown emails."));
+  assert.ok(registration.includes("const resultErrorStatus = Number("));
+});
