@@ -1,6 +1,7 @@
 const PROJECT_DEPLOYMENT_ORIGINS = Object.freeze([
   "https://vishal-kumar-choudhary-frontend-developer-*.vercel.app",
   "https://vishal-kumar-choudh-git-*-vishal-kumar-choudharys-projects.vercel.app",
+  "https://vishal-kumar-choudhary-fronten-vishal-kumar-choudharys-projects.vercel.app",
 ]);
 
 /**
@@ -8,15 +9,21 @@ const PROJECT_DEPLOYMENT_ORIGINS = Object.freeze([
  *
  * Production's canonical base URL remains the callback origin. These
  * additional HTTPS patterns allow browser sign-in requests made on this
- * project's unique deployment URLs, without trusting arbitrary *.vercel.app
- * hosts or changing the OAuth callback/base URL.
+ * project's unique deployment URLs and configured project aliases, without
+ * trusting arbitrary *.vercel.app hosts or changing the OAuth callback URL.
  */
 export function buildTrustedAuthOrigins({
   baseURL,
   configuredOrigins = "",
   vercelEnvironment = "",
 } = {}) {
-  const staticBaseOrigins = typeof baseURL === "string" ? [baseURL] : [];
+  const configuredBaseURL = typeof baseURL === "string"
+    ? baseURL
+    : typeof baseURL?.fallback === "string"
+      ? baseURL.fallback
+      : "";
+
+  const staticBaseOrigins = configuredBaseURL ? [configuredBaseURL] : [];
   const deploymentOrigins = ["production", "preview"].includes(vercelEnvironment)
     ? PROJECT_DEPLOYMENT_ORIGINS
     : [];
