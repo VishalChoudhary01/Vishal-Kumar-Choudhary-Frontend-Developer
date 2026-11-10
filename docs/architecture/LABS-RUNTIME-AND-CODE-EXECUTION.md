@@ -245,3 +245,15 @@ Required verification remains:
 - [ ] owner/non-owner/guest/unverified source access matrix;
 - [ ] mobile/desktop, keyboard, reduced-motion and both theme QA;
 - [ ] homepage/project-detail regression verification.
+
+## 13. Owner compiler snapshot storage management
+
+The owner Source Management page includes a separate Vercel Sandbox snapshot inventory. It uses the project's deployment OIDC identity and the Vercel Sandbox SDK to list project snapshots and named Sandboxes; it does not require a personal access token or paid Vercel team.
+
+The panel reports the sum of project snapshot byte sizes, snapshot metadata, sandbox references and conservative deletion eligibility. It explicitly does not label project bytes as the account-wide Hobby quota.
+
+Deletion is restricted to created automatic leaf snapshots that are not referenced by a named Sandbox, the active deployment compiler environment, or any parent/ancestor relationship. Manual/unknown snapshots and incomplete inventory scans are protected. The DELETE API repeats the inventory and eligibility check on the server immediately before deletion and verifies the result afterward. The owner must type the complete snapshot ID.
+
+This management surface is independent from visitor experiment execution, source compilation, artifact delivery and gallery posters. It does not delete named Sandbox records, drives, source versions or published artifacts.
+
+Implementation: `LabSnapshotStoragePanel.js`, `/api/v1/admin/labs/sandbox-snapshots`, `snapshot-storage-management.js` and `snapshot-storage-policy.mjs`. Operational details and verification command are in [LABS-PREVIEW-RECOVERY.md](../operations/LABS-PREVIEW-RECOVERY.md#14-owner-source-management--vercel-snapshot-storage-manager).
