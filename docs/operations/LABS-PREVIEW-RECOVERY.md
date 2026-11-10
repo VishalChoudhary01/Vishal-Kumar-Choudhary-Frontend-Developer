@@ -389,4 +389,26 @@ Observed results:
 - Browser-level screenshot verification could not complete because Chromium was not installed in the diagnostic snapshot. Do not describe this as a successful visual browser test.
 - The active `develop` Preview environment still points to the older compiler snapshot. Creating a replacement snapshot was rejected by Vercel with HTTP `402 payment_required`: the Hobby snapshot-storage allowance is exceeded. Vercel reported the allowance reset as `2026-12-01T00:00:00.000Z`.
 
-**Operational state:** the source-code fix and regression fixture are committed on `develop`; the image URL itself is valid and the updated compiler build/HTTP path passed. The new compiler snapshot has **not** been created or activated, and the currently configured Preview compiler therefore still has the old CSP/CSS restrictions. Resolve the Vercel snapshot-storage limit (delete only confirmed-unused snapshots or upgrade the team plan), then follow section 13 to build, activate and verify the replacement Preview snapshot. Do not change Production's snapshot reference as part of this recovery.
+**Operational state at the time of this test:** the compiler source-code fix and regression fixture were committed on `develop`; the image URL itself is valid and the updated compiler build/HTTP path passed. The replacement compiler snapshot was not created because Vercel returned HTTP 402 for snapshot storage. The owner-preview application layer now also normalizes the generated HTML CSP before the preview server starts, so a new Next.js Preview deployment can enable HTTPS images even while the older compiler snapshot remains configured. The older snapshot's Vite CSS-URL restriction still requires the compiler snapshot refresh for remote CSS `url(...)` background images. Do not change Production's snapshot reference as part of this recovery.
+
+### 13.2 Owner Run compatibility patch for legacy image CSP
+
+A legacy compiler snapshot can emit this policy:
+
+```text
+img-src 'self' data: blob:
+```
+
+That exact policy blocks a browser request to an otherwise valid HTTPS image URL, even though the newer compiler source is already committed. To avoid waiting for a new Sandbox snapshot just to correct this CSP, the Next.js owner-preview service normalizes `/vercel/sandbox/output/index.html` **after compilation and before starting the preview server**.
+
+The helper is `src/app/lib/labs/preview-html-policy.mjs`; `createOwnerLabPreview()` calls it immediately after `executeBuild()` and writes the normalized HTML back through the Sandbox filesystem. It adds `https:` only to the existing `img-src` directive:
+
+```text
+img-src 'self' data: blob: https:
+```
+
+All other directives are retained, including `script-src`, `style-src`, `font-src`, `media-src`, `connect-src 'none'`, `frame-src 'none'`, `object-src 'none'`, and `worker-src 'none'`. The helper is idempotent and fails closed if the generated CSP meta tag is missing or malformed.
+
+**Activation:** deploy the latest `develop` Next.js Preview application and press Run again. The newly-created owner preview should use the normalized CSP even when the configured compiler snapshot is older. An already-open iframe does not change its policy; create a fresh Run after deployment.
+
+**Scope distinction:** this application-layer compatibility patch fixes external HTTPS image loads in JSX/HTML `<img>` elements. The old compiler snapshot's Vite plugin can still reject remote CSS `url(...)` declarations before the preview is served. For CSS background images as well, rebuild and activate the compiler snapshot containing the updated `vite.config.js` once Vercel snapshot storage is available.
