@@ -248,7 +248,7 @@ Required verification remains:
 
 ## 13. Owner compiler snapshot storage management
 
-The owner Source Management page includes a separate Vercel Sandbox snapshot inventory. It uses the project's deployment OIDC identity and the Vercel Sandbox SDK to list project snapshots and named Sandboxes; it does not require a personal access token or paid Vercel team.
+The owner Source Management page links to a dedicated Vercel Sandbox snapshot management page at `/admin/labs/sources/snapshots`; the snapshot manager is not rendered inline with the experiment inventory. It uses the project's deployment OIDC identity and the Vercel Sandbox SDK to list project snapshots and named Sandboxes; it does not require a personal access token or paid Vercel team.
 
 The panel reports the sum of project snapshot byte sizes, snapshot metadata, sandbox references and conservative deletion eligibility. It explicitly does not label project bytes as the account-wide Hobby quota.
 
