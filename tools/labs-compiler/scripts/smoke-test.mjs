@@ -190,7 +190,7 @@ const runtimeHtmlFixtureWithAssets = [
   '<link rel="stylesheet" href="./assets/index-Zc0bh0At.css">',
   '<script src="src/script.js"></script>',
   '<img src="/images/orb.webp" srcset="/images/orb.webp 1x, images/orb@2x.webp 2x">',
-  '<img src="https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=1600" alt="Remote image">',
+  '<img src="https://images.unsplash.com/photo-1794066171454-631d426ceeaf?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D" alt="Remote image">',
   "</head><body><main>Fluid Gradient</main></body></html>",
 ].join("\n");
 const normalizedRuntimeHtml = rewritePublishedRuntimeHtml(runtimeHtmlFixtureWithAssets, {
@@ -207,7 +207,7 @@ for (const reference of [
     throw new Error("Published HTML did not normalize an asset into its immutable artifact path: " + reference);
   }
 }
-if (!normalizedRuntimeHtml.includes("https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=1600")) {
+if (!normalizedRuntimeHtml.includes("https://images.unsplash.com/photo-1794066171454-631d426ceeaf?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D")) {
   throw new Error("Absolute HTTPS image URLs must remain unchanged when published HTML is rewritten.");
 }
 if (normalizedRuntimeHtml.includes('<base href=')) {
@@ -318,7 +318,7 @@ const source = [
       'import { useState } from "react";',
       'import { motion, useReducedMotion } from "motion/react";',
       'import { ArrowUpRight, Sparkles } from "lucide-react";',
-      'const externalImageUrl = "https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=1600";',
+      'const externalImageUrl = "https://images.unsplash.com/photo-1794066171454-631d426ceeaf?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D";',
       "",
       "export default function Experiment() {",
       "  const [count, setCount] = useState(0);",
@@ -532,13 +532,13 @@ try {
       content: [
         "<!doctype html>",
         '<html lang="en"><head><meta charset="UTF-8"><title>Static Labs preview</title></head>',
-        '<body><main class="static-card"><h1 id="message">Static HTML preview</h1><img src="https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=1600" alt="Remote image"></main></body></html>',
+        '<body><main class="static-card"><h1 id="message">Static HTML preview</h1><img src="https://images.unsplash.com/photo-1794066171454-631d426ceeaf?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D" alt="Remote image"></main></body></html>',
       ].join("\n"),
     },
     {
       path: "styles.css",
       language: "css",
-      content: '.static-card { color: #123456; padding: 24px; background-image: url("https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg?auto=compress&cs=tinysrgb&w=1600"); }',
+      content: '.static-card { color: #123456; padding: 24px; background-image: url("https://images.unsplash.com/photo-1794066171454-631d426ceeaf?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D"), url("https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg?auto=compress&cs=tinysrgb&w=1600"); }',
     },
     {
       path: "main.js",
@@ -579,7 +579,10 @@ try {
     throw new Error("The standalone CSS file was not compiled into the static HTML preview.");
   }
   if (!staticCssOutput.includes("images.pexels.com")) {
-    throw new Error("The standalone CSS build did not preserve the external HTTPS background-image URL.");
+    throw new Error("The standalone CSS build did not preserve the Pexels HTTPS background-image URL.");
+  }
+  if (!staticCssOutput.includes("photo-1794066171454-631d426ceeaf")) {
+    throw new Error("The standalone CSS build did not preserve the exact Unsplash background-image URL.");
   }
   const staticJsOutput = await fs.readFile(path.join(staticOutput, staticJsFile.path), "utf8");
   if (!staticJsOutput.includes("Static HTML/CSS/JS preview passed")) {
