@@ -68,11 +68,11 @@ test("privacy preference uses a named same-origin event and does not generate an
   assert.ok(wrapper.includes("stopPortfolioVisitTracking"));
   assert.ok(tracker.includes("readPortfolioAnalyticsOptOut()"));
   assert.ok(tracker.includes("export function stopPortfolioVisitTracking()"));
-  assert.ok(control.includes("Disable analytics on this browser profile"));
+  assert.ok(control.includes("Turn off optional page-use information in this browser"));
   assert.ok(!preference.includes("randomUUID"));
 });
 
-test("privacy page uses plain-language disclosures for optional page statistics and Labs activity", async () => {
+test("privacy page explains site information in plain language without internal dashboard terminology", async () => {
   const [page, policy, preference, legalLayout] = await Promise.all([
     read("../src/app/privacy/page.js"),
     read("../src/app/lib/legal/policies.js"),
@@ -80,8 +80,8 @@ test("privacy page uses plain-language disclosures for optional page statistics 
     read("../src/app/components/legal/LegalDocumentPage.js"),
   ]);
 
-  assert.ok(page.includes("PortfolioAnalyticsPrivacyPreference"));
-  assert.ok(page.includes("Optional site usage statistics"));
+  assert.ok(page.includes("<PageInformationPreference />"));
+  assert.ok(page.includes("Limited page-use information"));
   assert.ok(page.includes("approximate country, region and city"));
   assert.ok(page.includes("full IP"));
   assert.ok(page.includes("clipboard contents are not collected"));
@@ -91,11 +91,12 @@ test("privacy page uses plain-language disclosures for optional page statistics 
   assert.ok(page.includes("does not delete records already stored"));
   assert.ok(page.includes("does not turn off the separate records"));
   assert.ok(!/we track users|I track users|tracking users/i.test(page));
-  assert.ok(preference.includes("Turn off optional site statistics in this browser"));
+  assert.ok(!/aggregate experiment statistics|portfolio page analytics|labs analytics/i.test(page));
+  assert.ok(preference.includes("Turn off optional page-use information in this browser"));
+  assert.ok(!/analytics|statistics/i.test(preference));
   assert.ok(policy.includes('PRIVACY_VERSION = "2026-11-11.1"'));
   assert.ok(legalLayout.includes('effectiveDate = "4 November 2026"'));
 });
-
 test("owner dashboard provides selected, date-range and all-record deletion actions", async () => {
   const [dashboard, controls, route] = await Promise.all([
     read("../src/app/components/portfolio-analytics/PortfolioAnalyticsDashboard.js"),
