@@ -30,13 +30,6 @@ async function collectPaginated(iterable, maximum, label) {
 }
 
 async function readProjectSnapshotRecords() {
-  if (!process.env.VERCEL_OIDC_TOKEN) {
-    throw createError(
-      "SNAPSHOT_AUTH_NOT_CONFIGURED",
-      "Vercel deployment identity is unavailable. Open this page from a Vercel deployment with OIDC enabled.",
-    );
-  }
-
   try {
     const [snapshotResult, sandboxResult] = await Promise.all([
       Snapshot.list({ limit: 50, sortOrder: "desc" }),
