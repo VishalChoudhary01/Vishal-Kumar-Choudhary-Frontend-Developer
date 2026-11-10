@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import LabSourceInventory from "@/app/components/labs/admin/LabSourceInventory";
+import LabSnapshotStoragePanel from "@/app/components/labs/admin/LabSnapshotStoragePanel";
 import LabsOwnerAccessNotice from "@/app/components/labs/admin/LabsOwnerAccessNotice";
 import LabsOwnerNavigation from "@/app/components/labs/admin/LabsOwnerNavigation";
 import { toLabsAccountUser } from "@/app/lib/labs/auth-user-presentation.mjs";
@@ -46,6 +47,7 @@ export default async function LabsSourceLibraryPage({ searchParams }) {
 
         <LabsOwnerNavigation active="sources" user={toLabsAccountUser(session.user)} />
 
+        <LabSnapshotStoragePanel />
         <LabSourceInventory />
       </div>
     </main>
