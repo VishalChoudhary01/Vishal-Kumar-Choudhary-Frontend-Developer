@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { shouldUseLenis } from "@/app/lib/lenis/scroll-policy.mjs";
 
 /* ==========================================================================
    PAGE LOADER CONTEXT
@@ -48,7 +49,7 @@ export function usePageLoader() {
  * Safely resets all scroll locks that may have been left behind
  * by the intro loader, MobileMenu, SuccessModal, or any other overlay.
  */
-function resetScrollLocks() {
+function resetScrollLocks({ useLenis } = {}) {
   const html = document.documentElement;
   const body = document.body;
 
@@ -69,9 +70,14 @@ function resetScrollLocks() {
    * `window.scrollY` leaves Lenis' internal target at the previous page's
    * position, so it immediately scrolls the new page back down.
    */
-  if (window.lenis && typeof window.lenis.scrollTo === "function") {
+  if (useLenis && window.lenis && typeof window.lenis.scrollTo === "function") {
     window.lenis.scrollTo(0, { immediate: true, force: true });
   } else {
+    /*
+     * Admin/Labs routes have no Lenis instance. Never address a stale Lenis
+     * target when entering a native-scroll workspace; it can pull the page
+     * back toward the previous route's saved position.
+     */
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }
 }
@@ -208,7 +214,7 @@ export function PageLoaderProvider({ children }) {
   useEffect(() => {
     if (prevPathnameRef.current !== pathname) {
       prevPathnameRef.current = pathname;
-      resetScrollLocks();
+      resetScrollLocks({ useLenis: shouldUseLenis(pathname) });
     }
   }, [pathname]);
 

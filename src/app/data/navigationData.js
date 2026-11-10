@@ -25,6 +25,11 @@ export const navigationData = [
     },
 
     {
+        label: "Labs",
+        href: "/labs",
+    },
+
+    {
         label: "Contact",
         href: "#contact",
     },

@@ -4,6 +4,7 @@ import PortfolioIntro from "@/app/components/sections/Intro_loader/portfolioIntr
 import ProjectDetail from "@/app/components/project-detail/ProjectDetail";
 import Navbar from "@/app/components/layout/Navbar";
 import { usePageLoader } from "@/app/providers/PageLoaderProvider";
+import PortfolioAnalyticsDeferred from "@/app/components/portfolio-analytics/PortfolioAnalyticsDeferred";
 
 /*
  * Project detail client shell.
@@ -22,6 +23,7 @@ export default function ProjectPageView({
 
   return (
     <>
+      <PortfolioAnalyticsDeferred />
       {isLoading && (
         <PortfolioIntro onComplete={completeLoading} />
       )}

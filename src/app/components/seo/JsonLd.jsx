@@ -15,7 +15,11 @@ function JsonLd({ data }) {
   let json;
 
   try {
-    json = JSON.stringify(data, null, 0);
+    json = JSON.stringify(data, null, 0)
+      // Prevent stored titles/descriptions from terminating the script node.
+      .replace(/</g, "\\u003c")
+      .replace(/>/g, "\\u003e")
+      .replace(/&/g, "\\u0026");
   } catch {
     return null;
   }

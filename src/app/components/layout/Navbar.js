@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, useMotionValueEvent, useScroll } from "motion/react";
 import { useMobileMenu } from "@/app/providers/MobileMenuProvider";
 import MobileMenu from "./MobileMenu";
@@ -14,8 +15,20 @@ import { flattenNavLinks } from "@/app/helper/flattenNav.Links";
 import Link from "next/link";
 import { cn } from "@/app/lib/utils";
 import SocialIcon from "../ui/SocialIcon";
+import LabsAccountControl from "@/app/components/labs/LabsAccountControl";
 
-export default function Navbar({ context = "site" }) {
+const EMPTY_LINKS = [];
+
+export default function Navbar({
+  context = "site",
+  solidScrolledSurface = false,
+  showLabsAccount = false,
+  hideSocialLinks = false,
+  initialAuthUser = null,
+  initialSessionResolved = false,
+  initialIsOwner = false,
+}) {
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [activeHref, setActiveHref] = useState("");
   const [pendingNavigation, setPendingNavigation] = useState(null);
@@ -26,8 +39,8 @@ export default function Navbar({ context = "site" }) {
   const headerRef = useRef(null);
   const previousMenuOpen = useRef(false);
 
-  const navLinks = portfolio.navigation || [];
-  const socialLinks = portfolio.socialLinks || [];
+  const navLinks = portfolio.navigation || EMPTY_LINKS;
+  const socialLinks = portfolio.socialLinks || EMPTY_LINKS;
 
   const isProjectContext = context === "project";
 
@@ -41,31 +54,23 @@ export default function Navbar({ context = "site" }) {
     setScrolled(latest > 24);
   });
 
-  useEffect(() => {
-    setScrolled(scrollY.get() > 24);
-  }, [scrollY]);
-
   // ---------------------------------------------------------------------------
   // INITIAL ACTIVE SECTION
   // ---------------------------------------------------------------------------
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
     const flat = flattenNavLinks(navLinks);
     const hash = window.location.hash;
+    const match = hash ? flat.find((entry) => entry.href === hash) : null;
+    const nextActiveHref = hash
+      ? match?.activeHref || hash
+      : flat[0]?.activeHref || "";
 
-    if (hash) {
-      const match = flat.find((entry) => entry.href === hash);
+    const frame = window.requestAnimationFrame(() => {
+      setActiveHref(nextActiveHref);
+    });
 
-      setActiveHref(match ? match.activeHref : hash);
-
-      return;
-    }
-
-    if (flat.length > 0) {
-      setActiveHref(flat[0].activeHref);
-    }
+    return () => window.cancelAnimationFrame(frame);
   }, [navLinks]);
 
   // ---------------------------------------------------------------------------
@@ -222,6 +227,11 @@ export default function Navbar({ context = "site" }) {
 
     setPendingNavigation(null);
 
+    if (href.startsWith("/")) {
+      router.push(href);
+      return;
+    }
+
     window.requestAnimationFrame(() => {
       scrollToSection(href);
     });
@@ -279,11 +289,11 @@ export default function Navbar({ context = "site" }) {
             ? [
               "top-0.5 mx-2.5 h-[56px] rounded-full",
               "border-border",
-              "bg-surface-elevated/85",
+              solidScrolledSurface ? "bg-surface-elevated/95" : "bg-surface-elevated/85",
               "shadow-[0_1px_2px_rgb(0_0_0/0.04),0_8px_24px_-12px_rgb(0_0_0/0.12),0_16px_40px_-20px_rgb(0_0_0/0.08)]",
               "md:top-1",
               "lg:top-3 lg:mx-18 lg:h-[68px]",
-              "lg:bg-surface-elevated/60",
+              solidScrolledSurface ? "lg:bg-surface-elevated/95" : "lg:bg-surface-elevated/60",
               "lg:shadow-[0_1px_2px_rgb(0_0_0/0.04),0_10px_28px_-14px_rgb(0_0_0/0.14),0_20px_48px_-24px_rgb(0_0_0/0.1)]",
             ]
             : [
@@ -368,14 +378,16 @@ export default function Navbar({ context = "site" }) {
             {/* SOCIAL LINKS — always visible in project context (incl. mobile, no
                 hamburger); portfolio landing keeps desktop-only */}
 
-            <div className={cn("items-center", isProjectContext ? "flex " : "hidden lg:flex  ")}>
-              {socialLinks.map((link) => (
-                <SocialIcon
-                  key={link.href}
-                  link={link}
-                />
-              ))}
-            </div>
+            {!hideSocialLinks ? (
+              <div className={cn("items-center", isProjectContext ? "hidden sm:flex" : "hidden lg:flex")}>
+                {socialLinks.map((link) => (
+                  <SocialIcon
+                    key={link.href}
+                    link={link}
+                  />
+                ))}
+              </div>
+            ) : null}
 
             {/* DIVIDER — portfolio context only */}
 
@@ -385,6 +397,15 @@ export default function Navbar({ context = "site" }) {
                 className="hidden h-[22px] w-px bg-border/15 lg:ml-2 lg:mr-[17px] lg:block"
               />
             )}
+
+            {showLabsAccount ? (
+              <LabsAccountControl
+                initialUser={initialAuthUser}
+                initialSessionResolved={initialSessionResolved}
+                initialIsOwner={initialIsOwner}
+                scrolled={scrolled}
+              />
+            ) : null}
 
             {/* THEME */}
 
