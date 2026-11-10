@@ -371,3 +371,22 @@ Changes to `src/app/lib/labs/runtime-html.mjs` are part of the Next.js applicati
 Never change Production's `LABS_COMPILER_SNAPSHOT_ID` during this Preview-only rollout. Keep the old working snapshot available until the new Preview snapshot and owner Run are verified. Do not delete the previous snapshot if any Production or other active environment still references it.
 
 **Current remote-image change:** the repository changes permit external HTTPS image resources in the preview and published runtime CSP. The compiler snapshot must also contain the changed `build.mjs` and `vite.config.js` before the editor's Run button uses this behavior. A GitHub commit by itself does not prove that the active Sandbox has been refreshed.
+
+### 13.1 Remote Unsplash image verification — November 10, 2026
+
+The following exact image URL was tested:
+
+```text
+https://images.unsplash.com/photo-1794066171454-631d426ceeaf?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D
+```
+
+Observed results:
+
+- Unsplash returned HTTP `200`, `image/jpeg`, and `111230` bytes from a temporary diagnostic worker with outbound access restricted to `images.unsplash.com`.
+- The updated compiler from `develop` successfully built a React 19 + Motion + Tailwind v4 sample using the exact URL in both JSX `<img src>` and CSS `background-image: url(...)`.
+- Build hash: `126e98eb9cb9ae281d4036ae93e9ed865cc35fbee23bfd1ef77f1304914cf296`.
+- The isolated preview HTTP server returned the HTML and compiled CSS with HTTP `200`; the exact Unsplash image request returned HTTP `200` with the expected JPEG content type and byte count.
+- Browser-level screenshot verification could not complete because Chromium was not installed in the diagnostic snapshot. Do not describe this as a successful visual browser test.
+- The active `develop` Preview environment still points to the older compiler snapshot. Creating a replacement snapshot was rejected by Vercel with HTTP `402 payment_required`: the Hobby snapshot-storage allowance is exceeded. Vercel reported the allowance reset as `2026-12-01T00:00:00.000Z`.
+
+**Operational state:** the source-code fix and regression fixture are committed on `develop`; the image URL itself is valid and the updated compiler build/HTTP path passed. The new compiler snapshot has **not** been created or activated, and the currently configured Preview compiler therefore still has the old CSP/CSS restrictions. Resolve the Vercel snapshot-storage limit (delete only confirmed-unused snapshots or upgrade the team plan), then follow section 13 to build, activate and verify the replacement Preview snapshot. Do not change Production's snapshot reference as part of this recovery.
