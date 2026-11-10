@@ -186,3 +186,16 @@ test("source management links to a separate snapshot page and keeps the inventor
   assert.ok(panel.includes("not your Hobby account's official storage allowance"));
   assert.ok(panel.includes("confirmation.trim() !== deleteTarget.id"));
 });
+
+test("missing compiler snapshot 404 gets a specific actionable owner response", async () => {
+  const [compiler, adminHttp] = await Promise.all([
+    readFile(new URL("../src/app/lib/labs/compiler-service.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/lib/labs/admin-http.js", import.meta.url), "utf8"),
+  ]);
+
+  assert.ok(compiler.includes("/status code 404|404.*not found/i.test(detail)"));
+  assert.ok(compiler.includes("/snapshot not found|snapshot.*not found/i.test(detail)"));
+  assert.ok(compiler.includes("COMPILER_SNAPSHOT_NOT_FOUND"));
+  assert.ok(adminHttp.includes("COMPILER_SNAPSHOT_NOT_FOUND: 503"));
+  assert.ok(adminHttp.includes('"COMPILER_SNAPSHOT_NOT_FOUND"'));
+});
