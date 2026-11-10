@@ -6,6 +6,7 @@ import { mongodbAdapter } from "@better-auth/mongo-adapter";
 import { betterAuth } from "better-auth";
 import { dash } from "@better-auth/infra";
 import { getAuthBaseURL, getAuthBaseURLConfig } from "./base-url";
+import { buildTrustedAuthOrigins } from "./trusted-origins.mjs";
 import { resolveMongoConnectionUri } from "@/app/lib/db/mongo-uri";
 
 import { sendAuthEmail, isAuthEmailConfigured } from "./email";
@@ -18,10 +19,11 @@ const isDatabaseConfigured = Boolean(
   configuredMongoUri && configuredDatabaseName && configuredSecret,
 );
 const baseURL = getAuthBaseURLConfig();
-const trustedOrigins = [
-  ...(typeof baseURL === "string" ? [baseURL] : []),
-  ...(process.env.BETTER_AUTH_TRUSTED_ORIGINS || "").split(",").map((value) => value.trim()).filter(Boolean),
-].filter((value, index, values) => values.indexOf(value) === index);
+const trustedOrigins = buildTrustedAuthOrigins({
+  baseURL,
+  configuredOrigins: process.env.BETTER_AUTH_TRUSTED_ORIGINS,
+  vercelEnvironment: process.env.VERCEL_ENV,
+});
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
