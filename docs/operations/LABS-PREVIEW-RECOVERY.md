@@ -1,7 +1,7 @@
 # Labs Run Preview — Recovery, Lifecycle and Reliability Plan
 
-**Status:** Root cause identified and first reliability fixes implemented on `feat/labs-platform-integration`.
-**Updated:** 2026-11-06
+**Status:** Snapshot-quota root cause and non-persistent worker fix are present on `develop`; operational recovery guidance is maintained here.
+**Updated:** 2026-11-10
 **Scope:** Owner Studio `Run` action for HTML/CSS/JavaScript and React JSX/TSX experiments. Automatic gallery poster capture is independent and must never be part of the interactive Run path.
 
 ## 1. Incident summary
@@ -153,3 +153,77 @@ The diagnostic/refresh workers were created with `persistent: false` and explici
 The Preview compiler snapshot was extended with pinned Playwright 1.65.0 and Chromium 158.0.8127.18, including Linux browser libraries. The new branch-only compiler snapshot is `snap_1Ep7fqKr9Q4MMSKWALnzZ9nQumBt`. The compiler smoke suite and a real 1200×900 compiled React artifact screenshot passed inside the snapshot. It was saved as a manual snapshot; the temporary setup worker was stopped with `persistent: false`. Only the `feat/labs-platform-integration` Preview environment's `LABS_COMPILER_SNAPSHOT_ID` was updated; Production was not changed.
 
 The Playwright capture process is now part of release build only. It is not invoked by Run, gallery requests or detail page requests. The actual deployed owner publish flow remains to be verified after a new Preview deployment consumes this snapshot ID.
+
+## 11. When Run stops working because a limit was reached
+
+A failed Run does **not** automatically mean the experiment code is broken. It can be a compiler error, a preview-server error, a sandbox/provider limit, a Vercel Function timeout, or an account-level usage limit. Diagnose the failed request before changing source code or repeatedly pressing Run.
+
+### 11.1 Current limits in this repository
+
+These are the code-level limits currently configured on `develop`. They are not all Vercel account-plan quotas.
+
+| Layer | Current configured limit | Meaning |
+|---|---:|---|
+| Owner preview API route | `maxDuration = 60` seconds | The synchronous HTTP request cannot run beyond this function duration. |
+| Compiler command | `45_000` ms | The isolated build command has its own 45-second timeout. |
+| Owner preview sandbox | `10 * 60 * 1000` ms (10 minutes) | One preview worker is short-lived. When it expires, that preview URL stops working; start a new Run. |
+| Source files | Maximum 40 files | More files are rejected during validation. |
+| One source file | 500 KB | A single larger file is rejected with `FILE_TOO_LARGE`. |
+| Complete source snapshot | 1 MB | Larger total source content is rejected with `SNAPSHOT_TOO_LARGE`. |
+| Preview request body | 1,100,000 bytes when a `Content-Length` header is present | Larger requests are rejected with `REQUEST_TOO_LARGE`. |
+| Compiled output | Maximum 80 files and 15 MB | Larger build output is rejected; remove unused assets or reduce generated output. |
+
+The 10-minute sandbox lifetime is **not** the API request timeout and is **not** a monthly quota. Similarly, the 45-second compiler-command timeout is not the Vercel Function duration. Changing one does not change the others.
+
+### 11.2 Identify which limit or failure occurred
+
+| What you see | What it usually means | Correct action |
+|---|---|---|
+| `COMPILER_SNAPSHOT_STORAGE_LIMIT` or upstream HTTP 402 | Snapshot storage quota was exceeded. This was the previously confirmed incident. | Confirm disposable workers still use `persistent: false`. Review the Vercel Sandbox snapshot list and remove only confirmed-unreferenced automatic snapshots. Preserve the active compiler snapshot and its base chain. If storage is still over quota, follow the Vercel usage/plan guidance or upgrade the plan. |
+| `COMPILER_BUSY` or upstream HTTP 429 | The Sandbox provider is rate-limiting or temporarily busy. | Stop repeated clicks, wait briefly, then retry once. Do not add rapid automatic retries or parallel Run requests. |
+| `COMPILER_SNAPSHOT_EXPIRED` or upstream HTTP 410 | The configured compiler snapshot is missing, expired, or deleted. | Check `LABS_COMPILER_SNAPSHOT_ID` in the **Preview** environment, confirm the referenced snapshot exists, then redeploy Preview. Do not change Production while fixing Preview. |
+| Vercel function timeout / request ends close to 60 seconds | The synchronous owner-preview route reached its configured function-duration limit. | Check the function duration and logs. The route currently declares `maxDuration = 60`; verify the project's Fluid Compute setting and the plan's supported maximum before changing it. If builds regularly approach the limit, use the asynchronous job/status design described above. |
+| `PREVIEW_START_FAILED` | Compilation may have succeeded, but the static preview server did not become healthy before the polling loop ended. | Inspect sandbox command and server logs. Verify port 3000, the per-run preview path, and the `/__health` response. Retry only after identifying the startup issue. |
+| `REQUEST_TOO_LARGE`, `FILE_TOO_LARGE`, or `SNAPSHOT_TOO_LARGE` | A repository input-size guardrail was reached. This is not a Vercel storage quota. | Reduce large source files, remove unnecessary files, or split unused content out of the experiment. Stay within the limits in section 11.1. |
+| `BUILD_OUTPUT_TOO_LARGE` or more than 80 output files | The compiled artifact exceeded the output guardrail. | Reduce bundled assets, remove unused dependencies/assets, and avoid embedding large media in the source bundle. |
+| `BUILD_FAILED`, `TYPECHECK_FAILED`, `UNRESOLVED_IMPORT`, or another 400/422 validation/build error | The input or experiment code failed validation, type-checking, or compilation. | Read the bounded compiler diagnostic and fix the named file/import/type issue. Increasing plan limits will not fix a source error. |
+| Preview iframe stops responding after about 10 minutes | The one-off sandbox reached its configured lifetime. | Press Run again to create a fresh preview. Do not recreate or refresh the compiler snapshot for this normal expiry. |
+| Generic `COMPILER_START_FAILED` | The failure did not match one of the specific mapped provider errors. | Read the Vercel Function logs for the underlying Sandbox response/status and deployment. Do not assume it is a source-code error or snapshot quota without evidence. |
+
+### 11.3 Check whether the Vercel account/team usage was exhausted
+
+Use this path when several unrelated server actions fail, Vercel reports that the team/project is paused, or the request logs point to account usage rather than a Labs compiler error.
+
+1. Open the Vercel team and the portfolio project.
+2. Check the team's **Usage**, **Limits**, and **Spend Management/Billing** views. Inspect the specific meter reported by Vercel (for example, active CPU, provisioned memory, Function duration/invocations, or Sandbox-related storage/usage).
+3. Check the period, current usage, limit, and next reset date shown for that meter. Do not assume every quota resets on the same schedule.
+4. If the team or service is paused because an included allowance was exceeded, follow the action and reset guidance shown in Vercel. Depending on the meter, that may mean waiting for the allowance to reset or changing the plan. A snapshot-storage quota caused by retained snapshots is different: waiting alone does not remove those snapshots.
+5. After the provider issue is resolved, run one fresh Preview test and confirm the route, sandbox health endpoint, and iframe ready handshake.
+
+Vercel's plan and usage limits can change. Verify the current dashboard and official plan documentation instead of copying a historical quota number into application code.
+
+### 11.4 Safe recovery sequence for the owner
+
+1. Do not keep clicking Run while the first request is pending or failing. The current follow-up hardening list includes an owner-level rate limit; until that exists, run one preview at a time.
+2. Keep the editor source intact. A provider quota, sandbox startup failure, or function timeout does not prove the source is invalid.
+3. Open the matching Vercel Preview deployment's Function logs and filter for `POST /api/v1/admin/labs/sources/<slug>/preview`. Record the timestamp, HTTP status, application error code, request duration, and underlying Sandbox status.
+4. Check the matching Sandbox logs/metrics if a worker was created. Confirm whether it started, whether the compiler command completed, whether the preview server listened on port 3000, and whether `/__health` returned successfully.
+5. Apply only the recovery action for the identified category in section 11.2. Change environment variables only in the intended Preview environment, and redeploy when a snapshot/configuration change requires it.
+6. Retry once. Confirm a new run ID, a healthy preview URL, and a ready message from the current iframe before considering the issue resolved.
+
+### 11.5 Do not use these as blind fixes
+
+- Do not delete the configured compiler snapshot, its base image, or any snapshot referenced by an active environment.
+- Do not change Production environment variables while recovering a Preview deployment.
+- Do not repeatedly press Run, run several previews in parallel, or add automatic retry loops for 402/429/provider errors.
+- Do not increase `maxDuration` without checking the active Vercel compute mode and plan ceiling.
+- Do not increase the sandbox timeout to solve a function timeout; those timers control different processes.
+- Do not rewrite valid experiment code to resolve a confirmed platform quota or infrastructure failure.
+- Do not connect poster-capture/Playwright work to the interactive Run request. Poster capture remains release-only.
+
+### External references
+
+- [Vercel Function maximum duration configuration](https://vercel.com/docs/functions/configuring-functions/duration)
+- [Vercel Sandbox duration and persistence](https://vercel.com/kb/guide/vercel-sandbox-duration-and-persistence)
+- [Vercel plan and usage limits](https://vercel.com/docs/limits)
+- [Vercel Hobby plan usage guidance](https://vercel.com/docs/plans/hobby)
