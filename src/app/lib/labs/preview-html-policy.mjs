@@ -1,6 +1,6 @@
 const CSP_META_PATTERN =
-  /<meta\\b(?=[^>]*\\bhttp-equiv\\s*=\\s*(?:"content-security-policy"|'content-security-policy'|content-security-policy)(?=[\\s/>]))[^>]*\\/?>/i;
-const CSP_CONTENT_PATTERN = /\\bcontent\\s*=\\s*(["'])([\\s\\S]*?)\\1/i;
+  /<meta\b(?=[^>]*\bhttp-equiv\s*=\s*(?:"content-security-policy"|'content-security-policy'|content-security-policy)(?=[\s/>]))[^>]*\/?>/i;
+const CSP_CONTENT_PATTERN = /\bcontent\s*=\s*(["'])([\s\S]*?)\1/i;
 
 /**
  * Compatibility policy for owner previews built from an older immutable
@@ -26,13 +26,13 @@ export function allowHttpsImagesInPreviewHtml(html) {
   const currentPolicy = contentMatch[2];
   const directives = currentPolicy.split(";").map((value) => value.trim()).filter(Boolean);
   const imageDirectiveIndex = directives.findIndex((directive) => {
-    return directive.split(/\\s+/, 1)[0]?.toLowerCase() === "img-src";
+    return directive.split(/\s+/, 1)[0]?.toLowerCase() === "img-src";
   });
 
   if (imageDirectiveIndex === -1) {
     directives.push("img-src https:");
   } else {
-    const tokens = directives[imageDirectiveIndex].split(/\\s+/);
+    const tokens = directives[imageDirectiveIndex].split(/\s+/);
     if (!tokens.some((token) => token.toLowerCase() === "https:")) {
       directives[imageDirectiveIndex] += " https:";
     }
