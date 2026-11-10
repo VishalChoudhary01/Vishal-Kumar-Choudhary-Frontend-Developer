@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Database } from "lucide-react";
 
 import LabSourceInventory from "@/app/components/labs/admin/LabSourceInventory";
-import LabSnapshotStoragePanel from "@/app/components/labs/admin/LabSnapshotStoragePanel";
 import LabsOwnerAccessNotice from "@/app/components/labs/admin/LabsOwnerAccessNotice";
 import LabsOwnerNavigation from "@/app/components/labs/admin/LabsOwnerNavigation";
 import { toLabsAccountUser } from "@/app/lib/labs/auth-user-presentation.mjs";
@@ -47,7 +46,27 @@ export default async function LabsSourceLibraryPage({ searchParams }) {
 
         <LabsOwnerNavigation active="sources" user={toLabsAccountUser(session.user)} />
 
-        <LabSnapshotStoragePanel />
+        <div className="mt-6 flex flex-col gap-3 border border-border bg-surface-1 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="grid h-9 w-9 shrink-0 place-items-center border border-brand/30 bg-brand/5 text-brand">
+              <Database size={16} aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-text-primary">Compiler snapshot storage</p>
+              <p className="mt-0.5 text-[11px] text-text-tertiary">
+                Inspect Vercel snapshots and safely remove unused automatic snapshots.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/admin/labs/sources/snapshots"
+            className="inline-flex h-9 shrink-0 items-center justify-center gap-2 border border-border px-3 text-xs font-semibold text-text-secondary transition-colors hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          >
+            Open storage manager
+            <ArrowUpRight size={13} aria-hidden="true" />
+          </Link>
+        </div>
+
         <LabSourceInventory />
       </div>
     </main>
