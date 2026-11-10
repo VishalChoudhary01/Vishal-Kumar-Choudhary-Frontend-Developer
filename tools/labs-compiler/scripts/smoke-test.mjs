@@ -6,6 +6,7 @@ import { resolveGalleryPreviewSelection } from "../../../src/app/lib/labs/galler
 import { getPublishedArtifactBlobPath } from "../../../src/app/lib/labs/release-artifact-path.mjs";
 import { PUBLISHED_LAB_SOURCE_PROJECTION, selectEligiblePublishedCustomExperiments } from "../../../src/app/lib/labs/owner-analytics-utils.mjs";
 import { ensureSandboxInputDirectory } from "../../../src/app/lib/labs/sandbox-directory.mjs";
+import { allowHttpsImagesInPreviewHtml } from "../../../src/app/lib/labs/preview-html-policy.mjs";
 import {
   buildPublishedRuntimeCsp,
   rewritePublishedRuntimeHtml,
@@ -19,6 +20,31 @@ import {
   normalizeMagneticRadius,
   normalizeMagneticStrength,
 } from "../../../src/app/components/labs/ui/magnetic-physics.mjs";
+
+const legacyPreviewHtml = '<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'self\' \'unsafe-inline\'; style-src \'self\' \'unsafe-inline\'; img-src \'self\' data: blob:; font-src \'self\' data:; media-src \'self\' data: blob:; connect-src \'none\'; frame-src \'none\'; object-src \'none\'; worker-src \'none\'"></head><body></body></html>';
+const normalizedPreviewHtml = allowHttpsImagesInPreviewHtml(legacyPreviewHtml);
+const normalizedPreviewCsp = normalizedPreviewHtml.match(/<meta[^>]+content="([^"]+)"/i)?.[1] || "";
+for (const directive of [
+  "img-src 'self' data: blob: https:",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self' data:",
+  "media-src 'self' data: blob:",
+  "connect-src 'none'",
+  "frame-src 'none'",
+  "object-src 'none'",
+  "worker-src 'none'",
+]) {
+  if (!normalizedPreviewCsp.includes(directive)) {
+    throw new Error("Preview CSP compatibility must add HTTPS images without changing existing restrictions: " + directive);
+  }
+}
+if (allowHttpsImagesInPreviewHtml(normalizedPreviewHtml) !== normalizedPreviewHtml) {
+  throw new Error("Preview CSP compatibility must be idempotent.");
+}
+if (allowHttpsImagesInPreviewHtml('<html><head><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src https: data:"></head></html>') !== '<html><head><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src https: data:"></head></html>') {
+  throw new Error("An already image-enabled preview CSP must remain unchanged.");
+}
 
 function assertNear(actual, expected, label) {
   if (Math.abs(actual - expected) > 1e-9) {
