@@ -228,6 +228,14 @@ if (!publishedCsp.includes("img-src " + publishedAssetBase + " https: data: blob
 if (!publishedCsp.includes("media-src " + publishedAssetBase + " data: blob:")) {
   throw new Error("The published runtime CSP must keep media access restricted to the immutable artifact.");
 }
+if (!publishedCsp.includes("font-src " + publishedAssetBase + " data:")) {
+  throw new Error("The published runtime CSP must keep fonts restricted to the immutable artifact.");
+}
+if (!publishedCsp.includes("connect-src 'none'") ||
+    !publishedCsp.includes("worker-src 'none'") ||
+    !publishedCsp.includes("frame-src 'none'")) {
+  throw new Error("Allowing HTTPS images must not loosen connection, worker or frame restrictions.");
+}
 for (const directive of ["script-src 'unsafe-inline' " + publishedAssetBase, "style-src 'unsafe-inline' " + publishedAssetBase]) {
   if (!publishedCsp.includes(directive)) {
     throw new Error("The published runtime CSP does not allow its scoped compiled assets.");
@@ -415,6 +423,17 @@ try {
   const negative = runBuild(negativeInput, negativeRoot, negativeOutput);
   if (negative.status === 0 || !String(negative.stderr).includes("Package is not allowed in Labs")) {
     process.stderr.write(negative.stderr || "Unsupported packages were not rejected.\n");
+    process.exit(1);
+  }
+
+  const remoteCssImportFiles = files.map((file) => ({ ...file }));
+  const remoteCssEntry = remoteCssImportFiles.find((file) => file.path === "src/index.css");
+  if (!remoteCssEntry) throw new Error("The React smoke fixture is missing src/index.css.");
+  remoteCssEntry.content += '\\n@import url("https://example.com/remote.css");';
+  await writeInput(negativeInput, remoteCssImportFiles.map(({ path: filePath, content }) => ({ path: filePath, content })));
+  const remoteCssImport = runBuild(negativeInput, negativeRoot, negativeOutput);
+  if (remoteCssImport.status === 0 || !String(remoteCssImport.stderr).includes("Remote CSS imports are blocked.")) {
+    process.stderr.write(remoteCssImport.stderr || "Remote CSS @import was not rejected.\\n");
     process.exit(1);
   }
 
@@ -780,8 +799,18 @@ try {
   if (!previewCsp.includes("img-src 'self' https: data: blob:")) {
     throw new Error("The isolated preview CSP must allow HTTPS images.");
   }
-  if (!previewCsp.includes("connect-src 'none'") || !previewCsp.includes("script-src 'self' 'unsafe-inline'")) {
-    throw new Error("Allowing HTTPS images must not loosen script or connection restrictions.");
+  for (const directive of [
+    "script-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline'",
+    "font-src 'self' data:",
+    "media-src 'self' data: blob:",
+    "connect-src 'none'",
+    "frame-src 'none'",
+    "object-src 'none'",
+  ]) {
+    if (!previewCsp.includes(directive)) {
+      throw new Error("Allowing HTTPS images changed an existing preview security directive: " + directive);
+    }
   }
 
   process.stdout.write(
