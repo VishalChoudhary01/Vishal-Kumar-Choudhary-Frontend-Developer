@@ -6,6 +6,7 @@ import { mongodbAdapter } from "@better-auth/mongo-adapter";
 import { betterAuth } from "better-auth";
 import { dash } from "@better-auth/infra";
 import { getAuthBaseURL, getAuthBaseURLConfig } from "./base-url";
+import { resolveMongoConnectionUri } from "@/app/lib/db/mongo-uri";
 
 import { sendAuthEmail, isAuthEmailConfigured } from "./email";
 import { markVerificationFlowVerified } from "./verification-flows";
@@ -112,16 +113,32 @@ export function getAuthRegistrationReadiness() {
  * A local placeholder permits static builds without deployment secrets;
  * request handlers never serve auth while the real configuration is absent.
  */
+// Atlas URIs are `mongodb+srv://`, which needs an SRV lookup. Resolve it here
+// through the shared fallback so authentication keeps working on networks
+// that refuse SRV queries.
+const mongoConnectionUri = await resolveMongoConnectionUri(
+  configuredMongoUri || "mongodb://127.0.0.1:27017",
+);
+
+// A dev server keeps module-scope globals across hot reloads, so a cached value
+// can come from another revision of this file or target a different URI. Only
+// reuse it when both the URI and the client shape still match.
+const cachedAuthMongoClient = globalThis.__labsBetterAuthMongoClient;
 const mongoClient =
-  globalThis.__labsBetterAuthMongoClient ||
-  new MongoClient(configuredMongoUri || "mongodb://127.0.0.1:27017", {
-    maxPoolSize: 5,
-    minPoolSize: 0,
-    serverSelectionTimeoutMS: 10000,
-  });
+  cachedAuthMongoClient?.uri === mongoConnectionUri &&
+  typeof cachedAuthMongoClient.client?.db === "function"
+    ? cachedAuthMongoClient.client
+    : new MongoClient(mongoConnectionUri, {
+        maxPoolSize: 5,
+        minPoolSize: 0,
+        serverSelectionTimeoutMS: 10000,
+      });
 
 if (process.env.NODE_ENV !== "production") {
-  globalThis.__labsBetterAuthMongoClient = mongoClient;
+  globalThis.__labsBetterAuthMongoClient = {
+    uri: mongoConnectionUri,
+    client: mongoClient,
+  };
 }
 
 const database = mongoClient.db(configuredDatabaseName || "portfolio");

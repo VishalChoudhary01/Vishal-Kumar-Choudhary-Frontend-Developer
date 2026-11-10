@@ -1,5 +1,12 @@
 import "server-only";
+import { setServers } from "node:dns";
 import mongoose from "mongoose";
+
+import {
+    getConfiguredDnsServers,
+    isSrvResolutionFailure,
+    resolveMongoSrvUri,
+} from "./mongo-uri.js";
 
 const globalForMongoose = globalThis;
 
@@ -13,13 +20,22 @@ if (!globalForMongoose.mongoose) {
 const cached = globalForMongoose.mongoose;
 
 /**
- * Resolve database configuration only when a connection is requested.
+ * Configure Node.js global DNS resolution for MongoDB SRV records.
  *
- * Do not read/validate MongoDB environment variables at module scope.
- * Next.js may load route modules while building or starting a deployment,
- * including routes that return before connecting to the database. Importing
- * this helper must therefore remain safe when a deployment environment does
- * not need MongoDB (for example, the production-disabled diagnostic route).
+ * Optional: Set MONGODB_DNS_SERVERS when the default system resolver cannot
+ * resolve MongoDB SRV records. This is best-effort only: some runtimes ignore
+ * the global setter, so `resolveMongoSrvUri` is the supported fallback.
+ */
+function configureMongoDns() {
+    const servers = getConfiguredDnsServers();
+
+    if (servers.length > 0) {
+        setServers(servers);
+    }
+}
+
+/**
+ * Resolve database configuration only when a connection is requested.
  */
 function getDatabaseConfig() {
     const uri = process.env.MONGODB_URI;
@@ -36,6 +52,26 @@ function getDatabaseConfig() {
     return { uri, dbName };
 }
 
+async function connectWithDnsFallback(uri, options) {
+    try {
+        return await mongoose.connect(uri, options);
+    } catch (error) {
+        if (!uri.startsWith("mongodb+srv://") || !isSrvResolutionFailure(error)) {
+            throw error;
+        }
+
+        const directUri = await resolveMongoSrvUri(uri);
+
+        if (!directUri) throw error;
+
+        console.warn(
+            "[db] SRV lookup failed; retrying with hosts resolved through fallback DNS.",
+        );
+
+        return mongoose.connect(directUri, options);
+    }
+}
+
 export async function connectToDatabase() {
     const { uri, dbName } = getDatabaseConfig();
 
@@ -47,14 +83,14 @@ export async function connectToDatabase() {
     }
 
     if (!cached.promise) {
-        cached.promise = mongoose
-            .connect(uri, {
-                dbName,
-                bufferCommands: false,
-                serverSelectionTimeoutMS: 10000,
-                maxPoolSize: 10,
-            })
-            .then((instance) => instance);
+        configureMongoDns();
+
+        cached.promise = connectWithDnsFallback(uri, {
+            dbName,
+            bufferCommands: false,
+            serverSelectionTimeoutMS: 10000,
+            maxPoolSize: 10,
+        });
     }
 
     try {
