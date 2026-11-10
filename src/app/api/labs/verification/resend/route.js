@@ -11,6 +11,7 @@ import { getAuthBaseURL } from "@/app/lib/auth/base-url";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 function json(body, status) {
   return NextResponse.json(body, {
@@ -66,21 +67,30 @@ export async function POST(request) {
       getSafeReturnTo(payload?.returnTo),
     );
 
-    try {
-      await auth.api.sendVerificationEmail({
-        headers: request.headers,
-        body: {
-          email,
-          callbackURL: callbackURL.toString(),
-        },
-      });
-    } catch (error) {
-      // Keep the same client-visible result for existing and unknown emails.
-      // The configured mail service may be temporarily unavailable.
-      console.error(
-        "[labs-verification] resend failed:",
-        error?.code || "VERIFICATION_SEND_ERROR",
+    const sendResult = await auth.api.sendVerificationEmail({
+      headers: request.headers,
+      body: {
+        email,
+        callbackURL: callbackURL.toString(),
+      },
+    });
+
+    const sendError = sendResult?.error;
+    const sendErrorStatus = Number(
+      sendError?.status ?? sendError?.statusCode ?? sendError?.status_code ?? 0,
+    );
+    const deliveryFailed =
+      sendError &&
+      (
+        sendErrorStatus >= 500 ||
+        sendError?.code === "AUTH_EMAIL_DELIVERY_FAILED" ||
+        /AUTH_EMAIL_DELIVERY_FAILED|email delivery failed/i.test(String(sendError?.message || ""))
       );
+
+    if (deliveryFailed) {
+      const error = new Error("AUTH_EMAIL_DELIVERY_FAILED");
+      error.code = "AUTH_EMAIL_DELIVERY_FAILED";
+      throw error;
     }
 
     return json(
@@ -100,8 +110,10 @@ export async function POST(request) {
     return json(
       {
         error: {
-          code: "SERVICE_UNAVAILABLE",
-          message: "Unable to process this request right now. Please try again.",
+          code: error?.code === "AUTH_EMAIL_DELIVERY_FAILED"
+            ? "AUTH_EMAIL_DELIVERY_FAILED"
+            : "SERVICE_UNAVAILABLE",
+          message: "Email delivery is temporarily unavailable. Please try again shortly.",
         },
       },
       503,
