@@ -1,10 +1,12 @@
-"use client";
+
+        <PasswordStrengthMeter password={password} />"use client";
 
 import { useState } from "react";
 import AuthField from "./AuthField";
 import AuthSubmit from "./AuthSubmit";
 import AuthMessage from "./AuthMessage";
 import AuthLink from "./AuthLink";
+import PasswordStrengthMeter from "./PasswordStrengthMeter";
 import SocialAuthButtons from "./SocialAuthButtons";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
