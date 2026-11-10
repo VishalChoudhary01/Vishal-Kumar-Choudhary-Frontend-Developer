@@ -1,14 +1,14 @@
 import Link from "next/link";
 
 import LegalDocumentPage from "@/app/components/legal/LegalDocumentPage";
-import PortfolioAnalyticsPrivacyPreference from "@/app/components/portfolio-analytics/PortfolioAnalyticsPrivacyPreference";
+import PageInformationPreference from "@/app/components/portfolio-analytics/PortfolioAnalyticsPrivacyPreference";
 import { PRIVACY_VERSION } from "@/app/lib/legal/policies";
 import { buildSiteUrl } from "@/app/lib/seo/urls";
 
 export const metadata = {
   title: "Privacy Policy",
   description:
-    "Understand the information used to operate this portfolio and Portfolio Labs, the optional site statistics, and the privacy choices available to you.",
+    "Understand the information used to operate this portfolio and Portfolio Labs, limited page-use information, and the privacy choices available to you.",
   alternates: { canonical: new URL("/privacy", buildSiteUrl()).toString() },
   robots: { index: true, follow: true },
 };
@@ -54,7 +54,7 @@ export default function PrivacyPage() {
     <LegalDocumentPage
       eyebrow="LEGAL / 02"
       title="Privacy Policy"
-      description="This notice explains the information needed to operate the portfolio and Portfolio Labs, including accounts, contact messages, experiment features, and optional site usage statistics."
+      description="This notice explains the information needed to operate the portfolio and Portfolio Labs, including accounts, contact messages, experiment features, and limited page-use information."
       version={PRIVACY_VERSION}
       effectiveDate="11 November 2026"
     >
@@ -122,7 +122,7 @@ export default function PrivacyPage() {
             verified email address. When a verified account opens or copies a
             source file, the service records the experiment, source version,
             file path, action, time, and an account reference. This supports
-            source access integrity and aggregate experiment statistics.
+            source access integrity and records of actions on protected files.
             Clipboard contents are not collected.
           </DataItem>
 
@@ -137,8 +137,8 @@ export default function PrivacyPage() {
             activity that refreshes it.
           </DataItem>
 
-          <DataItem title="Optional site usage statistics">
-            When the site usage feature is enabled, the website can collect
+          <DataItem title="Limited page-use information">
+            When this optional feature is enabled, the website can use
             limited information about visits to public pages: the page viewed,
             visit time, approximate active viewing time, broad device category,
             approximate country, region and city, the referring website
@@ -168,7 +168,7 @@ export default function PrivacyPage() {
           <li>To display the portfolio and operate interactive Labs features.</li>
           <li>To create accounts, verify email addresses, sign users in, maintain sessions, and deliver account emails.</li>
           <li>To protect access to published source and remember experiment likes.</li>
-          <li>To understand which public pages and experiments are useful, when optional site usage statistics are enabled.</li>
+          <li>To understand which public pages and experiments are useful, when limited page-use information are enabled.</li>
           <li>To prevent abuse, maintain reliability, diagnose service errors, and protect accounts.</li>
           <li>To respond to messages and privacy requests.</li>
         </ul>
@@ -183,18 +183,18 @@ export default function PrivacyPage() {
         <p>
           Necessary cookies support sign-in, account security, and anonymous
           experiment likes. Browser storage also remembers display preferences.
-          Optional site usage statistics use a temporary tab value during a
-          visit; the choice to turn those statistics off is saved in this
+          Limited page-use information use a temporary tab value during a
+          visit; your choice to turn this feature off is saved in this
           browser&apos;s local storage.
         </p>
         <p>
           You can manage cookies and browser storage through your browser
           settings. Removing necessary cookies may sign you out or reset an
           anonymous like. The preference below controls optional page usage
-          statistics only; it does not affect sign-in, protected source access,
+          information only; it does not affect sign-in, protected source access,
           or experiment likes.
         </p>
-        <PortfolioAnalyticsPrivacyPreference />
+        <PageInformationPreference />
       </Section>
 
       <Section id="sharing" title="5. Service providers">
@@ -249,7 +249,7 @@ export default function PrivacyPage() {
             after approximately 24 hours.
           </li>
           <li>
-            When enabled, public page usage records are configured for automatic
+            When enabled, page-use records are configured for automatic
             deletion 65 days after the visit starts. Database cleanup may take
             additional time after that period.
           </li>
@@ -284,7 +284,7 @@ export default function PrivacyPage() {
           manage cookies and browser storage in your browser.
         </p>
         <p>
-          You can turn off optional site usage statistics for this browser using
+          You can turn off limited page-use information for this browser using
           the control above. This stops future page usage records from this
           browser while the preference remains saved. It does not delete
           records already stored and does not turn off the separate records
