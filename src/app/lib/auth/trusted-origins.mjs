@@ -28,6 +28,14 @@ function normalizeExactOrigin(value) {
   }
 }
 
+function normalizeDeploymentHost(value) {
+  if (typeof value !== "string" || !value.trim()) return "";
+  const candidate = value.trim();
+  return normalizeExactOrigin(
+    /^https?:\/\//i.test(candidate) ? candidate : "https://" + candidate,
+  );
+}
+
 function isThisProjectDeploymentOrigin(value) {
   const origin = normalizeExactOrigin(value);
   if (!origin) return false;
@@ -41,10 +49,13 @@ function isThisProjectDeploymentOrigin(value) {
   );
 }
 
-function addProjectDeploymentOrigin(origins, value) {
-  if (isThisProjectDeploymentOrigin(value)) {
-    const origin = normalizeExactOrigin(value);
-    if (origin && !origins.includes(origin)) origins.push(origin);
+function addProjectDeploymentOrigin(origins, value, { allowHostOnly = false } = {}) {
+  const origin = allowHostOnly
+    ? normalizeDeploymentHost(value)
+    : normalizeExactOrigin(value);
+
+  if (origin && isThisProjectDeploymentOrigin(origin) && !origins.includes(origin)) {
+    origins.push(origin);
   }
 }
 
@@ -85,8 +96,8 @@ export function buildTrustedAuthOrigins({
     return origins;
   }
 
-  addProjectDeploymentOrigin(origins, vercelURL);
-  addProjectDeploymentOrigin(origins, vercelBranchURL);
+  addProjectDeploymentOrigin(origins, vercelURL, { allowHostOnly: true });
+  addProjectDeploymentOrigin(origins, vercelBranchURL, { allowHostOnly: true });
 
   const requestOrigin = request?.headers?.get?.("origin");
   addProjectDeploymentOrigin(origins, requestOrigin);
