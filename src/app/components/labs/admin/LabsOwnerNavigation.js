@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { BarChart3, ChevronDown, Code2, FlaskConical } from "lucide-react";
+import { BarChart3, ChevronDown, Code2, Database, FlaskConical } from "lucide-react";
 
 import { ThemeToggle } from "@/app/components/ui/ThemeToggle";
 import {
@@ -32,6 +32,13 @@ const DESTINATIONS = [
     label: "Source Library",
     description: "Manage source files and published versions",
     icon: Code2,
+  },
+  {
+    href: "/admin/labs/sources/snapshots",
+    id: "snapshots",
+    label: "Snapshot storage",
+    description: "Monitor and clean up Vercel Sandbox snapshots",
+    icon: Database,
   },
 ];
 
