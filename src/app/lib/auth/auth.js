@@ -19,10 +19,13 @@ const isDatabaseConfigured = Boolean(
   configuredMongoUri && configuredDatabaseName && configuredSecret,
 );
 const baseURL = getAuthBaseURLConfig();
-const trustedOrigins = buildTrustedAuthOrigins({
+const getTrustedAuthOrigins = (request) => buildTrustedAuthOrigins({
   baseURL,
   configuredOrigins: process.env.BETTER_AUTH_TRUSTED_ORIGINS,
   vercelEnvironment: process.env.VERCEL_ENV,
+  vercelURL: process.env.VERCEL_URL,
+  vercelBranchURL: process.env.VERCEL_BRANCH_URL,
+  request,
 });
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
@@ -188,7 +191,7 @@ export const auth = betterAuth({
   appName: "Portfolio Labs",
   baseURL,
   secret: authSecret,
-  trustedOrigins,
+  trustedOrigins: async (request) => getTrustedAuthOrigins(request),
   database: mongodbAdapter(database, { client: mongoClient }),
   // Activate Better Auth Dash only when its server-side project key is present.
   // Authentication itself remains available when Dash has not been connected.
