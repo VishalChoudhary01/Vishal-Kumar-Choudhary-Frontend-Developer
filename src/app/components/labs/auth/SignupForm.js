@@ -1,5 +1,4 @@
-
-        <PasswordStrengthMeter password={password} />"use client";
+"use client";
 
 import { useState } from "react";
 import AuthField from "./AuthField";
@@ -174,6 +173,7 @@ export default function SignupForm({
           error={errors.password}
           disabled={loading}
         />
+        <PasswordStrengthMeter password={password} />
 
         {!registrationEnabled ? (
           <AuthMessage title="Account registration is not ready">
