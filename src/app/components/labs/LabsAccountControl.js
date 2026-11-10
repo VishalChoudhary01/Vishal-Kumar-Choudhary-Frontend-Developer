@@ -239,7 +239,17 @@ export default function LabsAccountControl({
         className="flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full border border-border px-1.5 text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand lg:w-auto lg:max-w-[190px] lg:justify-start lg:pr-3"
       >
         {avatarUrl ? (
-          <Image src={avatarUrl} alt="" width={28} height={28} unoptimized referrerPolicy="no-referrer" className="h-7 w-7 shrink-0 rounded-full border border-border object-cover" />
+          <span className="relative isolate size-7 min-w-7 shrink-0 overflow-hidden rounded-full border border-border [clip-path:circle(50%)]">
+            <Image
+              src={avatarUrl}
+              alt=""
+              fill
+              sizes="28px"
+              unoptimized
+              referrerPolicy="no-referrer"
+              className="!absolute inset-0 !h-full !w-full max-w-none rounded-full object-cover object-center"
+            />
+          </span>
         ) : (
           <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-surface-2 text-[10px] font-semibold text-text-secondary" aria-hidden="true">
             {accountInitials}
@@ -257,7 +267,17 @@ export default function LabsAccountControl({
         >
           <div className="flex items-center gap-3 border-b border-border px-3 py-3">
             {avatarUrl ? (
-              <Image src={avatarUrl} alt="" width={36} height={36} unoptimized referrerPolicy="no-referrer" className="h-9 w-9 shrink-0 rounded-full border border-border object-cover" />
+              <span className="relative isolate size-9 min-w-9 shrink-0 overflow-hidden rounded-full border border-border [clip-path:circle(50%)]">
+                <Image
+                  src={avatarUrl}
+                  alt=""
+                  fill
+                  sizes="36px"
+                  unoptimized
+                  referrerPolicy="no-referrer"
+                  className="!absolute inset-0 !h-full !w-full max-w-none rounded-full object-cover object-center"
+                />
+              </span>
             ) : (
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface-2 text-xs font-semibold text-text-secondary" aria-hidden="true">
                 {accountInitials}
