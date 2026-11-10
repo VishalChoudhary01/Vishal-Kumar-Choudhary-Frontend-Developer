@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run test:labs-public-hero && npm run test:labs-particle-sphere && npm run test:labs-featured-experiment && npm run test:labs-public-collection && npm run test:labs-source-only && npm run test:labs-owner-navigation && npm run test:scroll-policy && npm run test:portfolio-analytics-foundation && npm run test:portfolio-analytics-ingestion && npm run test:portfolio-analytics-tracker && npm run test:portfolio-analytics-reports && npm run test:portfolio-analytics-dashboard && npm run test:portfolio-analytics-polling && npm run test:portfolio-analytics-deletion && npm run test:portfolio-analytics-privacy && npm run test:labs-public-pagination && npm run test:labs-monaco && npm run test:labs-source-reader && npm run test:labs-source-creator && npm run test:labs-history && npm run test:labs-media && npm run test:labs-snapshot-storage && npm run test:labs-analytics && npm run test:labs-seo && node scripts/validate-seo.cjs && next build",
+    "build": "npm run test:labs-public-hero && npm run test:labs-particle-sphere && npm run test:labs-featured-experiment && npm run test:labs-public-collection && npm run test:labs-source-only && npm run test:labs-owner-navigation && npm run test:scroll-policy && npm run test:portfolio-analytics-foundation && npm run test:portfolio-analytics-ingestion && npm run test:portfolio-analytics-tracker && npm run test:portfolio-analytics-reports && npm run test:portfolio-analytics-dashboard && npm run test:portfolio-analytics-polling && npm run test:portfolio-analytics-deletion && npm run test:portfolio-analytics-privacy && npm run test:labs-public-pagination && npm run test:labs-monaco && npm run test:labs-source-reader && npm run test:labs-source-creator && npm run test:labs-history && npm run test:labs-media && npm run test:labs-snapshot-storage && npm run test:auth-trusted-origins && npm run test:labs-analytics && npm run test:labs-seo && node scripts/validate-seo.cjs && next build",
     "start": "next start",
     "lint": "eslint",
     "validate:seo": "node scripts/validate-seo.cjs",
@@ -35,7 +35,8 @@
     "test:scroll-policy": "node --test tests/scroll-policy.test.mjs tests/scroll-reset-safety.test.mjs",
     "test:labs-seo": "node --test tests/labs-seo.test.mjs",
     "test:labs-particle-sphere": "node --test tests/labs-particle-sphere.test.mjs",
-    "test:labs-snapshot-storage": "node --test tests/labs-snapshot-storage.test.mjs"
+    "test:labs-snapshot-storage": "node --test tests/labs-snapshot-storage.test.mjs",
+    "test:auth-trusted-origins": "node --test tests/auth-trusted-origins.test.mjs"
   },
   "dependencies": {
     "@better-auth/infra": "^0.4.26",
