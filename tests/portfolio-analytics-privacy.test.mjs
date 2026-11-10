@@ -79,17 +79,18 @@ test("privacy page explains site information in plain language without internal 
     read("../src/app/components/portfolio-analytics/PortfolioAnalyticsPrivacyPreference.js"),
     read("../src/app/components/legal/LegalDocumentPage.js"),
   ]);
+  const normalizedPage = page.replace(/\\s+/g, " ");
 
-  assert.ok(page.includes("<PageInformationPreference />"));
-  assert.ok(page.includes("Limited page-use information"));
-  assert.ok(page.includes("approximate country, region and city"));
-  assert.ok(page.includes("full IP"));
-  assert.ok(page.toLowerCase().includes("clipboard contents are not collected"));
-  assert.ok(page.includes("65 days"));
-  assert.ok(page.includes("180 days"));
-  assert.ok(page.includes("do not currently have a fixed automatic expiry period"));
-  assert.ok(page.includes("does not delete records already stored"));
-  assert.ok(page.includes("does not turn off the separate records"));
+  assert.ok(normalizedPage.includes("<PageInformationPreference />"));
+  assert.ok(normalizedPage.includes("Limited page-use information"));
+  assert.ok(normalizedPage.includes("approximate country, region and city"));
+  assert.ok(normalizedPage.includes("full IP"));
+  assert.ok(normalizedPage.toLowerCase().includes("clipboard contents are not collected"));
+  assert.ok(normalizedPage.includes("65 days"));
+  assert.ok(normalizedPage.includes("180 days"));
+  assert.ok(normalizedPage.includes("do not currently have a fixed automatic expiry period"));
+  assert.ok(normalizedPage.includes("does not delete records already stored"));
+  assert.ok(normalizedPage.includes("does not turn off the separate records"));
   assert.ok(!/we track users|I track users|tracking users/i.test(page));
   assert.ok(!/aggregate experiment statistics|portfolio page analytics|labs analytics/i.test(page));
   assert.ok(preference.includes("Turn off optional page-use information in this browser"));
