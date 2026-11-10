@@ -1,6 +1,5 @@
 import "server-only";
 
-import { after } from "next/server";
 import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
 import { betterAuth } from "better-auth";
@@ -149,15 +148,16 @@ if (process.env.NODE_ENV !== "production") {
 const database = mongoClient.db(configuredDatabaseName || "portfolio");
 const authSecret = configuredSecret || "local-development-only-better-auth-secret-32";
 
-function scheduleEmail(message) {
-  after(async () => {
-    try {
-      await sendAuthEmail(message);
-    } catch (error) {
-      // Never log recipients, message contents, reset links, or tokens.
-      console.error("[auth-email] delivery failed:", error?.code || "DELIVERY_ERROR");
-    }
-  });
+async function deliverAuthEmail(message) {
+  try {
+    await sendAuthEmail(message);
+  } catch (error) {
+    // Never log recipients, message contents, reset links, SMTP credentials or tokens.
+    console.error("[auth-email] delivery failed:", error?.code || "DELIVERY_ERROR");
+    const deliveryError = new Error("AUTH_EMAIL_DELIVERY_FAILED");
+    deliveryError.code = "AUTH_EMAIL_DELIVERY_FAILED";
+    throw deliveryError;
+  }
 }
 
 function buildEmailHtml({ heading, message, actionLabel, url }) {
@@ -213,7 +213,7 @@ export const auth = betterAuth({
     maxPasswordLength: 128,
     revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
-      scheduleEmail({
+      await deliverAuthEmail({
         to: user.email,
         subject: "Reset your Portfolio Labs password",
         text: [
