@@ -412,3 +412,64 @@ All other directives are retained, including `script-src`, `style-src`, `font-sr
 **Activation:** deploy the latest `develop` Next.js Preview application and press Run again. The newly-created owner preview should use the normalized CSP even when the configured compiler snapshot is older. An already-open iframe does not change its policy; create a fresh Run after deployment.
 
 **Scope distinction:** this application-layer compatibility patch fixes external HTTPS image loads in JSX/HTML `<img>` elements. The old compiler snapshot's Vite plugin can still reject remote CSS `url(...)` declarations before the preview is served. For CSS background images as well, rebuild and activate the compiler snapshot containing the updated `vite.config.js` once Vercel snapshot storage is available.
+
+## 14. Owner Source Management — Vercel Snapshot Storage Manager
+
+The owner-only Source Management page at `/admin/labs/sources` includes a **Compiler snapshot storage** panel. It uses the Vercel Sandbox SDK with the deployment's OIDC identity; it does not require a paid Vercel team or a personal API token.
+
+### What the dashboard reports
+
+- Snapshot count and total bytes returned for the current Vercel project.
+- Automatic versus manual snapshot counts.
+- Snapshot status, size, creation/last-use/expiry times, region, architecture and workload type.
+- Parent snapshot ID, child snapshot IDs, source session ID and named Sandbox references.
+- Potentially reclaimable bytes for snapshots that pass every deletion rule.
+- Protection reasons for snapshots that must be retained.
+
+**Important accounting boundary:** the sum of snapshots returned for this project is a project inventory estimate. It is not represented as the full Hobby account quota or billing meter. The UI links to Vercel Usage for the authoritative account-level usage.
+
+### Deletion policy
+
+The browser never supplies an eligibility flag. Before every delete, the server fetches the latest complete project snapshot and named Sandbox inventories, then recomputes eligibility.
+
+A snapshot can be deleted from the UI only when it is:
+
+- a Vercel snapshot in `created` state;
+- explicitly marked `automatic`;
+- not referenced by any named Sandbox's current snapshot;
+- not the configured compiler snapshot for the current deployment;
+- not a parent of another listed snapshot;
+- not an ancestor of a snapshot referenced by a named Sandbox or the current deployment.
+
+Manual snapshots and records with unknown creation methods are retained. Parent/ancestor dependencies are retained. If either inventory request fails, reaches the configured scan cap, or is unavailable, the dashboard fails closed and no delete action is enabled.
+
+Deletion requires typing the complete snapshot ID. The server rechecks eligibility immediately before deletion and fetches the inventory again afterward; the UI reports success only when the snapshot is absent or marked deleted.
+
+### Routes and implementation
+
+- UI: `src/app/components/labs/admin/LabSnapshotStoragePanel.js`
+- Owner page: `src/app/admin/labs/sources/page.js`
+- API: `GET/DELETE /api/v1/admin/labs/sandbox-snapshots`
+- Vercel adapter: `src/app/lib/labs/snapshot-storage-management.js`
+- Eligibility policy: `src/app/lib/labs/snapshot-storage-policy.mjs`
+- Regression tests: `tests/labs-snapshot-storage.test.mjs`
+
+Both API methods re-check the server-derived Labs owner session. DELETE also requires a same-origin request and exact snapshot-ID confirmation. Vercel OIDC credentials stay on the server and are never returned to the browser.
+
+### Operational limitations
+
+- The dashboard lists snapshots and named Sandboxes visible to the current Vercel project-scoped OIDC identity. It is not an account-wide storage browser.
+- The dashboard cannot promise an exact free-tier storage quota or billing reset value; those belong to Vercel Usage.
+- Deleting a snapshot is permanent. A deleted snapshot cannot start a new Sandbox. Do not delete manual compiler/base snapshots or any snapshot whose lineage/reference state is uncertain.
+- The manager deletes snapshots only. It does not delete named Sandbox records or drives.
+- A successful deletion may take time to be reflected in Vercel's account-level usage meter.
+
+### Verification
+
+Run:
+
+```bash
+npm run test:labs-snapshot-storage
+```
+
+The test covers automatic leaf eligibility, manual snapshot protection, active compiler references, named Sandbox references, parent ancestry, incomplete scans, byte accounting and snapshot-ID validation.
