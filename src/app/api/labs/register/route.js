@@ -14,6 +14,7 @@ import {
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 const GENERIC_RESPONSE = {
   ok: true,
@@ -106,6 +107,21 @@ export async function POST(request) {
 
     if (result?.error) {
       await discardPendingVerificationFlow(flowId).catch(() => {});
+
+      const resultError = result.error;
+      const resultErrorStatus = Number(
+        resultError?.status ?? resultError?.statusCode ?? resultError?.status_code ?? 0,
+      );
+      const deliveryFailed =
+        resultErrorStatus >= 500 ||
+        resultError?.code === "AUTH_EMAIL_DELIVERY_FAILED" ||
+        /AUTH_EMAIL_DELIVERY_FAILED|email delivery failed/i.test(String(resultError?.message || ""));
+
+      if (deliveryFailed) {
+        const error = new Error("AUTH_EMAIL_DELIVERY_FAILED");
+        error.code = "AUTH_EMAIL_DELIVERY_FAILED";
+        throw error;
+      }
     }
 
     const remaining = 700 - (Date.now() - startedAt);
@@ -126,8 +142,12 @@ export async function POST(request) {
     return json(
       {
         error: {
-          code: "SERVICE_UNAVAILABLE",
-          message: "Unable to create your account right now. Please try again.",
+          code: error?.code === "AUTH_EMAIL_DELIVERY_FAILED"
+            ? "AUTH_EMAIL_DELIVERY_FAILED"
+            : "SERVICE_UNAVAILABLE",
+          message: error?.code === "AUTH_EMAIL_DELIVERY_FAILED"
+            ? "Email delivery is temporarily unavailable. Please try again shortly."
+            : "Unable to create your account right now. Please try again.",
         },
       },
       503,
