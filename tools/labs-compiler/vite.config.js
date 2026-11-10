@@ -75,11 +75,13 @@ function labsSourcePolicy() {
       }
 
       if (id.endsWith(".css")) {
+        // Remote stylesheets remain blocked. HTTPS URLs in CSS declarations are
+        // allowed so image-valued properties (background-image, mask-image,
+        // border-image, etc.) can load in the viewer's browser. The generated
+        // runtime CSP still permits HTTPS only in img-src; font-src and
+        // media-src remain artifact-scoped, and the sandbox has no network.
         if (/@import\s+(?:url\s*\(\s*["']?https?:|["']https?:)/i.test(code)) {
           this.error("Remote CSS imports are blocked.");
-        }
-        if (/url\s*\(\s*["']?https?:/i.test(code) && !/res\.cloudinary\.com/i.test(code)) {
-          this.error("External CSS assets are blocked.");
         }
       }
 
