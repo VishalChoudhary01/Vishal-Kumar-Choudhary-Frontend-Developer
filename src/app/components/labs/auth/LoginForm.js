@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/app/lib/auth/client";
 import { publishAuthEvent } from "@/app/lib/auth/session-events";
@@ -26,6 +26,7 @@ export default function LoginForm({
   const [loading, setLoading] = useState(false);
   const [globalError, setGlobalError] = useState(initialError || "");
   const [verificationRequired, setVerificationRequired] = useState(false);
+  const submitLockRef = useRef(false);
 
   const validate = (name, value) => {
     if (name === "email") {
@@ -39,6 +40,11 @@ export default function LoginForm({
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    // React state updates are asynchronous. Lock synchronously so repeated
+    // clicks/Enter presses cannot start concurrent sign-in requests.
+    if (submitLockRef.current) return;
+
     setSubmitted(true);
 
     const nextErrors = {
@@ -54,9 +60,12 @@ export default function LoginForm({
       return;
     }
 
+    submitLockRef.current = true;
     setLoading(true);
     setGlobalError("");
     setVerificationRequired(false);
+
+    let navigationStarted = false;
 
     try {
       const result = await authClient.signIn.email({
@@ -76,12 +85,19 @@ export default function LoginForm({
       }
 
       publishAuthEvent("sign-in");
-      router.replace(returnTo);
-      router.refresh();
+      navigationStarted = true;
+
+      // The auth cookie is set by Better Auth before this resolves. A full
+      // same-origin navigation makes the destination read the fresh server
+      // session and keeps the submit button locked until this form unmounts.
+      window.location.replace(returnTo);
     } catch {
       setGlobalError("Unable to sign in right now. Please try again.");
     } finally {
-      setLoading(false);
+      if (!navigationStarted) {
+        submitLockRef.current = false;
+        setLoading(false);
+      }
     }
   };
 
@@ -111,7 +127,7 @@ export default function LoginForm({
         </AuthMessage>
       ) : null}
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+      <form onSubmit={handleSubmit} noValidate aria-busy={loading} className="space-y-4">
         <AuthField
           id="email"
           label="Email address"
