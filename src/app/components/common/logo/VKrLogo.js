@@ -5,7 +5,7 @@ import { animate, motion, useMotionValue, useTransform } from "motion/react"
 
 import { usePageLoader } from "@/app/providers/PageLoaderProvider";
 
-export default function VKrLogo() {
+export default function VKrLogo({ compact = false, className = "" } = {}) {
   const { heroReady } = usePageLoader();
 
   const logoProgress = useMotionValue(0);
@@ -72,16 +72,18 @@ export default function VKrLogo() {
         leading-[0.8]
         tracking-[-0.08em]
 
-        text-[1.15rem]
-        sm:text-[1.4rem]
-        md:text-[1.55rem]
-        lg:text-[1.6rem]
-        xl:text-[1.7rem]
+        ${compact ? "text-[0.92rem]" : "text-[1.15rem] sm:text-[1.4rem] md:text-[1.55rem] lg:text-[1.6rem] xl:text-[1.7rem]"}
     `;
 
   return (
     <motion.div
-      className="relative flex items-center justify-center cursor-pointer size-[6rem] [perspective:800px] sm:size-[6.5rem] md:size-[7rem] lg:size-[7.5rem] xl:size-[6.5rem]"
+      className={[
+        "relative flex items-center justify-center cursor-pointer [perspective:800px]",
+        compact
+          ? "size-[3.25rem]"
+          : "size-[6rem] sm:size-[6.5rem] md:size-[7rem] lg:size-[7.5rem] xl:size-[6.5rem]",
+        className,
+      ].filter(Boolean).join(" ")}
       onMouseEnter={() => {
         if (heroReady) {
           setIsHovered(true);
