@@ -23,7 +23,7 @@ function formatBytes(value) {
 }
 
 function formatDate(value) {
-  if (!value) return "No expiry";
+  if (!value) return "Unavailable";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Unavailable";
   return date.toLocaleString(undefined, {
@@ -33,6 +33,10 @@ function formatDate(value) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function formatExpiry(value) {
+  return value ? formatDate(value) : "No expiry";
 }
 
 function shortId(value) {
@@ -204,7 +208,7 @@ export default function LabSnapshotStoragePanel() {
             </div>
           ) : report ? (
             <>
-              <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
                 <Metric
                   label="Project snapshot size"
                   value={formatBytes(summary.totalBytes)}
@@ -228,6 +232,12 @@ export default function LabSnapshotStoragePanel() {
                   value={summary.protectedSnapshotCount}
                   hint={summary.namedSandboxCount + " named Sandbox records scanned"}
                   icon={ShieldCheck}
+                />
+                <Metric
+                  label="Automatic / manual"
+                  value={summary.automaticSnapshotCount + " / " + summary.manualSnapshotCount}
+                  hint="Snapshot creation methods"
+                  icon={Database}
                 />
               </div>
 
@@ -300,6 +310,8 @@ export default function LabSnapshotStoragePanel() {
                             <span>{snapshot.creationMethod}</span>
                             <span>{snapshot.status}</span>
                             {snapshot.region ? <span>{snapshot.region}</span> : null}
+                            {snapshot.architecture ? <span>{snapshot.architecture}</span> : null}
+                            {snapshot.workloadType ? <span>{snapshot.workloadType}</span> : null}
                             <span className="inline-flex items-center gap-1">
                               <Clock3 size={10} aria-hidden="true" /> Created {formatDate(snapshot.createdAt)}
                             </span>
@@ -325,7 +337,7 @@ export default function LabSnapshotStoragePanel() {
 
                       <div className="grid grid-cols-1 gap-2 text-[10px] text-text-tertiary sm:grid-cols-2 lg:grid-cols-3">
                         <p>Last used: <span className="text-text-secondary">{formatDate(snapshot.lastUsedAt)}</span></p>
-                        <p>Expires: <span className="text-text-secondary">{formatDate(snapshot.expiresAt)}</span></p>
+                        <p>Expires: <span className="text-text-secondary">{formatExpiry(snapshot.expiresAt)}</span></p>
                         <p>Parent: <code className="break-all text-text-secondary">{shortId(snapshot.parentId)}</code></p>
                         <p>Source session: <code className="break-all text-text-secondary">{shortId(snapshot.sourceSessionId)}</code></p>
                         <p>Sandbox references: <span className="text-text-secondary">{snapshot.sandboxNames.length}</span></p>
