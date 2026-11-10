@@ -35,7 +35,7 @@ The app layer also accepts one JavaScript/JSX component file. When its editor la
 
 ## Security and resource policy
 
-The build rejects path traversal, hidden paths, oversized snapshots, duplicate files, missing entry points, absolute and remote imports, Node built-ins, unknown packages, `require`, `eval`, `Function`, dynamic expression imports, app parent/cookie/storage access and unapproved remote CSS/assets. It does not accept user package manifests, install user dependencies or execute user package scripts.
+The build rejects path traversal, hidden paths, oversized snapshots, duplicate files, missing entry points, remote JavaScript/module imports, Node built-ins, unknown packages, `require`, `eval`, `Function`, dynamic expression imports, app parent/cookie/storage access and remote CSS `@import`. HTTPS URLs used as image resources in React/HTML or CSS image declarations (for example, `background-image: url("https://...")`) are allowed; the browser loads them directly at preview time. The generated preview/published CSP permits HTTPS only under `img-src`. External scripts, stylesheets, fonts, media, frames and fetch/XHR connections remain restricted, and the compiler Sandbox keeps `networkPolicy: "deny-all"`. It does not accept user package manifests, install user dependencies or execute user package scripts.
 
 The generated document uses a restrictive Content Security Policy. Preview sessions use a separate sandbox origin and are short-lived. Public releases store only immutable compiled artifacts; source code remains behind the owner/verified-user access rules.
 
