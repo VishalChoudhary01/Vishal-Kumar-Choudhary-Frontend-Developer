@@ -429,11 +429,11 @@ try {
   const remoteCssImportFiles = files.map((file) => ({ ...file }));
   const remoteCssEntry = remoteCssImportFiles.find((file) => file.path === "src/index.css");
   if (!remoteCssEntry) throw new Error("The React smoke fixture is missing src/index.css.");
-  remoteCssEntry.content += '\\n@import url("https://example.com/remote.css");';
+  remoteCssEntry.content += '\n@import url("https://example.com/remote.css");';
   await writeInput(negativeInput, remoteCssImportFiles.map(({ path: filePath, content }) => ({ path: filePath, content })));
   const remoteCssImport = runBuild(negativeInput, negativeRoot, negativeOutput);
   if (remoteCssImport.status === 0 || !String(remoteCssImport.stderr).includes("Remote CSS imports are blocked.")) {
-    process.stderr.write(remoteCssImport.stderr || "Remote CSS @import was not rejected.\\n");
+    process.stderr.write(remoteCssImport.stderr || "Remote CSS @import was not rejected.\n");
     process.exit(1);
   }
 
