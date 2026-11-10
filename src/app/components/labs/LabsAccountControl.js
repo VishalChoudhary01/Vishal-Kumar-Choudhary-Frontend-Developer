@@ -231,11 +231,12 @@ export default function LabsAccountControl({
       <button
         ref={triggerRef}
         type="button"
-        aria-label="Account menu"
+        aria-label={displayName + " account menu"}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
-        className="flex h-9 max-w-[190px] items-center gap-2 rounded-full border border-border px-1.5 pr-3 text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        title={displayName}
+        className="flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full border border-border px-1.5 text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand lg:w-auto lg:max-w-[190px] lg:justify-start lg:pr-3"
       >
         {avatarUrl ? (
           <Image src={avatarUrl} alt="" width={28} height={28} unoptimized referrerPolicy="no-referrer" className="h-7 w-7 shrink-0 rounded-full border border-border object-cover" />
@@ -244,7 +245,7 @@ export default function LabsAccountControl({
             {accountInitials}
           </span>
         )}
-        <span className="max-w-[118px] truncate text-xs font-semibold">{displayName}</span>
+        <span className="hidden max-w-[118px] truncate text-xs font-semibold lg:inline">{displayName}</span>
       </button>
 
       {open ? (
