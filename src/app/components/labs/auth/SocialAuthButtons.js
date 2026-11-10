@@ -74,8 +74,8 @@ export default function SocialAuthButtons({
   };
 
   return (
-    <div className="mt-5">
-      <div className="mb-4 flex items-center gap-3 text-xs text-text-tertiary">
+    <div className="mt-4">
+      <div className="mb-3 flex items-center gap-3 text-xs text-text-tertiary">
         <span className="h-px flex-1 bg-border" />
         <span>OR CONTINUE WITH</span>
         <span className="h-px flex-1 bg-border" />
@@ -95,7 +95,7 @@ export default function SocialAuthButtons({
               onClick={() => handleProvider(provider)}
               disabled={disabled || Boolean(pendingProvider)}
               aria-busy={isPending}
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-sm border border-border px-4 text-sm font-medium text-text-primary transition-colors hover:border-border-strong hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-55"
+              className="flex h-10 w-full items-center justify-center gap-2 rounded-sm border border-border px-4 text-sm font-medium text-text-primary transition-colors hover:border-border-strong hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-55"
             >
               <Icon size={16} aria-hidden="true" />
               {isPending ? "Connecting…" : label}

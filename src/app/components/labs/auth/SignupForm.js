@@ -111,7 +111,7 @@ export default function SignupForm({
             <path d="m8.5 12.5 2.2 2.2 4.8-5" />
           </svg>
         </div>
-        <h1 className="font-display text-[2rem] leading-tight tracking-[-0.025em]">
+        <h1 className="font-display text-[1.7rem] leading-tight tracking-[-0.025em]">
           Check your email
         </h1>
         <p className="mt-3 text-sm leading-6 text-text-secondary">
@@ -128,18 +128,18 @@ export default function SignupForm({
 
   return (
     <>
-      <div className="mb-6 text-center">
+      <div className="mb-4 text-center">
         <h1 className="font-display text-[2rem] leading-tight tracking-[-0.025em]">
           Create your account
         </h1>
-        <p className="mt-2 text-sm leading-6 text-text-secondary">
+        <p className="mt-1.5 text-sm leading-5 text-text-secondary">
           Start using your Labs account.
         </p>
       </div>
 
       {globalError ? <AuthMessage title="Unable to create account">{globalError}</AuthMessage> : null}
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+      <form onSubmit={handleSubmit} noValidate className="space-y-3">
         <AuthField
           id="email"
           label="Email address"
@@ -207,7 +207,7 @@ export default function SignupForm({
         onPendingChange={setLoading}
       />
 
-      <p className="mt-6 text-center text-sm text-text-secondary">
+      <p className="mt-4 text-center text-sm text-text-secondary">
         Already have an account?{" "}
         <AuthLink href={"/labs/login?returnTo=" + encodeURIComponent(returnTo)}>
           Sign in

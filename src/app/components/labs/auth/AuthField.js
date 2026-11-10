@@ -47,7 +47,7 @@ export default function AuthField({
           aria-invalid={Boolean(error)}
           aria-describedby={errorId || helperId}
           className={[
-            "h-11 w-full rounded-sm border bg-transparent px-3 text-sm text-text-primary outline-none transition-colors",
+            "h-10 w-full rounded-sm border bg-transparent px-3 text-sm text-text-primary outline-none transition-colors",
             "placeholder:text-text-tertiary hover:border-border-strong",
             "focus:border-brand focus-visible:ring-2 focus-visible:ring-brand/30",
             error ? "border-error" : "border-border",
