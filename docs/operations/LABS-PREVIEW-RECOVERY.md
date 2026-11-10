@@ -415,7 +415,7 @@ All other directives are retained, including `script-src`, `style-src`, `font-sr
 
 ## 14. Owner Source Management — Vercel Snapshot Storage Manager
 
-The owner-only Source Management page at `/admin/labs/sources` includes a **Compiler snapshot storage** panel. It uses the Vercel Sandbox SDK with the deployment's OIDC identity; it does not require a paid Vercel team or a personal API token.
+The owner-only Source Management page at `/admin/labs/sources` links to a dedicated **Snapshot storage** page at `/admin/labs/sources/snapshots`. The manager is intentionally not rendered inline with the experiment inventory. It uses the Vercel Sandbox SDK with the deployment's OIDC identity; it does not require a paid Vercel team or a personal API token.
 
 ### What the dashboard reports
 
