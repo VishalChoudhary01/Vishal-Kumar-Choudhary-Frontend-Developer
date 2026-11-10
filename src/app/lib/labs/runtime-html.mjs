@@ -44,7 +44,9 @@ export function buildPublishedRuntimeCsp({ assetBase, parentOrigin }) {
     "default-src 'none'",
     "script-src 'unsafe-inline' " + assetSource,
     "style-src 'unsafe-inline' " + assetSource,
-    "img-src " + assetSource + " data: blob:",
+    // Published experiments may reference remote HTTPS image URLs.
+    // Keep this permission limited to images; connect-src remains disabled.
+    "img-src " + assetSource + " https: data: blob:",
     "font-src " + assetSource + " data:",
     "media-src " + assetSource + " data: blob:",
     "connect-src 'none'",
