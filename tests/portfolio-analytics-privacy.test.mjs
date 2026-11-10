@@ -79,7 +79,7 @@ test("privacy page explains site information in plain language without internal 
     read("../src/app/components/portfolio-analytics/PortfolioAnalyticsPrivacyPreference.js"),
     read("../src/app/components/legal/LegalDocumentPage.js"),
   ]);
-  const normalizedPage = page.replace(/\\s+/g, " ");
+  const normalizedPage = page.replace(/\s+/g, " ");
 
   assert.ok(normalizedPage.includes("<PageInformationPreference />"));
   assert.ok(normalizedPage.includes("Limited page-use information"));
