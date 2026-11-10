@@ -160,7 +160,9 @@ test("server management uses OIDC and re-checks eligibility before deletion", as
     "utf8",
   );
   assert.ok(management.includes('import { Sandbox, Snapshot } from "@vercel/sandbox"'));
-  assert.ok(management.includes("VERCEL_OIDC_TOKEN"));
+  assert.ok(management.includes("Snapshot.list({ limit: 50, sortOrder: \"desc\" })"));
+  assert.ok(management.includes("Sandbox.list({ limit: 50, sortBy: \"createdAt\", sortOrder: \"desc\" })"));
+  assert.ok(!management.includes("if (!process.env.VERCEL_OIDC_TOKEN)"));
   assert.ok(management.includes("Re-read the entire inventory immediately before deletion"));
   assert.ok(management.includes("const after = await getSnapshotStorageReport()"));
   assert.ok(!management.includes("console.log(process.env"));
