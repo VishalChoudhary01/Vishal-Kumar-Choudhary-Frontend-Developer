@@ -246,7 +246,7 @@ export const auth = betterAuth({
       }
     },
     sendVerificationEmail: async ({ user, url }) => {
-      scheduleEmail({
+      await deliverAuthEmail({
         to: user.email,
         subject: "Verify your Portfolio Labs email",
         text: [
