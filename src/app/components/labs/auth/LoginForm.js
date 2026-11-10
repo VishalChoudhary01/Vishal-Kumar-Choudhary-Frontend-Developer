@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { authClient } from "@/app/lib/auth/client";
 import { publishAuthEvent } from "@/app/lib/auth/session-events";
 import AuthField from "./AuthField";
@@ -18,7 +17,6 @@ export default function LoginForm({
   googleEnabled,
   githubEnabled,
 }) {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
@@ -92,6 +90,7 @@ export default function LoginForm({
       // session and keeps the submit button locked until this form unmounts.
       window.location.replace(returnTo);
     } catch {
+      navigationStarted = false;
       setGlobalError("Unable to sign in right now. Please try again.");
     } finally {
       if (!navigationStarted) {
@@ -100,8 +99,6 @@ export default function LoginForm({
       }
     }
   };
-
-
 
   return (
     <>
