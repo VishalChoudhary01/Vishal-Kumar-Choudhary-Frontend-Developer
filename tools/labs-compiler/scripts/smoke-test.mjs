@@ -190,6 +190,7 @@ const runtimeHtmlFixtureWithAssets = [
   '<link rel="stylesheet" href="./assets/index-Zc0bh0At.css">',
   '<script src="src/script.js"></script>',
   '<img src="/images/orb.webp" srcset="/images/orb.webp 1x, images/orb@2x.webp 2x">',
+  '<img src="https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=1600" alt="Remote image">',
   "</head><body><main>Fluid Gradient</main></body></html>",
 ].join("\n");
 const normalizedRuntimeHtml = rewritePublishedRuntimeHtml(runtimeHtmlFixtureWithAssets, {
@@ -206,6 +207,9 @@ for (const reference of [
     throw new Error("Published HTML did not normalize an asset into its immutable artifact path: " + reference);
   }
 }
+if (!normalizedRuntimeHtml.includes("https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=1600")) {
+  throw new Error("Absolute HTTPS image URLs must remain unchanged when published HTML is rewritten.");
+}
 if (normalizedRuntimeHtml.includes('<base href=')) {
   throw new Error("A source-authored base element can override the immutable artifact URL.");
 }
@@ -218,6 +222,12 @@ const publishedCsp = buildPublishedRuntimeCsp({
   assetBase: publishedAssetBase,
   parentOrigin: "https://portfolio.example",
 });
+if (!publishedCsp.includes("img-src " + publishedAssetBase + " https: data: blob:")) {
+  throw new Error("The published runtime CSP must allow HTTPS image URLs.");
+}
+if (!publishedCsp.includes("media-src " + publishedAssetBase + " data: blob:")) {
+  throw new Error("The published runtime CSP must keep media access restricted to the immutable artifact.");
+}
 for (const directive of ["script-src 'unsafe-inline' " + publishedAssetBase, "style-src 'unsafe-inline' " + publishedAssetBase]) {
   if (!publishedCsp.includes(directive)) {
     throw new Error("The published runtime CSP does not allow its scoped compiled assets.");
@@ -300,6 +310,7 @@ const source = [
       'import { useState } from "react";',
       'import { motion, useReducedMotion } from "motion/react";',
       'import { ArrowUpRight, Sparkles } from "lucide-react";',
+      'const externalImageUrl = "https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=1600";',
       "",
       "export default function Experiment() {",
       "  const [count, setCount] = useState(0);",
@@ -312,6 +323,7 @@ const source = [
       '        className="w-full max-w-xl border border-white/10 p-8"',
       "      >",
       '        <Sparkles aria-hidden="true" />',
+      '        <img src={externalImageUrl} alt="External remote image" />',
       '        <h1 className="mt-4 text-3xl font-bold">Single-file JSX preview passed</h1>',
       '        <button type="button" className="mt-6 bg-teal-300 px-4 py-2 text-black" onClick={() => setCount((value) => value + 1)}>',
       '          Count {count} <ArrowUpRight aria-hidden="true" />',
@@ -391,6 +403,9 @@ try {
   const js = await fs.readFile(path.join(output, jsFile.path), "utf8");
   if (!js.includes("Single-file JSX preview passed")) {
     throw new Error("The compiled React component is missing from the emitted JavaScript bundle.");
+  }
+  if (!js.includes("images.unsplash.com")) {
+    throw new Error("The React compiler did not preserve the external HTTPS image URL.");
   }
 
   const tampered = files.map((file) => ({ ...file }));
@@ -498,13 +513,13 @@ try {
       content: [
         "<!doctype html>",
         '<html lang="en"><head><meta charset="UTF-8"><title>Static Labs preview</title></head>',
-        '<body><main class="static-card"><h1 id="message">Static HTML preview</h1></main></body></html>',
+        '<body><main class="static-card"><h1 id="message">Static HTML preview</h1><img src="https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=1600" alt="Remote image"></main></body></html>',
       ].join("\n"),
     },
     {
       path: "styles.css",
       language: "css",
-      content: ".static-card { color: #123456; padding: 24px; }",
+      content: '.static-card { color: #123456; padding: 24px; background-image: url("https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg?auto=compress&cs=tinysrgb&w=1600"); }',
     },
     {
       path: "main.js",
@@ -537,9 +552,15 @@ try {
   if (!staticHtmlOutput.includes("Static Labs preview")) {
     throw new Error("The custom static HTML entry was not preserved.");
   }
+  if (!staticHtmlOutput.includes("images.unsplash.com")) {
+    throw new Error("The static HTML build did not preserve the external HTTPS image URL.");
+  }
   const staticCssOutput = await fs.readFile(path.join(staticOutput, staticCssFile.path), "utf8");
   if (!staticCssOutput.includes("#123456")) {
     throw new Error("The standalone CSS file was not compiled into the static HTML preview.");
+  }
+  if (!staticCssOutput.includes("images.pexels.com")) {
+    throw new Error("The standalone CSS build did not preserve the external HTTPS background-image URL.");
   }
   const staticJsOutput = await fs.readFile(path.join(staticOutput, staticJsFile.path), "utf8");
   if (!staticJsOutput.includes("Static HTML/CSS/JS preview passed")) {
@@ -755,8 +776,12 @@ try {
   }
 
   const html = await fs.readFile(path.join(output, "index.html"), "utf8");
-  if (!html.includes("Content-Security-Policy")) {
-    throw new Error("The compiled HTML is missing its runtime Content Security Policy.");
+  const previewCsp = html.match(/Content-Security-Policy" content="([^"]+)"/)?.[1] || "";
+  if (!previewCsp.includes("img-src 'self' https: data: blob:")) {
+    throw new Error("The isolated preview CSP must allow HTTPS images.");
+  }
+  if (!previewCsp.includes("connect-src 'none'") || !previewCsp.includes("script-src 'self' 'unsafe-inline'")) {
+    throw new Error("Allowing HTTPS images must not loosen script or connection restrictions.");
   }
 
   process.stdout.write(
