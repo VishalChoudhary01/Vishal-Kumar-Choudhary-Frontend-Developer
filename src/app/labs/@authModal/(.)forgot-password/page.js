@@ -1,1 +1,5 @@
-export { default, dynamic } from "@/app/labs/(auth)/forgot-password/page";
+import InterceptedLabsForgotPasswordPage from "@/app/labs/(auth)/forgot-password/page";
+
+export const dynamic = "force-dynamic";
+
+export default InterceptedLabsForgotPasswordPage;
