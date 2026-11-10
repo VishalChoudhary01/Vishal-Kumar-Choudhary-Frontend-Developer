@@ -227,3 +227,127 @@ Vercel's plan and usage limits can change. Verify the current dashboard and offi
 - [Vercel Sandbox duration and persistence](https://vercel.com/kb/guide/vercel-sandbox-duration-and-persistence)
 - [Vercel plan and usage limits](https://vercel.com/docs/limits)
 - [Vercel Hobby plan usage guidance](https://vercel.com/docs/plans/hobby)
+
+## 12. How to list and safely delete old Vercel Sandbox snapshots
+
+Use this procedure only when snapshot storage is genuinely contributing to a quota error (for example, the confirmed HTTP 402 incident). Deleting a snapshot is permanent: a deleted snapshot cannot be used to start another sandbox. The goal is to remove old, unreferenced temporary snapshots—not to remove the compiler environment that Labs currently needs.
+
+### 12.1 Install and authenticate the Sandbox CLI
+
+Run these commands in a terminal on your machine:
+
+```bash
+npm install --global sandbox
+sandbox login
+```
+
+Use the Vercel account/team that owns the portfolio project. If the CLI asks for a scope, choose the same team that owns the project. Do not paste a Vercel access token into this document, source code, chat, or a committed shell script.
+
+### 12.2 Confirm the correct project and active compiler snapshot IDs
+
+Before listing or deleting anything:
+
+1. Open Vercel and select the portfolio project and its owning team.
+2. Open **Project → Settings → Environment Variables**.
+3. Record the value of `LABS_COMPILER_SNAPSHOT_ID` separately for each environment that is used: **Production**, **Preview** (including any branch-specific override), and **Development** if configured.
+4. Treat every snapshot ID currently referenced by an environment as protected. A Preview recovery must not change or delete the Production snapshot.
+5. Also identify snapshots used by any named Sandbox that the team still needs. Do not assume that an old-looking or automatically-created snapshot is disposable.
+
+The compiler snapshot ID in the environment is the active starting point. Preserve that snapshot and its snapshot ancestry (its parent snapshots) unless Vercel's dependency information explicitly confirms a parent is no longer needed. A child snapshot may depend on a parent.
+
+### 12.3 List snapshots for the intended project
+
+Use the exact Vercel project name or project ID and the owning team slug:
+
+```bash
+# List recent snapshots for the portfolio project
+sandbox snapshots list --project <project-name-or-id> --scope <team-slug> --limit 50 --sort-order desc
+```
+
+The list command supports pagination. When a cursor is returned, fetch the next page before deciding which snapshots are old:
+
+```bash
+sandbox snapshots list --project <project-name-or-id> --scope <team-slug> --limit 50 --cursor <next-cursor>
+```
+
+Do not assume the first page contains every snapshot. Keep listing pages until there are no more results.
+
+Review the available metadata for each candidate, especially:
+
+- **Snapshot ID:** exact ID required for deletion.
+- **Creation method:** `automatic` or `manual`. This is a clue, not proof that a snapshot is safe to delete.
+- **Created/updated time and expiry:** helps identify snapshots produced during the old Run incident.
+- **Size:** prioritize confirmed-unused snapshots consuming the most storage.
+- **Parent ID:** identifies snapshot ancestry; preserve parents required by a live compiler snapshot.
+- **Source session ID:** helps correlate a snapshot with the session that created it.
+
+For a snapshot whose details need checking, use the documented Vercel endpoint:
+
+```text
+GET https://api.vercel.com/v2/sandboxes/snapshots/<snapshot-id>
+```
+
+Authenticate with your Vercel token and include the owning `teamId` and/or team `slug` as required by your account. The response includes fields such as `id`, `status`, `creationMethod`, `createdAt`, `expiresAt`, `sizeBytes`, `sourceSessionId`, and `parentId`. Never commit or share the bearer token.
+
+### 12.4 Decide which snapshots are safe to remove
+
+A snapshot is a deletion candidate only when **all** of the following are true:
+
+- Its ID is not configured in any active Production, Preview, or Development `LABS_COMPILER_SNAPSHOT_ID` value.
+- It is not the parent/ancestor of a compiler snapshot that an environment still references.
+- It is not the current snapshot or required ancestry of a named Sandbox that the team still uses.
+- It is not needed by an active or recoverable session/workflow.
+- It is confirmed to be an obsolete temporary snapshot, such as an automatic snapshot created by the previous persistent one-off Run workers.
+- The team has checked its metadata and exact ID; it is not being selected merely because it is old or marked `automatic`.
+
+**Important:** `creationMethod: automatic` alone is not enough to delete a snapshot. The current compiler base may itself have been created by an earlier workflow, and a child can rely on its parent. When the dependency cannot be established confidently, leave the snapshot in place and ask the project owner to verify it.
+
+### 12.5 Delete only the explicitly approved snapshot IDs
+
+After reviewing the candidate IDs, delete one snapshot at a time first:
+
+```bash
+sandbox snapshots delete --project <project-name-or-id> --scope <team-slug> <snapshot-id>
+```
+
+For multiple snapshots, pass only the individually reviewed IDs:
+
+```bash
+sandbox snapshots delete --project <project-name-or-id> --scope <team-slug> <snapshot-id-1> <snapshot-id-2>
+```
+
+Do not use wildcard patterns, generated ID ranges, or a script that deletes every snapshot older than a date. Do not bulk-delete an entire project snapshot list. The CLI supports deleting snapshots by ID; it does not decide whether an ID is safe for this Labs deployment.
+
+### 12.6 Verify deletion and protect the compiler
+
+After each deletion:
+
+1. Retrieve the deleted snapshot again using the snapshot details endpoint and confirm its status is `deleted` (or confirm it no longer appears in the list).
+2. List snapshots again and verify that only the intended IDs disappeared.
+3. Confirm all protected `LABS_COMPILER_SNAPSHOT_ID` values are unchanged in Vercel.
+4. Confirm the active compiler snapshot and its parent chain still exist.
+5. Start one new Preview Run. Confirm that the compiler sandbox can be created, the build completes, the preview server health check passes, and the current iframe sends its ready handshake.
+6. Recheck the Vercel usage meter after it refreshes. A successful delete should not be confused with an immediate UI meter refresh; use the provider's updated usage view as the final confirmation.
+
+Snapshot deletion does not require changing application code or changing the active compiler environment variable when only obsolete, unreferenced snapshots were removed. If the active compiler snapshot must be replaced, follow the dedicated snapshot build/release procedure, update only the intended environment, and deploy it before removing the old snapshot.
+
+### 12.7 Quick command reference
+
+```bash
+# Install and sign in
+npm install --global sandbox
+sandbox login
+
+# List snapshots (paginate if a cursor is returned)
+sandbox snapshots list --project <project-name-or-id> --scope <team-slug> --limit 50 --sort-order desc
+
+# Delete one reviewed snapshot
+sandbox snapshots delete --project <project-name-or-id> --scope <team-slug> <snapshot-id>
+```
+
+Official references:
+
+- [Sandbox CLI reference — snapshots list/delete](https://vercel.com/docs/sandbox/cli-reference)
+- [Sandbox snapshot concepts and CLI examples](https://vercel.com/docs/sandbox/concepts/snapshots)
+- [Get snapshot details API](https://vercel.com/docs/rest-api/sandboxes/get-a-snapshot)
+- [Delete snapshot API](https://vercel.com/docs/rest-api/sandboxes/delete-a-snapshot)
