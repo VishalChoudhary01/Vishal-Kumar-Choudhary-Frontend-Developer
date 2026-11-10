@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFile } from "node:fs/promises";
 
 import {
   buildSnapshotStorageInventory,
@@ -139,4 +140,44 @@ test("snapshot IDs use Vercel snapshot identifier format", () => {
   assert.equal(isSnapshotId(ids.active), true);
   assert.equal(isSnapshotId("snap_not-valid"), false);
   assert.equal(isSnapshotId("../snap_111"), false);
+});
+
+
+test("snapshot storage APIs are owner-only and deletion is same-origin guarded", async () => {
+  const route = await readFile(
+    new URL("../src/app/api/v1/admin/labs/sandbox-snapshots/route.js", import.meta.url),
+    "utf8",
+  );
+  assert.ok(route.includes("getLabsOwnerUser"));
+  assert.ok(route.includes("isSameOriginMutation"));
+  assert.ok(route.includes("deleteUnusedSnapshot"));
+  assert.ok(route.includes("confirmation: body?.confirmation"));
+});
+
+test("server management uses OIDC and re-checks eligibility before deletion", async () => {
+  const management = await readFile(
+    new URL("../src/app/lib/labs/snapshot-storage-management.js", import.meta.url),
+    "utf8",
+  );
+  assert.ok(management.includes('import { Sandbox, Snapshot } from "@vercel/sandbox"'));
+  assert.ok(management.includes("VERCEL_OIDC_TOKEN"));
+  assert.ok(management.includes("Re-read the entire inventory immediately before deletion"));
+  assert.ok(management.includes("const after = await getSnapshotStorageReport()"));
+  assert.ok(!management.includes("console.log(process.env"));
+});
+
+test("source management mounts a distinct storage panel without replacing experiment inventory", async () => {
+  const page = await readFile(
+    new URL("../src/app/admin/labs/sources/page.js", import.meta.url),
+    "utf8",
+  );
+  assert.ok(page.includes("<LabSnapshotStoragePanel />"));
+  assert.ok(page.includes("<LabSourceInventory />"));
+  const panel = await readFile(
+    new URL("../src/app/components/labs/admin/LabSnapshotStoragePanel.js", import.meta.url),
+    "utf8",
+  );
+  assert.ok(panel.includes("Potentially reclaimable"));
+  assert.ok(panel.includes("not your Hobby account's official storage allowance"));
+  assert.ok(panel.includes("confirmation.trim() !== deleteTarget.id"));
 });
