@@ -5,6 +5,7 @@ import { put } from "@vercel/blob";
 import { Sandbox } from "@vercel/sandbox";
 import { prepareReactProject } from "./prepare-react-project.mjs";
 import { ensureSandboxInputDirectory } from "./sandbox-directory.mjs";
+import { allowHttpsImagesInPreviewHtml } from "./preview-html-policy.mjs";
 import { getPublishedArtifactBlobPath } from "./release-artifact-path.mjs";
 
 const COMPILER_TIMEOUT_MS = 45_000;
@@ -172,6 +173,33 @@ async function writeBuildInput(sandbox, files) {
       content: Buffer.from("{}", "utf8"),
     },
   ]);
+}
+
+async function allowRemoteImagesInOwnerPreview(sandbox) {
+  const htmlPath = "/vercel/sandbox/output/index.html";
+  let html;
+  try {
+    html = await sandbox.fs.readFile(htmlPath, "utf8");
+  } catch {
+    fail("PREVIEW_HTML_READ_FAILED", "The compiled preview HTML could not be read for runtime policy validation.");
+  }
+
+  let normalizedHtml;
+  try {
+    normalizedHtml = allowHttpsImagesInPreviewHtml(html);
+  } catch (error) {
+    fail(
+      "PREVIEW_CSP_INVALID",
+      error?.message || "The compiled preview is missing a valid Content Security Policy.",
+    );
+  }
+
+  if (normalizedHtml !== html) {
+    await sandbox.writeFiles([{
+      path: htmlPath,
+      content: Buffer.from(normalizedHtml, "utf8"),
+    }]);
+  }
 }
 
 async function executeBuild(sandbox, files, { base = "./" } = {}) {
@@ -365,6 +393,11 @@ export async function createOwnerLabPreview({ slug, user, inputFiles, parentOrig
     await executeBuild(sandbox, files, {
       base: "./",
     });
+
+    // Normalize image policy in the application layer as well as the compiler.
+    // This keeps owner previews working while an older immutable compiler
+    // snapshot is still configured for the Preview environment.
+    await allowRemoteImagesInOwnerPreview(sandbox);
 
     await sandbox.runCommand({
       cmd: "node",
