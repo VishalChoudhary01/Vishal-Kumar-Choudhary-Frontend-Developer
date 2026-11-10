@@ -144,6 +144,12 @@ async function createCompilerSandbox({ timeout, ports = [] }) {
         "Vercel Sandbox snapshot storage is over quota. Labs Run workers are now configured as non-persistent; remove legacy automatic snapshots in Vercel or upgrade the plan, then retry. Your source code was not changed.",
       );
     }
+    if (/status code 404|404.*not found/i.test(detail) && /snapshot not found|snapshot.*not found/i.test(detail)) {
+      fail(
+        "COMPILER_SNAPSHOT_NOT_FOUND",
+        "The configured Labs compiler snapshot is missing from this Vercel project. Set LABS_COMPILER_SNAPSHOT_ID to an existing verified compiler snapshot and redeploy this environment.",
+      );
+    }
     if (/snapshot.*(?:expired|deleted)|status code 410/i.test(detail)) {
       fail(
         "COMPILER_SNAPSHOT_EXPIRED",
