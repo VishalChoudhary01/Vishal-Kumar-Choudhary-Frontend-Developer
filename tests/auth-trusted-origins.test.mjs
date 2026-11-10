@@ -129,3 +129,23 @@ test("registration and verification resend surface email delivery failures witho
   assert.ok(!resend.includes("Keep the same client-visible result for existing and unknown emails."));
   assert.ok(registration.includes("const resultErrorStatus = Number("));
 });
+
+test("email login synchronously blocks duplicate submissions and stays locked during redirect", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const source = await readFile(
+    new URL("../src/app/components/labs/auth/LoginForm.js", import.meta.url),
+    "utf8",
+  );
+
+  assert.ok(source.includes("const submitLockRef = useRef(false)"));
+  assert.ok(source.includes("if (submitLockRef.current) return"));
+  assert.ok(source.includes("submitLockRef.current = true"));
+  assert.ok(source.includes("window.location.replace(returnTo)"));
+  assert.ok(source.includes("navigationStarted = true"));
+  assert.ok(source.includes("if (!navigationStarted)"));
+  assert.ok(source.includes("submitLockRef.current = false"));
+  assert.ok(source.includes('aria-busy={loading}'));
+  assert.ok(source.includes('disabled={loading}'));
+  assert.equal(source.includes("router.replace(returnTo)"), false);
+  assert.equal(source.includes("useRouter"), false);
+});
