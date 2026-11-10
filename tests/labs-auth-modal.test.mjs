@@ -20,7 +20,8 @@ test("Labs auth routes render over the existing Labs page through a parallel rou
   assert.ok(slotLayout.includes("<LabsAuthModal>{children}</LabsAuthModal>"));
   assert.ok(fallback.includes("return null"));
   for (const page of [login, signup, forgot, reset, verify]) {
-    assert.ok(page.includes("export { default, dynamic }"));
+    assert.ok(page.includes('export const dynamic = "force-dynamic"'));
+    assert.ok(page.includes("export default "));
   }
 });
 
