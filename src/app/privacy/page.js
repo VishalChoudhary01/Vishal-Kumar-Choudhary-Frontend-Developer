@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 
 import LegalDocumentPage from "@/app/components/legal/LegalDocumentPage";
@@ -8,7 +10,7 @@ import { buildSiteUrl } from "@/app/lib/seo/urls";
 export const metadata = {
   title: "Privacy Policy",
   description:
-    "How the portfolio website and Portfolio Labs collect, use, store, and protect personal information.",
+    "Understand the information used to operate this portfolio and Portfolio Labs, the optional site statistics, and the privacy choices available to you.",
   alternates: { canonical: new URL("/privacy", buildSiteUrl()).toString() },
   robots: { index: true, follow: true },
 };
@@ -36,17 +38,17 @@ function DataItem({ title, children }) {
 }
 
 const contents = [
-  ["operator", "1. Who operates this site"],
-  ["information", "2. Information handled"],
-  ["purposes", "3. Why it is used"],
-  ["sharing", "4. Providers and disclosures"],
-  ["cookies", "5. Cookies and browser storage"],
-  ["retention", "6. Retention"],
-  ["security", "7. Security"],
-  ["rights", "8. Your choices and requests"],
+  ["operator", "1. About this notice"],
+  ["information", "2. Information used by the site"],
+  ["purposes", "3. How information is used"],
+  ["cookies", "4. Cookies and browser storage"],
+  ["sharing", "5. Service providers"],
+  ["retention", "6. How long information is kept"],
+  ["choices", "7. Your choices and requests"],
+  ["security", "8. Security"],
   ["children", "9. Children"],
   ["transfers", "10. International processing"],
-  ["changes", "11. Changes and contact"],
+  ["changes", "11. Updates and contact"],
 ];
 
 export default function PrivacyPage() {
@@ -54,181 +56,346 @@ export default function PrivacyPage() {
     <LegalDocumentPage
       eyebrow="LEGAL / 02"
       title="Privacy Policy"
-      description="This notice explains what personal information is handled when you browse this portfolio, contact me, create a Labs account, or use an authorised experiment source viewer."
+      description="This notice explains the information needed to operate the portfolio and Portfolio Labs, including accounts, contact messages, experiment features, and optional site usage statistics."
       version={PRIVACY_VERSION}
+      effectiveDate="11 November 2026"
     >
-      <nav aria-label="Privacy Policy contents" className="rounded-sm border border-border bg-surface-1 p-5 sm:p-6">
-        <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-text-tertiary">ON THIS PAGE</p>
+      <nav
+        aria-label="Privacy Policy contents"
+        className="rounded-sm border border-border bg-surface-1 p-5 sm:p-6"
+      >
+        <p className="font-mono text-[10px] font-semibold tracking-[0.16em] text-text-tertiary">
+          ON THIS PAGE
+        </p>
         <div className="mt-4 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
           {contents.map(([id, label]) => (
-            <a key={id} href={"#" + id} className="text-text-secondary transition-colors hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand">
+            <a
+              key={id}
+              href={"#" + id}
+              className="text-text-secondary transition-colors hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
+            >
               {label}
             </a>
           ))}
         </div>
       </nav>
 
-      <Section id="operator" title="1. Who operates this site">
+      <Section id="operator" title="1. About this notice">
         <p>
-          This portfolio and Portfolio Labs are operated by Vishal Kumar Choudhary (“I”, “me”, or “the operator”). The Contact section of this website is the communication channel for privacy questions and requests.
+          This portfolio and Portfolio Labs are operated by Vishal Kumar Choudhary
+          (“I”, “me”, or “the operator”). This policy covers the public website,
+          the Contact form, Labs accounts, authentication, likes, and access to
+          protected experiment source.
         </p>
         <p>
-          This policy covers the public portfolio, its contact form, Labs accounts, authentication emails, and protected experiment source access. It does not govern third-party websites that may be linked from the portfolio.
+          Websites linked from this portfolio are operated by other parties and
+          have their own privacy practices.
         </p>
       </Section>
 
-      <Section id="information" title="2. Information handled">
+      <Section id="information" title="2. Information used by the site">
         <div className="space-y-5">
-          <DataItem title="Account and sign-in information">
-            When you create a Labs account, the service handles your email address, a default account name, account identifiers, password authentication data (passwords are handled by Better Auth and are not stored as readable plain text), verification state, and timestamps. If you choose Google or GitHub sign-in, the selected provider may provide identity and profile information, including the verified email address used to authenticate or link your Labs account.
+          <DataItem title="Account and sign-in details">
+            When you create a Labs account, the service uses your email address,
+            account name, account identifier, verification status, and account
+            timestamps. Passwords are handled by the authentication system and
+            are not stored as readable plain text. If you choose Google or
+            GitHub sign-in, that provider shares the identity and profile details
+            needed to sign you in, such as your verified email address.
           </DataItem>
-          <DataItem title="Sessions and account security">
-            The service creates session records and authentication cookies to keep you signed in, protect account routes, and manage sign-out, verification, and password resets. Authentication and security systems may also process request details needed to detect abuse and protect the service.
+
+          <DataItem title="Sessions and service security">
+            Sign-in uses session records and necessary cookies to keep your
+            account secure and remember that you are signed in. Security and
+            hosting systems may also process technical details such as an IP
+            address, request time, browser or device information, and error
+            details to protect the service and diagnose problems.
           </DataItem>
-          <DataItem title="Email verification records">
-            Email/password registration creates a short-lived verification flow with a random identifier, a keyed digest of the email address, creation and expiry timestamps, and a verification status. The flow is used to confirm email verification and expires automatically after seven days. The service does not create a Terms/Conditions acceptance receipt during registration.
+
+          <DataItem title="Contact messages">
+            When you submit the Contact form, I receive the name, email address,
+            project type, and message that you provide. The message is delivered
+            to the configured email inbox and may remain in that mailbox and its
+            provider systems until it is deleted.
           </DataItem>
-          <DataItem title="Abuse-prevention records and technical logs">
-            Registration rate limiting stores a keyed digest derived from the trusted proxy IP address, a request count, and an update time. The rate-limit record is configured to expire after approximately 24 hours. Hosting, proxy, database, and security providers may separately create technical logs such as IP address, request time, browser/device information, and error metadata under their own retention settings.
+
+          <DataItem title="Use of protected experiment source">
+            Published source files are available to signed-in accounts with a
+            verified email address. When a verified account opens or copies a
+            source file, the service records the experiment, source version,
+            file path, action, time, and an account reference. This supports
+            source access integrity and aggregate experiment statistics.
+            Clipboard contents are not collected.
           </DataItem>
-          <DataItem title="Contact form messages">
-            If you use the Contact form, I receive the name, email address, project type, and message you submit. The form sends that information by email to the configured receiving inbox. Contact messages may remain in that email mailbox and provider systems until deleted under their retention practices.
+
+          <DataItem title="Experiment likes">
+            If you like an experiment while signed in, the like is associated
+            with your account and that experiment so it can be remembered and
+            removed later. You can also like an experiment without signing in.
+            In that case, a necessary browser cookie remembers the anonymous
+            like state for that browser. A protected, pseudonymous value is
+            stored with the experiment; it is not a verified name or email
+            address. Anonymous like state expires after 180 days without
+            activity that refreshes it.
           </DataItem>
-          <DataItem title="Protected source access and engagement">
-            Published experiment source is available only to signed-in accounts with a verified email address. When a verified account opens protected source or copies a file, the service records the experiment, source version, event type, timestamp, and account identifier. Copy events are recorded after the browser reports that the clipboard write succeeded; the clipboard contents are not collected. Verified likes are linked to the account and experiment so the like can be retained and later removed.
+
+          <DataItem title="Optional site usage statistics">
+            When the site usage feature is enabled, the website can collect
+            limited information about visits to public pages: the page viewed,
+            visit time, approximate active viewing time, broad device category,
+            approximate country, region and city, the referring website
+            hostname, and selected campaign labels such as source or medium.
+            Only the homepage, project pages, Labs collection, and public
+            experiment detail pages are included.
+            <br />
+            A temporary tab value is used to group activity during a visit and
+            is converted into a protected value before it is saved. The page
+            usage record does not contain your name, email address, full IP
+            address, full referring URL, or raw browser user-agent string.
+            Hosting and security providers may separately process technical
+            information, including IP addresses, in their own infrastructure
+            logs.
           </DataItem>
-          <DataItem title="Anonymous likes">
-            You can like a Labs experiment without signing in. When you first use the anonymous like control, the service creates a random browser identifier in a signed, HTTP-only cookie and stores a keyed digest of that identifier with the experiment&apos;s like state. It is used to remember your like in that browser; it is not a verified identity and is not used to claim a count of unique people. Clearing cookies, using another browser, or switching devices may create another anonymous like identity. Anonymous like state expires after 180 days without a visit that refreshes the identity.
-          </DataItem>
-          <DataItem title="Engagement analytics">
-            The owner dashboard displays aggregate source opens, copy actions, and current likes separately for anonymous browser identities and verified accounts. It does not provide a list of individual visitors&apos; source activity or expose their email addresses. Engagement records do not contain source text, clipboard contents, passwords, authentication tokens, or raw IP addresses.
-          </DataItem>
-          <DataItem title="Portfolio page analytics (when enabled)">
-            The portfolio may record a page-visit event for the homepage, project details, Labs collection, and Lab details. A visit record can include the page path and type, visit start/end timestamps, server-calculated visible-page duration, a temporary tab-session pseudonym, a broad device category, approximate country/region/city derived from trusted hosting request metadata, the external referrer hostname, and allowlisted UTM source/medium/campaign values. The full IP address, full referrer URL, raw user-agent string, account ID, and account email are not stored in the visit record. This feature is disabled unless the site owner explicitly enables its Production feature flags.
-          </DataItem>
-          <DataItem title="Preferences stored in your browser">
-            The website may store local preferences such as theme selection and whether an introductory animation has already been shown. These preferences are kept in browser storage and are used to remember your interface settings.
+
+          <DataItem title="Display preferences">
+            Browser storage may remember interface preferences such as your
+            selected theme or whether an introductory animation has already
+            been shown.
           </DataItem>
         </div>
       </Section>
 
-      <Section id="purposes" title="3. Why the information is used">
+      <Section id="purposes" title="3. How information is used">
         <ul className="list-disc space-y-2 pl-5 marker:text-brand">
-          <li>To display the portfolio, operate interactive Labs experiments, and respond to contact messages.</li>
-          <li>To create and maintain accounts, verify email addresses, authenticate sign-ins, maintain secure sessions, and deliver password-reset messages.</li>
-          <li>To provide verified-account access to published source, remember likes, and measure aggregate experiment engagement.</li>
-          <li>When enabled and not disabled in your browser, to understand aggregate page visits, approximate traffic sources, broad device categories, and visible-page activity across the public portfolio.</li>
-          <li>To detect abusive registration activity, protect the service, diagnose errors, and maintain reliability.</li>
-          <li>To remember interface preferences and provide a consistent experience.</li>
-          <li>To meet legal obligations, handle disputes, and protect the rights, safety, and reliability of the service.</li>
-        </ul>
-        <p>I do not sell personal information. I do not use Labs account or contact-form information to build advertising profiles or send marketing newsletters through the flows described here.</p>
-      </Section>
-
-      <Section id="sharing" title="4. Providers and disclosures">
-        <p>
-          Personal information is shared only as needed to operate, secure, or support the website, or where disclosure is required by law. Providers used by the current implementation include:
-        </p>
-        <ul className="list-disc space-y-2 pl-5 marker:text-brand">
-          <li><strong className="font-semibold text-text-primary">Vercel:</strong> website hosting, deployment, server execution, and associated platform logs.</li>
-          <li><strong className="font-semibold text-text-primary">MongoDB Atlas / MongoDB:</strong> database storage for account, session, verification, rate-limit, protected source, like-state, audit, engagement-event, and (when enabled) portfolio visit records.</li>
-          <li><strong className="font-semibold text-text-primary">Better Auth:</strong> authentication libraries and, when configured, the Better Auth Dash infrastructure integration.</li>
-          <li><strong className="font-semibold text-text-primary">Email providers:</strong> the configured SMTP provider for authentication messages; the portfolio contact endpoint uses Gmail SMTP.</li>
-          <li><strong className="font-semibold text-text-primary">Google:</strong> only if Google sign-in is configured and you choose that sign-in method.</li>
-          <li><strong className="font-semibold text-text-primary">GitHub:</strong> only if GitHub sign-in is configured and you choose that sign-in method. Labs requests identity and email information only; it does not request access to your repositories.</li>
+          <li>To display the portfolio and operate interactive Labs features.</li>
+          <li>To create accounts, verify email addresses, sign users in, maintain sessions, and deliver account emails.</li>
+          <li>To protect access to published source and remember experiment likes.</li>
+          <li>To understand which public pages and experiments are useful, when optional site usage statistics are enabled.</li>
+          <li>To prevent abuse, maintain reliability, diagnose service errors, and protect accounts.</li>
+          <li>To respond to messages and privacy requests.</li>
         </ul>
         <p>
-          These providers process information under their own terms and privacy notices. I do not author their independent policies. Information may also be disclosed to professional advisers, authorities, or other parties where required by law or necessary to protect rights, safety, and the service.
+          I do not sell personal information. The information described in this
+          policy is not used to build advertising profiles or to send marketing
+          newsletters.
         </p>
       </Section>
 
-      <Section id="cookies" title="5. Cookies and browser storage">
+      <Section id="cookies" title="4. Cookies and browser storage">
         <p>
-          Authentication uses server-managed session cookies so the website can recognise a signed-in account and protect account-only requests. If you choose to like an experiment anonymously, a separate signed, HTTP-only cookie remembers the anonymous like identity in that browser. The anonymous like cookie is created when you use the like control, rather than simply because you visit an experiment page. The site also uses browser storage for interface preferences such as the selected theme and introductory-animation state. If you disable optional portfolio analytics below, a simple preference flag is stored in this browser&apos;s local storage; it is not a unique visitor identifier.
+          Necessary cookies support sign-in, account security, and anonymous
+          experiment likes. Browser storage also remembers display preferences.
+          Optional site usage statistics use a temporary tab value during a
+          visit; the choice to turn those statistics off is saved in this
+          browser&apos;s local storage.
         </p>
         <p>
-          These storage mechanisms support core functionality. Blocking or deleting them may sign you out, reset preferences, or affect account and Labs features. You can manage cookies and site storage through your browser settings.
+          You can manage cookies and browser storage through your browser
+          settings. Removing necessary cookies may sign you out or reset an
+          anonymous like. The preference below controls optional page usage
+          statistics only; it does not affect sign-in, protected source access,
+          or experiment likes.
         </p>
         <PortfolioAnalyticsPrivacyPreference />
       </Section>
 
-      <Section id="retention" title="6. How long information is kept">
+      <Section id="sharing" title="5. Service providers">
+        <p>
+          Information is shared with providers only where needed to operate,
+          secure, or support the website, or where disclosure is required by
+          law. The current service uses:
+        </p>
         <ul className="list-disc space-y-2 pl-5 marker:text-brand">
-          <li>Account and session records are kept while needed to operate the account, protect the service, and meet applicable obligations. Sessions may expire or be revoked by sign-out or password reset.</li>
-          <li>Verification-flow records have a seven-day expiry. Registration rate-limit records are configured for approximately 24-hour expiry.</li>
-          <li>When portfolio page analytics is enabled, visit records are configured to expire 65 days after the visit starts. MongoDB TTL cleanup runs in the background, so an expired record may remain briefly while the database processes it. The owner dashboard also provides manual deletion of selected visits, an eligible date range, or all portfolio visit records.</li>
-
-          <li>Verified likes remain active until you unlike the experiment or the account is deleted. Anonymous like identities and their active like state expire after 180 days without a visit that refreshes the identity. Engagement event records are retained for service measurement and integrity; a fixed automatic expiry period is not currently configured.</li>
-          <li>Contact messages remain in the receiving email mailbox and associated provider systems until deleted under mailbox retention practices or no longer needed for a legitimate purpose.</li>
-          <li>Hosting and provider logs follow the relevant provider&apos;s retention controls and may remain in backups for a limited period.</li>
+          <li>
+            <strong className="font-semibold text-text-primary">Vercel:</strong>{" "}
+            website hosting, deployments, server execution, and platform
+            security logs.
+          </li>
+          <li>
+            <strong className="font-semibold text-text-primary">MongoDB Atlas / MongoDB:</strong>{" "}
+            storage for account, session, verification, experiment, like, and
+            service records.
+          </li>
+          <li>
+            <strong className="font-semibold text-text-primary">Better Auth:</strong>{" "}
+            account authentication and session management.
+          </li>
+          <li>
+            <strong className="font-semibold text-text-primary">Email providers:</strong>{" "}
+            delivery of account verification, password reset, and Contact form
+            messages through the configured email services.
+          </li>
+          <li>
+            <strong className="font-semibold text-text-primary">Google and GitHub:</strong>{" "}
+            only when you choose the relevant sign-in option. The GitHub sign-in
+            flow requests identity information; it does not request access to
+            your repositories.
+          </li>
         </ul>
         <p>
-          Where you request account deletion, I will review the request and delete or de-identify information that no longer needs to be retained, subject to legal, security, backup, and dispute-resolution requirements.
+          Each provider has its own privacy notice and retention practices.
+          Information may also be disclosed when required by law or when
+          necessary to protect the rights, safety, and security of the service.
         </p>
       </Section>
 
-      <Section id="security" title="7. Security">
+      <Section id="retention" title="6. How long information is kept">
+        <ul className="list-disc space-y-2 pl-5 marker:text-brand">
+          <li>
+            Account and session information is kept while needed to provide and
+            secure the account. Sessions can expire or be revoked.
+          </li>
+          <li>
+            Email verification records expire after seven days. Short-lived
+            registration abuse-prevention records are configured to expire
+            after approximately 24 hours.
+          </li>
+          <li>
+            When enabled, public page usage records are configured for automatic
+            deletion 65 days after the visit starts. Database cleanup may take
+            additional time after that period.
+          </li>
+          <li>
+            Anonymous like state expires after 180 days without activity that
+            refreshes it. Signed-in likes remain until you remove the like or
+            the account is deleted.
+          </li>
+          <li>
+            Experiment source activity records do not currently have a fixed
+            automatic expiry period. They are retained for source access
+            integrity and service reporting.
+          </li>
+          <li>
+            Contact messages remain in the receiving email system until
+            deleted. Hosting and provider logs follow the providers&apos; own
+            retention settings.
+          </li>
+        </ul>
         <p>
-          The implementation uses HTTPS for deployed access, server-side secret configuration, authentication controls, password hashing through the authentication provider, database-backed sessions, email verification, rate limiting, signed anonymous-like cookies, and server-side source authorization. Every protected source request checks the current verified session and publication state.
-        </p>
-        <p>
-          No website, transmission, or storage system can be guaranteed completely secure. Please use a unique password, keep verification and reset links private, and contact me promptly if you suspect unauthorised account activity.
+          You can contact me about account closure or deletion. Requests are
+          reviewed individually, taking into account legal, security, backup,
+          and dispute-resolution requirements.
         </p>
       </Section>
 
-      <Section id="rights" title="8. Your choices and privacy requests">
+      <Section id="choices" title="7. Your choices and privacy requests">
         <p>
-          You can choose not to submit the Contact form or create a Labs account. You can change browser storage preferences through your browser settings and sign out of Labs when finished. You can also disable optional portfolio page analytics for this browser using the preference control in the Cookies and browser storage section. The preference applies to this browser profile on this website and does not delete previously collected visit records.
+          You can browse the public portfolio without creating a Labs account.
+          Account creation is needed only for account features such as protected
+          source access. You can choose not to submit the Contact form and can
+          manage cookies and browser storage in your browser.
         </p>
         <p>
-          You may contact me to request access to, correction of, or deletion of account information; ask about a consent record; withdraw consent where applicable; close an account; or raise a privacy concern. Use the <Link className="text-brand underline-offset-4 hover:underline" href="/#contact">Contact form</Link> and include the email address associated with the request. I may need to verify that you control the account before acting.
+          You can turn off optional site usage statistics for this browser using
+          the control above. This stops future page usage records from this
+          browser while the preference remains saved. It does not delete
+          records already stored and does not turn off the separate records
+          needed for account security, protected source activity, or likes.
         </p>
         <p>
-          Requests are handled under the law applicable to the request. Some information may be retained where a legal obligation, security need, or legitimate dispute requires it. You may also request removal of portfolio visit records through the Contact form; the site owner can remove selected visit records or a validated date range through the private analytics dashboard.
+          You may contact me to ask about the personal information associated
+          with your account, request correction or deletion, withdraw consent
+          where applicable, close an account, or raise a privacy concern. Use
+          the <Link className="text-brand underline-offset-4 hover:underline" href="/#contact">Contact form</Link>{" "}
+          and include the email address associated with the request. I may ask
+          you to verify that you control the account before acting.
+        </p>
+      </Section>
+
+      <Section id="security" title="8. Security">
+        <p>
+          The service uses HTTPS, server-side secret configuration, password
+          hashing through the authentication system, database-backed sessions,
+          email verification, rate limits, and server-side checks for protected
+          source access. No website or storage system can be guaranteed
+          completely secure.
+        </p>
+        <p>
+          Please use a unique password and keep verification emails, sign-in
+          links, and password-reset links private. Contact me if you suspect
+          unauthorised access to your account.
         </p>
       </Section>
 
       <Section id="children" title="9. Children">
         <p>
-          Labs accounts are intended for adults aged 18 or older. I do not knowingly invite or intentionally collect account information from anyone under 18. If you believe a person under 18 has created an account or submitted personal information, contact me so I can review the matter and take appropriate steps.
+          Labs accounts are intended for adults aged 18 or older. I do not
+          knowingly invite or intentionally collect account information from
+          anyone under 18. Contact me if you believe a person under 18 has
+          submitted personal information so I can review the matter.
         </p>
       </Section>
 
       <Section id="transfers" title="10. International processing">
         <p>
-          Some hosting, database, authentication, email, or identity providers may process information in countries other than your own. Provider infrastructure and transfer locations can change. Consult their current privacy documentation for details of their locations and safeguards.
+          Hosting, database, authentication, email, and identity providers may
+          process information in countries other than your own. Their
+          infrastructure locations and safeguards may change; consult their
+          current privacy documentation for details.
         </p>
       </Section>
 
-      <Section id="changes" title="11. Changes and contact">
+      <Section id="changes" title="11. Updates and contact">
         <p>
-          This policy may be updated when the service, data practices, providers, or applicable law changes. The effective date and version at the top identify the current text. For material changes to the information collected or the purposes for which it is used, this notice will be updated and any legally required notice or consent step will be provided.
+          This policy may change when the website, its features, service
+          providers, or applicable requirements change. The effective date and
+          version above identify the current notice. Material changes to the
+          information used or the purposes for which it is used will be
+          reflected here, together with any notice or consent step required by
+          applicable law.
         </p>
         <p>
-          This notice is prepared with reference to India&apos;s Digital Personal Data Protection Act, 2023 and Digital Personal Data Protection Rules, 2025. Those instruments have phased commencement. Applicability depends on the relevant provision and its notified commencement date; publication of this policy is not a certification that the service has completed every compliance requirement.
+          This notice is prepared with reference to India&apos;s Digital
+          Personal Data Protection Act, 2023 and Digital Personal Data
+          Protection Rules, 2025. Those instruments have phased commencement.
+          Applicability depends on the relevant provision and its notified
+          commencement date. This notice is not a certification that the
+          service has completed every compliance requirement.
         </p>
         <div className="rounded-sm border border-border bg-surface-1 p-5">
-          <p className="text-sm font-semibold text-text-primary">Official Indian privacy-law resources</p>
+          <p className="text-sm font-semibold text-text-primary">
+            Official Indian privacy-law resources
+          </p>
           <ul className="mt-3 space-y-2 text-sm">
             <li>
-              <a href="https://www.meity.gov.in/writereaddata/files/Digital%20Personal%20Data%20Protection%20Act%202023.pdf" target="_blank" rel="noopener noreferrer" className="text-brand underline-offset-4 hover:underline">
+              <a
+                href="https://www.meity.gov.in/writereaddata/files/Digital%20Personal%20Data%20Protection%20Act%202023.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand underline-offset-4 hover:underline"
+              >
                 Digital Personal Data Protection Act, 2023
               </a>
             </li>
             <li>
-              <a href="https://www.meity.gov.in/static/uploads/2025/11/53450e6e5dc0bfa85ebd78686cadad39.pdf" target="_blank" rel="noopener noreferrer" className="text-brand underline-offset-4 hover:underline">
+              <a
+                href="https://www.meity.gov.in/static/uploads/2025/11/53450e6e5dc0bfa85ebd78686cadad39.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand underline-offset-4 hover:underline"
+              >
                 Digital Personal Data Protection Rules, 2025
               </a>
             </li>
             <li>
-              <a href="https://www.meity.gov.in/static/uploads/2025/11/c56ceae6c383460ca69577428d36828b.pdf" target="_blank" rel="noopener noreferrer" className="text-brand underline-offset-4 hover:underline">
+              <a
+                href="https://www.meity.gov.in/static/uploads/2025/11/c56ceae6c383460ca69577428d36828b.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand underline-offset-4 hover:underline"
+              >
                 DPDP Act commencement notification
               </a>
             </li>
           </ul>
         </div>
         <p>
-          For privacy questions, requests, or complaints, use the website&apos;s <Link className="text-brand underline-offset-4 hover:underline" href="/#contact">Contact section</Link>. Do not send passwords, one-time codes, session cookies, or password-reset links.
+          For privacy questions, requests, or complaints, use the website&apos;s{" "}
+          <Link className="text-brand underline-offset-4 hover:underline" href="/#contact">
+            Contact section
+          </Link>
+          . Do not send passwords, one-time codes, session cookies, or
+          password-reset links.
         </p>
       </Section>
     </LegalDocumentPage>
