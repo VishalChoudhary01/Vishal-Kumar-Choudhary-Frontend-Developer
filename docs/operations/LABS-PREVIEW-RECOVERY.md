@@ -351,3 +351,23 @@ Official references:
 - [Sandbox snapshot concepts and CLI examples](https://vercel.com/docs/sandbox/concepts/snapshots)
 - [Get snapshot details API](https://vercel.com/docs/rest-api/sandboxes/get-a-snapshot)
 - [Delete snapshot API](https://vercel.com/docs/rest-api/sandboxes/delete-a-snapshot)
+
+## 13. Deploying compiler-policy changes to the active Preview Sandbox
+
+Changes under `tools/labs-compiler/` are executed from the immutable Vercel Sandbox compiler snapshot. They are **not** loaded from the Next.js deployment filesystem on each Run. A Git commit or Next.js redeployment alone therefore does not update the compiler already stored in the active snapshot.
+
+For changes to `tools/labs-compiler/scripts/build.mjs`, `tools/labs-compiler/vite.config.js`, compiler dependencies, or other files baked into the compiler image:
+
+1. Check out the intended `develop` commit and run `npm run test:smoke` from `tools/labs-compiler` in the compiler preparation environment.
+2. Build a new immutable compiler snapshot containing the exact updated `tools/labs-compiler` files and pinned dependencies.
+3. Run the smoke test against that snapshot before selecting it for an environment.
+4. Update only the **Preview** environment's branch-scoped `LABS_COMPILER_SNAPSHOT_ID` to the new snapshot ID.
+5. Trigger/redeploy the `develop` Preview deployment so the server uses the new environment value.
+6. Verify JSX image `src`, HTML `<img>`, CSS `background-image`, Motion, Tailwind v4 and the existing preview bridge. Also verify that external CSS `@import`, remote fonts, media, scripts and `fetch` remain blocked.
+7. Check the deployed Preview function logs and run an actual owner preview before considering the compiler update active.
+
+Changes to `src/app/lib/labs/runtime-html.mjs` are part of the Next.js application deployment and take effect with the new Preview deployment, but published experiments also require the updated compiler snapshot to generate the correct build-time policy.
+
+Never change Production's `LABS_COMPILER_SNAPSHOT_ID` during this Preview-only rollout. Keep the old working snapshot available until the new Preview snapshot and owner Run are verified. Do not delete the previous snapshot if any Production or other active environment still references it.
+
+**Current remote-image change:** the repository changes permit external HTTPS image resources in the preview and published runtime CSP. The compiler snapshot must also contain the changed `build.mjs` and `vite.config.js` before the editor's Run button uses this behavior. A GitHub commit by itself does not prove that the active Sandbox has been refreshed.
