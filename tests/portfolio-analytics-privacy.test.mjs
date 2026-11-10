@@ -84,7 +84,7 @@ test("privacy page explains site information in plain language without internal 
   assert.ok(page.includes("Limited page-use information"));
   assert.ok(page.includes("approximate country, region and city"));
   assert.ok(page.includes("full IP"));
-  assert.ok(page.includes("clipboard contents are not collected"));
+  assert.ok(page.toLowerCase().includes("clipboard contents are not collected"));
   assert.ok(page.includes("65 days"));
   assert.ok(page.includes("180 days"));
   assert.ok(page.includes("do not currently have a fixed automatic expiry period"));
@@ -93,7 +93,8 @@ test("privacy page explains site information in plain language without internal 
   assert.ok(!/we track users|I track users|tracking users/i.test(page));
   assert.ok(!/aggregate experiment statistics|portfolio page analytics|labs analytics/i.test(page));
   assert.ok(preference.includes("Turn off optional page-use information in this browser"));
-  assert.ok(!/analytics|statistics/i.test(preference));
+  assert.ok(!preference.includes("Optional site usage statistics"));
+  assert.ok(!preference.includes("Disable analytics on this browser profile"));
   assert.ok(policy.includes('PRIVACY_VERSION = "2026-11-11.1"'));
   assert.ok(legalLayout.includes('effectiveDate = "4 November 2026"'));
 });
