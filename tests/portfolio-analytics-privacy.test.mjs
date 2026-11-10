@@ -72,20 +72,28 @@ test("privacy preference uses a named same-origin event and does not generate an
   assert.ok(!preference.includes("randomUUID"));
 });
 
-test("privacy page discloses analytics fields, 65-day retention and browser opt-out", async () => {
-  const [page, policy] = await Promise.all([
+test("privacy page uses plain-language disclosures for optional page statistics and Labs activity", async () => {
+  const [page, policy, preference, legalLayout] = await Promise.all([
     read("../src/app/privacy/page.js"),
     read("../src/app/lib/legal/policies.js"),
+    read("../src/app/components/portfolio-analytics/PortfolioAnalyticsPrivacyPreference.js"),
+    read("../src/app/components/legal/LegalDocumentPage.js"),
   ]);
 
   assert.ok(page.includes("PortfolioAnalyticsPrivacyPreference"));
-  assert.ok(page.includes("Portfolio page analytics (when enabled)"));
-  assert.ok(page.includes("temporary tab-session pseudonym"));
-  assert.ok(page.includes("full IP address"));
+  assert.ok(page.includes("Optional site usage statistics"));
+  assert.ok(page.includes("approximate country, region and city"));
+  assert.ok(page.includes("full IP"));
+  assert.ok(page.includes("clipboard contents are not collected"));
   assert.ok(page.includes("65 days"));
-  assert.ok(page.includes("manual deletion"));
-  assert.ok(page.includes("does not delete previously collected visit records"));
-  assert.ok(policy.includes('PRIVACY_VERSION = "2026-11-07.1"'));
+  assert.ok(page.includes("180 days"));
+  assert.ok(page.includes("do not currently have a fixed automatic expiry period"));
+  assert.ok(page.includes("does not delete records already stored"));
+  assert.ok(page.includes("does not turn off the separate records"));
+  assert.ok(!/we track users|I track users|tracking users/i.test(page));
+  assert.ok(preference.includes("Turn off optional site statistics in this browser"));
+  assert.ok(policy.includes('PRIVACY_VERSION = "2026-11-11.1"'));
+  assert.ok(legalLayout.includes('effectiveDate = "4 November 2026"'));
 });
 
 test("owner dashboard provides selected, date-range and all-record deletion actions", async () => {
