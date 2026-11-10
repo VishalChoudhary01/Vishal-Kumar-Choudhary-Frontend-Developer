@@ -6,7 +6,7 @@ const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
 test("owner workspace dropdown includes all three private destinations", async () => {
   const navigation = await read("../src/app/components/labs/admin/LabsOwnerNavigation.js");
-  for (const route of ["/admin/labs/analytics", "/admin/portfolio/analytics", "/admin/labs/sources"]) {
+  for (const route of ["/admin/labs/analytics", "/admin/portfolio/analytics", "/admin/labs/sources", "/admin/labs/sources/snapshots"]) {
     assert.ok(navigation.includes(route));
   }
   assert.ok(navigation.includes('aria-haspopup="menu"'));
