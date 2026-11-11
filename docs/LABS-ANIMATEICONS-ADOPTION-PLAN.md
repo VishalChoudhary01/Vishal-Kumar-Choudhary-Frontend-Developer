@@ -211,49 +211,42 @@ File: `LabSnapshotStoragePanel.js`
 
 ### F. Labs Analytics
 
-**Preferred It’s Hover components for the animated action layer:**
+File: `src/app/components/labs/admin/LabsLiveAnalyticsDashboard.js`
 
-| Current slot | It’s Hover component | Why it suits this slot | Trigger and restraint |
-|---|---|---|---|
-| Source opens (`Eye`) | `eye-icon` — `EyeIcon` | The pupil/eye shape gives a small blink response that reads as a view action. | Parent hover/focus only. Do not blink on every 10-second poll. |
-| Verified accounts (`Users`) | `user-check-icon` — `UserCheckIcon` | The user silhouette plus drawn check gives verified-user meaning in one mark. | Brief parent hover/focus. Do not repeatedly bounce while the metric is unchanged. |
-| Code copies (`Copy`) | `copy-icon` — `CopyIcon` | The foreground copy layer shifts slightly, which directly communicates duplication. | Parent hover/focus; keep copy success text/state as the actual confirmation. |
-| Active likes (`Heart`) | `heart-icon` — `HeartIcon` | The brief pulse reinforces the familiar like symbol. | Trigger after an accepted like action; no ambient pulsing on the dashboard metric. |
-| Trend / analytics destination | `chart-line-icon` — `ChartLineIcon` | Draws the line path and baseline, which communicates trend data more specifically than a generic flask. | One draw on parent hover/focus. Keep the chart itself unchanged. |
+Use It’s Hover for the first five metric/analytics concepts because the animation directly reinforces their meaning. Use AnimateIcons only for the other management actions whose It’s Hover equivalent is absent or not strong enough.
 
-For these five slots, use It’s Hover as the preferred custom animation. Keep the existing metric labels, values and accessible names unchanged. AnimateIcons equivalents remain the fallback if the local It’s Hover port fails the package/motion/accessibility smoke test.
+| Current slot | Preferred component | Fallback / alternative | Why it suits this slot | Trigger and restraint |
+|---|---|---|---|---|
+| Source opens (`Eye`) | It’s Hover `eye-icon` — `EyeIcon` | AnimateIcons `eye` — `EyeIcon` | The pupil/eye shape gives a small blink response that reads as a view action. | Parent hover/focus only. Do not blink on every 10-second poll. |
+| Verified accounts (`Users`) | It’s Hover `user-check-icon` — `UserCheckIcon` | AnimateIcons `user-round-check` — `UserRoundCheckIcon` | User silhouette plus drawn check expresses a verified account, not merely a group count. | Brief parent hover/focus. Do not repeatedly bounce while the metric is unchanged. |
+| Code copies (`Copy`) | It’s Hover `copy-icon` — `CopyIcon` | AnimateIcons `copy-check` — `CopyCheckIcon` | The foreground copy layer shifts and clarifies the copy action. | Parent hover/focus. Keep actual success feedback tied to clipboard completion. |
+| Active likes (`Heart`) | It’s Hover `heart-icon` — `HeartIcon` | AnimateIcons `heart` — `HeartIcon` | A short heart pulse reinforces the familiar engagement action. | Trigger after an accepted like action; no ambient pulsing on a static dashboard metric. |
+| Trend / analytics destination | It’s Hover `chart-line-icon` — `ChartLineIcon` | AnimateIcons `chart-spline` — `ChartSplineIcon` | Draws the line path and baseline, which communicates trend data more clearly than a generic flask. | One draw on parent hover/focus. Keep the trend chart itself unchanged. |
+| Refresh dashboard | AnimateIcons `refresh-cw` — `RefreshCwIcon` | Existing Lucide icon | It’s Hover’s `refresh-icon` performs a one-off 180° rotation, but the current dashboard already exposes a real refreshing state. AnimateIcons or the existing control can be tied to that state more predictably. | Animate only while a real refresh is running; do not replay on every polling success. |
+| Analytics-only removal | AnimateIcons `trash` — `TrashIcon` | Existing Lucide `Trash2` | The delete affordance should remain clear and restrained. | Gentle hover/focus only; keep typed-slug confirmation unchanged. |
+| Restore | AnimateIcons `rotate-ccw` — `RotateCcwIcon` | Existing Lucide `RotateCcw` | Directly communicates undo/restore. | Brief hover/focus only. |
+| Close dialog | — | Existing Lucide `X` | A close affordance gains little from motion. | Keep static. |
 
-### G. Source Management and editor — It’s Hover opportunities
+Keep the current metric labels, values, colors, accessible names, reporting period, polling interval and action handlers unchanged. The animation is a visual response only; it must never become the source of truth for whether an event succeeded.
+
+### G. Additional It’s Hover opportunities in Source Management and editor
+
+Files: `LabSourceInventory.js`, `LabSourceEditor.js`, `LabRuntimeImportPanel.js`, `LabMediaLibrary.js`, `LabSnapshotStoragePanel.js`
 
 | Current slot | It’s Hover component | Recommendation |
 |---|---|---|
-| Source workspace identity (`FileCode2`) | `code-xml-icon` — `CodeXmlIcon` | Use only if the more detailed code mark stays legible at 14–16 px. Otherwise choose AnimateIcons `file-code`. |
+| Source workspace identity (`FileCode2`) | `code-xml-icon` — `CodeXmlIcon` | Use only if the more detailed code mark remains legible at 14–16 px. Otherwise choose AnimateIcons `file-code`. |
 | Save source | `save-icon` — `SaveIcon` | Good hover/focus response for the save action. Keep save confirmation and dirty-state logic unchanged. |
-| File copy / code copy | `copy-icon` — `CopyIcon` | Use for copy controls, and show success only after the clipboard action succeeds. |
+| File copy / code copy | `copy-icon` — `CopyIcon` | Use for copy controls; show success only after the clipboard action succeeds. |
 | Preview source | `eye-icon` — `EyeIcon` | Good small blink on preview controls. |
-| Upload media | `upload-icon` — `UploadIcon` | **Do not use upstream unchanged:** it loops while hovered. Prefer AnimateIcons `upload` or keep the current icon unless the local port is changed to one bounded cycle. |
+| Upload media | `upload-icon` — `UploadIcon` | **Do not use upstream unchanged:** it repeats a fly-out/fly-in loop while hovered. Prefer AnimateIcons `upload` or keep the current icon unless the local port is changed to one bounded cycle. |
 | Download reviewed runtime | `download-icon` — `DownloadIcon` | Suitable for the reviewed runtime import action; trigger once on hover/focus. |
 | Delete source/file/media | `trash-icon` — `TrashIcon` | Keep the current destructive color and confirmation. If used, animate only on action hover/focus—not inside the confirmation modal. |
 | Verified source access | `lock-icon` — `LockIcon` | Optional, if the closed/open lock movement remains subtle at the current 18 px size. |
 
-**Coverage gap:** It’s Hover's current registry does not include direct equivalents for `folder-open`, `folder-plus`, `database`, `hard-drive`, `image`, or `file-code`. Keep those as AnimateIcons Lucide choices (or static Lucide if the animated version adds no meaning). Do not force a semantically weaker It’s Hover icon into those slots.
+**Coverage gap:** It’s Hover's current registry does not include direct equivalents for `folder-open`, `folder-plus`, `database`, `hard-drive`, `image`, or `file-code`. Keep those as AnimateIcons Lucide choices (or static Lucide if animation adds no meaning). Do not force a semantically weaker It’s Hover icon into those slots.
 
-
-File: `LabsLiveAnalyticsDashboard.js`
-
-| Current icon / metric | AnimateIcons slug | Component | Why |
-|---|---|---|---|
-| Source opens — current `Eye` | `eye` | `EyeIcon` | Represents successful source views. |
-| Verified accounts — current `Users` | `user-round-check` | `UserRoundCheckIcon` | Distinguishes verified users from anonymous activity better than a generic group icon. |
-| Code copies — current `Copy` | `copy-check` | `CopyCheckIcon` | Reinforces that copies are counted only after clipboard success. |
-| Active likes — current `Heart` | `heart` | `HeartIcon` | Familiar engagement metaphor. Use a short pulse only after the user action is accepted, not as ambient motion. |
-| Trend chart / activity context | `chart-spline` | `ChartSplineIcon` | Appropriate for trend/engagement context if a compact section-level icon is required; do not add one if the heading already reads clearly. |
-| Refresh action — current `RefreshCw` | `refresh-cw` | `RefreshCwIcon` | Communicates refreshing the dashboard; animation should follow the active refresh state. |
-| Analytics-only removal — current `Trash2` | `trash` | `TrashIcon` | Animate gently on action hover/focus only. The existing typed-slug confirmation remains unchanged. |
-| Restore — current `RotateCcw` | `rotate-ccw` | `RotateCcwIcon` | Reversible restoration action. |
-| Close — current `X` | — | **Keep static** | A close affordance does not need motion. |
-
-### G. Public experiment detail page
+### H. Public experiment detail page
 
 Files: `LabLikeButton.js`, `LabSourceAccess.js`, `LabCanvasActions.js`
 
