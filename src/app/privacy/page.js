@@ -54,10 +54,12 @@ export default function PrivacyPage() {
             category, approximate location, and referral or campaign source may
             be processed to help improve the website. When you are signed in
             with a verified account, a visit may also be linked to your account
-            display name and a masked email label. Full email addresses, raw
-            account IDs, full IP addresses, and full referring URLs are not
-            stored in visit records. Hosting and security providers may
-            separately process technical details such as IP addresses.
+            ID, display name and a masked email label. The raw account ID and
+            display name are stored in visit records and are visible only in
+            the private owner-only visitor table. Full email addresses, full IP
+            addresses and full referring URLs are not stored in visit records.
+            Hosting and security providers may separately process technical
+            details such as IP addresses.
           </li>
           <li>
             <strong className="font-semibold text-text-primary">Protected files:</strong>{" "}
@@ -93,8 +95,8 @@ export default function PrivacyPage() {
         <PageInformationPreference />
         <p>
           This setting applies to this browser and stops future page-visit
-          information, including any verified-account label, from being
-          recorded while it is turned off. It does not delete information
+          information, including a verified-account ID, display name and
+          masked email label, from being recorded while it is turned off. It does not delete information
           already stored or affect sign-in, protected file records, or likes. You can also manage cookies and browser storage in
           your browser settings.
         </p>
