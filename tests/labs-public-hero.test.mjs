@@ -173,7 +173,7 @@ test("Labs hero typography and container scale from mobile through desktop", () 
 });
 
 
-test("portfolio hero offers an outlined Labs CTA beside Projects across all motion modes", async () => {
+test("portfolio hero offers a theme-token outlined Labs CTA beside Projects across all motion modes", async () => {
   const [cinematicHero, mobileIntro, reducedMotionHero, labsButton] = await Promise.all([
     readFile(new URL("../src/app/components/sections/hero_comp/CinematicHero.js", import.meta.url), "utf8"),
     readFile(new URL("../src/app/components/sections/hero_comp/MobileIntro.js", import.meta.url), "utf8"),
@@ -187,8 +187,11 @@ test("portfolio hero offers an outlined Labs CTA beside Projects across all moti
   assert.ok(labsButton.includes('href="/labs"'));
   assert.ok(labsButton.includes("Explore Labs"));
   assert.ok(labsButton.includes("FlaskConical"));
-  assert.ok(labsButton.includes("border-[#0C8277]/45"));
-  assert.ok(labsButton.includes("dark:border-[#3CBBAA]/50"));
+  // The secondary CTA uses semantic brand tokens so its outline follows both themes.
+  assert.ok(labsButton.includes("border-brand/35"));
+  assert.ok(labsButton.includes("bg-brand-soft/35"));
+  assert.ok(labsButton.includes("dark:border-brand/45"));
+  assert.ok(labsButton.includes("dark:bg-brand-soft/35"));
   assert.ok(labsButton.includes("focus-visible:ring-2"));
   assert.ok(labsButton.includes("motion-reduce:transition-none"));
 });
