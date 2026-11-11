@@ -86,6 +86,30 @@ const portfolioVisitSchema = new mongoose.Schema(
       required: true,
       enum: ["desktop", "mobile", "tablet", "unknown"],
     },
+    // Only a one-way HMAC of the Better Auth user ID is retained. The
+    // display label and masked email are owner-report-only projections.
+    verifiedUserHash: {
+      type: String,
+      default: null,
+      minlength: 64,
+      maxlength: 64,
+      match: /^[a-f0-9]{64}$/i,
+      select: false,
+    },
+    verifiedUserName: {
+      type: String,
+      default: null,
+      trim: true,
+      maxlength: 80,
+      select: false,
+    },
+    verifiedUserEmailMasked: {
+      type: String,
+      default: null,
+      trim: true,
+      maxlength: 254,
+      select: false,
+    },
     startedAt: {
       type: Date,
       required: true,
