@@ -498,20 +498,22 @@ export default function PortfolioAnalyticsDashboard({
             type="button"
             onClick={refreshNow}
             disabled={refreshing}
-            className="inline-flex h-8 items-center gap-2 border border-border px-3 text-xs font-semibold text-text-secondary transition-colors hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-8 items-center gap-2 rounded-md border border-border px-3 text-xs font-semibold text-text-secondary transition-[color,background-color,border-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:border-brand/45 hover:bg-surface-2 hover:text-brand hover:shadow-sm active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transform-none motion-reduce:transition-none"
           >
             <RefreshCw size={13} className={refreshing && !reduceMotion ? "animate-spin" : ""} aria-hidden="true" />
             Refresh now
           </button>
-          <nav aria-label="Portfolio analytics reporting period" className="flex items-center gap-1 border border-border bg-surface-1 p-1">
+          <nav aria-label="Portfolio analytics reporting period" className="inline-flex items-center gap-1 rounded-xl border border-border bg-surface-1/80 p-1 shadow-sm">
           {[7, 30, 60].map((period) => (
             <Link
               key={period}
               href={"/admin/portfolio/analytics?days=" + period}
               aria-current={days === period ? "page" : undefined}
               className={[
-                "inline-flex h-8 items-center px-3 text-xs font-semibold transition-colors",
-                days === period ? "bg-brand text-white" : "text-text-secondary hover:bg-surface-2 hover:text-text-primary",
+                "inline-flex h-8 min-w-11 items-center justify-center rounded-lg border px-3 text-xs font-semibold transition-[color,background-color,border-color,box-shadow,transform] duration-200 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none",
+                days === period
+                  ? "border-brand/40 bg-brand-soft text-brand shadow-[0_1px_3px_rgba(0,0,0,0.12)] ring-1 ring-inset ring-brand/15"
+                  : "border-transparent text-text-secondary hover:-translate-y-0.5 hover:border-border hover:bg-surface-2 hover:text-text-primary hover:shadow-sm active:scale-[0.98]",
               ].join(" ")}
             >
               {period}D

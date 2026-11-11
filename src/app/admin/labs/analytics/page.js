@@ -72,17 +72,17 @@ export default async function LabsAnalyticsPage({ searchParams }) {
               Choose the window used for opens, copies and like activity.
             </p>
           </div>
-          <nav aria-label="Analytics reporting period" className="flex flex-wrap gap-1.5">
+          <nav aria-label="Analytics reporting period" className="inline-flex max-w-full flex-wrap items-center gap-1 rounded-xl border border-border bg-surface-1/80 p-1.5 shadow-sm">
             {[7, 30, 90, 365].map((period) => (
               <Link
                 key={period}
                 href={"/admin/labs/analytics?days=" + period}
                 aria-current={days === period ? "page" : undefined}
                 className={[
-                  "inline-flex h-8 items-center border px-3 text-xs font-medium transition-colors",
+                  "inline-flex min-h-9 items-center justify-center rounded-lg border px-3.5 text-xs font-medium transition-[color,background-color,border-color,box-shadow,transform] duration-200 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none sm:px-4",
                   days === period
-                    ? "border-brand bg-brand-soft text-brand"
-                    : "border-border text-text-secondary hover:border-brand hover:text-brand",
+                    ? "border-brand/40 bg-brand-soft text-brand shadow-[0_1px_3px_rgba(0,0,0,0.12)] ring-1 ring-inset ring-brand/15"
+                    : "border-transparent text-text-secondary hover:-translate-y-0.5 hover:border-border hover:bg-surface-2 hover:text-text-primary hover:shadow-sm active:scale-[0.98]",
                 ].join(" ")}
               >
                 {period} days

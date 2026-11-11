@@ -279,7 +279,7 @@ export default function LabSourceInventory() {
         <div className="flex items-center gap-2">
           <Link
             href="/admin/labs/experiments/new"
-            className="inline-flex h-9 items-center gap-2 bg-brand px-3 text-xs font-semibold text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="inline-flex h-9 items-center gap-2 rounded-md bg-brand px-3 text-xs font-semibold text-brand-contrast shadow-sm transition-[background-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:bg-brand-hover hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none"
           >
             <Plus size={14} aria-hidden="true" />
             New gallery experiment
@@ -288,7 +288,7 @@ export default function LabSourceInventory() {
           type="button"
           onClick={() => loadInventory({ quiet: true })}
           disabled={loading || refreshing || Boolean(creating)}
-          className="inline-flex h-9 items-center gap-2 border border-border px-3 text-xs font-medium text-text-secondary transition-colors hover:border-brand hover:text-brand disabled:opacity-50"
+          className="inline-flex h-9 items-center gap-2 rounded-md border border-border px-3 text-xs font-medium text-text-secondary transition-[color,background-color,border-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:border-brand/45 hover:bg-surface-2 hover:text-brand hover:shadow-sm active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transform-none motion-reduce:transition-none"
         >
           {refreshing ? (
             <LoaderCircle size={14} className="animate-spin" aria-hidden="true" />
@@ -326,10 +326,10 @@ export default function LabSourceInventory() {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search by experiment name or slug"
-            className="h-10 w-full border border-border bg-background pl-9 pr-3 text-xs text-text-primary outline-none transition-colors placeholder:text-text-tertiary focus:border-brand"
+            className="h-10 w-full rounded-md border border-border bg-background pl-9 pr-3 text-xs text-text-primary outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-text-tertiary focus:border-brand focus:ring-2 focus:ring-brand/15 motion-reduce:transition-none"
           />
         </label>
-        <div className="flex flex-wrap gap-1" role="group" aria-label="Filter source inventory">
+        <div className="inline-flex max-w-full flex-wrap items-center gap-1 rounded-lg border border-border bg-surface-2/45 p-1" role="group" aria-label="Filter source inventory">
           {FILTERS.map((option) => (
             <button
               key={option.value}
@@ -337,10 +337,10 @@ export default function LabSourceInventory() {
               onClick={() => setFilter(option.value)}
               aria-pressed={filter === option.value}
               className={[
-                "min-h-9 border px-3 text-[11px] font-medium transition-colors",
+                "inline-flex min-h-9 items-center justify-center rounded-md border px-3 text-[11px] font-medium transition-[color,background-color,border-color,box-shadow,transform] duration-200 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none",
                 filter === option.value
-                  ? "border-brand bg-brand-soft text-brand"
-                  : "border-transparent text-text-secondary hover:border-border hover:bg-surface-2",
+                  ? "border-brand/40 bg-brand-soft text-brand shadow-[0_1px_3px_rgba(0,0,0,0.12)] ring-1 ring-inset ring-brand/15"
+                  : "border-transparent text-text-secondary hover:-translate-y-0.5 hover:border-border hover:bg-surface-1 hover:text-text-primary hover:shadow-sm active:scale-[0.98]",
               ].join(" ")}
             >
               {option.label}
