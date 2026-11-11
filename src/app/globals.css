@@ -527,3 +527,15 @@ html::-webkit-scrollbar-corner {
     transition: none;
   }
 }
+
+
+/* ---------------------------------------------------------
+   LABS — MINIMUM CORNER RADIUS
+   Keep intentionally rounded controls/cards unchanged.
+   Give square, fully bordered Labs UI surfaces a subtle 2px edge.
+--------------------------------------------------------- */
+@layer utilities {
+  [data-labs-ui] .border:not([class*="rounded-"]) {
+    border-radius: 2px;
+  }
+}
