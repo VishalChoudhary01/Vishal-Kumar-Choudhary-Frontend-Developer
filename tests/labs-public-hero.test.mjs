@@ -173,22 +173,24 @@ test("Labs hero typography and container scale from mobile through desktop", () 
 });
 
 
-test("portfolio hero offers an outlined Labs CTA beside Projects across all motion modes", async () => {
-  const [cinematicHero, mobileIntro, reducedMotionHero, labsButton] = await Promise.all([
+test("portfolio hero uses the shared Project CTA treatment for Labs across all motion modes", async () => {
+  const [cinematicHero, mobileIntro, reducedMotionHero, sharedButton] = await Promise.all([
     readFile(new URL("../src/app/components/sections/hero_comp/CinematicHero.js", import.meta.url), "utf8"),
     readFile(new URL("../src/app/components/sections/hero_comp/MobileIntro.js", import.meta.url), "utf8"),
     readFile(new URL("../src/app/components/sections/hero_comp/ReducedMotionHero.js", import.meta.url), "utf8"),
-    readFile(new URL("../src/app/components/common/ExploreLabsButton.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/common/ProjectResumeButton.js", import.meta.url), "utf8"),
   ]);
 
-  assert.ok(cinematicHero.includes("<ExploreLabsButton />"));
-  assert.ok(mobileIntro.includes("<ExploreLabsButton />"));
-  assert.ok(reducedMotionHero.includes("<ExploreLabsButton />"));
-  assert.ok(labsButton.includes('href="/labs"'));
-  assert.ok(labsButton.includes("Explore Labs"));
-  assert.ok(labsButton.includes("FlaskConical"));
-  assert.ok(labsButton.includes("border-[#0C8277]/45"));
-  assert.ok(labsButton.includes("dark:border-[#3CBBAA]/50"));
-  assert.ok(labsButton.includes("focus-visible:ring-2"));
-  assert.ok(labsButton.includes("motion-reduce:transition-none"));
+  for (const source of [cinematicHero, mobileIntro, reducedMotionHero]) {
+    assert.ok(source.includes('import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";'));
+    assert.ok(source.includes('import { FlaskConical } from "lucide-react";'));
+    assert.ok(source.includes('<ProjectResumeButton href="/labs" label="Explore Labs" icon={FlaskConical} />'));
+    assert.doesNotMatch(source, /ExploreLabsButton/);
+  }
+
+  assert.ok(sharedButton.includes("icon: Icon = ArrowUpRight"));
+  assert.ok(sharedButton.includes("rounded-full"));
+  assert.ok(sharedButton.includes("tone.circle"));
+  assert.ok(sharedButton.includes("circleVariants"));
+  assert.ok(sharedButton.includes("useReducedMotion"));
 });

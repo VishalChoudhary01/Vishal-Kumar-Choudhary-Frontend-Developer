@@ -3,7 +3,7 @@
 import Image from "next/image";
 
 import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";
-import ExploreLabsButton from "@/app/components/common/ExploreLabsButton";
+import { FlaskConical } from "lucide-react";
 import SectionEyebrow from "../../common/SectionEyebrow";
 
 import { NAME, DESCRIPTION, CTA_TEXT, } from "./heroMotionConfig";
@@ -53,7 +53,7 @@ export function ReducedMotionHero() {
             href="#projects"
             label={CTA_TEXT}
           />
-          <ExploreLabsButton />
+          <ProjectResumeButton href="/labs" label="Explore Labs" icon={FlaskConical} />
         </div>
 
         <figure

@@ -415,6 +415,16 @@ All three components read the application's existing `useReducedMotion` preferen
 
 The initial build test is included in the canonical `npm run build` chain as `test:labs-animated-icons`. It asserts the pinned package, icon subpaths, reduced-motion safeguards and preservation of static loading/destructive confirmation icons.
 
+
+### Portfolio hero Labs CTA alignment correction
+
+The separate `ExploreLabsButton` teal-outline component was removed after visual review because its standalone icon treatment and pill proportions did not match the existing hero CTA. The hero now reuses `ProjectResumeButton` for both actions:
+
+- Projects: `<ProjectResumeButton href="#projects" label={CTA_TEXT} />`
+- Labs: `<ProjectResumeButton href="/labs" label="Explore Labs" icon={FlaskConical} />`
+
+This preserves one shared shell, moving circular icon position, sizing, surface treatment, hover/focus/tap behavior, sound feedback and reduced-motion behavior. Only the label, destination and leading icon differ. The same usage is applied in animated desktop/tablet, mobile intro and reduced-motion hero layouts. No separate Labs CTA styling remains.
+
 ### Deferred
 
 - It’s Hover components are **not yet copied**. The upstream README/package metadata and repository license file disagree (MIT versus Apache 2.0). Resolve that with the maintainers before copying source into this repository.
