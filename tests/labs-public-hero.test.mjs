@@ -348,8 +348,12 @@ test("portfolio homepage keeps Projects primary and Labs secondary across motion
   assert.ok(buttonSource.includes('surface === "brand-outline"'));
   assert.ok(buttonSource.includes("border-brand/35"));
   assert.ok(buttonSource.includes("bg-brand-soft/35"));
-  assert.ok(buttonSource.includes("dark:border-brand/45"));
-  assert.ok(buttonSource.includes("dark:bg-brand-soft/35"));
+  assert.ok(buttonSource.includes("dark:border-brand/30"));
+  assert.ok(buttonSource.includes("dark:bg-brand/10"));
+  assert.ok(buttonSource.includes("dark:hover:border-brand/50"));
+  assert.ok(buttonSource.includes("dark:hover:bg-brand/15"));
+  assert.ok(buttonSource.includes("dark:bg-brand/15 dark:text-brand"));
+  assert.ok(buttonSource.includes("surface === \"brand-outline\" ? \"dark:bg-brand/15\" : \"dark:bg-white/8\""));
 });
 
 test("contact form uses the brand-primary CTA variant without removing submit lifecycle states", async () => {
