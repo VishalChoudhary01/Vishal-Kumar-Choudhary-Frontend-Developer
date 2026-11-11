@@ -229,7 +229,7 @@ export default function ProjectResumeButton({
             },
     };
 
-    // Preserve the original button surface styling.
+    // Two consistent surfaces: a solid primary and a neutral glass secondary.
     const surfaceClasses = surface === "brand"
         ? [
             "border border-brand/80",
@@ -242,46 +242,26 @@ export default function ProjectResumeButton({
             "active:bg-brand-hover",
             "hover:shadow-[0_3px_12px_rgba(0,0,0,0.16)]",
         ].join(" ")
-        : surface === "brand-outline"
-            ? [
-                "border border-brand/35",
-                "bg-brand-soft/35",
-                "text-text-primary",
-                "hover:border-brand/65",
-                "hover:bg-brand-soft/65",
-                "hover:shadow-[0_3px_16px_rgba(23,107,104,0.10)]",
-                "dark:border-brand/30",
-                "dark:bg-brand/10",
-                "dark:text-text-primary",
-                "dark:hover:border-brand/50",
-                "dark:hover:bg-brand/15",
-                "dark:hover:shadow-[0_3px_18px_rgba(7,162,144,0.14)]",
-            ].join(" ")
-            : [
-                // Light mode.
-                "border border-black/10",
-                "bg-white/55",
-                "text-black",
-                "shadow-[0_2px_10px_rgba(0,0,0,0.08)]",
-
-                // Dark mode.
-                "dark:border-white/15",
-                "dark:bg-black/40",
-                "dark:text-white",
-                "dark:shadow-[0_2px_10px_rgba(0,0,0,0.18)]",
-
-                // Hover and active glass surface.
-                "hover:border-black/15",
-                "hover:bg-white/65",
-                "active:border-black/20",
-                "active:bg-white/70",
-                "hover:shadow-[0_3px_12px_rgba(0,0,0,0.10)]",
-                "dark:hover:border-white/20",
-                "dark:hover:bg-black/48",
-                "dark:active:border-white/25",
-                "dark:active:bg-black/55",
-                "dark:hover:shadow-[0_3px_12px_rgba(0,0,0,0.22)]",
-            ].join(" ");
+        : [
+            "border border-black/12",
+            "bg-black/[0.035]",
+            "text-black",
+            "shadow-[0_2px_10px_rgba(0,0,0,0.06)]",
+            "dark:border-white/15",
+            "dark:bg-white/[0.035]",
+            "dark:text-white",
+            "dark:shadow-[0_2px_10px_rgba(0,0,0,0.18)]",
+            "hover:border-black/20",
+            "hover:bg-black/[0.06]",
+            "active:border-black/25",
+            "active:bg-black/[0.075]",
+            "hover:shadow-[0_3px_12px_rgba(0,0,0,0.10)]",
+            "dark:hover:border-white/25",
+            "dark:hover:bg-white/[0.075]",
+            "dark:active:border-white/30",
+            "dark:active:bg-white/[0.09]",
+            "dark:hover:shadow-[0_3px_12px_rgba(0,0,0,0.22)]",
+        ].join(" ");
 
     const sharedClassName = cn(
         "group/action",
@@ -335,8 +315,7 @@ export default function ProjectResumeButton({
             <span
                 aria-hidden="true"
                 className={cn(
-                    "pointer-events-none absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover/action:opacity-100",
-                    surface === "brand-outline" ? "dark:bg-brand/15" : "dark:bg-white/8",
+                    "pointer-events-none absolute inset-0 bg-current/10 opacity-0 transition-opacity duration-300 group-hover/action:opacity-100",
                 )}
             />
 
@@ -344,8 +323,7 @@ export default function ProjectResumeButton({
             <span
                 aria-hidden="true"
                 className={cn(
-                    "pointer-events-none absolute inset-x-5 top-0 h-px bg-white/75 opacity-70",
-                    surface === "brand-outline" ? "dark:bg-brand/45" : "dark:bg-white/40",
+                    "pointer-events-none absolute inset-x-5 top-0 h-px bg-current/30 opacity-60",
                 )}
             />
 
@@ -384,18 +362,10 @@ export default function ProjectResumeButton({
                     "justify-center",
                     "rounded-full",
 
-                    // Light mode.
-                    "border border-black/10",
-                    "bg-white/80",
-                    "text-black",
-                    "shadow-[0_1px_5px_rgba(0,0,0,0.08)]",
-
-                    // Dark mode: Labs uses a muted teal icon medallion.
-                    surface === "brand-outline"
-                        ? "dark:border-brand/35 dark:bg-brand/15 dark:text-brand dark:shadow-[0_1px_5px_rgba(7,162,144,0.16)]"
-                        : "dark:border-white/15 dark:bg-white/75 dark:text-black dark:shadow-[0_1px_5px_rgba(0,0,0,0.18)]",
-
-                    "backdrop-blur-md",
+                    "border border-current/25",
+                    "bg-transparent",
+                    "text-current",
+                    "shadow-none",
 
                     tone.circle,
                 )}

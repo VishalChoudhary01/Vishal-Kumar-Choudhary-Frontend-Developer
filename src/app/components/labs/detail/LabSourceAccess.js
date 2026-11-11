@@ -30,7 +30,7 @@ function AnimatedSourceAction({ href, label, Icon, primary = false, isAnimated =
       label={label}
       icon={Icon}
       animateIconOnHover={isAnimated}
-      surface={primary ? "brand" : "brand-outline"}
+      surface={primary ? "brand" : "glass"}
       size="sm"
     />
   );

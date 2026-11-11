@@ -186,7 +186,7 @@ test("portfolio hero uses the shared Project CTA treatment for Labs across all m
     assert.ok(source.includes('import { FlaskConicalIcon } from "@/app/components/common/FlaskConicalIcon";'));
     assert.match(
       source,
-      /<ProjectResumeButton\s+href="\/labs"[\s\S]*?label="Explore Labs"[\s\S]*?icon=\{FlaskConicalIcon\}[\s\S]*?animateIconOnHover[\s\S]*?surface="brand-outline"[\s\S]*?\/>/,
+      /<ProjectResumeButton\s+href="\/labs"[\s\S]*?label="Explore Labs"[\s\S]*?icon=\{FlaskConicalIcon\}[\s\S]*?animateIconOnHover[\s\S]*?surface="glass"[\s\S]*?\/>/,
     );
     assert.doesNotMatch(source, /ExploreLabsButton/);
   }
@@ -344,19 +344,18 @@ test("portfolio homepage keeps Projects primary and Labs secondary across motion
     assert.ok(heroSource.includes('href="#projects"'));
     assert.ok(heroSource.includes('surface="brand"'));
     assert.ok(heroSource.includes('href="/labs"'));
-    assert.ok(heroSource.includes('surface="brand-outline"'));
+    assert.ok(heroSource.includes('surface="glass"'));
     assert.ok(heroSource.includes("animateIconOnHover"));
   }
 
-  assert.ok(buttonSource.includes('surface === "brand-outline"'));
-  assert.ok(buttonSource.includes("border-brand/35"));
-  assert.ok(buttonSource.includes("bg-brand-soft/35"));
-  assert.ok(buttonSource.includes("dark:border-brand/30"));
-  assert.ok(buttonSource.includes("dark:bg-brand/10"));
-  assert.ok(buttonSource.includes("dark:hover:border-brand/50"));
-  assert.ok(buttonSource.includes("dark:hover:bg-brand/15"));
-  assert.ok(buttonSource.includes("dark:bg-brand/15 dark:text-brand"));
-  assert.ok(buttonSource.includes("surface === \"brand-outline\" ? \"dark:bg-brand/15\" : \"dark:bg-white/8\""));
+  assert.ok(buttonSource.includes('surface = "glass"'));
+  assert.ok(buttonSource.includes('surface === "brand"'));
+  assert.ok(buttonSource.includes('"bg-brand"'));
+  assert.ok(buttonSource.includes('"dark:bg-white/[0.035]"'));
+  assert.ok(buttonSource.includes('"bg-black/[0.035]"'));
+  assert.ok(buttonSource.includes('"bg-transparent"'));
+  assert.ok(buttonSource.includes('"border border-current/25"'));
+  assert.doesNotMatch(buttonSource, /glass|bg-white\/80|dark:bg-white\/75/);
 });
 
 test("contact form uses the brand-primary CTA variant without removing submit lifecycle states", async () => {

@@ -759,7 +759,7 @@ function CinematicHero() {
                             label="Explore Labs"
                             icon={FlaskConicalIcon}
                             animateIconOnHover
-                            surface="brand-outline"
+                            surface="glass"
                           />
                         </div>
                       </motion.div>
