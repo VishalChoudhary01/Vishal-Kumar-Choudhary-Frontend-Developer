@@ -66,7 +66,48 @@ test("Labs animated icons use a pinned package, direct icon imports and reduced-
     assert.equal(source.includes('from "@animateicons/react/lucide";'), false);
   }
 
-  assert.ok(inventory.includes('<Trash2 size={16} aria-hidden="true" />'));
-  assert.ok(inventory.includes('<Trash2 size={13} aria-hidden="true" />'));
+  assert.ok(inventory.includes('<AnimatedTrash ref={deleteModalIconRef}'));
+  assert.ok(inventory.includes('<AnimatedTrash size={13}'));
   assert.ok(analytics.includes('<RefreshCw size={13} className={refreshing ? "animate-spin motion-reduce:animate-none" : ""} aria-hidden="true" />'));
+  assert.ok(analytics.includes('<AnimatedTrash ref={removeDialogIconRef}'));
+  assert.ok(analytics.includes('<AnimatedTrash size={13}'));
+
+  const [sourceEditor, editPage, metadataEditor, snapshotPanel] = await Promise.all([
+    read("../src/app/components/labs/admin/LabSourceEditor.js"),
+    read("../src/app/admin/labs/experiments/[slug]/edit/page.js"),
+    read("../src/app/components/labs/admin/LabExperimentMetadataEditor.js"),
+    read("../src/app/components/labs/admin/LabSnapshotStoragePanel.js"),
+  ]);
+
+  for (const iconPath of [
+    "@animateicons/react/lucide/arrow-left-icon",
+    "@animateicons/react/lucide/chevron-right-icon",
+    "@animateicons/react/lucide/lock-open-icon",
+    "@animateicons/react/lucide/trash-icon",
+    "@animateicons/react/lucide/upload-icon",
+  ]) assert.ok(sourceEditor.includes(iconPath), "Source editor is missing " + iconPath);
+
+  assert.ok(sourceEditor.includes('aria-label="Breadcrumb"'));
+  assert.ok(sourceEditor.includes("publishDialogIconRef.current?.startAnimation?.()"));
+  assert.ok(sourceEditor.includes("unpublishDialogIconRef.current?.startAnimation?.()"));
+  assert.ok(sourceEditor.includes("deleteDialogIconRef.current?.startAnimation?.()"));
+  assert.ok(sourceEditor.includes("ref={publishDialogIconRef}"));
+  assert.ok(sourceEditor.includes("ref={unpublishDialogIconRef}"));
+  assert.ok(sourceEditor.includes("ref={deleteDialogIconRef}"));
+
+  for (const iconPath of [
+    "@animateicons/react/lucide/arrow-left-icon",
+    "@animateicons/react/lucide/chevron-right-icon",
+    "@animateicons/react/lucide/pencil-icon",
+  ]) assert.ok(editPage.includes(iconPath), "Edit page is missing " + iconPath);
+  assert.ok(editPage.includes('aria-label="Breadcrumb"'));
+  assert.ok(metadataEditor.includes("@animateicons/react/lucide/arrow-left-icon"));
+
+  assert.ok(sourceAccess.includes("copyIconRef.current?.startAnimation?.()"));
+  assert.ok(sourceAccess.includes("onMouseEnter={startCopyIconAnimation}"));
+  assert.ok(sourceAccess.includes("onFocus={startCopyIconAnimation}"));
+  assert.ok(sourceAccess.includes("ref={copyIconRef}"));
+
+  assert.ok(snapshotPanel.includes("@animateicons/react/lucide/trash-icon"));
+  assert.ok(snapshotPanel.includes("deleteModalIconRef.current?.startAnimation?.()"));
 });
