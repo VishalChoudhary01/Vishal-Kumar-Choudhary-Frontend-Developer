@@ -68,7 +68,7 @@ test("privacy preference uses a named same-origin event and does not generate an
   assert.ok(wrapper.includes("stopPortfolioVisitTracking"));
   assert.ok(tracker.includes("readPortfolioAnalyticsOptOut()"));
   assert.ok(tracker.includes("export function stopPortfolioVisitTracking()"));
-  assert.ok(control.includes("Turn off optional page-use information in this browser"));
+  assert.ok(control.includes("Turn off optional website information in this browser"));
   assert.ok(!preference.includes("randomUUID"));
 });
 
@@ -82,18 +82,19 @@ test("privacy page explains site information in plain language without internal 
   const normalizedPage = page.replace(/\s+/g, " ");
 
   assert.ok(normalizedPage.includes("<PageInformationPreference />"));
-  assert.ok(normalizedPage.includes("Limited page-use information"));
-  assert.ok(normalizedPage.includes("approximate country, region and city"));
+  assert.ok(normalizedPage.includes("Basic site information"));
+  assert.ok(normalizedPage.includes("pages accessed"));
+  assert.ok(normalizedPage.includes("approximate location"));
   assert.ok(normalizedPage.includes("full IP"));
   assert.ok(normalizedPage.toLowerCase().includes("clipboard contents are not collected"));
   assert.ok(normalizedPage.includes("65 days"));
   assert.ok(normalizedPage.includes("180 days"));
-  assert.ok(normalizedPage.includes("do not currently have a fixed automatic expiry period"));
-  assert.ok(normalizedPage.includes("does not delete records already stored"));
-  assert.ok(normalizedPage.includes("does not turn off the separate records"));
-  assert.ok(!/we track users|I track users|tracking users/i.test(page));
-  assert.ok(!/aggregate experiment statistics|portfolio page analytics|labs analytics/i.test(page));
-  assert.ok(preference.includes("Turn off optional page-use information in this browser"));
+  assert.ok(normalizedPage.includes("does not currently have a fixed automatic expiry period"));
+  assert.ok(normalizedPage.includes("does not delete information already stored"));
+  assert.ok(normalizedPage.includes("does not affect sign-in"));
+  assert.ok(!/we track users|I track users|tracking users|user behaviour|user behavior/i.test(page));
+  assert.ok(!/portfolio analytics|labs analytics|portfolio page analytics|tracking/i.test(page));
+  assert.ok(preference.includes("Turn off optional website information in this browser"));
   assert.ok(!preference.includes("Optional site usage statistics"));
   assert.ok(!preference.includes("Disable analytics on this browser profile"));
   assert.ok(policy.includes('PRIVACY_VERSION = "2026-11-11.1"'));
