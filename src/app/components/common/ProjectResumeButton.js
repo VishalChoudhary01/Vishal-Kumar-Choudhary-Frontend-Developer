@@ -242,31 +242,45 @@ export default function ProjectResumeButton({
             "active:bg-brand-hover",
             "hover:shadow-[0_3px_12px_rgba(0,0,0,0.16)]",
         ].join(" ")
-        : [
-            // Light mode.
-            "border border-black/10",
-            "bg-white/55",
-            "text-black",
-            "shadow-[0_2px_10px_rgba(0,0,0,0.08)]",
+        : surface === "brand-outline"
+            ? [
+                "border border-brand/35",
+                "bg-brand-soft/35",
+                "text-text-primary",
+                "hover:border-brand/65",
+                "hover:bg-brand-soft/65",
+                "hover:shadow-[0_3px_16px_rgba(23,107,104,0.10)]",
+                "dark:border-brand/45",
+                "dark:bg-brand-soft/35",
+                "dark:hover:border-brand/70",
+                "dark:hover:bg-brand-soft/65",
+                "dark:hover:shadow-[0_3px_18px_rgba(105,189,185,0.14)]",
+            ].join(" ")
+            : [
+                // Light mode.
+                "border border-black/10",
+                "bg-white/55",
+                "text-black",
+                "shadow-[0_2px_10px_rgba(0,0,0,0.08)]",
 
-            // Dark mode.
-            "dark:border-white/15",
-            "dark:bg-black/40",
-            "dark:text-white",
-            "dark:shadow-[0_2px_10px_rgba(0,0,0,0.18)]",
+                // Dark mode.
+                "dark:border-white/15",
+                "dark:bg-black/40",
+                "dark:text-white",
+                "dark:shadow-[0_2px_10px_rgba(0,0,0,0.18)]",
 
-            // Hover and active glass surface.
-            "hover:border-black/15",
-            "hover:bg-white/65",
-            "active:border-black/20",
-            "active:bg-white/70",
-            "hover:shadow-[0_3px_12px_rgba(0,0,0,0.10)]",
-            "dark:hover:border-white/20",
-            "dark:hover:bg-black/48",
-            "dark:active:border-white/25",
-            "dark:active:bg-black/55",
-            "dark:hover:shadow-[0_3px_12px_rgba(0,0,0,0.22)]",
-        ].join(" ");
+                // Hover and active glass surface.
+                "hover:border-black/15",
+                "hover:bg-white/65",
+                "active:border-black/20",
+                "active:bg-white/70",
+                "hover:shadow-[0_3px_12px_rgba(0,0,0,0.10)]",
+                "dark:hover:border-white/20",
+                "dark:hover:bg-black/48",
+                "dark:active:border-white/25",
+                "dark:active:bg-black/55",
+                "dark:hover:shadow-[0_3px_12px_rgba(0,0,0,0.22)]",
+            ].join(" ");
 
     const sharedClassName = cn(
         "group/action",

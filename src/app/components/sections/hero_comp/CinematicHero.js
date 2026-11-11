@@ -752,8 +752,15 @@ function CinematicHero() {
                           <ProjectResumeButton
                             href="#projects"
                             label={CTA_TEXT}
+                            surface="brand"
                           />
-                          <ProjectResumeButton href="/labs" label="Explore Labs" icon={FlaskConicalIcon} animateIconOnHover surface="brand" />
+                          <ProjectResumeButton
+                            href="/labs"
+                            label="Explore Labs"
+                            icon={FlaskConicalIcon}
+                            animateIconOnHover
+                            surface="brand-outline"
+                          />
                         </div>
                       </motion.div>
                     </motion.div>

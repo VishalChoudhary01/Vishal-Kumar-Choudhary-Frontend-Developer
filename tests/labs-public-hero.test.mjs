@@ -327,3 +327,41 @@ test("Labs hero reuses the shared teal Resume button for primary actions and gla
   assert.equal(componentSource.includes("function HeroAction("), false);
   assert.equal(componentSource.includes("<Link "), false);
 });
+
+
+test("portfolio homepage keeps Projects primary and Labs secondary across motion modes", async () => {
+  const [cinematicHero, mobileIntro, reducedMotionHero, buttonSource] = await Promise.all([
+    readFile(new URL("../src/app/components/sections/hero_comp/CinematicHero.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/sections/hero_comp/MobileIntro.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/sections/hero_comp/ReducedMotionHero.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/common/ProjectResumeButton.js", import.meta.url), "utf8"),
+  ]);
+
+  for (const heroSource of [cinematicHero, mobileIntro, reducedMotionHero]) {
+    assert.match(heroSource, /href="#projects"[\\s\\S]*?surface="brand"/);
+    assert.match(heroSource, /href="\\/labs"[\\s\\S]*?surface="brand-outline"/);
+    assert.ok(heroSource.includes("animateIconOnHover"));
+  }
+
+  assert.ok(buttonSource.includes('surface === "brand-outline"'));
+  assert.ok(buttonSource.includes("border-brand/35"));
+  assert.ok(buttonSource.includes("bg-brand-soft/35"));
+  assert.ok(buttonSource.includes("dark:border-brand/45"));
+  assert.ok(buttonSource.includes("dark:bg-brand-soft/35"));
+});
+
+test("contact form uses the brand-primary CTA variant without removing submit lifecycle states", async () => {
+  const [fieldsSource, actionButtonSource] = await Promise.all([
+    readFile(new URL("../src/app/components/sections/contact_comp/ContactFormFields.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/common/buttons/ActionButton.js", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(fieldsSource, /<ActionButton[\\s\\S]*?variant="primary"[\\s\\S]*?label="Send Message"/);
+  assert.ok(fieldsSource.includes('status={isSubmitting ? "submitting" : "idle"}'));
+  assert.ok(fieldsSource.includes("disabled={!isValid}"));
+  assert.ok(actionButtonSource.includes('variant = "glass"'));
+  assert.ok(actionButtonSource.includes('const isPrimary = variant === "primary"'));
+  assert.ok(actionButtonSource.includes("bg-brand text-brand-contrast"));
+  assert.ok(actionButtonSource.includes("aria-busy={isSubmitting}"));
+  assert.ok(actionButtonSource.includes("isSubmitting ? submittingLabel"));
+});
