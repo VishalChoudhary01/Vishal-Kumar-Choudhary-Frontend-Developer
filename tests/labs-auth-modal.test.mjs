@@ -63,3 +63,19 @@ test("login and signup stay compact while retaining social login and password gu
   assert.ok(social.includes("h-10 w-full"));
   assert.ok(signup.includes("<PasswordStrengthMeter password={password} />"));
 });
+
+
+test("signup requires the shared Privacy Policy acknowledgment before email or social registration", async () => {
+  const signup = await read("../src/app/components/labs/auth/SignupForm.js");
+
+  assert.ok(signup.includes('href="/privacy"'));
+  assert.ok(signup.includes('target="_blank"'));
+  assert.ok(signup.includes('rel="noopener noreferrer"'));
+  assert.ok(signup.includes('name="privacyPolicyAccepted"'));
+  assert.ok(signup.includes("required"));
+  assert.ok(signup.includes('id="privacy-policy-acceptance"'));
+  assert.ok(signup.includes("if (!privacyAccepted)"));
+  assert.ok(signup.includes("disabled={loading || !registrationEnabled || !privacyAccepted}"));
+  assert.ok(signup.includes("disabled={loading || !privacyAccepted}"));
+  assert.ok(signup.includes("Please accept the Privacy Policy to create an account."));
+});
