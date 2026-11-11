@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useActionToast } from "@/app/providers/ActionToastProvider";
 import Link from "next/link";
@@ -10,7 +10,6 @@ import {
   LoaderCircle,
   Search,
   SearchX,
-  Trash2,
 } from "lucide-react";
 import { TriangleAlertIcon as AlertTriangle } from "@animateicons/react/lucide/triangle-alert-icon";
 import { CircleCheckIcon as CheckCircle2 } from "@animateicons/react/lucide/circle-check-icon";
@@ -101,6 +100,11 @@ export default function LabSourceInventory() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const deleteModalIconRef = useRef(null);
+
+  useEffect(() => {
+    if (deleteTarget) deleteModalIconRef.current?.startAnimation?.();
+  }, [deleteTarget]);
 
   async function loadInventory({ quiet = false } = {}) {
     if (quiet) setRefreshing(true);
@@ -491,7 +495,7 @@ export default function LabSourceInventory() {
         <div className="fixed inset-0 z-[80] grid place-items-center bg-black/70 p-4" role="presentation">
           <section role="dialog" aria-modal="true" aria-labelledby="inventory-delete-title" className="w-full max-w-md border border-warning/40 bg-surface-1 p-5 shadow-2xl">
             <div className="flex items-center gap-2 text-warning">
-              <Trash2 size={16} aria-hidden="true" />
+              <AnimatedTrash ref={deleteModalIconRef} size={16} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
               <h2 id="inventory-delete-title" className="text-base font-semibold">Delete {deleteTarget.title}?</h2>
             </div>
             <p className="mt-3 text-sm leading-6 text-text-secondary">This permanently removes the custom experiment, source versions, private media, release artifacts and engagement data. Built-in experiments cannot be deleted.</p>
@@ -502,7 +506,7 @@ export default function LabSourceInventory() {
             <div className="mt-5 flex justify-end gap-2">
               <button type="button" onClick={() => setDeleteTarget(null)} disabled={deleting} className="h-9 border border-border px-3 text-xs">Cancel</button>
               <button type="button" onClick={deleteExperiment} disabled={deleting || deleteConfirmation.trim() !== deleteTarget.slug} className="inline-flex h-9 items-center gap-2 border border-warning bg-warning/10 px-3 text-xs font-semibold text-warning disabled:cursor-not-allowed disabled:opacity-40">
-                {deleting ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <Trash2 size={13} aria-hidden="true" />}
+                {deleting ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <AnimatedTrash size={13} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />}
                 {deleting ? "Deleting…" : "Delete permanently"}
               </button>
             </div>
