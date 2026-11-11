@@ -42,6 +42,8 @@ test("dashboard maps real report fields and shows a real empty state", async () 
   assert.ok(dashboard.includes("RecentVisitsTable"));
   assert.ok(dashboard.includes("Visitor activity"));
   assert.ok(dashboard.includes("Visitor name"));
+  assert.ok(dashboard.includes("Raw account ID"));
+  assert.ok(dashboard.includes("visit.visitor.accountId"));
   assert.ok(dashboard.includes("Email (masked)"));
   assert.ok(dashboard.includes("Page visited"));
   assert.ok(dashboard.includes("getLocationLabel(visit)"));
