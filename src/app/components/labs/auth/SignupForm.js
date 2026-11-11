@@ -139,18 +139,18 @@ export default function SignupForm({
 
   return (
     <>
-      <div className="mb-3 text-center sm:mb-4">
-        <h1 className="font-display text-[1.7rem] leading-tight tracking-[-0.025em] sm:text-[2rem]">
+      <div className="mb-2 text-center sm:mb-2.5">
+        <h1 className="font-display text-[1.6rem] leading-tight tracking-[-0.025em] sm:text-[1.85rem]">
           Create your account
         </h1>
-        <p className="mt-1 text-xs leading-5 text-text-secondary sm:mt-1.5 sm:text-sm">
+        <p className="mt-0.5 text-xs leading-5 text-text-secondary sm:mt-1 sm:text-sm">
           Start using your Labs account.
         </p>
       </div>
 
       {globalError ? <AuthMessage title="Unable to create account">{globalError}</AuthMessage> : null}
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-2.5 sm:space-y-3">
+      <form onSubmit={handleSubmit} noValidate className="space-y-2 sm:space-y-2.5">
         <AuthField
           id="email"
           label="Email address"
@@ -186,7 +186,7 @@ export default function SignupForm({
         />
         <PasswordStrengthMeter password={password} />
 
-        <div className="pt-1">
+        <div className="pt-0.5">
           <div className="flex items-start gap-2">
             <input
               id="privacy-policy-acceptance"
@@ -258,7 +258,7 @@ export default function SignupForm({
         onPendingChange={setLoading}
       />
 
-      <p className="mt-3 text-center text-xs text-text-secondary sm:mt-4 sm:text-sm">
+      <p className="mt-2 text-center text-xs text-text-secondary sm:mt-3 sm:text-sm">
         Already have an account?{" "}
         <AuthLink href={"/labs/login?returnTo=" + encodeURIComponent(returnTo)}>
           Sign in

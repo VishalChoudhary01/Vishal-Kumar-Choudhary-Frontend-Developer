@@ -31,7 +31,7 @@ export default function AuthField({
     <div className="min-w-0">
       <label
         htmlFor={id}
-        className="mb-1 block text-xs font-medium text-text-primary sm:mb-1.5 sm:text-sm"
+        className="mb-0.5 block text-xs font-medium text-text-primary sm:mb-1 sm:text-sm"
       >
         {label}
       </label>
@@ -90,11 +90,11 @@ export default function AuthField({
       </div>
 
       {error ? (
-        <p id={errorId} className="mt-1 text-[11px] leading-4 text-error sm:mt-1.5 sm:text-xs sm:leading-5">
+        <p id={errorId} className="mt-0.5 text-[11px] leading-4 text-error sm:mt-1 sm:text-xs sm:leading-5">
           {error}
         </p>
       ) : helper ? (
-        <p id={helperId} className="mt-1 text-[11px] leading-4 text-text-tertiary sm:mt-1.5 sm:text-xs sm:leading-5">
+        <p id={helperId} className="mt-0.5 text-[11px] leading-4 text-text-tertiary sm:mt-1 sm:text-xs sm:leading-5">
           {helper}
         </p>
       ) : null}

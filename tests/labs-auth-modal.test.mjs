@@ -55,18 +55,18 @@ test("login and signup stay compact while retaining social login and password gu
     read("../src/app/components/labs/auth/AuthSubmit.js"),
     read("../src/app/components/labs/auth/SocialAuthButtons.js"),
   ]);
-  assert.ok(login.includes("text-[1.55rem]"));
-  assert.ok(login.includes("sm:text-[1.7rem]"));
-  assert.ok(signup.includes("text-[1.55rem]"));
-  assert.ok(signup.includes("sm:text-[2rem]"));
-  assert.ok(login.includes("space-y-2.5 sm:space-y-3"));
-  assert.ok(signup.includes("space-y-2.5 sm:space-y-3"));
+  assert.ok(login.includes("text-[1.5rem]"));
+  assert.ok(login.includes("sm:text-[1.65rem]"));
+  assert.ok(signup.includes("text-[1.6rem]"));
+  assert.ok(signup.includes("sm:text-[1.85rem]"));
+  assert.ok(login.includes("space-y-2 sm:space-y-2.5"));
+  assert.ok(signup.includes("space-y-2 sm:space-y-2.5"));
   assert.ok(field.includes("h-9 w-full"));
   assert.ok(field.includes("sm:h-10"));
   assert.ok(submit.includes("h-10"));
   assert.ok(submit.includes("sm:h-[42px]"));
   assert.ok(social.includes("h-9 w-full"));
-  assert.ok(social.includes("sm:h-10"));
+  assert.ok(social.includes("sm:h-9"));
   assert.ok(signup.includes("<PasswordStrengthMeter password={password} />"));
 });
 
@@ -120,9 +120,50 @@ test("page and modal authentication surfaces are compact on mobile and retain de
   assert.ok(modal.includes("max-w-[360px]"));
   assert.ok(modal.includes("sm:max-w-[392px]"));
 
-  for (const source of [login, signup, forgot, reset, verify]) {
-    assert.match(source, /space-y-(?:2\.5|3) sm:space-y-(?:3|4)/);
+  for (const source of [forgot, reset, verify]) {
+    assert.match(source, /space-y-3 sm:space-y-4/);
   }
+  assert.ok(login.includes("space-y-2 sm:space-y-2.5"));
+  assert.ok(signup.includes("space-y-2 sm:space-y-2.5"));
 
-  assert.ok(meter.includes("px-2.5 py-2.5 sm:space-y-3"));
+  assert.ok(meter.includes("px-2.5 py-2 sm:space-y-2"));
+});
+
+
+test("Labs auth scroll areas hide scrollbar chrome while preserving internal scrolling", async () => {
+  const [modal, frame, css] = await Promise.all([
+    read("../src/app/components/labs/auth/LabsAuthModal.js"),
+    read("../src/app/components/labs/auth/AuthFrame.js"),
+    read("../src/app/globals.css"),
+  ]);
+
+  assert.ok(modal.includes("overflow-y-auto auth-scrollbar-hidden"));
+  assert.ok(modal.includes("max-h-[calc(100dvh-1rem)]"));
+  assert.ok(modal.includes("sm:max-h-[calc(100dvh-2rem)]"));
+  assert.ok(frame.includes("overflow-y-auto auth-scrollbar-hidden"));
+  assert.ok(css.includes(".auth-scrollbar-hidden"));
+  assert.ok(css.includes("scrollbar-width: none"));
+  assert.ok(css.includes("-ms-overflow-style: none"));
+  assert.ok(css.includes(".auth-scrollbar-hidden::-webkit-scrollbar"));
+  assert.ok(css.includes("display: none !important"));
+});
+
+test("login and signup use tighter vertical rhythm without reducing auth control tap targets", async () => {
+  const [login, signup, field, social, meter] = await Promise.all([
+    read("../src/app/components/labs/auth/LoginForm.js"),
+    read("../src/app/components/labs/auth/SignupForm.js"),
+    read("../src/app/components/labs/auth/AuthField.js"),
+    read("../src/app/components/labs/auth/SocialAuthButtons.js"),
+    read("../src/app/components/labs/auth/PasswordStrengthMeter.js"),
+  ]);
+
+  assert.ok(login.includes("mb-2 text-center sm:mb-2.5"));
+  assert.ok(signup.includes("mb-2 text-center sm:mb-2.5"));
+  assert.ok(login.includes("space-y-2 sm:space-y-2.5"));
+  assert.ok(signup.includes("space-y-2 sm:space-y-2.5"));
+  assert.ok(field.includes("h-9 w-full"));
+  assert.ok(field.includes("sm:h-10"));
+  assert.ok(social.includes("mt-2.5 sm:mt-3"));
+  assert.ok(social.includes("sm:h-9"));
+  assert.ok(meter.includes("sm:px-3 sm:py-2.5"));
 });

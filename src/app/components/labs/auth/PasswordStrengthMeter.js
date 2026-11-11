@@ -41,7 +41,7 @@ export default function PasswordStrengthMeter({ password = "" }) {
           className="overflow-hidden"
           aria-label="Password strength"
         >
-          <div className="space-y-2 border border-border-subtle bg-surface-1/70 px-2.5 py-2.5 sm:space-y-3 sm:px-3.5 sm:py-3">
+          <div className="space-y-1.5 border border-border-subtle bg-surface-1/70 px-2.5 py-2 sm:space-y-2 sm:px-3 sm:py-2.5">
             <div className="flex items-center justify-between gap-3">
               <span className="text-[11px] font-medium tracking-wide text-text-secondary">
                 Password strength

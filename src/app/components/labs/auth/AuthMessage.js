@@ -8,7 +8,7 @@ export default function AuthMessage({ title, children, tone = "error" }) {
     <div
       role={tone === "success" ? "status" : "alert"}
       aria-live={tone === "success" ? "polite" : "assertive"}
-      className={"mb-4 rounded-sm border px-2.5 py-2.5 sm:mb-5 sm:px-3 sm:py-3 " + styles}
+      className={"mb-3 rounded-sm border px-2.5 py-2 sm:mb-4 sm:px-3 sm:py-2.5 " + styles}
     >
       {title ? <p className="mb-1 text-sm font-semibold">{title}</p> : null}
       <div className="text-xs leading-5 sm:text-sm sm:leading-6">{children}</div>

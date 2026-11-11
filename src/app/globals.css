@@ -539,3 +539,16 @@ html::-webkit-scrollbar-corner {
     border-radius: 2px;
   }
 }
+
+
+/* Labs authentication scroll areas: keep touch, wheel and keyboard scrolling; hide only the scrollbar chrome. */
+.auth-scrollbar-hidden {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.auth-scrollbar-hidden::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}

@@ -102,11 +102,11 @@ export default function LoginForm({
 
   return (
     <>
-      <div className="mb-3 text-center sm:mb-4">
-        <h1 className="font-display text-[1.55rem] leading-tight tracking-[-0.025em] sm:text-[1.7rem]">
+      <div className="mb-2 text-center sm:mb-2.5">
+        <h1 className="font-display text-[1.5rem] leading-tight tracking-[-0.025em] sm:text-[1.65rem]">
           Welcome back
         </h1>
-        <p className="mt-1 text-xs leading-5 text-text-secondary sm:mt-1.5 sm:text-sm">
+        <p className="mt-0.5 text-xs leading-5 text-text-secondary sm:mt-1 sm:text-sm">
           Sign in to access your Labs account.
         </p>
       </div>
@@ -124,7 +124,7 @@ export default function LoginForm({
         </AuthMessage>
       ) : null}
 
-      <form onSubmit={handleSubmit} noValidate aria-busy={loading} className="space-y-2.5 sm:space-y-3">
+      <form onSubmit={handleSubmit} noValidate aria-busy={loading} className="space-y-2 sm:space-y-2.5">
         <AuthField
           id="email"
           label="Email address"
@@ -179,7 +179,7 @@ export default function LoginForm({
         onPendingChange={setLoading}
       />
 
-      <p className="mt-3 text-center text-xs text-text-secondary sm:mt-4 sm:text-sm">
+      <p className="mt-2 text-center text-xs text-text-secondary sm:mt-3 sm:text-sm">
         Don&apos;t have an account?{" "}
         <AuthLink href={"/labs/signup?returnTo=" + encodeURIComponent(returnTo)}>
           Create an account
