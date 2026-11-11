@@ -61,11 +61,11 @@ export default function ForgotPasswordForm({ returnTo, emailDeliveryEnabled }) {
 
   if (complete) {
     return (
-      <div className="py-3 text-center">
-        <h1 className="font-display text-[2rem] leading-tight tracking-[-0.025em]">
+      <div className="py-2 text-center sm:py-3">
+        <h1 className="font-display text-[1.65rem] leading-tight tracking-[-0.025em] sm:text-[2rem]">
           Check your email
         </h1>
-        <p className="mt-3 text-sm leading-6 text-text-secondary">
+        <p className="mt-2 text-xs leading-5 text-text-secondary sm:mt-3 sm:text-sm sm:leading-6">
           If an account exists for this email address, you&apos;ll receive instructions to reset your password.
         </p>
         <div className="mt-6">
@@ -79,18 +79,18 @@ export default function ForgotPasswordForm({ returnTo, emailDeliveryEnabled }) {
 
   return (
     <>
-      <div className="mb-6 text-center">
+      <div className="mb-4 text-center sm:mb-6">
         <h1 className="font-display text-[2rem] leading-tight tracking-[-0.025em]">
           Reset your password
         </h1>
-        <p className="mt-2 text-sm leading-6 text-text-secondary">
+        <p className="mt-1.5 text-xs leading-5 text-text-secondary sm:mt-2 sm:text-sm sm:leading-6">
           Enter your email address and we&apos;ll send you a link to reset your password.
         </p>
       </div>
 
       {globalError ? <AuthMessage>{globalError}</AuthMessage> : null}
 
-      <form onSubmit={submit} noValidate className="space-y-4">
+      <form onSubmit={submit} noValidate className="space-y-3 sm:space-y-4">
         <AuthField
           id="email"
           label="Email address"
@@ -110,7 +110,7 @@ export default function ForgotPasswordForm({ returnTo, emailDeliveryEnabled }) {
         </AuthSubmit>
       </form>
 
-      <div className="mt-5 text-center">
+      <div className="mt-4 text-center sm:mt-5">
         <AuthLink href={"/labs/login?returnTo=" + encodeURIComponent(returnTo)}>
           Back to sign in
         </AuthLink>
