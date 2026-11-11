@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, LoaderCircle, Save } from "lucide-react";
+import { LoaderCircle, Save } from "lucide-react";
+import { ArrowLeftIcon as AnimatedArrowLeft } from "@animateicons/react/lucide/arrow-left-icon";
 
 import { LAB_CATEGORIES } from "@/app/data/labsExperiments";
 import { useActionToast } from "@/app/providers/ActionToastProvider";
@@ -225,7 +226,7 @@ export default function LabExperimentMetadataEditor({ initialExperiment }) {
           onClick={confirmNavigation}
           className="inline-flex h-9 items-center gap-2 text-xs font-medium text-text-secondary transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         >
-          <ArrowLeft size={13} aria-hidden="true" />
+          <AnimatedArrowLeft size={13} duration={0.68} aria-hidden="true" />
           Source workspace
         </Link>
 
