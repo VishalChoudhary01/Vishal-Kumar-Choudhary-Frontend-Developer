@@ -292,13 +292,14 @@ function RecentVisitsTable({
       ) : visits.length ? (
         <>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1320px] border-collapse text-left text-xs">
+            <table className="w-full min-w-[1480px] border-collapse text-left text-xs">
               <thead className="bg-surface-2 text-[10px] uppercase tracking-[0.12em] text-text-tertiary">
                 <tr>
                   <th className="w-10 px-3 py-3 font-medium">
                     <span className="sr-only">Select</span>
                   </th>
                   <th className="px-4 py-3 font-medium">Visitor name</th>
+                  <th className="px-4 py-3 font-medium">Raw account ID</th>
                   <th className="px-4 py-3 font-medium">Email (masked)</th>
                   <th className="px-4 py-3 font-medium">Account</th>
                   <th className="px-4 py-3 font-medium">Device</th>
@@ -335,6 +336,20 @@ function RecentVisitsTable({
                         <span className="block truncate font-medium text-text-primary">
                           {isVerified ? visit.visitor.name || "Verified account" : "Guest visitor"}
                         </span>
+                      </td>
+                      <td className="max-w-[240px] px-4 py-4">
+                        {isVerified && visit.visitor.accountId ? (
+                          <span
+                            className="block break-all font-mono text-[10px] leading-5 text-text-secondary"
+                            title={visit.visitor.accountId}
+                          >
+                            {visit.visitor.accountId}
+                          </span>
+                        ) : (
+                          <span className="text-text-tertiary">
+                            {isVerified ? "Not captured on this visit" : "—"}
+                          </span>
+                        )}
                       </td>
                       <td className="max-w-[190px] px-4 py-4">
                         {isVerified && visit.visitor.email ? (
