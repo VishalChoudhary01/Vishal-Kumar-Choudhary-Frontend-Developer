@@ -29,7 +29,8 @@ test("Labs auth modal keeps the Labs page visible through a translucent blurred 
   const modal = await read("../src/app/components/labs/auth/LabsAuthModal.js");
   assert.ok(modal.includes("bg-[rgba(2,8,6,0.18)]"));
   assert.ok(modal.includes("backdrop-blur-[4px]"));
-  assert.ok(modal.includes("max-w-[392px]"));
+  assert.ok(modal.includes("max-w-[360px]"));
+  assert.ok(modal.includes("sm:max-w-[392px]"));
   assert.ok(modal.includes("bg-surface-elevated/90"));
   assert.ok(modal.includes('aria-modal="true"'));
   assert.ok(modal.includes('event.key === "Escape"'));
@@ -54,13 +55,18 @@ test("login and signup stay compact while retaining social login and password gu
     read("../src/app/components/labs/auth/AuthSubmit.js"),
     read("../src/app/components/labs/auth/SocialAuthButtons.js"),
   ]);
-  assert.ok(login.includes("text-[1.7rem]"));
-  assert.ok(signup.includes("text-[1.7rem]"));
-  assert.ok(login.includes("space-y-3"));
-  assert.ok(signup.includes("space-y-3"));
-  assert.ok(field.includes("h-10 w-full"));
-  assert.ok(submit.includes("h-[42px]"));
-  assert.ok(social.includes("h-10 w-full"));
+  assert.ok(login.includes("text-[1.55rem]"));
+  assert.ok(login.includes("sm:text-[1.7rem]"));
+  assert.ok(signup.includes("text-[1.55rem]"));
+  assert.ok(signup.includes("sm:text-[2rem]"));
+  assert.ok(login.includes("space-y-2.5 sm:space-y-3"));
+  assert.ok(signup.includes("space-y-2.5 sm:space-y-3"));
+  assert.ok(field.includes("h-9 w-full"));
+  assert.ok(field.includes("sm:h-10"));
+  assert.ok(submit.includes("h-10"));
+  assert.ok(submit.includes("sm:h-[42px]"));
+  assert.ok(social.includes("h-9 w-full"));
+  assert.ok(social.includes("sm:h-10"));
   assert.ok(signup.includes("<PasswordStrengthMeter password={password} />"));
 });
 
@@ -78,4 +84,45 @@ test("signup requires the shared Privacy Policy acknowledgment before email or s
   assert.ok(signup.includes("disabled={loading || !registrationEnabled || !privacyAccepted}"));
   assert.ok(signup.includes("disabled={loading || !privacyAccepted}"));
   assert.ok(signup.includes("Please accept the Privacy Policy to create an account."));
+});
+
+
+test("password visibility uses animated eye and eye-closed icons with accessible state and reduced motion", async () => {
+  const field = await read("../src/app/components/labs/auth/AuthField.js");
+
+  assert.ok(field.includes("@animateicons/react/lucide/eye-icon"));
+  assert.ok(field.includes("@animateicons/react/lucide/eye-closed-icon"));
+  assert.ok(field.includes("AnimatePresence"));
+  assert.ok(field.includes("motion.span"));
+  assert.ok(field.includes("useReducedMotion"));
+  assert.ok(field.includes("key={visible ? \"password-visible\" : \"password-hidden\"}"));
+  assert.ok(field.includes("type={inputType}"));
+  assert.ok(field.includes('aria-label={visible ? "Hide password" : "Show password"}'));
+  assert.ok(field.includes("aria-pressed={visible}"));
+  assert.ok(field.includes("duration={0.62}"));
+  assert.ok(field.includes("isAnimated={!reducedMotion}"));
+});
+
+test("page and modal authentication surfaces are compact on mobile and retain desktop sizing", async () => {
+  const [frame, modal, login, signup, forgot, reset, verify, meter] = await Promise.all([
+    read("../src/app/components/labs/auth/AuthFrame.js"),
+    read("../src/app/components/labs/auth/LabsAuthModal.js"),
+    read("../src/app/components/labs/auth/LoginForm.js"),
+    read("../src/app/components/labs/auth/SignupForm.js"),
+    read("../src/app/components/labs/auth/ForgotPasswordForm.js"),
+    read("../src/app/components/labs/auth/ResetPasswordForm.js"),
+    read("../src/app/components/labs/auth/VerifyEmailPanel.js"),
+    read("../src/app/components/labs/auth/PasswordStrengthMeter.js"),
+  ]);
+
+  assert.ok(frame.includes("max-w-[360px]"));
+  assert.ok(frame.includes("sm:max-w-[408px]"));
+  assert.ok(modal.includes("max-w-[360px]"));
+  assert.ok(modal.includes("sm:max-w-[392px]"));
+
+  for (const source of [login, signup, forgot, reset, verify]) {
+    assert.match(source, /space-y-(?:2\.5|3) sm:space-y-(?:3|4)/);
+  }
+
+  assert.ok(meter.includes("px-2.5 py-2.5 sm:space-y-3"));
 });
