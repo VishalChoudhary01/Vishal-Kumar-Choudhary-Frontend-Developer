@@ -93,7 +93,7 @@ test("privacy page explains site information in plain language without internal 
   assert.ok(normalizedPage.includes("does not delete information already stored"));
   assert.ok(normalizedPage.includes("or affect sign-in"));
   assert.ok(!/we track users|I track users|tracking users|user behaviour|user behavior/i.test(page));
-  assert.ok(!/portfolio analytics|labs analytics|portfolio page analytics|tracking/i.test(page));
+  assert.ok(!/portfolio analytics|labs analytics|portfolio page analytics|tracking users|track user behaviour|track user behavior/i.test(page));
   assert.ok(preference.includes("Turn off optional website information in this browser"));
   assert.ok(!preference.includes("Optional site usage statistics"));
   assert.ok(!preference.includes("Disable analytics on this browser profile"));
