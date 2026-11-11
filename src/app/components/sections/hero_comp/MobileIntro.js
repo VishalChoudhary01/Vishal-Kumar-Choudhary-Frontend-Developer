@@ -43,6 +43,7 @@ export function MobileIntro() {
           <ProjectResumeButton
             href="#projects"
             label={CTA_TEXT}
+            variant="primary"
           />
           <ExploreLabsButton />
         </div>
