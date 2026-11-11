@@ -353,8 +353,15 @@ test("portfolio homepage keeps Projects primary and Labs secondary across motion
   assert.ok(buttonSource.includes('"bg-brand"'));
   assert.ok(buttonSource.includes('"dark:bg-white/[0.035]"'));
   assert.ok(buttonSource.includes('"bg-black/[0.035]"'));
-  assert.ok(buttonSource.includes('"bg-transparent"'));
-  assert.ok(buttonSource.includes('"border border-current/25"'));
+  assert.ok(buttonSource.includes('"bg-[#171717]"'));
+  assert.ok(buttonSource.includes('"text-white"'));
+  assert.ok(buttonSource.includes('"dark:bg-[#F2F2F0]"'));
+  assert.ok(buttonSource.includes('"dark:text-[#171717]"'));
+  assert.ok(buttonSource.includes('"border border-[#171717]"'));
+  assert.ok(buttonSource.includes('"dark:border-[#F2F2F0]"'));
+  assert.ok(buttonSource.includes('"transition-colors duration-300 motion-reduce:transition-none"'));
+  assert.equal(buttonSource.includes('"bg-transparent"'), false);
+  assert.equal(buttonSource.includes('"border border-current/25"'), false);
   assert.doesNotMatch(buttonSource, /bg-white\/80|dark:bg-white\/75/);
 });
 
