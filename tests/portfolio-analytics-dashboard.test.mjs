@@ -40,6 +40,13 @@ test("dashboard maps real report fields and shows a real empty state", async () 
   assert.ok(dashboard.includes("MotionNumber"));
   assert.ok(dashboard.includes("useReducedMotion"));
   assert.ok(dashboard.includes("RecentVisitsTable"));
+  assert.ok(dashboard.includes("Visitor activity"));
+  assert.ok(dashboard.includes("Visitor name"));
+  assert.ok(dashboard.includes("Email (masked)"));
+  assert.ok(dashboard.includes("Page visited"));
+  assert.ok(dashboard.includes("getLocationLabel(visit)"));
+  assert.ok(dashboard.includes("getDeviceLabel(visit.deviceType)"));
+  assert.ok(dashboard.includes("One row per page visit"));
   assert.ok(dashboard.includes("nextCursor"));
   assert.ok(dashboard.includes("Load older visits"));
   assert.ok(!/mockVisits|sampleData|fakeAnalytics|DEMO_VISITS/.test(dashboard));
