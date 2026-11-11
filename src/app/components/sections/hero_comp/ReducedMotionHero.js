@@ -3,6 +3,7 @@
 import Image from "next/image";
 
 import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";
+import ExploreLabsButton from "@/app/components/common/ExploreLabsButton";
 import SectionEyebrow from "../../common/SectionEyebrow";
 
 import { NAME, DESCRIPTION, CTA_TEXT, } from "./heroMotionConfig";
@@ -47,11 +48,12 @@ export function ReducedMotionHero() {
           {DESCRIPTION}
         </p>
 
-        <div className="mt-5 flex justify-center">
+        <div className="mt-5 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <ProjectResumeButton
             href="#projects"
             label={CTA_TEXT}
           />
+          <ExploreLabsButton />
         </div>
 
         <figure
