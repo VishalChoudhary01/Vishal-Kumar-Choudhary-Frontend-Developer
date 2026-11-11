@@ -5,20 +5,22 @@ import { useRouter } from "next/navigation";
 import { useActionToast } from "@/app/providers/ActionToastProvider";
 import Link from "next/link";
 import {
-  AlertTriangle,
   ArrowUpRight,
-  CheckCircle2,
   Plus,
   Clock3,
-  FileCode2,
-  FolderPlus,
   LoaderCircle,
-  Pencil,
-  RefreshCw,
   Search,
   SearchX,
   Trash2,
 } from "lucide-react";
+import { TriangleAlertIcon as AlertTriangle } from "@animateicons/react/lucide/triangle-alert-icon";
+import { CircleCheckIcon as CheckCircle2 } from "@animateicons/react/lucide/circle-check-icon";
+import { FileCodeIcon as FileCode2 } from "@animateicons/react/lucide/file-code-icon";
+import { FolderPlusIcon as FolderPlus } from "@animateicons/react/lucide/folder-plus-icon";
+import { PencilIcon as Pencil } from "@animateicons/react/lucide/pencil-icon";
+import { RefreshCwIcon as RefreshCw } from "@animateicons/react/lucide/refresh-cw-icon";
+import { TrashIcon as AnimatedTrash } from "@animateicons/react/lucide/trash-icon";
+import useReducedMotion from "@/app/hooks/useReducedMotion";
 
 const FILTERS = [
   { value: "all", label: "All experiments" },
@@ -86,6 +88,7 @@ function StateLabel({ state }) {
 }
 
 export default function LabSourceInventory() {
+  const prefersReducedMotion = useReducedMotion();
   const router = useRouter();
   const { showToast } = useActionToast();
   const [items, setItems] = useState([]);
@@ -286,7 +289,7 @@ export default function LabSourceInventory() {
           {refreshing ? (
             <LoaderCircle size={14} className="animate-spin" aria-hidden="true" />
           ) : (
-            <RefreshCw size={14} aria-hidden="true" />
+            <RefreshCw size={14} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
           )}
           Refresh
           </button>
@@ -367,13 +370,13 @@ export default function LabSourceInventory() {
                 <div className="flex min-w-0 items-start gap-3">
                   <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center border border-border bg-background text-text-tertiary">
                     {item.isCustom && item.publicationReadiness?.eligible !== true ? (
-                      <AlertTriangle size={16} className="text-warning" aria-hidden="true" />
+                      <AlertTriangle size={16} duration={0.68} isAnimated={!prefersReducedMotion} className="text-warning" aria-hidden="true" />
                     ) : state === "published" ? (
-                      <CheckCircle2 size={16} className="text-brand" aria-hidden="true" />
+                      <CheckCircle2 size={16} duration={0.68} isAnimated={!prefersReducedMotion} className="text-brand" aria-hidden="true" />
                     ) : state === "missing" ? (
-                      <FolderPlus size={16} aria-hidden="true" />
+                      <FolderPlus size={16} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
                     ) : (
-                      <FileCode2 size={16} aria-hidden="true" />
+                      <FileCode2 size={16} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
                     )}
                   </div>
                   <div className="min-w-0">
@@ -419,7 +422,7 @@ export default function LabSourceInventory() {
                       aria-label={"Edit details for " + item.title}
                       className="inline-flex h-9 items-center gap-2 border border-border px-3 text-xs font-semibold text-text-secondary transition-colors hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                     >
-                      <Pencil size={13} aria-hidden="true" />
+                      <Pencil size={13} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
                       Edit details
                     </Link>
                   ) : null}
@@ -443,7 +446,7 @@ export default function LabSourceInventory() {
                         title="Delete custom experiment"
                         className="grid h-9 w-9 place-items-center border border-warning/40 text-warning transition-colors hover:bg-warning/10 disabled:opacity-40"
                       >
-                        <Trash2 size={14} aria-hidden="true" />
+                        <AnimatedTrash size={14} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />
                       </button>
                     ) : null}
                     </>
@@ -457,7 +460,7 @@ export default function LabSourceInventory() {
                       {creating === item.slug ? (
                         <LoaderCircle size={13} className="animate-spin" aria-hidden="true" />
                       ) : (
-                        <FolderPlus size={13} aria-hidden="true" />
+                        <FolderPlus size={13} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
                       )}
                       Create source
                     </button>

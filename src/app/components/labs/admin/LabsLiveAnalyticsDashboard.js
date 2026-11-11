@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { CopyCheckIcon } from "@animateicons/react/lucide/copy-check-icon";
+import { EyeIcon } from "@animateicons/react/lucide/eye-icon";
+import { HeartIcon } from "@animateicons/react/lucide/heart-icon";
+import { UserRoundCheckIcon } from "@animateicons/react/lucide/user-round-check-icon";
+import useReducedMotion from "@/app/hooks/useReducedMotion";
 import {
-  Copy,
-  Eye,
-  Heart,
   RefreshCw,
-  Users,
   Trash2,
   RotateCcw,
   X,
@@ -35,13 +36,15 @@ function formatUpdatedAt(value) {
 }
 
 function MetricCard({ icon: Icon, label, value, detail }) {
+  const prefersReducedMotion = useReducedMotion();
+
   return (
     <article className="border border-border bg-surface-1 p-5">
       <div className="flex items-center justify-between gap-4">
         <p className="text-xs font-medium uppercase tracking-[0.12em] text-text-tertiary">
           {label}
         </p>
-        <Icon size={17} className="text-text-tertiary" aria-hidden="true" />
+        <Icon size={17} duration={0.72} isAnimated={!prefersReducedMotion} className="text-text-tertiary" aria-hidden="true" />
       </div>
       <div className="mt-4 text-3xl font-semibold tabular-nums tracking-tight text-text-primary">
         <MotionNumber
@@ -352,25 +355,25 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
         className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
       >
         <MetricCard
-          icon={Eye}
+          icon={EyeIcon}
           label="Source opens"
           value={totals.sourceOpens}
           detail="Successful verified source loads"
         />
         <MetricCard
-          icon={Users}
+          icon={UserRoundCheckIcon}
           label="Verified accounts"
           value={totals.uniqueVerifiedAccounts}
           detail="Per-experiment unique accounts, summed"
         />
         <MetricCard
-          icon={Copy}
+          icon={CopyCheckIcon}
           label="Code copies"
           value={totals.codeCopies}
           detail="Reported after clipboard success"
         />
         <MetricCard
-          icon={Heart}
+          icon={HeartIcon}
           label="Active likes"
           value={totals.totalActiveLikes}
           detail={number(totals.activeAnonymousLikes) + " anonymous · " + number(totals.activeVerifiedLikes) + " verified"}

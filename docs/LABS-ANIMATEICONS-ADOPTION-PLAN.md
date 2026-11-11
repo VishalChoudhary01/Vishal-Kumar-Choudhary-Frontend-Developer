@@ -1,6 +1,6 @@
 # Labs UI — AnimateIcons Adoption Plan
 
-**Status:** Planning document only — no icon package or UI component has been changed  
+**Status:** Phase 1 implemented on `develop`; later migration phases remain planned  
 **Reviewed:** 11 November 2026  
 **Target areas:** Public Labs experience, Source Management, Labs Analytics  
 **Recommended approach:** curated hybrid — It’s Hover for selected handcrafted interaction icons, AnimateIcons Lucide for semantic coverage, and existing Lucide for static/fallback icons
@@ -398,4 +398,26 @@ Do not turn the owner workspace into an icon showcase. The intended result is a 
 
 ---
 
-*This document is the approved planning basis for a later implementation pass. It does not install dependencies or modify any runtime UI. It was expanded to include It’s Hover after reviewing its live registry, component source, architecture and licensing metadata.*
+*This document records the design plan and the first delivered Labs icon implementation. It does not imply that the remaining It’s Hover, editor/media/storage or public-detail phases are complete.*
+
+
+## 11. Implementation status — 11 November 2026
+
+### Phase 1 delivered on `develop`
+
+The first production implementation uses the pinned `@animateicons/react@0.13.0` package. It is limited to the Labs owner workspace:
+
+- **Owner navigation:** Labs Analytics now uses `chart-spline`, Source Library uses `folder-open`, and Snapshot Storage uses `hard-drive`. Portfolio Analytics remains unchanged.
+- **Labs Analytics metric cards:** source opens uses `eye`, verified accounts uses `user-round-check`, code copies uses `copy-check`, and active likes uses `heart`.
+- **Source Management inventory:** status and action affordances use animated alert, check, file-code, folder-plus, pencil, refresh, and row-level trash icons. Search icons, loading spinners, navigation arrows, and destructive confirmation dialog trash icons remain static.
+
+All three components read the application's existing `useReducedMotion` preference and pass it to the icon's `isAnimated` prop. Icon imports use direct per-icon subpaths rather than the package barrel.
+
+The initial build test is included in the canonical `npm run build` chain as `test:labs-animated-icons`. It asserts the pinned package, icon subpaths, reduced-motion safeguards and preservation of static loading/destructive confirmation icons.
+
+### Deferred
+
+- It’s Hover components are **not yet copied**. The upstream README/package metadata and repository license file disagree (MIT versus Apache 2.0). Resolve that with the maintainers before copying source into this repository.
+- Editor/media/storage detail icons, public experiment detail actions, parent-controlled keyboard-focus animation and interactive visual QA remain subsequent phases.
+- Do not adopt the It’s Hover upload loop unchanged; the earlier plan's bounded-animation requirement still applies.
+

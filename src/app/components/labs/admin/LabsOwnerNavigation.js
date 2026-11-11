@@ -1,9 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ChartSplineIcon } from "@animateicons/react/lucide/chart-spline-icon";
+import { FolderOpenIcon } from "@animateicons/react/lucide/folder-open-icon";
+import { HardDriveIcon } from "@animateicons/react/lucide/hard-drive-icon";
 import Image from "next/image";
 import Link from "next/link";
-import { BarChart3, ChevronDown, Code2, Database, FlaskConical } from "lucide-react";
+import { BarChart3, ChevronDown } from "lucide-react";
+import useReducedMotion from "@/app/hooks/useReducedMotion";
 
 import { ThemeToggle } from "@/app/components/ui/ThemeToggle";
 import {
@@ -17,7 +21,7 @@ const DESTINATIONS = [
     id: "analytics",
     label: "Labs analytics",
     description: "Experiment engagement and activity",
-    icon: FlaskConical,
+    icon: ChartSplineIcon,
   },
   {
     href: "/admin/portfolio/analytics",
@@ -31,14 +35,14 @@ const DESTINATIONS = [
     id: "sources",
     label: "Source Library",
     description: "Manage source files and published versions",
-    icon: Code2,
+    icon: FolderOpenIcon,
   },
   {
     href: "/admin/labs/sources/snapshots",
     id: "snapshots",
     label: "Snapshot storage",
     description: "Monitor and clean up Vercel Sandbox snapshots",
-    icon: Database,
+    icon: HardDriveIcon,
   },
 ];
 
@@ -71,6 +75,7 @@ function SafeAvatar({ user, name, size = 36 }) {
 }
 
 export default function LabsOwnerNavigation({ active, user = null }) {
+  const prefersReducedMotion = useReducedMotion();
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
   const triggerRef = useRef(null);
@@ -165,7 +170,7 @@ export default function LabsOwnerNavigation({ active, user = null }) {
                     ].join(" ")}
                   >
                     <span className="grid size-8 shrink-0 place-items-center border border-current/15">
-                      <Icon size={15} aria-hidden="true" />
+                      <Icon size={15} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-xs font-semibold">{destination.label}</span>
