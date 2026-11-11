@@ -314,6 +314,8 @@ test("model, service and index script enforce privacy, server lifecycle and TTL 
   assert.ok(model.includes("portfolio_visits_expiry_ttl"));
   assert.ok(model.includes("expireAfterSeconds: 0"));
   assert.ok(model.includes("select: false"));
+  assert.ok(model.includes("verifiedUserAccountId"));
+  assert.ok(model.includes("maxlength: 128"));
   assert.ok(!/\b(?:ipAddress|rawIp|userAgent|tabSessionId|idempotencyKey)\s*:/.test(model));
 
   assert.ok(service.includes("createHmac"));
