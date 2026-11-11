@@ -58,6 +58,19 @@ function getRequestHost(request) {
   }
 }
 
+function getSafeErrorMessage(error) {
+  if (typeof error?.message !== "string") return null;
+
+  return error.message
+    .replace(/mongodb(?:\+srv)?:\/\/\S+/gi, "[redacted-mongodb-uri]")
+    .replace(/https?:\/\/\S+/gi, "[redacted-url]")
+    .replace(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, "[redacted-ip]")
+    .replace(/([\w.+-]+)@([\w.-]+)/g, "[redacted-email]")
+    .replace(/(password|token|secret)\s*[=:]\s*[^,\s]+/gi, "$1=[redacted]")
+    .replace(/[\r\n\t]+/g, " ")
+    .slice(0, 180);
+}
+
 export async function POST(request) {
   let config;
   try {
@@ -125,6 +138,7 @@ export async function POST(request) {
     );
   }
 
+  let operationStage = "rate-limit";
   try {
     const rateLimit = await consumePortfolioVisitRateLimit({
       request,
@@ -149,6 +163,7 @@ export async function POST(request) {
     }
 
     let data = null;
+    operationStage = "visit:" + parsed.action;
 
     switch (parsed.action) {
       case "start":
@@ -199,7 +214,10 @@ export async function POST(request) {
     console.error(
       "[portfolio-analytics] visit event failed:",
       JSON.stringify({
+        stage: operationStage,
+        action: parsed.action,
         name: typeof error?.name === "string" ? error.name.slice(0, 80) : "Error",
+        message: getSafeErrorMessage(error),
         code: typeof error?.code === "string" || typeof error?.code === "number"
           ? String(error.code).slice(0, 80)
           : null,
