@@ -3,24 +3,29 @@
 **Status:** Planning document only — no icon package or UI component has been changed  
 **Reviewed:** 11 November 2026  
 **Target areas:** Public Labs experience, Source Management, Labs Analytics  
-**Recommended library:** `@animateicons/react` — Lucide icon set
+**Recommended approach:** curated hybrid — It’s Hover for selected handcrafted interaction icons, AnimateIcons Lucide for semantic coverage, and existing Lucide for static/fallback icons
 
 ---
 
 ## 1. Executive recommendation
 
-Adopt AnimateIcons selectively as the animated replacement for existing Lucide-style icons in Labs. Do **not** animate every icon and do not redesign the existing pages around the library.
+Use a **curated hybrid**, not a wholesale replacement:
 
-The current Labs interface already uses a restrained outline-icon language through `lucide-react`. AnimateIcons is a good fit because it supplies path-level animated SVG versions of familiar Lucide icons, uses Motion, supports hover and imperative triggers, and exposes size, color, duration and animation controls. This lets the UI gain feedback without changing the existing icon vocabulary or the overall visual hierarchy.
+- **It’s Hover** is the first choice where its custom interaction is especially good: analytics chart, verified-user, copy, heart, refresh and source-code feedback icons.
+- **AnimateIcons — Lucide set** fills semantic gaps such as folders, database/storage, file/code and other familiar Lucide concepts that It’s Hover does not currently expose.
+- **Existing `lucide-react`** remains the static fallback for icons that are repeated, low-value, destructive-dialog-only, or not improved by motion.
+
+The current Labs interface already uses a restrained outline-icon language. Both libraries use Motion, so they can coexist with the project's existing `motion/react` stack; however, they have different delivery models. AnimateIcons is a versioned package with direct icon subpath exports, while It’s Hover supplies individual source components through a shadcn registry. Do not treat them as one dependency or import pattern.
 
 The visual target is:
 
-- **Quiet by default.** Icons keep their existing size, alignment, color and layout.
-- **Motion on intent.** Animate when the user hovers, focuses, clicks or completes a meaningful action—not continuously when the page loads.
-- **One icon language.** Prefer the AnimateIcons **Lucide** collection. Do not mix in the heavier Huge collection unless a specific icon cannot be represented well in Lucide.
+- **Quiet by default.** Preserve the current icon size, alignment, color, labels and layout.
+- **Motion on intent.** Animate on hover/focus or a meaningful completed action—not continuously on page load or every analytics poll.
+- **One icon per action.** Never render both libraries for the same slot. Choose one source per icon and keep the outline language consistent.
+- **Reduced-motion safe.** The local It’s Hover components need an explicit reduced-motion guard; the upstream examples reviewed do not provide one.
 - **No behavioral changes.** Replacing an SVG must not change routes, permissions, source publishing, delete semantics, analytics, upload behavior or loading states.
 
-The first implementation should be a focused migration of the owner navigation, Source Management controls and Labs Analytics indicators. Public experiment actions can follow as a separate pass.
+Start with Labs Analytics and Source Management inventory. Bring the most useful It’s Hover animations into the owner interface, use AnimateIcons only for clear coverage gaps, then assess editor/media and public detail actions in later phases.
 
 ## 2. What was reviewed
 
@@ -50,6 +55,50 @@ import { FolderOpenIcon } from "@animateicons/react/lucide/folder-open-icon";
 ```
 
 The path pattern is based on the icon slug with an `-icon` suffix. Confirm each exported path against the exact installed package before merging implementation code.
+
+
+### It’s Hover — second library reviewed
+
+- Icon gallery: https://www.itshover.com/icons
+- Project home: https://www.itshover.com/
+- GitHub repository: https://github.com/itshover/itshover
+- Source README: https://github.com/itshover/itshover/blob/master/README.md
+- Architecture and component pattern: https://github.com/itshover/itshover/blob/master/ARCHITECTURE.md
+- Registry: https://github.com/itshover/itshover/blob/master/registry.json
+- License file: https://github.com/itshover/itshover/blob/master/LICENSE
+
+The live icon page currently reports **263 icons** and gives a per-icon shadcn CLI URL such as `npx shadcn@latest add https://itshover.com/r/plug-connected-icon.json`. The checked-in `registry.json` also contains **263 registry entries**. The README still says “186+” icons, so use the live registry count rather than the older README count.
+
+It’s Hover is not an npm icon package like `@animateicons/react`. It distributes each icon as an editable React component through the shadcn registry or source files in `icons/`. The components use `motion/react`, support `size`, `color`, `strokeWidth`, and `className`, and expose `startAnimation()` / `stopAnimation()` through a forwarded ref. The custom animation behavior is the main advantage: for example, its chart line draws, user checkmark draws in, copy layers shift, heart pulses, eye blinks and refresh rotates.
+
+#### Why it is useful here
+
+- It gives more individually crafted interaction feedback than a generic icon fade/scale.
+- Its ref API can let a parent button trigger the animation for pointer hover, keyboard focus or a successful action.
+- It can be copied into the existing project; it does not require adding another icon runtime package.
+- The Portfolio project already has `motion` installed, so the core animation import exists.
+
+#### Important integration constraints
+
+1. **No shadcn config in this repository.** The Portfolio repository currently has no `components.json`, no `tsconfig.json`, and no TypeScript dev dependency. Do not run the It’s Hover shadcn CLI blindly. For the approved first pass, manually port only the selected components into a Labs-local JavaScript directory, removing TS-only annotations and type imports. Reconsider CLI setup only in a separate tooling decision.
+2. **Reduced motion is our responsibility.** The inspected upstream icon components attach hover handlers directly and do not check the app's `useReducedMotion` preference. Our local copies must guard their start/stop animation functions and render a static icon when motion is reduced.
+3. **Some upstream hover patterns need restraint.** The inspected `upload-icon` repeats a fly-out/fly-in sequence in a loop while hovered. Do not use that source unchanged. Either convert it to one bounded cycle and test cleanup on unmount, or retain the current/AnimateIcons upload icon. Likewise, do not use the one-second full-turn clock animation for frequent metadata.
+4. **Parent interaction must drive the animation.** A pointer may be over the button text rather than the nested SVG. Use the forwarded ref from the parent control so the whole button responds, and trigger the same short animation on `focus` / `blur` for keyboard users. Keep SVGs decorative with `aria-hidden="true"` where appropriate; do not rely on the icon to name the control.
+5. **License metadata is inconsistent upstream.** The current repository `LICENSE` file contains Apache License 2.0, while the README and `package.json` metadata describe MIT. Do not silently assume one. Before copying components into the portfolio, confirm the governing license with the project maintainers and preserve the applicable copyright/license notices. The plan assumes no license has been waived.
+6. **Version/API smoke test.** The It’s Hover repository's own package metadata uses a different Motion version from this project. Test its copied components against the installed `motion@13.2.x` before wider rollout.
+
+#### It’s Hover vs AnimateIcons
+
+| Decision point | It’s Hover | AnimateIcons |
+|---|---|---|
+| Delivery | Per-icon source through shadcn registry; components are copied and owned locally. | Versioned `@animateicons/react` package with direct icon subpath exports. |
+| Strength | Distinct handcrafted interaction choreography and editable source. | Broad Lucide/Huge coverage and consistent familiar icon vocabulary. |
+| Animation control | Forwarded ref exposes `startAnimation()` and `stopAnimation()`; inspected icons animate on their own hover by default. | Hover and imperative controls; package provides configurable icon props. |
+| Project fit | Reuse current Motion dependency, but manually port selected TSX to JS because this repository has no shadcn config or TypeScript toolchain. | Add a pinned dependency only if needed for concepts unavailable in It’s Hover; use direct subpath imports. |
+| Current catalog evidence | 263 live registry items. | Repository manifests show 999 Lucide + 501 Huge names at review time; use the exact package version's exports, not the count, as the implementation source of truth. |
+| Accessibility | Needs local reduced-motion, parent focus triggers and ARIA treatment. | Also needs the app's reduced-motion and parent-focus policy verified per component. |
+| Best use here | Handcrafted action feedback in Analytics and selected Source Editor actions. | Semantic coverage gaps such as folder, database, hard-drive and image. |
+
 
 ### Current Portfolio repository
 
@@ -162,6 +211,34 @@ File: `LabSnapshotStoragePanel.js`
 
 ### F. Labs Analytics
 
+**Preferred It’s Hover components for the animated action layer:**
+
+| Current slot | It’s Hover component | Why it suits this slot | Trigger and restraint |
+|---|---|---|---|
+| Source opens (`Eye`) | `eye-icon` — `EyeIcon` | The pupil/eye shape gives a small blink response that reads as a view action. | Parent hover/focus only. Do not blink on every 10-second poll. |
+| Verified accounts (`Users`) | `user-check-icon` — `UserCheckIcon` | The user silhouette plus drawn check gives verified-user meaning in one mark. | Brief parent hover/focus. Do not repeatedly bounce while the metric is unchanged. |
+| Code copies (`Copy`) | `copy-icon` — `CopyIcon` | The foreground copy layer shifts slightly, which directly communicates duplication. | Parent hover/focus; keep copy success text/state as the actual confirmation. |
+| Active likes (`Heart`) | `heart-icon` — `HeartIcon` | The brief pulse reinforces the familiar like symbol. | Trigger after an accepted like action; no ambient pulsing on the dashboard metric. |
+| Trend / analytics destination | `chart-line-icon` — `ChartLineIcon` | Draws the line path and baseline, which communicates trend data more specifically than a generic flask. | One draw on parent hover/focus. Keep the chart itself unchanged. |
+
+For these five slots, use It’s Hover as the preferred custom animation. Keep the existing metric labels, values and accessible names unchanged. AnimateIcons equivalents remain the fallback if the local It’s Hover port fails the package/motion/accessibility smoke test.
+
+### G. Source Management and editor — It’s Hover opportunities
+
+| Current slot | It’s Hover component | Recommendation |
+|---|---|---|
+| Source workspace identity (`FileCode2`) | `code-xml-icon` — `CodeXmlIcon` | Use only if the more detailed code mark stays legible at 14–16 px. Otherwise choose AnimateIcons `file-code`. |
+| Save source | `save-icon` — `SaveIcon` | Good hover/focus response for the save action. Keep save confirmation and dirty-state logic unchanged. |
+| File copy / code copy | `copy-icon` — `CopyIcon` | Use for copy controls, and show success only after the clipboard action succeeds. |
+| Preview source | `eye-icon` — `EyeIcon` | Good small blink on preview controls. |
+| Upload media | `upload-icon` — `UploadIcon` | **Do not use upstream unchanged:** it loops while hovered. Prefer AnimateIcons `upload` or keep the current icon unless the local port is changed to one bounded cycle. |
+| Download reviewed runtime | `download-icon` — `DownloadIcon` | Suitable for the reviewed runtime import action; trigger once on hover/focus. |
+| Delete source/file/media | `trash-icon` — `TrashIcon` | Keep the current destructive color and confirmation. If used, animate only on action hover/focus—not inside the confirmation modal. |
+| Verified source access | `lock-icon` — `LockIcon` | Optional, if the closed/open lock movement remains subtle at the current 18 px size. |
+
+**Coverage gap:** It’s Hover's current registry does not include direct equivalents for `folder-open`, `folder-plus`, `database`, `hard-drive`, `image`, or `file-code`. Keep those as AnimateIcons Lucide choices (or static Lucide if the animated version adds no meaning). Do not force a semantically weaker It’s Hover icon into those slots.
+
+
 File: `LabsLiveAnalyticsDashboard.js`
 
 | Current icon / metric | AnimateIcons slug | Component | Why |
@@ -223,34 +300,45 @@ These are implementation starting points, not fixed library defaults. The Animat
 
 ## 6. Integration approach
 
-### Dependency
+### AnimateIcons package dependency
 
 At implementation time:
 
 1. Confirm the current published package version and React peer requirements.
-2. Add `@animateicons/react` as an exact dependency (the reviewed package is `0.13.0`); do not update React, Next.js, Motion or Lucide as part of this change.
+2. Add `@animateicons/react` as an exact dependency only if the semantic gaps selected for AnimateIcons justify the package. The reviewed package is `0.13.0`; do not update React, Next.js, Motion or Lucide as part of this change.
 3. Update the repository lockfile with the project's existing package manager.
-4. Confirm that the exact icon subpaths in the mapping resolve from the installed package.
-5. Use direct imports such as `@animateicons/react/lucide/chart-spline-icon`. Avoid broad icon barrels in Next.js App Router because the package documents that barrel imports create a client boundary and can prevent the per-icon tree-shaking behavior available through direct subpaths.
+4. Confirm the exact icon subpaths in the mapping resolve from the installed package.
+5. Use direct imports such as `@animateicons/react/lucide/chart-spline-icon`; avoid broad icon barrels in Next.js App Router.
+
+### It’s Hover source integration
+
+- Do not add an npm dependency called `itshover`; the reviewed project distributes components through its shadcn registry and source tree.
+- Because this repository has no `components.json`, no `tsconfig.json` and no TypeScript dev dependency, do not invoke the registry CLI blindly. Manually port only the approved It’s Hover components from their upstream TSX source to JavaScript under `src/app/components/labs/icons/itshover/`.
+- Port only the specific icon and shared minimal helper/type behavior needed. Do not copy the full icon directory or the whole upstream application.
+- Remove TypeScript-only syntax and imports. Preserve the icon's `size`, `color`, `strokeWidth`, `className` API and imperative ref behavior where needed.
+- Before shipping copied source, resolve the upstream MIT/Apache metadata conflict and preserve the applicable license/copyright notice in the local directory.
+- Add the app's `useReducedMotion` guard to each local copy. Make hover start/stop idempotent and stop animations on unmount.
+- For any component with a repeating timeline (notably `upload-icon`), change it to a bounded one-shot interaction or do not adopt it.
+- Keep direct, local imports by feature. Do not create a global registry that eagerly imports every copied SVG.
 
 ### Component strategy
 
 - Keep icons imported locally by feature component; do not create a global map that imports the entire catalog.
-- Use a small Labs-only adapter only if it meaningfully centralizes the current reduced-motion preference and shared defaults. Do not hide imperative refs behind a wrapper if a particular action needs programmatic start/stop control.
-- Keep the present component props and action callbacks. Replace only the icon component at the render location.
-- Keep the existing `lucide-react` package for icons outside this scope and for any icons without a verified AnimateIcons equivalent.
-- Do not use AnimateIcons inside the editable source text in `LabSourceEditor.js`, source templates, compiler code, preview runtime, or stored experiment snapshots.
+- Use a small Labs-only adapter only if it centralizes reduced-motion behavior and shared defaults without hiding imperative refs.
+- Keep the present component props and action callbacks. Replace only the SVG component at the render location.
+- Keep `lucide-react` for icons outside this scope and for concepts without a verified animated equivalent in either library.
+- Do not use either library inside editable source text in `LabSourceEditor.js`, source templates, compiler code, preview runtime, or stored experiment snapshots.
 
 ## 7. Recommended rollout
 
 | Phase | Scope | Reason | Exit criteria |
 |---|---|---|---|
-| 0 — Package smoke test | Pin package, verify exact exports, test Next client-component imports and lockfile | Proves compatibility before touching the interface | Clean install, targeted import test and production build pass. |
-| 1 — Navigation + inventory | `LabsOwnerNavigation.js`, `LabSourceInventory.js` | High visibility, small surface area, establishes the common style | Correct current/hover/focus/reduced-motion behavior in light and dark themes. |
-| 2 — Analytics | `LabsLiveAnalyticsDashboard.js` and a small trend-context icon only if useful | Metrics benefit from semantic recognition; the user should notice feedback, not constant movement | Metric meaning and values remain unchanged; no looping icon motion during polling. |
-| 3 — Source tools | `LabSourceEditor.js`, `LabRuntimeImportPanel.js`, `LabMediaLibrary.js`, `LabSnapshotStoragePanel.js` | Several action types share the same icon language | Save/upload/import/delete flows still behave exactly as before; pending states remain clear. |
-| 4 — Public detail | `LabLikeButton.js`, `LabSourceAccess.js`, `LabCanvasActions.js` | Adds feedback at the point of user engagement | Like rollback, clipboard success, source authorization and restart behavior are unchanged. |
-| 5 — Visual QA | Desktop/tablet/mobile, light/dark, keyboard, touch and reduced motion | Catches density, contrast and motion issues across contexts | No layout shift, no motion on initial render, no console errors, acceptable bundle change. |
+| 0 — Library/rights smoke test | Verify It’s Hover license with maintainers, compare exact live registry components, verify AnimateIcons exports and test both against installed Motion | Avoids a dependency, source-port or licensing surprise | License decision recorded; local JS prototype compiles; reduced-motion and imperative triggers pass. |
+| 1 — Analytics prototype | `LabsLiveAnalyticsDashboard.js` with It’s Hover `chart-line`, `user-check`, `copy`, `heart`, and `eye` | Highest value-to-scope ratio; the motion directly explains metric meaning and successful interactions | Metrics and polling remain unchanged; no animation on every refresh; focus and reduced-motion work. |
+| 2 — Source inventory + owner navigation | `LabsOwnerNavigation.js`, `LabSourceInventory.js` | Establishes consistent icon style in the management entry points, using AnimateIcons for It’s Hover coverage gaps | Filters, links, create/delete semantics and status labels remain unchanged. |
+| 3 — Editor/media/storage tools | `LabSourceEditor.js`, `LabRuntimeImportPanel.js`, `LabMediaLibrary.js`, `LabSnapshotStoragePanel.js` | Adds feedback only to high-intent actions; keeps storage/file semantics clear | Save/upload/import/delete flows unchanged; no repeated upload loop; pending states remain clear. |
+| 4 — Public detail | `LabLikeButton.js`, `LabSourceAccess.js`, `LabCanvasActions.js` | Adds feedback at the point of user engagement | Like rollback, clipboard success, source authorization and restart behavior unchanged. |
+| 5 — Visual QA | Desktop/tablet/mobile, light/dark, keyboard, touch and reduced motion | Catches density, contrast, motion and local-source issues | No layout shift, no motion on initial render, no console errors, acceptable bundle impact. |
 
 ## 8. Regression and acceptance checklist
 
@@ -267,6 +355,11 @@ At implementation time:
 - [ ] Source access remains server-authorized; icons do not imply access the user does not have.
 
 ### Accessibility and motion
+
+- [ ] Local It’s Hover copies use the app's `useReducedMotion` hook and remain static when reduction is requested.
+- [ ] Parent buttons trigger nested icon motion on both pointer hover and keyboard focus; icon self-hover alone is not the only trigger.
+- [ ] Imperative animations stop and clean up on hover end, state reset and component unmount.
+- [ ] No unbounded hover loop is shipped (especially the upstream upload animation).
 
 - [ ] Icon-only buttons retain their existing `aria-label` and tooltips.
 - [ ] Decorative icons remain `aria-hidden="true"`.
@@ -287,7 +380,7 @@ At implementation time:
 
 ## 9. Files expected to change during implementation
 
-The planned UI surface is limited to these existing files (plus the dependency manifest/lockfile and focused tests):
+The planned UI surface is limited to these existing feature files, plus a small set of manually ported JavaScript icon components under `src/app/components/labs/icons/itshover/`, the applicable upstream license notice and focused tests. Add `@animateicons/react` and its lockfile entry only if the selected coverage-gap icons are approved for that package:
 
 - `src/app/components/labs/admin/LabsOwnerNavigation.js`
 - `src/app/components/labs/admin/LabSourceInventory.js`
@@ -304,10 +397,12 @@ The planned UI surface is limited to these existing files (plus the dependency m
 
 ## 10. Final design decision
 
-Use the AnimateIcons **Lucide** set as a progressive enhancement to the current Lucide icon system. Start with the navigation, Source Management inventory and the four Labs Analytics metric icons. Keep icons static at rest, animate on meaningful interaction, preserve reduced-motion behavior and leave all business logic untouched.
+Use **It’s Hover for selected handcrafted interactions**, **AnimateIcons Lucide for semantic coverage gaps**, and the existing `lucide-react` icons as the static fallback. Prototype It’s Hover first on the four Analytics metrics and chart context, then use AnimateIcons for folder/storage/file concepts that It’s Hover does not cover.
 
-Do not turn the owner workspace into an icon showcase. The intended result is a more responsive and polished product interface where the motion confirms an action or clarifies a control—without competing with experiment previews, charts, source code or the data itself.
+Do not install or copy either library wholesale. Resolve It’s Hover's license inconsistency, port only selected TSX icons to JavaScript, add reduced-motion and keyboard-focus behavior, and test against the current Motion version before adopting more icons.
+
+Do not turn the owner workspace into an icon showcase. The intended result is a more responsive and polished product interface where motion confirms an action or clarifies a control—without competing with experiment previews, charts, source code or the data itself.
 
 ---
 
-*This document is the approved planning basis for a later implementation pass. It does not install dependencies or modify any runtime UI.*
+*This document is the approved planning basis for a later implementation pass. It does not install dependencies or modify any runtime UI. It was expanded to include It’s Hover after reviewing its live registry, component source, architecture and licensing metadata.*
