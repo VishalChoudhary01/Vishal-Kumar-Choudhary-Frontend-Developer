@@ -62,12 +62,12 @@ function getSafeErrorMessage(error) {
   if (typeof error?.message !== "string") return null;
 
   return error.message
-    .replace(/mongodb(?:\\+srv)?:\\/\\/[^\\s]+/gi, "[redacted-mongodb-uri]")
-    .replace(/https?:\\/\\/[^\\s]+/gi, "[redacted-url]")
-    .replace(/\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b/g, "[redacted-ip]")
-    .replace(/([\\w.+-]+)@([\\w.-]+)/g, "[redacted-email]")
-    .replace(/(password|token|secret)\\s*[=:]\\s*[^,\\s]+/gi, "$1=[redacted]")
-    .replace(/[\\r\\n\\t]+/g, " ")
+    .replace(/mongodb(?:\+srv)?:\/\/\S+/gi, "[redacted-mongodb-uri]")
+    .replace(/https?:\/\/\S+/gi, "[redacted-url]")
+    .replace(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, "[redacted-ip]")
+    .replace(/([\w.+-]+)@([\w.-]+)/g, "[redacted-email]")
+    .replace(/(password|token|secret)\s*[=:]\s*[^,\s]+/gi, "$1=[redacted]")
+    .replace(/[\r\n\t]+/g, " ")
     .slice(0, 180);
 }
 
