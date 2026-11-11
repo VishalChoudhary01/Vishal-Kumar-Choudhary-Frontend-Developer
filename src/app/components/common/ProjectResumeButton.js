@@ -367,11 +367,16 @@ export default function ProjectResumeButton({
                 )}
             >
                 <Icon
-                    ref={animateIconOnHover ? leadingIconRef : undefined}
                     size={leftIconSize}
-                    duration={0.9}
-                    isAnimated={animateIconOnHover}
-                    strokeWidth={1.8}
+                    {...(animateIconOnHover
+                        ? {
+                            ref: leadingIconRef,
+                            duration: 0.9,
+                            isAnimated: true,
+                        }
+                        : {
+                            strokeWidth: 1.8,
+                        })}
                 />
             </motion.span>
         </>

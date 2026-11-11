@@ -208,7 +208,13 @@ test("FlaskConical icon animation is controlled by the complete hero button hove
   assert.ok(buttonSource.includes("onMouseLeave: stopLeadingIconAnimation"));
   assert.ok(buttonSource.includes("onFocus: startLeadingIconAnimation"));
   assert.ok(buttonSource.includes("onBlur: stopLeadingIconAnimation"));
-  assert.ok(buttonSource.includes("ref={animateIconOnHover ? leadingIconRef : undefined}"));
+  assert.ok(buttonSource.includes("ref: leadingIconRef"));
+  assert.ok(buttonSource.includes("duration: 0.9"));
+  assert.ok(buttonSource.includes("isAnimated: true"));
+  assert.ok(buttonSource.includes("strokeWidth: 1.8"));
+  assert.ok(buttonSource.includes("...(animateIconOnHover"));
+  assert.ok(iconSource.includes('initial="normal"'));
+  assert.doesNotMatch(iconSource, /animate="animate"|whileHover=/);
 
   assert.ok(iconSource.includes("useImperativeHandle"));
   assert.ok(iconSource.includes("controls.start(\"animate\")"));
