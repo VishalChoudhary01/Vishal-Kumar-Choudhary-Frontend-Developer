@@ -86,6 +86,38 @@ const portfolioVisitSchema = new mongoose.Schema(
       required: true,
       enum: ["desktop", "mobile", "tablet", "unknown"],
     },
+    // Verified account identity is derived only from the server-side
+    // Better Auth session. Raw ID, name and masked email are hidden from
+    // default model projections and requested only by the owner report.
+    verifiedUserAccountId: {
+      type: String,
+      default: null,
+      trim: true,
+      maxlength: 128,
+      select: false,
+    },
+    verifiedUserHash: {
+      type: String,
+      default: null,
+      minlength: 64,
+      maxlength: 64,
+      match: /^[a-f0-9]{64}$/i,
+      select: false,
+    },
+    verifiedUserName: {
+      type: String,
+      default: null,
+      trim: true,
+      maxlength: 80,
+      select: false,
+    },
+    verifiedUserEmailMasked: {
+      type: String,
+      default: null,
+      trim: true,
+      maxlength: 254,
+      select: false,
+    },
     startedAt: {
       type: Date,
       required: true,

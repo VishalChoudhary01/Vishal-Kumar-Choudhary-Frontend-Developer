@@ -85,6 +85,8 @@ test("privacy page explains site information in plain language without internal 
   assert.ok(normalizedPage.includes("Basic site information"));
   assert.ok(normalizedPage.includes("pages accessed"));
   assert.ok(normalizedPage.includes("approximate location"));
+  assert.ok(normalizedPage.includes("The raw account ID and"));
+  assert.ok(normalizedPage.includes("private owner-only visitor table"));
   assert.ok(normalizedPage.includes("full IP"));
   assert.ok(normalizedPage.toLowerCase().includes("clipboard contents are not collected"));
   assert.ok(normalizedPage.includes("65 days"));
@@ -97,7 +99,7 @@ test("privacy page explains site information in plain language without internal 
   assert.ok(preference.includes("Turn off optional website information in this browser"));
   assert.ok(!preference.includes("Optional site usage statistics"));
   assert.ok(!preference.includes("Disable analytics on this browser profile"));
-  assert.ok(policy.includes('PRIVACY_VERSION = "2026-11-11.2"'));
+  assert.ok(policy.includes('PRIVACY_VERSION = "2026-11-11.4"'));
   assert.ok(legalLayout.includes('effectiveDate = "4 November 2026"'));
 });
 test("owner dashboard provides selected, date-range and all-record deletion actions", async () => {

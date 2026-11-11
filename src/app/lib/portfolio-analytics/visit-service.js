@@ -3,6 +3,8 @@ import "server-only";
 import { createHmac, randomUUID } from "node:crypto";
 
 import { connectToDatabase } from "@/app/lib/db/mongoose";
+import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
+import { buildPortfolioVerifiedVisitor } from "./verified-visitor.mjs";
 import PortfolioVisit from "./models/PortfolioVisit";
 import {
   getPortfolioAnalyticsConfig,
@@ -85,7 +87,7 @@ function getSessionScopedFilter(parsed, secret) {
   };
 }
 
-function buildVisitRecord({ parsed, request, secret, now }) {
+function buildVisitRecord({ parsed, request, secret, now, verifiedVisitor }) {
   const headers = request.headers;
   const sessionHash = createHash(
     secret,
@@ -127,6 +129,7 @@ function buildVisitRecord({ parsed, request, secret, now }) {
     regionCode: location.regionCode,
     city: location.city,
     deviceType,
+    ...(verifiedVisitor || {}),
     startedAt: now,
     lastHeartbeatAt: now,
     activeSeconds: 0,
@@ -149,7 +152,9 @@ function publicVisitResult(document) {
 
 /**
  * Start is idempotent for a given temporary tab-session + route-visit key.
- * Only HMACs of browser identifiers are persisted; raw values stay in memory.
+ * Only HMACs of browser identifiers are persisted; raw browser values stay
+ * in memory. Verified account identity is captured separately from the
+ * server-validated auth session for the private owner report.
  */
 export async function startPortfolioVisit(payload, request, now = new Date()) {
   const config = getEnabledConfig(request);
@@ -159,11 +164,26 @@ export async function startPortfolioVisit(payload, request, now = new Date()) {
     throw serviceError("INVALID_SERVER_TIME", "A valid server timestamp is required.");
   }
 
+  // Account identity is resolved only from the server-side Better Auth
+  // session. Browser-supplied account IDs are never accepted; the trusted
+  // session ID is stored for the owner-only visitor report.
+  let verifiedVisitor = null;
+  try {
+    const session = await getCurrentAuthSession();
+    verifiedVisitor = buildPortfolioVerifiedVisitor({
+      user: session?.user,
+      secret: config.hmacSecret,
+    });
+  } catch {
+    // Keep anonymous visit recording available if account lookup is unavailable.
+  }
+
   const record = buildVisitRecord({
     parsed,
     request,
     secret: config.hmacSecret,
     now: timestamp,
+    verifiedVisitor,
   });
 
   await connectToDatabase();
