@@ -44,7 +44,7 @@ export function MobileIntro() {
             href="#projects"
             label={CTA_TEXT}
           />
-          <ProjectResumeButton href="/labs" label="Explore Labs" icon={FlaskConicalIcon} animateIconOnHover />
+          <ProjectResumeButton href="/labs" label="Explore Labs" icon={FlaskConicalIcon} animateIconOnHover surface="brand" />
         </div>
       </MobileIntroItem>
     </section>

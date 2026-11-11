@@ -69,6 +69,7 @@ test("spotlight is a media-only detail link and respects reduced motion", () => 
   assert.match(spotlightSource, /useReducedMotion/);
   assert.match(spotlightSource, /whileInView="visible"/);
   assert.match(spotlightSource, /LabExperimentPreview/);
+  assert.ok(spotlightSource.includes('surface="brand"'));
   assert.match(spotlightSource, /href=\{href\}/);
   assert.doesNotMatch(spotlightSource, /LabRuntimeBoundary|LabWorkspace|iframe/i);
 });

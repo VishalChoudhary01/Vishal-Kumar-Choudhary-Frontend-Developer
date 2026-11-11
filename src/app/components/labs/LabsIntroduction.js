@@ -6,7 +6,7 @@ import { UserRoundPlusIcon } from "@animateicons/react/lucide/user-round-plus-ic
 import { MailCheckIcon } from "@animateicons/react/lucide/mail-check-icon";
 import { EyeIcon } from "@animateicons/react/lucide/eye-icon";
 import { FlaskConicalIcon } from "@/app/components/common/FlaskConicalIcon";
-import Link from "next/link";
+import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";
 import { animate, motion, useInView, useMotionValue, useTransform } from "motion/react";
 
 import useReducedMotion from "@/app/hooks/useReducedMotion";
@@ -78,38 +78,6 @@ function AnimatedLabStat({ value, label }) {
   );
 }
 
-function HeroAction({ href, children, primary = false, Icon = EyeIcon }) {
-  const iconRef = useRef(null);
-
-  const startIconAnimation = () => iconRef.current?.startAnimation?.();
-  const stopIconAnimation = () => iconRef.current?.stopAnimation?.();
-
-  return (
-    <Link
-      href={href}
-      onMouseEnter={startIconAnimation}
-      onMouseLeave={stopIconAnimation}
-      onFocus={startIconAnimation}
-      onBlur={stopIconAnimation}
-      className={[
-        "pointer-events-auto group inline-flex min-h-11 items-center justify-center gap-2.5 border px-4 text-xs font-semibold transition-[background-color,border-color,color,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand motion-reduce:transition-none sm:px-5 sm:text-sm",
-        primary
-          ? "border-brand bg-brand text-brand-contrast hover:-translate-y-px hover:border-brand-hover hover:bg-brand-hover"
-          : "border-border-subtle text-text-secondary hover:-translate-y-px hover:border-brand/60 hover:text-text-primary",
-      ].join(" ")}
-    >
-      <Icon
-        ref={iconRef}
-        size={15}
-        duration={0.68}
-        isAnimated
-        aria-hidden="true"
-      />
-      {children}
-    </Link>
-  );
-}
-
 function HeroActions({ authState, featuredHref }) {
   const actions = getLabsHeroActions({ authState, featuredHref });
   const iconsByLabel = {
@@ -121,14 +89,16 @@ function HeroActions({ authState, featuredHref }) {
   };
 
   return actions.map((action) => (
-    <HeroAction
+    <ProjectResumeButton
       key={action.label}
       href={action.href}
-      Icon={iconsByLabel[action.label] || EyeIcon}
-      primary={action.variant === "primary"}
-    >
-      {action.label}
-    </HeroAction>
+      label={action.label}
+      icon={iconsByLabel[action.label] || EyeIcon}
+      animateIconOnHover
+      size="sm"
+      surface={action.variant === "primary" ? "brand" : "glass"}
+      className="pointer-events-auto"
+    />
   ));
 }
 

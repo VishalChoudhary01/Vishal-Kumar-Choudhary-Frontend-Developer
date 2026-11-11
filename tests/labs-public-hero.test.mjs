@@ -184,12 +184,16 @@ test("portfolio hero uses the shared Project CTA treatment for Labs across all m
   for (const source of [cinematicHero, mobileIntro, reducedMotionHero]) {
     assert.ok(source.includes('import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";'));
     assert.ok(source.includes('import { FlaskConicalIcon } from "@/app/components/common/FlaskConicalIcon";'));
-    assert.ok(source.includes('<ProjectResumeButton href="/labs" label="Explore Labs" icon={FlaskConicalIcon} animateIconOnHover />'));
+    assert.ok(source.includes('<ProjectResumeButton href="/labs" label="Explore Labs" icon={FlaskConicalIcon} animateIconOnHover surface="brand" />'));
     assert.doesNotMatch(source, /ExploreLabsButton/);
   }
 
   assert.ok(sharedButton.includes("icon: Icon = ArrowUpRight"));
   assert.ok(sharedButton.includes("rounded-full"));
+  assert.ok(sharedButton.includes('surface = "glass"'));
+  assert.ok(sharedButton.includes('surface === "brand"'));
+  assert.ok(sharedButton.includes('"bg-brand"'));
+  assert.ok(sharedButton.includes('"text-brand-contrast"'));
   assert.ok(sharedButton.includes("tone.circle"));
   assert.ok(sharedButton.includes("circleVariants"));
   assert.ok(sharedButton.includes("useReducedMotion"));
@@ -297,4 +301,15 @@ test("Labs hero auth and discovery actions use semantic animated icons controlle
   assert.ok(componentSource.includes("ref={iconRef}"));
   assert.ok(componentSource.includes("isAnimated"));
   assert.doesNotMatch(componentSource, /↗/);
+});
+
+
+test("Labs hero reuses the shared teal Resume button for primary actions and glass styling for secondary actions", () => {
+  assert.ok(componentSource.includes('import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";'));
+  assert.ok(componentSource.includes("<ProjectResumeButton"));
+  assert.ok(componentSource.includes('size="sm"'));
+  assert.ok(componentSource.includes('surface={action.variant === "primary" ? "brand" : "glass"}'));
+  assert.ok(componentSource.includes("animateIconOnHover"));
+  assert.ok(componentSource.includes('className="pointer-events-auto"'));
+  assert.doesNotMatch(componentSource, /function HeroAction|<Link/);
 });

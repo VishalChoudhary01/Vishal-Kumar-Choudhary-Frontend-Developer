@@ -143,6 +143,7 @@ export default function FeaturedExperiment({ experiment }) {
               ariaLabel={`Explore featured experiment: ${experiment.title}`}
               icon={FlaskConicalIcon}
               animateIconOnHover
+              surface="brand"
               className="mt-8 sm:mt-9"
             />
           </motion.div>
