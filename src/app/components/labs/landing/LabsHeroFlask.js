@@ -35,7 +35,7 @@ export default function LabsHeroFlask() {
     <div
       data-labs-hero-flask=""
       aria-hidden="true"
-      className="pointer-events-none absolute -left-5 -top-7 z-0 h-[16rem] opacity-[0.14] dark:opacity-[0.19] sm:-left-8 sm:-top-10 sm:h-[20rem] sm:opacity-[0.16] sm:dark:opacity-[0.22] lg:-left-12 lg:-top-20 lg:h-[clamp(35rem,39vw,39rem)] lg:opacity-[0.2] lg:dark:opacity-[0.26] xl:-left-14"
+      className="pointer-events-none absolute -left-4 top-4 z-0 h-[11rem] opacity-[0.09] dark:opacity-[0.12] sm:-left-6 sm:top-5 sm:h-[14rem] sm:opacity-[0.1] sm:dark:opacity-[0.14] lg:-left-8 lg:top-6 lg:h-[clamp(20rem,25vw,25rem)] lg:opacity-[0.12] lg:dark:opacity-[0.16] xl:-left-10"
     >
       <svg
         viewBox="0 0 260 360"
