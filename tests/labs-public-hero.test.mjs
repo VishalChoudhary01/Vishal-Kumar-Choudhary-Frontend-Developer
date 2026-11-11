@@ -245,6 +245,12 @@ test("Labs hero flask is a subtle independent decorative layer behind left conte
   assert.ok(flaskSource.includes("transformOrigin: \"130px 332px\""));
   assert.ok(flaskSource.includes("liquidFloat"));
   assert.ok(flaskSource.includes("lg:dark:opacity-[0.14]"));
+  assert.ok(flaskSource.includes("absolute -left-5 -top-7"));
+  assert.ok(flaskSource.includes("lg:-left-10 lg:-top-16"));
+  assert.ok(flaskSource.includes("lg:h-[clamp(29rem,34vw,33rem)]"));
+  assert.ok(flaskSource.includes("pointer-events-none"));
+  assert.ok(componentSource.includes("relative isolate z-10"));
+  assert.ok(componentSource.includes("relative z-10 flex min-w-0 w-full flex-col items-start"));
   assert.doesNotMatch(flaskSource, /WebGLRenderer|THREE|Raycaster|pointerdown|pointermove/);
 });
 

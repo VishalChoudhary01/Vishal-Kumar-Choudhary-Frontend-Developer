@@ -127,11 +127,12 @@ export default function LabsIntroduction({
       className="pointer-events-none relative z-10 mx-auto flex w-full max-w-[1440px] flex-col justify-center px-4 pb-9 pt-[calc(60px+1.75rem)] sm:px-8 sm:pb-12 sm:pt-[calc(60px+2.5rem)] lg:min-h-[calc(100svh-78px)] lg:px-16 lg:pb-8 lg:pt-[calc(78px+2.25rem)] xl:px-20"
     >
       <div className="relative z-10 grid grid-cols-1 items-center gap-8 sm:gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:gap-8 xl:gap-12">
-        <div className="relative z-10 flex min-w-0 flex-col items-start">
+        <div className="relative isolate z-10 flex min-w-0 flex-col items-start">
           <LabsHeroFlask />
+          <div className="relative z-10 flex min-w-0 w-full flex-col items-start">
           <motion.p
             variants={heroItemVariants}
-            className="relative z-10 mb-4 font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-brand sm:mb-5 sm:text-[10px]"
+            className="mb-4 font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-brand sm:mb-5 sm:text-[10px]"
           >
             Frontend experiments / Open collection
           </motion.p>
@@ -170,6 +171,7 @@ export default function LabsIntroduction({
             <AnimatedLabStat value={experimentCount} label="Published experiments" />
             <AnimatedLabStat value={categoryCount} label="Active disciplines" />
           </motion.div>
+          </div>
         </div>
 
         <div className="relative min-w-0 w-full lg:justify-self-stretch">
