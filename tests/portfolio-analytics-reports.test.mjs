@@ -137,6 +137,8 @@ test("report service is server-only, date-bounded, uses bounded facets and safe 
   const mapperStart = service.indexOf("function mapRecentVisit");
   const mapperEnd = service.indexOf("export async function getPortfolioRecentVisits");
   const mapper = service.slice(mapperStart, mapperEnd);
+  assert.ok(mapper.includes("accountId: document.verifiedUserAccountId || null"));
+  assert.ok(service.includes("+verifiedUserAccountId +verifiedUserName +verifiedUserEmailMasked"));
   for (const field of ["sessionHash", "startKeyHash", "visitId", "userAgent", "ipAddress"]) {
     assert.equal(mapper.includes(field), false, field);
   }
