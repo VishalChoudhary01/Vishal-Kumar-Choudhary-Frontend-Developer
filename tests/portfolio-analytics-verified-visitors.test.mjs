@@ -82,7 +82,7 @@ test("identity is resolved on the server and limited to the owner-only recent vi
   assert.ok(publicResultStart > -1 && publicResultEnd > publicResultStart);
   assert.ok(!service.slice(publicResultStart, publicResultEnd).includes("verifiedUserAccountId"));
   const ownerCheck = adminReadRoute.indexOf("if (!isLabsOwner(session.user))");
-  const recentQuery = adminReadRoute.indexOf("getPortfolioRecentVisits");
+  const recentQuery = adminReadRoute.indexOf("getPortfolioRecentVisits({");
   assert.ok(ownerCheck > -1 && recentQuery > ownerCheck);
   assert.ok(helper.includes("user?.emailVerified !== true"));
   assert.ok(model.includes("verifiedUserAccountId"));
