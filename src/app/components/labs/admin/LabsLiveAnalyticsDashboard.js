@@ -8,6 +8,9 @@ import {
   Heart,
   RefreshCw,
   Users,
+  Trash2,
+  RotateCcw,
+  X,
 } from "lucide-react";
 
 import MotionNumber from "@/app/components/motion/MotionNumber/MotionNumber";
@@ -107,6 +110,10 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
   const [lastUpdated, setLastUpdated] = useState(initialAnalytics?.generatedAt || null);
   const [refreshError, setRefreshError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState(null);
+  const [removeConfirmation, setRemoveConfirmation] = useState("");
+  const [analyticsMutationError, setAnalyticsMutationError] = useState("");
+  const [mutatingSlug, setMutatingSlug] = useState("");
 
   const timerRef = useRef(null);
   const abortRef = useRef(null);
@@ -208,6 +215,65 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
     window.clearTimeout(timerRef.current);
     failureCountRef.current = 0;
     refreshRef.current?.();
+  }
+
+  async function removeExperimentFromAnalytics() {
+    if (!removeTarget || removeConfirmation.trim() !== removeTarget.slug) return;
+
+    const slug = removeTarget.slug;
+    setMutatingSlug(slug);
+    setAnalyticsMutationError("");
+
+    try {
+      const response = await fetch(
+        "/api/v1/admin/labs/analytics/" + encodeURIComponent(slug),
+        {
+          method: "DELETE",
+          cache: "no-store",
+          credentials: "same-origin",
+          headers: { Accept: "application/json" },
+        },
+      );
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || payload?.data?.hidden !== true) {
+        throw new Error(payload?.error?.message || "The experiment could not be removed from analytics.");
+      }
+
+      setRemoveTarget(null);
+      setRemoveConfirmation("");
+      await refreshRef.current?.();
+    } catch (reason) {
+      setAnalyticsMutationError(reason?.message || "The experiment could not be removed from analytics.");
+    } finally {
+      setMutatingSlug("");
+    }
+  }
+
+  async function restoreExperimentAnalytics(slug) {
+    setMutatingSlug("restore:" + slug);
+    setAnalyticsMutationError("");
+
+    try {
+      const response = await fetch(
+        "/api/v1/admin/labs/analytics/" + encodeURIComponent(slug),
+        {
+          method: "POST",
+          cache: "no-store",
+          credentials: "same-origin",
+          headers: { Accept: "application/json" },
+        },
+      );
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || payload?.data?.restored !== true) {
+        throw new Error(payload?.error?.message || "The experiment could not be restored.");
+      }
+
+      await refreshRef.current?.();
+    } catch (reason) {
+      setAnalyticsMutationError(reason?.message || "The experiment could not be restored.");
+    } finally {
+      setMutatingSlug("");
+    }
   }
 
   if (!analytics) {
@@ -367,6 +433,7 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
                 <th className="px-4 py-3 text-right font-medium">Anonymous likes</th>
                 <th className="px-4 py-3 text-right font-medium">Verified likes</th>
                 <th className="px-4 py-3 text-right font-medium">Total active</th>
+                <th className="px-4 py-3 text-right font-medium">Manage</th>
               </tr>
             </thead>
             <tbody>
@@ -389,12 +456,77 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
                   <td className="px-4 py-4 text-right tabular-nums">{number(experiment.activeAnonymousLikes)}</td>
                   <td className="px-4 py-4 text-right tabular-nums">{number(experiment.activeVerifiedLikes)}</td>
                   <td className="px-4 py-4 text-right font-semibold tabular-nums">{number(experiment.totalActiveLikes)}</td>
+                  <td className="px-4 py-4 text-right">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRemoveTarget(experiment);
+                        setRemoveConfirmation("");
+                        setAnalyticsMutationError("");
+                      }}
+                      disabled={Boolean(mutatingSlug)}
+                      aria-label={"Remove " + experiment.title + " from analytics"}
+                      title="Remove from analytics only"
+                      className="inline-flex h-8 w-8 items-center justify-center border border-border text-text-tertiary transition-colors hover:border-danger/50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <Trash2 size={14} aria-hidden="true" />
+                    </button>
+                  </td>
                 </tr>
               ))}
+              {!analytics.experiments.length ? (
+                <tr>
+                  <td colSpan={8} className="px-4 py-8 text-center text-xs text-text-tertiary">
+                    No experiments are currently published from Source Management with a matching ready build.
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </div>
       </section>
+
+      {analytics.hiddenExperiments?.length ? (
+        <section aria-labelledby="hidden-analytics-experiments-title" className="mt-6 border border-border bg-surface-1 p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 id="hidden-analytics-experiments-title" className="text-sm font-semibold">Hidden from analytics</h2>
+              <p className="mt-1 text-xs leading-5 text-text-tertiary">
+                These experiments are hidden only from this dashboard. Source Management, published pages, source history, builds, likes and stored event records are unchanged.
+              </p>
+            </div>
+            <span className="text-xs tabular-nums text-text-tertiary">{analytics.hiddenExperiments.length} hidden</span>
+          </div>
+          <ul className="mt-4 divide-y divide-border">
+            {analytics.hiddenExperiments.map((experiment) => (
+              <li key={experiment.slug} className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-medium text-text-primary">{experiment.title}</p>
+                  <p className="mt-1 font-mono text-[10px] text-text-tertiary">{experiment.slug}</p>
+                  {experiment.hiddenAt ? (
+                    <p className="mt-1 text-[10px] text-text-tertiary">Hidden {formatUpdatedAt(experiment.hiddenAt)}</p>
+                  ) : null}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => restoreExperimentAnalytics(experiment.slug)}
+                  disabled={Boolean(mutatingSlug)}
+                  className="inline-flex h-8 items-center gap-2 border border-border px-3 text-xs font-medium text-text-secondary transition-colors hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <RotateCcw size={13} aria-hidden="true" />
+                  {mutatingSlug === "restore:" + experiment.slug ? "Restoring…" : "Restore"}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {analyticsMutationError && !removeTarget ? (
+        <p role="alert" className="mt-4 border border-warning/40 bg-warning/10 px-4 py-3 text-xs text-warning">
+          {analyticsMutationError}
+        </p>
+      ) : null}
 
       <section className="mt-8 grid gap-3 sm:grid-cols-2">
         <article className="border border-border p-5">
@@ -421,6 +553,79 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
           </p>
         </article>
       </section>
+
+      {removeTarget ? (
+        <div className="fixed inset-0 z-[120] grid place-items-center bg-black/60 p-4">
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="remove-analytics-experiment-title"
+            className="w-full max-w-md border border-border bg-surface-1 p-5 shadow-2xl"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-brand">ANALYTICS ONLY</p>
+                <h2 id="remove-analytics-experiment-title" className="mt-2 text-base font-semibold">
+                  Remove from analytics?
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setRemoveTarget(null);
+                  setRemoveConfirmation("");
+                  setAnalyticsMutationError("");
+                }}
+                aria-label="Close confirmation"
+                className="inline-flex h-8 w-8 items-center justify-center border border-border text-text-tertiary hover:text-text-primary"
+              >
+                <X size={14} aria-hidden="true" />
+              </button>
+            </div>
+            <p className="mt-3 text-xs leading-5 text-text-secondary">
+              <strong className="text-text-primary">{removeTarget.title}</strong> will disappear from this analytics dashboard and its aggregate metrics. The published experiment, Source Management record, source history, builds, likes and stored analytics events will not be deleted. You can restore it later.
+            </p>
+            <label htmlFor="confirm-remove-analytics-slug" className="mt-4 block text-xs font-medium text-text-secondary">
+              Type <code className="font-mono text-text-primary">{removeTarget.slug}</code> to confirm.
+            </label>
+            <input
+              id="confirm-remove-analytics-slug"
+              value={removeConfirmation}
+              onChange={(event) => setRemoveConfirmation(event.target.value)}
+              autoComplete="off"
+              spellCheck={false}
+              className="mt-2 h-10 w-full border border-border bg-background px-3 font-mono text-xs text-text-primary outline-none focus:border-brand"
+              placeholder={removeTarget.slug}
+            />
+            {analyticsMutationError ? (
+              <p role="alert" className="mt-3 text-xs text-warning">{analyticsMutationError}</p>
+            ) : null}
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setRemoveTarget(null);
+                  setRemoveConfirmation("");
+                  setAnalyticsMutationError("");
+                }}
+                disabled={Boolean(mutatingSlug)}
+                className="h-9 border border-border px-3 text-xs font-medium text-text-secondary hover:text-text-primary disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={removeExperimentFromAnalytics}
+                disabled={mutatingSlug === removeTarget.slug || removeConfirmation.trim() !== removeTarget.slug}
+                className="inline-flex h-9 items-center gap-2 border border-danger/50 bg-danger/10 px-3 text-xs font-semibold text-danger hover:bg-danger/15 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <Trash2 size={13} aria-hidden="true" />
+                {mutatingSlug === removeTarget.slug ? "Removing…" : "Remove from analytics"}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </>
   );
 }

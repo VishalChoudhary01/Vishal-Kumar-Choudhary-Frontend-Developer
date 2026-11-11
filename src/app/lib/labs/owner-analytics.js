@@ -1,17 +1,18 @@
 import "server-only";
 
 import { connectToDatabase } from "@/app/lib/db/mongoose";
-import { publishedLabExperiments } from "@/app/data/labsExperiments";
 import { getPublishedCustomLabExperiments } from "./public-experiments";
 import LabAnalyticsEvent from "./models/LabAnalyticsEvent";
 import LabLike from "./models/LabLike";
 import LabGuestLike from "./models/LabGuestLike";
+import LabAnalyticsHiddenExperiment from "./models/LabAnalyticsHiddenExperiment";
 import { isLabsOwner } from "./owner-access";
 import {
   applyActiveLikeGroups,
   applyAnalyticsEventGroups,
   buildCompleteDailySeries,
   createRankings,
+  filterVisibleAnalyticsExperiments,
   normalizePeriod,
   summarizeAnalyticsRows,
 } from "./owner-analytics-utils.mjs";
@@ -24,6 +25,7 @@ async function ensureIndexes() {
       LabAnalyticsEvent.createIndexes(),
       LabLike.createIndexes(),
       LabGuestLike.createIndexes(),
+      LabAnalyticsHiddenExperiment.createIndexes(),
     ]).catch((error) => {
       indexPromise = null;
       throw error;
@@ -79,75 +81,91 @@ export async function getLabsOwnerAnalytics({ user, days = 30 }) {
   await connectToDatabase();
   await ensureIndexes();
 
-  const [eventGroups, verifiedLikeGroups, guestLikeGroups, dailyGroups, customExperiments] =
-    await Promise.all([
-      LabAnalyticsEvent.aggregate([
-        { $match: { occurredAt: { $gte: since, $lte: generatedAt } } },
-        {
-          $group: {
-            _id: {
-              slug: "$experimentSlug",
-              eventType: "$eventType",
-              actorCategory: "$actorCategory",
-            },
-            count: { $sum: 1 },
-            actorIds: { $addToSet: "$actorUserId" },
-          },
-        },
-      ]),
-      LabLike.aggregate([
-        { $match: { active: true } },
-        { $group: { _id: "$experimentSlug", count: { $sum: 1 } } },
-      ]),
-      LabGuestLike.aggregate([
-        { $match: { active: true, expiresAt: { $gt: generatedAt } } },
-        { $group: { _id: "$experimentSlug", count: { $sum: 1 } } },
-      ]),
-      LabAnalyticsEvent.aggregate([
-        { $match: { occurredAt: { $gte: since, $lte: generatedAt } } },
-        {
-          $group: {
-            _id: {
-              $dateToString: {
-                format: "%Y-%m-%d",
-                date: "$occurredAt",
-                timezone: "UTC",
-              },
-            },
-            sourceOpens: {
-              $sum: { $cond: [{ $eq: ["$eventType", "source_open"] }, 1, 0] },
-            },
-            codeCopies: {
-              $sum: { $cond: [{ $eq: ["$eventType", "code_copy"] }, 1, 0] },
-            },
-            verifiedLikes: {
-              $sum: { $cond: [{ $and: [{ $eq: ["$actorCategory", "verified_user"] }, { $eq: ["$eventType", "like"] }] }, 1, 0] },
-            },
-            verifiedUnlikes: {
-              $sum: { $cond: [{ $and: [{ $eq: ["$actorCategory", "verified_user"] }, { $eq: ["$eventType", "unlike"] }] }, 1, 0] },
-            },
-            anonymousLikes: {
-              $sum: { $cond: [{ $and: [{ $eq: ["$actorCategory", "guest"] }, { $eq: ["$eventType", "guest_like"] }] }, 1, 0] },
-            },
-            anonymousUnlikes: {
-              $sum: { $cond: [{ $and: [{ $eq: ["$actorCategory", "guest"] }, { $eq: ["$eventType", "guest_unlike"] }] }, 1, 0] },
-            },
-            verifiedLikeActions: {
-              $sum: { $cond: [{ $in: ["$eventType", ["like", "unlike"]] }, 1, 0] },
-            },
-            anonymousLikeActions: {
-              $sum: { $cond: [{ $in: ["$eventType", ["guest_like", "guest_unlike"]] }, 1, 0] },
-            },
-          },
-        },
-        { $sort: { _id: 1 } },
-      ]),
-      getPublishedCustomLabExperiments(),
-    ]);
+  const [customExperiments, hiddenRecords] = await Promise.all([
+    getPublishedCustomLabExperiments(),
+    LabAnalyticsHiddenExperiment.find({})
+      .select("experimentSlug experimentTitle hiddenAt")
+      .sort({ hiddenAt: -1 })
+      .lean(),
+  ]);
+  const hiddenSlugs = hiddenRecords.map((record) => record.experimentSlug);
+  const visibleExperiments = filterVisibleAnalyticsExperiments(customExperiments, hiddenSlugs);
+  const experimentRows = createExperimentRows(visibleExperiments);
+  const visibleSlugs = experimentRows.map((experiment) => experiment.slug);
 
-  const experimentRows = createExperimentRows([
-    ...publishedLabExperiments,
-    ...customExperiments,
+  const eventMatch = {
+    experimentSlug: { $in: visibleSlugs },
+    occurredAt: { $gte: since, $lte: generatedAt },
+  };
+
+  const [eventGroups, verifiedLikeGroups, guestLikeGroups, dailyGroups] = await Promise.all([
+    LabAnalyticsEvent.aggregate([
+      { $match: eventMatch },
+      {
+        $group: {
+          _id: {
+            slug: "$experimentSlug",
+            eventType: "$eventType",
+            actorCategory: "$actorCategory",
+          },
+          count: { $sum: 1 },
+          actorIds: { $addToSet: "$actorUserId" },
+        },
+      },
+    ]),
+    LabLike.aggregate([
+      { $match: { active: true, experimentSlug: { $in: visibleSlugs } } },
+      { $group: { _id: "$experimentSlug", count: { $sum: 1 } } },
+    ]),
+    LabGuestLike.aggregate([
+      {
+        $match: {
+          active: true,
+          expiresAt: { $gt: generatedAt },
+          experimentSlug: { $in: visibleSlugs },
+        },
+      },
+      { $group: { _id: "$experimentSlug", count: { $sum: 1 } } },
+    ]),
+    LabAnalyticsEvent.aggregate([
+      { $match: eventMatch },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: "%Y-%m-%d",
+              date: "$occurredAt",
+              timezone: "UTC",
+            },
+          },
+          sourceOpens: {
+            $sum: { $cond: [{ $eq: ["$eventType", "source_open"] }, 1, 0] },
+          },
+          codeCopies: {
+            $sum: { $cond: [{ $eq: ["$eventType", "code_copy"] }, 1, 0] },
+          },
+          verifiedLikes: {
+            $sum: { $cond: [{ $and: [{ $eq: ["$actorCategory", "verified_user"] }, { $eq: ["$eventType", "like"] }] }, 1, 0] },
+          },
+          verifiedUnlikes: {
+            $sum: { $cond: [{ $and: [{ $eq: ["$actorCategory", "verified_user"] }, { $eq: ["$eventType", "unlike"] }] }, 1, 0] },
+          },
+          anonymousLikes: {
+            $sum: { $cond: [{ $and: [{ $eq: ["$actorCategory", "guest"] }, { $eq: ["$eventType", "guest_like"] }] }, 1, 0] },
+          },
+          anonymousUnlikes: {
+            $sum: { $cond: [{ $and: [{ $eq: ["$actorCategory", "guest"] }, { $eq: ["$eventType", "guest_unlike"] }] }, 1, 0] },
+          },
+          verifiedLikeActions: {
+            $sum: { $cond: [{ $in: ["$eventType", ["like", "unlike"]] }, 1, 0] },
+          },
+          anonymousLikeActions: {
+            $sum: { $cond: [{ $in: ["$eventType", ["guest_like", "guest_unlike"]] }, 1, 0] },
+          },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]),
   ]);
   const eventRows = applyAnalyticsEventGroups(experimentRows, eventGroups);
   const rowsWithLikes = applyActiveLikeGroups(
@@ -165,8 +183,71 @@ export async function getLabsOwnerAnalytics({ user, days = 30 }) {
     totals,
     daily: buildCompleteDailySeries({ since, generatedAt, dailyGroups }),
     experiments: rows,
+    hiddenExperiments: hiddenRecords.map((record) => ({
+      slug: record.experimentSlug,
+      title: record.experimentTitle,
+      hiddenAt: record.hiddenAt?.toISOString?.() || null,
+    })),
     rankings: createRankings(rows),
   };
+}
+
+
+function assertValidAnalyticsSlug(slug) {
+  if (typeof slug !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+    const error = new Error("Published experiment analytics were not found.");
+    error.code = "NOT_FOUND";
+    throw error;
+  }
+}
+
+export async function hideLabsOwnerExperimentFromAnalytics({ user, slug }) {
+  if (!isLabsOwner(user)) {
+    const error = new Error("Owner access is required.");
+    error.code = "OWNER_ACCESS_DENIED";
+    throw error;
+  }
+  assertValidAnalyticsSlug(slug);
+
+  await connectToDatabase();
+  await ensureIndexes();
+
+  const experiment = (await getPublishedCustomLabExperiments())
+    .find((item) => item.slug === slug);
+  if (!experiment) {
+    const error = new Error("The published source-managed experiment was not found.");
+    error.code = "NOT_FOUND";
+    throw error;
+  }
+
+  await LabAnalyticsHiddenExperiment.findOneAndUpdate(
+    { experimentSlug: slug },
+    {
+      $set: {
+        experimentTitle: experiment.title,
+        hiddenBy: user.id,
+        hiddenAt: new Date(),
+      },
+    },
+    { upsert: true, returnDocument: "after", runValidators: true },
+  );
+
+  return { hidden: true, slug, title: experiment.title };
+}
+
+export async function restoreLabsOwnerExperimentAnalytics({ user, slug }) {
+  if (!isLabsOwner(user)) {
+    const error = new Error("Owner access is required.");
+    error.code = "OWNER_ACCESS_DENIED";
+    throw error;
+  }
+  assertValidAnalyticsSlug(slug);
+
+  await connectToDatabase();
+  await ensureIndexes();
+  await LabAnalyticsHiddenExperiment.deleteOne({ experimentSlug: slug });
+
+  return { restored: true, slug };
 }
 
 

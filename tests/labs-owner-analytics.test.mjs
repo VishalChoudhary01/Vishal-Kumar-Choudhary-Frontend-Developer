@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import {
@@ -7,6 +8,7 @@ import {
   createRankings,
   normalizePeriod,
   selectEligiblePublishedCustomExperiments,
+  filterVisibleAnalyticsExperiments,
   applyActiveLikeGroups,
   applyAnalyticsEventGroups,
   summarizeAnalyticsRows,
@@ -531,4 +533,65 @@ test("activity buckets reject duplicate, out-of-order and invalid values", () =>
     }),
     { name: "TypeError" },
   );
+});
+
+
+test("analytics hides only selected experiment rows without mutating source catalogue records", () => {
+  const sourceManagedExperiments = [
+    { slug: "current-one", title: "Current One" },
+    { slug: "current-two", title: "Current Two" },
+    { slug: "current-three", title: "Current Three" },
+  ];
+
+  const visible = filterVisibleAnalyticsExperiments(sourceManagedExperiments, [
+    "current-two",
+    "../invalid",
+    null,
+  ]);
+
+  assert.deepEqual(
+    visible.map((experiment) => experiment.slug),
+    ["current-one", "current-three"],
+  );
+  assert.equal(sourceManagedExperiments.length, 3);
+  assert.equal(sourceManagedExperiments[1].slug, "current-two");
+});
+
+test("owner analytics is sourced from source-managed ready publications and scopes every metric to visible slugs", async () => {
+  const analytics = await readFile(
+    new URL("../src/app/lib/labs/owner-analytics.js", import.meta.url),
+    "utf8",
+  );
+  const hiddenModel = await readFile(
+    new URL("../src/app/lib/labs/models/LabAnalyticsHiddenExperiment.js", import.meta.url),
+    "utf8",
+  );
+  const route = await readFile(
+    new URL("../src/app/api/v1/admin/labs/analytics/[slug]/route.js", import.meta.url),
+    "utf8",
+  );
+  const dashboard = await readFile(
+    new URL("../src/app/components/labs/admin/LabsLiveAnalyticsDashboard.js", import.meta.url),
+    "utf8",
+  );
+
+  assert.ok(analytics.includes("getPublishedCustomLabExperiments()"));
+  assert.equal(analytics.includes("publishedLabExperiments"), false);
+  assert.ok(analytics.includes("filterVisibleAnalyticsExperiments(customExperiments, hiddenSlugs)"));
+  assert.ok(analytics.includes("experimentSlug: { $in: visibleSlugs }"));
+  assert.ok(analytics.includes("LabAnalyticsHiddenExperiment.createIndexes()"));
+  assert.ok(analytics.includes("hiddenExperiments: hiddenRecords.map"));
+  assert.ok(hiddenModel.includes('collection: "lab_analytics_hidden_experiments"'));
+  assert.ok(hiddenModel.includes("lab_analytics_hidden_experiment_slug_unique"));
+  assert.ok(route.includes("export async function DELETE"));
+  assert.ok(route.includes("export async function POST"));
+  assert.ok(route.includes("isSameOriginMutation(request)"));
+  assert.ok(route.includes("hideLabsOwnerExperimentFromAnalytics"));
+  assert.ok(route.includes("restoreLabsOwnerExperimentAnalytics"));
+  assert.ok(dashboard.includes("Remove from analytics only"));
+  assert.ok(dashboard.includes("restoreExperimentAnalytics"));
+  assert.ok(dashboard.includes("Hidden from analytics"));
+  assert.ok(dashboard.includes("Source Management record"));
+  assert.ok(dashboard.includes('method: "DELETE"'));
+  assert.ok(dashboard.includes('method: "POST"'));
 });

@@ -1,7 +1,17 @@
 import { NextResponse } from "next/server";
 
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
-import { getLabsOwnerExperimentAnalytics } from "@/app/lib/labs/owner-analytics";
+import {
+  getLabsOwnerExperimentAnalytics,
+  hideLabsOwnerExperimentFromAnalytics,
+  restoreLabsOwnerExperimentAnalytics,
+} from "@/app/lib/labs/owner-analytics";
+import {
+  adminError,
+  adminJson,
+  getLabsOwnerUser,
+  isSameOriginMutation,
+} from "@/app/lib/labs/admin-http";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,5 +63,44 @@ export async function GET(request, { params }) {
 
     console.error("[labs-owner-experiment-analytics] query failed:", error?.code || "ANALYTICS_ERROR");
     return json({ error: { code: "UNAVAILABLE", message: "Experiment analytics are temporarily unavailable." } }, 503);
+  }
+}
+
+
+export async function DELETE(request, { params }) {
+  const { user, response } = await getLabsOwnerUser();
+  if (response) return response;
+
+  if (!isSameOriginMutation(request)) {
+    return adminJson({
+      error: { code: "INVALID_ORIGIN", message: "This request is not allowed." },
+    }, 403);
+  }
+
+  const { slug } = await params;
+  try {
+    const data = await hideLabsOwnerExperimentFromAnalytics({ user, slug });
+    return adminJson({ data });
+  } catch (error) {
+    return adminError(error);
+  }
+}
+
+export async function POST(request, { params }) {
+  const { user, response } = await getLabsOwnerUser();
+  if (response) return response;
+
+  if (!isSameOriginMutation(request)) {
+    return adminJson({
+      error: { code: "INVALID_ORIGIN", message: "This request is not allowed." },
+    }, 403);
+  }
+
+  const { slug } = await params;
+  try {
+    const data = await restoreLabsOwnerExperimentAnalytics({ user, slug });
+    return adminJson({ data });
+  } catch (error) {
+    return adminError(error);
   }
 }
