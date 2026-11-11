@@ -279,3 +279,22 @@ test("featured experiment CTA reuses the shared resume button with parent-contro
   assert.ok(featured.includes("`Explore featured experiment: ${experiment.title}`"));
   assert.doesNotMatch(featured, /group mt-8 inline-flex min-h-11 items-center gap-4 border border-brand bg-brand/);
 });
+
+test("Labs hero auth and discovery actions use semantic animated icons controlled by link hover and focus", () => {
+  assert.ok(componentSource.includes('@animateicons/react/lucide/log-in-icon'));
+  assert.ok(componentSource.includes('@animateicons/react/lucide/user-round-plus-icon'));
+  assert.ok(componentSource.includes('@animateicons/react/lucide/mail-check-icon'));
+  assert.ok(componentSource.includes('import { FlaskConicalIcon } from "@/app/components/common/FlaskConicalIcon";'));
+  assert.ok(componentSource.includes('import { EyeIcon } from "@animateicons/react/lucide/eye-icon";'));
+  assert.ok(componentSource.includes('"Create account": UserRoundPlusIcon'));
+  assert.ok(componentSource.includes('"Sign in": LogInIcon'));
+  assert.ok(componentSource.includes('"Verify email": MailCheckIcon'));
+  assert.ok(componentSource.includes('"Explore experiments": FlaskConicalIcon'));
+  assert.ok(componentSource.includes("onMouseEnter={startIconAnimation}"));
+  assert.ok(componentSource.includes("onMouseLeave={stopIconAnimation}"));
+  assert.ok(componentSource.includes("onFocus={startIconAnimation}"));
+  assert.ok(componentSource.includes("onBlur={stopIconAnimation}"));
+  assert.ok(componentSource.includes("ref={iconRef}"));
+  assert.ok(componentSource.includes("isAnimated"));
+  assert.doesNotMatch(componentSource, /↗/);
+});

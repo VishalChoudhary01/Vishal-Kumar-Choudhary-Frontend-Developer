@@ -53,3 +53,20 @@ test("protected source actions use animated eye, copy and lock icons with reduce
   assert.ok(sourceAccess.includes("<AnimatedCopy"));
   assert.ok(sourceAccess.includes("<LockIcon"));
 });
+
+
+test("guest source gate uses animated eye, sign-in, and account-creation icons", () => {
+  assert.ok(sourceAccess.includes("@animateicons/react/lucide/log-in-icon"));
+  assert.ok(sourceAccess.includes("@animateicons/react/lucide/user-round-plus-icon"));
+  assert.ok(sourceAccess.includes("@animateicons/react/lucide/mail-check-icon"));
+  assert.ok(sourceAccess.includes("function AnimatedSourceAction"));
+  assert.ok(sourceAccess.includes("Icon={LogInIcon}"));
+  assert.ok(sourceAccess.includes("Icon={UserRoundPlusIcon}"));
+  assert.ok(sourceAccess.includes("Icon={MailCheckIcon}"));
+  assert.ok(sourceAccess.includes("<EyeIcon size={19}"));
+  assert.ok(sourceAccess.includes("onMouseEnter={startIconAnimation}"));
+  assert.ok(sourceAccess.includes("onFocus={startIconAnimation}"));
+  assert.ok(sourceAccess.includes("ref={iconRef}"));
+  assert.ok(sourceAccess.includes("isAnimated={isAnimated}"));
+  assert.doesNotMatch(sourceAccess, /ArrowUpRight/);
+});

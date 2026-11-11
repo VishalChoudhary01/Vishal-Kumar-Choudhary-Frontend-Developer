@@ -6,11 +6,13 @@ import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useReducedMotion } from "motion/react";
 import { CopyIcon as AnimatedCopy } from "@animateicons/react/lucide/copy-icon";
+import { LogInIcon } from "@animateicons/react/lucide/log-in-icon";
+import { UserRoundPlusIcon } from "@animateicons/react/lucide/user-round-plus-icon";
+import { MailCheckIcon } from "@animateicons/react/lucide/mail-check-icon";
 import { EyeIcon } from "@animateicons/react/lucide/eye-icon";
 import { LockIcon } from "@animateicons/react/lucide/lock-icon";
 import {
   AlertTriangle,
-  ArrowUpRight,
   Check,
   LoaderCircle,
   RefreshCw,
@@ -19,6 +21,38 @@ import {
 import { subscribeAuthEvents } from "@/app/lib/auth/session-events";
 import { authClient } from "@/app/lib/auth/client";
 import LabCodeEditor from "@/app/components/labs/code/LabCodeEditor";
+
+function AnimatedSourceAction({ href, label, Icon, primary = false, isAnimated = true }) {
+  const iconRef = useRef(null);
+
+  const startIconAnimation = () => iconRef.current?.startAnimation?.();
+  const stopIconAnimation = () => iconRef.current?.stopAnimation?.();
+
+  return (
+    <Link
+      href={href}
+      onMouseEnter={startIconAnimation}
+      onMouseLeave={stopIconAnimation}
+      onFocus={startIconAnimation}
+      onBlur={stopIconAnimation}
+      className={[
+        "inline-flex h-10 items-center gap-2 border px-4 text-sm font-semibold transition-[background-color,border-color,color,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transition-none",
+        primary
+          ? "border-brand bg-brand text-brand-contrast hover:-translate-y-px hover:bg-brand-hover"
+          : "border-brand text-brand hover:-translate-y-px hover:bg-brand-soft",
+      ].join(" ")}
+    >
+      <Icon
+        ref={iconRef}
+        size={14}
+        duration={0.68}
+        isAnimated={isAnimated}
+        aria-hidden="true"
+      />
+      {label}
+    </Link>
+  );
+}
 
 function getInitialSource(source, slug, userId) {
   if (!source || !userId || !Array.isArray(source.files)) return null;
@@ -491,7 +525,7 @@ export default function LabSourceAccess({
           </>
         ) : !session?.user?.id && !initialUserId ? (
           <div className="flex items-start gap-3">
-            <LockIcon size={19} duration={0.68} isAnimated={!prefersReducedMotion} className="mt-0.5 shrink-0 text-brand" aria-hidden="true" />
+            <EyeIcon size={19} duration={0.68} isAnimated={!prefersReducedMotion} className="mt-0.5 shrink-0 text-brand" aria-hidden="true" />
             <div className="min-w-0">
               <h2 className="text-base font-semibold">View the source</h2>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-text-secondary">
@@ -499,12 +533,19 @@ export default function LabSourceAccess({
                 Sign in or create an account to explore the files.
               </p>
               <div className="mt-4 flex flex-wrap items-center gap-3">
-                <Link href={signInHref} className="inline-flex h-10 items-center gap-2 bg-brand px-4 text-sm font-semibold text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
-                  Sign in <ArrowUpRight size={14} aria-hidden="true" />
-                </Link>
-                <Link href={signUpHref} className="inline-flex h-10 items-center border border-brand px-4 text-sm font-semibold text-brand transition-colors hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
-                  Create account
-                </Link>
+                <AnimatedSourceAction
+                  href={signInHref}
+                  label="Sign in"
+                  Icon={LogInIcon}
+                  primary
+                  isAnimated={!prefersReducedMotion}
+                />
+                <AnimatedSourceAction
+                  href={signUpHref}
+                  label="Create account"
+                  Icon={UserRoundPlusIcon}
+                  isAnimated={!prefersReducedMotion}
+                />
               </div>
             </div>
           </div>
@@ -516,9 +557,15 @@ export default function LabSourceAccess({
               <p className="mt-1 max-w-2xl text-sm leading-6 text-text-secondary">
                 Your account is signed in, but source access becomes available after email verification.
               </p>
-              <Link href={verifyHref} className="mt-4 inline-flex h-10 items-center gap-2 bg-brand px-4 text-sm font-semibold text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
-                Verify email <ArrowUpRight size={14} aria-hidden="true" />
-              </Link>
+              <div className="mt-4">
+                <AnimatedSourceAction
+                  href={verifyHref}
+                  label="Verify email"
+                  Icon={MailCheckIcon}
+                  primary
+                  isAnimated={!prefersReducedMotion}
+                />
+              </div>
             </div>
           </div>
         ) : state === "unpublished" ? (
@@ -536,7 +583,9 @@ export default function LabSourceAccess({
               <h2 className="text-base font-semibold">{state === "session-mismatch" ? "Sign in again on this address" : "Source temporarily unavailable"}</h2>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-text-secondary">{error || "We could not load this published source. Your account remains signed in."}</p>
               {state === "session-mismatch" ? (
-                <Link href={signInHref} className="mt-4 inline-flex h-10 items-center bg-brand px-4 text-sm font-semibold text-brand-contrast">Sign in again</Link>
+                <div className="mt-4">
+                  <AnimatedSourceAction href={signInHref} label="Sign in again" Icon={LogInIcon} primary isAnimated={!prefersReducedMotion} />
+                </div>
               ) : (
                 <button type="button" onClick={() => { autoLoadKeyRef.current = null; loadSource(); }} disabled={loading} className="mt-4 inline-flex h-9 items-center gap-2 border border-border px-3 text-xs font-semibold transition-colors hover:border-brand disabled:opacity-50">
                   <RefreshCw size={13} aria-hidden="true" /> Try again
