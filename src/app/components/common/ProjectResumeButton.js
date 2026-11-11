@@ -82,6 +82,7 @@ export default function ProjectResumeButton({
     className,
     size = "default",
     variant = "default",
+    surface = "glass",
     disabled = false,
     ariaLabel,
     download = false,
@@ -229,43 +230,56 @@ export default function ProjectResumeButton({
     };
 
     // Preserve the original button surface styling.
+    const surfaceClasses = surface === "brand"
+        ? [
+            "border border-brand/80",
+            "bg-brand",
+            "text-brand-contrast",
+            "shadow-[0_2px_10px_rgba(0,0,0,0.12)]",
+            "hover:border-brand-hover",
+            "hover:bg-brand-hover",
+            "active:border-brand-hover",
+            "active:bg-brand-hover",
+            "hover:shadow-[0_3px_12px_rgba(0,0,0,0.16)]",
+        ].join(" ")
+        : [
+            // Light mode.
+            "border border-black/10",
+            "bg-white/55",
+            "text-black",
+            "shadow-[0_2px_10px_rgba(0,0,0,0.08)]",
+
+            // Dark mode.
+            "dark:border-white/15",
+            "dark:bg-black/40",
+            "dark:text-white",
+            "dark:shadow-[0_2px_10px_rgba(0,0,0,0.18)]",
+
+            // Hover and active glass surface.
+            "hover:border-black/15",
+            "hover:bg-white/65",
+            "active:border-black/20",
+            "active:bg-white/70",
+            "hover:shadow-[0_3px_12px_rgba(0,0,0,0.10)]",
+            "dark:hover:border-white/20",
+            "dark:hover:bg-black/48",
+            "dark:active:border-white/25",
+            "dark:active:bg-black/55",
+            "dark:hover:shadow-[0_3px_12px_rgba(0,0,0,0.22)]",
+        ].join(" ");
+
     const sharedClassName = cn(
         "group/action",
-        "relative isolate inline-flex",
+        "relative isolate inline-flex pointer-events-auto",
         "w-fit max-w-full",
         "items-center justify-center",
         "overflow-hidden",
         "rounded-full",
-
-        // Light mode.
-        "border border-black/10",
-        "bg-white/55",
-        "text-black",
-        "shadow-[0_2px_10px_rgba(0,0,0,0.08)]",
-
-        // Dark mode.
-        "dark:border-white/15",
-        "dark:bg-black/40",
-        "dark:text-white",
-        "dark:shadow-[0_2px_10px_rgba(0,0,0,0.18)]",
-
-        // Glass.
         "backdrop-blur-xl",
-
-        // Hover and active surface.
         "transition-[background-color,border-color,box-shadow]",
         "duration-300",
         "ease-out",
-        "hover:border-black/15",
-        "hover:bg-white/65",
-        "active:border-black/20",
-        "active:bg-white/70",
-        "hover:shadow-[0_3px_12px_rgba(0,0,0,0.10)]",
-        "dark:hover:border-white/20",
-        "dark:hover:bg-black/48",
-        "dark:active:border-white/25",
-        "dark:active:bg-black/55",
-        "dark:hover:shadow-[0_3px_12px_rgba(0,0,0,0.22)]",
+        surfaceClasses,
 
         // Accessibility.
         "focus-visible:outline-none",
@@ -321,7 +335,7 @@ export default function ProjectResumeButton({
                     "whitespace-nowrap",
                     "leading-none",
                     "text-center",
-                    "text-text-primary",
+                    surface === "brand" ? "text-brand-contrast" : "text-text-primary",
                     tone.label,
                 )}
             >
