@@ -12,7 +12,7 @@
 | Actor model | Browser tab/session visit | Guest or verified user action |
 | Main lifecycle | start, heartbeat, pause, resume, end | event record plus current active like state |
 | Tracked meaning | page visit/session with approximate metadata and visible time | source opens, copy actions, likes/unlikes as instrumented |
-| Identity | HMAC'd visit/session keys, no person identity claim | verified account ID for verified events; hashed guest key only for current guest-like state |
+| Identity | HMAC'd tab/session keys; verified Better Auth accounts are linked through an HMAC account key and a display name plus masked email in the owner-only visit table | verified account ID for verified events; hashed guest key only for current guest-like state |
 | Public tracking routes | Homepage, project details, Labs collection, Lab detail | Public Labs source/engagement actions |
 | Must not be mixed | Never merge with source opens, copies, likes or audit events | Never relabel as general portfolio visits |
 
@@ -68,7 +68,10 @@ The server clamps accepted elapsed time per heartbeat (minimum and maximum inter
 - Referrer is reduced to host and only approved UTM fields are stored.
 - Country/region/city are approximate provider/deployment metadata where available.
 - Device category is a low-cardinality classification.
-- session/start identifiers are HMACs and hidden from normal model projection.
+- session/start identifiers and verified account references are HMACs and hidden from normal model projection.
+- only server-confirmed Better Auth users with emailVerified=true are labelled verified; browser-supplied account IDs are ignored.
+- the owner-only recent-visits projection may include a sanitized display name and masked email; a full email and raw account ID are not stored in visit records.
+- anonymous and unverified visits remain labelled guest/unverified.
 - endpoint validates host and payload shape.
 - endpoint applies per-action request rate limit.
 - previews/noncanonical hosts are suppressed unless explicit local development configuration permits.
@@ -93,6 +96,7 @@ See architecture/DATA-MODEL-CATALOG.md. Summary:
 - sourceType, referrerHost, UTM values;
 - approximate country/region/city;
 - deviceType;
+- optional HMAC verifiedUserHash, verifiedUserName and verifiedUserEmailMasked for verified signed-in visitors;
 - startedAt, lastHeartbeatAt, activeSeconds;
 - status active/paused/ended/expired;
 - endedAt and expiresAt;
@@ -114,7 +118,7 @@ The page:
 
 GET /api/v1/admin/portfolio/analytics accepts view=summary or recent, validated period, cursor and other approved filters. It returns aggregate data or a paginated recent-visit page, with private/no-store behavior. DELETE /api/v1/admin/portfolio/analytics/visits is owner-only and same-origin protected; it accepts a validated deletion scope and deletes matching visit records. Never allow client-selected arbitrary Mongo filters.
 
-The dashboard reports sessions/visits, page types/pages, source, device and approximate location where the data supports it. The Portfolio Analytics lab_detail page-visit record is separate from Labs Engagement event instrumentation; it cannot be used to claim per-experiment detail-view/preview event coverage. Date boundaries and labels must be read from read-query/report-service code; do not substitute a different timezone or imply unique people.
+The dashboard reports sessions/visits, page types/pages, source, device and approximate location where the data supports it. Recent visits identify server-verified accounts by display name and masked email; anonymous and unverified visitors remain separate guest/unverified rows. This identity projection is owner-only and follows the same 65-day visit retention. The Portfolio Analytics lab_detail page-visit record is separate from Labs Engagement event instrumentation; it cannot be used to claim per-experiment detail-view/preview event coverage. Date boundaries and labels must be read from read-query/report-service code; do not substitute a different timezone or imply unique people.
 
 The report service uses server-side Mongo aggregation. Aggregate reports should not send raw event records to the browser when aggregate buckets are enough. Recent-visit pagination uses a cursor; recent visit data is more sensitive than aggregates and stays owner-only.
 
