@@ -86,7 +86,8 @@ test("identity is resolved on the server and limited to the owner-only recent vi
   assert.ok(dashboard.includes('visit.visitor?.kind === "verified"'));
   assert.ok(dashboard.includes("Guest / unverified"));
   assert.ok(dashboard.includes("Verified"));
-  assert.ok(privacy.includes("masked email label"));
-  assert.ok(privacy.includes("raw account IDs"));
-  assert.ok(!privacy.includes("visit records do not contain your name, email address"));
+  const normalizedPrivacy = privacy.replace(/\\s+/g, " ");
+  assert.ok(normalizedPrivacy.includes("masked email label"));
+  assert.ok(normalizedPrivacy.includes("raw account IDs"));
+  assert.ok(!normalizedPrivacy.includes("visit records do not contain your name, email address"));
 });
