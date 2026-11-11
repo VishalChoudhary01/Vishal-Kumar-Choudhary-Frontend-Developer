@@ -50,12 +50,12 @@ export default function PortfolioAnalyticsPrivacyPreference() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-2xl">
           <h3 className="text-sm font-semibold text-text-primary">
-            Optional page-use information
+            Optional website information
           </h3>
           <p className="mt-2 text-sm leading-6 text-text-secondary">
-            When enabled by the site owner, this browser may share limited information about
-            public pages viewed, broad device category, approximate location and referral
-            source. This choice is saved only in this browser.
+            The site may use limited website and device information to help
+            maintain and improve the experience. This choice is saved only in
+            this browser.
           </p>
         </div>
 
@@ -67,7 +67,7 @@ export default function PortfolioAnalyticsPrivacyPreference() {
             className="size-4 accent-[var(--brand)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
           />
           <span className="font-medium">
-            Turn off optional page-use information in this browser
+            Turn off optional website information in this browser
           </span>
         </label>
       </div>
@@ -75,8 +75,8 @@ export default function PortfolioAnalyticsPrivacyPreference() {
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs">
         <p className={optedOut ? "text-success" : "text-text-tertiary"}>
           {optedOut
-            ? "Optional page-use information is off for this browser."
-            : "Optional page-use information is allowed if the site feature is enabled."}
+            ? "Optional website information is off for this browser."
+            : "Optional website information is allowed if the site feature is enabled."}
         </p>
         {storageUnavailable ? (
           <p role="alert" className="text-warning">
