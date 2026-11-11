@@ -50,7 +50,7 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong className="font-semibold text-text-primary">Basic site information:</strong>{" "}
-            pages opened, visit timing, approximate viewing time, broad device
+            pages accessed, visit timing, approximate viewing time, broad device
             category, approximate location, and referral or campaign source may
             be processed to help improve the website. The website&apos;s own
             visit records do not contain your name, email address, full IP
