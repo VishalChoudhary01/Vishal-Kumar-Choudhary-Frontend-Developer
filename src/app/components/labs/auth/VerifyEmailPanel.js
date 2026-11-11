@@ -76,16 +76,16 @@ export default function VerifyEmailPanel({ verified, invalid, emailDeliveryEnabl
 
   if (verified) {
     return (
-      <div className="py-3 text-center">
+      <div className="py-2 text-center sm:py-3">
         <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-success-soft text-success" aria-hidden="true">
           <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7">
             <path d="m5 12.5 4.2 4.2L19 7" />
           </svg>
         </div>
-        <h1 className="font-display text-[2rem] leading-tight tracking-[-0.025em]">
+        <h1 className="font-display text-[1.65rem] leading-tight tracking-[-0.025em] sm:text-[2rem]">
           Email verified
         </h1>
-        <p className="mt-3 text-sm leading-6 text-text-secondary">
+        <p className="mt-2 text-xs leading-5 text-text-secondary sm:mt-3 sm:text-sm sm:leading-6">
           Your email address has been successfully verified. You can now sign in to your Labs account.
         </p>
         <button
@@ -101,14 +101,14 @@ export default function VerifyEmailPanel({ verified, invalid, emailDeliveryEnabl
 
   return (
     <>
-      <div className="mb-6 text-center">
+      <div className="mb-4 text-center sm:mb-6">
         <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center text-brand" aria-hidden="true">
           <LoaderCircle size={24} className="animate-spin motion-reduce:animate-none" />
         </div>
         <h1 className="font-display text-[2rem] leading-tight tracking-[-0.025em]">
           {invalid ? "This link is no longer valid" : "Verify your email"}
         </h1>
-        <p className="mt-2 text-sm leading-6 text-text-secondary">
+        <p className="mt-1.5 text-xs leading-5 text-text-secondary sm:mt-2 sm:text-sm sm:leading-6">
           {invalid
             ? "This verification link may have expired or already been used. Request a new verification email to continue."
             : "Check your inbox and follow the verification link to activate your Labs account."}
@@ -122,7 +122,7 @@ export default function VerifyEmailPanel({ verified, invalid, emailDeliveryEnabl
       ) : null}
       {error ? <AuthMessage>{error}</AuthMessage> : null}
 
-      <form onSubmit={resend} className="space-y-4">
+      <form onSubmit={resend} className="space-y-3 sm:space-y-4">
         <AuthField
           id="email"
           label="Email address"
@@ -137,7 +137,7 @@ export default function VerifyEmailPanel({ verified, invalid, emailDeliveryEnabl
         <button
           type="submit"
           disabled={!emailDeliveryEnabled || loading || countdown > 0}
-          className="flex min-h-10 w-full items-center justify-center rounded-sm px-3 text-sm font-medium text-brand transition-colors hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:text-text-tertiary"
+          className="flex min-h-9 w-full items-center justify-center rounded-sm px-2 text-xs font-medium text-brand transition-colors hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:text-text-tertiary sm:min-h-10 sm:px-3 sm:text-sm"
         >
           {loading
             ? "Sending…"
@@ -147,7 +147,7 @@ export default function VerifyEmailPanel({ verified, invalid, emailDeliveryEnabl
         </button>
       </form>
 
-      <div className="mt-4 text-center">
+      <div className="mt-3 text-center sm:mt-4">
         <AuthLink href={"/labs/login?returnTo=" + encodeURIComponent(returnTo)}>Back to sign in</AuthLink>
       </div>
     </>
