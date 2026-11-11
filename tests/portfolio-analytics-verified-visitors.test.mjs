@@ -64,7 +64,7 @@ test("masked email never exposes a complete local part", () => {
 });
 
 test("identity is resolved on the server and limited to the owner-only recent visit projection", async () => {
-  const [service, helper, model, report, dashboard, privacy, adminReadRoute] = await Promise.all([
+  const [service, helper, model, report, dashboard, privacy, adminReadRoute, sessionHelper] = await Promise.all([
     read("../src/app/lib/portfolio-analytics/visit-service.js"),
     read("../src/app/lib/portfolio-analytics/verified-visitor.mjs"),
     read("../src/app/lib/portfolio-analytics/models/PortfolioVisit.js"),
@@ -72,11 +72,17 @@ test("identity is resolved on the server and limited to the owner-only recent vi
     read("../src/app/components/portfolio-analytics/PortfolioAnalyticsDashboard.js"),
     read("../src/app/privacy/page.js"),
     read("../src/app/api/v1/admin/portfolio/analytics/route.js"),
+    read("../src/app/lib/auth/server-session.js"),
   ]);
 
-  assert.ok(service.includes("getCurrentAuthSession"));
+  assert.ok(service.includes("getCurrentAuthSession(request?.headers)"));
   assert.ok(service.includes("buildPortfolioVerifiedVisitor"));
   assert.ok(service.includes("...(verifiedVisitor || {})"));
+  assert.ok(service.includes("attachVerifiedVisitorToVisit"));
+  assert.ok(service.includes("PortfolioVisit.exists(visitorFilter)"));
+  assert.ok(service.includes("PortfolioVisit.updateOne(visitorFilter"));
+  assert.ok(sessionHelper.includes("getCurrentAuthSession(requestHeaders)"));
+  assert.ok(sessionHelper.includes("const sessionHeaders = requestHeaders || await headers()"));
   const publicResultStart = service.indexOf("function publicVisitResult");
   const publicResultEnd = service.indexOf("\n}", publicResultStart);
   assert.ok(publicResultStart > -1 && publicResultEnd > publicResultStart);
