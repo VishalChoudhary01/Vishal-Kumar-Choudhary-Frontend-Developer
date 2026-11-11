@@ -101,6 +101,8 @@ test("ingestion API is feature gated, same-origin, bounded and rate limited", as
   assert.ok(route.includes("endPortfolioVisit"));
   assert.ok(route.includes('"Cache-Control": "private, no-store'));
   assert.ok(route.includes("429,"));
+  assert.ok(route.includes("validationPaths"));
+  assert.ok(route.includes("error?.cause?.name"));
 });
 
 test("rate limit storage uses scoped HMAC keys and a short TTL, never raw IP", async () => {
