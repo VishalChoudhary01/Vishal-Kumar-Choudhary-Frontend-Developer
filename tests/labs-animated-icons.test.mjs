@@ -5,7 +5,7 @@ import test from "node:test";
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
 test("Labs animated icons use a pinned package, direct icon imports and reduced-motion safeguards", async () => {
-  const [packageJson, navigation, inventory, analytics] = await Promise.all([
+  const [packageJson, navigation, inventory, analytics, portfolioAnalytics, sourceAccess] = await Promise.all([
     read("../package.json").then(JSON.parse),
     read("../src/app/components/labs/admin/LabsOwnerNavigation.js"),
     read("../src/app/components/labs/admin/LabSourceInventory.js"),
