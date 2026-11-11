@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
+
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useReducedMotion } from "motion/react";
@@ -21,36 +21,18 @@ import {
 import { subscribeAuthEvents } from "@/app/lib/auth/session-events";
 import { authClient } from "@/app/lib/auth/client";
 import LabCodeEditor from "@/app/components/labs/code/LabCodeEditor";
+import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";
 
 function AnimatedSourceAction({ href, label, Icon, primary = false, isAnimated = true }) {
-  const iconRef = useRef(null);
-
-  const startIconAnimation = () => iconRef.current?.startAnimation?.();
-  const stopIconAnimation = () => iconRef.current?.stopAnimation?.();
-
   return (
-    <Link
+    <ProjectResumeButton
       href={href}
-      onMouseEnter={startIconAnimation}
-      onMouseLeave={stopIconAnimation}
-      onFocus={startIconAnimation}
-      onBlur={stopIconAnimation}
-      className={[
-        "inline-flex h-10 items-center gap-2 border px-4 text-sm font-semibold transition-[background-color,border-color,color,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transition-none",
-        primary
-          ? "border-brand bg-brand text-brand-contrast hover:-translate-y-px hover:bg-brand-hover"
-          : "border-brand text-brand hover:-translate-y-px hover:bg-brand-soft",
-      ].join(" ")}
-    >
-      <Icon
-        ref={iconRef}
-        size={14}
-        duration={0.68}
-        isAnimated={isAnimated}
-        aria-hidden="true"
-      />
-      {label}
-    </Link>
+      label={label}
+      icon={Icon}
+      animateIconOnHover={isAnimated}
+      surface={primary ? "brand" : "brand-outline"}
+      size="sm"
+    />
   );
 }
 
