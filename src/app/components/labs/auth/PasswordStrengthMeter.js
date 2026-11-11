@@ -41,7 +41,7 @@ export default function PasswordStrengthMeter({ password = "" }) {
           className="overflow-hidden"
           aria-label="Password strength"
         >
-          <div className="space-y-3 border border-border-subtle bg-surface-1/70 px-3.5 py-3">
+          <div className="space-y-2 border border-border-subtle bg-surface-1/70 px-2.5 py-2.5 sm:space-y-3 sm:px-3.5 sm:py-3">
             <div className="flex items-center justify-between gap-3">
               <span className="text-[11px] font-medium tracking-wide text-text-secondary">
                 Password strength
@@ -87,7 +87,7 @@ export default function PasswordStrengthMeter({ password = "" }) {
               ))}
             </div>
 
-            <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 sm:grid-cols-3 sm:gap-x-3 sm:gap-y-2">
               {checks.map((check) => (
                 <motion.div
                   key={check.id}
