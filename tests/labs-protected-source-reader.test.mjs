@@ -7,6 +7,11 @@ const sourceAccess = await readFile(
   "utf8",
 );
 
+const sharedButton = await readFile(
+  new URL("../src/app/components/common/ProjectResumeButton.js", import.meta.url),
+  "utf8",
+);
+
 test("protected source content is rendered only inside the loaded authorized-source state", () => {
   const authorizedBranch = sourceAccess.indexOf('state === "loaded" && source ? (');
   const editor = sourceAccess.indexOf("<LabCodeEditor");
@@ -55,18 +60,28 @@ test("protected source actions use animated eye, copy and lock icons with reduce
 });
 
 
-test("guest source gate uses animated eye, sign-in, and account-creation icons", () => {
+test("guest source gate uses shared CTAs with animated sign-in and account-creation icons", () => {
   assert.ok(sourceAccess.includes("@animateicons/react/lucide/log-in-icon"));
   assert.ok(sourceAccess.includes("@animateicons/react/lucide/user-round-plus-icon"));
   assert.ok(sourceAccess.includes("@animateicons/react/lucide/mail-check-icon"));
+  assert.ok(sourceAccess.includes('import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";'));
   assert.ok(sourceAccess.includes("function AnimatedSourceAction"));
   assert.ok(sourceAccess.includes("Icon={LogInIcon}"));
   assert.ok(sourceAccess.includes("Icon={UserRoundPlusIcon}"));
   assert.ok(sourceAccess.includes("Icon={MailCheckIcon}"));
   assert.ok(sourceAccess.includes("<EyeIcon size={19}"));
-  assert.ok(sourceAccess.includes("onMouseEnter={startIconAnimation}"));
-  assert.ok(sourceAccess.includes("onFocus={startIconAnimation}"));
-  assert.ok(sourceAccess.includes("ref={iconRef}"));
-  assert.ok(sourceAccess.includes("isAnimated={isAnimated}"));
-  assert.doesNotMatch(sourceAccess, /ArrowUpRight/);
+  assert.ok(sourceAccess.includes("icon={Icon}"));
+  assert.ok(sourceAccess.includes("animateIconOnHover={isAnimated}"));
+  assert.ok(sourceAccess.includes('surface={primary ? "brand" : "brand-outline"}'));
+  assert.ok(sourceAccess.includes('size="sm"'));
+
+  // The shared button starts and stops the supplied animated icon on hover and focus.
+  assert.ok(sharedButton.includes("leadingIconRef.current?.startAnimation?.()"));
+  assert.ok(sharedButton.includes("leadingIconRef.current?.stopAnimation?.()"));
+  assert.ok(sharedButton.includes("onMouseEnter: () =>"));
+  assert.ok(sharedButton.includes("onMouseLeave: stopLeadingIconAnimation"));
+  assert.ok(sharedButton.includes("onFocus: startLeadingIconAnimation"));
+  assert.ok(sharedButton.includes("onBlur: stopLeadingIconAnimation"));
+  assert.ok(sharedButton.includes("if (!animateIconOnHover) return"));
+  assert.doesNotMatch(sourceAccess, /<Link/);
 });
