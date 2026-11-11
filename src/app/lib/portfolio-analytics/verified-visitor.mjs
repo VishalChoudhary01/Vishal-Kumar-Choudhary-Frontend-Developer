@@ -41,6 +41,7 @@ export function buildPortfolioVerifiedVisitor({ user, secret } = {}) {
     user?.emailVerified !== true ||
     typeof user?.id !== "string" ||
     !user.id.trim() ||
+    user.id.trim().length > 128 ||
     typeof secret !== "string" ||
     Buffer.byteLength(secret, "utf8") < 32
   ) {
@@ -59,6 +60,7 @@ export function buildPortfolioVerifiedVisitor({ user, secret } = {}) {
 
   return {
     verifiedUserHash,
+    verifiedUserAccountId: user.id.trim(),
     verifiedUserName: name || "Verified account",
     verifiedUserEmailMasked: maskedEmail,
   };
