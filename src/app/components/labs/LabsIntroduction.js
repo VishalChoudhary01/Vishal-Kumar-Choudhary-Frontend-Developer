@@ -122,7 +122,7 @@ export default function LabsIntroduction({
       <div className="relative z-10 grid grid-cols-1 items-center gap-8 sm:gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:gap-8 xl:gap-12">
         <div
           data-labs-hero-glass-panel=""
-          className="relative isolate z-10 flex min-w-0 flex-col items-start overflow-hidden rounded-[1.75rem] border border-[#0B746A]/20 bg-[linear-gradient(135deg,rgba(255,255,255,0.78)_0%,rgba(255,255,255,0.48)_58%,rgba(11,116,106,0.10)_100%)] px-4 py-5 shadow-[0_18px_70px_rgba(22,52,47,0.10)] backdrop-blur-2xl backdrop-saturate-150 ring-1 ring-white/35 sm:rounded-[2rem] sm:px-6 sm:py-7 lg:px-7 lg:py-8 dark:border-[#9AF3E9]/20 dark:bg-[linear-gradient(135deg,rgba(16,29,27,0.92)_0%,rgba(8,17,16,0.82)_58%,rgba(117,220,209,0.10)_100%)] dark:shadow-[0_24px_90px_rgba(0,0,0,0.36)] dark:ring-white/[0.05]"
+          className="relative isolate z-10 flex min-w-0 flex-col items-start overflow-hidden rounded-[1.75rem] border border-black/[0.08] bg-[linear-gradient(135deg,rgba(255,255,255,0.52)_0%,rgba(247,248,247,0.34)_52%,rgba(232,235,233,0.28)_100%)] px-4 py-5 shadow-[0_24px_80px_rgba(18,22,20,0.12),inset_0_1px_0_rgba(255,255,255,0.68)] backdrop-blur-[32px] backdrop-saturate-150 ring-1 ring-white/45 sm:rounded-[2rem] sm:px-6 sm:py-7 lg:px-7 lg:py-8 dark:border-white/[0.12] dark:bg-[linear-gradient(135deg,rgba(42,46,44,0.64)_0%,rgba(23,27,25,0.5)_54%,rgba(11,14,13,0.44)_100%)] dark:shadow-[0_28px_90px_rgba(0,0,0,0.38),inset_0_1px_0_rgba(255,255,255,0.12)] dark:ring-white/[0.06]"
         >
           <LabsHeroFlask />
           <div className="relative z-10 flex min-w-0 w-full flex-col items-start">
