@@ -6,7 +6,6 @@ import ContactRevealRow from "./ContactRevealRow";
 import ContactMessageCounter from "./ContactMessageCounter";
 import ActionButton from "../../common/buttons/ActionButton";
 import { Send } from "lucide-react";
-import Link from "next/link";
 
 import { CONTACT_STAGGER } from "./contact.motion";
 import { MESSAGE_MAX_LENGTH } from "./contactForm.validation";
@@ -100,14 +99,7 @@ export default function ContactFormFields({
 
             <ContactRevealRow active={active} className="mt-6">
                 <p className="max-w-[62ch] text-xs leading-5 text-text-tertiary">
-                    When you send this form, your details are emailed to me so I can respond. Read the{" "}
-                    <Link
-                        href="/privacy"
-                        className="text-brand underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-                    >
-                        Privacy Policy
-                    </Link>
-                    {" "}for details.
+                    When you send this form, your name, email address, and message are emailed to me so I can respond.
                 </p>
             </ContactRevealRow>
 

@@ -50,12 +50,12 @@ export default function PortfolioAnalyticsPrivacyPreference() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-2xl">
           <h3 className="text-sm font-semibold text-text-primary">
-            Optional first-party page analytics
+            Optional website information
           </h3>
           <p className="mt-2 text-sm leading-6 text-text-secondary">
-            When the site owner enables analytics, this browser can send limited page-visit,
-            device-category, approximate location and source information to the portfolio.
-            This preference is stored only in this browser profile.
+            The site may use limited website and device information to help
+            maintain and improve the experience. This choice is saved only in
+            this browser.
           </p>
         </div>
 
@@ -67,7 +67,7 @@ export default function PortfolioAnalyticsPrivacyPreference() {
             className="size-4 accent-[var(--brand)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
           />
           <span className="font-medium">
-            Disable analytics on this browser profile
+            Turn off optional website information in this browser
           </span>
         </label>
       </div>
@@ -75,8 +75,8 @@ export default function PortfolioAnalyticsPrivacyPreference() {
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs">
         <p className={optedOut ? "text-success" : "text-text-tertiary"}>
           {optedOut
-            ? "Analytics are disabled for this browser profile."
-            : "Analytics preference: allowed if the site feature is enabled."}
+            ? "Optional website information is off for this browser."
+            : "Optional website information is allowed if the site feature is enabled."}
         </p>
         {storageUnavailable ? (
           <p role="alert" className="text-warning">

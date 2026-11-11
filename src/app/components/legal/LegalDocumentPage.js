@@ -5,6 +5,7 @@ export default function LegalDocumentPage({
   title,
   description,
   version,
+  effectiveDate = "4 November 2026",
   children,
 }) {
   return (
@@ -39,7 +40,7 @@ export default function LegalDocumentPage({
             {description}
           </p>
           <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-2 border-y border-border-subtle py-4 text-[11px] text-text-tertiary sm:text-xs">
-            <span>Effective: 4 November 2026</span>
+            <span>Effective: {effectiveDate}</span>
             <span>Version {version}</span>
           </div>
 

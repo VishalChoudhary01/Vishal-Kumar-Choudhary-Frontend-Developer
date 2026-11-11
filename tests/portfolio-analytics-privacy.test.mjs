@@ -68,26 +68,38 @@ test("privacy preference uses a named same-origin event and does not generate an
   assert.ok(wrapper.includes("stopPortfolioVisitTracking"));
   assert.ok(tracker.includes("readPortfolioAnalyticsOptOut()"));
   assert.ok(tracker.includes("export function stopPortfolioVisitTracking()"));
-  assert.ok(control.includes("Disable analytics on this browser profile"));
+  assert.ok(control.includes("Turn off optional website information in this browser"));
   assert.ok(!preference.includes("randomUUID"));
 });
 
-test("privacy page discloses analytics fields, 65-day retention and browser opt-out", async () => {
-  const [page, policy] = await Promise.all([
+test("privacy page explains site information in plain language without internal dashboard terminology", async () => {
+  const [page, policy, preference, legalLayout] = await Promise.all([
     read("../src/app/privacy/page.js"),
     read("../src/app/lib/legal/policies.js"),
+    read("../src/app/components/portfolio-analytics/PortfolioAnalyticsPrivacyPreference.js"),
+    read("../src/app/components/legal/LegalDocumentPage.js"),
   ]);
+  const normalizedPage = page.replace(/\s+/g, " ");
 
-  assert.ok(page.includes("PortfolioAnalyticsPrivacyPreference"));
-  assert.ok(page.includes("Portfolio page analytics (when enabled)"));
-  assert.ok(page.includes("temporary tab-session pseudonym"));
-  assert.ok(page.includes("full IP address"));
-  assert.ok(page.includes("65 days"));
-  assert.ok(page.includes("manual deletion"));
-  assert.ok(page.includes("does not delete previously collected visit records"));
-  assert.ok(policy.includes('PRIVACY_VERSION = "2026-11-07.1"'));
+  assert.ok(normalizedPage.includes("<PageInformationPreference />"));
+  assert.ok(normalizedPage.includes("Basic site information"));
+  assert.ok(normalizedPage.includes("pages accessed"));
+  assert.ok(normalizedPage.includes("approximate location"));
+  assert.ok(normalizedPage.includes("full IP"));
+  assert.ok(normalizedPage.toLowerCase().includes("clipboard contents are not collected"));
+  assert.ok(normalizedPage.includes("65 days"));
+  assert.ok(normalizedPage.includes("180 days"));
+  assert.ok(normalizedPage.includes("does not currently have a fixed automatic expiry period"));
+  assert.ok(normalizedPage.includes("does not delete information already stored"));
+  assert.ok(normalizedPage.includes("or affect sign-in"));
+  assert.ok(!/we track users|I track users|tracking users|user behaviour|user behavior/i.test(page));
+  assert.ok(!/portfolio analytics|labs analytics|portfolio page analytics|tracking users|track user behaviour|track user behavior/i.test(page));
+  assert.ok(preference.includes("Turn off optional website information in this browser"));
+  assert.ok(!preference.includes("Optional site usage statistics"));
+  assert.ok(!preference.includes("Disable analytics on this browser profile"));
+  assert.ok(policy.includes('PRIVACY_VERSION = "2026-11-11.2"'));
+  assert.ok(legalLayout.includes('effectiveDate = "4 November 2026"'));
 });
-
 test("owner dashboard provides selected, date-range and all-record deletion actions", async () => {
   const [dashboard, controls, route] = await Promise.all([
     read("../src/app/components/portfolio-analytics/PortfolioAnalyticsDashboard.js"),

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import AuthField from "./AuthField";
 import AuthSubmit from "./AuthSubmit";
@@ -25,6 +26,8 @@ export default function SignupForm({
   const [loading, setLoading] = useState(false);
   const [globalError, setGlobalError] = useState(initialError);
   const [complete, setComplete] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [privacyError, setPrivacyError] = useState(false);
 
   const validate = (name, value) => {
     if (name === "email") {
@@ -57,6 +60,14 @@ export default function SignupForm({
       document.getElementById(firstInvalid)?.focus();
       return;
     }
+
+    if (!privacyAccepted) {
+      setPrivacyError(true);
+      document.getElementById("privacy-policy-acceptance")?.focus();
+      return;
+    }
+
+    setPrivacyError(false);
 
     if (!registrationEnabled) {
       setGlobalError("Account registration is not configured yet.");
@@ -175,6 +186,46 @@ export default function SignupForm({
         />
         <PasswordStrengthMeter password={password} />
 
+        <div className="pt-1">
+          <div className="flex items-start gap-2">
+            <input
+              id="privacy-policy-acceptance"
+              name="privacyPolicyAccepted"
+              type="checkbox"
+              checked={privacyAccepted}
+              onChange={(event) => {
+                setPrivacyAccepted(event.target.checked);
+                if (event.target.checked) setPrivacyError(false);
+              }}
+              required
+              disabled={loading}
+              aria-invalid={privacyError}
+              aria-describedby={privacyError ? "privacy-policy-error" : undefined}
+              className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed"
+            />
+            <label
+              htmlFor="privacy-policy-acceptance"
+              className="text-xs leading-5 text-text-secondary"
+            >
+              I have read and agree to the{" "}
+              <Link
+                href="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-brand underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              >
+                Privacy Policy
+              </Link>
+              .
+            </label>
+          </div>
+          {privacyError ? (
+            <p id="privacy-policy-error" role="alert" className="mt-1.5 text-xs leading-5 text-error">
+              Please accept the Privacy Policy to create an account.
+            </p>
+          ) : null}
+        </div>
+
         {!registrationEnabled ? (
           <AuthMessage title="Account registration is not ready">
             Complete the remaining server setup before new accounts can be created.
@@ -192,7 +243,7 @@ export default function SignupForm({
 
         <AuthSubmit
           loading={loading ? "Creating account…" : ""}
-          disabled={loading || !registrationEnabled}
+          disabled={loading || !registrationEnabled || !privacyAccepted}
         >
           Create account
         </AuthSubmit>
@@ -203,7 +254,7 @@ export default function SignupForm({
         returnTo={returnTo}
         googleEnabled={googleEnabled}
         githubEnabled={githubEnabled}
-        disabled={loading}
+        disabled={loading || !privacyAccepted}
         onPendingChange={setLoading}
       />
 
