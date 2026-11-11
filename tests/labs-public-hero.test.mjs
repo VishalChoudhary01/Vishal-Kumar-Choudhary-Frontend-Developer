@@ -261,7 +261,13 @@ test("Labs hero flask is a subtle independent decorative layer behind left conte
   assert.ok(flaskSource.includes("M91 24.5C111 22.5 149 22.5 169 24.5"));
   assert.ok(flaskSource.includes("M38 251C67 239 91 259 119 253C150 246 180 244 222 256"));
   assert.ok(flaskSource.includes("pointer-events-none"));
-  assert.ok(componentSource.includes("relative isolate z-10"));
+  assert.ok(componentSource.includes('data-labs-hero-glass-panel=""'));
+  assert.ok(componentSource.includes("overflow-hidden rounded-[1.75rem]"));
+  assert.ok(componentSource.includes("backdrop-blur-2xl backdrop-saturate-150"));
+  assert.ok(componentSource.includes("bg-[linear-gradient(135deg,rgba(255,255,255,0.78)"));
+  assert.ok(componentSource.includes("dark:bg-[linear-gradient(135deg,rgba(16,29,27,0.92)"));
+  assert.ok(componentSource.includes("border-[#0B746A]/20"));
+  assert.ok(componentSource.includes("dark:border-[#9AF3E9]/20"));
   assert.ok(componentSource.includes("relative z-10 flex min-w-0 w-full flex-col items-start"));
   assert.doesNotMatch(flaskSource, /WebGLRenderer|THREE|Raycaster|pointerdown|pointermove/);
 });
