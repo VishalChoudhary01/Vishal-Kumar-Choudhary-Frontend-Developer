@@ -25,7 +25,6 @@ import {
   Save,
   Upload,
   X,
-  Trash2,
 } from "lucide-react";
 
 const LANGUAGES = [
