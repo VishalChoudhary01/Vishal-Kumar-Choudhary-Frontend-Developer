@@ -10,7 +10,6 @@ import { UserRoundCheckIcon } from "@animateicons/react/lucide/user-round-check-
 import useReducedMotion from "@/app/hooks/useReducedMotion";
 import {
   RefreshCw,
-  Trash2,
   RotateCcw,
   X,
 } from "lucide-react";
@@ -126,6 +125,11 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
   const failureCountRef = useRef(0);
   const refreshRef = useRef(null);
   const scheduleRef = useRef(null);
+  const removeDialogIconRef = useRef(null);
+
+  useEffect(() => {
+    if (removeTarget) removeDialogIconRef.current?.startAnimation?.();
+  }, [removeTarget]);
 
   const scheduleRefresh = useCallback((delay) => {
     window.clearTimeout(timerRef.current);
@@ -570,9 +574,12 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-brand">ANALYTICS ONLY</p>
-                <h2 id="remove-analytics-experiment-title" className="mt-2 text-base font-semibold">
-                  Remove from analytics?
-                </h2>
+                <div className="mt-2 flex items-center gap-2">
+                  <AnimatedTrash ref={removeDialogIconRef} size={17} duration={0.68} isAnimated={!prefersReducedMotion} className="shrink-0 text-danger" aria-hidden="true" />
+                  <h2 id="remove-analytics-experiment-title" className="text-base font-semibold">
+                    Remove from analytics?
+                  </h2>
+                </div>
               </div>
               <button
                 type="button"
@@ -624,7 +631,7 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
                 disabled={mutatingSlug === removeTarget.slug || removeConfirmation.trim() !== removeTarget.slug}
                 className="inline-flex h-9 items-center gap-2 border border-danger/50 bg-danger/10 px-3 text-xs font-semibold text-danger hover:bg-danger/15 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                <Trash2 size={13} aria-hidden="true" />
+                <AnimatedTrash size={13} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />
                 {mutatingSlug === removeTarget.slug ? "Removing…" : "Remove from analytics"}
               </button>
             </div>
