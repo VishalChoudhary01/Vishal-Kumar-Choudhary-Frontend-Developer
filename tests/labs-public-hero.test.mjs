@@ -171,3 +171,24 @@ test("Labs hero typography and container scale from mobile through desktop", () 
   assert.ok(componentSource.includes("sm:text-[clamp(3.2rem,6.2vw,6.35rem)]"));
   assert.ok(componentSource.includes("text-[13px] leading-6"));
 });
+
+
+test("portfolio hero offers an outlined Labs CTA beside Projects across all motion modes", async () => {
+  const [cinematicHero, mobileIntro, reducedMotionHero, labsButton] = await Promise.all([
+    readFile(new URL("../src/app/components/sections/hero_comp/CinematicHero.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/sections/hero_comp/MobileIntro.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/sections/hero_comp/ReducedMotionHero.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/common/ExploreLabsButton.js", import.meta.url), "utf8"),
+  ]);
+
+  assert.ok(cinematicHero.includes("<ExploreLabsButton />"));
+  assert.ok(mobileIntro.includes("<ExploreLabsButton />"));
+  assert.ok(reducedMotionHero.includes("<ExploreLabsButton />"));
+  assert.ok(labsButton.includes('href="/labs"'));
+  assert.ok(labsButton.includes("Explore Labs"));
+  assert.ok(labsButton.includes("FlaskConical"));
+  assert.ok(labsButton.includes("border-[#0C8277]/45"));
+  assert.ok(labsButton.includes("dark:border-[#3CBBAA]/50"));
+  assert.ok(labsButton.includes("focus-visible:ring-2"));
+  assert.ok(labsButton.includes("motion-reduce:transition-none"));
+});

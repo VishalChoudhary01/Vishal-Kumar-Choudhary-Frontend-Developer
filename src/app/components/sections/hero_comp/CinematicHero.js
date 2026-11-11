@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { motion, useMotionValue, useScroll, useTransform, } from "motion/react";
 import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";
+import ExploreLabsButton from "@/app/components/common/ExploreLabsButton";
 import HeroAmbientBackground from "@/app/components/common/HeroAmbientBackground";
 import { usePageLoader } from "@/app/providers/PageLoaderProvider";
 import useBreakpoint from "@/app/hooks/useBreakpoint";
@@ -747,10 +748,13 @@ function CinematicHero() {
                             .cta
                         }
                       >
-                        <ProjectResumeButton
-                          href="#projects"
-                          label={CTA_TEXT}
-                        />
+                        <div className="flex flex-wrap items-center gap-3">
+                          <ProjectResumeButton
+                            href="#projects"
+                            label={CTA_TEXT}
+                          />
+                          <ExploreLabsButton />
+                        </div>
                       </motion.div>
                     </motion.div>
                   </motion.div>

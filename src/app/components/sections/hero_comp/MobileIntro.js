@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { motion, useInView } from "motion/react";
 import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";
+import ExploreLabsButton from "@/app/components/common/ExploreLabsButton";
 import { DESCRIPTION, CTA_TEXT, MOTION, } from "./heroMotionConfig";
 import SectionEyebrow from "../../common/SectionEyebrow";
 
@@ -38,11 +39,12 @@ export function MobileIntro() {
       <MobileIntroItem
         {...MOTION.mobileIntroEntrance.cta}
       >
-        <div className="mt-6 flex justify-center">
+        <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <ProjectResumeButton
             href="#projects"
             label={CTA_TEXT}
           />
+          <ExploreLabsButton />
         </div>
       </MobileIntroItem>
     </section>
