@@ -152,7 +152,9 @@ function publicVisitResult(document) {
 
 /**
  * Start is idempotent for a given temporary tab-session + route-visit key.
- * Only HMACs of browser identifiers are persisted; raw values stay in memory.
+ * Only HMACs of browser identifiers are persisted; raw browser values stay
+ * in memory. Verified account identity is captured separately from the
+ * server-validated auth session for the private owner report.
  */
 export async function startPortfolioVisit(payload, request, now = new Date()) {
   const config = getEnabledConfig(request);
@@ -163,7 +165,8 @@ export async function startPortfolioVisit(payload, request, now = new Date()) {
   }
 
   // Account identity is resolved only from the server-side Better Auth
-  // session. Browser-supplied account IDs are never accepted or persisted.
+  // session. Browser-supplied account IDs are never accepted; the trusted
+  // session ID is stored for the owner-only visitor report.
   let verifiedVisitor = null;
   try {
     const session = await getCurrentAuthSession();
