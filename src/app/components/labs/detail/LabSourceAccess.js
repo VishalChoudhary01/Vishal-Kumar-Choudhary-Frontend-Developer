@@ -55,6 +55,10 @@ export default function LabSourceAccess({
     initialAuthState === "error" ? "We could not load the published source. Please try again." : "",
   );
   const [copied, setCopied] = useState(false);
+  const copyIconRef = useRef(null);
+
+  const startCopyIconAnimation = () => copyIconRef.current?.startAnimation?.();
+  const stopCopyIconAnimation = () => copyIconRef.current?.stopAnimation?.();
   const selectedSourceFile = source?.files?.[selectedFile] || null;
   const { data: session, isPending: sessionPending } = authClient.useSession();
 
@@ -422,10 +426,14 @@ export default function LabSourceAccess({
               <button
                 type="button"
                 onClick={copyCurrentFile}
+                onMouseEnter={startCopyIconAnimation}
+                onMouseLeave={stopCopyIconAnimation}
+                onFocus={startCopyIconAnimation}
+                onBlur={stopCopyIconAnimation}
                 disabled={sessionPending || session?.user?.id !== source.userId}
                 className="inline-flex h-9 items-center gap-2 border border-border px-3 text-xs font-medium text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {copied ? <Check size={14} aria-hidden="true" /> : <AnimatedCopy size={14} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />}
+                {copied ? <Check size={14} aria-hidden="true" /> : <AnimatedCopy ref={copyIconRef} size={14} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />}
                 {copied ? "Copied" : "Copy file"}
               </button>
             </div>
