@@ -184,7 +184,10 @@ test("portfolio hero uses the shared Project CTA treatment for Labs across all m
   for (const source of [cinematicHero, mobileIntro, reducedMotionHero]) {
     assert.ok(source.includes('import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";'));
     assert.ok(source.includes('import { FlaskConicalIcon } from "@/app/components/common/FlaskConicalIcon";'));
-    assert.ok(source.includes('<ProjectResumeButton href="/labs" label="Explore Labs" icon={FlaskConicalIcon} animateIconOnHover surface="brand" />'));
+    assert.match(
+      source,
+      /<ProjectResumeButton\s+href="\/labs"[\s\S]*?label="Explore Labs"[\s\S]*?icon=\{FlaskConicalIcon\}[\s\S]*?animateIconOnHover[\s\S]*?surface="brand-outline"[\s\S]*?\/>/,
+    );
     assert.doesNotMatch(source, /ExploreLabsButton/);
   }
 
