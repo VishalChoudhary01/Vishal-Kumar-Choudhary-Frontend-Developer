@@ -313,6 +313,7 @@ function mapRecentVisit(document) {
     visitor: document.verifiedUserName
       ? {
           kind: "verified",
+          accountId: document.verifiedUserAccountId || null,
           name: document.verifiedUserName,
           email: document.verifiedUserEmailMasked || null,
         }
@@ -350,7 +351,7 @@ export async function getPortfolioRecentVisits({
 
   const documents = await PortfolioVisit.find(match)
     .select(
-      "_id path pageType slug sourceType referrerHost countryCode regionCode city deviceType startedAt activeSeconds status +verifiedUserName +verifiedUserEmailMasked",
+      "_id path pageType slug sourceType referrerHost countryCode regionCode city deviceType startedAt activeSeconds status +verifiedUserAccountId +verifiedUserName +verifiedUserEmailMasked",
     )
     .sort({ startedAt: -1, _id: -1 })
     .limit(safeLimit + 1)
