@@ -4,8 +4,8 @@ function normalizeDisplayName(value) {
   if (typeof value !== "string") return "";
   return value
     .normalize("NFC")
-    .replace(/[\\u0000-\\u001f\\u007f-\\u009f]/g, "")
-    .replace(/\\s+/g, " ")
+    .replace(/[\u0000-\u001f\u007f-\u009f]/g, " ")
+    .replace(/\s+/g, " ")
     .trim()
     .slice(0, 80);
 }
@@ -14,22 +14,22 @@ export function maskPortfolioVisitEmail(value) {
   if (typeof value !== "string" || value.length > 254) return null;
   const email = value.trim().toLowerCase();
   const separator = email.lastIndexOf("@");
+  if (separator < 1 || separator === email.length - 1) return null;
+
+  const local = email.slice(0, separator);
+  const domain = email.slice(separator + 1);
   if (
-    separator < 1 ||
-    separator === email.length - 1 ||
-    /[\\s<>]/.test(email)
+    !/^[^@\s<>]+$/.test(local) ||
+    !/^[a-z0-9.-]+$/i.test(domain) ||
+    !domain.includes(".") ||
+    domain.startsWith(".") ||
+    domain.endsWith(".") ||
+    domain.includes("..")
   ) {
     return null;
   }
 
-  const local = email.slice(0, separator);
-  const domain = email.slice(separator + 1);
-  if (!domain.includes(".") || domain.startsWith(".") || domain.endsWith(".")) {
-    return null;
-  }
-
-  const maskLength = Math.min(6, Math.max(3, local.length - 1));
-  return (local[0] || "*") + "*".repeat(maskLength) + "@" + domain;
+  return local[0] + "***@" + domain;
 }
 
 /**
@@ -53,7 +53,7 @@ export function buildPortfolioVerifiedVisitor({ user, secret } = {}) {
   const name = normalizeDisplayName(user.name);
   const verifiedUserHash = createHmac("sha256", secret)
     .update("portfolio-analytics:verified-user:v1")
-    .update("\\0")
+    .update("\0")
     .update(user.id.trim())
     .digest("hex");
 
