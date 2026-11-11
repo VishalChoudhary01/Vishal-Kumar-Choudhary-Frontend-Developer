@@ -193,9 +193,21 @@ export async function POST(request) {
       return json({ error: { code: "NOT_FOUND", message: "Not found." } }, 404);
     }
 
+    const validationPaths = error?.errors && typeof error.errors === "object"
+      ? Object.keys(error.errors).slice(0, 12)
+      : [];
     console.error(
       "[portfolio-analytics] visit event failed:",
-      error?.code || "VISIT_EVENT_ERROR",
+      JSON.stringify({
+        name: typeof error?.name === "string" ? error.name.slice(0, 80) : "Error",
+        code: typeof error?.code === "string" || typeof error?.code === "number"
+          ? String(error.code).slice(0, 80)
+          : null,
+        causeName: typeof error?.cause?.name === "string"
+          ? error.cause.name.slice(0, 80)
+          : null,
+        validationPaths,
+      }),
     );
     return unavailable();
   }
