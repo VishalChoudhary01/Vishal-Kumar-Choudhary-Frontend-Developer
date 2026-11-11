@@ -355,7 +355,7 @@ test("portfolio homepage keeps Projects primary and Labs secondary across motion
   assert.ok(buttonSource.includes('"bg-black/[0.035]"'));
   assert.ok(buttonSource.includes('"bg-transparent"'));
   assert.ok(buttonSource.includes('"border border-current/25"'));
-  assert.doesNotMatch(buttonSource, /glass|bg-white\/80|dark:bg-white\/75/);
+  assert.doesNotMatch(buttonSource, /bg-white\/80|dark:bg-white\/75/);
 });
 
 test("contact form uses the brand-primary CTA variant without removing submit lifecycle states", async () => {

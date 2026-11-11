@@ -1,9 +1,7 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeftIcon as AnimatedArrowLeft } from "@animateicons/react/lucide/arrow-left-icon";
-import { ChevronRightIcon as AnimatedChevronRight } from "@animateicons/react/lucide/chevron-right-icon";
 import { PencilIcon as AnimatedPencil } from "@animateicons/react/lucide/pencil-icon";
 
+import AdminBreadcrumbs from "@/app/components/labs/admin/AdminBreadcrumbs";
 import LabExperimentMetadataEditor from "@/app/components/labs/admin/LabExperimentMetadataEditor";
 import LabsOwnerAccessNotice from "@/app/components/labs/admin/LabsOwnerAccessNotice";
 import LabsOwnerNavigation from "@/app/components/labs/admin/LabsOwnerNavigation";
@@ -45,17 +43,7 @@ export default async function EditLabExperimentPage({ params }) {
   return (
     <main className="min-h-screen bg-background px-5 py-8 text-text-primary sm:px-8 lg:px-12">
       <div className="mx-auto w-full max-w-4xl">
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs font-medium">
-          <Link
-            href="/admin/labs/sources"
-            className="inline-flex items-center gap-2 text-text-secondary transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
-          >
-            <AnimatedArrowLeft size={14} duration={0.68} aria-hidden="true" />
-            Source Library
-          </Link>
-          <AnimatedChevronRight size={13} duration={0.62} className="text-text-tertiary" aria-hidden="true" />
-          <span aria-current="page" className="text-text-primary">Edit experiment</span>
-        </nav>
+        <AdminBreadcrumbs items={[{ href: "/admin/labs/sources", label: "Source Library" }, { label: "Edit experiment" }]} />
 
         <LabsOwnerNavigation active="sources" user={toLabsAccountUser(session.user)} />
 

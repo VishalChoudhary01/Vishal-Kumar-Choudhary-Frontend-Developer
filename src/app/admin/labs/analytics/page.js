@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
+import AdminBreadcrumbs from "@/app/components/labs/admin/AdminBreadcrumbs";
 import LabsLiveAnalyticsDashboard from "@/app/components/labs/admin/LabsLiveAnalyticsDashboard";
 import LabsOwnerAccessNotice from "@/app/components/labs/admin/LabsOwnerAccessNotice";
 import LabsOwnerNavigation from "@/app/components/labs/admin/LabsOwnerNavigation";
@@ -38,13 +38,7 @@ export default async function LabsAnalyticsPage({ searchParams }) {
   return (
     <main className="min-h-screen bg-background px-5 py-10 text-text-primary sm:px-8 lg:px-12">
       <div className="mx-auto w-full max-w-[1280px]">
-        <Link
-          href="/labs"
-          className="inline-flex items-center gap-2 text-xs font-medium text-text-secondary transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
-        >
-          <ArrowLeft size={14} aria-hidden="true" />
-          Back to Labs
-        </Link>
+        <AdminBreadcrumbs items={[{ href: "/labs", label: "Back to Labs" }]} />
 
         <LabsOwnerNavigation active="analytics" user={toLabsAccountUser(session.user)} />
 
@@ -72,14 +66,14 @@ export default async function LabsAnalyticsPage({ searchParams }) {
               Choose the window used for opens, copies and like activity.
             </p>
           </div>
-          <nav aria-label="Analytics reporting period" className="inline-flex max-w-full flex-wrap items-center gap-1 rounded-xl border border-border bg-surface-1/80 p-1.5 shadow-sm">
+          <nav aria-label="Analytics reporting period" className="inline-flex max-w-full flex-wrap items-center gap-1 rounded-[3px] border border-border bg-surface-1/80 p-1.5 shadow-sm">
             {[7, 30, 90, 365].map((period) => (
               <Link
                 key={period}
                 href={"/admin/labs/analytics?days=" + period}
                 aria-current={days === period ? "page" : undefined}
                 className={[
-                  "inline-flex min-h-9 items-center justify-center rounded-lg border px-3.5 text-xs font-medium transition-[color,background-color,border-color,box-shadow,transform] duration-200 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none sm:px-4",
+                  "inline-flex min-h-9 items-center justify-center rounded-[2px] border px-3.5 text-xs font-medium transition-[color,background-color,border-color,box-shadow,transform] duration-200 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none sm:px-4",
                   days === period
                     ? "border-brand/40 bg-brand-soft text-brand shadow-[0_1px_3px_rgba(0,0,0,0.12)] ring-1 ring-inset ring-brand/15"
                     : "border-transparent text-text-secondary hover:-translate-y-0.5 hover:border-border hover:bg-surface-2 hover:text-text-primary hover:shadow-sm active:scale-[0.98]",

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useReducedMotion from "@/app/hooks/useReducedMotion";
 import { TrashIcon as AnimatedTrash } from "@animateicons/react/lucide/trash-icon";
+import { RefreshCwIcon as AnimatedRefreshCw } from "@animateicons/react/lucide/refresh-cw-icon";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -10,7 +11,6 @@ import {
   Database,
   HardDrive,
   LoaderCircle,
-  RefreshCw,
   ShieldCheck,
   Trash2,
 } from "lucide-react";
@@ -48,7 +48,7 @@ function shortId(value) {
 
 function Metric({ label, value, hint, icon: Icon }) {
   return (
-    <div className="min-w-0 border border-border bg-surface-1 px-3 py-3 sm:px-4">
+    <div className="rounded-[3px] min-w-0 border border-border bg-surface-1 px-3 py-3 sm:px-4">
       <div className="flex items-center justify-between gap-2">
         <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-text-tertiary">{label}</p>
         <Icon size={14} className="shrink-0 text-text-tertiary" aria-hidden="true" />
@@ -62,6 +62,8 @@ function Metric({ label, value, hint, icon: Icon }) {
 export default function LabSnapshotStoragePanel() {
   const prefersReducedMotion = useReducedMotion();
   const deleteModalIconRef = useRef(null);
+  const deleteConfirmIconRef = useRef(null);
+  const refreshIconRef = useRef(null);
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -177,7 +179,7 @@ export default function LabSnapshotStoragePanel() {
       <div className="border border-border bg-surface-1">
         <header className="flex flex-col gap-4 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <div className="flex items-start gap-3">
-            <div className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center border border-brand/30 bg-brand/5 text-brand">
+            <div className="rounded-[2px] mt-0.5 grid h-9 w-9 shrink-0 place-items-center border border-brand/30 bg-brand/5 text-brand transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none">
               <Database size={17} aria-hidden="true" />
             </div>
             <div className="min-w-0">
@@ -193,17 +195,21 @@ export default function LabSnapshotStoragePanel() {
           <button
             type="button"
             onClick={() => loadReport({ quiet: true })}
+            onMouseEnter={() => refreshIconRef.current?.startAnimation?.()}
+            onMouseLeave={() => refreshIconRef.current?.stopAnimation?.()}
+            onFocus={() => refreshIconRef.current?.startAnimation?.()}
+            onBlur={() => refreshIconRef.current?.stopAnimation?.()}
             disabled={loading || refreshing || deleting}
-            className="inline-flex h-9 shrink-0 items-center justify-center gap-2 border border-border px-3 text-xs font-medium text-text-secondary transition-colors hover:border-brand hover:text-brand disabled:opacity-50"
+            className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-[2px] border border-border px-3 text-xs font-medium text-text-secondary transition-[color,background-color,border-color,transform] duration-200 hover:-translate-y-px hover:border-brand/45 hover:bg-surface-2 hover:text-brand active:scale-[0.98] disabled:opacity-50 motion-reduce:transform-none motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           >
-            {refreshing ? <LoaderCircle size={14} className="animate-spin" aria-hidden="true" /> : <RefreshCw size={14} aria-hidden="true" />}
+            {refreshing ? <LoaderCircle size={14} className="animate-spin" aria-hidden="true" /> : <AnimatedRefreshCw ref={refreshIconRef} size={14} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />}
             Refresh snapshots
           </button>
         </header>
 
         <div className="p-4 sm:p-5">
           {error ? (
-            <div className="mb-4 flex items-start gap-2 border border-warning/40 bg-warning/10 px-3 py-3 text-xs leading-5 text-warning" role="alert">
+            <div className="rounded-[2px] mb-4 flex items-start gap-2 border border-warning/40 bg-warning/10 px-3 py-3 text-xs leading-5 text-warning" role="alert">
               <AlertTriangle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
               <span>{error}</span>
             </div>
@@ -304,7 +310,7 @@ export default function LabSnapshotStoragePanel() {
                           <div className="flex flex-wrap items-center gap-2">
                             <code className="break-all font-mono text-[11px] font-semibold text-text-primary">{snapshot.id}</code>
                             {snapshot.canDelete ? (
-                              <span className="inline-flex h-5 items-center gap-1 border border-warning/40 bg-warning/10 px-2 text-[9px] font-semibold uppercase tracking-wide text-warning">
+                              <span className="rounded-[2px] inline-flex h-5 items-center gap-1 border border-warning/40 bg-warning/10 px-2 text-[9px] font-semibold uppercase tracking-wide text-warning">
                                 <Trash2 size={10} aria-hidden="true" /> Safe to delete
                               </span>
                             ) : (
@@ -331,7 +337,7 @@ export default function LabSnapshotStoragePanel() {
                             type="button"
                             onClick={() => { setDeleteTarget(snapshot); setConfirmation(""); }}
                             disabled={deleting}
-                            className="inline-flex h-8 shrink-0 items-center justify-center gap-2 border border-warning/50 px-3 text-[11px] font-semibold text-warning transition-colors hover:bg-warning/10 disabled:opacity-50"
+                            className="rounded-[2px] inline-flex h-8 shrink-0 items-center justify-center gap-2 border border-warning/50 px-3 text-[11px] font-semibold text-warning transition-colors hover:bg-warning/10 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none"
                           >
                             <AnimatedTrash size={12} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />
                             Delete snapshot
@@ -390,9 +396,9 @@ export default function LabSnapshotStoragePanel() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="snapshot-delete-title"
-            className="w-full max-w-lg border border-warning/40 bg-surface-1 p-5 shadow-2xl"
+            className="w-full max-w-lg rounded-[4px] border border-error/30 bg-surface-1 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.48)]"
           >
-            <div className="flex items-center gap-2 text-warning">
+            <div className="flex items-center gap-2 text-error">
               <AnimatedTrash ref={deleteModalIconRef} size={16} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
               <h2 id="snapshot-delete-title" className="text-base font-semibold text-text-primary">Delete Vercel snapshot?</h2>
             </div>
@@ -411,7 +417,7 @@ export default function LabSnapshotStoragePanel() {
                 onChange={(event) => setConfirmation(event.target.value)}
                 autoComplete="off"
                 spellCheck={false}
-                className="mt-2 h-10 w-full border border-border bg-background px-3 font-mono text-xs text-text-primary outline-none focus:border-warning"
+                className="mt-2 h-10 w-full rounded-[2px] border border-border bg-background px-3 font-mono text-xs text-text-primary outline-none transition-[border-color,box-shadow] duration-200 focus:border-error focus:ring-2 focus:ring-error/15 motion-reduce:transition-none"
                 placeholder={deleteTarget.id}
               />
             </label>
@@ -420,17 +426,21 @@ export default function LabSnapshotStoragePanel() {
                 type="button"
                 onClick={() => { setDeleteTarget(null); setConfirmation(""); }}
                 disabled={deleting}
-                className="h-9 border border-border px-3 text-xs text-text-secondary"
+                className="h-9 rounded-[2px] border border-border bg-surface-2/40 px-3 text-xs text-text-secondary transition-colors hover:bg-surface-2"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={deleteSnapshot}
+                onMouseEnter={() => deleteConfirmIconRef.current?.startAnimation?.()}
+                onMouseLeave={() => deleteConfirmIconRef.current?.stopAnimation?.()}
+                onFocus={() => deleteConfirmIconRef.current?.startAnimation?.()}
+                onBlur={() => deleteConfirmIconRef.current?.stopAnimation?.()}
                 disabled={deleting || confirmation.trim() !== deleteTarget.id}
-                className="inline-flex h-9 items-center gap-2 border border-warning bg-warning/10 px-3 text-xs font-semibold text-warning disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex h-9 items-center gap-2 rounded-[2px] border border-error bg-error px-3 text-xs font-semibold text-error-contrast shadow-sm transition-[background-color,transform] duration-200 hover:-translate-y-px hover:bg-error-hover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 motion-reduce:transform-none motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-error"
               >
-                {deleting ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <AnimatedTrash size={13} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />}
+                {deleting ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <AnimatedTrash ref={deleteConfirmIconRef} size={13} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />}
                 {deleting ? "Deleting…" : "Delete permanently"}
               </button>
             </div>

@@ -6,7 +6,6 @@ import { useActionToast } from "@/app/providers/ActionToastProvider";
 import Link from "next/link";
 import { motion } from "motion/react";
 import {
-  Plus,
   Clock3,
   LoaderCircle,
   SearchX,
@@ -105,6 +104,10 @@ export default function LabSourceInventory() {
   const deleteConfirmIconRef = useRef(null);
   const deleteRowIconRefs = useRef(new Map());
   const searchIconRef = useRef(null);
+  const refreshIconRef = useRef(null);
+  const createIconRef = useRef(null);
+  const editIconRefs = useRef(new Map());
+  const openIconRefs = useRef(new Map());
 
   const startSearchAnimation = () => searchIconRef.current?.startAnimation?.();
   const stopSearchAnimation = () => searchIconRef.current?.stopAnimation?.();
@@ -286,21 +289,29 @@ export default function LabSourceInventory() {
         <div className="flex items-center gap-2">
           <Link
             href="/admin/labs/experiments/new"
-            className="inline-flex h-9 items-center gap-2 rounded-md bg-brand px-3 text-xs font-semibold text-brand-contrast shadow-sm transition-[background-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:bg-brand-hover hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none"
+            onMouseEnter={() => createIconRef.current?.startAnimation?.()}
+            onMouseLeave={() => createIconRef.current?.stopAnimation?.()}
+            onFocus={() => createIconRef.current?.startAnimation?.()}
+            onBlur={() => createIconRef.current?.stopAnimation?.()}
+            className="inline-flex h-9 items-center gap-2 rounded-[2px] bg-brand px-3 text-xs font-semibold text-brand-contrast shadow-sm transition-[background-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:bg-brand-hover hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none"
           >
-            <Plus size={14} aria-hidden="true" />
+            <FolderPlus ref={createIconRef} size={14} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
             New gallery experiment
           </Link>
           <button
           type="button"
           onClick={() => loadInventory({ quiet: true })}
+          onMouseEnter={() => refreshIconRef.current?.startAnimation?.()}
+          onMouseLeave={() => refreshIconRef.current?.stopAnimation?.()}
+          onFocus={() => refreshIconRef.current?.startAnimation?.()}
+          onBlur={() => refreshIconRef.current?.stopAnimation?.()}
           disabled={loading || refreshing || Boolean(creating)}
-          className="inline-flex h-9 items-center gap-2 rounded-md border border-border px-3 text-xs font-medium text-text-secondary transition-[color,background-color,border-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:border-brand/45 hover:bg-surface-2 hover:text-brand hover:shadow-sm active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transform-none motion-reduce:transition-none"
+          className="inline-flex h-9 items-center gap-2 rounded-[2px] border border-border px-3 text-xs font-medium text-text-secondary transition-[color,background-color,border-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:border-brand/45 hover:bg-surface-2 hover:text-brand hover:shadow-sm active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transform-none motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         >
           {refreshing ? (
             <LoaderCircle size={14} className="animate-spin" aria-hidden="true" />
           ) : (
-            <RefreshCw size={14} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
+            <RefreshCw ref={refreshIconRef} size={14} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
           )}
           Refresh
           </button>
@@ -316,7 +327,7 @@ export default function LabSourceInventory() {
           { label: "Custom not in gallery", value: counts.notInGallery },
           { label: "Cleanup pending", value: counts.deleting },
         ].map((metric) => (
-          <div key={metric.label} className="border border-border bg-surface-1 px-3 py-3">
+          <div key={metric.label} className="rounded-[3px] border border-border bg-surface-1 px-3 py-3">
             <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-text-tertiary">
               {metric.label}
             </p>
@@ -325,7 +336,7 @@ export default function LabSourceInventory() {
         ))}
       </div>
 
-      <div className="mt-4 flex flex-col gap-3 border border-border bg-surface-1 p-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-4 flex flex-col gap-3 rounded-[3px] border border-border bg-surface-1 p-3 sm:flex-row sm:items-center sm:justify-between">
         <label
           className="group/search relative block min-w-0 flex-1"
           onMouseEnter={startSearchAnimation}
@@ -346,10 +357,10 @@ export default function LabSourceInventory() {
             onFocus={startSearchAnimation}
             onBlur={stopSearchAnimation}
             placeholder="Search by experiment name or slug"
-            className="h-10 w-full rounded-md border border-border bg-background pl-9 pr-3 text-xs text-text-primary outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-text-tertiary focus:border-brand focus:ring-2 focus:ring-brand/15 motion-reduce:transition-none"
+            className="h-10 w-full rounded-[2px] border border-border bg-background pl-9 pr-3 text-xs text-text-primary outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-text-tertiary focus:border-brand focus:ring-2 focus:ring-brand/15 motion-reduce:transition-none"
           />
         </label>
-        <div className="inline-flex max-w-full flex-wrap items-center gap-1 rounded-lg border border-border bg-surface-2/45 p-1" role="group" aria-label="Filter source inventory">
+        <div className="inline-flex max-w-full flex-wrap items-center gap-1 rounded-[3px] border border-border bg-surface-2/45 p-1" role="group" aria-label="Filter source inventory">
           {FILTERS.map((option) => (
             <button
               key={option.value}
@@ -357,7 +368,7 @@ export default function LabSourceInventory() {
               onClick={() => setFilter(option.value)}
               aria-pressed={filter === option.value}
               className={[
-                "inline-flex min-h-9 items-center justify-center rounded-md border px-3 text-[11px] font-medium transition-[color,background-color,border-color,box-shadow,transform] duration-200 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none",
+                "inline-flex min-h-9 items-center justify-center rounded-[2px] border px-3 text-[11px] font-medium transition-[color,background-color,border-color,box-shadow,transform] duration-200 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none",
                 filter === option.value
                   ? "border-brand/40 bg-brand-soft text-brand shadow-[0_1px_3px_rgba(0,0,0,0.12)] ring-1 ring-inset ring-brand/15"
                   : "border-transparent text-text-secondary hover:-translate-y-0.5 hover:border-border hover:bg-surface-1 hover:text-text-primary hover:shadow-sm active:scale-[0.98]",
@@ -371,7 +382,7 @@ export default function LabSourceInventory() {
       </div>
 
       {error ? (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border border-warning/40 bg-warning/10 px-4 py-3 text-xs text-warning" role="alert">
+        <div className="rounded-[2px] mt-4 flex flex-wrap items-center justify-between gap-3 border border-warning/40 bg-warning/10 px-4 py-3 text-xs text-warning" role="alert">
           <span>{error}</span>
           <button type="button" onClick={() => loadInventory()} className="font-semibold underline underline-offset-2">
             Try again
@@ -380,19 +391,19 @@ export default function LabSourceInventory() {
       ) : null}
 
       {loading ? (
-        <div className="mt-4 flex min-h-40 items-center justify-center gap-3 border border-border bg-surface-1 text-xs text-text-tertiary" role="status">
+        <div className="mt-4 flex min-h-40 items-center justify-center gap-3 rounded-[3px] border border-border bg-surface-1 text-xs text-text-tertiary" role="status">
           <LoaderCircle size={16} className="animate-spin" aria-hidden="true" />
           Loading source inventory…
         </div>
       ) : filteredItems.length ? (
-        <div className="mt-4 divide-y divide-border border border-border bg-surface-1">
+        <div className="mt-4 divide-y divide-border rounded-[3px] border border-border bg-surface-1">
           {filteredItems.map((item) => {
             const state = getSourceState(item);
             const hasWorkspace = item.hasSource;
             return (
               <article key={item.slug} className="flex flex-col gap-4 p-4 transition-colors hover:bg-surface-2/50 sm:flex-row sm:items-center sm:justify-between sm:px-5">
                 <div className="flex min-w-0 items-start gap-3">
-                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center border border-border bg-background text-text-tertiary">
+                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[2px] border border-border bg-background text-text-tertiary transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none">
                     {item.isCustom && item.publicationReadiness?.eligible !== true ? (
                       <AlertTriangle size={16} duration={0.68} isAnimated={!prefersReducedMotion} className="text-warning" aria-hidden="true" />
                     ) : state === "published" ? (
@@ -407,7 +418,7 @@ export default function LabSourceInventory() {
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="truncate text-sm font-semibold text-text-primary">{item.title}</h3>
                       {item.isCustom ? (
-                        <span className="inline-flex h-6 items-center border border-brand/30 bg-brand/5 px-2 text-[10px] font-semibold text-brand">
+                        <span className="inline-flex h-6 items-center rounded-[2px] border border-brand/30 bg-brand/5 px-2 text-[10px] font-semibold text-brand">
                           OWNER CREATED
                         </span>
                       ) : null}
@@ -444,9 +455,13 @@ export default function LabSourceInventory() {
                     <Link
                       href={"/admin/labs/experiments/" + encodeURIComponent(item.slug) + "/edit"}
                       aria-label={"Edit details for " + item.title}
-                      className="inline-flex h-9 items-center gap-2 border border-border px-3 text-xs font-semibold text-text-secondary transition-colors hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                      onMouseEnter={() => editIconRefs.current.get(item.slug)?.startAnimation?.()}
+                      onMouseLeave={() => editIconRefs.current.get(item.slug)?.stopAnimation?.()}
+                      onFocus={() => editIconRefs.current.get(item.slug)?.startAnimation?.()}
+                      onBlur={() => editIconRefs.current.get(item.slug)?.stopAnimation?.()}
+                      className="inline-flex h-9 items-center gap-2 rounded-[2px] border border-border px-3 text-xs font-semibold text-text-secondary transition-[color,background-color,border-color,transform] duration-200 hover:-translate-y-px hover:border-brand/45 hover:bg-surface-2 hover:text-brand active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none"
                     >
-                      <Pencil size={13} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
+                      <Pencil ref={(node) => { if (node) editIconRefs.current.set(item.slug, node); else editIconRefs.current.delete(item.slug); }} size={13} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
                       Edit details
                     </Link>
                   ) : null}
@@ -454,9 +469,13 @@ export default function LabSourceInventory() {
                     <>
                     <Link
                       href={"/admin/labs/sources/" + encodeURIComponent(item.slug)}
-                      className="inline-flex h-9 items-center gap-2 border border-border px-3 text-xs font-semibold text-text-secondary transition-colors hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                      onMouseEnter={() => openIconRefs.current.get(item.slug)?.startAnimation?.()}
+                      onMouseLeave={() => openIconRefs.current.get(item.slug)?.stopAnimation?.()}
+                      onFocus={() => openIconRefs.current.get(item.slug)?.startAnimation?.()}
+                      onBlur={() => openIconRefs.current.get(item.slug)?.stopAnimation?.()}
+                      className="inline-flex h-9 items-center gap-2 rounded-[2px] border border-border px-3 text-xs font-semibold text-text-secondary transition-[color,background-color,border-color,transform] duration-200 hover:-translate-y-px hover:border-brand/45 hover:bg-surface-2 hover:text-brand active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none"
                     >
-                      <EyeIcon size={13} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
+                      <EyeIcon ref={(node) => { if (node) openIconRefs.current.set(item.slug, node); else openIconRefs.current.delete(item.slug); }} size={13} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
                       {item.isCustom && item.publicationReadiness?.eligible !== true
                         ? "Continue to publish"
                         : "Open workspace"}
@@ -472,7 +491,7 @@ export default function LabSourceInventory() {
                         onMouseLeave={() => deleteRowIconRefs.current.get(item.slug)?.stopAnimation?.()}
                         onFocus={() => deleteRowIconRefs.current.get(item.slug)?.startAnimation?.()}
                         onBlur={() => deleteRowIconRefs.current.get(item.slug)?.stopAnimation?.()}
-                        className="grid h-9 w-9 place-items-center rounded-md border border-error/35 bg-error/[0.035] text-error transition-[color,background-color,border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-error/60 hover:bg-error/10 hover:shadow-sm active:translate-y-0 active:scale-[0.97] disabled:opacity-40 motion-reduce:transform-none motion-reduce:transition-none"
+                        className="grid h-9 w-9 place-items-center rounded-[2px] border border-error/35 bg-error/[0.035] text-error transition-[color,background-color,border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-error/60 hover:bg-error/10 hover:shadow-sm active:translate-y-0 active:scale-[0.97] disabled:opacity-40 motion-reduce:transform-none motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-error"
                       >
                         <AnimatedTrash
                           ref={(node) => {
@@ -492,7 +511,7 @@ export default function LabSourceInventory() {
                       type="button"
                       onClick={() => createSource(item.slug)}
                       disabled={Boolean(creating)}
-                      className="inline-flex h-9 items-center gap-2 bg-brand px-3 text-xs font-semibold text-brand-contrast transition-colors hover:bg-brand-hover disabled:opacity-50"
+                      className="inline-flex h-9 items-center gap-2 rounded-[2px] bg-brand px-3 text-xs font-semibold text-brand-contrast shadow-sm transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:bg-brand-hover hover:shadow-md active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-50 motion-reduce:transform-none motion-reduce:transition-none"
                     >
                       {creating === item.slug ? (
                         <LoaderCircle size={13} className="animate-spin" aria-hidden="true" />
@@ -508,7 +527,7 @@ export default function LabSourceInventory() {
           })}
         </div>
       ) : (
-        <div className="mt-4 flex min-h-44 flex-col items-center justify-center border border-dashed border-border bg-surface-1 px-5 text-center">
+        <div className="mt-4 flex min-h-44 flex-col items-center justify-center rounded-[3px] border border-dashed border-border bg-surface-1 px-5 text-center">
           <SearchX size={20} className="text-text-tertiary" aria-hidden="true" />
           <p className="mt-3 text-sm font-medium">No experiments match this view</p>
           <p className="mt-1 text-xs text-text-tertiary">Change the search or status filter to see more experiments.</p>
@@ -539,10 +558,10 @@ export default function LabSourceInventory() {
             initial={prefersReducedMotion ? false : { opacity: 0, y: 14, scale: 0.985 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: prefersReducedMotion ? 0.01 : 0.24, ease: [0.22, 1, 0.36, 1] }}
-            className="w-full max-w-md rounded-xl border border-error/25 bg-surface-1 p-5 shadow-[0_24px_100px_rgba(0,0,0,0.5)] sm:p-6"
+            className="w-full max-w-md rounded-[4px] border border-error/25 bg-surface-1 p-5 shadow-[0_24px_100px_rgba(0,0,0,0.5)] sm:p-6"
           >
             <div className="flex items-start gap-3">
-              <span className="grid size-10 shrink-0 place-items-center rounded-lg border border-error/30 bg-error/10 text-error shadow-sm">
+              <span className="grid size-10 shrink-0 place-items-center rounded-[3px] border border-error/30 bg-error/10 text-error shadow-sm">
                 <AnimatedTrash ref={deleteModalIconRef} size={17} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
               </span>
               <div className="min-w-0 flex-1">
@@ -551,12 +570,12 @@ export default function LabSourceInventory() {
               </div>
             </div>
             <p className="mt-4 text-sm leading-6 text-text-secondary">This permanently removes the custom experiment, source versions, private media, release artifacts and engagement data. Built-in experiments cannot be deleted.</p>
-            <label className="mt-4 block rounded-lg border border-error/20 bg-error/[0.035] p-3 text-xs font-medium text-text-secondary sm:p-4">
+            <label className="mt-4 block rounded-[3px] border border-error/20 bg-error/[0.035] p-3 text-xs font-medium text-text-secondary sm:p-4">
               Type <span className="font-mono font-semibold text-text-primary">{deleteTarget.slug}</span> to confirm
-              <input value={deleteConfirmation} onChange={(event) => setDeleteConfirmation(event.target.value)} autoComplete="off" spellCheck={false} className="mt-2 h-10 w-full rounded-md border border-border bg-background px-3 font-mono text-xs text-text-primary outline-none transition-[border-color,box-shadow] duration-200 focus:border-error focus:ring-2 focus:ring-error/15 motion-reduce:transition-none" placeholder={deleteTarget.slug} />
+              <input value={deleteConfirmation} onChange={(event) => setDeleteConfirmation(event.target.value)} autoComplete="off" spellCheck={false} className="mt-2 h-10 w-full rounded-[2px] border border-border bg-background px-3 font-mono text-xs text-text-primary outline-none transition-[border-color,box-shadow] duration-200 focus:border-error focus:ring-2 focus:ring-error/15 motion-reduce:transition-none" placeholder={deleteTarget.slug} />
             </label>
             <div className="mt-5 flex flex-wrap justify-end gap-2">
-              <button type="button" onClick={() => setDeleteTarget(null)} disabled={deleting} className="inline-flex h-9 items-center justify-center rounded-md border border-border bg-surface-2/50 px-3 text-xs font-medium text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-50">Cancel</button>
+              <button type="button" onClick={() => setDeleteTarget(null)} disabled={deleting} className="inline-flex h-9 items-center justify-center rounded-[2px] border border-border bg-surface-2/50 px-3 text-xs font-medium text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-50 motion-reduce:transform-none motion-reduce:transition-none">Cancel</button>
               <button
                 type="button"
                 onClick={deleteExperiment}
@@ -565,7 +584,7 @@ export default function LabSourceInventory() {
                 onFocus={() => deleteConfirmIconRef.current?.startAnimation?.()}
                 onBlur={() => deleteConfirmIconRef.current?.stopAnimation?.()}
                 disabled={deleting || deleteConfirmation.trim() !== deleteTarget.slug}
-                className="inline-flex h-9 items-center gap-2 rounded-md border border-error bg-error px-3 text-xs font-semibold text-error-contrast shadow-sm transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-error-hover hover:bg-error-hover hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-error disabled:cursor-not-allowed disabled:opacity-40 motion-reduce:transform-none motion-reduce:transition-none"
+                className="inline-flex h-9 items-center gap-2 rounded-[2px] border border-error bg-error px-3 text-xs font-semibold text-error-contrast shadow-sm transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-error-hover hover:bg-error-hover hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-error disabled:cursor-not-allowed disabled:opacity-40 motion-reduce:transform-none motion-reduce:transition-none"
               >
                 {deleting ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <AnimatedTrash size={13} ref={deleteConfirmIconRef} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />}
                 {deleting ? "Deleting…" : "Delete permanently"}

@@ -125,7 +125,7 @@ export default function PortfolioAnalyticsDeletionControls({
   };
 
   return (
-    <section className="border border-border bg-surface-1 p-5" aria-labelledby="portfolio-data-controls-title">
+    <section className="rounded-[3px] border border-border bg-surface-1 p-5" aria-labelledby="portfolio-data-controls-title">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-2xl">
           <h2 id="portfolio-data-controls-title" className="text-sm font-semibold text-text-primary">
@@ -145,7 +145,7 @@ export default function PortfolioAnalyticsDeletionControls({
             onFocus={() => selectedDeleteIconRef.current?.startAnimation?.()}
             onBlur={() => selectedDeleteIconRef.current?.stopAnimation?.()}
             disabled={selectedVisitIds.length === 0 || selectedVisitIds.length > 25}
-            className="inline-flex min-h-9 items-center gap-2 rounded-md border border-error/30 bg-error/[0.035] px-3 text-xs font-semibold text-error transition-[color,background-color,border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-error/55 hover:bg-error/10 hover:shadow-sm active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 motion-reduce:transform-none motion-reduce:transition-none"
+            className="inline-flex min-h-9 items-center gap-2 rounded-[2px] border border-error/30 bg-error/[0.035] px-3 text-xs font-semibold text-error transition-[color,background-color,border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-error/55 hover:bg-error/10 hover:shadow-sm active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 motion-reduce:transform-none motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-error"
           >
             <AnimatedTrash ref={selectedDeleteIconRef} size={13} duration={0.62} isAnimated={!reduceMotion} aria-hidden="true" />
             Delete selected ({selectedVisitIds.length})
@@ -157,7 +157,7 @@ export default function PortfolioAnalyticsDeletionControls({
             onMouseLeave={() => dateRangeDeleteIconRef.current?.stopAnimation?.()}
             onFocus={() => dateRangeDeleteIconRef.current?.startAnimation?.()}
             onBlur={() => dateRangeDeleteIconRef.current?.stopAnimation?.()}
-            className="inline-flex min-h-9 items-center gap-2 rounded-md border border-error/30 bg-error/[0.035] px-3 text-xs font-semibold text-error transition-[color,background-color,border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-error/55 hover:bg-error/10 hover:shadow-sm active:translate-y-0 active:scale-[0.98] motion-reduce:transform-none motion-reduce:transition-none"
+            className="inline-flex min-h-9 items-center gap-2 rounded-[2px] border border-error/30 bg-error/[0.035] px-3 text-xs font-semibold text-error transition-[color,background-color,border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-error/55 hover:bg-error/10 hover:shadow-sm active:translate-y-0 active:scale-[0.98] motion-reduce:transform-none motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-error"
           >
             <AnimatedTrash ref={dateRangeDeleteIconRef} size={13} duration={0.62} isAnimated={!reduceMotion} aria-hidden="true" />
             Delete date range
@@ -169,7 +169,7 @@ export default function PortfolioAnalyticsDeletionControls({
             onMouseLeave={() => allDeleteIconRef.current?.stopAnimation?.()}
             onFocus={() => allDeleteIconRef.current?.startAnimation?.()}
             onBlur={() => allDeleteIconRef.current?.stopAnimation?.()}
-            className="inline-flex min-h-9 items-center gap-2 rounded-md border border-error/55 bg-error/10 px-3 text-xs font-semibold text-error shadow-sm transition-[color,background-color,border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-error/15 hover:shadow-md active:translate-y-0 active:scale-[0.98] motion-reduce:transform-none motion-reduce:transition-none"
+            className="inline-flex min-h-9 items-center gap-2 rounded-[2px] border border-error/55 bg-error/10 px-3 text-xs font-semibold text-error shadow-sm transition-[color,background-color,border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-error/15 hover:shadow-md active:translate-y-0 active:scale-[0.98] motion-reduce:transform-none motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-error"
           >
             <AnimatedTrash ref={allDeleteIconRef} size={13} duration={0.62} isAnimated={!reduceMotion} aria-hidden="true" />
             Delete all data
@@ -196,11 +196,11 @@ export default function PortfolioAnalyticsDeletionControls({
             initial={reduceMotion ? false : { opacity: 0, y: 14, scale: 0.985 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: reduceMotion ? 0.01 : 0.24, ease: [0.22, 1, 0.36, 1] }}
-            className="w-full max-w-[480px] rounded-xl border border-error/25 bg-surface-1 p-5 shadow-[0_24px_100px_rgba(0,0,0,0.5)] sm:p-6"
+            className="w-full max-w-[480px] rounded-[4px] border border-error/25 bg-surface-1 p-5 shadow-[0_24px_100px_rgba(0,0,0,0.5)] sm:p-6"
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-3">
-                <span className="mt-0.5 grid size-10 shrink-0 place-items-center rounded-lg border border-error/30 bg-error/10 text-error shadow-sm">
+                <span className="mt-0.5 grid size-10 shrink-0 place-items-center rounded-[3px] border border-error/30 bg-error/10 text-error shadow-sm">
                   <AnimatedTrash ref={dialogDeleteIconRef} size={17} duration={0.68} isAnimated={!reduceMotion} aria-hidden="true" />
                 </span>
                 <div>
@@ -221,7 +221,7 @@ export default function PortfolioAnalyticsDeletionControls({
                 onClick={closeDialog}
                 disabled={pending}
                 aria-label="Close deletion confirmation"
-                className="grid size-8 shrink-0 place-items-center rounded-md border border-transparent text-text-tertiary transition-[color,background-color,border-color] duration-200 hover:border-border hover:bg-surface-2 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-40"
+                className="grid size-8 shrink-0 place-items-center rounded-[2px] border border-transparent text-text-tertiary transition-[color,background-color,border-color] duration-200 hover:border-border hover:bg-surface-2 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-40"
               >
                 <X size={16} aria-hidden="true" />
               </button>
@@ -236,7 +236,7 @@ export default function PortfolioAnalyticsDeletionControls({
                     value={from}
                     max={to || utcDate(0)}
                     onChange={(event) => setFrom(event.target.value)}
-                    className="h-10 min-w-0 border border-border bg-background px-3 text-sm text-text-primary outline-none focus-visible:border-brand"
+                    className="h-10 min-w-0 rounded-[2px] border border-border bg-background px-3 text-sm text-text-primary outline-none transition-[border-color,box-shadow] duration-200 focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/15 motion-reduce:transition-none"
                   />
                 </label>
                 <label className="grid gap-1.5 text-xs font-medium text-text-secondary">
@@ -256,7 +256,7 @@ export default function PortfolioAnalyticsDeletionControls({
               </div>
             ) : null}
 
-            <div className="mt-5 rounded-lg border border-error/20 bg-error/[0.035] p-3 sm:p-4">
+            <div className="mt-5 rounded-[3px] border border-error/20 bg-error/[0.035] p-3 sm:p-4">
               <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-text-tertiary">
                 Type this exact confirmation
               </p>
@@ -271,7 +271,7 @@ export default function PortfolioAnalyticsDeletionControls({
                 onChange={(event) => setConfirmation(event.target.value)}
                 aria-label="Deletion confirmation phrase"
                 placeholder="Enter confirmation phrase"
-                className="mt-3 h-10 w-full rounded-md border border-border bg-surface-1 px-3 font-mono text-xs text-text-primary outline-none placeholder:text-text-tertiary transition-[border-color,box-shadow] duration-200 focus-visible:border-error focus-visible:ring-2 focus-visible:ring-error/15 motion-reduce:transition-none"
+                className="mt-3 h-10 w-full rounded-[2px] border border-border bg-surface-1 px-3 font-mono text-xs text-text-primary outline-none placeholder:text-text-tertiary transition-[border-color,box-shadow] duration-200 focus-visible:border-error focus-visible:ring-2 focus-visible:ring-error/15 motion-reduce:transition-none"
               />
             </div>
 
@@ -284,7 +284,7 @@ export default function PortfolioAnalyticsDeletionControls({
                 type="button"
                 onClick={closeDialog}
                 disabled={pending}
-                className="inline-flex min-h-9 items-center justify-center rounded-md border border-border bg-surface-2/50 px-4 text-xs font-semibold text-text-secondary transition-[color,background-color,border-color,transform] duration-200 hover:border-border-strong hover:bg-surface-2 hover:text-text-primary active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-40 motion-reduce:transition-none"
+                className="inline-flex min-h-9 items-center justify-center rounded-[2px] border border-border bg-surface-2/50 px-4 text-xs font-semibold text-text-secondary transition-[color,background-color,border-color,transform] duration-200 hover:border-border-strong hover:bg-surface-2 hover:text-text-primary active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-40 motion-reduce:transition-none"
               >
                 Cancel
               </button>
@@ -296,7 +296,7 @@ export default function PortfolioAnalyticsDeletionControls({
                 onFocus={() => confirmDeleteIconRef.current?.startAnimation?.()}
                 onBlur={() => confirmDeleteIconRef.current?.stopAnimation?.()}
                 disabled={pending || confirmation !== expectedConfirmation}
-                className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-error bg-error px-4 text-xs font-semibold text-error-contrast shadow-sm transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-error-hover hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-error disabled:cursor-not-allowed disabled:opacity-40 motion-reduce:transform-none motion-reduce:transition-none"
+                className="inline-flex min-h-9 items-center justify-center gap-2 rounded-[2px] border border-error bg-error px-4 text-xs font-semibold text-error-contrast shadow-sm transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-error-hover hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-error disabled:cursor-not-allowed disabled:opacity-40 motion-reduce:transform-none motion-reduce:transition-none"
               >
                 {!pending ? <AnimatedTrash ref={confirmDeleteIconRef} size={14} duration={0.62} isAnimated={!reduceMotion} aria-hidden="true" /> : null}
                 {pending ? "Deleting…" : "Confirm deletion"}

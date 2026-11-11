@@ -70,3 +70,13 @@ test("owner navigation pages pass their server-resolved profile fields", async (
     assert.ok(source.includes("LabsOwnerNavigation"), path);
   }
 });
+
+
+test("owner workspace uses compact admin radii and a clear selected state", async () => {
+  const navigation = await read("../src/app/components/labs/admin/LabsOwnerNavigation.js");
+  assert.ok(navigation.includes("rounded-[2px]"));
+  assert.ok(navigation.includes("rounded-[3px]"));
+  assert.ok(navigation.includes("rounded-[4px]"));
+  assert.ok(navigation.includes("border-brand/30 bg-brand-soft/35 text-brand"));
+  assert.ok(navigation.includes('aria-current={isActive ? "page" : undefined}'));
+});

@@ -101,3 +101,18 @@ test("Portfolio Analytics uses animated semantic metric icons and reduced-motion
   assert.ok(deletionControls.includes("useReducedMotion"));
   assert.ok(deletionControls.includes("isAnimated={!reduceMotion}"));
 });
+
+
+test("Portfolio Analytics uses compact controls and an animated refresh action", async () => {
+  const [dashboard, page, breadcrumbs] = await Promise.all([
+    read("../src/app/components/portfolio-analytics/PortfolioAnalyticsDashboard.js"),
+    read("../src/app/admin/portfolio/analytics/page.js"),
+    read("../src/app/components/labs/admin/AdminBreadcrumbs.js"),
+  ]);
+  assert.ok(dashboard.includes("rounded-[2px]"));
+  assert.ok(dashboard.includes("rounded-[3px]"));
+  assert.ok(dashboard.includes("AnimatedRefreshCw"));
+  assert.ok(dashboard.includes("refreshIconRef.current?.startAnimation?.()"));
+  assert.ok(page.includes("<AdminBreadcrumbs"));
+  assert.ok(breadcrumbs.includes("AnimatedArrowLeft"));
+});

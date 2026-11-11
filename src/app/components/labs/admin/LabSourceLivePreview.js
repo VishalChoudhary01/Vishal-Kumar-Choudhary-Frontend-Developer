@@ -2,7 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useActionToast } from "@/app/providers/ActionToastProvider";
-import { AlertTriangle, Monitor, Play, RefreshCw, Smartphone, Terminal } from "lucide-react";
+import { AlertTriangle, Play, RefreshCw, Terminal } from "lucide-react";
+import { MonitorIcon as AnimatedMonitor } from "@animateicons/react/lucide/monitor-icon";
+import { SmartphoneIcon as AnimatedSmartphone } from "@animateicons/react/lucide/smartphone-icon";
+import { PlayIcon as AnimatedPlay } from "@animateicons/react/lucide/play-icon";
+import { RefreshCwIcon as AnimatedRefreshCw } from "@animateicons/react/lucide/refresh-cw-icon";
+import useReducedMotion from "@/app/hooks/useReducedMotion";
 
 export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
   const { showToast } = useActionToast();
@@ -14,6 +19,11 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
   const [error, setError] = useState("");
   const [runtimeError, setRuntimeError] = useState("");
   const frameRef = useRef(null);
+  const prefersReducedMotion = useReducedMotion();
+  const runIconRef = useRef(null);
+  const retryIconRef = useRef(null);
+  const desktopIconRef = useRef(null);
+  const mobileIconRef = useRef(null);
 
   let frameOrigin = "";
   if (run?.previewUrl) {
@@ -119,12 +129,12 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
   const expiresAt = run?.expiresAt ? new Date(run.expiresAt) : null;
 
   return (
-    <aside className="min-w-0 self-start border border-border bg-surface-1 xl:sticky xl:top-5">
+    <aside className="min-w-0 self-start rounded-[3px] border border-border bg-surface-1 xl:sticky xl:top-5">
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-sm font-semibold">Live preview</h2>
-            <span className="border border-brand/30 bg-brand-soft/30 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-brand">
+            <span className="rounded-[2px] border border-brand/30 bg-brand-soft/30 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-brand">
               Isolated
             </span>
           </div>
@@ -136,20 +146,28 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
           <button
             type="button"
             onClick={() => setViewport("desktop")}
+            onMouseEnter={() => desktopIconRef.current?.startAnimation?.()}
+            onMouseLeave={() => desktopIconRef.current?.stopAnimation?.()}
+            onFocus={() => desktopIconRef.current?.startAnimation?.()}
+            onBlur={() => desktopIconRef.current?.stopAnimation?.()}
             aria-pressed={viewport === "desktop"}
             title="Desktop preview"
-            className={["grid h-8 w-8 place-items-center border", viewport === "desktop" ? "border-brand bg-brand-soft text-brand" : "border-border text-text-tertiary"].join(" ")}
+            className={["grid h-8 w-8 place-items-center rounded-[2px] border transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transition-none", viewport === "desktop" ? "border-brand bg-brand-soft text-brand" : "border-border text-text-tertiary hover:bg-surface-2"].join(" ")}
           >
-            <Monitor size={14} aria-hidden="true" />
+            <AnimatedMonitor ref={desktopIconRef} size={14} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />
           </button>
           <button
             type="button"
             onClick={() => setViewport("mobile")}
+            onMouseEnter={() => mobileIconRef.current?.startAnimation?.()}
+            onMouseLeave={() => mobileIconRef.current?.stopAnimation?.()}
+            onFocus={() => mobileIconRef.current?.startAnimation?.()}
+            onBlur={() => mobileIconRef.current?.stopAnimation?.()}
             aria-pressed={viewport === "mobile"}
             title="Mobile preview"
-            className={["grid h-8 w-8 place-items-center border", viewport === "mobile" ? "border-brand bg-brand-soft text-brand" : "border-border text-text-tertiary"].join(" ")}
+            className={["grid h-8 w-8 place-items-center rounded-[2px] border transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transition-none", viewport === "mobile" ? "border-brand bg-brand-soft text-brand" : "border-border text-text-tertiary hover:bg-surface-2"].join(" ")}
           >
-            <Smartphone size={14} aria-hidden="true" />
+            <AnimatedSmartphone ref={mobileIconRef} size={14} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />
           </button>
         </div>
       </header>
@@ -161,10 +179,14 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
         <button
           type="button"
           onClick={runPreview}
+          onMouseEnter={() => runIconRef.current?.startAnimation?.()}
+          onMouseLeave={() => runIconRef.current?.stopAnimation?.()}
+          onFocus={() => runIconRef.current?.startAnimation?.()}
+          onBlur={() => runIconRef.current?.stopAnimation?.()}
           disabled={busy || !files.length}
-          className="inline-flex h-8 shrink-0 items-center gap-1.5 bg-brand px-2.5 text-[11px] font-semibold text-brand-contrast hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[2px] bg-brand px-2.5 text-[11px] font-semibold text-brand-contrast shadow-sm transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:bg-brand-hover hover:shadow-sm active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transform-none motion-reduce:transition-none"
         >
-          {busy ? <RefreshCw size={12} className="animate-spin" aria-hidden="true" /> : <Play size={12} aria-hidden="true" />}
+          {busy ? <RefreshCw size={12} className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : <AnimatedPlay ref={runIconRef} size={12} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />}
           {busy ? "Building…" : run ? "Run again" : "Run"}
         </button>
       </div>
@@ -184,11 +206,11 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
               setStatus("failed");
               setRuntimeError("The isolated preview could not be loaded.");
             }}
-            className="h-[520px] border border-border bg-white"
+            className="h-[520px] rounded-[2px] border border-border bg-white"
             style={{ width: viewport === "mobile" ? "375px" : "100%", maxWidth: "100%" }}
           />
         ) : (
-          <div className="grid min-h-[400px] w-full place-items-center border border-dashed border-border px-5 text-center">
+          <div className="grid min-h-[400px] w-full place-items-center rounded-[3px] border border-dashed border-border px-5 text-center">
             <div>
               <Play size={20} className="mx-auto text-text-tertiary" aria-hidden="true" />
               <p className="mt-3 text-xs font-semibold">Preview is not running</p>
@@ -212,8 +234,8 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
               <AlertTriangle size={18} className="mx-auto text-warning" aria-hidden="true" />
               <p className="mt-2 text-xs font-semibold">Preview did not start</p>
               <p className="mt-1 text-[10px] leading-5 text-text-tertiary">{runtimeError || "Check the console and run again."}</p>
-              <button type="button" onClick={runPreview} disabled={busy} className="mt-3 inline-flex h-8 items-center gap-2 border border-border px-3 text-[11px] font-semibold hover:border-brand disabled:opacity-50">
-                <RefreshCw size={12} aria-hidden="true" /> Retry
+              <button type="button" onClick={runPreview} onMouseEnter={() => retryIconRef.current?.startAnimation?.()} onMouseLeave={() => retryIconRef.current?.stopAnimation?.()} onFocus={() => retryIconRef.current?.startAnimation?.()} onBlur={() => retryIconRef.current?.stopAnimation?.()} disabled={busy} className="mt-3 inline-flex h-8 items-center gap-2 rounded-[2px] border border-border px-3 text-[11px] font-semibold transition-[color,background-color,border-color] duration-200 hover:border-brand/45 hover:bg-surface-2 hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-50 motion-reduce:transition-none">
+                <AnimatedRefreshCw ref={retryIconRef} size={12} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" /> Retry
               </button>
             </div>
           </div>

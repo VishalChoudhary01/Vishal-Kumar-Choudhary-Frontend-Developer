@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 
+import AdminBreadcrumbs from "@/app/components/labs/admin/AdminBreadcrumbs";
 import PortfolioAnalyticsDashboard from "@/app/components/portfolio-analytics/PortfolioAnalyticsDashboard";
 import LabsOwnerNavigation from "@/app/components/labs/admin/LabsOwnerNavigation";
 import { toLabsAccountUser } from "@/app/lib/labs/auth-user-presentation.mjs";
@@ -65,13 +64,7 @@ export default async function PortfolioAnalyticsPage({ searchParams }) {
   return (
     <main className="min-h-screen bg-background px-5 py-8 text-text-primary sm:px-8 lg:px-12">
       <div className="mx-auto w-full max-w-[1440px]">
-        <Link
-          href="/admin/labs/analytics"
-          className="inline-flex items-center gap-2 text-xs font-medium text-text-secondary transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
-        >
-          <ArrowLeft size={14} aria-hidden="true" />
-          Back to Labs analytics
-        </Link>
+        <AdminBreadcrumbs items={[{ href: "/admin/labs/analytics", label: "Back to Labs analytics" }]} />
 
         <LabsOwnerNavigation active="portfolio-analytics" user={toLabsAccountUser(session.user)} />
 

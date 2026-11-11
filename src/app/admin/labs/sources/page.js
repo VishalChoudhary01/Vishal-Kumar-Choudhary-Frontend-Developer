@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, ArrowUpRight, Database } from "lucide-react";
+import { ArrowUpRight, Database } from "lucide-react";
 
+import AdminBreadcrumbs from "@/app/components/labs/admin/AdminBreadcrumbs";
 import LabSourceInventory from "@/app/components/labs/admin/LabSourceInventory";
 import LabsOwnerAccessNotice from "@/app/components/labs/admin/LabsOwnerAccessNotice";
 import LabsOwnerNavigation from "@/app/components/labs/admin/LabsOwnerNavigation";
@@ -36,19 +37,13 @@ export default async function LabsSourceLibraryPage({ searchParams }) {
   return (
     <main className="min-h-screen bg-background px-5 py-10 text-text-primary sm:px-8 lg:px-12">
       <div className="mx-auto w-full max-w-[1280px]">
-        <Link
-          href="/labs"
-          className="inline-flex items-center gap-2 text-xs font-medium text-text-secondary transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
-        >
-          <ArrowLeft size={14} aria-hidden="true" />
-          Back to Labs
-        </Link>
+        <AdminBreadcrumbs items={[{ href: "/labs", label: "Back to Labs" }]} />
 
         <LabsOwnerNavigation active="sources" user={toLabsAccountUser(session.user)} />
 
-        <div className="mt-6 flex flex-col gap-3 border border-border bg-surface-1 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-6 flex flex-col gap-3 rounded-[3px] border border-border bg-surface-1 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="grid h-9 w-9 shrink-0 place-items-center border border-brand/30 bg-brand/5 text-brand">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[2px] border border-brand/30 bg-brand/5 text-brand">
               <Database size={16} aria-hidden="true" />
             </span>
             <div className="min-w-0">
@@ -60,7 +55,7 @@ export default async function LabsSourceLibraryPage({ searchParams }) {
           </div>
           <Link
             href="/admin/labs/sources/snapshots"
-            className="inline-flex h-9 shrink-0 items-center justify-center gap-2 border border-border px-3 text-xs font-semibold text-text-secondary transition-colors hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-[2px] border border-border px-3 text-xs font-semibold text-text-secondary transition-[color,background-color,border-color] duration-200 hover:border-brand/45 hover:bg-surface-2 hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transition-none"
           >
             Open storage manager
             <ArrowUpRight size={13} aria-hidden="true" />
