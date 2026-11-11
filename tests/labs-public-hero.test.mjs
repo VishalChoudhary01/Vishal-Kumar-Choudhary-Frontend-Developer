@@ -240,6 +240,9 @@ test("Labs hero flask is a subtle independent decorative layer behind left conte
 
   assert.ok(componentSource.includes('import LabsHeroFlask from "./landing/LabsHeroFlask";'));
   assert.ok(componentSource.includes("<LabsHeroFlask />"));
+  assert.ok(componentSource.includes("rgba(13,129,118,0.12)"));
+  assert.ok(componentSource.includes("rgba(36,151,137,0.13)"));
+  assert.ok(componentSource.includes("pointer-events-none absolute inset-0 z-0"));
   assert.ok(componentSource.indexOf("<LabsHeroFlask />") < componentSource.indexOf("<motion.p"));
   assert.ok(flaskSource.includes('data-labs-hero-flask=""'));
   assert.ok(flaskSource.includes('aria-hidden="true"'));
@@ -251,10 +254,14 @@ test("Labs hero flask is a subtle independent decorative layer behind left conte
   assert.ok(flaskSource.includes("repeat: Infinity"));
   assert.ok(flaskSource.includes("transformOrigin: \"130px 332px\""));
   assert.ok(flaskSource.includes("liquidFloat"));
-  assert.ok(flaskSource.includes("lg:dark:opacity-[0.26]"));
-  assert.ok(flaskSource.includes("absolute -left-5 -top-7"));
-  assert.ok(flaskSource.includes("lg:-left-12 lg:-top-20"));
-  assert.ok(flaskSource.includes("lg:h-[clamp(35rem,39vw,39rem)]"));
+  assert.ok(flaskSource.includes("lg:dark:opacity-[0.16]"));
+  assert.ok(flaskSource.includes("absolute -left-4 top-4"));
+  assert.ok(flaskSource.includes("lg:-left-8 lg:top-6"));
+  assert.ok(flaskSource.includes("lg:h-[clamp(20rem,25vw,25rem)]"));
+  assert.ok(flaskSource.includes("h-[11rem]"));
+  assert.ok(flaskSource.includes("sm:h-[14rem]"));
+  assert.ok(flaskSource.includes("opacity-[0.09] dark:opacity-[0.12]"));
+  assert.ok(flaskSource.includes("lg:opacity-[0.12]"));
   assert.ok(flaskSource.includes("text-[#0B746A] dark:text-[#9AF3E9]"));
   assert.ok(flaskSource.includes("labs-flask-inner-glass"));
   assert.ok(flaskSource.includes("labs-flask-rim"));
