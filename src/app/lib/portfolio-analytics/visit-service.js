@@ -3,6 +3,8 @@ import "server-only";
 import { createHmac, randomUUID } from "node:crypto";
 
 import { connectToDatabase } from "@/app/lib/db/mongoose";
+import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
+import { buildPortfolioVerifiedVisitor } from "./verified-visitor.mjs";
 import PortfolioVisit from "./models/PortfolioVisit";
 import {
   getPortfolioAnalyticsConfig,
@@ -85,7 +87,7 @@ function getSessionScopedFilter(parsed, secret) {
   };
 }
 
-function buildVisitRecord({ parsed, request, secret, now }) {
+function buildVisitRecord({ parsed, request, secret, now, verifiedVisitor }) {
   const headers = request.headers;
   const sessionHash = createHash(
     secret,
@@ -127,6 +129,7 @@ function buildVisitRecord({ parsed, request, secret, now }) {
     regionCode: location.regionCode,
     city: location.city,
     deviceType,
+    ...(verifiedVisitor || {}),
     startedAt: now,
     lastHeartbeatAt: now,
     activeSeconds: 0,
@@ -159,11 +162,25 @@ export async function startPortfolioVisit(payload, request, now = new Date()) {
     throw serviceError("INVALID_SERVER_TIME", "A valid server timestamp is required.");
   }
 
+  // Account identity is resolved only from the server-side Better Auth
+  // session. Browser-supplied account IDs are never accepted or persisted.
+  let verifiedVisitor = null;
+  try {
+    const session = await getCurrentAuthSession();
+    verifiedVisitor = buildPortfolioVerifiedVisitor({
+      user: session?.user,
+      secret: config.hmacSecret,
+    });
+  } catch {
+    // Keep anonymous visit recording available if account lookup is unavailable.
+  }
+
   const record = buildVisitRecord({
     parsed,
     request,
     secret: config.hmacSecret,
     now: timestamp,
+    verifiedVisitor,
   });
 
   await connectToDatabase();
@@ -174,7 +191,7 @@ export async function startPortfolioVisit(payload, request, now = new Date()) {
       { $setOnInsert: record },
       {
         upsert: true,
-        new: true,
+        returnDocument: "after",
         runValidators: true,
         setDefaultsOnInsert: true,
       },
@@ -261,7 +278,7 @@ export async function heartbeatPortfolioVisit(payload, request, now = new Date()
         },
       },
     ],
-    { new: true },
+    { returnDocument: "after" },
   )
     .select("visitId status activeSeconds lastHeartbeatAt")
     .lean();
@@ -299,7 +316,7 @@ export async function pausePortfolioVisit(payload, request, now = new Date()) {
         },
       },
     ],
-    { new: true },
+    { returnDocument: "after" },
   )
     .select("visitId status activeSeconds lastHeartbeatAt endedAt")
     .lean();
@@ -332,7 +349,7 @@ export async function resumePortfolioVisit(payload, request, now = new Date()) {
         endedAt: null,
       },
     },
-    { new: true, runValidators: true },
+    { returnDocument: "after", runValidators: true },
   )
     .select("visitId status activeSeconds lastHeartbeatAt")
     .lean();
@@ -379,7 +396,7 @@ export async function endPortfolioVisit(payload, request, now = new Date()) {
         },
       },
     ],
-    { new: true },
+    { returnDocument: "after" },
   )
     .select("visitId status activeSeconds lastHeartbeatAt endedAt")
     .lean();
