@@ -6,6 +6,7 @@ import { animate, motion, useInView, useMotionValue, useTransform } from "motion
 
 import useReducedMotion from "@/app/hooks/useReducedMotion";
 import LabsHeroArtwork from "./landing/LabsHeroArtwork";
+import LabsHeroFlask from "./landing/LabsHeroFlask";
 import { getLabsHeroActions } from "@/app/lib/labs/hero-cta.mjs";
 
 const heroContainerVariants = {
@@ -127,7 +128,8 @@ export default function LabsIntroduction({
     >
       <div className="relative z-10 grid grid-cols-1 items-center gap-8 sm:gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:gap-8 xl:gap-12">
         <div className="relative z-10 flex min-w-0 flex-col items-start">
-          <motion.p
+          <LabsHeroFlask />
+          <motion.p className="relative z-10"
             variants={heroItemVariants}
             className="mb-4 font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-brand sm:mb-5 sm:text-[10px]"
           >

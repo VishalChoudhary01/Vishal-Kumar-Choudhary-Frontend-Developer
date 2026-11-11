@@ -224,3 +224,34 @@ test("FlaskConical icon animation is controlled by the complete hero button hove
   assert.ok(iconSource.includes("LazyMotion features={domMin} strict"));
   assert.ok(iconSource.includes("rotate: [0, -10, 8, -5, 0]"));
 });
+
+test("Labs hero flask is a subtle independent decorative layer behind left content", async () => {
+  const flaskSource = await readFile(
+    new URL("../src/app/components/labs/landing/LabsHeroFlask.js", import.meta.url),
+    "utf8",
+  );
+
+  assert.ok(componentSource.includes('import LabsHeroFlask from "./landing/LabsHeroFlask";'));
+  assert.ok(componentSource.includes("<LabsHeroFlask />"));
+  assert.ok(componentSource.indexOf("<LabsHeroFlask />") < componentSource.indexOf("<motion.p"));
+  assert.ok(flaskSource.includes('data-labs-hero-flask=""'));
+  assert.ok(flaskSource.includes('aria-hidden="true"'));
+  assert.ok(flaskSource.includes("pointer-events-none absolute"));
+  assert.ok(flaskSource.includes("z-0"));
+  assert.ok(flaskSource.includes("useReducedMotion"));
+  assert.ok(flaskSource.includes("rotate: [-1.6, 1.6, -1.6]"));
+  assert.ok(flaskSource.includes("duration: 8"));
+  assert.ok(flaskSource.includes("repeat: Infinity"));
+  assert.ok(flaskSource.includes("transformOrigin: \"130px 332px\""));
+  assert.ok(flaskSource.includes("liquidFloat"));
+  assert.ok(flaskSource.includes("lg:dark:opacity-[0.14]"));
+  assert.doesNotMatch(flaskSource, /WebGLRenderer|THREE|Raycaster|pointerdown|pointermove/);
+});
+
+test("adding the hero flask does not change the existing Three.js sphere interaction", () => {
+  assert.match(particleRendererSource, /raycaster\.intersectObject\(sphereHitArea, false\)/);
+  assert.match(particleRendererSource, /distance <= 12 && pointerDown\.startedOnSphere && hitSphere/);
+  assert.match(particleRendererSource, /burstStartedAt = elapsed/);
+  assert.match(particleRendererSource, /orbitGroup\.userData\.update\?\.\(elapsed\)/);
+  assert.match(particleRendererSource, /renderer\.domElement\.style\.touchAction = "pan-y"/);
+});
