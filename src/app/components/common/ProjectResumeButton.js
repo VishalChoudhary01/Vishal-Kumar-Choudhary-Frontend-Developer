@@ -250,11 +250,12 @@ export default function ProjectResumeButton({
                 "hover:border-brand/65",
                 "hover:bg-brand-soft/65",
                 "hover:shadow-[0_3px_16px_rgba(23,107,104,0.10)]",
-                "dark:border-brand/45",
-                "dark:bg-brand-soft/35",
-                "dark:hover:border-brand/70",
-                "dark:hover:bg-brand-soft/65",
-                "dark:hover:shadow-[0_3px_18px_rgba(105,189,185,0.14)]",
+                "dark:border-brand/30",
+                "dark:bg-brand/10",
+                "dark:text-text-primary",
+                "dark:hover:border-brand/50",
+                "dark:hover:bg-brand/15",
+                "dark:hover:shadow-[0_3px_18px_rgba(7,162,144,0.14)]",
             ].join(" ")
             : [
                 // Light mode.
@@ -333,13 +334,19 @@ export default function ProjectResumeButton({
             {/* Glass highlight */}
             <span
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover/action:opacity-100 dark:bg-white/8"
+                className={cn(
+                    "pointer-events-none absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover/action:opacity-100",
+                    surface === "brand-outline" ? "dark:bg-brand/15" : "dark:bg-white/8",
+                )}
             />
 
             {/* Top glass reflection */}
             <span
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-x-5 top-0 h-px bg-white/75 opacity-70 dark:bg-white/40"
+                className={cn(
+                    "pointer-events-none absolute inset-x-5 top-0 h-px bg-white/75 opacity-70",
+                    surface === "brand-outline" ? "dark:bg-brand/45" : "dark:bg-white/40",
+                )}
             />
 
             {/* Label */}
@@ -383,11 +390,10 @@ export default function ProjectResumeButton({
                     "text-black",
                     "shadow-[0_1px_5px_rgba(0,0,0,0.08)]",
 
-                    // Dark mode.
-                    "dark:border-white/15",
-                    "dark:bg-white/75",
-                    "dark:text-black",
-                    "dark:shadow-[0_1px_5px_rgba(0,0,0,0.18)]",
+                    // Dark mode: Labs uses a muted teal icon medallion.
+                    surface === "brand-outline"
+                        ? "dark:border-brand/35 dark:bg-brand/15 dark:text-brand dark:shadow-[0_1px_5px_rgba(7,162,144,0.16)]"
+                        : "dark:border-white/15 dark:bg-white/75 dark:text-black dark:shadow-[0_1px_5px_rgba(0,0,0,0.18)]",
 
                     "backdrop-blur-md",
 
