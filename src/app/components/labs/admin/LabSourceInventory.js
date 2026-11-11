@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useActionToast } from "@/app/providers/ActionToastProvider";
 import Link from "next/link";
+import { motion } from "motion/react";
 import {
   Plus,
   Clock3,
@@ -101,6 +102,8 @@ export default function LabSourceInventory() {
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [deleting, setDeleting] = useState(false);
   const deleteModalIconRef = useRef(null);
+  const deleteConfirmIconRef = useRef(null);
+  const deleteRowIconRefs = useRef(new Map());
   const searchIconRef = useRef(null);
 
   const startSearchAnimation = () => searchIconRef.current?.startAnimation?.();
@@ -465,9 +468,22 @@ export default function LabSourceInventory() {
                         disabled={Boolean(creating) || deleting}
                         aria-label={"Delete " + item.title}
                         title="Delete custom experiment"
-                        className="grid h-9 w-9 place-items-center border border-warning/40 text-warning transition-colors hover:bg-warning/10 disabled:opacity-40"
+                        onMouseEnter={() => deleteRowIconRefs.current.get(item.slug)?.startAnimation?.()}
+                        onMouseLeave={() => deleteRowIconRefs.current.get(item.slug)?.stopAnimation?.()}
+                        onFocus={() => deleteRowIconRefs.current.get(item.slug)?.startAnimation?.()}
+                        onBlur={() => deleteRowIconRefs.current.get(item.slug)?.stopAnimation?.()}
+                        className="grid h-9 w-9 place-items-center rounded-md border border-error/35 bg-error/[0.035] text-error transition-[color,background-color,border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-error/60 hover:bg-error/10 hover:shadow-sm active:translate-y-0 active:scale-[0.97] disabled:opacity-40 motion-reduce:transform-none motion-reduce:transition-none"
                       >
-                        <AnimatedTrash size={14} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />
+                        <AnimatedTrash
+                          ref={(node) => {
+                            if (node) deleteRowIconRefs.current.set(item.slug, node);
+                            else deleteRowIconRefs.current.delete(item.slug);
+                          }}
+                          size={14}
+                          duration={0.62}
+                          isAnimated={!prefersReducedMotion}
+                          aria-hidden="true"
+                        />
                       </button>
                     ) : null}
                     </>
@@ -509,26 +525,54 @@ export default function LabSourceInventory() {
         </div>
       )}
       {deleteTarget ? (
-        <div className="fixed inset-0 z-[80] grid place-items-center bg-black/70 p-4" role="presentation">
-          <section role="dialog" aria-modal="true" aria-labelledby="inventory-delete-title" className="w-full max-w-md border border-warning/40 bg-surface-1 p-5 shadow-2xl">
-            <div className="flex items-center gap-2 text-warning">
-              <AnimatedTrash ref={deleteModalIconRef} size={16} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
-              <h2 id="inventory-delete-title" className="text-base font-semibold">Delete {deleteTarget.title}?</h2>
+        <motion.div
+          initial={prefersReducedMotion ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: prefersReducedMotion ? 0.01 : 0.18, ease: [0.22, 1, 0.36, 1] }}
+          className="fixed inset-0 z-[80] grid place-items-center bg-black/70 p-4 backdrop-blur-sm"
+          role="presentation"
+        >
+          <motion.section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="inventory-delete-title"
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 14, scale: 0.985 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: prefersReducedMotion ? 0.01 : 0.24, ease: [0.22, 1, 0.36, 1] }}
+            className="w-full max-w-md rounded-xl border border-error/25 bg-surface-1 p-5 shadow-[0_24px_100px_rgba(0,0,0,0.5)] sm:p-6"
+          >
+            <div className="flex items-start gap-3">
+              <span className="grid size-10 shrink-0 place-items-center rounded-lg border border-error/30 bg-error/10 text-error shadow-sm">
+                <AnimatedTrash ref={deleteModalIconRef} size={17} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-error">Permanent action</p>
+                <h2 id="inventory-delete-title" className="mt-1 text-base font-semibold text-text-primary">Delete {deleteTarget.title}?</h2>
+              </div>
             </div>
-            <p className="mt-3 text-sm leading-6 text-text-secondary">This permanently removes the custom experiment, source versions, private media, release artifacts and engagement data. Built-in experiments cannot be deleted.</p>
-            <label className="mt-4 block text-xs font-medium text-text-secondary">
-              Type <span className="font-mono text-text-primary">{deleteTarget.slug}</span> to confirm
-              <input value={deleteConfirmation} onChange={(event) => setDeleteConfirmation(event.target.value)} autoComplete="off" spellCheck={false} className="mt-2 h-10 w-full border border-border bg-background px-3 font-mono text-xs text-text-primary outline-none focus:border-warning" placeholder={deleteTarget.slug} />
+            <p className="mt-4 text-sm leading-6 text-text-secondary">This permanently removes the custom experiment, source versions, private media, release artifacts and engagement data. Built-in experiments cannot be deleted.</p>
+            <label className="mt-4 block rounded-lg border border-error/20 bg-error/[0.035] p-3 text-xs font-medium text-text-secondary sm:p-4">
+              Type <span className="font-mono font-semibold text-text-primary">{deleteTarget.slug}</span> to confirm
+              <input value={deleteConfirmation} onChange={(event) => setDeleteConfirmation(event.target.value)} autoComplete="off" spellCheck={false} className="mt-2 h-10 w-full rounded-md border border-border bg-background px-3 font-mono text-xs text-text-primary outline-none transition-[border-color,box-shadow] duration-200 focus:border-error focus:ring-2 focus:ring-error/15 motion-reduce:transition-none" placeholder={deleteTarget.slug} />
             </label>
-            <div className="mt-5 flex justify-end gap-2">
-              <button type="button" onClick={() => setDeleteTarget(null)} disabled={deleting} className="h-9 border border-border px-3 text-xs">Cancel</button>
-              <button type="button" onClick={deleteExperiment} disabled={deleting || deleteConfirmation.trim() !== deleteTarget.slug} className="inline-flex h-9 items-center gap-2 border border-warning bg-warning/10 px-3 text-xs font-semibold text-warning disabled:cursor-not-allowed disabled:opacity-40">
-                {deleting ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <AnimatedTrash size={13} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />}
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button type="button" onClick={() => setDeleteTarget(null)} disabled={deleting} className="inline-flex h-9 items-center justify-center rounded-md border border-border bg-surface-2/50 px-3 text-xs font-medium text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-50">Cancel</button>
+              <button
+                type="button"
+                onClick={deleteExperiment}
+                onMouseEnter={() => deleteConfirmIconRef.current?.startAnimation?.()}
+                onMouseLeave={() => deleteConfirmIconRef.current?.stopAnimation?.()}
+                onFocus={() => deleteConfirmIconRef.current?.startAnimation?.()}
+                onBlur={() => deleteConfirmIconRef.current?.stopAnimation?.()}
+                disabled={deleting || deleteConfirmation.trim() !== deleteTarget.slug}
+                className="inline-flex h-9 items-center gap-2 rounded-md border border-error bg-error px-3 text-xs font-semibold text-error-contrast shadow-sm transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-error-hover hover:bg-error-hover hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-error disabled:cursor-not-allowed disabled:opacity-40 motion-reduce:transform-none motion-reduce:transition-none"
+              >
+                {deleting ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <AnimatedTrash ref={deleteConfirmIconRef} size={13} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />}
                 {deleting ? "Deleting…" : "Delete permanently"}
               </button>
             </div>
-          </section>
-        </div>
+          </motion.section>
+        </motion.div>
       ) : null}
     </section>
   );
