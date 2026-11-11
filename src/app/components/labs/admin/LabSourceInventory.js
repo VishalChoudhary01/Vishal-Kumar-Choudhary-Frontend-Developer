@@ -567,7 +567,7 @@ export default function LabSourceInventory() {
                 disabled={deleting || deleteConfirmation.trim() !== deleteTarget.slug}
                 className="inline-flex h-9 items-center gap-2 rounded-md border border-error bg-error px-3 text-xs font-semibold text-error-contrast shadow-sm transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-error-hover hover:bg-error-hover hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-error disabled:cursor-not-allowed disabled:opacity-40 motion-reduce:transform-none motion-reduce:transition-none"
               >
-                {deleting ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <AnimatedTrash ref={deleteConfirmIconRef} size={13} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />}
+                {deleting ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <AnimatedTrash size={13} ref={deleteConfirmIconRef} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />}
                 {deleting ? "Deleting…" : "Delete permanently"}
               </button>
             </div>
