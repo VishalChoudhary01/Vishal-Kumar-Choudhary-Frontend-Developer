@@ -86,8 +86,16 @@ const portfolioVisitSchema = new mongoose.Schema(
       required: true,
       enum: ["desktop", "mobile", "tablet", "unknown"],
     },
-    // Only a one-way HMAC of the Better Auth user ID is retained. The
-    // display label and masked email are owner-report-only projections.
+    // Verified account identity is derived only from the server-side
+    // Better Auth session. Raw ID, name and masked email are hidden from
+    // default model projections and requested only by the owner report.
+    verifiedUserAccountId: {
+      type: String,
+      default: null,
+      trim: true,
+      maxlength: 128,
+      select: false,
+    },
     verifiedUserHash: {
       type: String,
       default: null,
