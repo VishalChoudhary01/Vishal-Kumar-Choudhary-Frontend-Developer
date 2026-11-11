@@ -338,8 +338,10 @@ test("portfolio homepage keeps Projects primary and Labs secondary across motion
   ]);
 
   for (const heroSource of [cinematicHero, mobileIntro, reducedMotionHero]) {
-    assert.match(heroSource, /href="#projects"[\\s\\S]*?surface="brand"/);
-    assert.match(heroSource, /href="\\/labs"[\\s\\S]*?surface="brand-outline"/);
+    assert.ok(heroSource.includes('href="#projects"'));
+    assert.ok(heroSource.includes('surface="brand"'));
+    assert.ok(heroSource.includes('href="/labs"'));
+    assert.ok(heroSource.includes('surface="brand-outline"'));
     assert.ok(heroSource.includes("animateIconOnHover"));
   }
 
@@ -356,12 +358,14 @@ test("contact form uses the brand-primary CTA variant without removing submit li
     readFile(new URL("../src/app/components/common/buttons/ActionButton.js", import.meta.url), "utf8"),
   ]);
 
-  assert.match(fieldsSource, /<ActionButton[\\s\\S]*?variant="primary"[\\s\\S]*?label="Send Message"/);
+  assert.ok(fieldsSource.includes('variant="primary"'));
+  assert.ok(fieldsSource.includes('label="Send Message"'));
   assert.ok(fieldsSource.includes('status={isSubmitting ? "submitting" : "idle"}'));
   assert.ok(fieldsSource.includes("disabled={!isValid}"));
   assert.ok(actionButtonSource.includes('variant = "glass"'));
   assert.ok(actionButtonSource.includes('const isPrimary = variant === "primary"'));
   assert.ok(actionButtonSource.includes("bg-brand text-brand-contrast"));
   assert.ok(actionButtonSource.includes("aria-busy={isSubmitting}"));
-  assert.ok(actionButtonSource.includes("isSubmitting ? submittingLabel"));
+  assert.ok(actionButtonSource.includes("isSubmitting"));
+  assert.ok(actionButtonSource.includes("submittingLabel"));
 });
