@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { motion } from "motion/react";
 
+import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";
+import { FlaskConicalIcon } from "@/app/components/common/FlaskConicalIcon";
 import useReducedMotion from "@/app/hooks/useReducedMotion";
 import LabExperimentPreview from "./LabExperimentPreview";
 
@@ -135,18 +137,14 @@ export default function FeaturedExperiment({ experiment }) {
               </div>
             ) : null}
 
-            <Link
+            <ProjectResumeButton
               href={href}
-              className="group mt-8 inline-flex min-h-11 items-center gap-4 border border-brand bg-brand px-5 text-xs font-semibold text-brand-contrast transition-[background-color,border-color,transform] duration-200 hover:-translate-y-px hover:border-brand-hover hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none sm:mt-9 sm:text-sm"
-            >
-              Explore experiment
-              <span
-                aria-hidden="true"
-                className="inline-block transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transform-none motion-reduce:transition-none"
-              >
-                ↗
-              </span>
-            </Link>
+              label="Explore experiment"
+              ariaLabel={`Explore featured experiment: ${experiment.title}`}
+              icon={FlaskConicalIcon}
+              animateIconOnHover
+              className="mt-8 sm:mt-9"
+            />
           </motion.div>
         </div>
       </div>

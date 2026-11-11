@@ -261,3 +261,21 @@ test("adding the hero flask does not change the existing Three.js sphere interac
   assert.match(particleRendererSource, /orbitGroup\.userData\.update\?\.\(elapsed\)/);
   assert.match(particleRendererSource, /renderer\.domElement\.style\.touchAction = "pan-y"/);
 });
+
+test("featured experiment CTA reuses the shared resume button with parent-controlled animated flask", async () => {
+  const featured = await readFile(
+    new URL("../src/app/components/labs/FeaturedExperiment.js", import.meta.url),
+    "utf8",
+  );
+
+  assert.ok(featured.includes('import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";'));
+  assert.ok(featured.includes('import { FlaskConicalIcon } from "@/app/components/common/FlaskConicalIcon";'));
+  assert.ok(featured.includes("<ProjectResumeButton"));
+  assert.ok(featured.includes("href={href}"));
+  assert.ok(featured.includes('label="Explore experiment"'));
+  assert.ok(featured.includes("icon={FlaskConicalIcon}"));
+  assert.ok(featured.includes("animateIconOnHover"));
+  assert.ok(featured.includes("className=\"mt-8 sm:mt-9\""));
+  assert.ok(featured.includes("`Explore featured experiment: ${experiment.title}`"));
+  assert.doesNotMatch(featured, /group mt-8 inline-flex min-h-11 items-center gap-4 border border-brand bg-brand/);
+});
