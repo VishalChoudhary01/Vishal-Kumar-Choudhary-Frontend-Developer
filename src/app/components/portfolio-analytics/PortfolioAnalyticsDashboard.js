@@ -279,8 +279,10 @@ function RecentVisitsTable({
     <section className="border border-border bg-surface-1" aria-labelledby="recent-visits-title">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
         <div>
-          <h2 id="recent-visits-title" className="text-sm font-semibold">Recent visits</h2>
-          <p className="mt-1 text-xs text-text-tertiary">Verified accounts are labelled; other visits remain guest or unverified.</p>
+          <h2 id="recent-visits-title" className="text-sm font-semibold">Visitor activity</h2>
+          <p className="mt-1 text-xs text-text-tertiary">
+            One row per page visit, with visitor identity, device and approximate location. Verified account emails are masked.
+          </p>
         </div>
         <span className="text-xs text-text-tertiary">{visits.length} records shown</span>
       </div>
@@ -290,17 +292,19 @@ function RecentVisitsTable({
       ) : visits.length ? (
         <>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1080px] border-collapse text-left text-xs">
+            <table className="w-full min-w-[1320px] border-collapse text-left text-xs">
               <thead className="bg-surface-2 text-[10px] uppercase tracking-[0.12em] text-text-tertiary">
                 <tr>
                   <th className="w-10 px-3 py-3 font-medium">
                     <span className="sr-only">Select</span>
                   </th>
-                  <th className="px-5 py-3 font-medium">Page</th>
-                  <th className="px-4 py-3 font-medium">Visitor</th>
-                  <th className="px-4 py-3 font-medium">Source</th>
-                  <th className="px-4 py-3 font-medium">Location</th>
+                  <th className="px-4 py-3 font-medium">Visitor name</th>
+                  <th className="px-4 py-3 font-medium">Email (masked)</th>
+                  <th className="px-4 py-3 font-medium">Account</th>
                   <th className="px-4 py-3 font-medium">Device</th>
+                  <th className="px-4 py-3 font-medium">Location</th>
+                  <th className="px-4 py-3 font-medium">Page visited</th>
+                  <th className="px-4 py-3 font-medium">Source</th>
                   <th className="px-4 py-3 text-right font-medium">Visible time</th>
                   <th className="px-5 py-3 text-right font-medium">Visited</th>
                 </tr>
@@ -309,6 +313,7 @@ function RecentVisitsTable({
                 {visits.map((visit) => {
                   const DeviceIcon = getDeviceIcon(visit.deviceType);
                   const isNew = newVisitIds.has(visit.id);
+                  const isVerified = visit.visitor?.kind === "verified";
                   return (
                     <motion.tr
                       key={visit.id}
@@ -326,44 +331,43 @@ function RecentVisitsTable({
                           className="size-4 accent-[var(--brand)] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand"
                         />
                       </td>
-                      <td className="max-w-[260px] px-5 py-4">
-                        <span className="block truncate font-medium text-text-primary">{getPageLabel(visit.pageType)}</span>
-                        <span className="mt-1 block truncate font-mono text-[10px] text-text-tertiary">{visit.path}</span>
+                      <td className="max-w-[180px] px-4 py-4">
+                        <span className="block truncate font-medium text-text-primary">
+                          {isVerified ? visit.visitor.name || "Verified account" : "Guest visitor"}
+                        </span>
                       </td>
-                      <td className="max-w-[220px] px-4 py-4">
-                        {visit.visitor?.kind === "verified" ? (
-                          <>
-                            <span className="block truncate font-medium text-text-primary">
-                              {visit.visitor.name || "Verified account"}
-                            </span>
-                            {visit.visitor.email ? (
-                              <span className="mt-1 block truncate text-[10px] text-text-tertiary">
-                                {visit.visitor.email}
-                              </span>
-                            ) : null}
-                            <span className="mt-1 inline-flex items-center rounded border border-success/30 bg-success/10 px-1.5 py-0.5 text-[9px] font-semibold text-success">
-                              Verified
-                            </span>
-                          </>
+                      <td className="max-w-[190px] px-4 py-4">
+                        {isVerified && visit.visitor.email ? (
+                          <span className="block truncate text-text-secondary">{visit.visitor.email}</span>
                         ) : (
-                          <>
-                            <span className="block font-medium text-text-secondary">Guest / unverified</span>
-                            <span className="mt-1 block text-[10px] text-text-tertiary">
-                              No verified account attached
-                            </span>
-                          </>
+                          <span className="text-text-tertiary">—</span>
                         )}
                       </td>
                       <td className="px-4 py-4">
-                        <span className="block font-medium text-text-secondary">{getSourceLabel(visit)}</span>
-                        {visit.referrerHost ? <span className="mt-1 block max-w-[150px] truncate text-[10px] text-text-tertiary">{visit.referrerHost}</span> : null}
+                        {isVerified ? (
+                          <span className="inline-flex items-center rounded border border-success/30 bg-success/10 px-1.5 py-0.5 text-[9px] font-semibold text-success">
+                            Verified
+                          </span>
+                        ) : (
+                          <span className="text-text-tertiary">Guest / unverified</span>
+                        )}
                       </td>
-                      <td className="px-4 py-4 text-text-secondary">{getLocationLabel(visit)}</td>
                       <td className="px-4 py-4">
                         <span className="inline-flex items-center gap-2 text-text-secondary">
                           <DeviceIcon size={14} aria-hidden="true" />
                           {getDeviceLabel(visit.deviceType)}
                         </span>
+                      </td>
+                      <td className="max-w-[180px] px-4 py-4 text-text-secondary">
+                        <span className="block truncate">{getLocationLabel(visit)}</span>
+                      </td>
+                      <td className="max-w-[250px] px-4 py-4">
+                        <span className="block truncate font-medium text-text-primary">{getPageLabel(visit.pageType)}</span>
+                        <span className="mt-1 block truncate font-mono text-[10px] text-text-tertiary">{visit.path}</span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="block font-medium text-text-secondary">{getSourceLabel(visit)}</span>
+                        {visit.referrerHost ? <span className="mt-1 block max-w-[140px] truncate text-[10px] text-text-tertiary">{visit.referrerHost}</span> : null}
                       </td>
                       <td className="px-4 py-4 text-right tabular-nums text-text-secondary">{formatDuration(visit.activeSeconds)}</td>
                       <td className="whitespace-nowrap px-5 py-4 text-right text-text-secondary">
