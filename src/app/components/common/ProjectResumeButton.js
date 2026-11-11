@@ -85,6 +85,7 @@ export default function ProjectResumeButton({
     disabled = false,
     ariaLabel,
     download = false,
+    animateIconOnHover = false,
 }) {
     const reducedMotion = useReducedMotion();
 
@@ -99,6 +100,17 @@ export default function ProjectResumeButton({
 
     const linkRef = useRef(null);
     const circleRef = useRef(null);
+    const leadingIconRef = useRef(null);
+
+    const startLeadingIconAnimation = () => {
+        if (!animateIconOnHover) return;
+        leadingIconRef.current?.startAnimation?.();
+    };
+
+    const stopLeadingIconAnimation = () => {
+        if (!animateIconOnHover) return;
+        leadingIconRef.current?.stopAnimation?.();
+    };
 
     const [travel, setTravel] = useState(0);
 
@@ -272,8 +284,14 @@ export default function ProjectResumeButton({
         whileFocus: "focus",
         whileTap: "tap",
 
-        // Play the sound once when the pointer enters the button.
-        onMouseEnter: playHoverSound,
+        // The full button controls the optional animated leading icon.
+        onMouseEnter: () => {
+            playHoverSound();
+            startLeadingIconAnimation();
+        },
+        onMouseLeave: stopLeadingIconAnimation,
+        onFocus: startLeadingIconAnimation,
+        onBlur: stopLeadingIconAnimation,
 
         transition: {
             duration: 0.28,
@@ -349,7 +367,10 @@ export default function ProjectResumeButton({
                 )}
             >
                 <Icon
+                    ref={animateIconOnHover ? leadingIconRef : undefined}
                     size={leftIconSize}
+                    duration={0.9}
+                    isAnimated={animateIconOnHover}
                     strokeWidth={1.8}
                 />
             </motion.span>

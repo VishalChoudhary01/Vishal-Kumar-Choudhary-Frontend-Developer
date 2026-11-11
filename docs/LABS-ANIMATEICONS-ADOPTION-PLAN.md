@@ -431,3 +431,8 @@ This preserves one shared shell, moving circular icon position, sizing, surface 
 - Editor/media/storage detail icons, public experiment detail actions, parent-controlled keyboard-focus animation and interactive visual QA remain subsequent phases.
 - Do not adopt the It’s Hover upload loop unchanged; the earlier plan's bounded-animation requirement still applies.
 
+
+
+### Flask CTA animation trigger correction
+
+The hero's `FlaskConicalIcon` is now used as a parent-controlled icon inside `ProjectResumeButton` rather than relying on the icon's own pointer-enter handler. The shared button receives an imperative icon ref and starts the flask motion on the button's `onMouseEnter` and `onFocus`; it returns the icon to its normal pose on `onMouseLeave` and `onBlur`. The icon's internal hover handler detects the controlled ref and does not start a second independent animation. Reduced-motion is respected inside the icon. This ensures the flask animates when the pointer enters the entire Explore Labs CTA, not only when it happens to cross the SVG itself.

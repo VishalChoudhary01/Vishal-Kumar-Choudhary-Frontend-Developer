@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { motion, useInView } from "motion/react";
 import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";
-import { FlaskConical } from "lucide-react";
+import { FlaskConicalIcon } from "@/app/components/common/FlaskConicalIcon";
 import { DESCRIPTION, CTA_TEXT, MOTION, } from "./heroMotionConfig";
 import SectionEyebrow from "../../common/SectionEyebrow";
 
@@ -44,7 +44,7 @@ export function MobileIntro() {
             href="#projects"
             label={CTA_TEXT}
           />
-          <ProjectResumeButton href="/labs" label="Explore Labs" icon={FlaskConical} />
+          <ProjectResumeButton href="/labs" label="Explore Labs" icon={FlaskConicalIcon} animateIconOnHover />
         </div>
       </MobileIntroItem>
     </section>

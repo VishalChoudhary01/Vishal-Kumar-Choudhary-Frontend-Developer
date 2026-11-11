@@ -183,8 +183,8 @@ test("portfolio hero uses the shared Project CTA treatment for Labs across all m
 
   for (const source of [cinematicHero, mobileIntro, reducedMotionHero]) {
     assert.ok(source.includes('import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";'));
-    assert.ok(source.includes('import { FlaskConical } from "lucide-react";'));
-    assert.ok(source.includes('<ProjectResumeButton href="/labs" label="Explore Labs" icon={FlaskConical} />'));
+    assert.ok(source.includes('import { FlaskConicalIcon } from "@/app/components/common/FlaskConicalIcon";'));
+    assert.ok(source.includes('<ProjectResumeButton href="/labs" label="Explore Labs" icon={FlaskConicalIcon} animateIconOnHover />'));
     assert.doesNotMatch(source, /ExploreLabsButton/);
   }
 
@@ -193,4 +193,28 @@ test("portfolio hero uses the shared Project CTA treatment for Labs across all m
   assert.ok(sharedButton.includes("tone.circle"));
   assert.ok(sharedButton.includes("circleVariants"));
   assert.ok(sharedButton.includes("useReducedMotion"));
+});
+
+test("FlaskConical icon animation is controlled by the complete hero button hover and focus", async () => {
+  const [buttonSource, iconSource] = await Promise.all([
+    readFile(new URL("../src/app/components/common/ProjectResumeButton.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/common/FlaskConicalIcon.js", import.meta.url), "utf8"),
+  ]);
+
+  assert.ok(buttonSource.includes("animateIconOnHover = false"));
+  assert.ok(buttonSource.includes("leadingIconRef.current?.startAnimation?.()"));
+  assert.ok(buttonSource.includes("leadingIconRef.current?.stopAnimation?.()"));
+  assert.ok(buttonSource.includes("onMouseEnter: () =>"));
+  assert.ok(buttonSource.includes("onMouseLeave: stopLeadingIconAnimation"));
+  assert.ok(buttonSource.includes("onFocus: startLeadingIconAnimation"));
+  assert.ok(buttonSource.includes("onBlur: stopLeadingIconAnimation"));
+  assert.ok(buttonSource.includes("ref={animateIconOnHover ? leadingIconRef : undefined}"));
+
+  assert.ok(iconSource.includes("useImperativeHandle"));
+  assert.ok(iconSource.includes("controls.start(\"animate\")"));
+  assert.ok(iconSource.includes("controls.start(\"normal\")"));
+  assert.ok(iconSource.includes("isControlled.current"));
+  assert.ok(iconSource.includes("useReducedMotion"));
+  assert.ok(iconSource.includes("LazyMotion features={domMin} strict"));
+  assert.ok(iconSource.includes("rotate: [0, -10, 8, -5, 0]"));
 });

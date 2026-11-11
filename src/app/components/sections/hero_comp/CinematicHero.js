@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { motion, useMotionValue, useScroll, useTransform, } from "motion/react";
 import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";
-import { FlaskConical } from "lucide-react";
+import { FlaskConicalIcon } from "@/app/components/common/FlaskConicalIcon";
 import HeroAmbientBackground from "@/app/components/common/HeroAmbientBackground";
 import { usePageLoader } from "@/app/providers/PageLoaderProvider";
 import useBreakpoint from "@/app/hooks/useBreakpoint";
@@ -753,7 +753,7 @@ function CinematicHero() {
                             href="#projects"
                             label={CTA_TEXT}
                           />
-                          <ProjectResumeButton href="/labs" label="Explore Labs" icon={FlaskConical} />
+                          <ProjectResumeButton href="/labs" label="Explore Labs" icon={FlaskConicalIcon} animateIconOnHover />
                         </div>
                       </motion.div>
                     </motion.div>
