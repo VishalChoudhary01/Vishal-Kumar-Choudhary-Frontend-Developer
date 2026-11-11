@@ -8,9 +8,9 @@ import {
   Plus,
   Clock3,
   LoaderCircle,
-  Search,
   SearchX,
 } from "lucide-react";
+import { SearchIcon as AnimatedSearch } from "@animateicons/react/lucide/search-icon";
 import { TriangleAlertIcon as AlertTriangle } from "@animateicons/react/lucide/triangle-alert-icon";
 import { CircleCheckIcon as CheckCircle2 } from "@animateicons/react/lucide/circle-check-icon";
 import { FileCodeIcon as FileCode2 } from "@animateicons/react/lucide/file-code-icon";
@@ -101,6 +101,10 @@ export default function LabSourceInventory() {
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [deleting, setDeleting] = useState(false);
   const deleteModalIconRef = useRef(null);
+  const searchIconRef = useRef(null);
+
+  const startSearchAnimation = () => searchIconRef.current?.startAnimation?.();
+  const stopSearchAnimation = () => searchIconRef.current?.stopAnimation?.();
 
   useEffect(() => {
     if (deleteTarget) deleteModalIconRef.current?.startAnimation?.();
@@ -319,12 +323,25 @@ export default function LabSourceInventory() {
       </div>
 
       <div className="mt-4 flex flex-col gap-3 border border-border bg-surface-1 p-3 sm:flex-row sm:items-center sm:justify-between">
-        <label className="relative block min-w-0 flex-1">
+        <label
+          className="group/search relative block min-w-0 flex-1"
+          onMouseEnter={startSearchAnimation}
+          onMouseLeave={stopSearchAnimation}
+        >
           <span className="sr-only">Search experiments</span>
-          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" aria-hidden="true" />
+          <AnimatedSearch
+            ref={searchIconRef}
+            size={15}
+            duration={0.68}
+            isAnimated={!prefersReducedMotion}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary transition-colors group-focus-within/search:text-brand"
+            aria-hidden="true"
+          />
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
+            onFocus={startSearchAnimation}
+            onBlur={stopSearchAnimation}
             placeholder="Search by experiment name or slug"
             className="h-10 w-full rounded-md border border-border bg-background pl-9 pr-3 text-xs text-text-primary outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-text-tertiary focus:border-brand focus:ring-2 focus:ring-brand/15 motion-reduce:transition-none"
           />
