@@ -294,12 +294,8 @@ test("Labs hero auth and discovery actions use semantic animated icons controlle
   assert.ok(componentSource.includes('"Sign in": LogInIcon'));
   assert.ok(componentSource.includes('"Verify email": MailCheckIcon'));
   assert.ok(componentSource.includes('"Explore experiments": FlaskConicalIcon'));
-  assert.ok(componentSource.includes("onMouseEnter={startIconAnimation}"));
-  assert.ok(componentSource.includes("onMouseLeave={stopIconAnimation}"));
-  assert.ok(componentSource.includes("onFocus={startIconAnimation}"));
-  assert.ok(componentSource.includes("onBlur={stopIconAnimation}"));
-  assert.ok(componentSource.includes("ref={iconRef}"));
-  assert.ok(componentSource.includes("isAnimated"));
+  assert.ok(componentSource.includes("animateIconOnHover"));
+  assert.ok(componentSource.includes("icon={iconsByLabel[action.label] || EyeIcon}"));
   assert.doesNotMatch(componentSource, /↗/);
 });
 
@@ -311,5 +307,5 @@ test("Labs hero reuses the shared teal Resume button for primary actions and gla
   assert.ok(componentSource.includes('surface={action.variant === "primary" ? "brand" : "glass"}'));
   assert.ok(componentSource.includes("animateIconOnHover"));
   assert.ok(componentSource.includes('className="pointer-events-auto"'));
-  assert.doesNotMatch(componentSource, /function HeroAction|<Link/);
+  assert.doesNotMatch(componentSource, /function HeroAction\\(|<Link\\s/);
 });
