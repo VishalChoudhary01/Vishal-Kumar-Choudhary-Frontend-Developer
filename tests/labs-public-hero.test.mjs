@@ -307,5 +307,6 @@ test("Labs hero reuses the shared teal Resume button for primary actions and gla
   assert.ok(componentSource.includes('surface={action.variant === "primary" ? "brand" : "glass"}'));
   assert.ok(componentSource.includes("animateIconOnHover"));
   assert.ok(componentSource.includes('className="pointer-events-auto"'));
-  assert.doesNotMatch(componentSource, /function HeroAction\\(|<Link\\s/);
+  assert.equal(componentSource.includes("function HeroAction("), false);
+  assert.equal(componentSource.includes("<Link "), false);
 });
