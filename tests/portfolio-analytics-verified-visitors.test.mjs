@@ -21,6 +21,7 @@ test("only server-verified accounts receive a visitor identity", () => {
   const visitor = buildPortfolioVerifiedVisitor({ user: verifiedUser, secret });
   assert.deepEqual(visitor, {
     verifiedUserHash: visitor.verifiedUserHash,
+    verifiedUserAccountId: verifiedUser.id,
     verifiedUserName: "Vishal Kumar",
     verifiedUserEmailMasked: "v***@example.com",
   });
@@ -33,7 +34,7 @@ test("only server-verified accounts receive a visitor identity", () => {
     .digest("hex");
   assert.equal(visitor.verifiedUserHash, expectedHash);
 
-  assert.equal(JSON.stringify(visitor).includes(verifiedUser.id), false);
+  assert.equal(JSON.stringify(visitor).includes(verifiedUser.id), true);
   assert.equal(JSON.stringify(visitor).includes(verifiedUser.email), false);
 });
 
@@ -75,19 +76,24 @@ test("identity is resolved on the server and limited to the owner-only recent vi
   assert.ok(service.includes("getCurrentAuthSession"));
   assert.ok(service.includes("buildPortfolioVerifiedVisitor"));
   assert.ok(helper.includes("user?.emailVerified !== true"));
+  assert.ok(model.includes("verifiedUserAccountId"));
   assert.ok(model.includes("verifiedUserHash"));
   assert.ok(model.includes("verifiedUserName"));
   assert.ok(model.includes("verifiedUserEmailMasked"));
   assert.ok(model.includes("select: false"));
-  assert.ok(report.includes("+verifiedUserName +verifiedUserEmailMasked"));
+  assert.ok(report.includes("+verifiedUserAccountId +verifiedUserName +verifiedUserEmailMasked"));
+  assert.ok(report.includes("accountId: document.verifiedUserAccountId || null"));
   assert.ok(report.includes('kind: "verified"'));
   assert.ok(report.includes('kind: "guest"'));
   assert.ok(!report.includes("verifiedUserHash: document"));
   assert.ok(dashboard.includes('visit.visitor?.kind === "verified"'));
   assert.ok(dashboard.includes("Guest / unverified"));
   assert.ok(dashboard.includes("Verified"));
+  assert.ok(dashboard.includes("Raw account ID"));
+  assert.ok(dashboard.includes("visit.visitor.accountId"));
   const normalizedPrivacy = privacy.replace(/\s+/g, " ");
   assert.ok(normalizedPrivacy.includes("masked email label"));
-  assert.ok(normalizedPrivacy.includes("raw account IDs"));
+  assert.ok(normalizedPrivacy.includes("The raw account ID and display name are stored in visit records"));
+  assert.ok(normalizedPrivacy.includes("private owner-only visitor table"));
   assert.ok(!normalizedPrivacy.includes("visit records do not contain your name, email address"));
 });
