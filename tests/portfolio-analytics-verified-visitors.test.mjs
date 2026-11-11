@@ -63,8 +63,9 @@ test("masked email never exposes a complete local part", () => {
 });
 
 test("identity is resolved on the server and limited to the owner-only recent visit projection", async () => {
-  const [service, model, report, dashboard, privacy] = await Promise.all([
+  const [service, helper, model, report, dashboard, privacy] = await Promise.all([
     read("../src/app/lib/portfolio-analytics/visit-service.js"),
+    read("../src/app/lib/portfolio-analytics/verified-visitor.mjs"),
     read("../src/app/lib/portfolio-analytics/models/PortfolioVisit.js"),
     read("../src/app/lib/portfolio-analytics/report-service.js"),
     read("../src/app/components/portfolio-analytics/PortfolioAnalyticsDashboard.js"),
@@ -73,7 +74,7 @@ test("identity is resolved on the server and limited to the owner-only recent vi
 
   assert.ok(service.includes("getCurrentAuthSession"));
   assert.ok(service.includes("buildPortfolioVerifiedVisitor"));
-  assert.ok(service.includes("emailVerified"));
+  assert.ok(helper.includes("user?.emailVerified !== true"));
   assert.ok(model.includes("verifiedUserHash"));
   assert.ok(model.includes("verifiedUserName"));
   assert.ok(model.includes("verifiedUserEmailMasked"));
