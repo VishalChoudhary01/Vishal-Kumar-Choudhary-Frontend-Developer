@@ -280,7 +280,7 @@ function RecentVisitsTable({
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
         <div>
           <h2 id="recent-visits-title" className="text-sm font-semibold">Recent visits</h2>
-          <p className="mt-1 text-xs text-text-tertiary">Individual page visits, not identified people.</p>
+          <p className="mt-1 text-xs text-text-tertiary">Verified accounts are labelled; other visits remain guest or unverified.</p>
         </div>
         <span className="text-xs text-text-tertiary">{visits.length} records shown</span>
       </div>
@@ -290,13 +290,14 @@ function RecentVisitsTable({
       ) : visits.length ? (
         <>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] border-collapse text-left text-xs">
+            <table className="w-full min-w-[1080px] border-collapse text-left text-xs">
               <thead className="bg-surface-2 text-[10px] uppercase tracking-[0.12em] text-text-tertiary">
                 <tr>
                   <th className="w-10 px-3 py-3 font-medium">
                     <span className="sr-only">Select</span>
                   </th>
                   <th className="px-5 py-3 font-medium">Page</th>
+                  <th className="px-4 py-3 font-medium">Visitor</th>
                   <th className="px-4 py-3 font-medium">Source</th>
                   <th className="px-4 py-3 font-medium">Location</th>
                   <th className="px-4 py-3 font-medium">Device</th>
@@ -328,6 +329,30 @@ function RecentVisitsTable({
                       <td className="max-w-[260px] px-5 py-4">
                         <span className="block truncate font-medium text-text-primary">{getPageLabel(visit.pageType)}</span>
                         <span className="mt-1 block truncate font-mono text-[10px] text-text-tertiary">{visit.path}</span>
+                      </td>
+                      <td className="max-w-[220px] px-4 py-4">
+                        {visit.visitor?.kind === "verified" ? (
+                          <>
+                            <span className="block truncate font-medium text-text-primary">
+                              {visit.visitor.name || "Verified account"}
+                            </span>
+                            {visit.visitor.email ? (
+                              <span className="mt-1 block truncate text-[10px] text-text-tertiary">
+                                {visit.visitor.email}
+                              </span>
+                            ) : null}
+                            <span className="mt-1 inline-flex items-center rounded border border-success/30 bg-success/10 px-1.5 py-0.5 text-[9px] font-semibold text-success">
+                              Verified
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="block font-medium text-text-secondary">Guest / unverified</span>
+                            <span className="mt-1 block text-[10px] text-text-tertiary">
+                              No verified account attached
+                            </span>
+                          </>
+                        )}
                       </td>
                       <td className="px-4 py-4">
                         <span className="block font-medium text-text-secondary">{getSourceLabel(visit)}</span>
