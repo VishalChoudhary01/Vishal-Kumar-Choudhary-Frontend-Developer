@@ -182,6 +182,16 @@ export function selectEligiblePublishedCustomExperiments({
 }
 
 
+export function filterVisibleAnalyticsExperiments(experiments = [], hiddenSlugs = []) {
+  const hidden = new Set(
+    hiddenSlugs.filter(
+      (slug) => typeof slug === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug),
+    ),
+  );
+
+  return experiments.filter((experiment) => !hidden.has(experiment?.slug));
+}
+
 const ZERO_TOTALS = {
   sourceOpens: 0,
   uniqueVerifiedAccounts: 0,
