@@ -174,7 +174,7 @@ export async function startPortfolioVisit(payload, request, now = new Date()) {
       { $setOnInsert: record },
       {
         upsert: true,
-        new: true,
+        returnDocument: "after",
         runValidators: true,
         setDefaultsOnInsert: true,
       },
@@ -261,7 +261,7 @@ export async function heartbeatPortfolioVisit(payload, request, now = new Date()
         },
       },
     ],
-    { new: true },
+    { returnDocument: "after" },
   )
     .select("visitId status activeSeconds lastHeartbeatAt")
     .lean();
@@ -299,7 +299,7 @@ export async function pausePortfolioVisit(payload, request, now = new Date()) {
         },
       },
     ],
-    { new: true },
+    { returnDocument: "after" },
   )
     .select("visitId status activeSeconds lastHeartbeatAt endedAt")
     .lean();
@@ -332,7 +332,7 @@ export async function resumePortfolioVisit(payload, request, now = new Date()) {
         endedAt: null,
       },
     },
-    { new: true, runValidators: true },
+    { returnDocument: "after", runValidators: true },
   )
     .select("visitId status activeSeconds lastHeartbeatAt")
     .lean();
@@ -379,7 +379,7 @@ export async function endPortfolioVisit(payload, request, now = new Date()) {
         },
       },
     ],
-    { new: true },
+    { returnDocument: "after" },
   )
     .select("visitId status activeSeconds lastHeartbeatAt endedAt")
     .lean();
