@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import useReducedMotion from "@/app/hooks/useReducedMotion";
+import { TrashIcon as AnimatedTrash } from "@animateicons/react/lucide/trash-icon";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -58,6 +60,8 @@ function Metric({ label, value, hint, icon: Icon }) {
 }
 
 export default function LabSnapshotStoragePanel() {
+  const prefersReducedMotion = useReducedMotion();
+  const deleteModalIconRef = useRef(null);
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -65,6 +69,10 @@ export default function LabSnapshotStoragePanel() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [confirmation, setConfirmation] = useState("");
   const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (deleteTarget) deleteModalIconRef.current?.startAnimation?.();
+  }, [deleteTarget]);
 
   const loadReport = useCallback(async ({ quiet = false } = {}) => {
     if (quiet) setRefreshing(true);
@@ -325,7 +333,7 @@ export default function LabSnapshotStoragePanel() {
                             disabled={deleting}
                             className="inline-flex h-8 shrink-0 items-center justify-center gap-2 border border-warning/50 px-3 text-[11px] font-semibold text-warning transition-colors hover:bg-warning/10 disabled:opacity-50"
                           >
-                            <Trash2 size={12} aria-hidden="true" />
+                            <AnimatedTrash size={12} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />
                             Delete snapshot
                           </button>
                         ) : (
@@ -385,7 +393,7 @@ export default function LabSnapshotStoragePanel() {
             className="w-full max-w-lg border border-warning/40 bg-surface-1 p-5 shadow-2xl"
           >
             <div className="flex items-center gap-2 text-warning">
-              <Trash2 size={16} aria-hidden="true" />
+              <AnimatedTrash ref={deleteModalIconRef} size={16} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
               <h2 id="snapshot-delete-title" className="text-base font-semibold text-text-primary">Delete Vercel snapshot?</h2>
             </div>
             <p className="mt-3 text-sm leading-6 text-text-secondary">
@@ -422,7 +430,7 @@ export default function LabSnapshotStoragePanel() {
                 disabled={deleting || confirmation.trim() !== deleteTarget.id}
                 className="inline-flex h-9 items-center gap-2 border border-warning bg-warning/10 px-3 text-xs font-semibold text-warning disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {deleting ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <Trash2 size={13} aria-hidden="true" />}
+                {deleting ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <AnimatedTrash size={13} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />}
                 {deleting ? "Deleting…" : "Delete permanently"}
               </button>
             </div>
