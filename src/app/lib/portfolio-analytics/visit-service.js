@@ -325,7 +325,7 @@ export async function heartbeatPortfolioVisit(payload, request, now = new Date()
         },
       },
     ],
-    { returnDocument: "after" },
+    { returnDocument: "after", updatePipeline: true },
   )
     .select("visitId status activeSeconds lastHeartbeatAt")
     .lean();
@@ -363,7 +363,7 @@ export async function pausePortfolioVisit(payload, request, now = new Date()) {
         },
       },
     ],
-    { returnDocument: "after" },
+    { returnDocument: "after", updatePipeline: true },
   )
     .select("visitId status activeSeconds lastHeartbeatAt endedAt")
     .lean();
@@ -443,7 +443,7 @@ export async function endPortfolioVisit(payload, request, now = new Date()) {
         },
       },
     ],
-    { returnDocument: "after" },
+    { returnDocument: "after", updatePipeline: true },
   )
     .select("visitId status activeSeconds lastHeartbeatAt endedAt")
     .lean();

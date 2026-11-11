@@ -327,6 +327,7 @@ test("model, service and index script enforce privacy, server lifecycle and TTL 
   assert.ok(service.includes("sessionHash"));
   assert.ok(service.includes("$setOnInsert"));
   assert.ok(service.includes("elapsedSecondsExpression"));
+  assert.equal((service.match(/updatePipeline: true/g) || []).length, 3);
   assert.ok(!service.includes("x-forwarded-for"));
 
   assert.ok(indexScript.includes("portfolio_visits_expiry_ttl"));
