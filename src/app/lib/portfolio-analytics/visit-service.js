@@ -87,6 +87,39 @@ function getSessionScopedFilter(parsed, secret) {
   };
 }
 
+async function resolveVerifiedVisitor(request, secret) {
+  try {
+    const session = await getCurrentAuthSession(request?.headers);
+    return buildPortfolioVerifiedVisitor({
+      user: session?.user,
+      secret,
+    });
+  } catch {
+    // Anonymous visit tracking must continue when authentication is unavailable.
+    return null;
+  }
+}
+
+async function attachVerifiedVisitorToVisit(filter, request, secret, status = "active") {
+  const visitorFilter = {
+    ...filter,
+    status,
+    $or: [
+      { verifiedUserHash: null },
+      { verifiedUserHash: { $exists: false } },
+    ],
+  };
+
+  // Avoid repeated auth/database work once this visit already has an identity.
+  const visitNeedsIdentity = await PortfolioVisit.exists(visitorFilter);
+  if (!visitNeedsIdentity) return;
+
+  const verifiedVisitor = await resolveVerifiedVisitor(request, secret);
+  if (!verifiedVisitor) return;
+
+  await PortfolioVisit.updateOne(visitorFilter, { $set: verifiedVisitor });
+}
+
 function buildVisitRecord({ parsed, request, secret, now, verifiedVisitor }) {
   const headers = request.headers;
   const sessionHash = createHash(
@@ -164,19 +197,8 @@ export async function startPortfolioVisit(payload, request, now = new Date()) {
     throw serviceError("INVALID_SERVER_TIME", "A valid server timestamp is required.");
   }
 
-  // Account identity is resolved only from the server-side Better Auth
-  // session. Browser-supplied account IDs are never accepted; the trusted
-  // session ID is stored for the owner-only visitor report.
-  let verifiedVisitor = null;
-  try {
-    const session = await getCurrentAuthSession();
-    verifiedVisitor = buildPortfolioVerifiedVisitor({
-      user: session?.user,
-      secret: config.hmacSecret,
-    });
-  } catch {
-    // Keep anonymous visit recording available if account lookup is unavailable.
-  }
+  // Identity comes only from the Better Auth session on this exact request.
+  const verifiedVisitor = await resolveVerifiedVisitor(request, config.hmacSecret);
 
   const record = buildVisitRecord({
     parsed,
@@ -202,6 +224,15 @@ export async function startPortfolioVisit(payload, request, now = new Date()) {
       .select("visitId status startedAt activeSeconds")
       .lean();
 
+    // Also enrich a prior guest insert when this idempotent start is retried
+    // after the user has signed in.
+    await attachVerifiedVisitorToVisit(
+      { startKeyHash: record.startKeyHash },
+      request,
+      config.hmacSecret,
+      "active",
+    );
+
     return publicVisitResult(document);
   } catch (error) {
     if (error?.code !== 11000) throw error;
@@ -215,6 +246,12 @@ export async function startPortfolioVisit(payload, request, now = new Date()) {
       .lean();
 
     if (!existing) throw error;
+    await attachVerifiedVisitorToVisit(
+      { startKeyHash: record.startKeyHash },
+      request,
+      config.hmacSecret,
+      "active",
+    );
     return publicVisitResult(existing);
   }
 }
@@ -260,6 +297,13 @@ export async function heartbeatPortfolioVisit(payload, request, now = new Date()
   }
 
   await connectToDatabase();
+  await attachVerifiedVisitorToVisit(
+    getSessionScopedFilter(parsed, config.hmacSecret),
+    request,
+    config.hmacSecret,
+    "active",
+  );
+
   const document = await PortfolioVisit.findOneAndUpdate(
     {
       ...getSessionScopedFilter(parsed, config.hmacSecret),

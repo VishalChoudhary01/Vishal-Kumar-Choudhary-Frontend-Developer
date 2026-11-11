@@ -304,10 +304,11 @@ test("production host gate rejects previews and accepts only the canonical host"
 });
 
 test("model, service and index script enforce privacy, server lifecycle and TTL contracts", async () => {
-  const [model, service, indexScript] = await Promise.all([
+  const [model, service, indexScript, database] = await Promise.all([
     read("../src/app/lib/portfolio-analytics/models/PortfolioVisit.js"),
     read("../src/app/lib/portfolio-analytics/visit-service.js"),
     read("../scripts/ensure-portfolio-analytics-indexes.mjs"),
+    read("../src/app/lib/db/mongoose.js"),
   ]);
 
   assert.ok(model.includes('collection: "portfolio_visits"'));
@@ -330,4 +331,8 @@ test("model, service and index script enforce privacy, server lifecycle and TTL 
 
   assert.ok(indexScript.includes("portfolio_visits_expiry_ttl"));
   assert.ok(indexScript.includes("expireAfterSeconds: 0"));
+
+  assert.ok(database.includes("mongoose.connection.readyState !== 1"));
+  assert.ok(database.includes("cached.promise = null"));
+  assert.ok(database.includes("connection did not reach the connected state"));
 });

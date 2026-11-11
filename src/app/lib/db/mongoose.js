@@ -75,11 +75,15 @@ async function connectWithDnsFallback(uri, options) {
 export async function connectToDatabase() {
     const { uri, dbName } = getDatabaseConfig();
 
-    if (
-        cached.conn &&
-        mongoose.connection.readyState === 1
-    ) {
+    if (cached.conn && mongoose.connection.readyState === 1) {
         return cached.conn;
+    }
+
+    // A previously resolved mongoose.connect() promise stays fulfilled even
+    // after MongoDB disconnects. Never reuse that stale promise as a reconnect.
+    if (cached.conn && mongoose.connection.readyState !== 1) {
+        cached.conn = null;
+        cached.promise = null;
     }
 
     if (!cached.promise) {
@@ -94,7 +98,17 @@ export async function connectToDatabase() {
     }
 
     try {
-        cached.conn = await cached.promise;
+        const connectionPromise = cached.promise;
+        const connection = await connectionPromise;
+
+        if (mongoose.connection.readyState !== 1) {
+            throw new Error("MongoDB connection did not reach the connected state.");
+        }
+
+        cached.conn = connection;
+        // The active connection is checked above on every call. Keeping the
+        // resolved promise would prevent a later disconnected state reconnect.
+        if (cached.promise === connectionPromise) cached.promise = null;
         return cached.conn;
     } catch (error) {
         cached.promise = null;
