@@ -5,9 +5,10 @@ import test from "node:test";
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
 test("Labs animated icons use a pinned package, direct icon imports and reduced-motion safeguards", async () => {
-  const [packageJson, navigation, inventory, analytics, portfolioAnalytics, sourceAccess] = await Promise.all([
+  const [packageJson, navigation, workspaceDestinations, inventory, analytics, portfolioAnalytics, sourceAccess] = await Promise.all([
     read("../package.json").then(JSON.parse),
     read("../src/app/components/labs/admin/LabsOwnerNavigation.js"),
+    read("../src/app/components/labs/LabsWorkspaceDestinations.js"),
     read("../src/app/components/labs/admin/LabSourceInventory.js"),
     read("../src/app/components/labs/admin/LabsLiveAnalyticsDashboard.js"),
     read("../src/app/components/portfolio-analytics/PortfolioAnalyticsDashboard.js"),
@@ -16,11 +17,13 @@ test("Labs animated icons use a pinned package, direct icon imports and reduced-
 
   assert.equal(packageJson.dependencies["@animateicons/react"], "0.13.0");
 
+  assert.ok(navigation.includes("LABS_WORKSPACE_DESTINATIONS"));
   for (const iconPath of [
     "@animateicons/react/lucide/chart-spline-icon",
+    "@animateicons/react/lucide/activity-icon",
     "@animateicons/react/lucide/folder-open-icon",
     "@animateicons/react/lucide/hard-drive-icon",
-  ]) assert.ok(navigation.includes(iconPath), "navigation is missing " + iconPath);
+  ]) assert.ok(workspaceDestinations.includes(iconPath), "workspace destinations are missing " + iconPath);
 
   for (const iconPath of [
     "@animateicons/react/lucide/triangle-alert-icon",
@@ -64,7 +67,13 @@ test("Labs animated icons use a pinned package, direct icon imports and reduced-
   assert.ok(sourceAccess.includes("useReducedMotion"));
   assert.ok(sourceAccess.includes("isAnimated={!prefersReducedMotion}"));
 
-  for (const source of [navigation, inventory, analytics, sourceAccess]) {
+  assert.ok(navigation.includes("useReducedMotion"));
+  assert.ok(navigation.includes("isAnimated={!prefersReducedMotion}"));
+  assert.ok(navigation.includes("LABS_WORKSPACE_DESTINATIONS"));
+  assert.ok(workspaceDestinations.includes("@animateicons/react/lucide/"));
+  assert.equal(workspaceDestinations.includes('from "@animateicons/react/lucide";'), false);
+
+  for (const source of [inventory, analytics, sourceAccess]) {
     assert.ok(source.includes("useReducedMotion"));
     assert.ok(source.includes("isAnimated={!prefersReducedMotion}"));
     assert.ok(source.includes("@animateicons/react/lucide/"));
@@ -154,7 +163,7 @@ test("Labs owner subpages use the shared animated breadcrumb", async () => {
 
 
 test("admin action icons animate on hover or focus and respect reduced motion", async () => {
-  const [metadata, runtimeImport, livePreview, createForm, inventory, analytics, navigation, snapshot] = await Promise.all([
+  const [metadata, runtimeImport, livePreview, createForm, inventory, analytics, navigation, snapshot, workspaceDropdown] = await Promise.all([
     read("../src/app/components/labs/admin/LabExperimentMetadataEditor.js"),
     read("../src/app/components/labs/admin/LabRuntimeImportPanel.js"),
     read("../src/app/components/labs/admin/LabSourceLivePreview.js"),
@@ -163,6 +172,7 @@ test("admin action icons animate on hover or focus and respect reduced motion", 
     read("../src/app/components/labs/admin/LabsLiveAnalyticsDashboard.js"),
     read("../src/app/components/labs/admin/LabsOwnerNavigation.js"),
     read("../src/app/components/labs/admin/LabSnapshotStoragePanel.js"),
+    read("../src/app/components/labs/LabsWorkspaceDropdown.js"),
   ]);
 
   assert.ok(metadata.includes("AnimatedSave"));
@@ -186,14 +196,17 @@ test("admin action icons animate on hover or focus and respect reduced motion", 
   assert.ok(createForm.includes("createIconRef.current?.startAnimation?.()"));
   assert.ok(inventory.includes("rounded-[2px] border px-3 text-[11px]"));
   assert.ok(analytics.includes("restoreIconRefs.current.get(experiment.slug)?.startAnimation?.()"));
-  assert.ok(navigation.includes("destinationIconRefs.current.get(destination.id)?.startAnimation?.()"));
-  assert.ok(navigation.includes("destinationIconRefs.current.set(destination.id, node)"));
+  assert.ok(navigation.includes("LABS_WORKSPACE_DESTINATIONS.map"));
+  assert.ok(workspaceDropdown.includes("iconRef.current?.startAnimation?.()"));
+  assert.ok(workspaceDropdown.includes("iconRef.current?.stopAnimation?.()"));
+  assert.ok(workspaceDropdown.includes("if (isActive) iconRef.current?.startAnimation?.()"));
   assert.ok(snapshot.includes("deleteConfirmIconRef.current?.startAnimation?.()"));
 });
 
 test("admin controls, cards and dialogs use the compact radius scale", async () => {
-  const [navigation, inventory, editor, snapshot, labsAnalytics, portfolioAnalytics, deletion] = await Promise.all([
+  const [navigation, workspaceDropdown, inventory, editor, snapshot, labsAnalytics, portfolioAnalytics, deletion] = await Promise.all([
     read("../src/app/components/labs/admin/LabsOwnerNavigation.js"),
+    read("../src/app/components/labs/LabsWorkspaceDropdown.js"),
     read("../src/app/components/labs/admin/LabSourceInventory.js"),
     read("../src/app/components/labs/admin/LabSourceEditor.js"),
     read("../src/app/components/labs/admin/LabSnapshotStoragePanel.js"),
@@ -202,11 +215,13 @@ test("admin controls, cards and dialogs use the compact radius scale", async () 
     read("../src/app/components/portfolio-analytics/PortfolioAnalyticsDeletionControls.js"),
   ]);
 
-  for (const source of [navigation, inventory, editor, snapshot, labsAnalytics, portfolioAnalytics, deletion]) {
-    assert.equal(/className="[^"]*\brounded-(?:sm|md|lg|xl|2xl)\\b/.test(source), false);
+  for (const source of [workspaceDropdown, inventory, editor, snapshot, labsAnalytics, portfolioAnalytics, deletion]) {
+    assert.equal(/className="[^"]*\brounded-(?:sm|md|lg|xl|2xl)\b/.test(source), false);
     assert.ok(source.includes("rounded-[2px]"));
     assert.ok(source.includes("rounded-[3px]"));
   }
+  assert.ok(navigation.includes("rounded-[3px]"));
+  assert.ok(workspaceDropdown.includes("rounded-[4px]"));
   assert.ok(editor.includes("rounded-[4px]"));
   assert.ok(snapshot.includes("rounded-[4px]"));
   assert.ok(labsAnalytics.includes("rounded-[4px]"));

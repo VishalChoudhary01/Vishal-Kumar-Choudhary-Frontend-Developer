@@ -169,11 +169,12 @@ test("server management uses OIDC and re-checks eligibility before deletion", as
 });
 
 test("source management links to a separate snapshot page and keeps the inventory uncluttered", async () => {
-  const [sourcePage, snapshotPage, navigation, panel] = await Promise.all([
+  const [sourcePage, snapshotPage, navigation, panel, destinations] = await Promise.all([
     readFile(new URL("../src/app/admin/labs/sources/page.js", import.meta.url), "utf8"),
     readFile(new URL("../src/app/admin/labs/sources/snapshots/page.js", import.meta.url), "utf8"),
     readFile(new URL("../src/app/components/labs/admin/LabsOwnerNavigation.js", import.meta.url), "utf8"),
     readFile(new URL("../src/app/components/labs/admin/LabSnapshotStoragePanel.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/labs/LabsWorkspaceDestinations.js", import.meta.url), "utf8"),
   ]);
 
   assert.ok(sourcePage.includes('href="/admin/labs/sources/snapshots"'));
@@ -181,7 +182,8 @@ test("source management links to a separate snapshot page and keeps the inventor
   assert.ok(!sourcePage.includes("<LabSnapshotStoragePanel />"));
   assert.ok(snapshotPage.includes("<LabSnapshotStoragePanel />"));
   assert.ok(snapshotPage.includes('getLabsOwnerAccessStatus(session.user)'));
-  assert.ok(navigation.includes('href: "/admin/labs/sources/snapshots"'));
+  assert.ok(navigation.includes("LABS_WORKSPACE_DESTINATIONS"));
+  assert.ok(destinations.includes('href: "/admin/labs/sources/snapshots"'));
   assert.ok(panel.includes("Potentially reclaimable"));
   assert.ok(panel.includes("not your Hobby account's official storage allowance"));
   assert.ok(panel.includes("confirmation.trim() !== deleteTarget.id"));

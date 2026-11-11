@@ -35,8 +35,36 @@ test("guest sign-in and create-account CTAs are desktop-only", async () => {
 test("account menu displays optional provider name and avatar with a safe fallback", async () => {
   const account = await read("../src/app/components/labs/LabsAccountControl.js");
   assert.ok(account.includes("getLabsAccountDisplayName"));
-  assert.ok(account.includes("getLabsAccountInitials"));
-  assert.ok(account.includes("session.user.image"));
+  assert.ok(account.includes("<LabsWorkspaceAvatar"));
+  assert.ok(account.includes("session.user"));
   assert.ok(account.includes("getLabsAccountDisplayName(session.user)"));
   assert.ok(account.includes("{displayName}"));
+});
+
+
+test("account and owner menus share the compact responsive dropdown surface", async () => {
+  const [account, owner, dropdown, destinations] = await Promise.all([
+    read("../src/app/components/labs/LabsAccountControl.js"),
+    read("../src/app/components/labs/admin/LabsOwnerNavigation.js"),
+    read("../src/app/components/labs/LabsWorkspaceDropdown.js"),
+    read("../src/app/components/labs/LabsWorkspaceDestinations.js"),
+  ]);
+  assert.ok(account.includes("<LabsWorkspaceDropdown"));
+  assert.ok(owner.includes("<LabsWorkspaceDropdown"));
+  assert.ok(account.includes("activeWorkspaceId === destination.id"));
+  assert.ok(dropdown.includes("rounded-[4px]"));
+  assert.ok(dropdown.includes("rounded-[3px]"));
+  assert.ok(dropdown.includes("rounded-[2px]"));
+  assert.ok(dropdown.includes("max-h-[min(70dvh,520px)]"));
+  assert.equal((destinations.match(/href: \"\/admin\//g) || []).length, 4);
+});
+
+test("account dropdown preserves mobile profile trigger, owner destinations and sign-out", async () => {
+  const account = await read("../src/app/components/labs/LabsAccountControl.js");
+  assert.ok(account.includes("max-w-[min(196px,calc(100vw-5.5rem))]"));
+  assert.ok(account.includes("Owner workspace"));
+  assert.ok(account.includes("LABS_WORKSPACE_DESTINATIONS.map"));
+  assert.ok(account.includes("Sign out"));
+  assert.ok(account.includes("Verify email"));
+  assert.ok(account.includes("aria-controls=\"labs-account-menu\""));
 });
