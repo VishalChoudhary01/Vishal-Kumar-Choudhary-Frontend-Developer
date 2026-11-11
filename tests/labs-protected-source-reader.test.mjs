@@ -41,3 +41,15 @@ test("session invalidation clears source state so the read-only editor unmounts"
 test("the old plain pre/code renderer is not left alongside Monaco", () => {
   assert.doesNotMatch(sourceAccess, /<pre[\s\S]*?<code>/);
 });
+
+
+test("protected source actions use animated eye, copy and lock icons with reduced-motion support", () => {
+  assert.ok(sourceAccess.includes("@animateicons/react/lucide/copy-icon"));
+  assert.ok(sourceAccess.includes("@animateicons/react/lucide/eye-icon"));
+  assert.ok(sourceAccess.includes("@animateicons/react/lucide/lock-icon"));
+  assert.ok(sourceAccess.includes("useReducedMotion"));
+  assert.ok(sourceAccess.includes("isAnimated={!prefersReducedMotion}"));
+  assert.ok(sourceAccess.includes("<EyeIcon"));
+  assert.ok(sourceAccess.includes("<AnimatedCopy"));
+  assert.ok(sourceAccess.includes("<LockIcon"));
+});

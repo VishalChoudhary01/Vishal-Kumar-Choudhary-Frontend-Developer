@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CopyCheckIcon } from "@animateicons/react/lucide/copy-check-icon";
 import { EyeIcon } from "@animateicons/react/lucide/eye-icon";
-import { HeartIcon } from "@animateicons/react/lucide/heart-icon";
+import { HeartPulseIcon } from "@animateicons/react/lucide/heart-pulse-icon";
+import { TrashIcon as AnimatedTrash } from "@animateicons/react/lucide/trash-icon";
 import { UserRoundCheckIcon } from "@animateicons/react/lucide/user-round-check-icon";
 import useReducedMotion from "@/app/hooks/useReducedMotion";
 import {
@@ -109,6 +110,7 @@ function LoadingMetrics() {
 }
 
 export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
+  const prefersReducedMotion = useReducedMotion();
   const [analytics, setAnalytics] = useState(initialAnalytics || null);
   const [lastUpdated, setLastUpdated] = useState(initialAnalytics?.generatedAt || null);
   const [refreshError, setRefreshError] = useState("");
@@ -373,7 +375,7 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
           detail="Reported after clipboard success"
         />
         <MetricCard
-          icon={HeartIcon}
+          icon={HeartPulseIcon}
           label="Active likes"
           value={totals.totalActiveLikes}
           detail={number(totals.activeAnonymousLikes) + " anonymous · " + number(totals.activeVerifiedLikes) + " verified"}
@@ -472,7 +474,7 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
                       title="Remove from analytics only"
                       className="inline-flex h-8 w-8 items-center justify-center border border-border text-text-tertiary transition-colors hover:border-danger/50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                      <Trash2 size={14} aria-hidden="true" />
+                      <AnimatedTrash size={14} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />
                     </button>
                   </td>
                 </tr>

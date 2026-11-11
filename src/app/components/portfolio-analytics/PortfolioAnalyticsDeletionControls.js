@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AlertTriangle, Trash2, X } from "lucide-react";
+import { useReducedMotion } from "motion/react";
+import { TrashIcon as AnimatedTrash } from "@animateicons/react/lucide/trash-icon";
+import { AlertTriangle, X } from "lucide-react";
 
 const API_PATH = "/api/v1/admin/portfolio/analytics/visits";
 const DELETE_ALL_CONFIRMATION = "DELETE ALL PORTFOLIO VISIT DATA";
@@ -29,6 +31,7 @@ export default function PortfolioAnalyticsDeletionControls({
   onClearSelection,
   onDeleted,
 }) {
+  const reduceMotion = useReducedMotion();
   const [scope, setScope] = useState(null);
   const [from, setFrom] = useState(() => utcDate(-6));
   const [to, setTo] = useState(() => utcDate(0));
@@ -131,7 +134,7 @@ export default function PortfolioAnalyticsDeletionControls({
             disabled={selectedVisitIds.length === 0 || selectedVisitIds.length > 25}
             className="inline-flex min-h-9 items-center gap-2 border border-border px-3 text-xs font-semibold text-text-secondary transition-colors hover:border-warning hover:text-warning disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <Trash2 size={13} aria-hidden="true" />
+            <AnimatedTrash size={13} duration={0.62} isAnimated={!reduceMotion} aria-hidden="true" />
             Delete selected ({selectedVisitIds.length})
           </button>
           <button
@@ -139,6 +142,7 @@ export default function PortfolioAnalyticsDeletionControls({
             onClick={() => openDialog("date_range")}
             className="inline-flex min-h-9 items-center gap-2 border border-border px-3 text-xs font-semibold text-text-secondary transition-colors hover:border-warning hover:text-warning"
           >
+            <AnimatedTrash size={13} duration={0.62} isAnimated={!reduceMotion} aria-hidden="true" />
             Delete date range
           </button>
           <button

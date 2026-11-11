@@ -4,9 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import {
-  Activity,
-  Clock3,
-  Eye,
   Globe2,
   Laptop,
   Monitor,
@@ -14,8 +11,11 @@ import {
   RefreshCw,
   Smartphone,
   Tablet,
-  Users,
 } from "lucide-react";
+import { ActivityIcon } from "@animateicons/react/lucide/activity-icon";
+import { ClockIcon } from "@animateicons/react/lucide/clock-icon";
+import { EyeIcon } from "@animateicons/react/lucide/eye-icon";
+import { UsersIcon } from "@animateicons/react/lucide/users-icon";
 
 import MotionNumber from "@/app/components/motion/MotionNumber/MotionNumber";
 import usePortfolioAnalyticsPolling from "@/app/hooks/portfolio-analytics/usePortfolioAnalyticsPolling";
@@ -95,7 +95,7 @@ function MetricCard({ icon: Icon, label, value, detail, duration = false, index 
     >
       <div className="flex items-center justify-between gap-3">
         <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-text-tertiary">{label}</p>
-        <Icon size={17} className="shrink-0 text-text-tertiary" aria-hidden="true" />
+        <Icon size={17} duration={0.72} isAnimated={!reduceMotion} className="shrink-0 text-text-tertiary" aria-hidden="true" />
       </div>
       <div className="mt-4 min-h-9 text-3xl font-semibold tabular-nums tracking-tight text-text-primary">
         {duration ? (
@@ -533,10 +533,10 @@ export default function PortfolioAnalyticsDashboard({
       ) : null}
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Portfolio visit overview">
-        <MetricCard icon={Eye} label="Page visits" value={overview.totalVisits} detail="Eligible page loads in this period" index={0} />
-        <MetricCard icon={Users} label="Tab sessions" value={overview.uniqueTabSessions} detail="Distinct temporary browser-tab sessions" index={1} />
-        <MetricCard icon={Clock3} label="Average visible time" value={overview.averageActiveSeconds} detail="Foreground seconds per page visit" duration index={2} />
-        <MetricCard icon={Activity} label="Total visible time" value={overview.totalActiveSeconds} detail="Accumulated foreground page time" duration index={3} />
+        <MetricCard icon={EyeIcon} label="Page visits" value={overview.totalVisits} detail="Eligible page loads in this period" index={0} />
+        <MetricCard icon={UsersIcon} label="Tab sessions" value={overview.uniqueTabSessions} detail="Distinct temporary browser-tab sessions" index={1} />
+        <MetricCard icon={ClockIcon} label="Average visible time" value={overview.averageActiveSeconds} detail="Foreground seconds per page visit" duration index={2} />
+        <MetricCard icon={ActivityIcon} label="Total visible time" value={overview.totalActiveSeconds} detail="Accumulated foreground page time" duration index={3} />
       </section>
 
       <VisitsTrendChart daily={daily} days={days} />

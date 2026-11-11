@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useActionToast } from "@/app/providers/ActionToastProvider";
 import Link from "next/link";
 import {
-  ArrowUpRight,
   Plus,
   Clock3,
   LoaderCircle,
@@ -20,6 +19,7 @@ import { FolderPlusIcon as FolderPlus } from "@animateicons/react/lucide/folder-
 import { PencilIcon as Pencil } from "@animateicons/react/lucide/pencil-icon";
 import { RefreshCwIcon as RefreshCw } from "@animateicons/react/lucide/refresh-cw-icon";
 import { TrashIcon as AnimatedTrash } from "@animateicons/react/lucide/trash-icon";
+import { EyeIcon } from "@animateicons/react/lucide/eye-icon";
 import useReducedMotion from "@/app/hooks/useReducedMotion";
 
 const FILTERS = [
@@ -432,10 +432,10 @@ export default function LabSourceInventory() {
                       href={"/admin/labs/sources/" + encodeURIComponent(item.slug)}
                       className="inline-flex h-9 items-center gap-2 border border-border px-3 text-xs font-semibold text-text-secondary transition-colors hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                     >
+                      <EyeIcon size={13} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
                       {item.isCustom && item.publicationReadiness?.eligible !== true
                         ? "Continue to publish"
                         : "Open workspace"}
-                      <ArrowUpRight size={13} aria-hidden="true" />
                     </Link>
                     {item.isCustom ? (
                       <button
