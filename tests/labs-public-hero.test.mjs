@@ -240,9 +240,7 @@ test("Labs hero flask is a subtle independent decorative layer behind left conte
 
   assert.ok(componentSource.includes('import LabsHeroFlask from "./landing/LabsHeroFlask";'));
   assert.ok(componentSource.includes("<LabsHeroFlask />"));
-  assert.ok(componentSource.includes("before:pointer-events-none before:absolute before:inset-0 before:z-0"));
-  assert.ok(componentSource.includes("before:bg-[radial-gradient(ellipse_62%_72%_at_24%_46%,rgba(13,129,118,0.12)"));
-  assert.ok(componentSource.includes("dark:before:bg-[radial-gradient(ellipse_62%_72%_at_24%_46%,rgba(36,151,137,0.13)"));
+  assert.doesNotMatch(componentSource, /before:pointer-events-none|before:bg-\[radial-gradient|dark:before:bg-\[radial-gradient/);
   assert.ok(componentSource.indexOf("<LabsHeroFlask />") < componentSource.indexOf("<motion.p"));
   assert.ok(flaskSource.includes('data-labs-hero-flask=""'));
   assert.ok(flaskSource.includes('aria-hidden="true"'));
