@@ -64,17 +64,26 @@ test("masked email never exposes a complete local part", () => {
 });
 
 test("identity is resolved on the server and limited to the owner-only recent visit projection", async () => {
-  const [service, helper, model, report, dashboard, privacy] = await Promise.all([
+  const [service, helper, model, report, dashboard, privacy, adminReadRoute] = await Promise.all([
     read("../src/app/lib/portfolio-analytics/visit-service.js"),
     read("../src/app/lib/portfolio-analytics/verified-visitor.mjs"),
     read("../src/app/lib/portfolio-analytics/models/PortfolioVisit.js"),
     read("../src/app/lib/portfolio-analytics/report-service.js"),
     read("../src/app/components/portfolio-analytics/PortfolioAnalyticsDashboard.js"),
     read("../src/app/privacy/page.js"),
+    read("../src/app/api/v1/admin/portfolio/analytics/route.js"),
   ]);
 
   assert.ok(service.includes("getCurrentAuthSession"));
   assert.ok(service.includes("buildPortfolioVerifiedVisitor"));
+  assert.ok(service.includes("verifiedUserAccountId"));
+  const publicResultStart = service.indexOf("function publicVisitResult");
+  const publicResultEnd = service.indexOf("\n}", publicResultStart);
+  assert.ok(publicResultStart > -1 && publicResultEnd > publicResultStart);
+  assert.ok(!service.slice(publicResultStart, publicResultEnd).includes("verifiedUserAccountId"));
+  const ownerCheck = adminReadRoute.indexOf("if (!isLabsOwner(session.user))");
+  const recentQuery = adminReadRoute.indexOf("getPortfolioRecentVisits");
+  assert.ok(ownerCheck > -1 && recentQuery > ownerCheck);
   assert.ok(helper.includes("user?.emailVerified !== true"));
   assert.ok(model.includes("verifiedUserAccountId"));
   assert.ok(model.includes("verifiedUserHash"));
