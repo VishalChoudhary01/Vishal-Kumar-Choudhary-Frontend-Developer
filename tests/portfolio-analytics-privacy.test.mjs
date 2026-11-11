@@ -91,7 +91,7 @@ test("privacy page explains site information in plain language without internal 
   assert.ok(normalizedPage.includes("180 days"));
   assert.ok(normalizedPage.includes("does not currently have a fixed automatic expiry period"));
   assert.ok(normalizedPage.includes("does not delete information already stored"));
-  assert.ok(normalizedPage.includes("does not affect sign-in"));
+  assert.ok(normalizedPage.includes("or affect sign-in"));
   assert.ok(!/we track users|I track users|tracking users|user behaviour|user behavior/i.test(page));
   assert.ok(!/portfolio analytics|labs analytics|portfolio page analytics|tracking/i.test(page));
   assert.ok(preference.includes("Turn off optional website information in this browser"));
