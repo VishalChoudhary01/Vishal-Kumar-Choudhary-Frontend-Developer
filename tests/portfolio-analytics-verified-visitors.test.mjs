@@ -76,7 +76,7 @@ test("identity is resolved on the server and limited to the owner-only recent vi
 
   assert.ok(service.includes("getCurrentAuthSession"));
   assert.ok(service.includes("buildPortfolioVerifiedVisitor"));
-  assert.ok(service.includes("verifiedUserAccountId"));
+  assert.ok(service.includes("...(verifiedVisitor || {})"));
   const publicResultStart = service.indexOf("function publicVisitResult");
   const publicResultEnd = service.indexOf("\n}", publicResultStart);
   assert.ok(publicResultStart > -1 && publicResultEnd > publicResultStart);
