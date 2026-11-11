@@ -1,6 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useReducedMotion } from "motion/react";
+import { ArrowLeftIcon as AnimatedArrowLeft } from "@animateicons/react/lucide/arrow-left-icon";
+import { ChevronRightIcon as AnimatedChevronRight } from "@animateicons/react/lucide/chevron-right-icon";
+import { LockOpenIcon as AnimatedLockOpen } from "@animateicons/react/lucide/lock-open-icon";
+import { TrashIcon as AnimatedTrash } from "@animateicons/react/lucide/trash-icon";
+import { UploadIcon as AnimatedUpload } from "@animateicons/react/lucide/upload-icon";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useActionToast } from "@/app/providers/ActionToastProvider";
@@ -11,7 +17,6 @@ import LabMediaLibrary from "./LabMediaLibrary";
 import Link from "next/link";
 import {
   ArrowDown,
-  ArrowLeft,
   ArrowUp,
   Eye,
   FilePlus2,
@@ -98,6 +103,11 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
   const [files, setFiles] = useState(initialSource.files || []);
   const filesRef = useRef(files);
   const { resolvedTheme } = useTheme();
+  const prefersReducedMotion = useReducedMotion();
+  const breadcrumbIconRef = useRef(null);
+  const publishDialogIconRef = useRef(null);
+  const unpublishDialogIconRef = useRef(null);
+  const deleteDialogIconRef = useRef(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [versions, setVersions] = useState(initialVersions || []);
   const [audit, setAudit] = useState(initialAudit || []);
@@ -113,6 +123,12 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
   const [previewFileIndex, setPreviewFileIndex] = useState(0);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [publishStage, setPublishStage] = useState("");
+
+  useEffect(() => {
+    if (confirmPublish) publishDialogIconRef.current?.startAnimation?.();
+    if (confirmUnpublish) unpublishDialogIconRef.current?.startAnimation?.();
+    if (confirmDelete) deleteDialogIconRef.current?.startAnimation?.();
+  }, [confirmPublish, confirmUnpublish, confirmDelete]);
   // React files state is authoritative; this ref is its synchronous mirror.
   // Monaco emits content on each change, so save/run/publish can always capture
   // the latest keystroke even before a parent render is committed.
@@ -762,13 +778,21 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
   return (
     <main className="min-h-screen bg-background px-5 py-8 text-text-primary sm:px-8 lg:px-12">
       <div className="mx-auto w-full max-w-[1440px]">
-        <Link
-          href="/admin/labs/sources"
-          className="inline-flex items-center gap-2 text-xs font-medium text-text-secondary hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
-        >
-          <ArrowLeft size={14} aria-hidden="true" />
-          Source dashboard
-        </Link>
+        <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-xs font-medium">
+          <Link
+            href="/admin/labs/sources"
+            onMouseEnter={() => breadcrumbIconRef.current?.startAnimation?.()}
+            onMouseLeave={() => breadcrumbIconRef.current?.stopAnimation?.()}
+            onFocus={() => breadcrumbIconRef.current?.startAnimation?.()}
+            onBlur={() => breadcrumbIconRef.current?.stopAnimation?.()}
+            className="inline-flex items-center gap-2 text-text-secondary transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
+          >
+            <AnimatedArrowLeft ref={breadcrumbIconRef} size={14} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
+            Source Library
+          </Link>
+          <AnimatedChevronRight size={13} duration={0.62} isAnimated={!prefersReducedMotion} className="text-text-tertiary" aria-hidden="true" />
+          <span aria-current="page" className="max-w-[min(60vw,32rem)] truncate text-text-primary">{source.title}</span>
+        </nav>
 
         <header className="mt-8 flex flex-wrap items-start justify-between gap-5 border-b border-border pb-6">
           <div>
@@ -806,7 +830,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                   disabled={Boolean(busy)}
                   className="inline-flex h-9 items-center gap-2 border border-warning/50 px-3 text-xs font-semibold text-warning transition-colors hover:bg-warning/10 disabled:opacity-40"
                 >
-                  <Trash2 size={13} aria-hidden="true" />
+                  <AnimatedTrash size={13} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />
                   Delete project
                 </button>
               </>
@@ -1356,9 +1380,12 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
       {confirmPublish ? (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" role="presentation">
           <section role="dialog" aria-modal="true" aria-labelledby="publish-title" className="w-full max-w-md border border-border bg-surface-1 p-5 shadow-2xl">
-            <h2 id="publish-title" className="text-base font-semibold">
-              {source.isCustom ? "Build and publish this release?" : "Publish this source version?"}
-            </h2>
+            <div className="flex items-center gap-2 text-brand">
+              <AnimatedUpload ref={publishDialogIconRef} size={17} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
+              <h2 id="publish-title" className="text-base font-semibold">
+                {source.isCustom ? "Build and publish this release?" : "Publish this source version?"}
+              </h2>
+            </div>
             <p className="mt-2 text-sm leading-6 text-text-secondary">
               {source.isCustom
                 ? hasUnsavedChanges || !source.draftVersionId
@@ -1394,7 +1421,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                 aria-busy={busy === "publish"}
                 className="inline-flex h-9 items-center gap-2 bg-brand px-3 text-xs font-semibold text-brand-contrast disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {busy === "publish" ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <Upload size={13} aria-hidden="true" />}
+                {busy === "publish" ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <AnimatedUpload size={13} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />}
                 {busy === "publish"
                   ? (source.isCustom ? "Building & publishing…" : "Publishing…")
                   : (source.isCustom ? "Build & publish" : "Confirm publish")}
@@ -1407,13 +1434,17 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
       {confirmUnpublish ? (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" role="presentation">
           <section role="dialog" aria-modal="true" aria-labelledby="unpublish-title" className="w-full max-w-md border border-border bg-surface-1 p-5 shadow-2xl">
-            <h2 id="unpublish-title" className="text-base font-semibold">Unpublish this source?</h2>
+            <div className="flex items-center gap-2 text-warning">
+              <AnimatedLockOpen ref={unpublishDialogIconRef} size={17} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
+              <h2 id="unpublish-title" className="text-base font-semibold">Unpublish this source?</h2>
+            </div>
             <p className="mt-2 text-sm leading-6 text-text-secondary">
               New source requests will be blocked for every verified account. Existing version history and engagement records will remain.
             </p>
             <div className="mt-5 flex justify-end gap-2">
               <button type="button" onClick={() => setConfirmUnpublish(false)} className="h-9 border border-border px-3 text-xs">Cancel</button>
-              <button type="button" onClick={unpublishSource} disabled={Boolean(busy)} className="h-9 border border-warning/50 px-3 text-xs font-semibold text-warning disabled:opacity-50">
+              <button type="button" onClick={unpublishSource} disabled={Boolean(busy)} className="inline-flex h-9 items-center gap-2 border border-warning/50 px-3 text-xs font-semibold text-warning disabled:opacity-50">
+                <AnimatedLockOpen size={13} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />
                 {busy === "unpublish" ? "Unpublishing…" : "Confirm unpublish"}
               </button>
             </div>
@@ -1424,7 +1455,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
         <div className="fixed inset-0 z-[80] grid place-items-center bg-black/70 p-4" role="presentation">
           <section role="dialog" aria-modal="true" aria-labelledby="delete-project-title" className="w-full max-w-md border border-warning/40 bg-surface-1 p-5 shadow-2xl">
             <div className="flex items-center gap-2 text-warning">
-              <Trash2 size={16} aria-hidden="true" />
+              <AnimatedTrash ref={deleteDialogIconRef} size={16} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
               <h2 id="delete-project-title" className="text-base font-semibold">Delete this experiment?</h2>
             </div>
             <p className="mt-3 text-sm leading-6 text-text-secondary">
@@ -1449,7 +1480,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                 disabled={busy === "delete" || deleteConfirmation.trim() !== source.slug}
                 className="inline-flex h-9 items-center gap-2 border border-warning bg-warning/10 px-3 text-xs font-semibold text-warning disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {busy === "delete" ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <Trash2 size={13} aria-hidden="true" />}
+                {busy === "delete" ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <AnimatedTrash size={13} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />}
                 {busy === "delete" ? "Deleting…" : "Delete permanently"}
               </button>
             </div>
