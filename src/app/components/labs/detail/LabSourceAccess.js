@@ -1,23 +1,40 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
+
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
+import { useReducedMotion } from "motion/react";
+import { CopyIcon as AnimatedCopy } from "@animateicons/react/lucide/copy-icon";
+import { LogInIcon } from "@animateicons/react/lucide/log-in-icon";
+import { UserRoundPlusIcon } from "@animateicons/react/lucide/user-round-plus-icon";
+import { MailCheckIcon } from "@animateicons/react/lucide/mail-check-icon";
+import { EyeIcon } from "@animateicons/react/lucide/eye-icon";
+import { LockIcon } from "@animateicons/react/lucide/lock-icon";
 import {
   AlertTriangle,
-  ArrowUpRight,
   Check,
-  Code2,
-  Copy,
   LoaderCircle,
-  LockKeyhole,
   RefreshCw,
 } from "lucide-react";
 
 import { subscribeAuthEvents } from "@/app/lib/auth/session-events";
 import { authClient } from "@/app/lib/auth/client";
 import LabCodeEditor from "@/app/components/labs/code/LabCodeEditor";
+import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";
+
+function AnimatedSourceAction({ href, label, Icon, primary = false, isAnimated = true }) {
+  return (
+    <ProjectResumeButton
+      href={href}
+      label={label}
+      icon={Icon}
+      animateIconOnHover={isAnimated}
+      surface={primary ? "brand" : "glass"}
+      size="sm"
+    />
+  );
+}
 
 function getInitialSource(source, slug, userId) {
   if (!source || !userId || !Array.isArray(source.files)) return null;
@@ -43,6 +60,7 @@ export default function LabSourceAccess({
   const pathname = usePathname();
   const returnTo = pathname + "?source=1";
   const { resolvedTheme } = useTheme();
+  const prefersReducedMotion = useReducedMotion();
 
   const firstSource = getInitialSource(initialSource, slug, initialUserId);
   const [loading, setLoading] = useState(initialAuthState === "verified" && !firstSource);
@@ -53,6 +71,10 @@ export default function LabSourceAccess({
     initialAuthState === "error" ? "We could not load the published source. Please try again." : "",
   );
   const [copied, setCopied] = useState(false);
+  const copyIconRef = useRef(null);
+
+  const startCopyIconAnimation = () => copyIconRef.current?.startAnimation?.();
+  const stopCopyIconAnimation = () => copyIconRef.current?.stopAnimation?.();
   const selectedSourceFile = source?.files?.[selectedFile] || null;
   const { data: session, isPending: sessionPending } = authClient.useSession();
 
@@ -411,7 +433,7 @@ export default function LabSourceAccess({
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.12em] text-brand">
-                  <Code2 size={15} aria-hidden="true" />
+                  <EyeIcon size={15} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
                   PROTECTED SOURCE
                 </div>
                 <h2 className="mt-2 text-lg font-semibold">Source code</h2>
@@ -420,10 +442,14 @@ export default function LabSourceAccess({
               <button
                 type="button"
                 onClick={copyCurrentFile}
+                onMouseEnter={startCopyIconAnimation}
+                onMouseLeave={stopCopyIconAnimation}
+                onFocus={startCopyIconAnimation}
+                onBlur={stopCopyIconAnimation}
                 disabled={sessionPending || session?.user?.id !== source.userId}
                 className="inline-flex h-9 items-center gap-2 border border-border px-3 text-xs font-medium text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
+                {copied ? <Check size={14} aria-hidden="true" /> : <AnimatedCopy ref={copyIconRef} size={14} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />}
                 {copied ? "Copied" : "Copy file"}
               </button>
             </div>
@@ -481,7 +507,7 @@ export default function LabSourceAccess({
           </>
         ) : !session?.user?.id && !initialUserId ? (
           <div className="flex items-start gap-3">
-            <LockKeyhole size={19} className="mt-0.5 shrink-0 text-brand" aria-hidden="true" />
+            <EyeIcon size={19} duration={0.68} isAnimated={!prefersReducedMotion} className="mt-0.5 shrink-0 text-brand" aria-hidden="true" />
             <div className="min-w-0">
               <h2 className="text-base font-semibold">View the source</h2>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-text-secondary">
@@ -489,26 +515,39 @@ export default function LabSourceAccess({
                 Sign in or create an account to explore the files.
               </p>
               <div className="mt-4 flex flex-wrap items-center gap-3">
-                <Link href={signInHref} className="inline-flex h-10 items-center gap-2 bg-brand px-4 text-sm font-semibold text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
-                  Sign in <ArrowUpRight size={14} aria-hidden="true" />
-                </Link>
-                <Link href={signUpHref} className="inline-flex h-10 items-center border border-brand px-4 text-sm font-semibold text-brand transition-colors hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
-                  Create account
-                </Link>
+                <AnimatedSourceAction
+                  href={signInHref}
+                  label="Sign in"
+                  Icon={LogInIcon}
+                  primary
+                  isAnimated={!prefersReducedMotion}
+                />
+                <AnimatedSourceAction
+                  href={signUpHref}
+                  label="Create account"
+                  Icon={UserRoundPlusIcon}
+                  isAnimated={!prefersReducedMotion}
+                />
               </div>
             </div>
           </div>
         ) : session?.user?.emailVerified !== true && state !== "session-mismatch" ? (
           <div className="flex items-start gap-3">
-            <LockKeyhole size={19} className="mt-0.5 shrink-0 text-warning" aria-hidden="true" />
+            <LockIcon size={19} duration={0.68} isAnimated={!prefersReducedMotion} className="mt-0.5 shrink-0 text-warning" aria-hidden="true" />
             <div>
               <h2 className="text-base font-semibold">Verify your email to view source</h2>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-text-secondary">
                 Your account is signed in, but source access becomes available after email verification.
               </p>
-              <Link href={verifyHref} className="mt-4 inline-flex h-10 items-center gap-2 bg-brand px-4 text-sm font-semibold text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
-                Verify email <ArrowUpRight size={14} aria-hidden="true" />
-              </Link>
+              <div className="mt-4">
+                <AnimatedSourceAction
+                  href={verifyHref}
+                  label="Verify email"
+                  Icon={MailCheckIcon}
+                  primary
+                  isAnimated={!prefersReducedMotion}
+                />
+              </div>
             </div>
           </div>
         ) : state === "unpublished" ? (
@@ -526,7 +565,9 @@ export default function LabSourceAccess({
               <h2 className="text-base font-semibold">{state === "session-mismatch" ? "Sign in again on this address" : "Source temporarily unavailable"}</h2>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-text-secondary">{error || "We could not load this published source. Your account remains signed in."}</p>
               {state === "session-mismatch" ? (
-                <Link href={signInHref} className="mt-4 inline-flex h-10 items-center bg-brand px-4 text-sm font-semibold text-brand-contrast">Sign in again</Link>
+                <div className="mt-4">
+                  <AnimatedSourceAction href={signInHref} label="Sign in again" Icon={LogInIcon} primary isAnimated={!prefersReducedMotion} />
+                </div>
               ) : (
                 <button type="button" onClick={() => { autoLoadKeyRef.current = null; loadSource(); }} disabled={loading} className="mt-4 inline-flex h-9 items-center gap-2 border border-border px-3 text-xs font-semibold transition-colors hover:border-brand disabled:opacity-50">
                   <RefreshCw size={13} aria-hidden="true" /> Try again

@@ -173,22 +173,212 @@ test("Labs hero typography and container scale from mobile through desktop", () 
 });
 
 
-test("portfolio hero offers an outlined Labs CTA beside Projects across all motion modes", async () => {
-  const [cinematicHero, mobileIntro, reducedMotionHero, labsButton] = await Promise.all([
+test("portfolio hero uses the shared Project CTA treatment for Labs across all motion modes", async () => {
+  const [cinematicHero, mobileIntro, reducedMotionHero, sharedButton] = await Promise.all([
     readFile(new URL("../src/app/components/sections/hero_comp/CinematicHero.js", import.meta.url), "utf8"),
     readFile(new URL("../src/app/components/sections/hero_comp/MobileIntro.js", import.meta.url), "utf8"),
     readFile(new URL("../src/app/components/sections/hero_comp/ReducedMotionHero.js", import.meta.url), "utf8"),
-    readFile(new URL("../src/app/components/common/ExploreLabsButton.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/common/ProjectResumeButton.js", import.meta.url), "utf8"),
   ]);
 
-  assert.ok(cinematicHero.includes("<ExploreLabsButton />"));
-  assert.ok(mobileIntro.includes("<ExploreLabsButton />"));
-  assert.ok(reducedMotionHero.includes("<ExploreLabsButton />"));
-  assert.ok(labsButton.includes('href="/labs"'));
-  assert.ok(labsButton.includes("Explore Labs"));
-  assert.ok(labsButton.includes("FlaskConical"));
-  assert.ok(labsButton.includes("border-[#0C8277]/45"));
-  assert.ok(labsButton.includes("dark:border-[#3CBBAA]/50"));
-  assert.ok(labsButton.includes("focus-visible:ring-2"));
-  assert.ok(labsButton.includes("motion-reduce:transition-none"));
+  for (const source of [cinematicHero, mobileIntro, reducedMotionHero]) {
+    assert.ok(source.includes('import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";'));
+    assert.ok(source.includes('import { FlaskConicalIcon } from "@/app/components/common/FlaskConicalIcon";'));
+    assert.match(
+      source,
+      /<ProjectResumeButton\s+href="\/labs"[\s\S]*?label="Explore Labs"[\s\S]*?icon=\{FlaskConicalIcon\}[\s\S]*?animateIconOnHover[\s\S]*?surface="glass"[\s\S]*?\/>/,
+    );
+    assert.doesNotMatch(source, /ExploreLabsButton/);
+  }
+
+  assert.ok(sharedButton.includes("icon: Icon = ArrowUpRight"));
+  assert.ok(sharedButton.includes("rounded-full"));
+  assert.ok(sharedButton.includes('surface = "glass"'));
+  assert.ok(sharedButton.includes('surface === "brand"'));
+  assert.ok(sharedButton.includes('"bg-brand"'));
+  assert.ok(sharedButton.includes('"text-brand-contrast"'));
+  assert.ok(sharedButton.includes("tone.circle"));
+  assert.ok(sharedButton.includes("circleVariants"));
+  assert.ok(sharedButton.includes("useReducedMotion"));
+});
+
+test("FlaskConical icon animation is controlled by the complete hero button hover and focus", async () => {
+  const [buttonSource, iconSource] = await Promise.all([
+    readFile(new URL("../src/app/components/common/ProjectResumeButton.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/common/FlaskConicalIcon.js", import.meta.url), "utf8"),
+  ]);
+
+  assert.ok(buttonSource.includes("animateIconOnHover = false"));
+  assert.ok(buttonSource.includes("leadingIconRef.current?.startAnimation?.()"));
+  assert.ok(buttonSource.includes("leadingIconRef.current?.stopAnimation?.()"));
+  assert.ok(buttonSource.includes("onMouseEnter: () =>"));
+  assert.ok(buttonSource.includes("onMouseLeave: stopLeadingIconAnimation"));
+  assert.ok(buttonSource.includes("onFocus: startLeadingIconAnimation"));
+  assert.ok(buttonSource.includes("onBlur: stopLeadingIconAnimation"));
+  assert.ok(buttonSource.includes("ref: leadingIconRef"));
+  assert.ok(buttonSource.includes("duration: 0.9"));
+  assert.ok(buttonSource.includes("isAnimated: true"));
+  assert.ok(buttonSource.includes("strokeWidth: 1.8"));
+  assert.ok(buttonSource.includes("...(animateIconOnHover"));
+  assert.ok(iconSource.includes('initial="normal"'));
+  assert.doesNotMatch(iconSource, /animate="animate"|whileHover=/);
+
+  assert.ok(iconSource.includes("useImperativeHandle"));
+  assert.ok(iconSource.includes("controls.start(\"animate\")"));
+  assert.ok(iconSource.includes("controls.start(\"normal\")"));
+  assert.ok(iconSource.includes("isControlled.current"));
+  assert.ok(iconSource.includes("useReducedMotion"));
+  assert.ok(iconSource.includes("LazyMotion features={domMin} strict"));
+  assert.ok(iconSource.includes("rotate: [0, -10, 8, -5, 0]"));
+});
+
+test("Labs hero flask is a subtle independent decorative layer behind left content", async () => {
+  const flaskSource = await readFile(
+    new URL("../src/app/components/labs/landing/LabsHeroFlask.js", import.meta.url),
+    "utf8",
+  );
+
+  assert.ok(componentSource.includes('import LabsHeroFlask from "./landing/LabsHeroFlask";'));
+  assert.ok(componentSource.includes("<LabsHeroFlask />"));
+  assert.doesNotMatch(componentSource, /before:pointer-events-none|before:bg-\[radial-gradient|dark:before:bg-\[radial-gradient/);
+  assert.ok(componentSource.indexOf("<LabsHeroFlask />") < componentSource.indexOf("<motion.p"));
+  assert.ok(flaskSource.includes('data-labs-hero-flask=""'));
+  assert.ok(flaskSource.includes('aria-hidden="true"'));
+  assert.ok(flaskSource.includes("pointer-events-none absolute"));
+  assert.ok(flaskSource.includes("z-0"));
+  assert.ok(flaskSource.includes("useReducedMotion"));
+  assert.ok(flaskSource.includes("rotate: [-1.6, 1.6, -1.6]"));
+  assert.ok(flaskSource.includes("duration: 8"));
+  assert.ok(flaskSource.includes("repeat: Infinity"));
+  assert.ok(flaskSource.includes("transformOrigin: \"130px 332px\""));
+  assert.ok(flaskSource.includes("liquidFloat"));
+  assert.ok(flaskSource.includes("lg:dark:opacity-[0.16]"));
+  assert.ok(flaskSource.includes("absolute -left-4 top-4"));
+  assert.ok(flaskSource.includes("lg:-left-8 lg:top-6"));
+  assert.ok(flaskSource.includes("lg:h-[clamp(20rem,25vw,25rem)]"));
+  assert.ok(flaskSource.includes("h-[11rem]"));
+  assert.ok(flaskSource.includes("sm:h-[14rem]"));
+  assert.ok(flaskSource.includes("opacity-[0.09] dark:opacity-[0.12]"));
+  assert.ok(flaskSource.includes("lg:opacity-[0.12]"));
+  assert.ok(flaskSource.includes("text-[#0B746A] dark:text-[#9AF3E9]"));
+  assert.ok(flaskSource.includes("labs-flask-inner-glass"));
+  assert.ok(flaskSource.includes("labs-flask-rim"));
+  assert.ok(flaskSource.includes("labs-flask-liquid"));
+  assert.ok(flaskSource.includes("strokeOpacity=\"0.92\""));
+  assert.ok(flaskSource.includes("strokeOpacity=\"0.84\""));
+  assert.ok(flaskSource.includes("M91 24.5C111 22.5 149 22.5 169 24.5"));
+  assert.ok(flaskSource.includes("M38 251C67 239 91 259 119 253C150 246 180 244 222 256"));
+  assert.ok(flaskSource.includes("pointer-events-none"));
+  assert.ok(componentSource.includes('data-labs-hero-content=""'));
+  assert.ok(componentSource.includes("relative isolate z-10 flex min-w-0 flex-col items-start py-4 sm:py-5 lg:py-6"));
+  assert.doesNotMatch(componentSource, /data-labs-hero-glass-panel|backdrop-blur|backdrop-saturate|rounded-\[1\.75rem\]|bg-\[linear-gradient\(135deg,rgba\(255,255,255,0\.52/);
+  assert.doesNotMatch(componentSource, /border-black\/\[0\.08\]|dark:border-white\/\[0\.12\]|dark:shadow-\[0_28px_90px/);
+  assert.doesNotMatch(componentSource, /border-\[#0B746A\]|dark:border-\[#9AF3E9\]|rgba\(11,116,106|rgba\(117,220,209/);
+  assert.ok(componentSource.includes("relative z-10 flex min-w-0 w-full flex-col items-start"));
+  assert.doesNotMatch(flaskSource, /WebGLRenderer|THREE|Raycaster|pointerdown|pointermove/);
+});
+
+test("adding the hero flask does not change the existing Three.js sphere interaction", () => {
+  assert.match(particleRendererSource, /raycaster\.intersectObject\(sphereHitArea, false\)/);
+  assert.match(particleRendererSource, /distance <= 12 && pointerDown\.startedOnSphere && hitSphere/);
+  assert.match(particleRendererSource, /burstStartedAt = elapsed/);
+  assert.match(particleRendererSource, /orbitGroup\.userData\.update\?\.\(elapsed\)/);
+  assert.match(particleRendererSource, /renderer\.domElement\.style\.touchAction = "pan-y"/);
+});
+
+test("featured experiment CTA reuses the shared resume button with parent-controlled animated flask", async () => {
+  const featured = await readFile(
+    new URL("../src/app/components/labs/FeaturedExperiment.js", import.meta.url),
+    "utf8",
+  );
+
+  assert.ok(featured.includes('import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";'));
+  assert.ok(featured.includes('import { FlaskConicalIcon } from "@/app/components/common/FlaskConicalIcon";'));
+  assert.ok(featured.includes("<ProjectResumeButton"));
+  assert.ok(featured.includes("href={href}"));
+  assert.ok(featured.includes('label="Explore experiment"'));
+  assert.ok(featured.includes("icon={FlaskConicalIcon}"));
+  assert.ok(featured.includes("animateIconOnHover"));
+  assert.ok(featured.includes("className=\"mt-8 sm:mt-9\""));
+  assert.ok(featured.includes("`Explore featured experiment: ${experiment.title}`"));
+  assert.doesNotMatch(featured, /group mt-8 inline-flex min-h-11 items-center gap-4 border border-brand bg-brand/);
+});
+
+test("Labs hero auth and discovery actions use semantic animated icons controlled by link hover and focus", () => {
+  assert.ok(componentSource.includes('@animateicons/react/lucide/log-in-icon'));
+  assert.ok(componentSource.includes('@animateicons/react/lucide/user-round-plus-icon'));
+  assert.ok(componentSource.includes('@animateicons/react/lucide/mail-check-icon'));
+  assert.ok(componentSource.includes('import { FlaskConicalIcon } from "@/app/components/common/FlaskConicalIcon";'));
+  assert.ok(componentSource.includes('import { EyeIcon } from "@animateicons/react/lucide/eye-icon";'));
+  assert.ok(componentSource.includes('"Create account": UserRoundPlusIcon'));
+  assert.ok(componentSource.includes('"Sign in": LogInIcon'));
+  assert.ok(componentSource.includes('"Verify email": MailCheckIcon'));
+  assert.ok(componentSource.includes('"Explore experiments": FlaskConicalIcon'));
+  assert.ok(componentSource.includes("animateIconOnHover"));
+  assert.ok(componentSource.includes("icon={iconsByLabel[action.label] || EyeIcon}"));
+  assert.doesNotMatch(componentSource, /↗/);
+});
+
+
+test("Labs hero reuses the shared teal Resume button for primary actions and glass styling for secondary actions", () => {
+  assert.ok(componentSource.includes('import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";'));
+  assert.ok(componentSource.includes("<ProjectResumeButton"));
+  assert.ok(componentSource.includes('size="sm"'));
+  assert.ok(componentSource.includes('surface={action.variant === "primary" ? "brand" : "glass"}'));
+  assert.ok(componentSource.includes("animateIconOnHover"));
+  assert.ok(componentSource.includes('className="pointer-events-auto"'));
+  assert.equal(componentSource.includes("function HeroAction("), false);
+  assert.equal(componentSource.includes("<Link "), false);
+});
+
+
+test("portfolio homepage keeps Projects primary and Labs secondary across motion modes", async () => {
+  const [cinematicHero, mobileIntro, reducedMotionHero, buttonSource] = await Promise.all([
+    readFile(new URL("../src/app/components/sections/hero_comp/CinematicHero.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/sections/hero_comp/MobileIntro.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/sections/hero_comp/ReducedMotionHero.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/common/ProjectResumeButton.js", import.meta.url), "utf8"),
+  ]);
+
+  for (const heroSource of [cinematicHero, mobileIntro, reducedMotionHero]) {
+    assert.ok(heroSource.includes('href="#projects"'));
+    assert.ok(heroSource.includes('surface="brand"'));
+    assert.ok(heroSource.includes('href="/labs"'));
+    assert.ok(heroSource.includes('surface="glass"'));
+    assert.ok(heroSource.includes("animateIconOnHover"));
+  }
+
+  assert.ok(buttonSource.includes('surface = "glass"'));
+  assert.ok(buttonSource.includes('surface === "brand"'));
+  assert.ok(buttonSource.includes('"bg-brand"'));
+  assert.ok(buttonSource.includes('"dark:bg-white/[0.035]"'));
+  assert.ok(buttonSource.includes('"bg-black/[0.035]"'));
+  assert.ok(buttonSource.includes('"bg-[#171717]"'));
+  assert.ok(buttonSource.includes('"text-white"'));
+  assert.ok(buttonSource.includes('"dark:bg-[#F2F2F0]"'));
+  assert.ok(buttonSource.includes('"dark:text-[#171717]"'));
+  assert.ok(buttonSource.includes('"border border-[#171717]"'));
+  assert.ok(buttonSource.includes('"dark:border-[#F2F2F0]"'));
+  assert.ok(buttonSource.includes('"transition-colors duration-300 motion-reduce:transition-none"'));
+  assert.equal(buttonSource.includes('"bg-transparent"'), false);
+  assert.equal(buttonSource.includes('"border border-current/25"'), false);
+  assert.doesNotMatch(buttonSource, /bg-white\/80|dark:bg-white\/75/);
+});
+
+test("contact form uses the brand-primary CTA variant without removing submit lifecycle states", async () => {
+  const [fieldsSource, actionButtonSource] = await Promise.all([
+    readFile(new URL("../src/app/components/sections/contact_comp/ContactFormFields.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/common/buttons/ActionButton.js", import.meta.url), "utf8"),
+  ]);
+
+  assert.ok(fieldsSource.includes('variant="primary"'));
+  assert.ok(fieldsSource.includes('label="Send Message"'));
+  assert.ok(fieldsSource.includes('status={isSubmitting ? "submitting" : "idle"}'));
+  assert.ok(fieldsSource.includes("disabled={!isValid}"));
+  assert.ok(actionButtonSource.includes('variant = "glass"'));
+  assert.ok(actionButtonSource.includes('const isPrimary = variant === "primary"'));
+  assert.ok(actionButtonSource.includes("bg-brand text-brand-contrast"));
+  assert.ok(actionButtonSource.includes("aria-busy={isSubmitting}"));
+  assert.ok(actionButtonSource.includes("isSubmitting"));
+  assert.ok(actionButtonSource.includes("submittingLabel"));
 });

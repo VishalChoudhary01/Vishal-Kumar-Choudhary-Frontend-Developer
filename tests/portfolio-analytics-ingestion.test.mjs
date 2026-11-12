@@ -125,8 +125,9 @@ test("rate limit storage uses scoped HMAC keys and a short TTL, never raw IP", a
 });
 
 test("Portfolio Analytics page is server protected and is not indexed", async () => {
-  const [page, navigation] = await Promise.all([
+  const [page, destinations, navigation] = await Promise.all([
     read("../src/app/admin/portfolio/analytics/page.js"),
+    read("../src/app/components/labs/LabsWorkspaceDestinations.js"),
     read("../src/app/components/labs/admin/LabsOwnerNavigation.js"),
   ]);
   assert.ok(page.includes("getCurrentAuthSession"));
@@ -134,6 +135,7 @@ test("Portfolio Analytics page is server protected and is not indexed", async ()
   assert.ok(page.includes("notFound()"));
   assert.ok(page.includes("index: false"));
   assert.ok(page.includes('active="portfolio-analytics"'));
-  assert.ok(navigation.includes('href: "/admin/portfolio/analytics"'));
-  assert.ok(navigation.includes('label: "Portfolio analytics"'));
+  assert.ok(navigation.includes("LABS_WORKSPACE_DESTINATIONS"));
+  assert.ok(destinations.includes('href: "/admin/portfolio/analytics"'));
+  assert.ok(destinations.includes('label: "Portfolio analytics"'));
 });

@@ -59,6 +59,7 @@ export default function ActionButton({
     height = "h-[46px]",
 
     className = "",
+    variant = "glass",
 
     reduced: forceReduced = false,
 
@@ -78,6 +79,7 @@ export default function ActionButton({
     const isSuccess = status === "success";
 
     const buttonDisabled = disabled || isSubmitting;
+    const isPrimary = variant === "primary";
 
     const currentLabel = isSuccess
         ? successLabel
@@ -225,33 +227,45 @@ export default function ActionButton({
                     ? "pl-6 pr-12 sm:pl-8 sm:pr-14"
                     : "pl-12 pr-6 sm:pl-14 sm:pr-8",
 
-                // Light mode.
-                "border border-black/10",
-                "bg-white/55",
-                "shadow-[0_2px_10px_rgba(0,0,0,0.08)]",
+                isPrimary
+                    ? [
+                        "border border-brand/20",
+                        "bg-brand text-brand-contrast",
+                        "shadow-[0_4px_16px_rgba(23,107,104,0.18)]",
+                        "hover:border-brand-hover hover:bg-brand-hover",
+                        "active:border-brand-pressed active:bg-brand-pressed",
+                        "dark:shadow-[0_4px_18px_rgba(105,189,185,0.14)]",
+                    ]
+                    : [
+                        // Light mode.
+                        "border border-black/10",
+                        "bg-white/55",
+                        "shadow-[0_2px_10px_rgba(0,0,0,0.08)]",
 
-                // Dark mode.
-                "dark:border-white/15",
-                "dark:bg-black/40",
-                "dark:shadow-[0_2px_10px_rgba(0,0,0,0.18)]",
+                        // Dark mode.
+                        "dark:border-white/15",
+                        "dark:bg-black/40",
+                        "dark:shadow-[0_2px_10px_rgba(0,0,0,0.18)]",
 
-                // Glass.
-                "backdrop-blur-xl",
+                        // Glass.
+                        "backdrop-blur-xl",
 
-                // Hover and active surface.
+                        // Hover and active surface.
+                        "hover:border-black/15",
+                        "hover:bg-white/65",
+                        "active:border-black/20",
+                        "active:bg-white/70",
+                        "hover:shadow-[0_3px_12px_rgba(0,0,0,0.10)]",
+                        "dark:hover:border-white/20",
+                        "dark:hover:bg-black/48",
+                        "dark:active:border-white/25",
+                        "dark:active:bg-black/55",
+                        "dark:hover:shadow-[0_3px_12px_rgba(0,0,0,0.22)]",
+                    ],
+
                 "transition-[background-color,border-color,box-shadow]",
                 "duration-300",
                 "ease-out",
-                "hover:border-black/15",
-                "hover:bg-white/65",
-                "active:border-black/20",
-                "active:bg-white/70",
-                "hover:shadow-[0_3px_12px_rgba(0,0,0,0.10)]",
-                "dark:hover:border-white/20",
-                "dark:hover:bg-black/48",
-                "dark:active:border-white/25",
-                "dark:active:bg-black/55",
-                "dark:hover:shadow-[0_3px_12px_rgba(0,0,0,0.22)]",
 
                 // Accessibility.
                 "focus-visible:outline-none",
@@ -272,13 +286,23 @@ export default function ActionButton({
             {/* Glass highlight */}
             <span
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover/action:opacity-100 dark:bg-white/8"
+                className={cn(
+                    "pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover/action:opacity-100",
+                    isPrimary
+                        ? "bg-white/10 dark:bg-black/10"
+                        : "bg-white/20 dark:bg-white/8",
+                )}
             />
 
             {/* Top glass reflection */}
             <span
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-x-5 top-0 h-px bg-white/75 opacity-70 dark:bg-white/40"
+                className={cn(
+                    "pointer-events-none absolute inset-x-5 top-0 h-px",
+                    isPrimary
+                        ? "bg-white/35 opacity-60 dark:bg-black/15"
+                        : "bg-white/75 opacity-70 dark:bg-white/40",
+                )}
             />
 
             {/* Label */}
@@ -288,8 +312,10 @@ export default function ActionButton({
                     "flex items-center justify-center gap-2",
                     "whitespace-nowrap",
                     "text-center",
-                    "font-normal leading-none tracking-[-0.35px]",
-                    "text-text-primary",
+                    "leading-none tracking-[-0.35px]",
+                    isPrimary
+                        ? "font-medium text-brand-contrast"
+                        : "font-normal text-text-primary",
                     "text-[14px] sm:text-[15px]",
                 )}
             >
@@ -312,19 +338,27 @@ export default function ActionButton({
                     "flex shrink-0 items-center justify-center",
                     "rounded-full",
 
-                    // Light mode.
-                    "border border-black/10",
-                    "bg-white/80",
-                    "text-black",
-                    "shadow-[0_1px_5px_rgba(0,0,0,0.08)]",
+                    isPrimary
+                        ? [
+                            "border border-brand-contrast/15",
+                            "bg-brand-contrast text-brand",
+                            "shadow-[0_1px_6px_rgba(0,0,0,0.10)]",
+                        ]
+                        : [
+                            // Light mode.
+                            "border border-black/10",
+                            "bg-white/80",
+                            "text-black",
+                            "shadow-[0_1px_5px_rgba(0,0,0,0.08)]",
 
-                    // Dark mode.
-                    "dark:border-white/15",
-                    "dark:bg-white/75",
-                    "dark:text-black",
-                    "dark:shadow-[0_1px_5px_rgba(0,0,0,0.18)]",
+                            // Dark mode.
+                            "dark:border-white/15",
+                            "dark:bg-white/75",
+                            "dark:text-black",
+                            "dark:shadow-[0_1px_5px_rgba(0,0,0,0.18)]",
 
-                    "backdrop-blur-md",
+                            "backdrop-blur-md",
+                        ],
 
                     "size-9 sm:size-10",
 

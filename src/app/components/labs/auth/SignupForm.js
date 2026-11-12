@@ -114,7 +114,7 @@ export default function SignupForm({
 
   if (complete) {
     return (
-      <div className="py-3 text-center">
+      <div className="py-2 text-center sm:py-3">
         <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-brand-soft text-brand" aria-hidden="true">
           <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.6">
             <path d="M3.5 6.5h17v11h-17z" />
@@ -122,10 +122,10 @@ export default function SignupForm({
             <path d="m8.5 12.5 2.2 2.2 4.8-5" />
           </svg>
         </div>
-        <h1 className="font-display text-[1.7rem] leading-tight tracking-[-0.025em]">
+        <h1 className="font-display text-[1.55rem] leading-tight tracking-[-0.025em] sm:text-[1.7rem]">
           Check your email
         </h1>
-        <p className="mt-3 text-sm leading-6 text-text-secondary">
+        <p className="mt-2 text-xs leading-5 text-text-secondary sm:mt-3 sm:text-sm sm:leading-6">
           If an account can be created with this address, you&apos;ll receive an email with the next steps.
         </p>
         <div className="mt-6">
@@ -139,18 +139,18 @@ export default function SignupForm({
 
   return (
     <>
-      <div className="mb-4 text-center">
-        <h1 className="font-display text-[2rem] leading-tight tracking-[-0.025em]">
+      <div className="mb-2 text-center sm:mb-2.5">
+        <h1 className="font-display text-[1.6rem] leading-tight tracking-[-0.025em] sm:text-[1.85rem]">
           Create your account
         </h1>
-        <p className="mt-1.5 text-sm leading-5 text-text-secondary">
+        <p className="mt-0.5 text-xs leading-5 text-text-secondary sm:mt-1 sm:text-sm">
           Start using your Labs account.
         </p>
       </div>
 
       {globalError ? <AuthMessage title="Unable to create account">{globalError}</AuthMessage> : null}
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-3">
+      <form onSubmit={handleSubmit} noValidate className="space-y-2 sm:space-y-2.5">
         <AuthField
           id="email"
           label="Email address"
@@ -186,7 +186,7 @@ export default function SignupForm({
         />
         <PasswordStrengthMeter password={password} />
 
-        <div className="pt-1">
+        <div className="pt-0.5">
           <div className="flex items-start gap-2">
             <input
               id="privacy-policy-acceptance"
@@ -258,7 +258,7 @@ export default function SignupForm({
         onPendingChange={setLoading}
       />
 
-      <p className="mt-4 text-center text-sm text-text-secondary">
+      <p className="mt-2 text-center text-xs text-text-secondary sm:mt-3 sm:text-sm">
         Already have an account?{" "}
         <AuthLink href={"/labs/login?returnTo=" + encodeURIComponent(returnTo)}>
           Sign in

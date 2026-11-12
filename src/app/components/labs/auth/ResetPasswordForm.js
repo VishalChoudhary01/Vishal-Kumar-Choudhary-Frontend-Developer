@@ -75,14 +75,14 @@ export default function ResetPasswordForm({ token, returnTo }) {
 
   if (invalidToken) {
     return (
-      <div className="py-3 text-center">
-        <h1 className="font-display text-[2rem] leading-tight tracking-[-0.025em]">
+      <div className="py-2 text-center sm:py-3">
+        <h1 className="font-display text-[1.65rem] leading-tight tracking-[-0.025em] sm:text-[2rem]">
           This link is no longer valid
         </h1>
-        <p className="mt-3 text-sm leading-6 text-text-secondary">
+        <p className="mt-2 text-xs leading-5 text-text-secondary sm:mt-3 sm:text-sm sm:leading-6">
           This password-reset link may have expired or already been used. Request a new link to continue.
         </p>
-        <div className="mt-6">
+        <div className="mt-4 sm:mt-6">
           <AuthLink href={"/labs/forgot-password?returnTo=" + encodeURIComponent(returnTo)}>
             Request a new link
           </AuthLink>
@@ -108,7 +108,7 @@ export default function ResetPasswordForm({ token, returnTo }) {
         <button
           type="button"
           onClick={() => router.replace("/labs/login?returnTo=" + encodeURIComponent(returnTo))}
-          className="mt-6 h-[46px] w-full rounded-sm bg-brand px-4 text-sm font-semibold text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          className="mt-4 h-10 w-full rounded-sm bg-brand px-4 text-sm font-semibold text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:mt-6 sm:h-[46px]"
         >
           Continue to sign in
         </button>
@@ -118,18 +118,18 @@ export default function ResetPasswordForm({ token, returnTo }) {
 
   return (
     <>
-      <div className="mb-6 text-center">
+      <div className="mb-4 text-center sm:mb-6">
         <h1 className="font-display text-[2rem] leading-tight tracking-[-0.025em]">
           Create a new password
         </h1>
-        <p className="mt-2 text-sm leading-6 text-text-secondary">
+        <p className="mt-1.5 text-xs leading-5 text-text-secondary sm:mt-2 sm:text-sm sm:leading-6">
           Choose a new password for your Labs account.
         </p>
       </div>
 
       {globalError ? <AuthMessage>{globalError}</AuthMessage> : null}
 
-      <form onSubmit={submit} noValidate className="space-y-4">
+      <form onSubmit={submit} noValidate className="space-y-3 sm:space-y-4">
         <AuthField
           id="password"
           label="New Password"

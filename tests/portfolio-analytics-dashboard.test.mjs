@@ -78,3 +78,41 @@ test("dashboard uses theme tokens and remains isolated from public page shells",
   assert.ok(!project.includes("PortfolioAnalyticsDashboard"));
   assert.ok(!labs.includes("PortfolioAnalyticsDashboard"));
 });
+
+
+test("Portfolio Analytics uses animated semantic metric icons and reduced-motion-aware deletion controls", async () => {
+  const [dashboard, deletionControls] = await Promise.all([
+    read("../src/app/components/portfolio-analytics/PortfolioAnalyticsDashboard.js"),
+    read("../src/app/components/portfolio-analytics/PortfolioAnalyticsDeletionControls.js"),
+  ]);
+
+  for (const iconPath of [
+    "@animateicons/react/lucide/activity-icon",
+    "@animateicons/react/lucide/clock-icon",
+    "@animateicons/react/lucide/eye-icon",
+    "@animateicons/react/lucide/users-icon",
+  ]) {
+    assert.ok(dashboard.includes(iconPath), iconPath);
+  }
+
+  assert.ok(dashboard.includes("isAnimated={!reduceMotion}"));
+  assert.ok(dashboard.includes("duration={0.72}"));
+  assert.ok(deletionControls.includes("@animateicons/react/lucide/trash-icon"));
+  assert.ok(deletionControls.includes("useReducedMotion"));
+  assert.ok(deletionControls.includes("isAnimated={!reduceMotion}"));
+});
+
+
+test("Portfolio Analytics uses compact controls and an animated refresh action", async () => {
+  const [dashboard, page, breadcrumbs] = await Promise.all([
+    read("../src/app/components/portfolio-analytics/PortfolioAnalyticsDashboard.js"),
+    read("../src/app/admin/portfolio/analytics/page.js"),
+    read("../src/app/components/labs/admin/AdminBreadcrumbs.js"),
+  ]);
+  assert.ok(dashboard.includes("rounded-[2px]"));
+  assert.ok(dashboard.includes("rounded-[3px]"));
+  assert.ok(dashboard.includes("AnimatedRefreshCw"));
+  assert.ok(dashboard.includes("refreshIconRef.current?.startAnimation?.()"));
+  assert.ok(page.includes("<AdminBreadcrumbs"));
+  assert.ok(breadcrumbs.includes("AnimatedArrowLeft"));
+});

@@ -106,6 +106,7 @@ export default function ContactFormFields({
             <ContactRevealRow active={active} delay={CONTACT_STAGGER.submit} className="mt-8 sm:mt-10 "> 
                 <ActionButton
                     type="submit"
+                    variant="primary"
                     label="Send Message"
                     submittingLabel="Sending…"
                     status={isSubmitting ? "submitting" : "idle"}

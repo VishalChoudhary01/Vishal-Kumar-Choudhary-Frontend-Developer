@@ -1,6 +1,7 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, Copy, Eye, Heart, Users } from "lucide-react";
+import Link from "next/link";
+import { Copy, Eye, Heart, Users } from "lucide-react";
+import AdminBreadcrumbs from "@/app/components/labs/admin/AdminBreadcrumbs";
 import LabsEngagementTrendChart from "@/app/components/labs/admin/LabsEngagementTrendChart";
 import LabsOwnerAccessNotice from "@/app/components/labs/admin/LabsOwnerAccessNotice";
 import LabsOwnerNavigation from "@/app/components/labs/admin/LabsOwnerNavigation";
@@ -98,9 +99,10 @@ export default async function LabsExperimentAnalyticsPage({ params, searchParams
   return (
     <main className="min-h-screen bg-background px-5 py-10 text-text-primary sm:px-8 lg:px-12">
       <div className="mx-auto w-full max-w-[1280px]">
-        <Link href="/admin/labs/analytics" className="inline-flex items-center gap-2 text-xs font-medium text-text-secondary hover:text-text-primary">
-          <ArrowLeft size={14} aria-hidden="true" /> All analytics
-        </Link>
+        <AdminBreadcrumbs items={[
+          { href: "/admin/labs/analytics", label: "All analytics" },
+          { label: analytics?.experiment.title || "Experiment analytics" },
+        ]} />
         <LabsOwnerNavigation active="analytics" user={toLabsAccountUser(session.user)} />
 
         <header className="mt-8 border-b border-border pb-6">

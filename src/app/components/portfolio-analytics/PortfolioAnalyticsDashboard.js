@@ -1,21 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import {
-  Activity,
-  Clock3,
-  Eye,
   Globe2,
   Laptop,
   Monitor,
   MousePointer2,
-  RefreshCw,
   Smartphone,
   Tablet,
-  Users,
 } from "lucide-react";
+import { ActivityIcon } from "@animateicons/react/lucide/activity-icon";
+import { ClockIcon } from "@animateicons/react/lucide/clock-icon";
+import { EyeIcon } from "@animateicons/react/lucide/eye-icon";
+import { UsersIcon } from "@animateicons/react/lucide/users-icon";
+import { RefreshCwIcon as AnimatedRefreshCw } from "@animateicons/react/lucide/refresh-cw-icon";
 
 import MotionNumber from "@/app/components/motion/MotionNumber/MotionNumber";
 import usePortfolioAnalyticsPolling from "@/app/hooks/portfolio-analytics/usePortfolioAnalyticsPolling";
@@ -91,11 +91,11 @@ function MetricCard({ icon: Icon, label, value, detail, duration = false, index 
       initial={reduceMotion ? false : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.34, delay: reduceMotion ? 0 : index * 0.045 }}
-      className="min-w-0 border border-border bg-surface-1 p-5"
+      className="rounded-[3px] min-w-0 border border-border bg-surface-1 p-5"
     >
       <div className="flex items-center justify-between gap-3">
         <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-text-tertiary">{label}</p>
-        <Icon size={17} className="shrink-0 text-text-tertiary" aria-hidden="true" />
+        <Icon size={17} duration={0.72} isAnimated={!reduceMotion} className="shrink-0 text-text-tertiary" aria-hidden="true" />
       </div>
       <div className="mt-4 min-h-9 text-3xl font-semibold tabular-nums tracking-tight text-text-primary">
         {duration ? (
@@ -151,7 +151,7 @@ function VisitsTrendChart({ daily = [], days }) {
   const totalVisits = daily.reduce((sum, point) => sum + (Number(point.visits) || 0), 0);
 
   return (
-    <section className="border border-border bg-surface-1 p-5 sm:p-6" aria-labelledby="portfolio-trend-title">
+    <section className="rounded-[3px] border border-border bg-surface-1 p-5 sm:p-6" aria-labelledby="portfolio-trend-title">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 id="portfolio-trend-title" className="text-sm font-semibold">Visit trend</h2>
@@ -231,7 +231,7 @@ function BreakdownCard({ title, description, items, labelFor }) {
   const maxValue = Math.max(1, ...items.map((item) => Number(item.visits) || 0));
 
   return (
-    <section className="min-w-0 border border-border bg-surface-1 p-5" aria-label={title}>
+    <section className="rounded-[3px] min-w-0 border border-border bg-surface-1 p-5" aria-label={title}>
       <h2 className="text-sm font-semibold">{title}</h2>
       <p className="mt-1 text-xs leading-5 text-text-tertiary">{description}</p>
       {items.length ? (
@@ -276,7 +276,7 @@ function RecentVisitsTable({
     : null;
 
   return (
-    <section className="border border-border bg-surface-1" aria-labelledby="recent-visits-title">
+    <section className="rounded-[3px] border border-border bg-surface-1" aria-labelledby="recent-visits-title">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
         <div>
           <h2 id="recent-visits-title" className="text-sm font-semibold">Visitor activity</h2>
@@ -360,7 +360,7 @@ function RecentVisitsTable({
                       </td>
                       <td className="px-4 py-4">
                         {isVerified ? (
-                          <span className="inline-flex items-center rounded border border-success/30 bg-success/10 px-1.5 py-0.5 text-[9px] font-semibold text-success">
+                          <span className="rounded-[2px] inline-flex items-center rounded border border-success/30 bg-success/10 px-1.5 py-0.5 text-[9px] font-semibold text-success">
                             Verified
                           </span>
                         ) : (
@@ -398,7 +398,7 @@ function RecentVisitsTable({
           </div>
           {nextHref ? (
             <div className="flex justify-center border-t border-border px-5 py-4">
-              <Link href={nextHref} scroll={false} className="inline-flex min-h-9 items-center justify-center border border-border px-4 text-xs font-semibold text-text-secondary transition-colors hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
+              <Link href={nextHref} scroll={false} className="inline-flex min-h-9 items-center justify-center rounded-[2px] border border-border px-4 text-xs font-semibold text-text-secondary transition-[color,background-color,border-color] duration-200 hover:border-brand/45 hover:bg-surface-2 hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transition-none">
                 Load older visits
               </Link>
             </div>
@@ -446,6 +446,7 @@ export default function PortfolioAnalyticsDashboard({
     initialRecentError,
   });
   const reduceMotion = useReducedMotion();
+  const refreshIconRef = useRef(null);
   const [selectedVisitIds, setSelectedVisitIds] = useState(() => new Set());
   const overview = report?.overview || {
     totalVisits: 0,
@@ -497,21 +498,27 @@ export default function PortfolioAnalyticsDashboard({
           <button
             type="button"
             onClick={refreshNow}
+            onMouseEnter={() => refreshIconRef.current?.startAnimation?.()}
+            onMouseLeave={() => refreshIconRef.current?.stopAnimation?.()}
+            onFocus={() => refreshIconRef.current?.startAnimation?.()}
+            onBlur={() => refreshIconRef.current?.stopAnimation?.()}
             disabled={refreshing}
-            className="inline-flex h-8 items-center gap-2 border border-border px-3 text-xs font-semibold text-text-secondary transition-colors hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-8 items-center gap-2 rounded-[2px] border border-border px-3 text-xs font-semibold text-text-secondary transition-[color,background-color,border-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-px hover:border-brand/45 hover:bg-surface-2 hover:text-brand hover:shadow-sm active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transform-none motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           >
-            <RefreshCw size={13} className={refreshing && !reduceMotion ? "animate-spin" : ""} aria-hidden="true" />
+            <AnimatedRefreshCw ref={refreshIconRef} size={13} duration={0.68} isAnimated={!reduceMotion} className={refreshing && !reduceMotion ? "animate-spin motion-reduce:animate-none" : ""} aria-hidden="true" />
             Refresh now
           </button>
-          <nav aria-label="Portfolio analytics reporting period" className="flex items-center gap-1 border border-border bg-surface-1 p-1">
+          <nav aria-label="Portfolio analytics reporting period" className="inline-flex items-center gap-1 rounded-[3px] border border-border bg-surface-1/80 p-1 shadow-sm">
           {[7, 30, 60].map((period) => (
             <Link
               key={period}
               href={"/admin/portfolio/analytics?days=" + period}
               aria-current={days === period ? "page" : undefined}
               className={[
-                "inline-flex h-8 items-center px-3 text-xs font-semibold transition-colors",
-                days === period ? "bg-brand text-white" : "text-text-secondary hover:bg-surface-2 hover:text-text-primary",
+                "inline-flex h-8 min-w-11 items-center justify-center rounded-[2px] border px-3 text-xs font-semibold transition-[color,background-color,border-color,box-shadow,transform] duration-200 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none",
+                days === period
+                  ? "border-brand/40 bg-brand-soft text-brand shadow-[0_1px_3px_rgba(0,0,0,0.12)] ring-1 ring-inset ring-brand/15"
+                  : "border-transparent text-text-secondary hover:-translate-y-0.5 hover:border-border hover:bg-surface-2 hover:text-text-primary hover:shadow-sm active:scale-[0.98]",
               ].join(" ")}
             >
               {period}D
@@ -522,7 +529,7 @@ export default function PortfolioAnalyticsDashboard({
       </div>
 
       {reportError || recentError ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 border border-warning/40 bg-warning/10 px-4 py-3 text-xs leading-5 text-warning" role="status">
+        <div className="rounded-[2px] flex flex-wrap items-center justify-between gap-3 border border-warning/40 bg-warning/10 px-4 py-3 text-xs leading-5 text-warning" role="status">
           <span>
             {reportError || recentError} Showing the last successful data where available.
           </span>
@@ -533,10 +540,10 @@ export default function PortfolioAnalyticsDashboard({
       ) : null}
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Portfolio visit overview">
-        <MetricCard icon={Eye} label="Page visits" value={overview.totalVisits} detail="Eligible page loads in this period" index={0} />
-        <MetricCard icon={Users} label="Tab sessions" value={overview.uniqueTabSessions} detail="Distinct temporary browser-tab sessions" index={1} />
-        <MetricCard icon={Clock3} label="Average visible time" value={overview.averageActiveSeconds} detail="Foreground seconds per page visit" duration index={2} />
-        <MetricCard icon={Activity} label="Total visible time" value={overview.totalActiveSeconds} detail="Accumulated foreground page time" duration index={3} />
+        <MetricCard icon={EyeIcon} label="Page visits" value={overview.totalVisits} detail="Eligible page loads in this period" index={0} />
+        <MetricCard icon={UsersIcon} label="Tab sessions" value={overview.uniqueTabSessions} detail="Distinct temporary browser-tab sessions" index={1} />
+        <MetricCard icon={ClockIcon} label="Average visible time" value={overview.averageActiveSeconds} detail="Foreground seconds per page visit" duration index={2} />
+        <MetricCard icon={ActivityIcon} label="Total visible time" value={overview.totalActiveSeconds} detail="Accumulated foreground page time" duration index={3} />
       </section>
 
       <VisitsTrendChart daily={daily} days={days} />
@@ -575,7 +582,7 @@ export default function PortfolioAnalyticsDashboard({
           items={(report?.pageTypes || []).map((item) => ({ ...item, key: item.pageType }))}
           labelFor={(item) => getPageLabel(item.pageType)}
         />
-        <article className="border border-border bg-surface-1 p-5">
+        <article className="rounded-[3px] border border-border bg-surface-1 p-5">
           <div className="flex items-center gap-2">
             <MousePointer2 size={16} className="text-text-tertiary" aria-hidden="true" />
             <h2 className="text-sm font-semibold">Measurement notes</h2>

@@ -82,9 +82,11 @@ export default function ProjectResumeButton({
     className,
     size = "default",
     variant = "default",
+    surface = "glass",
     disabled = false,
     ariaLabel,
     download = false,
+    animateIconOnHover = false,
 }) {
     const reducedMotion = useReducedMotion();
 
@@ -99,6 +101,17 @@ export default function ProjectResumeButton({
 
     const linkRef = useRef(null);
     const circleRef = useRef(null);
+    const leadingIconRef = useRef(null);
+
+    const startLeadingIconAnimation = () => {
+        if (!animateIconOnHover) return;
+        leadingIconRef.current?.startAnimation?.();
+    };
+
+    const stopLeadingIconAnimation = () => {
+        if (!animateIconOnHover) return;
+        leadingIconRef.current?.stopAnimation?.();
+    };
 
     const [travel, setTravel] = useState(0);
 
@@ -216,44 +229,52 @@ export default function ProjectResumeButton({
             },
     };
 
-    // Preserve the original button surface styling.
+    // Two consistent surfaces: a solid primary and a neutral glass secondary.
+    const surfaceClasses = surface === "brand"
+        ? [
+            "border border-brand/80",
+            "bg-brand",
+            "text-brand-contrast",
+            "shadow-[0_2px_10px_rgba(0,0,0,0.12)]",
+            "hover:border-brand-hover",
+            "hover:bg-brand-hover",
+            "active:border-brand-hover",
+            "active:bg-brand-hover",
+            "hover:shadow-[0_3px_12px_rgba(0,0,0,0.16)]",
+        ].join(" ")
+        : [
+            "border border-black/12",
+            "bg-black/[0.035]",
+            "text-black",
+            "shadow-[0_2px_10px_rgba(0,0,0,0.06)]",
+            "dark:border-white/15",
+            "dark:bg-white/[0.035]",
+            "dark:text-white",
+            "dark:shadow-[0_2px_10px_rgba(0,0,0,0.18)]",
+            "hover:border-black/20",
+            "hover:bg-black/[0.06]",
+            "active:border-black/25",
+            "active:bg-black/[0.075]",
+            "hover:shadow-[0_3px_12px_rgba(0,0,0,0.10)]",
+            "dark:hover:border-white/25",
+            "dark:hover:bg-white/[0.075]",
+            "dark:active:border-white/30",
+            "dark:active:bg-white/[0.09]",
+            "dark:hover:shadow-[0_3px_12px_rgba(0,0,0,0.22)]",
+        ].join(" ");
+
     const sharedClassName = cn(
         "group/action",
-        "relative isolate inline-flex",
+        "relative isolate inline-flex pointer-events-auto",
         "w-fit max-w-full",
         "items-center justify-center",
         "overflow-hidden",
         "rounded-full",
-
-        // Light mode.
-        "border border-black/10",
-        "bg-white/55",
-        "text-black",
-        "shadow-[0_2px_10px_rgba(0,0,0,0.08)]",
-
-        // Dark mode.
-        "dark:border-white/15",
-        "dark:bg-black/40",
-        "dark:text-white",
-        "dark:shadow-[0_2px_10px_rgba(0,0,0,0.18)]",
-
-        // Glass.
         "backdrop-blur-xl",
-
-        // Hover and active surface.
         "transition-[background-color,border-color,box-shadow]",
         "duration-300",
         "ease-out",
-        "hover:border-black/15",
-        "hover:bg-white/65",
-        "active:border-black/20",
-        "active:bg-white/70",
-        "hover:shadow-[0_3px_12px_rgba(0,0,0,0.10)]",
-        "dark:hover:border-white/20",
-        "dark:hover:bg-black/48",
-        "dark:active:border-white/25",
-        "dark:active:bg-black/55",
-        "dark:hover:shadow-[0_3px_12px_rgba(0,0,0,0.22)]",
+        surfaceClasses,
 
         // Accessibility.
         "focus-visible:outline-none",
@@ -272,8 +293,14 @@ export default function ProjectResumeButton({
         whileFocus: "focus",
         whileTap: "tap",
 
-        // Play the sound once when the pointer enters the button.
-        onMouseEnter: playHoverSound,
+        // The full button controls the optional animated leading icon.
+        onMouseEnter: () => {
+            playHoverSound();
+            startLeadingIconAnimation();
+        },
+        onMouseLeave: stopLeadingIconAnimation,
+        onFocus: startLeadingIconAnimation,
+        onBlur: stopLeadingIconAnimation,
 
         transition: {
             duration: 0.28,
@@ -287,13 +314,17 @@ export default function ProjectResumeButton({
             {/* Glass highlight */}
             <span
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover/action:opacity-100 dark:bg-white/8"
+                className={cn(
+                    "pointer-events-none absolute inset-0 bg-current/10 opacity-0 transition-opacity duration-300 group-hover/action:opacity-100",
+                )}
             />
 
             {/* Top glass reflection */}
             <span
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-x-5 top-0 h-px bg-white/75 opacity-70 dark:bg-white/40"
+                className={cn(
+                    "pointer-events-none absolute inset-x-5 top-0 h-px bg-current/30 opacity-60",
+                )}
             />
 
             {/* Label */}
@@ -303,7 +334,7 @@ export default function ProjectResumeButton({
                     "whitespace-nowrap",
                     "leading-none",
                     "text-center",
-                    "text-text-primary",
+                    surface === "brand" ? "text-brand-contrast" : "text-text-primary",
                     tone.label,
                 )}
             >
@@ -331,26 +362,29 @@ export default function ProjectResumeButton({
                     "justify-center",
                     "rounded-full",
 
-                    // Light mode.
-                    "border border-black/10",
-                    "bg-white/80",
-                    "text-black",
-                    "shadow-[0_1px_5px_rgba(0,0,0,0.08)]",
-
-                    // Dark mode.
-                    "dark:border-white/15",
-                    "dark:bg-white/75",
-                    "dark:text-black",
-                    "dark:shadow-[0_1px_5px_rgba(0,0,0,0.18)]",
-
-                    "backdrop-blur-md",
+                    "border border-[#171717]",
+                    "bg-[#171717]",
+                    "text-white",
+                    "dark:border-[#F2F2F0]",
+                    "dark:bg-[#F2F2F0]",
+                    "dark:text-[#171717]",
+                    "shadow-none",
+                    "transition-colors duration-300 motion-reduce:transition-none",
 
                     tone.circle,
                 )}
             >
                 <Icon
                     size={leftIconSize}
-                    strokeWidth={1.8}
+                    {...(animateIconOnHover
+                        ? {
+                            ref: leadingIconRef,
+                            duration: 0.9,
+                            isAnimated: true,
+                        }
+                        : {
+                            strokeWidth: 1.8,
+                        })}
                 />
             </motion.span>
         </>

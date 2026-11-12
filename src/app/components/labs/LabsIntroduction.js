@@ -1,11 +1,17 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Link from "next/link";
+import { LogInIcon } from "@animateicons/react/lucide/log-in-icon";
+import { UserRoundPlusIcon } from "@animateicons/react/lucide/user-round-plus-icon";
+import { MailCheckIcon } from "@animateicons/react/lucide/mail-check-icon";
+import { EyeIcon } from "@animateicons/react/lucide/eye-icon";
+import { FlaskConicalIcon } from "@/app/components/common/FlaskConicalIcon";
+import ProjectResumeButton from "@/app/components/common/ProjectResumeButton";
 import { animate, motion, useInView, useMotionValue, useTransform } from "motion/react";
 
 import useReducedMotion from "@/app/hooks/useReducedMotion";
 import LabsHeroArtwork from "./landing/LabsHeroArtwork";
+import LabsHeroFlask from "./landing/LabsHeroFlask";
 import { getLabsHeroActions } from "@/app/lib/labs/hero-cta.mjs";
 
 const heroContainerVariants = {
@@ -72,39 +78,27 @@ function AnimatedLabStat({ value, label }) {
   );
 }
 
-function HeroAction({ href, children, primary = false }) {
-  return (
-    <Link
-      href={href}
-      className={[
-        "pointer-events-auto group inline-flex min-h-11 items-center justify-center gap-3 border px-4 text-xs font-semibold transition-[background-color,border-color,color,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand motion-reduce:transition-none sm:px-5 sm:text-sm",
-        primary
-          ? "border-brand bg-brand text-brand-contrast hover:-translate-y-px hover:border-brand-hover hover:bg-brand-hover"
-          : "border-border-subtle text-text-secondary hover:-translate-y-px hover:border-brand/60 hover:text-text-primary",
-      ].join(" ")}
-    >
-      {children}
-      <span
-        aria-hidden="true"
-        className="inline-block transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transform-none motion-reduce:transition-none"
-      >
-        ↗
-      </span>
-    </Link>
-  );
-}
-
 function HeroActions({ authState, featuredHref }) {
   const actions = getLabsHeroActions({ authState, featuredHref });
+  const iconsByLabel = {
+    "Create account": UserRoundPlusIcon,
+    "Sign in": LogInIcon,
+    "Verify email": MailCheckIcon,
+    "Explore experiments": FlaskConicalIcon,
+    "Explore featured experiment": EyeIcon,
+  };
 
   return actions.map((action) => (
-    <HeroAction
+    <ProjectResumeButton
       key={action.label}
       href={action.href}
-      primary={action.variant === "primary"}
-    >
-      {action.label}
-    </HeroAction>
+      label={action.label}
+      icon={iconsByLabel[action.label] || EyeIcon}
+      animateIconOnHover
+      size="sm"
+      surface={action.variant === "primary" ? "brand" : "glass"}
+      className="pointer-events-auto"
+    />
   ));
 }
 
@@ -126,7 +120,12 @@ export default function LabsIntroduction({
       className="pointer-events-none relative z-10 mx-auto flex w-full max-w-[1440px] flex-col justify-center px-4 pb-9 pt-[calc(60px+1.75rem)] sm:px-8 sm:pb-12 sm:pt-[calc(60px+2.5rem)] lg:min-h-[calc(100svh-78px)] lg:px-16 lg:pb-8 lg:pt-[calc(78px+2.25rem)] xl:px-20"
     >
       <div className="relative z-10 grid grid-cols-1 items-center gap-8 sm:gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:gap-8 xl:gap-12">
-        <div className="relative z-10 flex min-w-0 flex-col items-start">
+        <div
+          data-labs-hero-content=""
+          className="relative isolate z-10 flex min-w-0 flex-col items-start py-4 sm:py-5 lg:py-6"
+        >
+          <LabsHeroFlask />
+          <div className="relative z-10 flex min-w-0 w-full flex-col items-start">
           <motion.p
             variants={heroItemVariants}
             className="mb-4 font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-brand sm:mb-5 sm:text-[10px]"
@@ -168,6 +167,7 @@ export default function LabsIntroduction({
             <AnimatedLabStat value={experimentCount} label="Published experiments" />
             <AnimatedLabStat value={categoryCount} label="Active disciplines" />
           </motion.div>
+          </div>
         </div>
 
         <div className="relative min-w-0 w-full lg:justify-self-stretch">

@@ -1,9 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useReducedMotion } from "motion/react";
+import { LockOpenIcon as AnimatedLockOpen } from "@animateicons/react/lucide/lock-open-icon";
+import { TrashIcon as AnimatedTrash } from "@animateicons/react/lucide/trash-icon";
+import { UploadIcon as AnimatedUpload } from "@animateicons/react/lucide/upload-icon";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useActionToast } from "@/app/providers/ActionToastProvider";
+import AdminBreadcrumbs from "./AdminBreadcrumbs";
 import LabSourceLivePreview from "./LabSourceLivePreview";
 import LabCodeEditor from "@/app/components/labs/code/LabCodeEditor";
 import { updateSourceFileContent } from "@/app/lib/labs/source-editor-state.mjs";
@@ -11,7 +16,6 @@ import LabMediaLibrary from "./LabMediaLibrary";
 import Link from "next/link";
 import {
   ArrowDown,
-  ArrowLeft,
   ArrowUp,
   Eye,
   FilePlus2,
@@ -20,7 +24,6 @@ import {
   Save,
   Upload,
   X,
-  Trash2,
 } from "lucide-react";
 
 const LANGUAGES = [
@@ -98,6 +101,11 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
   const [files, setFiles] = useState(initialSource.files || []);
   const filesRef = useRef(files);
   const { resolvedTheme } = useTheme();
+  const prefersReducedMotion = useReducedMotion();
+  const publishDialogIconRef = useRef(null);
+  const unpublishDialogIconRef = useRef(null);
+  const deleteDialogIconRef = useRef(null);
+  const deleteHeaderIconRef = useRef(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [versions, setVersions] = useState(initialVersions || []);
   const [audit, setAudit] = useState(initialAudit || []);
@@ -113,6 +121,12 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
   const [previewFileIndex, setPreviewFileIndex] = useState(0);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [publishStage, setPublishStage] = useState("");
+
+  useEffect(() => {
+    if (confirmPublish) publishDialogIconRef.current?.startAnimation?.();
+    if (confirmUnpublish) unpublishDialogIconRef.current?.startAnimation?.();
+    if (confirmDelete) deleteDialogIconRef.current?.startAnimation?.();
+  }, [confirmPublish, confirmUnpublish, confirmDelete]);
   // React files state is authoritative; this ref is its synchronous mirror.
   // Monaco emits content on each change, so save/run/publish can always capture
   // the latest keystroke even before a parent render is committed.
@@ -762,13 +776,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
   return (
     <main className="min-h-screen bg-background px-5 py-8 text-text-primary sm:px-8 lg:px-12">
       <div className="mx-auto w-full max-w-[1440px]">
-        <Link
-          href="/admin/labs/sources"
-          className="inline-flex items-center gap-2 text-xs font-medium text-text-secondary hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
-        >
-          <ArrowLeft size={14} aria-hidden="true" />
-          Source dashboard
-        </Link>
+        <AdminBreadcrumbs items={[{ href: "/admin/labs/sources", label: "Source Library" }, { label: source.title }]} />
 
         <header className="mt-8 flex flex-wrap items-start justify-between gap-5 border-b border-border pb-6">
           <div>
@@ -776,37 +784,41 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
             <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{source.title}</h1>
             <p className="mt-1 text-xs text-text-tertiary">{source.slug}</p>
             <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
-              <span className={source.published ? "border border-brand/40 bg-brand-soft px-2 py-1 text-brand" : "border border-border px-2 py-1 text-text-tertiary"}>
+              <span className={source.published ? "rounded-[2px] border border-brand/40 bg-brand-soft px-2 py-1 text-brand" : "rounded-[2px] border border-border px-2 py-1 text-text-tertiary"}>
                 {source.published ? "Published" : "Unpublished"}
               </span>
-              <span className="border border-border px-2 py-1 text-text-tertiary">
+              <span className="rounded-[2px] border border-border px-2 py-1 text-text-tertiary">
                 {source.draft?.version || "No saved draft"}
               </span>
               {source.publishedVersion ? (
-                <span className="border border-border px-2 py-1 text-text-tertiary">
+                <span className="rounded-[2px] border border-border px-2 py-1 text-text-tertiary">
                   Live: {source.publishedVersion.version}
                 </span>
               ) : null}
               {hasUnsavedChanges ? (
-                <span className="border border-warning/40 bg-warning/10 px-2 py-1 text-warning">Unsaved edits</span>
+                <span className="rounded-[2px] border border-warning/40 bg-warning/10 px-2 py-1 text-warning">Unsaved edits</span>
               ) : (
-                <span className="border border-border px-2 py-1 text-text-tertiary">Working copy saved</span>
+                <span className="rounded-[2px] border border-border px-2 py-1 text-text-tertiary">Working copy saved</span>
               )}
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {source.isCustom ? (
               <>
-                <span className="inline-flex h-9 items-center border border-border px-3 text-xs text-text-tertiary">
+                <span className="rounded-[2px] inline-flex h-9 items-center border border-border px-3 text-xs text-text-tertiary transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none">
                   Private experiment draft
                 </span>
                 <button
                   type="button"
                   onClick={() => { setDeleteConfirmation(""); setConfirmDelete(true); }}
+                  onMouseEnter={() => deleteHeaderIconRef.current?.startAnimation?.()}
+                  onMouseLeave={() => deleteHeaderIconRef.current?.stopAnimation?.()}
+                  onFocus={() => deleteHeaderIconRef.current?.startAnimation?.()}
+                  onBlur={() => deleteHeaderIconRef.current?.stopAnimation?.()}
                   disabled={Boolean(busy)}
-                  className="inline-flex h-9 items-center gap-2 border border-warning/50 px-3 text-xs font-semibold text-warning transition-colors hover:bg-warning/10 disabled:opacity-40"
+                  className="inline-flex h-9 items-center gap-2 rounded-[2px] border border-error/45 bg-error/[0.035] px-3 text-xs font-semibold text-error transition-[color,background-color,border-color,transform] duration-200 hover:-translate-y-px hover:border-error/65 hover:bg-error/10 active:scale-[0.98] disabled:opacity-40 motion-reduce:transform-none motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-error"
                 >
-                  <Trash2 size={13} aria-hidden="true" />
+                  <AnimatedTrash ref={deleteHeaderIconRef} size={13} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />
                   Delete project
                 </button>
               </>
@@ -814,7 +826,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
               <Link
                 href={"/labs/" + encodeURIComponent(source.slug)}
                 target="_blank"
-                className="inline-flex h-9 items-center border border-border px-3 text-xs font-medium text-text-secondary hover:text-text-primary"
+                className="rounded-[2px] inline-flex h-9 items-center border border-border px-3 text-xs font-medium text-text-secondary hover:text-text-primary transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none"
               >
                 View experiment
               </Link>
@@ -829,7 +841,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
             { label: "Saved draft", value: source.draft?.version || "Not saved" },
             { label: "Published version", value: source.publishedVersion?.version || "Not published" },
           ].map((metric) => (
-            <div key={metric.label} className="border border-border bg-surface-1 px-3 py-3">
+            <div key={metric.label} className="rounded-[3px] border border-border bg-surface-1 px-3 py-3">
               <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-text-tertiary">{metric.label}</p>
               <p className="mt-1 truncate text-sm font-semibold tabular-nums" title={metric.value}>{metric.value}</p>
             </div>
@@ -837,7 +849,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
         </section>
 
         {message ? <p role="status" className="mt-4 border border-brand/30 bg-brand-soft/30 px-3 py-2 text-xs text-brand">{message}</p> : null}
-        {error ? <p role="alert" className="mt-4 border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning">{error}</p> : null}
+        {error ? <p role="alert" className="rounded-[2px] mt-4 border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning">{error}</p> : null}
 
         <section className={[
           "mt-6 grid gap-5",
@@ -845,14 +857,14 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
             ? "xl:grid-cols-[240px_minmax(0,1.2fr)_minmax(340px,0.9fr)]"
             : "xl:grid-cols-[280px_minmax(0,1fr)]",
         ].join(" ")}>
-          <aside className="rounded-sm border border-border bg-surface-1 p-4">
+          <aside className="rounded-[2px] border border-border bg-surface-1 p-4">
             <div className="flex flex-col items-stretch gap-3">
               <div>
                 <h2 className="text-sm font-semibold">Files</h2>
                 <p className="mt-1 text-[10px] text-text-tertiary">Drag to reorder or use the arrow controls.</p>
               </div>
               <div className="flex flex-wrap items-center gap-1.5">
-                <label className="inline-flex h-8 cursor-pointer items-center gap-1 border border-border px-2 text-[11px] font-semibold hover:border-brand hover:text-brand">
+                <label className="rounded-[2px] inline-flex h-8 cursor-pointer items-center gap-1 border border-border px-2 text-[11px] font-semibold hover:border-brand hover:text-brand transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none">
                   <FileUp size={13} aria-hidden="true" />
                   Import
                   <input
@@ -866,13 +878,13 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                 </label>
                 {files.length === 0 ? (
                   <>
-                    <button type="button" onClick={createHtmlStarter} className="inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft">
+                    <button type="button" onClick={createHtmlStarter} className="rounded-[2px] inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none">
                       HTML/CSS
                     </button>
-                    <button type="button" onClick={createReactStarter} className="inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft">
+                    <button type="button" onClick={createReactStarter} className="rounded-[2px] inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none">
                       React JS
                     </button>
-                    <button type="button" onClick={createReactTsStarter} className="inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft">
+                    <button type="button" onClick={createReactTsStarter} className="rounded-[2px] inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none">
                       React TSX
                     </button>
                   </>
@@ -881,7 +893,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                   type="button"
                   onClick={addFile}
                   disabled={files.length >= 40}
-                  className="inline-flex h-8 items-center gap-1 border border-border px-2 text-[11px] font-semibold hover:border-brand hover:text-brand disabled:opacity-40"
+                  className="rounded-[2px] inline-flex h-8 items-center gap-1 border border-border px-2 text-[11px] font-semibold hover:border-brand hover:text-brand disabled:opacity-40 transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none"
                 >
                   <FilePlus2 size={13} aria-hidden="true" />
                   Add
@@ -967,7 +979,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
             </div>
           </aside>
 
-          <div className="min-w-0 rounded-sm border border-border bg-surface-1 p-4 sm:p-5">
+          <div className="min-w-0 rounded-[2px] border border-border bg-surface-1 p-4 sm:p-5">
             {selectedFile ? (
               <>
                 <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_160px_auto]">
@@ -1000,7 +1012,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                       onClick={removeSelectedFile}
                       disabled={files.length <= 1 || Boolean(busy)}
                       title={files.length <= 1 ? "A saved source snapshot must contain at least one file." : "Remove selected file"}
-                      className="inline-flex h-9 items-center gap-1 border border-border px-3 text-xs text-text-secondary hover:border-warning hover:text-warning disabled:cursor-not-allowed disabled:opacity-40"
+                      className="rounded-[2px] inline-flex h-9 items-center gap-1 border border-border px-3 text-xs text-text-secondary hover:border-warning hover:text-warning disabled:cursor-not-allowed disabled:opacity-40 transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none"
                     >
                       <X size={13} aria-hidden="true" />
                       Remove
@@ -1058,7 +1070,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                   type="button"
                   onClick={saveDraft}
                   disabled={Boolean(busy) || !hasUnsavedChanges || !files.length}
-                  className="inline-flex h-9 items-center gap-2 bg-brand px-4 text-xs font-semibold text-brand-contrast hover:bg-brand-hover disabled:opacity-50"
+                  className="rounded-[2px] inline-flex h-9 items-center gap-2 bg-brand px-4 text-xs font-semibold text-brand-contrast hover:bg-brand-hover disabled:opacity-50 transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none"
                 >
                   {busy === "save" ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <Save size={13} aria-hidden="true" />}
                   {busy === "save" ? "Saving…" : hasUnsavedChanges ? "Save draft" : "Draft saved"}
@@ -1114,7 +1126,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                   type="button"
                   onClick={() => { setError(""); setConfirmPublish(true); }}
                   disabled={Boolean(busy) || !files.length}
-                  className="mt-4 inline-flex h-9 items-center gap-2 border border-brand px-3 text-xs font-semibold text-brand hover:bg-brand-soft disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-[2px] mt-4 inline-flex h-9 items-center gap-2 border border-brand px-3 text-xs font-semibold text-brand hover:bg-brand-soft disabled:cursor-not-allowed disabled:opacity-40 transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none"
                   title={hasUnsavedChanges || !source.draftVersionId ? "Save the current editor files, then build and publish them." : "Build and publish the current saved draft."}
                 >
                   <Upload size={13} aria-hidden="true" />
@@ -1138,7 +1150,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                   type="button"
                   onClick={() => setConfirmPublish(true)}
                   disabled={Boolean(busy) || hasUnsavedChanges}
-                  className="inline-flex h-9 items-center gap-2 border border-brand px-3 text-xs font-semibold text-brand hover:bg-brand-soft disabled:opacity-40"
+                  className="rounded-[2px] inline-flex h-9 items-center gap-2 border border-brand px-3 text-xs font-semibold text-brand hover:bg-brand-soft disabled:opacity-40 transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none"
                 >
                   <Upload size={13} aria-hidden="true" />
                   Publish draft
@@ -1153,7 +1165,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                   type="button"
                   onClick={() => setConfirmUnpublish(true)}
                   disabled={Boolean(busy)}
-                  className="h-9 border border-warning/50 px-3 text-xs font-semibold text-warning hover:bg-warning/10 disabled:opacity-50"
+                  className="rounded-[2px] h-9 border border-warning/50 px-3 text-xs font-semibold text-warning hover:bg-warning/10 disabled:opacity-50"
                 >
                   Unpublish source
                 </button>
@@ -1165,7 +1177,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
 
         {source.isCustom ? <LabMediaLibrary slug={source.slug} /> : null}
 
-        <section className="mt-8 rounded-sm border border-border bg-surface-1 p-4 sm:p-5">
+        <section className="mt-8 rounded-[2px] border border-border bg-surface-1 p-4 sm:p-5">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold">Version history</h2>
@@ -1180,10 +1192,10 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-xs font-semibold">{version.version}</p>
                     {source.draftVersionId === version.versionId ? (
-                      <span className="border border-border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-text-secondary">Draft</span>
+                      <span className="rounded-[2px] border border-border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-text-secondary">Draft</span>
                     ) : null}
                     {source.publishedVersionId === version.versionId ? (
-                      <span className="border border-brand/40 bg-brand-soft px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-brand">Live</span>
+                      <span className="rounded-[2px] border border-brand/40 bg-brand-soft px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-brand">Live</span>
                     ) : null}
                   </div>
                   <p className="mt-1 text-[11px] text-text-tertiary">
@@ -1199,7 +1211,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                     type="button"
                     onClick={() => viewVersion(version.versionId)}
                     disabled={Boolean(busy) || previewLoading}
-                    className="inline-flex h-8 items-center gap-1 border border-border px-3 text-[11px] font-medium text-text-secondary hover:border-brand hover:text-brand disabled:opacity-40"
+                    className="rounded-[2px] inline-flex h-8 items-center gap-1 border border-border px-3 text-[11px] font-medium text-text-secondary hover:border-brand hover:text-brand disabled:opacity-40 transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none"
                   >
                     <Eye size={12} aria-hidden="true" />
                     View
@@ -1219,7 +1231,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
           </div>
         </section>
 
-        <section className="mt-8 rounded-sm border border-border bg-surface-1 p-4 sm:p-5">
+        <section className="mt-8 rounded-[2px] border border-border bg-surface-1 p-4 sm:p-5">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold">Source audit history</h2>
@@ -1302,7 +1314,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
               <div className="mt-3 min-h-0 flex-1 overflow-hidden border border-border bg-surface-inset">
                 {previewVersion.files[previewFileIndex] ? (
                   <>
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-surface-1 px-3 py-2">
+                    <div className="rounded-[3px] flex flex-wrap items-center justify-between gap-2 border-b border-border bg-surface-1 px-3 py-2">
                       <p className="min-w-0 truncate font-mono text-xs text-text-secondary">
                         {previewVersion.files[previewFileIndex].path}
                       </p>
@@ -1355,10 +1367,13 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
 
       {confirmPublish ? (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" role="presentation">
-          <section role="dialog" aria-modal="true" aria-labelledby="publish-title" className="w-full max-w-md border border-border bg-surface-1 p-5 shadow-2xl">
-            <h2 id="publish-title" className="text-base font-semibold">
-              {source.isCustom ? "Build and publish this release?" : "Publish this source version?"}
-            </h2>
+          <section role="dialog" aria-modal="true" aria-labelledby="publish-title" className="rounded-[4px] w-full max-w-md border border-border bg-surface-1 p-5 shadow-2xl">
+            <div className="flex items-center gap-2 text-brand">
+              <AnimatedUpload ref={publishDialogIconRef} size={17} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
+              <h2 id="publish-title" className="text-base font-semibold">
+                {source.isCustom ? "Build and publish this release?" : "Publish this source version?"}
+              </h2>
+            </div>
             <p className="mt-2 text-sm leading-6 text-text-secondary">
               {source.isCustom
                 ? hasUnsavedChanges || !source.draftVersionId
@@ -1373,7 +1388,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
               </div>
             ) : null}
             {error ? (
-              <div className="mt-4 border border-warning/40 bg-warning/10 px-3 py-3" role="alert">
+              <div className="rounded-[2px] mt-4 border border-warning/40 bg-warning/10 px-3 py-3" role="alert">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-warning">Build & publish failed</p>
                 <p className="mt-1 break-words text-xs leading-5 text-text-secondary">{error}</p>
               </div>
@@ -1392,9 +1407,9 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                 onClick={publishDraft}
                 disabled={Boolean(busy) || !files.length}
                 aria-busy={busy === "publish"}
-                className="inline-flex h-9 items-center gap-2 bg-brand px-3 text-xs font-semibold text-brand-contrast disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-[2px] inline-flex h-9 items-center gap-2 bg-brand px-3 text-xs font-semibold text-brand-contrast disabled:cursor-not-allowed disabled:opacity-50 transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none"
               >
-                {busy === "publish" ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <Upload size={13} aria-hidden="true" />}
+                {busy === "publish" ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <AnimatedUpload size={13} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />}
                 {busy === "publish"
                   ? (source.isCustom ? "Building & publishing…" : "Publishing…")
                   : (source.isCustom ? "Build & publish" : "Confirm publish")}
@@ -1406,14 +1421,18 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
 
       {confirmUnpublish ? (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" role="presentation">
-          <section role="dialog" aria-modal="true" aria-labelledby="unpublish-title" className="w-full max-w-md border border-border bg-surface-1 p-5 shadow-2xl">
-            <h2 id="unpublish-title" className="text-base font-semibold">Unpublish this source?</h2>
+          <section role="dialog" aria-modal="true" aria-labelledby="unpublish-title" className="rounded-[4px] w-full max-w-md border border-border bg-surface-1 p-5 shadow-2xl">
+            <div className="flex items-center gap-2 text-warning">
+              <AnimatedLockOpen ref={unpublishDialogIconRef} size={17} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
+              <h2 id="unpublish-title" className="text-base font-semibold">Unpublish this source?</h2>
+            </div>
             <p className="mt-2 text-sm leading-6 text-text-secondary">
               New source requests will be blocked for every verified account. Existing version history and engagement records will remain.
             </p>
             <div className="mt-5 flex justify-end gap-2">
-              <button type="button" onClick={() => setConfirmUnpublish(false)} className="h-9 border border-border px-3 text-xs">Cancel</button>
-              <button type="button" onClick={unpublishSource} disabled={Boolean(busy)} className="h-9 border border-warning/50 px-3 text-xs font-semibold text-warning disabled:opacity-50">
+              <button type="button" onClick={() => setConfirmUnpublish(false)} className="h-9 rounded-[2px] border border-border bg-surface-2/40 px-3 text-xs text-text-secondary transition-colors hover:bg-surface-2 hover:text-text-primary">Cancel</button>
+              <button type="button" onClick={unpublishSource} disabled={Boolean(busy)} className="rounded-[2px] inline-flex h-9 items-center gap-2 border border-warning/50 px-3 text-xs font-semibold text-warning disabled:opacity-50 transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none">
+                <AnimatedLockOpen size={13} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />
                 {busy === "unpublish" ? "Unpublishing…" : "Confirm unpublish"}
               </button>
             </div>
@@ -1422,9 +1441,9 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
       ) : null}
       {confirmDelete ? (
         <div className="fixed inset-0 z-[80] grid place-items-center bg-black/70 p-4" role="presentation">
-          <section role="dialog" aria-modal="true" aria-labelledby="delete-project-title" className="w-full max-w-md border border-warning/40 bg-surface-1 p-5 shadow-2xl">
-            <div className="flex items-center gap-2 text-warning">
-              <Trash2 size={16} aria-hidden="true" />
+          <section role="dialog" aria-modal="true" aria-labelledby="delete-project-title" className="w-full max-w-md rounded-[4px] border border-error/30 bg-surface-1 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.48)]">
+            <div className="flex items-center gap-2 text-error">
+              <AnimatedTrash ref={deleteDialogIconRef} size={16} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
               <h2 id="delete-project-title" className="text-base font-semibold">Delete this experiment?</h2>
             </div>
             <p className="mt-3 text-sm leading-6 text-text-secondary">
@@ -1437,7 +1456,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                 onChange={(event) => setDeleteConfirmation(event.target.value)}
                 autoComplete="off"
                 spellCheck={false}
-                className="mt-2 h-10 w-full border border-border bg-background px-3 font-mono text-xs text-text-primary outline-none focus:border-warning"
+                className="mt-2 h-10 w-full rounded-[2px] border border-border bg-background px-3 font-mono text-xs text-text-primary outline-none transition-[border-color,box-shadow] duration-200 focus:border-error focus:ring-2 focus:ring-error/15 motion-reduce:transition-none"
                 placeholder={source.slug}
               />
             </label>
@@ -1447,9 +1466,9 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                 type="button"
                 onClick={deleteProject}
                 disabled={busy === "delete" || deleteConfirmation.trim() !== source.slug}
-                className="inline-flex h-9 items-center gap-2 border border-warning bg-warning/10 px-3 text-xs font-semibold text-warning disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex h-9 items-center gap-2 rounded-[2px] border border-error bg-error px-3 text-xs font-semibold text-error-contrast shadow-sm transition-[background-color,transform] duration-200 hover:-translate-y-px hover:bg-error-hover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 motion-reduce:transform-none motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-error"
               >
-                {busy === "delete" ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <Trash2 size={13} aria-hidden="true" />}
+                {busy === "delete" ? <LoaderCircle size={13} className="animate-spin" aria-hidden="true" /> : <AnimatedTrash size={13} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />}
                 {busy === "delete" ? "Deleting…" : "Delete permanently"}
               </button>
             </div>

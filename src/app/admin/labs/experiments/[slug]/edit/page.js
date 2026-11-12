@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { PencilIcon as AnimatedPencil } from "@animateicons/react/lucide/pencil-icon";
 
+import AdminBreadcrumbs from "@/app/components/labs/admin/AdminBreadcrumbs";
 import LabExperimentMetadataEditor from "@/app/components/labs/admin/LabExperimentMetadataEditor";
 import LabsOwnerAccessNotice from "@/app/components/labs/admin/LabsOwnerAccessNotice";
 import LabsOwnerNavigation from "@/app/components/labs/admin/LabsOwnerNavigation";
@@ -43,13 +43,7 @@ export default async function EditLabExperimentPage({ params }) {
   return (
     <main className="min-h-screen bg-background px-5 py-8 text-text-primary sm:px-8 lg:px-12">
       <div className="mx-auto w-full max-w-4xl">
-        <Link
-          href="/admin/labs/sources"
-          className="inline-flex items-center gap-2 text-xs font-medium text-text-secondary transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
-        >
-          <ArrowLeft size={14} aria-hidden="true" />
-          Source Library
-        </Link>
+        <AdminBreadcrumbs items={[{ href: "/admin/labs/sources", label: "Source Library" }, { label: "Edit experiment" }]} />
 
         <LabsOwnerNavigation active="sources" user={toLabsAccountUser(session.user)} />
 
@@ -57,7 +51,8 @@ export default async function EditLabExperimentPage({ params }) {
           <p className="text-xs font-semibold uppercase tracking-[0.15em] text-brand">
             OWNER EXPERIMENT DETAILS
           </p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
+          <h1 className="mt-2 flex items-center gap-3 text-2xl font-semibold tracking-tight sm:text-3xl">
+            <AnimatedPencil size={23} duration={0.68} className="shrink-0 text-brand" aria-hidden="true" />
             Edit experiment details
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">

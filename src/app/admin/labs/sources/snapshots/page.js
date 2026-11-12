@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 
+import AdminBreadcrumbs from "@/app/components/labs/admin/AdminBreadcrumbs";
 import LabSnapshotStoragePanel from "@/app/components/labs/admin/LabSnapshotStoragePanel";
 import LabsOwnerAccessNotice from "@/app/components/labs/admin/LabsOwnerAccessNotice";
 import LabsOwnerNavigation from "@/app/components/labs/admin/LabsOwnerNavigation";
@@ -27,13 +26,7 @@ export default async function LabsSnapshotStoragePage() {
   return (
     <main className="min-h-screen bg-background px-5 py-10 text-text-primary sm:px-8 lg:px-12">
       <div className="mx-auto w-full max-w-[1280px]">
-        <Link
-          href="/admin/labs/sources"
-          className="inline-flex items-center gap-2 text-xs font-medium text-text-secondary transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
-        >
-          <ArrowLeft size={14} aria-hidden="true" />
-          Back to Source Management
-        </Link>
+        <AdminBreadcrumbs items={[{ href: "/admin/labs/sources", label: "Back to Source Management" }]} />
 
         <LabsOwnerNavigation active="snapshots" user={toLabsAccountUser(session.user)} />
 

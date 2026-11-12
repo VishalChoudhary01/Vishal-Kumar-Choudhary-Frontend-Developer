@@ -104,7 +104,7 @@ export default function LabsAuthModal({ children }) {
       {isOpen ? (
         <motion.div
           key="labs-auth-modal"
-          className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto px-3 py-4 sm:px-6 sm:py-6"
+          className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto auth-scrollbar-hidden px-2 py-2 sm:px-6 sm:py-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -128,9 +128,9 @@ export default function LabsAuthModal({ children }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.985 }}
             transition={panelTransition}
-            className="relative z-10 my-auto max-h-[calc(100svh-2rem)] w-full max-w-[392px] overflow-y-auto overscroll-contain rounded-xl border border-border/90 bg-surface-elevated/90 p-4 text-text-primary shadow-[0_28px_100px_-34px_rgba(0,0,0,0.58)] backdrop-blur-xl sm:max-h-[calc(100svh-3rem)] sm:p-5"
+            className="relative z-10 my-auto max-h-[calc(100dvh-1rem)] w-full max-w-[360px] overflow-y-auto auth-scrollbar-hidden overscroll-contain rounded-xl border border-border/90 bg-surface-elevated/90 p-2.5 text-text-primary shadow-[0_28px_100px_-34px_rgba(0,0,0,0.58)] backdrop-blur-xl sm:max-h-[calc(100dvh-2rem)] sm:max-w-[392px] sm:p-4"
           >
-            <header className="mb-3 flex items-center justify-between">
+            <header className="mb-1 flex items-center justify-between sm:mb-2">
               <Link href="/labs" aria-label="V Kr. Labs" className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand">
                 <VKrLogo compact />
               </Link>

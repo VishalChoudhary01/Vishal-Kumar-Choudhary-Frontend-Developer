@@ -526,14 +526,16 @@ test("particle bursts leave the camera and orbital paths at their resting size",
 });
 
 test("particle burst spans the entire Labs hero while the sphere stays at the artwork anchor", async () => {
-  const labsHeroSource = await readFile(
-    new URL("../src/app/components/labs/LabsIntroduction.js", import.meta.url),
-    "utf8",
-  );
+  const [labsHeroSource, sharedButtonSource] = await Promise.all([
+    readFile(new URL("../src/app/components/labs/LabsIntroduction.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/common/ProjectResumeButton.js", import.meta.url), "utf8"),
+  ]);
 
   assert.match(labsHeroSource, /data-labs-hero-root=""/);
   assert.ok(labsHeroSource.includes("pointer-events-none relative z-10"));
-  assert.ok(labsHeroSource.includes("pointer-events-auto group inline-flex"));
+  assert.ok(labsHeroSource.includes("<ProjectResumeButton"));
+  assert.ok(labsHeroSource.includes('className="pointer-events-auto"'));
+  assert.ok(sharedButtonSource.includes('"relative isolate inline-flex pointer-events-auto"'));
   assert.ok(rendererSource.includes('mount.closest("[data-labs-hero-root]")'));
   assert.ok(rendererSource.includes("renderRoot.appendChild(renderer.domElement)"));
   assert.ok(rendererSource.includes("renderRoot.getBoundingClientRect()"));

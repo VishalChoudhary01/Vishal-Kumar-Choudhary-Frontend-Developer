@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 
 import { toLabsAccountUser } from "@/app/lib/labs/auth-user-presentation.mjs";
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
 import { getLabsOwnerAccessStatus } from "@/app/lib/labs/owner-access";
 import LabsOwnerAccessNotice from "@/app/components/labs/admin/LabsOwnerAccessNotice";
 import LabsOwnerNavigation from "@/app/components/labs/admin/LabsOwnerNavigation";
+import AdminBreadcrumbs from "@/app/components/labs/admin/AdminBreadcrumbs";
 import LabRuntimeImportPanel from "@/app/components/labs/admin/LabRuntimeImportPanel";
 
 export const dynamic = "force-dynamic";
@@ -31,12 +31,7 @@ export default async function ImportRuntimePage() {
   return (
     <main className="min-h-screen bg-background px-5 py-10 text-text-primary sm:px-8">
       <div className="mx-auto max-w-5xl">
-        <Link
-          href="/admin/labs/sources"
-          className="text-xs text-text-secondary transition-colors hover:text-text-primary"
-        >
-          ← Source Library
-        </Link>
+        <AdminBreadcrumbs items={[{ href: "/admin/labs/sources", label: "Source Library" }, { label: "Import runtime source" }]} />
         <LabsOwnerNavigation active="sources" user={toLabsAccountUser(session.user)} />
         <header className="mt-8 border-b border-border pb-5">
           <p className="text-xs font-semibold uppercase tracking-[0.15em] text-brand">
