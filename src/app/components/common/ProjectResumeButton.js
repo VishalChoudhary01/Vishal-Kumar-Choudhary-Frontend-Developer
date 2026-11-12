@@ -362,9 +362,10 @@ export default function ProjectResumeButton({
                     "justify-center",
                     "rounded-full",
 
-                    "border border-[#171717]",
-                    "bg-[#171717]",
-                    "text-white",
+                    "border border-[#D3D7D4]",
+                    "bg-[#E3E6E3]",
+                    "text-[#353B38]",
+                    "shadow-[0_1px_5px_rgba(0,0,0,0.06)]",
                     "dark:border-[#F2F2F0]",
                     "dark:bg-[#F2F2F0]",
                     "dark:text-[#171717]",
