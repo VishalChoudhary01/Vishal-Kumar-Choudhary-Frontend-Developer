@@ -7,6 +7,7 @@ import HamburgerSVGButton from "../ui/HamburgerSVGButton";
 import { cn } from "@/app/lib/utils";
 import EditorialNumber from "../ui/EditorialNumber";
 import ProjectResumeButton from "../common/ProjectResumeButton";
+import { DownloadIcon } from "../ui/DownloadIcon";
 import Link from "next/link";
 import VKrLogo from "../common/logo/VKrLogo";
 
@@ -522,6 +523,8 @@ export default function MobileMenu({ navLinks = [], socialLinks = [], activeHref
             download="vishal_kumar_choudhary_frontend_developer.pdf"
             ariaLabel="Download resume (PDF)"
             variant="nav"
+            icon={DownloadIcon}
+            animateIconOnHover
             className="w-full max-w-sm"
           />
         </motion.div>

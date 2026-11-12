@@ -5,7 +5,7 @@ import ContactProjectType from "./contact_form/ContactProjectType";
 import ContactRevealRow from "./ContactRevealRow";
 import ContactMessageCounter from "./ContactMessageCounter";
 import ActionButton from "../../common/buttons/ActionButton";
-import { Send } from "lucide-react";
+import AnimatedSendIcon from "../../common/buttons/action_button_comp/AnimatedSendIcon";
 
 import { CONTACT_STAGGER } from "./contact.motion";
 import { MESSAGE_MAX_LENGTH } from "./contactForm.validation";
@@ -111,10 +111,10 @@ export default function ContactFormFields({
                     submittingLabel="Sending…"
                     status={isSubmitting ? "submitting" : "idle"}
                     disabled={!isValid}
-                    icon={<Send size={18} strokeWidth={1.8} />}
-                    iconPosition="right"
-                    width="sm:w-[180px]"
-                    height="h-[50px]"
+                    icon={<AnimatedSendIcon size={18} />}
+                    iconPosition="left"
+                    width="min-w-[140px] sm:min-w-[150px] lg:min-w-[160px]"
+                    height="min-h-10 sm:min-h-11 lg:min-h-12"
                 />
             </ContactRevealRow>
 

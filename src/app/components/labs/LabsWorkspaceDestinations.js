@@ -2,6 +2,8 @@ import { ActivityIcon } from "@animateicons/react/lucide/activity-icon";
 import { ChartSplineIcon } from "@animateicons/react/lucide/chart-spline-icon";
 import { FolderOpenIcon } from "@animateicons/react/lucide/folder-open-icon";
 import { HardDriveIcon } from "@animateicons/react/lucide/hard-drive-icon";
+import DatabaseArrowDownIcon from "@/app/components/ui/DatabaseArrowDownIcon";
+import FileCodeIcon from "@/app/components/ui/FileCodeIcon";
 
 export const LABS_WORKSPACE_DESTINATIONS = [
   {
@@ -23,13 +25,15 @@ export const LABS_WORKSPACE_DESTINATIONS = [
     id: "sources",
     label: "Source Library",
     description: "Manage source files and published versions",
-    icon: FolderOpenIcon,
+    icon: FileCodeIcon,
+    fallbackIcon: FolderOpenIcon,
   },
   {
     href: "/admin/labs/sources/snapshots",
     id: "snapshots",
     label: "Snapshot storage",
     description: "Monitor and clean up Vercel Sandbox snapshots",
-    icon: HardDriveIcon,
+    icon: DatabaseArrowDownIcon,
+    fallbackIcon: HardDriveIcon,
   },
 ];
