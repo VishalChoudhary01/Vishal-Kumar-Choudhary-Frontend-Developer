@@ -216,6 +216,7 @@ export default function ActionButton({
                 "items-center justify-center",
                 "select-none overflow-hidden",
                 "rounded-full",
+                "backdrop-blur-xl",
 
                 /*
                  * Asymmetric padding reserves the resting zone for the
@@ -223,18 +224,20 @@ export default function ActionButton({
                  * space and never sits under the circle (the capsule grows
                  * symmetrically for long labels via w-fit callers).
                  */
-                circleOnRight
-                    ? "pl-6 pr-12 sm:pl-8 sm:pr-14"
-                    : "pl-12 pr-6 sm:pl-14 sm:pr-8",
+                // Balanced icon-safe padding from ProjectResumeButton's sm size.
+                "pl-11 pr-11 sm:pl-12 sm:pr-12 lg:pl-14 lg:pr-14",
 
                 isPrimary
                     ? [
-                        "border border-brand/20",
-                        "bg-brand text-brand-contrast",
-                        "shadow-[0_4px_16px_rgba(23,107,104,0.18)]",
-                        "hover:border-brand-hover hover:bg-brand-hover",
-                        "active:border-brand-pressed active:bg-brand-pressed",
-                        "dark:shadow-[0_4px_18px_rgba(105,189,185,0.14)]",
+                        "border border-brand/80",
+                        "bg-brand",
+                        "text-brand-contrast",
+                        "shadow-[0_2px_10px_rgba(0,0,0,0.12)]",
+                        "hover:border-brand-hover",
+                        "hover:bg-brand-hover",
+                        "active:border-brand-hover",
+                        "active:bg-brand-hover",
+                        "hover:shadow-[0_3px_12px_rgba(0,0,0,0.16)]",
                     ]
                     : [
                         // Light mode.
@@ -288,9 +291,7 @@ export default function ActionButton({
                 aria-hidden="true"
                 className={cn(
                     "pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover/action:opacity-100",
-                    isPrimary
-                        ? "bg-white/10 dark:bg-black/10"
-                        : "bg-white/20 dark:bg-white/8",
+                    "bg-current/10",
                 )}
             />
 
@@ -299,9 +300,7 @@ export default function ActionButton({
                 aria-hidden="true"
                 className={cn(
                     "pointer-events-none absolute inset-x-5 top-0 h-px",
-                    isPrimary
-                        ? "bg-white/35 opacity-60 dark:bg-black/15"
-                        : "bg-white/75 opacity-70 dark:bg-white/40",
+                    "bg-current/30 opacity-60",
                 )}
             />
 
@@ -309,14 +308,13 @@ export default function ActionButton({
             <span
                 className={cn(
                     "relative z-10",
-                    "flex items-center justify-center gap-2",
                     "whitespace-nowrap",
                     "text-center",
-                    "leading-none tracking-[-0.35px]",
+                    "leading-none",
                     isPrimary
                         ? "font-medium text-brand-contrast"
                         : "font-normal text-text-primary",
-                    "text-[14px] sm:text-[15px]",
+                    "text-[0.68rem] sm:text-[0.72rem] lg:text-[0.76rem]",
                 )}
             >
                 {currentLabel}
@@ -340,9 +338,16 @@ export default function ActionButton({
 
                     isPrimary
                         ? [
-                            "border border-brand-contrast/15",
-                            "bg-brand-contrast text-brand",
-                            "shadow-[0_1px_6px_rgba(0,0,0,0.10)]",
+                            // Match ProjectResumeButton's shared CTA icon disc.
+                            "border border-[#3D4640]",
+                            "bg-[#292F2B]",
+                            "text-[#F1F3EF]",
+                            "shadow-[0_1px_5px_rgba(0,0,0,0.06)]",
+                            "dark:border-[#C9D0CB]",
+                            "dark:bg-[#DCE1DD]",
+                            "dark:text-[#343B36]",
+                            "shadow-none",
+                            "transition-colors duration-300 motion-reduce:transition-none",
                         ]
                         : [
                             // Light mode.
@@ -360,9 +365,9 @@ export default function ActionButton({
                             "backdrop-blur-md",
                         ],
 
-                    "size-9 sm:size-10",
+                    "size-8 sm:size-9 lg:size-10",
 
-                    circleOnRight ? "right-1" : "left-1",
+                    circleOnRight ? "right-[3px]" : "left-[3px]",
 
                     iconClassName,
                 )}
