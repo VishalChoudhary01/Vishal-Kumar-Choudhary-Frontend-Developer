@@ -6,9 +6,9 @@ export default function LabExplanation({ explanation }) {
   return (
     <section
       aria-labelledby="lab-explanation-heading"
-      className="mx-auto mt-12 w-full max-w-[1440px] px-6 sm:mt-16 sm:px-8 lg:px-20"
+      className="mx-auto mt-8 w-full max-w-[1440px] px-4 sm:mt-16 sm:px-8 lg:px-20"
     >
-      <div className="max-w-3xl border-t border-border-subtle pt-7">
+      <div className="max-w-3xl border-t border-border-subtle pt-5 sm:pt-7">
         <p className="font-mono text-[9px] font-medium uppercase tracking-[0.2em] text-brand">
           About the experiment
         </p>
@@ -18,7 +18,7 @@ export default function LabExplanation({ explanation }) {
         >
           How it works
         </h2>
-        <p className="mt-4 max-w-2xl text-sm leading-7 text-text-secondary sm:text-base sm:leading-8">
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-text-secondary sm:mt-4 sm:text-base sm:leading-8">
           {explanation}
         </p>
       </div>
