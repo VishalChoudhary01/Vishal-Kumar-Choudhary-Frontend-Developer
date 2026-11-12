@@ -353,12 +353,12 @@ test("portfolio homepage keeps Projects primary and Labs secondary across motion
   assert.ok(buttonSource.includes('"bg-brand"'));
   assert.ok(buttonSource.includes('"dark:bg-white/[0.035]"'));
   assert.ok(buttonSource.includes('"bg-black/[0.035]"'));
-  assert.ok(buttonSource.includes('"bg-[#E3E6E3]"'));
-  assert.ok(buttonSource.includes('"text-[#353B38]"'));
-  assert.ok(buttonSource.includes('"dark:bg-[#F2F2F0]"'));
-  assert.ok(buttonSource.includes('"dark:text-[#171717]"'));
-  assert.ok(buttonSource.includes('"border border-[#D3D7D4]"'));
-  assert.ok(buttonSource.includes('"dark:border-[#F2F2F0]"'));
+  assert.ok(buttonSource.includes('"bg-[#DCE1DD]"'));
+  assert.ok(buttonSource.includes('"text-[#343B36]"'));
+  assert.ok(buttonSource.includes('"dark:bg-[#292F2B]"'));
+  assert.ok(buttonSource.includes('"dark:text-[#F1F3EF]"'));
+  assert.ok(buttonSource.includes('"border border-[#C9D0CB]"'));
+  assert.ok(buttonSource.includes('"dark:border-[#3D4640]"'));
   assert.ok(buttonSource.includes('"transition-colors duration-300 motion-reduce:transition-none"'));
   assert.equal(buttonSource.includes('"bg-transparent"'), false);
   assert.equal(buttonSource.includes('"border border-current/25"'), false);
