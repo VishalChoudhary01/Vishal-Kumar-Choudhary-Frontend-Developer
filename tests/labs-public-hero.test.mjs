@@ -429,6 +429,11 @@ test("contact submit CTA matches ProjectResumeButton styling and animates Send w
   assert.ok(actionButtonSource.includes('aria-busy={isSubmitting}'));
   assert.ok(actionButtonSource.includes("ActionButtonSubmitting"));
   assert.ok(actionButtonSource.includes("ActionButtonSuccess"));
+  assert.ok(actionButtonSource.includes('"size-9 sm:size-10"'));
+  assert.ok(actionButtonSource.includes('"bg-white/20 dark:bg-white/8"'));
+  assert.ok(actionButtonSource.includes('"bg-white/75 opacity-70 dark:bg-white/40"'));
+  assert.ok(actionButtonSource.includes('circleOnRight\n                        ? "pl-6 pr-12 sm:pl-8 sm:pr-14"'));
+  assert.ok(actionButtonSource.includes('"text-[14px] sm:text-[15px]"'));
   assert.ok(formSource.includes("onSubmit={handleSubmit}"));
   assert.ok(formSource.includes("await submitContactForm("));
   assert.ok(formSource.includes("setModalOpen(true)"));
