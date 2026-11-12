@@ -82,8 +82,16 @@ test("mobile account trigger is avatar-only and keeps the owner dropdown inside 
   assert.ok(account.includes('scrolled ? "lg:rounded-full" : "lg:rounded-[3px]"'));
   assert.ok(account.includes("mobileTop={scrolled ? 66 : 68}"));
   assert.ok(dropdown.includes("max-lg:fixed"));
-  assert.ok(dropdown.includes("max-lg:left-3 max-lg:right-3"));
+  assert.ok(dropdown.includes("max-lg:left-auto"));
+  assert.ok(dropdown.includes("max-lg:right-4"));
+  assert.ok(dropdown.includes("max-lg:w-[min(300px,calc(100vw-2rem))]"));
+  assert.equal(dropdown.includes("max-lg:left-3 max-lg:right-3"), false);
   assert.ok(dropdown.includes("max-lg:top-[var(--mobile-menu-top)]"));
+  assert.ok(dropdown.includes('transformOrigin: "top right"'));
+  assert.ok(dropdown.includes("transformPerspective: 900"));
+  assert.ok(dropdown.includes('type: "spring"'));
+  assert.ok(dropdown.includes("scaleY: 0.94"));
+  assert.ok(dropdown.includes("rotateX: -7"));
   assert.ok(navbar.includes('"top-0.5 mx-2.5 h-[56px] rounded-full"'));
 });
 

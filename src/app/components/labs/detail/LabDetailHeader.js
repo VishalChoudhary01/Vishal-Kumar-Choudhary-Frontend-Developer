@@ -24,7 +24,7 @@ export default function LabDetailHeader({ experiment, initialEngagement = null }
   const updatedAt = parsePublicDate(experiment.updatedAt);
 
   return (
-    <header className="mx-auto w-full max-w-[1440px] px-6 pb-7 pt-[clamp(6.5rem,9vw,8rem)] sm:px-8 sm:pb-9 lg:px-20">
+    <header className="mx-auto w-full max-w-[1440px] px-4 pb-7 pt-[clamp(6.5rem,9vw,8rem)] sm:px-8 sm:pb-9 lg:px-20">
       <Link
         href="/labs"
         className="group inline-flex min-h-9 items-center gap-2 text-xs font-medium text-text-muted transition-colors hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4 focus-visible:ring-offset-background motion-reduce:transition-none"

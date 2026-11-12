@@ -132,7 +132,7 @@ export default async function LabExperimentPage({ params }) {
         {experiment.galleryPreview || experiment.generatedPoster || experiment.thumbnail ? (
           <section
             aria-labelledby="lab-preview-heading"
-            className="mx-auto mt-0 w-full max-w-[1440px] px-6 sm:px-8 lg:px-20"
+            className="mx-auto mt-0 w-full max-w-[1440px] px-4 sm:px-8 lg:px-20"
           >
             <h2 id="lab-preview-heading" className="sr-only">
               Preview of {experiment.title}

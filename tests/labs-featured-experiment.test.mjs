@@ -87,3 +87,39 @@ test("featured experiment typography and preview layout adapt across breakpoints
   assert.ok(spotlightSource.includes("sm:text-[clamp(2.7rem,5.2vw,5.25rem)]"));
   assert.ok(spotlightSource.includes("text-[13px] leading-6"));
 });
+
+
+test("featured experiment action matches the compact Labs hero button on mobile", async () => {
+  const [buttonSource, introSource] = await Promise.all([
+    readFile(new URL("../src/app/components/common/ProjectResumeButton.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/labs/LabsIntroduction.js", import.meta.url), "utf8"),
+  ]);
+
+  assert.ok(spotlightSource.includes('size="sm"'));
+  assert.ok(spotlightSource.includes('className="mt-6 sm:mt-9"'));
+  assert.ok(introSource.includes('size="sm"'));
+  assert.ok(buttonSource.includes('xs: {'));
+  assert.ok(buttonSource.includes("min-w-[104px]"));
+  assert.ok(buttonSource.includes("size-7 sm:size-9 lg:size-10"));
+});
+
+test("experiment detail sections use consistent compact mobile gutters and source actions stay inline", async () => {
+  const [header, workspace, explanation, sourceAccess, detailPage, buttonSource] = await Promise.all([
+    readFile(new URL("../src/app/components/labs/detail/LabDetailHeader.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/labs/detail/LabWorkspace.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/labs/detail/LabExplanation.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/labs/detail/LabSourceAccess.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/labs/[slug]/page.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/common/ProjectResumeButton.js", import.meta.url), "utf8"),
+  ]);
+
+  for (const source of [header, workspace, explanation, sourceAccess, detailPage]) {
+    assert.ok(source.includes("px-4"), "Detail section is missing the compact mobile gutter");
+  }
+  assert.ok(explanation.includes("mt-8"));
+  assert.ok(sourceAccess.includes("p-3 sm:p-6"));
+  assert.ok(sourceAccess.includes('size="xs"'));
+  assert.ok(sourceAccess.includes("gap-2 sm:mt-4 sm:gap-3"));
+  assert.ok(buttonSource.includes("sm:min-w-[150px]"));
+  assert.ok(buttonSource.includes("lg:min-w-[160px]"));
+});

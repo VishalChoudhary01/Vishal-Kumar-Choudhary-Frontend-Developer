@@ -14,6 +14,26 @@ const EASE = [0.22, 1, 0.36, 1];
 const EDGE_OFFSET = 4;
 
 const SIZES = {
+    xs: {
+        shell: `
+            min-h-9
+            min-w-[104px]
+            pl-9
+            pr-9
+            sm:min-h-11
+            sm:min-w-[150px]
+            sm:pl-12
+            sm:pr-12
+            lg:min-h-12
+            lg:min-w-[160px]
+            lg:pl-14
+            lg:pr-14
+        `,
+        label: "text-[0.6rem] sm:text-[0.72rem] lg:text-[0.76rem]",
+        circle: "size-7 sm:size-9 lg:size-10",
+        icon: 13,
+    },
+
     sm: {
         shell: `
             min-h-10

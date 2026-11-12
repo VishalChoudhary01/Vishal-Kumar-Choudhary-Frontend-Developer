@@ -73,7 +73,7 @@ test("guest source gate uses shared CTAs with animated sign-in and account-creat
   assert.ok(sourceAccess.includes("icon={Icon}"));
   assert.ok(sourceAccess.includes("animateIconOnHover={isAnimated}"));
   assert.ok(sourceAccess.includes('surface={primary ? "brand" : "glass"}'));
-  assert.ok(sourceAccess.includes('size="sm"'));
+  assert.ok(sourceAccess.includes('size="xs"'));
 
   // The shared button starts and stops the supplied animated icon on hover and focus.
   assert.ok(sharedButton.includes("leadingIconRef.current?.startAnimation?.()"));

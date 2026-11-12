@@ -58,7 +58,7 @@ export default function LabWorkspace({ experiment }) {
   return (
     <section
       aria-label="Interactive experiment workspace"
-      className="mx-auto w-full max-w-[1440px] px-6 sm:px-8 lg:px-20"
+      className="mx-auto w-full max-w-[1440px] px-4 sm:px-8 lg:px-20"
     >
       <div
         className={

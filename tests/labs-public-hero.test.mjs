@@ -299,7 +299,7 @@ test("featured experiment CTA reuses the shared resume button with parent-contro
   assert.ok(featured.includes('label="Explore experiment"'));
   assert.ok(featured.includes("icon={FlaskConicalIcon}"));
   assert.ok(featured.includes("animateIconOnHover"));
-  assert.ok(featured.includes("className=\"mt-8 sm:mt-9\""));
+  assert.ok(featured.includes("className=\"mt-6 sm:mt-9\""));
   assert.ok(featured.includes("`Explore featured experiment: ${experiment.title}`"));
   assert.doesNotMatch(featured, /group mt-8 inline-flex min-h-11 items-center gap-4 border border-brand bg-brand/);
 });
