@@ -124,6 +124,7 @@ export default function LabsWorkspaceDropdown({
   sectionLabel = "Switch workspace",
   itemCount,
   prefersReducedMotion = false,
+  mobileTop = 68,
   children,
   footer,
 }) {
@@ -159,8 +160,8 @@ export default function LabsWorkspaceDropdown({
                 y: { duration: 0.32, ease: [0.22, 1, 0.36, 1] },
                 scaleY: { duration: 0.36, ease: [0.22, 1, 0.36, 1] },
               }}
-          style={{ transformOrigin: "top center" }}
-          className="absolute right-0 top-full z-[80] mt-2 w-[min(360px,calc(100vw-2rem))] overflow-hidden drop-shadow-[0_16px_30px_rgba(0,0,0,0.2)] sm:mt-3"
+          style={{ transformOrigin: "top center", "--mobile-menu-top": `${mobileTop}px` }}
+          className="absolute right-0 top-full z-[80] mt-2 w-[min(360px,calc(100vw-2rem))] overflow-hidden drop-shadow-[0_16px_30px_rgba(0,0,0,0.2)] sm:mt-3 max-lg:fixed max-lg:left-3 max-lg:right-3 max-lg:top-[var(--mobile-menu-top)] max-lg:mt-0 max-lg:w-auto"
         >
           <div className="max-h-[min(70dvh,520px)] overflow-y-auto overscroll-contain rounded-[4px] border border-border/80 bg-surface-elevated p-1.5 text-text-primary backdrop-blur-2xl sm:max-h-[min(72vh,560px)] sm:p-2">
             <div className="flex min-w-0 items-center gap-2 rounded-[3px] border border-border/60 bg-surface-2/55 px-2.5 py-2.5 sm:gap-3 sm:px-3 sm:py-3">
