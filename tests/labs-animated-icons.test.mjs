@@ -256,11 +256,11 @@ test("Source Library, Snapshot storage and account sign-out reuse the supplied a
   assert.ok(account.includes("isAnimated={!prefersReducedMotion}"));
 });
 
-test("secondary CTA icon disc uses a muted gray surface in light mode and preserves dark mode contrast", async () => {
+test("CTA icon disc uses smoky gray in light mode and muted charcoal with a white icon in dark mode", async () => {
   const cta = await read("../src/app/components/common/ProjectResumeButton.js");
-  assert.ok(cta.includes('"border border-[#D3D7D4]"'));
-  assert.ok(cta.includes('"bg-[#E3E6E3]"'));
-  assert.ok(cta.includes('"text-[#353B38]"'));
-  assert.ok(cta.includes('"dark:bg-[#F2F2F0]"'));
-  assert.ok(cta.includes('"dark:text-[#171717]"'));
+  assert.ok(cta.includes('"border border-[#C9D0CB]"'));
+  assert.ok(cta.includes('"bg-[#DCE1DD]"'));
+  assert.ok(cta.includes('"text-[#343B36]"'));
+  assert.ok(cta.includes('"dark:bg-[#292F2B]"'));
+  assert.ok(cta.includes('"dark:text-[#F1F3EF]"'));
 });
