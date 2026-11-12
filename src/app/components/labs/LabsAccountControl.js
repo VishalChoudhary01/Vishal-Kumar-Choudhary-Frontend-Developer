@@ -248,7 +248,7 @@ export default function LabsAccountControl({
         onClick={() => setOpen((current) => !current)}
         title={displayName}
         className={[
-          "group inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-border/80 bg-surface-1 p-0 text-text-secondary shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition-[background-color,border-color,border-radius,box-shadow,transform] duration-200 hover:-translate-y-px hover:border-brand/45 hover:bg-surface-2 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none",
+          "group inline-flex size-10 max-w-[min(196px,calc(100vw-5.5rem))] shrink-0 items-center justify-center rounded-full border border-border/80 bg-surface-1 p-0 text-text-secondary shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition-[background-color,border-color,border-radius,box-shadow,transform] duration-200 hover:-translate-y-px hover:border-brand/45 hover:bg-surface-2 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none",
           scrolled ? "lg:rounded-full" : "lg:rounded-[3px]",
           "lg:size-auto lg:min-h-10 lg:max-w-[210px] lg:justify-start lg:gap-2.5 lg:px-2.5 lg:py-1.5",
         ].join(" ")}
@@ -282,6 +282,7 @@ export default function LabsAccountControl({
         sectionLabel={isOwner ? "Switch workspace" : null}
         itemCount={isOwner ? LABS_WORKSPACE_DESTINATIONS.length : undefined}
         prefersReducedMotion={prefersReducedMotion}
+        mobileTop={scrolled ? 66 : 68}
         footer={
           <>
             {logoutError ? (
