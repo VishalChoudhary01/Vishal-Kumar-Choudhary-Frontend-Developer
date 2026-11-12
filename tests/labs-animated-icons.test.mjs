@@ -258,7 +258,7 @@ test("Source Library, Snapshot storage and account sign-out reuse the supplied a
 
 test("CTA icon disc uses muted charcoal in light mode and smoky gray with a dark icon in dark mode", async () => {
   const cta = await read("../src/app/components/common/ProjectResumeButton.js");
-  assert.ok(cta.includes('"border border-[#C9D0CB]"'));
+  assert.ok(cta.includes('"border border-[#3D4640]"'));
   assert.ok(cta.includes('"bg-[#292F2B]"'));
   assert.ok(cta.includes('"text-[#F1F3EF]"'));
   assert.ok(cta.includes('"dark:bg-[#DCE1DD]"'));
