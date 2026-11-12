@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronDown, LogOut, MailCheck } from "lucide-react";
+import { ChevronDown, MailCheck } from "lucide-react";
+import LogOutAnimatedIcon from "@/app/components/ui/LogOutAnimatedIcon";
 
 import { getLabsAccountDisplayName } from "@/app/lib/labs/auth-user-presentation.mjs";
 import { authClient } from "@/app/lib/auth/client";
@@ -23,6 +24,7 @@ export default function LabsAccountControl({
   const pathname = usePathname();
   const triggerRef = useRef(null);
   const menuRef = useRef(null);
+  const signOutIconRef = useRef(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [session, setSession] = useState(() =>
@@ -245,18 +247,22 @@ export default function LabsAccountControl({
         aria-controls="labs-account-menu"
         onClick={() => setOpen((current) => !current)}
         title={displayName}
-        className="group inline-flex min-h-10 max-w-[min(196px,calc(100vw-5.5rem))] items-center gap-2 rounded-[3px] border border-border/80 bg-surface-1 px-2 py-1.5 text-left text-text-secondary shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition-[background-color,border-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:border-brand/45 hover:bg-surface-2 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none lg:max-w-[210px] lg:gap-2.5 lg:px-2.5"
+        className={[
+          "group inline-flex size-10 max-w-[min(196px,calc(100vw-5.5rem))] shrink-0 items-center justify-center rounded-full border border-border/80 bg-surface-1 p-0 text-text-secondary shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition-[background-color,border-color,border-radius,box-shadow,transform] duration-200 hover:-translate-y-px hover:border-brand/45 hover:bg-surface-2 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none",
+          scrolled ? "lg:rounded-full" : "lg:rounded-[3px]",
+          "lg:size-auto lg:min-h-10 lg:max-w-[210px] lg:justify-start lg:gap-2.5 lg:px-2.5 lg:py-1.5",
+        ].join(" ")}
       >
         <LabsWorkspaceAvatar user={session.user} name={displayName} size={34} />
-        <span className="min-w-0 flex-1">
-          <span className="block max-w-[104px] truncate text-[11px] font-semibold text-text-primary sm:max-w-[132px] lg:text-xs">
+        <span className="hidden min-w-0 flex-1 lg:block">
+          <span className="block max-w-[132px] truncate text-xs font-semibold text-text-primary">
             {displayName}
           </span>
-          <span className="mt-0.5 hidden text-[8px] font-medium uppercase tracking-[0.12em] text-text-tertiary min-[380px]:block">
+          <span className="mt-0.5 block text-[8px] font-medium uppercase tracking-[0.12em] text-text-tertiary">
             {isOwner ? "Owner workspace" : "Labs account"}
           </span>
         </span>
-        <span className="grid size-6 shrink-0 place-items-center rounded-full border border-border/70 bg-surface-2/70 text-text-tertiary transition-colors group-hover:border-brand/25 group-hover:text-brand">
+        <span className="hidden size-6 shrink-0 place-items-center rounded-full border border-border/70 bg-surface-2/70 text-text-tertiary transition-colors group-hover:border-brand/25 group-hover:text-brand lg:grid">
           <ChevronDown
             size={13}
             aria-hidden="true"
@@ -276,6 +282,7 @@ export default function LabsAccountControl({
         sectionLabel={isOwner ? "Switch workspace" : null}
         itemCount={isOwner ? LABS_WORKSPACE_DESTINATIONS.length : undefined}
         prefersReducedMotion={prefersReducedMotion}
+        mobileTop={scrolled ? 66 : 68}
         footer={
           <>
             {logoutError ? (
@@ -287,10 +294,22 @@ export default function LabsAccountControl({
               type="button"
               role="menuitem"
               onClick={signOut}
+              onMouseEnter={() => signOutIconRef.current?.startAnimation?.()}
+              onMouseLeave={() => signOutIconRef.current?.stopAnimation?.()}
+              onFocus={() => signOutIconRef.current?.startAnimation?.()}
+              onBlur={() => signOutIconRef.current?.stopAnimation?.()}
               disabled={loading}
-              className="flex min-h-10 w-full items-center gap-2 rounded-[2px] border border-transparent px-2.5 text-left text-xs font-medium text-text-secondary transition-[color,background-color,border-color] duration-200 hover:border-border hover:bg-surface-2 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand disabled:opacity-50 motion-reduce:transition-none sm:px-3 sm:text-sm"
+              className="group/signout flex min-h-10 w-full items-center gap-2 rounded-[2px] border border-transparent px-2.5 text-left text-xs font-medium text-text-secondary transition-[color,background-color,border-color] duration-200 hover:border-border hover:bg-surface-2 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand disabled:opacity-50 motion-reduce:transition-none sm:px-3 sm:text-sm"
             >
-              <LogOut size={15} aria-hidden="true" />
+              <span className="grid size-6 shrink-0 place-items-center text-current">
+                <LogOutAnimatedIcon
+                  ref={signOutIconRef}
+                  size={16}
+                  duration={0.72}
+                  isAnimated={!prefersReducedMotion}
+                  aria-hidden="true"
+                />
+              </span>
               {loading ? "Signing out…" : "Sign out"}
             </button>
           </>

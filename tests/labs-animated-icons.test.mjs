@@ -227,3 +227,42 @@ test("admin controls, cards and dialogs use the compact radius scale", async () 
   assert.ok(labsAnalytics.includes("rounded-[4px]"));
   assert.ok(deletion.includes("rounded-[4px]"));
 });
+
+
+test("Source Library, Snapshot storage and account sign-out reuse the supplied animated icon sources", async () => {
+  const [destinations, account, fileCode, database, logout] = await Promise.all([
+    read("../src/app/components/labs/LabsWorkspaceDestinations.js"),
+    read("../src/app/components/labs/LabsAccountControl.js"),
+    read("../src/app/components/ui/FileCodeIcon.js"),
+    read("../src/app/components/ui/DatabaseArrowDownIcon.js"),
+    read("../src/app/components/ui/LogOutAnimatedIcon.js"),
+  ]);
+
+  assert.ok(destinations.includes('import FileCodeIcon from "@/app/components/ui/FileCodeIcon"'));
+  assert.ok(destinations.includes('import DatabaseArrowDownIcon from "@/app/components/ui/DatabaseArrowDownIcon"'));
+  assert.match(destinations, /id: "sources"[\s\S]*?icon: FileCodeIcon/);
+  assert.match(destinations, /id: "snapshots"[\s\S]*?icon: DatabaseArrowDownIcon/);
+
+  for (const source of [fileCode, database, logout]) {
+    assert.ok(source.includes("forwardRef"));
+    assert.ok(source.includes("useImperativeHandle"));
+    assert.ok(source.includes("startAnimation"));
+    assert.ok(source.includes("stopAnimation"));
+    assert.ok(source.includes("useReducedMotion"));
+  }
+
+  assert.ok(account.includes("LogOutAnimatedIcon"));
+  assert.ok(account.includes("signOutIconRef"));
+  assert.ok(account.includes("isAnimated={!prefersReducedMotion}"));
+});
+
+test("CTA icon disc uses muted charcoal in light mode and smoky gray with a dark icon in dark mode", async () => {
+  const cta = await read("../src/app/components/common/ProjectResumeButton.js");
+  assert.ok(cta.includes('"border border-[#3D4640]"'));
+  assert.ok(cta.includes('"bg-[#292F2B]"'));
+  assert.ok(cta.includes('"text-[#F1F3EF]"'));
+  assert.ok(cta.includes('"dark:bg-[#DCE1DD]"'));
+  assert.ok(cta.includes('"dark:text-[#343B36]"'));
+  assert.ok(cta.includes('"border border-[#3D4640]"'));
+  assert.ok(cta.includes('"dark:border-[#C9D0CB]"'));
+});

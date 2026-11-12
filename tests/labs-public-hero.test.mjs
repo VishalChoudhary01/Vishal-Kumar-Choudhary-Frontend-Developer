@@ -353,12 +353,12 @@ test("portfolio homepage keeps Projects primary and Labs secondary across motion
   assert.ok(buttonSource.includes('"bg-brand"'));
   assert.ok(buttonSource.includes('"dark:bg-white/[0.035]"'));
   assert.ok(buttonSource.includes('"bg-black/[0.035]"'));
-  assert.ok(buttonSource.includes('"bg-[#171717]"'));
-  assert.ok(buttonSource.includes('"text-white"'));
-  assert.ok(buttonSource.includes('"dark:bg-[#F2F2F0]"'));
-  assert.ok(buttonSource.includes('"dark:text-[#171717]"'));
-  assert.ok(buttonSource.includes('"border border-[#171717]"'));
-  assert.ok(buttonSource.includes('"dark:border-[#F2F2F0]"'));
+  assert.ok(buttonSource.includes('"bg-[#292F2B]"'));
+  assert.ok(buttonSource.includes('"text-[#F1F3EF]"'));
+  assert.ok(buttonSource.includes('"dark:bg-[#DCE1DD]"'));
+  assert.ok(buttonSource.includes('"dark:text-[#343B36]"'));
+  assert.ok(buttonSource.includes('"border border-[#3D4640]"'));
+  assert.ok(buttonSource.includes('"dark:border-[#C9D0CB]"'));
   assert.ok(buttonSource.includes('"transition-colors duration-300 motion-reduce:transition-none"'));
   assert.equal(buttonSource.includes('"bg-transparent"'), false);
   assert.equal(buttonSource.includes('"border border-current/25"'), false);
@@ -377,8 +377,70 @@ test("contact form uses the brand-primary CTA variant without removing submit li
   assert.ok(fieldsSource.includes("disabled={!isValid}"));
   assert.ok(actionButtonSource.includes('variant = "glass"'));
   assert.ok(actionButtonSource.includes('const isPrimary = variant === "primary"'));
-  assert.ok(actionButtonSource.includes("bg-brand text-brand-contrast"));
+  assert.ok(actionButtonSource.includes('"bg-brand"'));
+  assert.ok(actionButtonSource.includes('"text-brand-contrast"'));
   assert.ok(actionButtonSource.includes("aria-busy={isSubmitting}"));
   assert.ok(actionButtonSource.includes("isSubmitting"));
   assert.ok(actionButtonSource.includes("submittingLabel"));
+});
+
+
+test("contact submit CTA matches ProjectResumeButton styling and animates Send without changing form submission behavior", async () => {
+  const [fieldsSource, actionButtonSource, projectButtonSource, animatedSendSource, formSource] = await Promise.all([
+    readFile(new URL("../src/app/components/sections/contact_comp/ContactFormFields.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/common/buttons/ActionButton.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/common/ProjectResumeButton.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/common/buttons/action_button_comp/AnimatedSendIcon.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/components/sections/contact_comp/ContactForm.js", import.meta.url), "utf8"),
+  ]);
+
+  assert.ok(fieldsSource.includes('type="submit"'));
+  assert.ok(fieldsSource.includes('variant="primary"'));
+  assert.ok(fieldsSource.includes('status={isSubmitting ? "submitting" : "idle"}'));
+  assert.ok(fieldsSource.includes("disabled={!isValid}"));
+  assert.ok(fieldsSource.includes('iconPosition="left"'));
+  assert.ok(fieldsSource.includes("<AnimatedSendIcon size={18} />"));
+
+  for (const token of [
+    '"border border-brand/80"',
+    '"bg-brand"',
+    '"hover:border-brand-hover"',
+    '"hover:bg-brand-hover"',
+    '"backdrop-blur-xl"',
+    '"pl-11 pr-11 sm:pl-12 sm:pr-12 lg:pl-14 lg:pr-14"',
+    '"left-[3px]"',
+    '"size-8 sm:size-9 lg:size-10"',
+    '"text-[0.68rem] sm:text-[0.72rem] lg:text-[0.76rem]"',
+    '"bg-[#292F2B]"',
+    '"text-[#F1F3EF]"',
+    '"dark:bg-[#DCE1DD]"',
+    '"dark:text-[#343B36]"',
+  ]) assert.ok(actionButtonSource.includes(token), "Submit CTA is missing shared styling: " + token);
+
+  for (const token of [
+    '"border border-brand/80"',
+    '"bg-brand"',
+    '"backdrop-blur-xl"',
+    '"left-[3px]"',
+    '"size-8 sm:size-9 lg:size-10"',
+  ]) assert.ok(projectButtonSource.includes(token), "ProjectResumeButton styling reference changed: " + token);
+
+  assert.ok(actionButtonSource.includes('disabled={buttonDisabled}'));
+  assert.ok(actionButtonSource.includes('aria-busy={isSubmitting}'));
+  assert.ok(actionButtonSource.includes("ActionButtonSubmitting"));
+  assert.ok(actionButtonSource.includes("ActionButtonSuccess"));
+  assert.ok(actionButtonSource.includes('"size-9 sm:size-10"'));
+  assert.ok(actionButtonSource.includes('"bg-white/20 dark:bg-white/8"'));
+  assert.ok(actionButtonSource.includes('"bg-white/75 opacity-70 dark:bg-white/40"'));
+  assert.ok(actionButtonSource.includes('circleOnRight\n                        ? "pl-6 pr-12 sm:pl-8 sm:pr-14"'));
+  assert.ok(actionButtonSource.includes('"text-[14px] sm:text-[15px]"'));
+  assert.ok(formSource.includes("onSubmit={handleSubmit}"));
+  assert.ok(formSource.includes("await submitContactForm("));
+  assert.ok(formSource.includes("setModalOpen(true)"));
+  assert.ok(formSource.includes("setSubmitError(error?.message"));
+  assert.ok(formSource.includes("handleReset"));
+
+  assert.ok(animatedSendSource.includes("planeVariants"));
+  assert.ok(animatedSendSource.includes("trailVariants"));
+  assert.ok(animatedSendSource.includes("useReducedMotion"));
 });
