@@ -105,7 +105,9 @@ test("owner dropdown shares the animated responsive workspace menu and active ic
   assert.ok(menuItem.includes("isActive"));
   assert.ok(dropdown.includes("height: 0"));
   assert.ok(dropdown.includes('height: "auto"'));
-  assert.ok(dropdown.includes("transformOrigin: \"top center\""));
+  assert.ok(dropdown.includes("transformOrigin: \"top right\""));
+  assert.ok(dropdown.includes("transformPerspective: 900"));
+  assert.ok(dropdown.includes('type: "spring"'));
   assert.ok(dropdown.includes("prefersReducedMotion"));
   assert.ok(dropdown.includes("overflow-y-auto"));
 });
