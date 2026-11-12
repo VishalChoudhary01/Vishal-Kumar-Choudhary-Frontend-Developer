@@ -144,7 +144,8 @@ export default function FeaturedExperiment({ experiment }) {
               icon={FlaskConicalIcon}
               animateIconOnHover
               surface="brand"
-              className="mt-8 sm:mt-9"
+              size="sm"
+              className="mt-6 sm:mt-9"
             />
           </motion.div>
         </div>
