@@ -31,7 +31,7 @@ function AnimatedSourceAction({ href, label, Icon, primary = false, isAnimated =
       icon={Icon}
       animateIconOnHover={isAnimated}
       surface={primary ? "brand" : "glass"}
-      size="sm"
+      size="xs"
     />
   );
 }
@@ -417,9 +417,9 @@ export default function LabSourceAccess({
     <section
       id="lab-source-content"
       aria-label="Protected experiment source"
-      className="mx-auto mt-12 w-full max-w-[1440px] scroll-mt-28 px-6 sm:px-8 lg:px-20"
+      className="mx-auto mt-8 w-full max-w-[1440px] scroll-mt-28 px-4 sm:mt-12 sm:px-8 lg:px-20"
     >
-      <div className="border border-border bg-surface-1 p-5 sm:p-6">
+      <div className="border border-border bg-surface-1 p-3 sm:p-6">
         {sessionPending && !firstSource || (state === "loading" && !source) ? (
           <div className="flex min-h-24 items-center gap-3" role="status" aria-live="polite">
             <LoaderCircle size={18} className="animate-spin text-brand motion-reduce:animate-none" aria-hidden="true" />
@@ -514,7 +514,7 @@ export default function LabSourceAccess({
                 Published source is available to every Labs account with a verified email.
                 Sign in or create an account to explore the files.
               </p>
-              <div className="mt-4 flex flex-wrap items-center gap-3">
+              <div className="mt-3 flex flex-wrap items-center gap-2 sm:mt-4 sm:gap-3">
                 <AnimatedSourceAction
                   href={signInHref}
                   label="Sign in"
