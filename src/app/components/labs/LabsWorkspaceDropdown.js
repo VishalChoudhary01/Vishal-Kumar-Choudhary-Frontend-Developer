@@ -136,32 +136,52 @@ export default function LabsWorkspaceDropdown({
           id={id}
           role="menu"
           aria-label={ariaLabel}
-          initial={prefersReducedMotion ? false : { height: 0, opacity: 0, y: -6, scaleY: 0.985 }}
-          animate={{ height: "auto", opacity: 1, y: 0, scaleY: 1 }}
+          initial={prefersReducedMotion
+            ? false
+            : {
+                height: 0,
+                opacity: 0,
+                y: -9,
+                scaleX: 0.985,
+                scaleY: 0.94,
+                rotateX: -7,
+              }}
+          animate={{
+            height: "auto",
+            opacity: 1,
+            y: 0,
+            scaleX: 1,
+            scaleY: 1,
+            rotateX: 0,
+          }}
           exit={prefersReducedMotion
             ? { height: 0, opacity: 0 }
             : {
                 height: 0,
                 opacity: 0,
-                y: -4,
-                scaleY: 0.985,
+                y: -6,
+                scaleX: 0.985,
+                scaleY: 0.96,
+                rotateX: -4,
                 transition: {
-                  height: { duration: 0.24, ease: [0.4, 0, 1, 1] },
-                  opacity: { duration: 0.16 },
-                  y: { duration: 0.2, ease: [0.4, 0, 1, 1] },
-                  scaleY: { duration: 0.24, ease: [0.4, 0, 1, 1] },
+                  height: { type: "spring", stiffness: 460, damping: 38, mass: 0.72 },
+                  opacity: { duration: 0.14, ease: "easeOut" },
+                  default: { type: "spring", stiffness: 430, damping: 34, mass: 0.72 },
                 },
               }}
           transition={prefersReducedMotion
             ? { duration: 0.01 }
             : {
-                height: { duration: 0.36, ease: [0.22, 1, 0.36, 1] },
-                opacity: { duration: 0.24 },
-                y: { duration: 0.32, ease: [0.22, 1, 0.36, 1] },
-                scaleY: { duration: 0.36, ease: [0.22, 1, 0.36, 1] },
+                height: { type: "spring", stiffness: 420, damping: 34, mass: 0.78 },
+                opacity: { duration: 0.2, ease: "easeOut" },
+                default: { type: "spring", stiffness: 420, damping: 32, mass: 0.72 },
               }}
-          style={{ transformOrigin: "top center", "--mobile-menu-top": `${mobileTop}px` }}
-          className="absolute right-0 top-full z-[80] mt-2 w-[min(360px,calc(100vw-2rem))] overflow-hidden drop-shadow-[0_16px_30px_rgba(0,0,0,0.2)] sm:mt-3 max-lg:fixed max-lg:left-3 max-lg:right-3 max-lg:top-[var(--mobile-menu-top)] max-lg:mt-0 max-lg:w-auto"
+          style={{
+            transformOrigin: "top right",
+            transformPerspective: 900,
+            "--mobile-menu-top": `${mobileTop}px`,
+          }}
+          className="absolute right-0 top-full z-[80] mt-2 w-[min(360px,calc(100vw-2rem))] overflow-hidden drop-shadow-[0_16px_30px_rgba(0,0,0,0.2)] sm:mt-3 max-lg:fixed max-lg:left-auto max-lg:right-4 max-lg:top-[var(--mobile-menu-top)] max-lg:mt-0 max-lg:w-[min(300px,calc(100vw-2rem))]"
         >
           <div className="max-h-[min(70dvh,520px)] overflow-y-auto overscroll-contain rounded-[4px] border border-border/80 bg-surface-elevated p-1.5 text-text-primary backdrop-blur-2xl sm:max-h-[min(72vh,560px)] sm:p-2">
             <div className="flex min-w-0 items-center gap-2 rounded-[3px] border border-border/60 bg-surface-2/55 px-2.5 py-2.5 sm:gap-3 sm:px-3 sm:py-3">
