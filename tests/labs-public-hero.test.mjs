@@ -377,7 +377,8 @@ test("contact form uses the brand-primary CTA variant without removing submit li
   assert.ok(fieldsSource.includes("disabled={!isValid}"));
   assert.ok(actionButtonSource.includes('variant = "glass"'));
   assert.ok(actionButtonSource.includes('const isPrimary = variant === "primary"'));
-  assert.ok(actionButtonSource.includes("bg-brand text-brand-contrast"));
+  assert.ok(actionButtonSource.includes('"bg-brand"'));
+  assert.ok(actionButtonSource.includes('"text-brand-contrast"'));
   assert.ok(actionButtonSource.includes("aria-busy={isSubmitting}"));
   assert.ok(actionButtonSource.includes("isSubmitting"));
   assert.ok(actionButtonSource.includes("submittingLabel"));
