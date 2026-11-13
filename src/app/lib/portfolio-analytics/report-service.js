@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 
 import { connectToDatabase } from "@/app/lib/db/mongoose";
 import PortfolioVisit from "./models/PortfolioVisit";
+import { getPortfolioAnalyticsExcludedOwnerHash } from "./verified-visitor.mjs";
 import {
   buildCompletePortfolioDailySeries,
   buildPortfolioRecentCursorMatch,
@@ -19,13 +20,26 @@ function safeCount(value) {
   return Math.max(0, Number(value) || 0);
 }
 
-function dateRangeMatch(period) {
-  return {
+function dateRangeMatch(period, excludedOwnerHash = null) {
+  const match = {
     startedAt: {
       $gte: period.from,
       $lte: period.to,
     },
   };
+
+  if (excludedOwnerHash) {
+    match.verifiedUserHash = { $ne: excludedOwnerHash };
+  }
+
+  return match;
+}
+
+function getExcludedOwnerHash(excludedOwnerUser) {
+  return getPortfolioAnalyticsExcludedOwnerHash({
+    user: excludedOwnerUser,
+    secret: process.env.PORTFOLIO_ANALYTICS_HMAC_SECRET,
+  });
 }
 
 function activeSecondsExpression() {
@@ -279,9 +293,11 @@ function normalizeReportResult(facets, period, uniqueTabSessions) {
 export async function getPortfolioAnalyticsReport({
   days = 30,
   now = new Date(),
+  excludedOwnerUser = null,
 } = {}) {
   const period = normalizePortfolioAnalyticsPeriod(days, now);
-  const match = dateRangeMatch(period);
+  const excludedOwnerHash = getExcludedOwnerHash(excludedOwnerUser);
+  const match = dateRangeMatch(period, excludedOwnerHash);
 
   await connectToDatabase();
 
@@ -336,10 +352,12 @@ export async function getPortfolioRecentVisits({
   limit = RECENT_DEFAULT_LIMIT,
   cursor = null,
   now = new Date(),
+  excludedOwnerUser = null,
 } = {}) {
   const period = normalizePortfolioAnalyticsPeriod(days, now);
   const safeLimit = normalizePortfolioRecentLimit(limit);
-  const match = dateRangeMatch(period);
+  const excludedOwnerHash = getExcludedOwnerHash(excludedOwnerUser);
+  const match = dateRangeMatch(period, excludedOwnerHash);
   const cursorMatch = buildPortfolioRecentCursorMatch(
     cursor,
     mongoose.Types.ObjectId,
