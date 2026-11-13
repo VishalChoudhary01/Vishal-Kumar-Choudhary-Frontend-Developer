@@ -7,37 +7,17 @@ export function isPortfolioAnalyticsExcludedOwner(user) {
     user.email.trim().toLowerCase() === PORTFOLIO_ANALYTICS_EXCLUDED_OWNER_EMAIL;
 }
 
-function createVerifiedUserHash(userId, secret) {
-  return createHmac("sha256", secret)
-    .update("portfolio-analytics:verified-user:v1")
-    .update("\0")
-    .update(userId)
-    .digest("hex");
-}
-
 /**
- * Returns the owner's existing verified-visitor HMAC so historical rows can
- * be excluded without querying or storing the owner's email in analytics.
- * Fails closed when the owner session exists but its exclusion key is absent.
+ * Returns the stable Better Auth account ID only for the configured owner.
+ * Historical rows already store this value, so reports can exclude the owner
+ * without depending on preview/production availability of the HMAC secret.
  */
-export function getPortfolioAnalyticsExcludedOwnerHash({ user, secret } = {}) {
+export function getPortfolioAnalyticsExcludedOwnerAccountId(user) {
   if (!isPortfolioAnalyticsExcludedOwner(user)) return null;
-
-  if (
-    typeof user?.id !== "string" ||
-    !user.id.trim() ||
-    user.id.trim().length > 128 ||
-    typeof secret !== "string" ||
-    Buffer.byteLength(secret, "utf8") < 32
-  ) {
-    const error = new Error("Portfolio Analytics owner exclusion is not configured.");
-    error.code = "PORTFOLIO_ANALYTICS_OWNER_EXCLUSION_NOT_CONFIGURED";
-    throw error;
-  }
-
-  return createVerifiedUserHash(user.id.trim(), secret);
+  return typeof user?.id === "string" && user.id.trim()
+    ? user.id.trim()
+    : null;
 }
-
 
 function normalizeDisplayName(value) {
   if (typeof value !== "string") return "";
@@ -92,7 +72,11 @@ export function buildPortfolioVerifiedVisitor({ user, secret } = {}) {
   if (!maskedEmail) return null;
 
   const name = normalizeDisplayName(user.name);
-  const verifiedUserHash = createVerifiedUserHash(user.id.trim(), secret);
+  const verifiedUserHash = createHmac("sha256", secret)
+    .update("portfolio-analytics:verified-user:v1")
+    .update("\0")
+    .update(user.id.trim())
+    .digest("hex");
 
   return {
     verifiedUserHash,
