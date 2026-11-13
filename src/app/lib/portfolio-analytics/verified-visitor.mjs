@@ -1,5 +1,44 @@
 import { createHmac } from "node:crypto";
 
+export const PORTFOLIO_ANALYTICS_EXCLUDED_OWNER_EMAIL = "vishal.bhumca21@gmail.com";
+
+export function isPortfolioAnalyticsExcludedOwner(user) {
+  return typeof user?.email === "string" &&
+    user.email.trim().toLowerCase() === PORTFOLIO_ANALYTICS_EXCLUDED_OWNER_EMAIL;
+}
+
+function createVerifiedUserHash(userId, secret) {
+  return createHmac("sha256", secret)
+    .update("portfolio-analytics:verified-user:v1")
+    .update("\0")
+    .update(userId)
+    .digest("hex");
+}
+
+/**
+ * Returns the owner's existing verified-visitor HMAC so historical rows can
+ * be excluded without querying or storing the owner's email in analytics.
+ * Fails closed when the owner session exists but its exclusion key is absent.
+ */
+export function getPortfolioAnalyticsExcludedOwnerHash({ user, secret } = {}) {
+  if (!isPortfolioAnalyticsExcludedOwner(user)) return null;
+
+  if (
+    typeof user?.id !== "string" ||
+    !user.id.trim() ||
+    user.id.trim().length > 128 ||
+    typeof secret !== "string" ||
+    Buffer.byteLength(secret, "utf8") < 32
+  ) {
+    const error = new Error("Portfolio Analytics owner exclusion is not configured.");
+    error.code = "PORTFOLIO_ANALYTICS_OWNER_EXCLUSION_NOT_CONFIGURED";
+    throw error;
+  }
+
+  return createVerifiedUserHash(user.id.trim(), secret);
+}
+
+
 function normalizeDisplayName(value) {
   if (typeof value !== "string") return "";
   return value
@@ -38,6 +77,7 @@ export function maskPortfolioVisitEmail(value) {
  */
 export function buildPortfolioVerifiedVisitor({ user, secret } = {}) {
   if (
+    isPortfolioAnalyticsExcludedOwner(user) ||
     user?.emailVerified !== true ||
     typeof user?.id !== "string" ||
     !user.id.trim() ||
@@ -52,11 +92,7 @@ export function buildPortfolioVerifiedVisitor({ user, secret } = {}) {
   if (!maskedEmail) return null;
 
   const name = normalizeDisplayName(user.name);
-  const verifiedUserHash = createHmac("sha256", secret)
-    .update("portfolio-analytics:verified-user:v1")
-    .update("\0")
-    .update(user.id.trim())
-    .digest("hex");
+  const verifiedUserHash = createVerifiedUserHash(user.id.trim(), secret);
 
   return {
     verifiedUserHash,
