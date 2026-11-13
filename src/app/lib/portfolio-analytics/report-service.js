@@ -4,10 +4,8 @@ import mongoose from "mongoose";
 
 import { connectToDatabase } from "@/app/lib/db/mongoose";
 import PortfolioVisit from "./models/PortfolioVisit";
-import { getPortfolioAnalyticsConfig } from "./config.mjs";
 import {
-  getPortfolioAnalyticsExcludedOwnerHash,
-  isPortfolioAnalyticsExcludedOwner,
+  getPortfolioAnalyticsExcludedOwnerAccountId,
 } from "./verified-visitor.mjs";
 import {
   buildCompletePortfolioDailySeries,
@@ -24,7 +22,7 @@ function safeCount(value) {
   return Math.max(0, Number(value) || 0);
 }
 
-function dateRangeMatch(period, excludedOwnerHash = null) {
+function dateRangeMatch(period, excludedOwnerAccountId = null) {
   const match = {
     startedAt: {
       $gte: period.from,
@@ -32,23 +30,17 @@ function dateRangeMatch(period, excludedOwnerHash = null) {
     },
   };
 
-  if (excludedOwnerHash) {
-    match.verifiedUserHash = { $ne: excludedOwnerHash };
+  if (excludedOwnerAccountId) {
+    // MongoDB $ne also matches documents where the field is absent, preserving
+    // guest/unverified visits while excluding only the exact owner account ID.
+    match.verifiedUserAccountId = { $ne: excludedOwnerAccountId };
   }
 
   return match;
 }
 
-function getExcludedOwnerHash(excludedOwnerUser) {
-  // Guest and non-owner reports need no exclusion predicate at all.
-  // For the owner, use the same validated secret source as visit ingestion.
-  if (!isPortfolioAnalyticsExcludedOwner(excludedOwnerUser)) return null;
-
-  const { hmacSecret } = getPortfolioAnalyticsConfig();
-  return getPortfolioAnalyticsExcludedOwnerHash({
-    user: excludedOwnerUser,
-    secret: hmacSecret,
-  });
+function getExcludedOwnerAccountId(excludedOwnerUser) {
+  return getPortfolioAnalyticsExcludedOwnerAccountId(excludedOwnerUser);
 }
 
 function activeSecondsExpression() {
@@ -305,8 +297,8 @@ export async function getPortfolioAnalyticsReport({
   excludedOwnerUser = null,
 } = {}) {
   const period = normalizePortfolioAnalyticsPeriod(days, now);
-  const excludedOwnerHash = getExcludedOwnerHash(excludedOwnerUser);
-  const match = dateRangeMatch(period, excludedOwnerHash);
+  const excludedOwnerAccountId = getExcludedOwnerAccountId(excludedOwnerUser);
+  const match = dateRangeMatch(period, excludedOwnerAccountId);
 
   await connectToDatabase();
 
@@ -365,8 +357,8 @@ export async function getPortfolioRecentVisits({
 } = {}) {
   const period = normalizePortfolioAnalyticsPeriod(days, now);
   const safeLimit = normalizePortfolioRecentLimit(limit);
-  const excludedOwnerHash = getExcludedOwnerHash(excludedOwnerUser);
-  const match = dateRangeMatch(period, excludedOwnerHash);
+  const excludedOwnerAccountId = getExcludedOwnerAccountId(excludedOwnerUser);
+  const match = dateRangeMatch(period, excludedOwnerAccountId);
   const cursorMatch = buildPortfolioRecentCursorMatch(
     cursor,
     mongoose.Types.ObjectId,
