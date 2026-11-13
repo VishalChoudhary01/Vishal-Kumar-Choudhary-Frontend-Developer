@@ -159,9 +159,8 @@ test("all Portfolio Analytics reports exclude the exact owner account while reta
   assert.ok(report.includes("function getExcludedOwnerAccountId(excludedOwnerUser)"));
   assert.equal(report.includes("PORTFOLIO_ANALYTICS_OWNER_EXCLUSION_NOT_CONFIGURED"), false);
   assert.equal(report.includes("getPortfolioAnalyticsConfig"), false);
-  assert.ok(report.includes("match.verifiedUserHash = { $ne: excludedOwnerHash }"));
   assert.ok(report.includes("excludedOwnerUser = null"));
-  assert.ok(report.includes("dateRangeMatch(period, excludedOwnerHash)"));
+  assert.ok(report.includes("dateRangeMatch(period, excludedOwnerAccountId)"));
   assert.ok(api.includes("excludedOwnerUser: session.user"));
   assert.ok(page.includes("excludedOwnerUser: session.user"));
 
