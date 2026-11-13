@@ -4,7 +4,11 @@ import mongoose from "mongoose";
 
 import { connectToDatabase } from "@/app/lib/db/mongoose";
 import PortfolioVisit from "./models/PortfolioVisit";
-import { getPortfolioAnalyticsExcludedOwnerHash } from "./verified-visitor.mjs";
+import { getPortfolioAnalyticsConfig } from "./config.mjs";
+import {
+  getPortfolioAnalyticsExcludedOwnerHash,
+  isPortfolioAnalyticsExcludedOwner,
+} from "./verified-visitor.mjs";
 import {
   buildCompletePortfolioDailySeries,
   buildPortfolioRecentCursorMatch,
@@ -36,9 +40,14 @@ function dateRangeMatch(period, excludedOwnerHash = null) {
 }
 
 function getExcludedOwnerHash(excludedOwnerUser) {
+  // Guest and non-owner reports need no exclusion predicate at all.
+  // For the owner, use the same validated secret source as visit ingestion.
+  if (!isPortfolioAnalyticsExcludedOwner(excludedOwnerUser)) return null;
+
+  const { hmacSecret } = getPortfolioAnalyticsConfig();
   return getPortfolioAnalyticsExcludedOwnerHash({
     user: excludedOwnerUser,
-    secret: process.env.PORTFOLIO_ANALYTICS_HMAC_SECRET,
+    secret: hmacSecret,
   });
 }
 
