@@ -5,7 +5,7 @@ import test from "node:test";
 
 import {
   buildPortfolioVerifiedVisitor,
-  getPortfolioAnalyticsExcludedOwnerHash,
+  getPortfolioAnalyticsExcludedOwnerAccountId,
   isPortfolioAnalyticsExcludedOwner,
   maskPortfolioVisitEmail,
 } from "../src/app/lib/portfolio-analytics/verified-visitor.mjs";
@@ -116,7 +116,7 @@ test("identity is resolved on the server and limited to the owner-only recent vi
 });
 
 
-test("the exact owner account is excluded without excluding other Gmail visitors", () => {
+test("the exact owner account is excluded while other verified Gmail users remain eligible", () => {
   const owner = {
     id: "owner-better-auth-user-id-123",
     name: "Portfolio owner",
@@ -125,29 +125,27 @@ test("the exact owner account is excluded without excluding other Gmail visitors
   };
 
   assert.equal(isPortfolioAnalyticsExcludedOwner(owner), true);
+  assert.equal(getPortfolioAnalyticsExcludedOwnerAccountId(owner), owner.id);
   assert.equal(isPortfolioAnalyticsExcludedOwner({
     ...owner,
     email: "vishal.bhumca22@gmail.com",
   }), false);
+  assert.equal(getPortfolioAnalyticsExcludedOwnerAccountId({
+    ...owner,
+    email: "vishal.bhumca22@gmail.com",
+  }), null);
   assert.equal(isPortfolioAnalyticsExcludedOwner({
     ...owner,
     email: "another.person@gmail.com",
   }), false);
-  assert.equal(isPortfolioAnalyticsExcludedOwner(null), false);
-
-  const ownerHash = getPortfolioAnalyticsExcludedOwnerHash({ user: owner, secret });
-  const expectedHash = createHmac("sha256", secret)
-    .update("portfolio-analytics:verified-user:v1")
-    .update("\0")
-    .update(owner.id)
-    .digest("hex");
-
-  assert.equal(ownerHash, expectedHash);
+  assert.equal(getPortfolioAnalyticsExcludedOwnerAccountId(null), null);
   assert.equal(buildPortfolioVerifiedVisitor({ user: owner, secret }), null);
-  assert.throws(
-    () => getPortfolioAnalyticsExcludedOwnerHash({ user: owner, secret: "short" }),
-    { code: "PORTFOLIO_ANALYTICS_OWNER_EXCLUSION_NOT_CONFIGURED" },
-  );
+
+  const otherVerifiedVisitor = buildPortfolioVerifiedVisitor({
+    user: { ...verifiedUser, email: "another.person@gmail.com" },
+    secret,
+  });
+  assert.equal(otherVerifiedVisitor.verifiedUserAccountId, verifiedUser.id);
 });
 
 test("owner visits are blocked before insertion and any in-flight owner row is discarded", async () => {
