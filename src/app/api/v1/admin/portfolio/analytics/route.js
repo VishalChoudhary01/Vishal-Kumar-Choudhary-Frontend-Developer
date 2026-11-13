@@ -76,7 +76,7 @@ export async function GET(request) {
 
   try {
     if (query.view === "summary") {
-      const data = await getPortfolioAnalyticsReport({ days: query.days });
+      const data = await getPortfolioAnalyticsReport({ days: query.days, excludedOwnerUser: session.user });
       return json({ data });
     }
 
@@ -84,6 +84,7 @@ export async function GET(request) {
       days: query.days,
       limit: 25,
       cursor: query.cursor,
+      excludedOwnerUser: session.user,
     });
     return json({ data });
   } catch (error) {
