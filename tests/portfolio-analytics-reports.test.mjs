@@ -154,11 +154,11 @@ test("all Portfolio Analytics reports exclude the exact owner account while reta
     read("../src/app/components/portfolio-analytics/PortfolioAnalyticsDashboard.js"),
   ]);
 
-  assert.ok(report.includes("getPortfolioAnalyticsExcludedOwnerHash"));
-  assert.ok(report.includes('import { getPortfolioAnalyticsConfig } from "./config.mjs"'));
-  assert.ok(report.includes("const { hmacSecret } = getPortfolioAnalyticsConfig()"));
-  assert.ok(report.includes("if (!isPortfolioAnalyticsExcludedOwner(excludedOwnerUser)) return null"));
-  assert.equal(report.includes("process.env.PORTFOLIO_ANALYTICS_HMAC_SECRET"), false);
+  assert.ok(report.includes("getPortfolioAnalyticsExcludedOwnerAccountId"));
+  assert.ok(report.includes("match.verifiedUserAccountId = { $ne: excludedOwnerAccountId }"));
+  assert.ok(report.includes("function getExcludedOwnerAccountId(excludedOwnerUser)"));
+  assert.equal(report.includes("PORTFOLIO_ANALYTICS_OWNER_EXCLUSION_NOT_CONFIGURED"), false);
+  assert.equal(report.includes("getPortfolioAnalyticsConfig"), false);
   assert.ok(report.includes("match.verifiedUserHash = { $ne: excludedOwnerHash }"));
   assert.ok(report.includes("excludedOwnerUser = null"));
   assert.ok(report.includes("dateRangeMatch(period, excludedOwnerHash)"));
@@ -177,22 +177,23 @@ test("all Portfolio Analytics reports exclude the exact owner account while reta
 });
 
 
-test("the exclusion predicate is only applied to the exact owner, leaving guests and other accounts in reports", async () => {
+test("the report exclusion matches only the owner account ID and keeps guests and other verified users", async () => {
   const [report, helper] = await Promise.all([
     read("../src/app/lib/portfolio-analytics/report-service.js"),
     read("../src/app/lib/portfolio-analytics/verified-visitor.mjs"),
   ]);
 
-  assert.ok(report.includes("if (!isPortfolioAnalyticsExcludedOwner(excludedOwnerUser)) return null"));
-  assert.ok(report.includes("if (excludedOwnerHash)"));
-  assert.ok(report.includes('match.verifiedUserHash = { $ne: excludedOwnerHash }'));
+  assert.ok(report.includes("getPortfolioAnalyticsExcludedOwnerAccountId"));
+  assert.ok(report.includes("if (excludedOwnerAccountId)"));
+  assert.ok(report.includes('match.verifiedUserAccountId = { $ne: excludedOwnerAccountId }'));
   assert.ok(helper.includes('user.email.trim().toLowerCase() === PORTFOLIO_ANALYTICS_EXCLUDED_OWNER_EMAIL'));
-  assert.ok(helper.includes('export function isPortfolioAnalyticsExcludedOwner'));
-  assert.ok(helper.includes('export function buildPortfolioVerifiedVisitor'));
-  assert.ok(helper.includes('isPortfolioAnalyticsExcludedOwner(user) ||'));
+  assert.ok(helper.includes("export function getPortfolioAnalyticsExcludedOwnerAccountId"));
+  assert.ok(helper.includes("export function isPortfolioAnalyticsExcludedOwner"));
+  assert.ok(helper.includes("export function buildPortfolioVerifiedVisitor"));
+  assert.ok(helper.includes("isPortfolioAnalyticsExcludedOwner(user) ||"));
 
-  // $ne matches documents where verifiedUserHash is missing (guest/unverified)
-  // while rejecting only the row with the exact derived owner hash.
-  assert.ok(report.includes("match.verifiedUserHash = { $ne: excludedOwnerHash }"));
-  assert.ok(report.includes("if (!isPortfolioAnalyticsExcludedOwner(excludedOwnerUser)) return null"));
+  // MongoDB $ne matches documents where verifiedUserAccountId is missing,
+  // so guest/unverified rows remain reportable. Other account IDs also match.
+  assert.ok(report.includes("match.verifiedUserAccountId = { $ne: excludedOwnerAccountId }"));
+  assert.equal(report.includes("verifiedUserHash: { $ne:"), false);
 });
