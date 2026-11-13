@@ -48,14 +48,14 @@ export default async function PortfolioAnalyticsPage({ searchParams }) {
   let recentError = "";
 
   try {
-    report = await getPortfolioAnalyticsReport({ days });
+    report = await getPortfolioAnalyticsReport({ days, excludedOwnerUser: session.user });
   } catch (error) {
     reportError = "Analytics summary is temporarily unavailable.";
     console.error("[portfolio-analytics] report unavailable:", error?.code || "REPORT_UNAVAILABLE");
   }
 
   try {
-    recent = await getPortfolioRecentVisits({ days, cursor, limit: 25 });
+    recent = await getPortfolioRecentVisits({ days, cursor, limit: 25, excludedOwnerUser: session.user });
   } catch (error) {
     recentError = "Recent visits could not be loaded. Check the database indexes and try again.";
     console.error("[portfolio-analytics] recent visits unavailable:", error?.code || "RECENT_VISITS_UNAVAILABLE");
