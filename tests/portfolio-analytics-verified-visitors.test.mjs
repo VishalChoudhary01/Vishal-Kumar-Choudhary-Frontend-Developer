@@ -5,6 +5,8 @@ import test from "node:test";
 
 import {
   buildPortfolioVerifiedVisitor,
+  getPortfolioAnalyticsExcludedOwnerHash,
+  isPortfolioAnalyticsExcludedOwner,
   maskPortfolioVisitEmail,
 } from "../src/app/lib/portfolio-analytics/verified-visitor.mjs";
 
@@ -111,4 +113,60 @@ test("identity is resolved on the server and limited to the owner-only recent vi
   assert.ok(normalizedPrivacy.includes("The raw account ID and display name are stored in visit records"));
   assert.ok(normalizedPrivacy.includes("private owner-only visitor table"));
   assert.ok(!normalizedPrivacy.includes("visit records do not contain your name, email address"));
+});
+
+
+test("the exact owner account is excluded without excluding other Gmail visitors", () => {
+  const owner = {
+    id: "owner-better-auth-user-id-123",
+    name: "Portfolio owner",
+    email: "  Vishal.Bhumca21@GMAIL.com ",
+    emailVerified: true,
+  };
+
+  assert.equal(isPortfolioAnalyticsExcludedOwner(owner), true);
+  assert.equal(isPortfolioAnalyticsExcludedOwner({
+    ...owner,
+    email: "vishal.bhumca22@gmail.com",
+  }), false);
+  assert.equal(isPortfolioAnalyticsExcludedOwner({
+    ...owner,
+    email: "another.person@gmail.com",
+  }), false);
+  assert.equal(isPortfolioAnalyticsExcludedOwner(null), false);
+
+  const ownerHash = getPortfolioAnalyticsExcludedOwnerHash({ user: owner, secret });
+  const expectedHash = createHmac("sha256", secret)
+    .update("portfolio-analytics:verified-user:v1")
+    .update("\0")
+    .update(owner.id)
+    .digest("hex");
+
+  assert.equal(ownerHash, expectedHash);
+  assert.equal(buildPortfolioVerifiedVisitor({ user: owner, secret }), null);
+  assert.throws(
+    () => getPortfolioAnalyticsExcludedOwnerHash({ user: owner, secret: "short" }),
+    { code: "PORTFOLIO_ANALYTICS_OWNER_EXCLUSION_NOT_CONFIGURED" },
+  );
+});
+
+test("owner visits are blocked before insertion and any in-flight owner row is discarded", async () => {
+  const service = await read("../src/app/lib/portfolio-analytics/visit-service.js");
+  const start = service.indexOf("export async function startPortfolioVisit");
+  const startDb = service.indexOf("await connectToDatabase();", start);
+  const ownerGuard = service.indexOf("if (isPortfolioAnalyticsExcludedOwner(requestUser)) return null;", start);
+
+  assert.ok(start > -1 && ownerGuard > start && startDb > ownerGuard);
+  assert.ok(service.includes("async function discardExcludedOwnerVisit"));
+  assert.ok(service.includes("PortfolioVisit.deleteOne(getSessionScopedFilter(parsed, secret))"));
+  for (const action of [
+    "heartbeatPortfolioVisit",
+    "pausePortfolioVisit",
+    "resumePortfolioVisit",
+    "endPortfolioVisit",
+  ]) {
+    const actionStart = service.indexOf("export async function " + action);
+    const discard = service.indexOf("discardExcludedOwnerVisit(parsed, request, config.hmacSecret)", actionStart);
+    assert.ok(actionStart > -1 && discard > actionStart, action);
+  }
 });
