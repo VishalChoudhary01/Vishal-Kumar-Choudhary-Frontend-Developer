@@ -4,7 +4,7 @@ import { createHmac, randomUUID } from "node:crypto";
 
 import { connectToDatabase } from "@/app/lib/db/mongoose";
 import { getCurrentAuthSession } from "@/app/lib/auth/server-session";
-import { buildPortfolioVerifiedVisitor } from "./verified-visitor.mjs";
+import { buildPortfolioVerifiedVisitor, isPortfolioAnalyticsExcludedOwner } from "./verified-visitor.mjs";
 import PortfolioVisit from "./models/PortfolioVisit";
 import {
   getPortfolioAnalyticsConfig,
@@ -87,17 +87,31 @@ function getSessionScopedFilter(parsed, secret) {
   };
 }
 
-async function resolveVerifiedVisitor(request, secret) {
+async function resolveRequestUser(request) {
   try {
     const session = await getCurrentAuthSession(request?.headers);
-    return buildPortfolioVerifiedVisitor({
-      user: session?.user,
-      secret,
-    });
+    return session?.user || null;
   } catch {
     // Anonymous visit tracking must continue when authentication is unavailable.
     return null;
   }
+}
+
+async function resolveVerifiedVisitor(request, secret) {
+  const user = await resolveRequestUser(request);
+  if (isPortfolioAnalyticsExcludedOwner(user)) return null;
+
+  return buildPortfolioVerifiedVisitor({ user, secret });
+}
+
+async function discardExcludedOwnerVisit(parsed, request, secret) {
+  const user = await resolveRequestUser(request);
+  if (!isPortfolioAnalyticsExcludedOwner(user)) return false;
+
+  // The owner may have signed in after this tab started as an anonymous visit.
+  // Delete only the current tab's matching visit, never another visitor's row.
+  await PortfolioVisit.deleteOne(getSessionScopedFilter(parsed, secret));
+  return true;
 }
 
 async function attachVerifiedVisitorToVisit(filter, request, secret, status = "active") {
@@ -197,8 +211,15 @@ export async function startPortfolioVisit(payload, request, now = new Date()) {
     throw serviceError("INVALID_SERVER_TIME", "A valid server timestamp is required.");
   }
 
+  // Owner activity is not analytics data. Reject it before any visit is written.
+  const requestUser = await resolveRequestUser(request);
+  if (isPortfolioAnalyticsExcludedOwner(requestUser)) return null;
+
   // Identity comes only from the Better Auth session on this exact request.
-  const verifiedVisitor = await resolveVerifiedVisitor(request, config.hmacSecret);
+  const verifiedVisitor = buildPortfolioVerifiedVisitor({
+    user: requestUser,
+    secret: config.hmacSecret,
+  });
 
   const record = buildVisitRecord({
     parsed,
@@ -297,6 +318,7 @@ export async function heartbeatPortfolioVisit(payload, request, now = new Date()
   }
 
   await connectToDatabase();
+  if (await discardExcludedOwnerVisit(parsed, request, config.hmacSecret)) return null;
   await attachVerifiedVisitorToVisit(
     getSessionScopedFilter(parsed, config.hmacSecret),
     request,
@@ -346,6 +368,7 @@ export async function pausePortfolioVisit(payload, request, now = new Date()) {
   }
 
   await connectToDatabase();
+  if (await discardExcludedOwnerVisit(parsed, request, config.hmacSecret)) return null;
   const document = await PortfolioVisit.findOneAndUpdate(
     { ...getSessionScopedFilter(parsed, config.hmacSecret), status: "active" },
     [
@@ -384,6 +407,7 @@ export async function resumePortfolioVisit(payload, request, now = new Date()) {
   }
 
   await connectToDatabase();
+  if (await discardExcludedOwnerVisit(parsed, request, config.hmacSecret)) return null;
   const document = await PortfolioVisit.findOneAndUpdate(
     {
       ...getSessionScopedFilter(parsed, config.hmacSecret),
@@ -417,6 +441,7 @@ export async function endPortfolioVisit(payload, request, now = new Date()) {
   }
 
   await connectToDatabase();
+  if (await discardExcludedOwnerVisit(parsed, request, config.hmacSecret)) return null;
   const document = await PortfolioVisit.findOneAndUpdate(
     {
       ...getSessionScopedFilter(parsed, config.hmacSecret),
