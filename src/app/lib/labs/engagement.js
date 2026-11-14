@@ -139,7 +139,15 @@ export async function getLabsAnalyticsExcludedOwnerUserId() {
       await connectToDatabase();
       const owner = await mongoose.connection.db.collection("user").findOne(
         {
+          email: {
+            $regex: "^" + LABS_ANALYTICS_EXCLUDED_OWNER_EMAIL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\      const owner = await mongoose.connection.db.collection("user").findOne(
+        {
           email: LABS_ANALYTICS_EXCLUDED_OWNER_EMAIL,
+        },
+        { projection: { id: 1 } },
+      );") + "$",
+            $options: "i",
+          },
         },
         { projection: { id: 1 } },
       );
@@ -633,11 +641,31 @@ export async function recordVerifiedSourceEvent({
   await connectToDatabase();
   await ensureEngagementIndexes();
 
-  // A replay of an already accepted idempotency key is not a new attempt and
-  // must not consume the account's source-event quota.
-  const existingEvent = await LabAnalyticsEvent.exists({ eventId: safeEventId });
+  // Defense in depth: internal callers cannot record owner source activity.
+  const excludedOwnerUserId = await getLabsAnalyticsExcludedOwnerUserId();
+  if (excludedOwnerUserId && userId === excludedOwnerUserId) {
+    return { recorded: false, excluded: true };
+  }
+
+  // A replay is idempotent only when it belongs to the same server-resolved
+  // actor, experiment, event and source version. An event ID copied from a
+  // different user's request must never advance this actor's bundle progress.
+  const existingEvent = await LabAnalyticsEvent.findOne({ eventId: safeEventId })
+    .select("eventType experimentSlug actorCategory actorUserId sourceVersion sourceVersionId filePath")
+    .lean();
   if (existingEvent) {
-    const component = eventType === "code_copy" && Array.isArray(requiredFilePaths)
+    const sameActorEvent =
+      existingEvent.eventType === eventType &&
+      existingEvent.experimentSlug === slug &&
+      existingEvent.actorCategory === "verified_user" &&
+      existingEvent.actorUserId === userId &&
+      existingEvent.sourceVersion === sourceVersion &&
+      existingEvent.sourceVersionId === (sourceVersionId ? String(sourceVersionId) : null) &&
+      existingEvent.filePath === (filePath || null);
+
+    const component = sameActorEvent &&
+      eventType === "code_copy" &&
+      Array.isArray(requiredFilePaths)
       ? await recordComponentBundleProgress({
           userId,
           slug,
@@ -647,7 +675,12 @@ export async function recordVerifiedSourceEvent({
           requiredFilePaths,
         })
       : null;
-    return { recorded: false, duplicate: true, component };
+
+    return {
+      recorded: false,
+      duplicate: true,
+      ...(sameActorEvent ? { component } : { eventIdConflict: true }),
+    };
   }
 
   const rateLimit = await consumeSourceEventRateLimit({ userId, eventType });
