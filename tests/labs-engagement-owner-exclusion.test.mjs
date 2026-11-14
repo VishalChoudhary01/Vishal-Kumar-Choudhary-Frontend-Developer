@@ -57,6 +57,18 @@ test("like API prevents owner likes on both reads and writes", async () => {
   assert.match(route, /actorType: "owner_excluded"/);
 });
 
+test("verified non-owner accounts retain the normal like actor path", async () => {
+  const route = await read("../src/app/api/v1/labs/[slug]/engagement/route.js");
+  const actorForStart = route.indexOf("function actorFor(session, guestIdentity)");
+  const actorForEnd = route.indexOf("\n}\n", actorForStart);
+  const actorFor = route.slice(actorForStart, actorForEnd + 2);
+
+  assert.match(actorFor, /session\?\.user\?\.id && session\.user\.emailVerified === true/);
+  assert.match(route, /const actor = actorFor\(session, identity\)/);
+  assert.match(route, /if \(isExcludedLabsAnalyticsOwner\(session\?\.user\)\)/);
+  assert.match(route, /likeAllowed: Boolean\(actor\) \|\| canLikeAsGuest/);
+});
+
 test("engagement index initialization cannot fail from a removed model reference", async () => {
   const service = await read("../src/app/lib/labs/engagement.js");
   const initializer = service.slice(
