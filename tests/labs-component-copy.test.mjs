@@ -1,91 +1,109 @@
 import assert from "node:assert/strict";
-import test from "node:test";
 import { readFile } from "node:fs/promises";
+import test from "node:test";
 
-import {
-  MAX_COMPONENT_BUNDLE_FILES,
-  normalizeComponentBundleFilePaths,
-  hasCompletedComponentBundle,
-  hashComponentBundleManifest,
-} from "../src/app/lib/labs/component-copy-utils.mjs";
+import { createComponentCopyEventId } from "../src/app/lib/labs/component-copy-utils.mjs";
 
-test("component bundle paths are validated, unique and deterministically ordered", () => {
-  const paths = normalizeComponentBundleFilePaths([
-    "src/App.jsx",
-    "package.json",
-    "src/styles.css",
-  ]);
+const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
-  assert.deepEqual(paths, ["package.json", "src/App.jsx", "src/styles.css"]);
-  assert.throws(
-    () => normalizeComponentBundleFilePaths(["src/App.jsx", "src/App.jsx"]),
-    { name: "TypeError" },
-  );
-  assert.throws(
-    () => normalizeComponentBundleFilePaths([""]),
-    { name: "TypeError" },
-  );
-  assert.throws(
-    () => normalizeComponentBundleFilePaths([" src/App.jsx"]),
-    { name: "TypeError" },
-  );
-  assert.throws(
-    () => normalizeComponentBundleFilePaths(["x".repeat(181)]),
-    { name: "TypeError" },
-  );
+test("copying the main entry file records one component copy even when other bundle files remain", () => {
+  const eventId = createComponentCopyEventId({
+    userId: "verified-user-1",
+    experimentSlug: "example-component",
+    sourceVersionId: "published-version-1",
+  });
+
+  assert.match(eventId, /^component_[a-f0-9]{64}$/);
 });
 
-test("component bundle size is bounded without changing the individual file-copy flow", () => {
-  const allowed = Array.from({ length: MAX_COMPONENT_BUNDLE_FILES }, (_, index) => `src/file-${index}.js`);
-  assert.equal(normalizeComponentBundleFilePaths(allowed).length, 40);
-  assert.throws(
-    () => normalizeComponentBundleFilePaths([...allowed, "src/file-40.js"]),
-    { name: "TypeError" },
+test("copying remaining files does not create additional component-copy identities", () => {
+  const afterMainFile = createComponentCopyEventId({
+    userId: "verified-user-1",
+    experimentSlug: "example-component",
+    sourceVersionId: "published-version-1",
+  });
+  const afterSecondFile = createComponentCopyEventId({
+    userId: "verified-user-1",
+    experimentSlug: "example-component",
+    sourceVersionId: "published-version-1",
+  });
+
+  assert.equal(afterMainFile, afterSecondFile);
+});
+
+test("different users, experiments, or published versions count as separate component copies", () => {
+  const base = createComponentCopyEventId({
+    userId: "verified-user-1",
+    experimentSlug: "example-component",
+    sourceVersionId: "published-version-1",
+  });
+
+  assert.notEqual(base, createComponentCopyEventId({
+    userId: "verified-user-2",
+    experimentSlug: "example-component",
+    sourceVersionId: "published-version-1",
+  }));
+  assert.notEqual(base, createComponentCopyEventId({
+    userId: "verified-user-1",
+    experimentSlug: "another-component",
+    sourceVersionId: "published-version-1",
+  }));
+  assert.notEqual(base, createComponentCopyEventId({
+    userId: "verified-user-1",
+    experimentSlug: "example-component",
+    sourceVersionId: "published-version-2",
+  }));
+});
+
+test("component-copy identity rejects invalid server-resolved identity values", () => {
+  assert.throws(() => createComponentCopyEventId({
+    userId: "",
+    experimentSlug: "example-component",
+    sourceVersionId: "version-1",
+  }), { name: "TypeError" });
+  assert.throws(() => createComponentCopyEventId({
+    userId: "user-1",
+    experimentSlug: "../bad",
+    sourceVersionId: "version-1",
+  }), { name: "TypeError" });
+  assert.throws(() => createComponentCopyEventId({
+    userId: "user-1",
+    experimentSlug: "example-component",
+    sourceVersionId: "",
+  }), { name: "TypeError" });
+});
+
+test("the service only counts a component when the primary file path is copied", async () => {
+  const service = await read("../src/app/lib/labs/engagement.js");
+  const recorder = service.slice(
+    service.indexOf("export async function recordVerifiedSourceEvent"),
+    service.indexOf("export async function getLabEngagementBatch"),
   );
+
+  assert.match(recorder, /filePath === primaryFilePath/);
+  assert.match(recorder, /typeof primaryFilePath === "string"/);
+  assert.match(recorder, /const component = eventType === "code_copy"/);
+  assert.match(recorder, /recordComponentCopyEvent/);
 });
 
-test("component copy completes only after every published file has been copied", () => {
-  const required = ["src/App.jsx", "src/styles.css", "package.json"];
-
-  assert.equal(hasCompletedComponentBundle(required, ["src/App.jsx"]), false);
-  assert.equal(hasCompletedComponentBundle(required, ["src/App.jsx", "package.json"]), false);
-  assert.equal(
-    hasCompletedComponentBundle(required, ["src/App.jsx", "src/styles.css", "package.json"]),
-    true,
-  );
-  assert.equal(hasCompletedComponentBundle([], required), false);
-  assert.equal(hasCompletedComponentBundle(required, null), false);
+test("source event route determines the primary file from the trusted published snapshot", async () => {
+  const route = await read("../src/app/api/v1/labs/[slug]/source/events/route.js");
+  assert.match(route, /primaryFilePath = snapshot\.files\.find/);
+  assert.match(route, /filePath,\s*primaryFilePath,\s*eventId/);
+  assert.doesNotMatch(route, /body\.primaryFilePath/);
 });
 
-test("component bundle manifest hash is stable and changes when its contents change", () => {
-  const first = hashComponentBundleManifest(["src/App.jsx", "package.json"]);
-  const reordered = hashComponentBundleManifest(["package.json", "src/App.jsx"]);
-  const changed = hashComponentBundleManifest(["src/App.jsx", "package.json", "src/styles.css"]);
-
-  assert.match(first, /^[a-f0-9]{64}$/);
-  assert.equal(first, reordered);
-  assert.notEqual(first, changed);
+test("component copy identity is idempotent and independent of per-file event IDs", async () => {
+  const service = await read("../src/app/lib/labs/engagement.js");
+  assert.match(service, /const eventId = createComponentCopyEventId/);
+  assert.match(service, /eventType: "component_copy"/);
+  assert.match(service, /\$setOnInsert/);
+  assert.match(service, /eventId: safeEventId,[\s\S]*?eventType,[\s\S]*?filePath: filePath \|\| null/);
 });
 
-test("records one component copy per account, experiment and published version", async () => {
-  const [service, model] = await Promise.all([
-    readFile(new URL("../src/app/lib/labs/engagement.js", import.meta.url), "utf8"),
-    readFile(new URL("../src/app/lib/labs/models/LabComponentCopyProgress.js", import.meta.url), "utf8"),
-  ]);
-
-  assert.match(service, /const completionKey = createHash\("sha256"\)/);
-  assert.match(service, /const eventId = "component_" \+ completionKey/);
-  assert.match(service, /LabAnalyticsEvent\.updateOne\(\s*\{ eventId \}/);
-  assert.match(model, /lab_component_copy_actor_version_unique/);
-  assert.match(model, /\{ userId: 1, experimentSlug: 1, sourceVersionId: 1 \}/);
-});
-
-test("component bundle progress reuses valid file copies from the same published version", async () => {
-  const service = await readFile(
-    new URL("../src/app/lib/labs/engagement.js", import.meta.url),
-    "utf8",
-  );
-  assert.match(service, /LabAnalyticsEvent\.distinct\("filePath"/);
-  assert.match(service, /eventType: "code_copy"/);
-  assert.match(service, /sourceVersion,/);
+test("the primary file is the first copyable file in the exact published source version", async () => {
+  const route = await read("../src/app/api/v1/labs/[slug]/source/events/route.js");
+  assert.match(route, /source\.publishedVersionId/);
+  assert.match(route, /LabSourceVersion\.findOne/);
+  assert.match(route, /snapshot\.files\.find\(\s*\(file\) => typeof file\?\.content === "string"/);
 });
