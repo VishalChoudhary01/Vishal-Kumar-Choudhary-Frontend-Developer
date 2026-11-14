@@ -199,7 +199,10 @@ test("admin action icons animate on hover or focus and respect reduced motion", 
   assert.ok(navigation.includes("LABS_WORKSPACE_DESTINATIONS.map"));
   assert.ok(workspaceDropdown.includes("iconRef.current?.startAnimation?.()"));
   assert.ok(workspaceDropdown.includes("iconRef.current?.stopAnimation?.()"));
-  assert.ok(workspaceDropdown.includes("if (isActive) iconRef.current?.startAnimation?.()"));
+  assert.ok(workspaceDropdown.includes("if (!isAnimated || !isActive)"));
+  assert.ok(workspaceDropdown.includes("iconRef.current?.startAnimation?.()"));
+  assert.ok(workspaceDropdown.includes("window.setInterval"));
+  assert.ok(workspaceDropdown.includes("window.clearInterval(replayId)"));
   assert.ok(snapshot.includes("deleteConfirmIconRef.current?.startAnimation?.()"));
 });
 
