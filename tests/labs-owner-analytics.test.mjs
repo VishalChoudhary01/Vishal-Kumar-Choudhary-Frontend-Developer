@@ -109,6 +109,7 @@ test("daily series includes each UTC calendar day and fills missing dates with z
       date: "2026-11-04",
       sourceOpens: 3,
       codeCopies: 1,
+      componentCopies: 0,
       verifiedLikes: 0,
       verifiedUnlikes: 0,
       anonymousLikes: 0,
@@ -121,6 +122,7 @@ test("daily series includes each UTC calendar day and fills missing dates with z
       date: "2026-11-05",
       sourceOpens: 0,
       codeCopies: 0,
+      componentCopies: 0,
       verifiedLikes: 0,
       verifiedUnlikes: 0,
       anonymousLikes: 0,
@@ -133,6 +135,7 @@ test("daily series includes each UTC calendar day and fills missing dates with z
       date: "2026-11-06",
       sourceOpens: 5,
       codeCopies: 2,
+      componentCopies: 0,
       verifiedLikes: 0,
       verifiedUnlikes: 0,
       anonymousLikes: 0,
@@ -209,6 +212,7 @@ test("event attribution counts only supported actor/event combinations", () => {
       sourceOpens: 0,
       uniqueVerifiedAccounts: 0,
       codeCopies: 0,
+      componentCopies: 0,
       verifiedLikeActions: 0,
       verifiedUnlikeActions: 0,
       anonymousLikeActions: 0,
@@ -223,6 +227,7 @@ test("event attribution counts only supported actor/event combinations", () => {
       sourceOpens: 0,
       uniqueVerifiedAccounts: 0,
       codeCopies: 0,
+      componentCopies: 0,
       verifiedLikeActions: 0,
       verifiedUnlikeActions: 0,
       anonymousLikeActions: 0,
@@ -291,6 +296,11 @@ test("event attribution counts only supported actor/event combinations", () => {
     },
   ];
 
+  eventGroups.push({
+    _id: { slug: "alpha", eventType: "component_copy", actorCategory: "verified_user" },
+    count: 2,
+  });
+
   const result = applyAnalyticsEventGroups(baseRows, eventGroups);
   const alpha = result.find((row) => row.slug === "alpha");
   const beta = result.find((row) => row.slug === "beta");
@@ -300,6 +310,7 @@ test("event attribution counts only supported actor/event combinations", () => {
       sourceOpens: alpha.sourceOpens,
       uniqueVerifiedAccounts: alpha.uniqueVerifiedAccounts,
       codeCopies: alpha.codeCopies,
+      componentCopies: alpha.componentCopies,
       verifiedLikeActions: alpha.verifiedLikeActions,
       verifiedUnlikeActions: alpha.verifiedUnlikeActions,
       anonymousLikeActions: alpha.anonymousLikeActions,
@@ -309,6 +320,7 @@ test("event attribution counts only supported actor/event combinations", () => {
       sourceOpens: 5,
       uniqueVerifiedAccounts: 2,
       codeCopies: 3,
+      componentCopies: 2,
       verifiedLikeActions: 4,
       verifiedUnlikeActions: 2,
       anonymousLikeActions: 7,
@@ -355,6 +367,7 @@ test("collection totals equal the sum of per-experiment aggregate values", () =>
       sourceOpens: 5,
       uniqueVerifiedAccounts: 2,
       codeCopies: 3,
+      componentCopies: 2,
       verifiedLikeActions: 4,
       verifiedUnlikeActions: 2,
       anonymousLikeActions: 7,
@@ -367,6 +380,7 @@ test("collection totals equal the sum of per-experiment aggregate values", () =>
       sourceOpens: 1,
       uniqueVerifiedAccounts: 1,
       codeCopies: 2,
+      componentCopies: 1,
       verifiedLikeActions: 1,
       verifiedUnlikeActions: 0,
       anonymousLikeActions: 0,
@@ -381,6 +395,7 @@ test("collection totals equal the sum of per-experiment aggregate values", () =>
     sourceOpens: 6,
     uniqueVerifiedAccounts: 3,
     codeCopies: 5,
+    componentCopies: 3,
     verifiedLikeActions: 5,
     verifiedUnlikeActions: 2,
     anonymousLikeActions: 7,
@@ -594,4 +609,17 @@ test("owner analytics is sourced from source-managed ready publications and scop
   assert.ok(dashboard.includes("Source Management record"));
   assert.ok(dashboard.includes('method: "DELETE"'));
   assert.ok(dashboard.includes('method: "POST"'));
+});
+
+test("component-copy activity is chartable separately from individual file copies", () => {
+  const buckets = buildActivityBuckets({
+    daily: [
+      { date: "2026-11-01", codeCopies: 4, componentCopies: 1 },
+      { date: "2026-11-02", codeCopies: 2, componentCopies: 0 },
+    ],
+    metric: "componentCopies",
+    periodDays: 7,
+  });
+
+  assert.deepEqual(buckets.map((bucket) => bucket.value), [1, 0]);
 });

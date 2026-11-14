@@ -7,6 +7,7 @@ import LabSourceVersion from "@/app/lib/labs/models/LabSourceVersion";
 import { recordVerifiedSourceEvent } from "@/app/lib/labs/engagement";
 import { getPublishedLabExperimentBySlug } from "@/app/data/labsExperiments";
 import { isPublishedCustomLabSlug } from "@/app/lib/labs/public-experiments";
+import { isExcludedLabsAnalyticsOwner } from "@/app/lib/labs/analytics-owner.mjs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -68,6 +69,12 @@ export async function POST(request, { params }) {
     return json({ error: { code: "UNAUTHENTICATED", message: "Sign in to use protected source." } }, 401);
   }
 
+  // Owner source opens and copies are intentionally not analytics activity.
+  // Identity is read from the trusted server session, never the request body.
+  if (isExcludedLabsAnalyticsOwner(session.user)) {
+    return json({ data: { recorded: false, excluded: true } });
+  }
+
   if (session.user.emailVerified !== true) {
     return json({ error: { code: "EMAIL_VERIFICATION_REQUIRED", message: "Verify your email before using protected source." } }, 403);
   }
@@ -119,6 +126,7 @@ export async function POST(request, { params }) {
     }
 
     let filePath = null;
+    let requiredFilePaths = null;
     if (eventType === "code_copy") {
       if (typeof body?.filePath !== "string" || body.filePath.length > 180) {
         return json({ error: { code: "INVALID_FILE", message: "A valid source file is required." } }, 400);
@@ -133,6 +141,19 @@ export async function POST(request, { params }) {
       }
 
       filePath = body.filePath;
+      const manifestPaths = snapshot.files
+        .filter((file) => typeof file?.content === "string")
+        .map((file) => file.path);
+      // Bundle counting is an optional metric. A larger or malformed legacy
+      // manifest must never disable the existing individual file-copy event.
+      if (
+        manifestPaths.length >= 1 &&
+        manifestPaths.length <= 40 &&
+        manifestPaths.every((path) => typeof path === "string" && path.length > 0 && path.length <= 180) &&
+        new Set(manifestPaths).size === manifestPaths.length
+      ) {
+        requiredFilePaths = manifestPaths;
+      }
     }
 
     if (
@@ -147,7 +168,9 @@ export async function POST(request, { params }) {
       slug,
       userId: session.user.id,
       sourceVersion: snapshot.version,
+      sourceVersionId: String(source.publishedVersionId || source._id),
       filePath,
+      requiredFilePaths,
       eventId,
     });
 

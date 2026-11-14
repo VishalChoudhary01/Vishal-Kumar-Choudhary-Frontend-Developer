@@ -56,6 +56,7 @@ function createExperimentRows(experiments) {
         sourceOpens: 0,
         uniqueVerifiedAccounts: 0,
         codeCopies: 0,
+        componentCopies: 0,
         verifiedLikeActions: 0,
         verifiedUnlikeActions: 0,
         anonymousLikeActions: 0,
@@ -96,6 +97,9 @@ export async function getLabsOwnerAnalytics({ user, days = 30 }) {
   const eventMatch = {
     experimentSlug: { $in: visibleSlugs },
     occurredAt: { $gte: since, $lte: generatedAt },
+    // This function is owner-only. Exclude the authenticated owner from
+    // historical source/copy/like events while retaining guests and others.
+    $nor: [{ actorCategory: "verified_user", actorUserId: user.id }],
   };
 
   const [eventGroups, verifiedLikeGroups, guestLikeGroups, dailyGroups] = await Promise.all([
@@ -114,7 +118,7 @@ export async function getLabsOwnerAnalytics({ user, days = 30 }) {
       },
     ]),
     LabLike.aggregate([
-      { $match: { active: true, experimentSlug: { $in: visibleSlugs } } },
+      { $match: { active: true, userId: { $ne: user.id }, experimentSlug: { $in: visibleSlugs } } },
       { $group: { _id: "$experimentSlug", count: { $sum: 1 } } },
     ]),
     LabGuestLike.aggregate([
@@ -143,6 +147,9 @@ export async function getLabsOwnerAnalytics({ user, days = 30 }) {
           },
           codeCopies: {
             $sum: { $cond: [{ $eq: ["$eventType", "code_copy"] }, 1, 0] },
+          },
+          componentCopies: {
+            $sum: { $cond: [{ $eq: ["$eventType", "component_copy"] }, 1, 0] },
           },
           verifiedLikes: {
             $sum: { $cond: [{ $and: [{ $eq: ["$actorCategory", "verified_user"] }, { $eq: ["$eventType", "like"] }] }, 1, 0] },
@@ -279,6 +286,7 @@ export async function getLabsOwnerExperimentAnalytics({ user, slug, days = 30 })
       $match: {
         experimentSlug: slug,
         occurredAt: { $gte: since, $lte: generatedAt },
+        $nor: [{ actorCategory: "verified_user", actorUserId: user.id }],
       },
     },
     {
@@ -295,6 +303,9 @@ export async function getLabsOwnerExperimentAnalytics({ user, slug, days = 30 })
         },
         codeCopies: {
           $sum: { $cond: [{ $eq: ["$eventType", "code_copy"] }, 1, 0] },
+        },
+        componentCopies: {
+          $sum: { $cond: [{ $eq: ["$eventType", "component_copy"] }, 1, 0] },
         },
         verifiedLikes: {
           $sum: { $cond: [{ $and: [{ $eq: ["$actorCategory", "verified_user"] }, { $eq: ["$eventType", "like"] }] }, 1, 0] },
@@ -360,7 +371,7 @@ export async function getLabsOwnerActiveVerifiedLikes({
   const safeSearch = typeof search === "string" ? search.trim().slice(0, 80) : "";
   const pageSize = 20;
   const basePipeline = [
-    { $match: { experimentSlug: slug, active: true } },
+    { $match: { experimentSlug: slug, active: true, userId: { $ne: user.id } } },
     {
       $lookup: {
         from: "user",

@@ -97,8 +97,8 @@ function RankingCard({ title, description, items, valueSuffix = "" }) {
 
 function LoadingMetrics() {
   return (
-    <section aria-label="Loading engagement overview" className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      {[0, 1, 2, 3].map((item) => (
+    <section aria-label="Loading engagement overview" className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      {[0, 1, 2, 3, 4].map((item) => (
         <div key={item} className="rounded-[3px] min-h-32 border border-border bg-surface-1 p-5" aria-hidden="true">
           <div className="h-3 w-28 animate-pulse bg-surface-2 motion-reduce:animate-none" />
           <div className="mt-5 h-8 w-24 animate-pulse bg-surface-2 motion-reduce:animate-none" />
@@ -368,7 +368,7 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
 
       <section
         aria-label="Engagement overview"
-        className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+        className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-5"
       >
         <MetricCard
           icon={EyeIcon}
@@ -384,9 +384,15 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
         />
         <MetricCard
           icon={CopyCheckIcon}
-          label="Code copies"
+          label="File copies"
           value={totals.codeCopies}
-          detail="Reported after clipboard success"
+          detail="Individual files copied after clipboard success"
+        />
+        <MetricCard
+          icon={CopyCheckIcon}
+          label="Component copies"
+          value={totals.componentCopies}
+          detail="Complete published source bundles copied once per account and version"
         />
         <MetricCard
           icon={HeartPulseIcon}
@@ -409,16 +415,21 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
             Opens and copies use the selected period. Active likes show the current persisted state.
           </p>
         </div>
-        <div className="mt-4 grid gap-3 xl:grid-cols-3">
+        <div className="mt-4 grid gap-3 xl:grid-cols-4">
           <RankingCard
             title="Most source opens"
             description="Successful verified source loads during this period."
             items={analytics.rankings?.mostSourceOpens || []}
           />
           <RankingCard
-            title="Most code copies"
-            description="Clipboard-success reports accepted during this period."
+            title="Most file copies"
+            description="Individual clipboard-success reports during this period."
             items={analytics.rankings?.mostCodeCopies || []}
+          />
+          <RankingCard
+            title="Most component copies"
+            description="Complete source bundles copied by a verified account."
+            items={analytics.rankings?.mostComponentCopies || []}
           />
           <RankingCard
             title="Most active likes"
@@ -442,13 +453,14 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
         </div>
 
         <div className="mt-4 overflow-x-auto rounded-[3px] border border-border">
-          <table className="w-full min-w-[900px] border-collapse text-left text-sm">
+          <table className="w-full min-w-[1040px] border-collapse text-left text-sm">
             <thead className="bg-surface-2 text-[11px] uppercase tracking-[0.1em] text-text-tertiary">
               <tr>
                 <th className="px-4 py-3 font-medium">Experiment</th>
                 <th className="px-4 py-3 text-right font-medium">Opens</th>
                 <th className="px-4 py-3 text-right font-medium">Unique verified</th>
-                <th className="px-4 py-3 text-right font-medium">Copies</th>
+                <th className="px-4 py-3 text-right font-medium">File copies</th>
+                <th className="px-4 py-3 text-right font-medium">Component copies</th>
                 <th className="px-4 py-3 text-right font-medium">Anonymous likes</th>
                 <th className="px-4 py-3 text-right font-medium">Verified likes</th>
                 <th className="px-4 py-3 text-right font-medium">Total active</th>
@@ -472,6 +484,7 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
                   <td className="px-4 py-4 text-right tabular-nums">{number(experiment.sourceOpens)}</td>
                   <td className="px-4 py-4 text-right tabular-nums">{number(experiment.uniqueVerifiedAccounts)}</td>
                   <td className="px-4 py-4 text-right tabular-nums">{number(experiment.codeCopies)}</td>
+                  <td className="px-4 py-4 text-right tabular-nums">{number(experiment.componentCopies)}</td>
                   <td className="px-4 py-4 text-right tabular-nums">{number(experiment.activeAnonymousLikes)}</td>
                   <td className="px-4 py-4 text-right tabular-nums">{number(experiment.activeVerifiedLikes)}</td>
                   <td className="px-4 py-4 text-right font-semibold tabular-nums">{number(experiment.totalActiveLikes)}</td>
@@ -499,7 +512,7 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
               ))}
               {!analytics.experiments.length ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-xs text-text-tertiary">
+                  <td colSpan={9} className="px-4 py-8 text-center text-xs text-text-tertiary">
                     No experiments are currently published from Source Management with a matching ready build.
                   </td>
                 </tr>

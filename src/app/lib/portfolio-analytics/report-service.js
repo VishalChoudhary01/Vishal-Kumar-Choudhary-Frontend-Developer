@@ -5,6 +5,9 @@ import mongoose from "mongoose";
 import { connectToDatabase } from "@/app/lib/db/mongoose";
 import PortfolioVisit from "./models/PortfolioVisit";
 import {
+  getPortfolioAnalyticsExcludedOwnerAccountId,
+} from "./verified-visitor.mjs";
+import {
   buildCompletePortfolioDailySeries,
   buildPortfolioRecentCursorMatch,
   encodePortfolioRecentCursor,
@@ -19,13 +22,25 @@ function safeCount(value) {
   return Math.max(0, Number(value) || 0);
 }
 
-function dateRangeMatch(period) {
-  return {
+function dateRangeMatch(period, excludedOwnerAccountId = null) {
+  const match = {
     startedAt: {
       $gte: period.from,
       $lte: period.to,
     },
   };
+
+  if (excludedOwnerAccountId) {
+    // MongoDB $ne also matches documents where the field is absent, preserving
+    // guest/unverified visits while excluding only the exact owner account ID.
+    match.verifiedUserAccountId = { $ne: excludedOwnerAccountId };
+  }
+
+  return match;
+}
+
+function getExcludedOwnerAccountId(excludedOwnerUser) {
+  return getPortfolioAnalyticsExcludedOwnerAccountId(excludedOwnerUser);
 }
 
 function activeSecondsExpression() {
@@ -279,9 +294,11 @@ function normalizeReportResult(facets, period, uniqueTabSessions) {
 export async function getPortfolioAnalyticsReport({
   days = 30,
   now = new Date(),
+  excludedOwnerUser = null,
 } = {}) {
   const period = normalizePortfolioAnalyticsPeriod(days, now);
-  const match = dateRangeMatch(period);
+  const excludedOwnerAccountId = getExcludedOwnerAccountId(excludedOwnerUser);
+  const match = dateRangeMatch(period, excludedOwnerAccountId);
 
   await connectToDatabase();
 
@@ -336,10 +353,12 @@ export async function getPortfolioRecentVisits({
   limit = RECENT_DEFAULT_LIMIT,
   cursor = null,
   now = new Date(),
+  excludedOwnerUser = null,
 } = {}) {
   const period = normalizePortfolioAnalyticsPeriod(days, now);
   const safeLimit = normalizePortfolioRecentLimit(limit);
-  const match = dateRangeMatch(period);
+  const excludedOwnerAccountId = getExcludedOwnerAccountId(excludedOwnerUser);
+  const match = dateRangeMatch(period, excludedOwnerAccountId);
   const cursorMatch = buildPortfolioRecentCursorMatch(
     cursor,
     mongoose.Types.ObjectId,

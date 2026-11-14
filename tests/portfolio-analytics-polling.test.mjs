@@ -74,12 +74,13 @@ test("read endpoint checks the owner before querying reporting services and uses
   const route = await read("../src/app/api/v1/admin/portfolio/analytics/route.js");
   const sessionLookup = route.indexOf("getCurrentAuthSession()");
   const ownerCheck = route.indexOf("if (!isLabsOwner(session.user))");
-  const summaryQuery = route.indexOf("getPortfolioAnalyticsReport({ days: query.days })");
+  const summaryQuery = route.indexOf("getPortfolioAnalyticsReport({ days: query.days, excludedOwnerUser: session.user })");
   const recentQuery = route.indexOf("getPortfolioRecentVisits({");
   assert.ok(sessionLookup >= 0);
   assert.ok(ownerCheck > sessionLookup);
   assert.ok(summaryQuery > ownerCheck);
   assert.ok(recentQuery > ownerCheck);
+  assert.ok(route.includes("excludedOwnerUser: session.user"));
   assert.ok(route.includes('"Cache-Control": "private, no-store'));
   assert.ok(route.includes("}, 404"));
   assert.ok(route.includes("parsePortfolioAnalyticsReadQuery"));

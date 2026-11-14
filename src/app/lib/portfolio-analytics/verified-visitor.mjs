@@ -1,5 +1,24 @@
 import { createHmac } from "node:crypto";
 
+export const PORTFOLIO_ANALYTICS_EXCLUDED_OWNER_EMAIL = "vishal.bhumca21@gmail.com";
+
+export function isPortfolioAnalyticsExcludedOwner(user) {
+  return typeof user?.email === "string" &&
+    user.email.trim().toLowerCase() === PORTFOLIO_ANALYTICS_EXCLUDED_OWNER_EMAIL;
+}
+
+/**
+ * Returns the stable Better Auth account ID only for the configured owner.
+ * Historical rows already store this value, so reports can exclude the owner
+ * without depending on preview/production availability of the HMAC secret.
+ */
+export function getPortfolioAnalyticsExcludedOwnerAccountId(user) {
+  if (!isPortfolioAnalyticsExcludedOwner(user)) return null;
+  return typeof user?.id === "string" && user.id.trim()
+    ? user.id.trim()
+    : null;
+}
+
 function normalizeDisplayName(value) {
   if (typeof value !== "string") return "";
   return value
@@ -38,6 +57,7 @@ export function maskPortfolioVisitEmail(value) {
  */
 export function buildPortfolioVerifiedVisitor({ user, secret } = {}) {
   if (
+    isPortfolioAnalyticsExcludedOwner(user) ||
     user?.emailVerified !== true ||
     typeof user?.id !== "string" ||
     !user.id.trim() ||

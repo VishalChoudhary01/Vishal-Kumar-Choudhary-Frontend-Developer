@@ -23,6 +23,7 @@ export function createRankings(rows, limit = 5) {
   return {
     mostSourceOpens: rankBy("sourceOpens"),
     mostCodeCopies: rankBy("codeCopies"),
+    mostComponentCopies: rankBy("componentCopies"),
     mostActiveLikes: rankBy("totalActiveLikes", (row) => ({
       activeVerifiedLikes: row.activeVerifiedLikes,
       activeAnonymousLikes: row.activeAnonymousLikes,
@@ -88,6 +89,7 @@ export function buildCompleteDailySeries({ since, generatedAt, dailyGroups = [] 
 
     const sourceOpens = Number(group?.sourceOpens) || 0;
     const codeCopies = Number(group?.codeCopies) || 0;
+    const componentCopies = Number(group?.componentCopies) || 0;
     const verifiedLikes = Number(group?.verifiedLikes) || 0;
     const verifiedUnlikes = Number(group?.verifiedUnlikes) || 0;
     const anonymousLikes = Number(group?.anonymousLikes) || 0;
@@ -110,13 +112,14 @@ export function buildCompleteDailySeries({ since, generatedAt, dailyGroups = [] 
       date,
       sourceOpens,
       codeCopies,
+      componentCopies,
       verifiedLikes,
       verifiedUnlikes,
       anonymousLikes,
       anonymousUnlikes,
       verifiedLikeActions,
       anonymousLikeActions,
-      totalActions: sourceOpens + codeCopies + totalLikeActions,
+      totalActions: sourceOpens + codeCopies + componentCopies + totalLikeActions,
     });
   }
 
@@ -196,6 +199,7 @@ const ZERO_TOTALS = {
   sourceOpens: 0,
   uniqueVerifiedAccounts: 0,
   codeCopies: 0,
+  componentCopies: 0,
   verifiedLikeActions: 0,
   verifiedUnlikeActions: 0,
   anonymousLikeActions: 0,
@@ -225,6 +229,8 @@ export function applyAnalyticsEventGroups(rows, eventGroups) {
       ).size;
     } else if (eventType === "code_copy" && actorCategory === "verified_user") {
       row.codeCopies += count;
+    } else if (eventType === "component_copy" && actorCategory === "verified_user") {
+      row.componentCopies += count;
     } else if (eventType === "like" && actorCategory === "verified_user") {
       row.verifiedLikeActions += count;
     } else if (eventType === "unlike" && actorCategory === "verified_user") {
@@ -324,7 +330,8 @@ export function evaluateFixedWindowRateLimit({
 
 export const LABS_ACTIVITY_METRICS = Object.freeze([
   { key: "sourceOpens", label: "Source opens", singular: "source open" },
-  { key: "codeCopies", label: "Code copies", singular: "code copy" },
+  { key: "codeCopies", label: "File copies", singular: "file copy" },
+  { key: "componentCopies", label: "Component copies", singular: "component copy" },
   { key: "verifiedLikes", label: "Verified likes", singular: "verified like" },
   { key: "verifiedUnlikes", label: "Verified unlikes", singular: "verified unlike" },
   { key: "anonymousLikes", label: "Anonymous likes", singular: "anonymous like" },

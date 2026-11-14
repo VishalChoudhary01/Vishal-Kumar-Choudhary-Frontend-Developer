@@ -143,3 +143,56 @@ test("report service is server-only, date-bounded, uses bounded facets and safe 
     assert.equal(mapper.includes(field), false, field);
   }
 });
+
+
+test("all Portfolio Analytics reports exclude the exact owner account while retaining Labs experiment reporting", async () => {
+  const [report, api, page, visitUtils, dashboard] = await Promise.all([
+    read("../src/app/lib/portfolio-analytics/report-service.js"),
+    read("../src/app/api/v1/admin/portfolio/analytics/route.js"),
+    read("../src/app/admin/portfolio/analytics/page.js"),
+    read("../src/app/lib/portfolio-analytics/visit-utils.mjs"),
+    read("../src/app/components/portfolio-analytics/PortfolioAnalyticsDashboard.js"),
+  ]);
+
+  assert.ok(report.includes("getPortfolioAnalyticsExcludedOwnerAccountId"));
+  assert.ok(report.includes("match.verifiedUserAccountId = { $ne: excludedOwnerAccountId }"));
+  assert.ok(report.includes("function getExcludedOwnerAccountId(excludedOwnerUser)"));
+  assert.equal(report.includes("PORTFOLIO_ANALYTICS_OWNER_EXCLUSION_NOT_CONFIGURED"), false);
+  assert.equal(report.includes("getPortfolioAnalyticsConfig"), false);
+  assert.ok(report.includes("excludedOwnerUser = null"));
+  assert.ok(report.includes("dateRangeMatch(period, excludedOwnerAccountId)"));
+  assert.ok(api.includes("excludedOwnerUser: session.user"));
+  assert.ok(page.includes("excludedOwnerUser: session.user"));
+
+  // Preserve experiment and Labs analytics: only the owner identity is excluded.
+  assert.ok(visitUtils.includes('"labs_index"'));
+  assert.ok(visitUtils.includes('"lab_detail"'));
+  assert.ok(visitUtils.includes('pageType: "lab_detail"'));
+  assert.ok(dashboard.includes('lab_detail: "Lab detail"'));
+  assert.ok(dashboard.includes("Visitor activity"));
+  assert.ok(dashboard.includes("Page types"));
+  assert.ok(report.includes("pageTypes:"));
+  assert.ok(report.includes("topPages:"));
+});
+
+
+test("the report exclusion matches only the owner account ID and keeps guests and other verified users", async () => {
+  const [report, helper] = await Promise.all([
+    read("../src/app/lib/portfolio-analytics/report-service.js"),
+    read("../src/app/lib/portfolio-analytics/verified-visitor.mjs"),
+  ]);
+
+  assert.ok(report.includes("getPortfolioAnalyticsExcludedOwnerAccountId"));
+  assert.ok(report.includes("if (excludedOwnerAccountId)"));
+  assert.ok(report.includes('match.verifiedUserAccountId = { $ne: excludedOwnerAccountId }'));
+  assert.ok(helper.includes('user.email.trim().toLowerCase() === PORTFOLIO_ANALYTICS_EXCLUDED_OWNER_EMAIL'));
+  assert.ok(helper.includes("export function getPortfolioAnalyticsExcludedOwnerAccountId"));
+  assert.ok(helper.includes("export function isPortfolioAnalyticsExcludedOwner"));
+  assert.ok(helper.includes("export function buildPortfolioVerifiedVisitor"));
+  assert.ok(helper.includes("isPortfolioAnalyticsExcludedOwner(user) ||"));
+
+  // MongoDB $ne matches documents where verifiedUserAccountId is missing,
+  // so guest/unverified rows remain reportable. Other account IDs also match.
+  assert.ok(report.includes("match.verifiedUserAccountId = { $ne: excludedOwnerAccountId }"));
+  assert.equal(report.includes("verifiedUserHash: { $ne:"), false);
+});

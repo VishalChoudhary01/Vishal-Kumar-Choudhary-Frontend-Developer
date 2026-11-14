@@ -7,8 +7,8 @@ const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 test("dashboard route verifies the owner before private report queries", async () => {
   const page = await read("../src/app/admin/portfolio/analytics/page.js");
   const ownerCheck = page.indexOf("if (!isLabsOwner(session?.user))");
-  const reportQuery = page.indexOf("getPortfolioAnalyticsReport({ days })");
-  const recentQuery = page.indexOf("getPortfolioRecentVisits({ days, cursor, limit: 25 })");
+  const reportQuery = page.indexOf("getPortfolioAnalyticsReport({ days, excludedOwnerUser: session.user })");
+  const recentQuery = page.indexOf("getPortfolioRecentVisits({ days, cursor, limit: 25, excludedOwnerUser: session.user })");
 
   assert.ok(ownerCheck > -1);
   assert.ok(reportQuery > ownerCheck);

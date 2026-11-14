@@ -12,6 +12,7 @@ import {
 } from "@/app/lib/labs/engagement";
 import { getPublishedLabExperimentBySlug } from "@/app/data/labsExperiments";
 import { isPublishedCustomLabSlug } from "@/app/lib/labs/public-experiments";
+import { isExcludedLabsAnalyticsOwner } from "@/app/lib/labs/analytics-owner.mjs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -76,6 +77,18 @@ export async function GET(request, { params }) {
 
   try {
     const session = await readSession();
+    if (isExcludedLabsAnalyticsOwner(session?.user)) {
+      const engagement = await getLabEngagement({ slug, actor: null });
+      const response = json({
+        data: publicEngagement(engagement, {
+          likeAllowed: false,
+          actorType: "owner_excluded",
+        }),
+      });
+      clearGuestIdentityCookie(response);
+      return response;
+    }
+
     const hasGuestCookie = Boolean(
       request.cookies?.get?.(LABS_GUEST_LIKE_COOKIE)?.value,
     );
@@ -143,6 +156,18 @@ export async function POST(request, { params }) {
 
   try {
     const session = await readSession();
+    if (isExcludedLabsAnalyticsOwner(session?.user)) {
+      const engagement = await getLabEngagement({ slug, actor: null });
+      const response = json({
+        data: publicEngagement(engagement, {
+          actorType: "owner_excluded",
+          likeAllowed: false,
+        }),
+      });
+      clearGuestIdentityCookie(response);
+      return response;
+    }
+
     const hasGuestCookie = Boolean(
       request.cookies?.get?.(LABS_GUEST_LIKE_COOKIE)?.value,
     );
