@@ -140,7 +140,6 @@ export async function getLabsAnalyticsExcludedOwnerUserId() {
       const owner = await mongoose.connection.db.collection("user").findOne(
         {
           email: LABS_ANALYTICS_EXCLUDED_OWNER_EMAIL,
-          emailVerified: true,
         },
         { projection: { id: 1 } },
       );
