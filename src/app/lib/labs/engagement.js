@@ -544,6 +544,7 @@ export async function recordVerifiedSourceEvent({
   sourceVersion,
   sourceVersionId = null,
   filePath = null,
+  primaryFilePath = null,
   eventId,
 }) {
   if (!["source_open", "code_copy"].includes(eventType)) {
@@ -580,7 +581,10 @@ export async function recordVerifiedSourceEvent({
       existingEvent.sourceVersionId === (sourceVersionId ? String(sourceVersionId) : null) &&
       existingEvent.filePath === (filePath || null);
 
-    const component = sameActorEvent && eventType === "code_copy"
+    const component = sameActorEvent &&
+      eventType === "code_copy" &&
+      typeof primaryFilePath === "string" &&
+      filePath === primaryFilePath
       ? await recordComponentCopyEvent({ userId, slug, sourceVersion, sourceVersionId })
       : null;
 
@@ -612,7 +616,9 @@ export async function recordVerifiedSourceEvent({
       filePath: filePath || null,
       occurredAt: new Date(),
     });
-    const component = eventType === "code_copy"
+    const component = eventType === "code_copy" &&
+      typeof primaryFilePath === "string" &&
+      filePath === primaryFilePath
       ? await recordComponentCopyEvent({ userId, slug, sourceVersion, sourceVersionId })
       : null;
 
