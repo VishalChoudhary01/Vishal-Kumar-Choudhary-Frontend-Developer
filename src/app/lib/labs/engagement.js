@@ -9,7 +9,7 @@ import LabGuestLike from "./models/LabGuestLike";
 import LabAnalyticsEvent from "./models/LabAnalyticsEvent";
 import LabComponentCopyProgress from "./models/LabComponentCopyProgress";
 import { normalizeComponentBundleFilePaths, hasCompletedComponentBundle } from "./component-copy-utils.mjs";
-import { LABS_ANALYTICS_EXCLUDED_OWNER_EMAIL, isExcludedLabsAnalyticsOwner } from "./analytics-owner.mjs";
+import { isExcludedLabsAnalyticsOwner } from "./analytics-owner.mjs";
 import {
   evaluateFixedWindowRateLimit,
   getSourceEventRateLimit,
