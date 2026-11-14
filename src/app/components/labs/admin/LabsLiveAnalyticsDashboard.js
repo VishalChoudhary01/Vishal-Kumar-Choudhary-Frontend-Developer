@@ -386,7 +386,7 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
           icon={CopyCheckIcon}
           label="File copies"
           value={totals.codeCopies}
-          detail="Individual files copied after clipboard success"
+          detail="Every successful copy click, including repeat copies"
         />
         <MetricCard
           icon={CopyCheckIcon}
