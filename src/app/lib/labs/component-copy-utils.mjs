@@ -18,7 +18,7 @@ export function normalizeComponentBundleFilePaths(filePaths) {
       !path ||
       path.length > 180 ||
       path.trim() !== path ||
-      path.includes("\\0")
+      path.includes("\0")
     ) {
       throw new TypeError("The component bundle contains an invalid file path.");
     }
