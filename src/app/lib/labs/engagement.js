@@ -1,12 +1,15 @@
 import "server-only";
 
-import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import mongoose from "mongoose";
 
 import { connectToDatabase } from "@/app/lib/db/mongoose";
 import LabLike from "./models/LabLike";
 import LabGuestLike from "./models/LabGuestLike";
 import LabAnalyticsEvent from "./models/LabAnalyticsEvent";
+import LabComponentCopyProgress from "./models/LabComponentCopyProgress";
+import { normalizeComponentBundleFilePaths, hasCompletedComponentBundle } from "./component-copy-utils.mjs";
+import { LABS_ANALYTICS_EXCLUDED_OWNER_EMAIL } from "./analytics-owner.mjs";
 import {
   evaluateFixedWindowRateLimit,
   getSourceEventRateLimit,
@@ -115,6 +118,7 @@ async function ensureEngagementIndexes() {
       LabLike.createIndexes(),
       LabGuestLike.createIndexes(),
       LabAnalyticsEvent.createIndexes(),
+      LabComponentCopyProgress.createIndexes(),
     ]).catch((error) => {
       engagementIndexesPromise = null;
       throw error;
@@ -122,6 +126,149 @@ async function ensureEngagementIndexes() {
   }
 
   await engagementIndexesPromise;
+}
+
+let excludedOwnerUserIdPromise = null;
+
+export async function getLabsAnalyticsExcludedOwnerUserId() {
+  const configuredId = process.env.LABS_OWNER_USER_ID?.trim();
+  if (configuredId) return configuredId;
+
+  if (!excludedOwnerUserIdPromise) {
+    excludedOwnerUserIdPromise = (async () => {
+      await connectToDatabase();
+      const owner = await mongoose.connection.db.collection("user").findOne(
+        {
+          email: LABS_ANALYTICS_EXCLUDED_OWNER_EMAIL,
+          emailVerified: true,
+        },
+        { projection: { id: 1 } },
+      );
+
+      const id = typeof owner?.id === "string" && owner.id.trim()
+        ? owner.id.trim()
+        : owner?._id
+          ? String(owner._id)
+          : null;
+
+      return id && id.length <= 128 ? id : null;
+    })().catch((error) => {
+      excludedOwnerUserIdPromise = null;
+      throw error;
+    });
+  }
+
+  return excludedOwnerUserIdPromise;
+}
+
+async function recordComponentBundleProgress({
+  userId,
+  slug,
+  sourceVersion,
+  sourceVersionId,
+  filePath,
+  requiredFilePaths,
+}) {
+  const requiredPaths = normalizeComponentBundleFilePaths(requiredFilePaths);
+  if (!requiredPaths.includes(filePath)) {
+    throw new TypeError("Copied file is not part of the published component bundle.");
+  }
+
+  const manifestHash = createHash("sha256")
+    .update(requiredPaths.join("\n"))
+    .digest("hex");
+
+  // Carry valid pre-existing per-file copy events forward, so deploying this
+  // feature does not force a visitor to recopy files already copied in this
+  // same published version.
+  const previousPaths = await LabAnalyticsEvent.distinct("filePath", {
+    actorUserId: userId,
+    experimentSlug: slug,
+    eventType: "code_copy",
+    sourceVersion,
+    filePath: { $in: requiredPaths },
+    $or: [
+      { sourceVersionId },
+      { sourceVersionId: null },
+      { sourceVersionId: { $exists: false } },
+    ],
+  });
+
+  const copiedPaths = [...new Set([
+    ...(Array.isArray(previousPaths) ? previousPaths : []),
+    filePath,
+  ])].filter((path) => requiredPaths.includes(path));
+
+  const progress = await LabComponentCopyProgress.findOneAndUpdate(
+    { userId, experimentSlug: slug, sourceVersionId },
+    {
+      $setOnInsert: {
+        userId,
+        experimentSlug: slug,
+        sourceVersionId,
+        sourceVersion,
+        manifestHash,
+        requiredFilePaths: requiredPaths,
+      },
+      $addToSet: { copiedFilePaths: { $each: copiedPaths } },
+    },
+    {
+      upsert: true,
+      new: true,
+      runValidators: true,
+      setDefaultsOnInsert: true,
+    },
+  );
+
+  if (!progress || progress.manifestHash !== manifestHash) {
+    const error = new Error("The published component manifest changed. Reload the source before copying.");
+    error.code = "COMPONENT_MANIFEST_CHANGED";
+    throw error;
+  }
+
+  if (!hasCompletedComponentBundle(requiredPaths, progress.copiedFilePaths)) {
+    return { completed: false, copiedFiles: progress.copiedFilePaths.length, requiredFiles: requiredPaths.length };
+  }
+
+  const completedAt = progress.completedAt || new Date();
+  const completionKey = createHash("sha256")
+    .update(userId)
+    .update("\n")
+    .update(slug)
+    .update("\n")
+    .update(sourceVersionId)
+    .digest("hex");
+  const eventId = "component_" + completionKey;
+
+  // A deterministic event ID plus the unique eventId index guarantees one
+  // component completion per account, experiment, and published version,
+  // including concurrent requests and retries.
+  await LabAnalyticsEvent.updateOne(
+    { eventId },
+    {
+      $setOnInsert: {
+        eventId,
+        eventType: "component_copy",
+        experimentSlug: slug,
+        actorCategory: "verified_user",
+        actorUserId: userId,
+        sourceVersion,
+        sourceVersionId,
+        filePath: null,
+        occurredAt: completedAt,
+      },
+    },
+    { upsert: true, runValidators: true },
+  );
+
+  if (!progress.completedAt) {
+    await LabComponentCopyProgress.updateOne(
+      { _id: progress._id, completedAt: null },
+      { $set: { completedAt } },
+    );
+  }
+
+  return { completed: true, copiedFiles: requiredPaths.length, requiredFiles: requiredPaths.length };
 }
 
 /**
@@ -146,6 +293,10 @@ export async function mergeGuestLikesIntoVerifiedAccount({ guestKeyHash, userId 
 
   await connectToDatabase();
   await ensureEngagementIndexes();
+
+  if (userId === await getLabsAnalyticsExcludedOwnerUserId()) {
+    return { migratedCount: 0, excluded: true };
+  }
 
   const now = new Date();
   const session = await mongoose.startSession();
@@ -216,13 +367,18 @@ export async function mergeGuestLikesIntoVerifiedAccount({ guestKeyHash, userId 
   return { migratedCount };
 }
 
-export async function getLabEngagement({ slug, actor }) {
+export async function getLabEngagement({ slug, actor, excludedUserId: suppliedExcludedUserId = null }) {
   await connectToDatabase();
   await ensureEngagementIndexes();
 
   const now = new Date();
+  const excludedUserId = suppliedExcludedUserId ||
+    await getLabsAnalyticsExcludedOwnerUserId();
+  const safeActor = actor?.type === "verified" && actor.userId === excludedUserId
+    ? null
+    : actor;
 
-  if (actor?.type === "guest") {
+  if (safeActor?.type === "guest") {
     const rollingExpiry = new Date(now.getTime() + COOKIE_MAX_AGE_MS);
     await LabGuestLike.updateMany(
       {
@@ -233,22 +389,25 @@ export async function getLabEngagement({ slug, actor }) {
     );
   }
 
+  const verifiedLikeFilter = { experimentSlug: slug, active: true };
+  if (excludedUserId) verifiedLikeFilter.userId = { $ne: excludedUserId };
+
   const [verifiedLikes, anonymousLikes, actorLike] = await Promise.all([
-    LabLike.countDocuments({ experimentSlug: slug, active: true }),
+    LabLike.countDocuments(verifiedLikeFilter),
     LabGuestLike.countDocuments({
       experimentSlug: slug,
       active: true,
       expiresAt: { $gt: now },
     }),
-    actor?.type === "verified"
+    safeActor?.type === "verified"
       ? LabLike.findOne({
-          userId: actor.userId,
+          userId: safeActor.userId,
           experimentSlug: slug,
           active: true,
         }).select("_id").lean()
-      : actor?.type === "guest"
+      : safeActor?.type === "guest"
         ? LabGuestLike.findOne({
-            guestKeyHash: actor.guestKeyHash,
+            guestKeyHash: safeActor.guestKeyHash,
             experimentSlug: slug,
             active: true,
             expiresAt: { $gt: now },
@@ -261,12 +420,22 @@ export async function getLabEngagement({ slug, actor }) {
     anonymousLikes,
     totalLikes: verifiedLikes + anonymousLikes,
     liked: Boolean(actorLike),
+    ownerExcluded: actor?.type === "verified" && !safeActor,
   };
 }
 
 export async function setLabLike({ slug, actor, liked }) {
   await connectToDatabase();
   await ensureEngagementIndexes();
+
+  if (actor?.type === "verified" && actor.userId === await getLabsAnalyticsExcludedOwnerUserId()) {
+    return {
+      ...(await getLabEngagement({ slug, actor: null })),
+      transitioned: false,
+      rateLimited: false,
+      excluded: true,
+    };
+  }
 
   const now = new Date();
   const isVerified = actor.type === "verified";
@@ -448,7 +617,9 @@ export async function recordVerifiedSourceEvent({
   slug,
   userId,
   sourceVersion,
+  sourceVersionId = null,
   filePath = null,
+  requiredFilePaths = null,
   eventId,
 }) {
   if (!["source_open", "code_copy"].includes(eventType)) {
@@ -466,7 +637,19 @@ export async function recordVerifiedSourceEvent({
   // A replay of an already accepted idempotency key is not a new attempt and
   // must not consume the account's source-event quota.
   const existingEvent = await LabAnalyticsEvent.exists({ eventId: safeEventId });
-  if (existingEvent) return { recorded: false, duplicate: true };
+  if (existingEvent) {
+    const component = eventType === "code_copy" && Array.isArray(requiredFilePaths)
+      ? await recordComponentBundleProgress({
+          userId,
+          slug,
+          sourceVersion,
+          sourceVersionId: String(sourceVersionId || slug + ":" + sourceVersion),
+          filePath,
+          requiredFilePaths,
+        })
+      : null;
+    return { recorded: false, duplicate: true, component };
+  }
 
   const rateLimit = await consumeSourceEventRateLimit({ userId, eventType });
   if (!rateLimit.allowed) {
@@ -485,10 +668,26 @@ export async function recordVerifiedSourceEvent({
       actorCategory: "verified_user",
       actorUserId: userId,
       sourceVersion: sourceVersion || null,
+      sourceVersionId: sourceVersionId ? String(sourceVersionId) : null,
       filePath: filePath || null,
       occurredAt: new Date(),
     });
-    return { recorded: true, rateLimitRemaining: rateLimit.remaining };
+    const component = eventType === "code_copy" && Array.isArray(requiredFilePaths)
+      ? await recordComponentBundleProgress({
+          userId,
+          slug,
+          sourceVersion,
+          sourceVersionId: String(sourceVersionId || slug + ":" + sourceVersion),
+          filePath,
+          requiredFilePaths,
+        })
+      : null;
+
+    return {
+      recorded: true,
+      rateLimitRemaining: rateLimit.remaining,
+      component,
+    };
   } catch (error) {
     if (error?.code === 11000) return { recorded: false, duplicate: true };
     throw error;
@@ -512,9 +711,15 @@ export async function getLabEngagementBatch({ slugs, actor = null }) {
   await ensureEngagementIndexes();
 
   const now = new Date();
+  const excludedUserId = await getLabsAnalyticsExcludedOwnerUserId();
+  const safeActor = actor?.type === "verified" && actor.userId === excludedUserId
+    ? null
+    : actor;
   const matchSlugs = { $in: uniqueSlugs };
+  const verifiedLikeFilter = { experimentSlug: matchSlugs, active: true };
+  if (excludedUserId) verifiedLikeFilter.userId = { $ne: excludedUserId };
 
-  if (actor?.type === "guest") {
+  if (safeActor?.type === "guest") {
     await LabGuestLike.updateMany(
       {
         guestKeyHash: actor.guestKeyHash,
@@ -527,7 +732,7 @@ export async function getLabEngagementBatch({ slugs, actor = null }) {
 
   const [verifiedCounts, guestCounts, actorRows] = await Promise.all([
     LabLike.aggregate([
-      { $match: { experimentSlug: matchSlugs, active: true } },
+      { $match: verifiedLikeFilter },
       { $group: { _id: "$experimentSlug", count: { $sum: 1 } } },
     ]),
     LabGuestLike.aggregate([
@@ -540,15 +745,15 @@ export async function getLabEngagementBatch({ slugs, actor = null }) {
       },
       { $group: { _id: "$experimentSlug", count: { $sum: 1 } } },
     ]),
-    actor?.type === "verified"
+    safeActor?.type === "verified"
       ? LabLike.find({
-          userId: actor.userId,
+          userId: safeActor.userId,
           experimentSlug: matchSlugs,
           active: true,
         }).select("experimentSlug").lean()
-      : actor?.type === "guest"
+      : safeActor?.type === "guest"
         ? LabGuestLike.find({
-            guestKeyHash: actor.guestKeyHash,
+            guestKeyHash: safeActor.guestKeyHash,
             experimentSlug: matchSlugs,
             active: true,
             expiresAt: { $gt: now },
