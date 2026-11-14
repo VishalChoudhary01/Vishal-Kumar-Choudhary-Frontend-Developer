@@ -65,6 +65,10 @@ test("engagement service blocks owner event writes and excludes existing owner l
   assert.match(service, /verifiedLikeFilter = \{ experimentSlug: matchSlugs, active: true \}/);
   assert.match(service, /const ownerExcluded = isExcludedLabsAnalyticsOwner\(session\?\.user\)/);
   assert.match(service, /likeAllowed: !ownerExcluded/);
+  assert.match(service, /existingEvent\.actorUserId === userId/);
+  assert.match(service, /existingEvent\.experimentSlug === slug/);
+  assert.match(service, /existingEvent\.sourceVersionId ===/);
+  assert.match(service, /eventIdConflict: true/);
 });
 
 test("owner Labs reports and verified-like drilldown exclude the owner account ID", async () => {
@@ -76,6 +80,6 @@ test("owner Labs reports and verified-like drilldown exclude the owner account I
 
 test("owner account ID lookup resolves the exact email without trusting request input", async () => {
   const service = await read("../src/app/lib/labs/engagement.js");
-  assert.match(service, /email:\s*\{\s*\$regex:\s*"\^vishal\\\\\.bhumca21@gmail\\\\\.com\$"/);
+  assert.ok(service.includes('$regex: "^vishal\\\\.bhumca21@gmail\\\\.com$"'));
   assert.match(service, /collection\("user"\)\.findOne/);
 });
