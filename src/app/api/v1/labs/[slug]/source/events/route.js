@@ -126,7 +126,6 @@ export async function POST(request, { params }) {
     }
 
     let filePath = null;
-    let primaryFilePath = null;
     if (eventType === "code_copy") {
       if (typeof body?.filePath !== "string" || body.filePath.length > 180) {
         return json({ error: { code: "INVALID_FILE", message: "A valid source file is required." } }, 400);
@@ -140,13 +139,7 @@ export async function POST(request, { params }) {
         return json({ error: { code: "INVALID_FILE", message: "The requested source file is not available." } }, 404);
       }
 
-      filePath = body.filePath;
-      // The first copyable file is the source reader's default selected file
-      // and serves as the main entry file for component-copy analytics.
-      primaryFilePath = snapshot.files.find(
-        (file) => typeof file?.content === "string",
-      )?.path || null;
-    }
+      filePath = body.filePath;    }
 
     if (
       typeof body?.sourceVersion !== "string" ||
@@ -162,7 +155,6 @@ export async function POST(request, { params }) {
       sourceVersion: snapshot.version,
       sourceVersionId: String(source.publishedVersionId || source._id),
       filePath,
-      primaryFilePath,
       eventId,
     });
 
