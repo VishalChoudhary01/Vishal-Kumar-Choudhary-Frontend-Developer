@@ -7,6 +7,7 @@ import LabSourceVersion from "@/app/lib/labs/models/LabSourceVersion";
 import { recordVerifiedSourceEvent } from "@/app/lib/labs/engagement";
 import { getPublishedLabExperimentBySlug } from "@/app/data/labsExperiments";
 import { isPublishedCustomLabSlug } from "@/app/lib/labs/public-experiments";
+import { isExcludedLabsAnalyticsOwner } from "@/app/lib/labs/analytics-owner.mjs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -72,6 +73,12 @@ export async function POST(request, { params }) {
     return json({ error: { code: "EMAIL_VERIFICATION_REQUIRED", message: "Verify your email before using protected source." } }, 403);
   }
 
+  // Owner source opens and copies are intentionally not analytics activity.
+  // Identity is read from the trusted server session, never the request body.
+  if (isExcludedLabsAnalyticsOwner(session.user)) {
+    return json({ data: { recorded: false, excluded: true } });
+  }
+
   let body;
   try {
     body = await request.json();
@@ -119,6 +126,7 @@ export async function POST(request, { params }) {
     }
 
     let filePath = null;
+    let requiredFilePaths = null;
     if (eventType === "code_copy") {
       if (typeof body?.filePath !== "string" || body.filePath.length > 180) {
         return json({ error: { code: "INVALID_FILE", message: "A valid source file is required." } }, 400);
@@ -133,6 +141,15 @@ export async function POST(request, { params }) {
       }
 
       filePath = body.filePath;
+      requiredFilePaths = snapshot.files.map((file) => file?.path);
+      if (
+        requiredFilePaths.length < 1 ||
+        requiredFilePaths.length > 40 ||
+        requiredFilePaths.some((path) => typeof path !== "string" || !path) ||
+        new Set(requiredFilePaths).size !== requiredFilePaths.length
+      ) {
+        return json({ error: { code: "INVALID_SOURCE_MANIFEST", message: "The published source file manifest is invalid." } }, 409);
+      }
     }
 
     if (
@@ -147,7 +164,9 @@ export async function POST(request, { params }) {
       slug,
       userId: session.user.id,
       sourceVersion: snapshot.version,
+      sourceVersionId: String(source.publishedVersionId || source._id),
       filePath,
+      requiredFilePaths,
       eventId,
     });
 
