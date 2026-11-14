@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 const EVENT_TYPES = [
   "source_open",
   "code_copy",
+  "component_copy",
   "like",
   "unlike",
   "guest_like",
@@ -45,6 +46,11 @@ const labAnalyticsEventSchema = new mongoose.Schema(
       type: String,
       default: null,
       maxlength: 80,
+    },
+    sourceVersionId: {
+      type: String,
+      default: null,
+      maxlength: 64,
     },
     filePath: {
       type: String,
