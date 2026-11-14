@@ -374,7 +374,7 @@ export default function LabsEngagementTrendChart({
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6" role="group" aria-label="Select activity metric">
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-7" role="group" aria-label="Select activity metric">
         {LABS_ACTIVITY_METRICS.map((item) => {
           const active = item.key === metric.key;
           return (
