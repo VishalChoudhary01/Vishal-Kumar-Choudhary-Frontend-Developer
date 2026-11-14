@@ -128,7 +128,7 @@ export default async function LabsExperimentAnalyticsPage({ params, searchParams
             <section aria-label="Experiment engagement overview" className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
               <Metric icon={Eye} label="Source opens" value={analytics.experiment.sourceOpens} detail="Successful verified source loads in this period" />
               <Metric icon={Users} label="Verified accounts" value={analytics.experiment.uniqueVerifiedAccounts} detail="Distinct accounts for this experiment in this period" />
-              <Metric icon={Copy} label="File copies" value={analytics.experiment.codeCopies} detail="Individual files copied after clipboard success" />
+              <Metric icon={Copy} label="File copies" value={analytics.experiment.codeCopies} detail="Every successful copy click, including repeat copies" />
               <Metric icon={Copy} label="Component copies" value={analytics.experiment.componentCopies} detail="Any source file copied; one component per account and published version" />
               <Metric icon={Heart} label="Active likes" value={analytics.experiment.totalActiveLikes} detail={number(analytics.experiment.activeAnonymousLikes) + " anonymous · " + number(analytics.experiment.activeVerifiedLikes) + " verified · current state"} />
             </section>
