@@ -131,21 +131,13 @@ async function ensureEngagementIndexes() {
 let excludedOwnerUserIdPromise = null;
 
 export async function getLabsAnalyticsExcludedOwnerUserId() {
-  const configuredId = process.env.LABS_OWNER_USER_ID?.trim();
-  if (configuredId) return configuredId;
-
   if (!excludedOwnerUserIdPromise) {
     excludedOwnerUserIdPromise = (async () => {
       await connectToDatabase();
       const owner = await mongoose.connection.db.collection("user").findOne(
         {
           email: {
-            $regex: "^" + LABS_ANALYTICS_EXCLUDED_OWNER_EMAIL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\      const owner = await mongoose.connection.db.collection("user").findOne(
-        {
-          email: LABS_ANALYTICS_EXCLUDED_OWNER_EMAIL,
-        },
-        { projection: { id: 1 } },
-      );") + "$",
+            $regex: "^vishal\\.bhumca21@gmail\\.com$",
             $options: "i",
           },
         },
@@ -167,7 +159,6 @@ export async function getLabsAnalyticsExcludedOwnerUserId() {
 
   return excludedOwnerUserIdPromise;
 }
-
 async function recordComponentBundleProgress({
   userId,
   slug,
