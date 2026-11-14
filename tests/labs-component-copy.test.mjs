@@ -111,7 +111,7 @@ test("each click creates a fresh event ID even when the same file is copied repe
   assert.match(copyHandler, /eventType: "code_copy"/);
   assert.match(copyHandler, /crypto\?\.randomUUID\?\.\(\)/);
   assert.match(copyHandler, /await fetch\(/);
-  assert.match(copyHandler, /eventResponse\.ok/);
+  assert.match(copyHandler, /response\.ok/);
 });
 
 test("repeated manual copy actions have a practical anti-abuse ceiling", () => {
