@@ -20,6 +20,9 @@ export function createComponentCopyEventId({ userId, experimentSlug, sourceVersi
     throw new TypeError("A valid actor, experiment, and published source version are required.");
   }
 
-  const identity = [userId.trim(), experimentSlug, sourceVersionId.trim()].join("\0");
+  // Preserve the previous production key format so accounts whose component
+  // was already counted by the earlier all-files completion rule are not
+  // counted a second time after this behavior correction.
+  const identity = userId.trim() + "\n" + experimentSlug + "\n" + sourceVersionId.trim();
   return "component_" + createHash("sha256").update(identity).digest("hex");
 }
