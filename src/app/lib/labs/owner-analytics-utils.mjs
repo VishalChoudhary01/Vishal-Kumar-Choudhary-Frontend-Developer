@@ -280,7 +280,7 @@ export function summarizeAnalyticsRows(rows) {
 
 const SOURCE_EVENT_RATE_LIMITS = Object.freeze({
   source_open: 30,
-  code_copy: 20,
+  code_copy: 60,
 });
 
 export function getSourceEventRateLimit(eventType) {
