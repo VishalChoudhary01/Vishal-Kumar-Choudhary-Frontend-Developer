@@ -139,7 +139,8 @@ export async function POST(request, { params }) {
         return json({ error: { code: "INVALID_FILE", message: "The requested source file is not available." } }, 404);
       }
 
-      filePath = body.filePath;    }
+      filePath = body.filePath;
+    }
 
     if (
       typeof body?.sourceVersion !== "string" ||
