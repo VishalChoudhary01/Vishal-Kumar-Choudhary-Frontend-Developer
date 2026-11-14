@@ -3,10 +3,11 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { createComponentCopyEventId } from "../src/app/lib/labs/component-copy-utils.mjs";
+import { getSourceEventRateLimit } from "../src/app/lib/labs/owner-analytics-utils.mjs";
 
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
-test("copying the main entry file records one component copy even when other bundle files remain", () => {
+test("any copied source file can trigger one component copy for a visitor and published version", () => {
   const eventId = createComponentCopyEventId({
     userId: "verified-user-1",
     experimentSlug: "example-component",
@@ -16,19 +17,19 @@ test("copying the main entry file records one component copy even when other bun
   assert.match(eventId, /^component_[a-f0-9]{64}$/);
 });
 
-test("copying remaining files does not create additional component-copy identities", () => {
-  const afterMainFile = createComponentCopyEventId({
+test("component-copy identity stays the same across files copied from the same component version", () => {
+  const indexHtmlCopy = createComponentCopyEventId({
     userId: "verified-user-1",
     experimentSlug: "example-component",
     sourceVersionId: "published-version-1",
   });
-  const afterSecondFile = createComponentCopyEventId({
+  const appJsxCopy = createComponentCopyEventId({
     userId: "verified-user-1",
     experimentSlug: "example-component",
     sourceVersionId: "published-version-1",
   });
 
-  assert.equal(afterMainFile, afterSecondFile);
+  assert.equal(indexHtmlCopy, appJsxCopy);
 });
 
 test("different users, experiments, or published versions count as separate component copies", () => {
@@ -73,37 +74,53 @@ test("component-copy identity rejects invalid server-resolved identity values", 
   }), { name: "TypeError" });
 });
 
-test("the service only counts a component when the primary file path is copied", async () => {
+test("every accepted code-copy action records a file event and attempts the one-per-version component event", async () => {
   const service = await read("../src/app/lib/labs/engagement.js");
   const recorder = service.slice(
     service.indexOf("export async function recordVerifiedSourceEvent"),
     service.indexOf("export async function getLabEngagementBatch"),
   );
 
-  assert.match(recorder, /filePath === primaryFilePath/);
-  assert.match(recorder, /typeof primaryFilePath === "string"/);
-  assert.match(recorder, /const component = eventType === "code_copy"/);
-  assert.match(recorder, /recordComponentCopyEvent/);
+  assert.match(recorder, /eventType: \"code_copy\"|eventType,/);
+  assert.match(recorder, /eventId: safeEventId/);
+  assert.match(recorder, /eventType === "code_copy"\s*\? await recordComponentCopyEvent/);
+  assert.doesNotMatch(recorder, /primaryFilePath/);
 });
 
-test("source event route determines the primary file from the trusted published snapshot", async () => {
-  const route = await read("../src/app/api/v1/labs/[slug]/source/events/route.js");
-  assert.match(route, /primaryFilePath = snapshot\.files\.find/);
-  assert.match(route, /filePath,\s*primaryFilePath,\s*eventId/);
-  assert.doesNotMatch(route, /body\.primaryFilePath/);
-});
-
-test("component copy identity is idempotent and independent of per-file event IDs", async () => {
+test("like and source event index setup only touches imported engagement models", async () => {
   const service = await read("../src/app/lib/labs/engagement.js");
-  assert.match(service, /const eventId = createComponentCopyEventId/);
-  assert.match(service, /eventType: "component_copy"/);
-  assert.match(service, /\$setOnInsert/);
-  assert.match(service, /eventId: safeEventId,[\s\S]*?eventType,[\s\S]*?filePath: filePath \|\| null/);
+  const initializer = service.slice(
+    service.indexOf("async function ensureEngagementIndexes"),
+    service.indexOf("let excludedOwnerUserIdPromise"),
+  );
+
+  assert.match(initializer, /LabLike\.createIndexes\(\)/);
+  assert.match(initializer, /LabGuestLike\.createIndexes\(\)/);
+  assert.match(initializer, /LabAnalyticsEvent\.createIndexes\(\)/);
+  assert.doesNotMatch(initializer, /LabComponentCopyProgress/);
 });
 
-test("the primary file is the first copyable file in the exact published source version", async () => {
+test("each click creates a fresh event ID even when the same file is copied repeatedly", async () => {
+  const sourceAccess = await read("../src/app/components/labs/detail/LabSourceAccess.js");
+  const copyHandler = sourceAccess.slice(
+    sourceAccess.indexOf("const copyCurrentFile"),
+    sourceAccess.indexOf("\n  return (", sourceAccess.indexOf("const copyCurrentFile")),
+  );
+
+  assert.match(copyHandler, /navigator\.clipboard\.writeText\(file\.content\)/);
+  assert.match(copyHandler, /eventType: "code_copy"/);
+  assert.match(copyHandler, /crypto\?\.randomUUID\?\.\(\)/);
+  assert.match(copyHandler, /await fetch\(/);
+  assert.match(copyHandler, /eventResponse\.ok/);
+});
+
+test("repeated manual copy actions have a practical anti-abuse ceiling", () => {
+  assert.equal(getSourceEventRateLimit("code_copy"), 60);
+});
+
+test("the event API validates each selected file against the exact published snapshot", async () => {
   const route = await read("../src/app/api/v1/labs/[slug]/source/events/route.js");
-  assert.match(route, /source\.publishedVersionId/);
-  assert.match(route, /LabSourceVersion\.findOne/);
-  assert.match(route, /snapshot\.files\.find\(\s*\(file\) => typeof file\?\.content === "string"/);
+  assert.match(route, /snapshot\.files\.some/);
+  assert.match(route, /filePath,\s*eventId/);
+  assert.doesNotMatch(route, /primaryFilePath/);
 });
