@@ -62,6 +62,8 @@ function getMetricColor(theme, metricKey) {
       return theme.info;
     case "codeCopies":
       return theme.brand;
+    case "componentCopies":
+      return theme.success;
     case "verifiedLikes":
       return theme.success;
     case "verifiedUnlikes":
