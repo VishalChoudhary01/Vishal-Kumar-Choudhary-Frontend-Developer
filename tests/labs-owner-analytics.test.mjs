@@ -296,6 +296,11 @@ test("event attribution counts only supported actor/event combinations", () => {
     },
   ];
 
+  eventGroups.push({
+    _id: { slug: "alpha", eventType: "component_copy", actorCategory: "verified_user" },
+    count: 2,
+  });
+
   const result = applyAnalyticsEventGroups(baseRows, eventGroups);
   const alpha = result.find((row) => row.slug === "alpha");
   const beta = result.find((row) => row.slug === "beta");
