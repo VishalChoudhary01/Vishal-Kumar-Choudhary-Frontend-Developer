@@ -392,7 +392,7 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
           icon={CopyCheckIcon}
           label="Component copies"
           value={totals.componentCopies}
-          detail="Complete published source bundles copied once per account and version"
+          detail="Main entry file copied once per account and published version"
         />
         <MetricCard
           icon={HeartPulseIcon}
@@ -428,7 +428,7 @@ export default function LabsLiveAnalyticsDashboard({ initialAnalytics, days }) {
           />
           <RankingCard
             title="Most component copies"
-            description="Complete source bundles copied by a verified account."
+            description="Main entry files copied by a verified account."
             items={analytics.rankings?.mostComponentCopies || []}
           />
           <RankingCard
