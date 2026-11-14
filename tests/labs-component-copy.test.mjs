@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFile } from "node:fs/promises";
 
 import {
   MAX_COMPONENT_BUNDLE_FILES,
@@ -64,4 +65,27 @@ test("component bundle manifest hash is stable and changes when its contents cha
   assert.match(first, /^[a-f0-9]{64}$/);
   assert.equal(first, reordered);
   assert.notEqual(first, changed);
+});
+
+test("records one component copy per account, experiment and published version", async () => {
+  const [service, model] = await Promise.all([
+    readFile(new URL("../src/app/lib/labs/engagement.js", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/lib/labs/models/LabComponentCopyProgress.js", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(service, /const completionKey = createHash\("sha256"\)/);
+  assert.match(service, /const eventId = "component_" \+ completionKey/);
+  assert.match(service, /LabAnalyticsEvent\.updateOne\(\s*\{ eventId \}/);
+  assert.match(model, /lab_component_copy_actor_version_unique/);
+  assert.match(model, /\{ userId: 1, experimentSlug: 1, sourceVersionId: 1 \}/);
+});
+
+test("component bundle progress reuses valid file copies from the same published version", async () => {
+  const service = await readFile(
+    new URL("../src/app/lib/labs/engagement.js", import.meta.url),
+    "utf8",
+  );
+  assert.match(service, /LabAnalyticsEvent\.distinct\("filePath"/);
+  assert.match(service, /eventType: "code_copy"/);
+  assert.match(service, /sourceVersion,/);
 });
