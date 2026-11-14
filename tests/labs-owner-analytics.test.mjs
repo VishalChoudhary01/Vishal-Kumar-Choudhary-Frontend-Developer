@@ -409,7 +409,8 @@ test("collection totals equal the sum of per-experiment aggregate values", () =>
 
 test("source event quotas are scoped by event type", () => {
   assert.equal(getSourceEventRateLimit("source_open"), 30);
-  assert.equal(getSourceEventRateLimit("code_copy"), 20);
+  // Allow normal repeated copy interactions without removing the per-minute ceiling.
+  assert.equal(getSourceEventRateLimit("code_copy"), 60);
   assert.equal(getSourceEventRateLimit("like"), null);
   assert.equal(getSourceEventRateLimit("unknown"), null);
   assert.equal(getSourceEventRateLimit("toString"), null);
