@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 export const MAX_COMPONENT_BUNDLE_FILES = 40;
 
 export function normalizeComponentBundleFilePaths(filePaths) {
@@ -19,6 +21,9 @@ export function normalizeComponentBundleFilePaths(filePaths) {
       path.includes("\\0")
     ) {
       throw new TypeError("The component bundle contains an invalid file path.");
+    }
+    if (unique.has(path)) {
+      throw new TypeError("The component bundle contains duplicate file paths.");
     }
     unique.add(path);
   }
@@ -42,5 +47,5 @@ export function hasCompletedComponentBundle(requiredFilePaths, copiedFilePaths) 
 export function hashComponentBundleManifest(filePaths) {
   const paths = normalizeComponentBundleFilePaths(filePaths);
   // Stable manifest identity; this is an integrity key, not an authorization token.
-  return paths.join("\n");
+  return createHash("sha256").update(paths.join("\n")).digest("hex");
 }
