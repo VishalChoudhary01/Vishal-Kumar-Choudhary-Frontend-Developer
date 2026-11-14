@@ -9,7 +9,7 @@ import LabGuestLike from "./models/LabGuestLike";
 import LabAnalyticsEvent from "./models/LabAnalyticsEvent";
 import LabComponentCopyProgress from "./models/LabComponentCopyProgress";
 import { normalizeComponentBundleFilePaths, hasCompletedComponentBundle } from "./component-copy-utils.mjs";
-import { LABS_ANALYTICS_EXCLUDED_OWNER_EMAIL } from "./analytics-owner.mjs";
+import { LABS_ANALYTICS_EXCLUDED_OWNER_EMAIL, isExcludedLabsAnalyticsOwner } from "./analytics-owner.mjs";
 import {
   evaluateFixedWindowRateLimit,
   getSourceEventRateLimit,
@@ -790,7 +790,8 @@ export async function getLabEngagementSnapshot({
   session = null,
   guestCookieValue = "",
 }) {
-  const isVerified = Boolean(session?.user?.id && session.user.emailVerified === true);
+  const ownerExcluded = isExcludedLabsAnalyticsOwner(session?.user);
+  const isVerified = Boolean(session?.user?.id && session.user.emailVerified === true && !ownerExcluded);
   const isUnverified = Boolean(session?.user?.id && session.user.emailVerified !== true);
   let actor = isVerified ? { type: "verified", userId: session.user.id } : null;
 
@@ -828,8 +829,8 @@ export async function getLabEngagementSnapshot({
       // deliberately kept inside the owner-only analytics repository.
       totalLikes: engagementBySlug[slug]?.totalLikes || 0,
       liked: engagementBySlug[slug]?.liked === true,
-      likeAllowed: !session?.user?.id || isVerified,
-      actorType: isVerified ? "verified_user" : isUnverified ? "unverified" : "guest",
+      likeAllowed: !ownerExcluded && (!session?.user?.id || isVerified),
+      actorType: ownerExcluded ? "owner_excluded" : isVerified ? "verified_user" : isUnverified ? "unverified" : "guest",
       // A verified page can clear the consumed browser cookie through the
       // engagement GET route after this server snapshot has migrated state.
       guestCookieCleanupRequired: isVerified && Boolean(guestCookieValue),
