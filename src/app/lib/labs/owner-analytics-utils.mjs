@@ -1,5 +1,3 @@
-import { createHash } from "node:crypto";
-
 export function createRankings(rows, limit = 5) {
   const safeLimit = Number.isInteger(limit) ? Math.max(0, limit) : 5;
 
