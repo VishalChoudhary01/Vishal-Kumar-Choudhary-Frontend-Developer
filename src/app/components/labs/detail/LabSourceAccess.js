@@ -71,6 +71,7 @@ export default function LabSourceAccess({
     initialAuthState === "error" ? "We could not load the published source. Please try again." : "",
   );
   const [copied, setCopied] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState("");
   const copyIconRef = useRef(null);
 
   const startCopyIconAnimation = () => copyIconRef.current?.startAnimation?.();
@@ -390,7 +391,11 @@ export default function LabSourceAccess({
 
     try {
       await navigator.clipboard.writeText(file.content);
-      fetch("/api/v1/labs/" + encodeURIComponent(slug) + "/source/events", {
+      setCopyFeedback("");
+
+      // One request per successful copy action. A new event ID is generated
+      // for every click, including repeated copies of the same file.
+      const eventResponse = await fetch("/api/v1/labs/" + encodeURIComponent(slug) + "/source/events", {
         method: "POST",
         cache: "no-store",
         credentials: "same-origin",
@@ -404,7 +409,19 @@ export default function LabSourceAccess({
           filePath: file.path,
           eventId: globalThis.crypto?.randomUUID?.() || "copy_" + Date.now() + "_" + Math.random().toString(36).slice(2),
         }),
-      }).catch(() => {});
+      });
+      const eventPayload = await eventResponse.json().catch(() => ({}));
+      if (
+        !eventResponse.ok ||
+        (!eventPayload?.data?.recorded &&
+          !eventPayload?.data?.duplicate &&
+          !eventPayload?.data?.excluded)
+      ) {
+        setCopyFeedback(
+          eventPayload?.error?.message ||
+          "File copied, but its analytics event could not be recorded. Please try again.",
+        );
+      }
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1600);
     } catch {
@@ -452,6 +469,11 @@ export default function LabSourceAccess({
                 {copied ? <Check size={14} aria-hidden="true" /> : <AnimatedCopy ref={copyIconRef} size={14} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />}
                 {copied ? "Copied" : "Copy file"}
               </button>
+              {copyFeedback ? (
+                <span role="status" className="max-w-64 text-xs text-warning">
+                  {copyFeedback}
+                </span>
+              ) : null}
             </div>
             {source.files.length > 1 ? (
               <div className="mt-5 flex flex-wrap gap-2" aria-label="Source files">
