@@ -57,6 +57,18 @@ test("like API prevents owner likes on both reads and writes", async () => {
   assert.match(route, /actorType: "owner_excluded"/);
 });
 
+test("engagement index initialization cannot fail from a removed model reference", async () => {
+  const service = await read("../src/app/lib/labs/engagement.js");
+  const initializer = service.slice(
+    service.indexOf("async function ensureEngagementIndexes"),
+    service.indexOf("let excludedOwnerUserIdPromise"),
+  );
+  assert.match(initializer, /LabLike\.createIndexes\(\)/);
+  assert.match(initializer, /LabGuestLike\.createIndexes\(\)/);
+  assert.match(initializer, /LabAnalyticsEvent\.createIndexes\(\)/);
+  assert.doesNotMatch(initializer, /LabComponentCopyProgress/);
+});
+
 test("engagement service blocks owner event writes and excludes existing owner likes", async () => {
   const service = await read("../src/app/lib/labs/engagement.js");
   assert.match(service, /const excludedOwnerUserId = await getLabsAnalyticsExcludedOwnerUserId\(\)/);
