@@ -7,8 +7,7 @@ import { connectToDatabase } from "@/app/lib/db/mongoose";
 import LabLike from "./models/LabLike";
 import LabGuestLike from "./models/LabGuestLike";
 import LabAnalyticsEvent from "./models/LabAnalyticsEvent";
-import LabComponentCopyProgress from "./models/LabComponentCopyProgress";
-import { normalizeComponentBundleFilePaths, hasCompletedComponentBundle } from "./component-copy-utils.mjs";
+import { createComponentCopyEventId } from "./component-copy-utils.mjs";
 import { isExcludedLabsAnalyticsOwner } from "./analytics-owner.mjs";
 import {
   evaluateFixedWindowRateLimit,
@@ -118,7 +117,6 @@ async function ensureEngagementIndexes() {
       LabLike.createIndexes(),
       LabGuestLike.createIndexes(),
       LabAnalyticsEvent.createIndexes(),
-      LabComponentCopyProgress.createIndexes(),
     ]).catch((error) => {
       engagementIndexesPromise = null;
       throw error;
@@ -159,88 +157,23 @@ export async function getLabsAnalyticsExcludedOwnerUserId() {
 
   return excludedOwnerUserIdPromise;
 }
-async function recordComponentBundleProgress({
+async function recordComponentCopyEvent({
   userId,
   slug,
   sourceVersion,
   sourceVersionId,
-  filePath,
-  requiredFilePaths,
 }) {
-  const requiredPaths = normalizeComponentBundleFilePaths(requiredFilePaths);
-  if (!requiredPaths.includes(filePath)) {
-    throw new TypeError("Copied file is not part of the published component bundle.");
-  }
-
-  const manifestHash = createHash("sha256")
-    .update(requiredPaths.join("\n"))
-    .digest("hex");
-
-  // Carry valid pre-existing per-file copy events forward, so deploying this
-  // feature does not force a visitor to recopy files already copied in this
-  // same published version.
-  const previousPaths = await LabAnalyticsEvent.distinct("filePath", {
-    actorUserId: userId,
+  const stableSourceVersionId = String(sourceVersionId || slug + ":" + sourceVersion);
+  const eventId = createComponentCopyEventId({
+    userId,
     experimentSlug: slug,
-    eventType: "code_copy",
-    sourceVersion,
-    filePath: { $in: requiredPaths },
-    $or: [
-      { sourceVersionId },
-      { sourceVersionId: null },
-      { sourceVersionId: { $exists: false } },
-    ],
+    sourceVersionId: stableSourceVersionId,
   });
+  const occurredAt = new Date();
 
-  const copiedPaths = [...new Set([
-    ...(Array.isArray(previousPaths) ? previousPaths : []),
-    filePath,
-  ])].filter((path) => requiredPaths.includes(path));
-
-  const progress = await LabComponentCopyProgress.findOneAndUpdate(
-    { userId, experimentSlug: slug, sourceVersionId },
-    {
-      $setOnInsert: {
-        userId,
-        experimentSlug: slug,
-        sourceVersionId,
-        sourceVersion,
-        manifestHash,
-        requiredFilePaths: requiredPaths,
-      },
-      $addToSet: { copiedFilePaths: { $each: copiedPaths } },
-    },
-    {
-      upsert: true,
-      new: true,
-      runValidators: true,
-      setDefaultsOnInsert: true,
-    },
-  );
-
-  if (!progress || progress.manifestHash !== manifestHash) {
-    const error = new Error("The published component manifest changed. Reload the source before copying.");
-    error.code = "COMPONENT_MANIFEST_CHANGED";
-    throw error;
-  }
-
-  if (!hasCompletedComponentBundle(requiredPaths, progress.copiedFilePaths)) {
-    return { completed: false, copiedFiles: progress.copiedFilePaths.length, requiredFiles: requiredPaths.length };
-  }
-
-  const completedAt = progress.completedAt || new Date();
-  const completionKey = createHash("sha256")
-    .update(userId)
-    .update("\n")
-    .update(slug)
-    .update("\n")
-    .update(sourceVersionId)
-    .digest("hex");
-  const eventId = "component_" + completionKey;
-
-  // A deterministic event ID plus the unique eventId index guarantees one
-  // component completion per account, experiment, and published version,
-  // including concurrent requests and retries.
+  // The deterministic ID makes this one component copy per account,
+  // experiment, and published version, even if the user copies many files,
+  // retries the request, or sends concurrent copy requests.
   await LabAnalyticsEvent.updateOne(
     { eventId },
     {
@@ -251,22 +184,15 @@ async function recordComponentBundleProgress({
         actorCategory: "verified_user",
         actorUserId: userId,
         sourceVersion,
-        sourceVersionId,
+        sourceVersionId: stableSourceVersionId,
         filePath: null,
-        occurredAt: completedAt,
+        occurredAt,
       },
     },
     { upsert: true, runValidators: true },
   );
 
-  if (!progress.completedAt) {
-    await LabComponentCopyProgress.updateOne(
-      { _id: progress._id, completedAt: null },
-      { $set: { completedAt } },
-    );
-  }
-
-  return { completed: true, copiedFiles: requiredPaths.length, requiredFiles: requiredPaths.length };
+  return { recorded: true, eventId };
 }
 
 /**
@@ -617,7 +543,6 @@ export async function recordVerifiedSourceEvent({
   sourceVersion,
   sourceVersionId = null,
   filePath = null,
-  requiredFilePaths = null,
   eventId,
 }) {
   if (!["source_open", "code_copy"].includes(eventType)) {
@@ -654,17 +579,8 @@ export async function recordVerifiedSourceEvent({
       existingEvent.sourceVersionId === (sourceVersionId ? String(sourceVersionId) : null) &&
       existingEvent.filePath === (filePath || null);
 
-    const component = sameActorEvent &&
-      eventType === "code_copy" &&
-      Array.isArray(requiredFilePaths)
-      ? await recordComponentBundleProgress({
-          userId,
-          slug,
-          sourceVersion,
-          sourceVersionId: String(sourceVersionId || slug + ":" + sourceVersion),
-          filePath,
-          requiredFilePaths,
-        })
+    const component = sameActorEvent && eventType === "code_copy"
+      ? await recordComponentCopyEvent({ userId, slug, sourceVersion, sourceVersionId })
       : null;
 
     return {
@@ -695,15 +611,8 @@ export async function recordVerifiedSourceEvent({
       filePath: filePath || null,
       occurredAt: new Date(),
     });
-    const component = eventType === "code_copy" && Array.isArray(requiredFilePaths)
-      ? await recordComponentBundleProgress({
-          userId,
-          slug,
-          sourceVersion,
-          sourceVersionId: String(sourceVersionId || slug + ":" + sourceVersion),
-          filePath,
-          requiredFilePaths,
-        })
+    const component = eventType === "code_copy"
+      ? await recordComponentCopyEvent({ userId, slug, sourceVersion, sourceVersionId })
       : null;
 
     return {

@@ -111,3 +111,22 @@ test("owner dropdown shares the animated responsive workspace menu and active ic
   assert.ok(dropdown.includes("prefersReducedMotion"));
   assert.ok(dropdown.includes("overflow-y-auto"));
 });
+
+test("every workspace destination has an animated icon that keeps replaying while active", async () => {
+  const [destinations, dropdown] = await Promise.all([
+    read("../src/app/components/labs/LabsWorkspaceDestinations.js"),
+    read("../src/app/components/labs/LabsWorkspaceDropdown.js"),
+  ]);
+
+  assert.equal((destinations.match(/icon:/g) || []).length, 4);
+  assert.match(destinations, /ChartSplineIcon/);
+  assert.match(destinations, /ActivityIcon/);
+  assert.match(destinations, /FileCodeIcon/);
+  assert.match(destinations, /DatabaseArrowDownIcon/);
+
+  assert.match(dropdown, /window\.setInterval\([\s\S]*?1400/);
+  assert.match(dropdown, /window\.clearInterval\(replayId\)/);
+  assert.match(dropdown, /if \(!isActive\) iconRef\.current\?\.stopAnimation\?\.\(\)/);
+  assert.match(dropdown, /isAnimated=\{isAnimated\}/);
+  assert.match(dropdown, /prefersReducedMotion/);
+});

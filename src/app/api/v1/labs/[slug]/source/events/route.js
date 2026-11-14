@@ -126,7 +126,6 @@ export async function POST(request, { params }) {
     }
 
     let filePath = null;
-    let requiredFilePaths = null;
     if (eventType === "code_copy") {
       if (typeof body?.filePath !== "string" || body.filePath.length > 180) {
         return json({ error: { code: "INVALID_FILE", message: "A valid source file is required." } }, 400);
@@ -141,19 +140,6 @@ export async function POST(request, { params }) {
       }
 
       filePath = body.filePath;
-      const manifestPaths = snapshot.files
-        .filter((file) => typeof file?.content === "string")
-        .map((file) => file.path);
-      // Bundle counting is an optional metric. A larger or malformed legacy
-      // manifest must never disable the existing individual file-copy event.
-      if (
-        manifestPaths.length >= 1 &&
-        manifestPaths.length <= 40 &&
-        manifestPaths.every((path) => typeof path === "string" && path.length > 0 && path.length <= 180) &&
-        new Set(manifestPaths).size === manifestPaths.length
-      ) {
-        requiredFilePaths = manifestPaths;
-      }
     }
 
     if (
@@ -170,7 +156,6 @@ export async function POST(request, { params }) {
       sourceVersion: snapshot.version,
       sourceVersionId: String(source.publishedVersionId || source._id),
       filePath,
-      requiredFilePaths,
       eventId,
     });
 

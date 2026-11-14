@@ -1,91 +1,126 @@
 import assert from "node:assert/strict";
-import test from "node:test";
 import { readFile } from "node:fs/promises";
+import test from "node:test";
 
-import {
-  MAX_COMPONENT_BUNDLE_FILES,
-  normalizeComponentBundleFilePaths,
-  hasCompletedComponentBundle,
-  hashComponentBundleManifest,
-} from "../src/app/lib/labs/component-copy-utils.mjs";
+import { createComponentCopyEventId } from "../src/app/lib/labs/component-copy-utils.mjs";
+import { getSourceEventRateLimit } from "../src/app/lib/labs/owner-analytics-utils.mjs";
 
-test("component bundle paths are validated, unique and deterministically ordered", () => {
-  const paths = normalizeComponentBundleFilePaths([
-    "src/App.jsx",
-    "package.json",
-    "src/styles.css",
-  ]);
+const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
-  assert.deepEqual(paths, ["package.json", "src/App.jsx", "src/styles.css"]);
-  assert.throws(
-    () => normalizeComponentBundleFilePaths(["src/App.jsx", "src/App.jsx"]),
-    { name: "TypeError" },
-  );
-  assert.throws(
-    () => normalizeComponentBundleFilePaths([""]),
-    { name: "TypeError" },
-  );
-  assert.throws(
-    () => normalizeComponentBundleFilePaths([" src/App.jsx"]),
-    { name: "TypeError" },
-  );
-  assert.throws(
-    () => normalizeComponentBundleFilePaths(["x".repeat(181)]),
-    { name: "TypeError" },
-  );
+test("any copied source file can trigger one component copy for a visitor and published version", () => {
+  const eventId = createComponentCopyEventId({
+    userId: "verified-user-1",
+    experimentSlug: "example-component",
+    sourceVersionId: "published-version-1",
+  });
+
+  assert.match(eventId, /^component_[a-f0-9]{64}$/);
 });
 
-test("component bundle size is bounded without changing the individual file-copy flow", () => {
-  const allowed = Array.from({ length: MAX_COMPONENT_BUNDLE_FILES }, (_, index) => `src/file-${index}.js`);
-  assert.equal(normalizeComponentBundleFilePaths(allowed).length, 40);
-  assert.throws(
-    () => normalizeComponentBundleFilePaths([...allowed, "src/file-40.js"]),
-    { name: "TypeError" },
+test("component-copy identity stays the same across files copied from the same component version", () => {
+  const indexHtmlCopy = createComponentCopyEventId({
+    userId: "verified-user-1",
+    experimentSlug: "example-component",
+    sourceVersionId: "published-version-1",
+  });
+  const appJsxCopy = createComponentCopyEventId({
+    userId: "verified-user-1",
+    experimentSlug: "example-component",
+    sourceVersionId: "published-version-1",
+  });
+
+  assert.equal(indexHtmlCopy, appJsxCopy);
+});
+
+test("different users, experiments, or published versions count as separate component copies", () => {
+  const base = createComponentCopyEventId({
+    userId: "verified-user-1",
+    experimentSlug: "example-component",
+    sourceVersionId: "published-version-1",
+  });
+
+  assert.notEqual(base, createComponentCopyEventId({
+    userId: "verified-user-2",
+    experimentSlug: "example-component",
+    sourceVersionId: "published-version-1",
+  }));
+  assert.notEqual(base, createComponentCopyEventId({
+    userId: "verified-user-1",
+    experimentSlug: "another-component",
+    sourceVersionId: "published-version-1",
+  }));
+  assert.notEqual(base, createComponentCopyEventId({
+    userId: "verified-user-1",
+    experimentSlug: "example-component",
+    sourceVersionId: "published-version-2",
+  }));
+});
+
+test("component-copy identity rejects invalid server-resolved identity values", () => {
+  assert.throws(() => createComponentCopyEventId({
+    userId: "",
+    experimentSlug: "example-component",
+    sourceVersionId: "version-1",
+  }), { name: "TypeError" });
+  assert.throws(() => createComponentCopyEventId({
+    userId: "user-1",
+    experimentSlug: "../bad",
+    sourceVersionId: "version-1",
+  }), { name: "TypeError" });
+  assert.throws(() => createComponentCopyEventId({
+    userId: "user-1",
+    experimentSlug: "example-component",
+    sourceVersionId: "",
+  }), { name: "TypeError" });
+});
+
+test("every accepted code-copy action records a file event and attempts the one-per-version component event", async () => {
+  const service = await read("../src/app/lib/labs/engagement.js");
+  const recorder = service.slice(
+    service.indexOf("export async function recordVerifiedSourceEvent"),
+    service.indexOf("export async function getLabEngagementBatch"),
   );
+
+  assert.match(recorder, /eventType: \"code_copy\"|eventType,/);
+  assert.match(recorder, /eventId: safeEventId/);
+  assert.match(recorder, /eventType === "code_copy"\s*\? await recordComponentCopyEvent/);
+  assert.doesNotMatch(recorder, /primaryFilePath/);
 });
 
-test("component copy completes only after every published file has been copied", () => {
-  const required = ["src/App.jsx", "src/styles.css", "package.json"];
-
-  assert.equal(hasCompletedComponentBundle(required, ["src/App.jsx"]), false);
-  assert.equal(hasCompletedComponentBundle(required, ["src/App.jsx", "package.json"]), false);
-  assert.equal(
-    hasCompletedComponentBundle(required, ["src/App.jsx", "src/styles.css", "package.json"]),
-    true,
+test("like and source event index setup only touches imported engagement models", async () => {
+  const service = await read("../src/app/lib/labs/engagement.js");
+  const initializer = service.slice(
+    service.indexOf("async function ensureEngagementIndexes"),
+    service.indexOf("let excludedOwnerUserIdPromise"),
   );
-  assert.equal(hasCompletedComponentBundle([], required), false);
-  assert.equal(hasCompletedComponentBundle(required, null), false);
+
+  assert.match(initializer, /LabLike\.createIndexes\(\)/);
+  assert.match(initializer, /LabGuestLike\.createIndexes\(\)/);
+  assert.match(initializer, /LabAnalyticsEvent\.createIndexes\(\)/);
+  assert.doesNotMatch(initializer, /LabComponentCopyProgress/);
 });
 
-test("component bundle manifest hash is stable and changes when its contents change", () => {
-  const first = hashComponentBundleManifest(["src/App.jsx", "package.json"]);
-  const reordered = hashComponentBundleManifest(["package.json", "src/App.jsx"]);
-  const changed = hashComponentBundleManifest(["src/App.jsx", "package.json", "src/styles.css"]);
-
-  assert.match(first, /^[a-f0-9]{64}$/);
-  assert.equal(first, reordered);
-  assert.notEqual(first, changed);
-});
-
-test("records one component copy per account, experiment and published version", async () => {
-  const [service, model] = await Promise.all([
-    readFile(new URL("../src/app/lib/labs/engagement.js", import.meta.url), "utf8"),
-    readFile(new URL("../src/app/lib/labs/models/LabComponentCopyProgress.js", import.meta.url), "utf8"),
-  ]);
-
-  assert.match(service, /const completionKey = createHash\("sha256"\)/);
-  assert.match(service, /const eventId = "component_" \+ completionKey/);
-  assert.match(service, /LabAnalyticsEvent\.updateOne\(\s*\{ eventId \}/);
-  assert.match(model, /lab_component_copy_actor_version_unique/);
-  assert.match(model, /\{ userId: 1, experimentSlug: 1, sourceVersionId: 1 \}/);
-});
-
-test("component bundle progress reuses valid file copies from the same published version", async () => {
-  const service = await readFile(
-    new URL("../src/app/lib/labs/engagement.js", import.meta.url),
-    "utf8",
+test("each click creates a fresh event ID even when the same file is copied repeatedly", async () => {
+  const sourceAccess = await read("../src/app/components/labs/detail/LabSourceAccess.js");
+  const copyHandler = sourceAccess.slice(
+    sourceAccess.indexOf("const copyCurrentFile"),
+    sourceAccess.indexOf("\n  return (", sourceAccess.indexOf("const copyCurrentFile")),
   );
-  assert.match(service, /LabAnalyticsEvent\.distinct\("filePath"/);
-  assert.match(service, /eventType: "code_copy"/);
-  assert.match(service, /sourceVersion,/);
+
+  assert.match(copyHandler, /navigator\.clipboard\.writeText\(file\.content\)/);
+  assert.match(copyHandler, /eventType: "code_copy"/);
+  assert.match(copyHandler, /crypto\?\.randomUUID\?\.\(\)/);
+  assert.match(copyHandler, /await fetch\(/);
+  assert.match(copyHandler, /response\.ok/);
+});
+
+test("repeated manual copy actions have a practical anti-abuse ceiling", () => {
+  assert.equal(getSourceEventRateLimit("code_copy"), 60);
+});
+
+test("the event API validates each selected file against the exact published snapshot", async () => {
+  const route = await read("../src/app/api/v1/labs/[slug]/source/events/route.js");
+  assert.match(route, /snapshot\.files\.some/);
+  assert.match(route, /filePath,\s*eventId/);
+  assert.doesNotMatch(route, /primaryFilePath/);
 });

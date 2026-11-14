@@ -48,13 +48,23 @@ export function LabsWorkspaceMenuItem({
   const iconRef = useRef(null);
 
   useEffect(() => {
-    if (!isAnimated) {
+    if (!isAnimated || !isActive) {
       iconRef.current?.stopAnimation?.();
-      return;
+      return undefined;
     }
 
-    if (isActive) iconRef.current?.startAnimation?.();
-    else iconRef.current?.stopAnimation?.();
+    // Keep the selected workspace icon visibly alive after the initial
+    // entrance animation. The replay interval is longer than each icon's
+    // animation duration, so motion remains calm rather than jittery.
+    iconRef.current?.startAnimation?.();
+    const replayId = window.setInterval(() => {
+      iconRef.current?.startAnimation?.();
+    }, 1400);
+
+    return () => {
+      window.clearInterval(replayId);
+      iconRef.current?.stopAnimation?.();
+    };
   }, [isActive, isAnimated]);
 
   const itemTone = tone === "warning"
@@ -76,9 +86,13 @@ export function LabsWorkspaceMenuItem({
       aria-current={isActive ? "page" : undefined}
       onClick={onClick}
       onMouseEnter={() => iconRef.current?.startAnimation?.()}
-      onMouseLeave={() => iconRef.current?.stopAnimation?.()}
+      onMouseLeave={() => {
+        if (!isActive) iconRef.current?.stopAnimation?.();
+      }}
       onFocus={() => iconRef.current?.startAnimation?.()}
-      onBlur={() => iconRef.current?.stopAnimation?.()}
+      onBlur={() => {
+        if (!isActive) iconRef.current?.stopAnimation?.();
+      }}
       className={[
         "group flex min-h-11 w-full min-w-0 items-center gap-2 rounded-[2px] border px-2 py-2 text-left transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand motion-reduce:transition-none sm:min-h-12 sm:gap-3 sm:px-2.5",
         itemTone,

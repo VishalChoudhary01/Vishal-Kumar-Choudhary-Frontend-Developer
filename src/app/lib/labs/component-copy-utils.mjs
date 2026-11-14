@@ -1,51 +1,28 @@
 import { createHash } from "node:crypto";
 
-export const MAX_COMPONENT_BUNDLE_FILES = 40;
+const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-export function normalizeComponentBundleFilePaths(filePaths) {
+/**
+ * Deterministic one-per-user/experiment/published-version event identity.
+ * It is only generated from server-resolved values, never request payload.
+ */
+export function createComponentCopyEventId({ userId, experimentSlug, sourceVersionId }) {
   if (
-    !Array.isArray(filePaths) ||
-    filePaths.length < 1 ||
-    filePaths.length > MAX_COMPONENT_BUNDLE_FILES
+    typeof userId !== "string" ||
+    !userId.trim() ||
+    userId.length > 128 ||
+    typeof experimentSlug !== "string" ||
+    !SLUG_PATTERN.test(experimentSlug) ||
+    typeof sourceVersionId !== "string" ||
+    !sourceVersionId.trim() ||
+    sourceVersionId.length > 64
   ) {
-    throw new TypeError("A component bundle must contain between 1 and 40 files.");
+    throw new TypeError("A valid actor, experiment, and published source version are required.");
   }
 
-  const unique = new Set();
-  for (const path of filePaths) {
-    if (
-      typeof path !== "string" ||
-      !path ||
-      path.length > 180 ||
-      path.trim() !== path ||
-      path.includes("\0")
-    ) {
-      throw new TypeError("The component bundle contains an invalid file path.");
-    }
-    if (unique.has(path)) {
-      throw new TypeError("The component bundle contains duplicate file paths.");
-    }
-    unique.add(path);
-  }
-
-  return [...unique].sort((a, b) => a.localeCompare(b, "en"));
-}
-
-export function hasCompletedComponentBundle(requiredFilePaths, copiedFilePaths) {
-  if (!Array.isArray(requiredFilePaths) || requiredFilePaths.length === 0) {
-    return false;
-  }
-
-  const copied = new Set(
-    (Array.isArray(copiedFilePaths) ? copiedFilePaths : [])
-      .filter((path) => typeof path === "string"),
-  );
-
-  return requiredFilePaths.every((path) => copied.has(path));
-}
-
-export function hashComponentBundleManifest(filePaths) {
-  const paths = normalizeComponentBundleFilePaths(filePaths);
-  // Stable manifest identity; this is an integrity key, not an authorization token.
-  return createHash("sha256").update(paths.join("\n")).digest("hex");
+  // Preserve the previous production key format so accounts whose component
+  // was already counted by the earlier all-files completion rule are not
+  // counted a second time after this behavior correction.
+  const identity = userId.trim() + "\n" + experimentSlug + "\n" + sourceVersionId.trim();
+  return "component_" + createHash("sha256").update(identity).digest("hex");
 }
