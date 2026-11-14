@@ -391,45 +391,52 @@ export default function LabSourceAccess({
 
     try {
       await navigator.clipboard.writeText(file.content);
-      setCopyFeedback("");
-
-      // One request per successful copy action. A new event ID is generated
-      // for every click, including repeated copies of the same file.
-      const eventResponse = await fetch("/api/v1/labs/" + encodeURIComponent(slug) + "/source/events", {
-        method: "POST",
-        cache: "no-store",
-        credentials: "same-origin",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          eventType: "code_copy",
-          sourceVersion: source.version,
-          filePath: file.path,
-          eventId: globalThis.crypto?.randomUUID?.() || "copy_" + Date.now() + "_" + Math.random().toString(36).slice(2),
-        }),
-      });
-      const eventPayload = await eventResponse.json().catch(() => ({}));
-      if (
-        !eventResponse.ok ||
-        (!eventPayload?.data?.recorded &&
-          !eventPayload?.data?.duplicate &&
-          !eventPayload?.data?.excluded)
-      ) {
-        setCopyFeedback(
-          eventPayload?.error?.message ||
-          "File copied, but its analytics event could not be recorded. Please try again.",
-        );
-      }
       setCopied(true);
+      setCopyFeedback("");
       window.setTimeout(() => setCopied(false), 1600);
     } catch {
       setError("Clipboard access is unavailable in this browser.");
       setState("error");
+      return;
+    }
+
+    // The clipboard operation has succeeded. Analytics is sent separately so
+    // a temporary event-write problem never hides or invalidates copied code.
+    try {
+      const response = await fetch(
+        "/api/v1/labs/" + encodeURIComponent(slug) + "/source/events",
+        {
+          method: "POST",
+          cache: "no-store",
+          credentials: "same-origin",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            eventType: "code_copy",
+            sourceVersion: source.version,
+            filePath: file.path,
+            // Every click gets a new id, including repeated copies of the
+            // same file. Server-side deterministic component IDs dedupe the
+            // unique component metric independently from file-copy events.
+            eventId: globalThis.crypto?.randomUUID?.() ||
+              "copy_" + Date.now() + "_" + Math.random().toString(36).slice(2),
+          }),
+        },
+      );
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload?.data ||
+          (!payload.data.recorded && !payload.data.duplicate && !payload.data.excluded)) {
+        setCopyFeedback(
+          payload?.error?.message ||
+          "File copied, but its analytics event could not be recorded.",
+        );
+      }
+    } catch {
+      setCopyFeedback("File copied, but its analytics event could not be recorded.");
     }
   };
-
   return (
     <section
       id="lab-source-content"
