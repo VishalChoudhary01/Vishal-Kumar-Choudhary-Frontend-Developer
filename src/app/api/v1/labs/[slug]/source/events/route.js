@@ -69,14 +69,14 @@ export async function POST(request, { params }) {
     return json({ error: { code: "UNAUTHENTICATED", message: "Sign in to use protected source." } }, 401);
   }
 
-  if (session.user.emailVerified !== true) {
-    return json({ error: { code: "EMAIL_VERIFICATION_REQUIRED", message: "Verify your email before using protected source." } }, 403);
-  }
-
   // Owner source opens and copies are intentionally not analytics activity.
   // Identity is read from the trusted server session, never the request body.
   if (isExcludedLabsAnalyticsOwner(session.user)) {
     return json({ data: { recorded: false, excluded: true } });
+  }
+
+  if (session.user.emailVerified !== true) {
+    return json({ error: { code: "EMAIL_VERIFICATION_REQUIRED", message: "Verify your email before using protected source." } }, 403);
   }
 
   let body;
@@ -141,14 +141,16 @@ export async function POST(request, { params }) {
       }
 
       filePath = body.filePath;
-      requiredFilePaths = snapshot.files.map((file) => file?.path);
+      const manifestPaths = snapshot.files.map((file) => file?.path);
+      // Bundle counting is an optional metric. A larger or malformed legacy
+      // manifest must never disable the existing individual file-copy event.
       if (
-        requiredFilePaths.length < 1 ||
-        requiredFilePaths.length > 40 ||
-        requiredFilePaths.some((path) => typeof path !== "string" || !path) ||
-        new Set(requiredFilePaths).size !== requiredFilePaths.length
+        manifestPaths.length >= 1 &&
+        manifestPaths.length <= 40 &&
+        manifestPaths.every((path) => typeof path === "string" && path.length > 0 && path.length <= 180) &&
+        new Set(manifestPaths).size === manifestPaths.length
       ) {
-        return json({ error: { code: "INVALID_SOURCE_MANIFEST", message: "The published source file manifest is invalid." } }, 409);
+        requiredFilePaths = manifestPaths;
       }
     }
 
