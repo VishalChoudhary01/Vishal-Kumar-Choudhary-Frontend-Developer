@@ -141,7 +141,9 @@ export async function POST(request, { params }) {
       }
 
       filePath = body.filePath;
-      const manifestPaths = snapshot.files.map((file) => file?.path);
+      const manifestPaths = snapshot.files
+        .filter((file) => typeof file?.content === "string")
+        .map((file) => file.path);
       // Bundle counting is an optional metric. A larger or malformed legacy
       // manifest must never disable the existing individual file-copy event.
       if (
