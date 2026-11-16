@@ -130,6 +130,7 @@ Each listed component has one individual specification file. Similar names with 
 | Swipe-to-Delete | [swipe-to-delete.md](./components/06-controls/swipe-to-delete.md) |
 | Form Validation Feedback | [form-validation-feedback.md](./components/06-controls/form-validation-feedback.md) |
 | Signature Pad | [signature-pad.md](./components/06-controls/signature-pad.md) |
+| Audio Recorder Waveform | [audio-recorder-waveform.md](./components/06-controls/audio-recorder-waveform.md) |
 | Before/After Comparison Slider | [before-after-comparison-slider.md](./components/06-controls/before-after-comparison-slider.md) |
 
 ## 7. Loading and progress
@@ -212,6 +213,7 @@ Each listed component has one individual specification file. Similar names with 
 - Swipe-to-Delete acts on one item; Pull-to-Refresh is scoped to the top edge of a scrollable feed and calls a caller-owned async refresh operation.
 - Loading Button reports an async action state and Press Feedback acknowledges a press; Hold-to-Confirm requires a bounded sustained input and includes keyboard/assistive-technology alternatives.
 - Signature Pad captures user-authored handwriting as normalized vector strokes with undo/clear and optional path playback; it is not a preset SVG path animation, a scroll-scrubbed diagram, or a general freeform canvas.
+- Audio Recorder Waveform captures a microphone recording with a live analyser meter and local playback; it is not a passive visualizer or a preset animation, and it owns no upload or persistence flow.
 
 ## Build rule
 
