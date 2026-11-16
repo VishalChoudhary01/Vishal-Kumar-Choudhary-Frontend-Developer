@@ -13,6 +13,8 @@ Each listed component has one individual specification file. Similar names with 
 
 **Milestone 4 — Advanced and Data Motion:** creative effects and data visualization, with performance budgets and real data semantics.
 
+**Milestone 5 — Advanced Interaction Systems:** scroll-mapped color and vector motion, shared-element continuity, direct image comparison, image-sequence scrubbing, contained refresh gestures, constrained pane resizing and deliberate hold confirmation.
+
 ## 1. Interactive actions
 
 | Component | Specification |
@@ -30,6 +32,7 @@ Each listed component has one individual specification file. Similar names with 
 | Text-Slide Button | [text-slide-button.md](./components/01-actions/text-slide-button.md) |
 | Loading Button | [loading-button.md](./components/01-actions/loading-button.md) |
 | Progress Button | [progress-button.md](./components/01-actions/progress-button.md) |
+| Hold-to-Confirm Button | [hold-to-confirm-button.md](./components/01-actions/hold-to-confirm-button.md) |
 
 ## 2. Interactive cards and surfaces
 
@@ -87,6 +90,8 @@ Each listed component has one individual specification file. Similar names with 
 | Sticky Navigation | [sticky-navigation.md](./components/04-scroll/sticky-navigation.md) |
 | Layered Parallax | [layered-parallax.md](./components/04-scroll/layered-parallax.md) |
 | Scroll-Synchronized Counters | [scroll-synchronized-counters.md](./components/04-scroll/scroll-synchronized-counters.md) |
+| Scroll Color Transition | [scroll-color-transition.md](./components/04-scroll/scroll-color-transition.md) |
+| Scroll-Scrubbed SVG Path | [scroll-scrubbed-svg-path.md](./components/04-scroll/scroll-scrubbed-svg-path.md) |
 
 ## 5. Navigation and layout
 
@@ -102,6 +107,8 @@ Each listed component has one individual specification file. Similar names with 
 | Floating Navigation | [floating-navigation.md](./components/05-navigation/floating-navigation.md) |
 | Expandable Search | [expandable-search.md](./components/05-navigation/expandable-search.md) |
 | Animated Pagination | [animated-pagination.md](./components/05-navigation/animated-pagination.md) |
+| Shared Element Transition | [shared-element-transition.md](./components/05-navigation/shared-element-transition.md) |
+| Resizable Split Pane | [resizable-split-pane.md](./components/05-navigation/resizable-split-pane.md) |
 
 ## 6. Micro-interaction controls
 
@@ -122,6 +129,7 @@ Each listed component has one individual specification file. Similar names with 
 | Drag Handle | [drag-handle.md](./components/06-controls/drag-handle.md) |
 | Swipe-to-Delete | [swipe-to-delete.md](./components/06-controls/swipe-to-delete.md) |
 | Form Validation Feedback | [form-validation-feedback.md](./components/06-controls/form-validation-feedback.md) |
+| Before/After Comparison Slider | [before-after-comparison-slider.md](./components/09-effects/before-after-comparison-slider.md) |
 
 ## 7. Loading and progress
 
@@ -135,6 +143,7 @@ Each listed component has one individual specification file. Similar names with 
 | Image Reveal Loader | [image-reveal-loader.md](./components/07-loading/image-reveal-loader.md) |
 | Page Transition Loader | [page-transition-loader.md](./components/07-loading/page-transition-loader.md) |
 | Number Ticker | [number-ticker.md](./components/07-loading/number-ticker.md) |
+| Pull-to-Refresh | [pull-to-refresh.md](./components/07-loading/pull-to-refresh.md) |
 
 ## 8. Cursor and pointer systems
 
@@ -168,6 +177,7 @@ Each listed component has one individual specification file. Similar names with 
 | 3D Image Gallery | [3d-image-gallery.md](./components/09-effects/3d-image-gallery.md) |
 | Circular Gallery | [circular-gallery.md](./components/09-effects/circular-gallery.md) |
 | Magnetic Grid | [magnetic-grid.md](./components/09-effects/magnetic-grid.md) |
+| Image Sequence Scrubber | [image-sequence-scrubber.md](./components/09-effects/image-sequence-scrubber.md) |
 
 ## 10. Data visualization
 
@@ -192,6 +202,14 @@ Each listed component has one individual specification file. Similar names with 
 - Scroll Reveal is a general in-view entrance. Reveal Through Mask is scroll-linked clipping. Image Mask Transition is a state/slide transition.
 - Custom Cursor replaces the visible pointer in an opted-in region. Cursor Follower draws a spring follower. Cursor Trail leaves fading history. Do not mount all three by default.
 - Glow is local brand-tinted emission with a strict brightness limit. Spotlight is a restrained light overlay, not a new palette.
+- Animated SVG Line is a one-shot in-view/explicit path draw; Scroll-Scrubbed SVG Path maps path length directly to scroll progress and reverses with it.
+- Section Transition reveals a section boundary/content; Scroll Color Transition interpolates only a background layer continuously from validated color stops and never owns content motion.
+- Image Mask Transition changes between discrete images on navigation; Before/After Comparison Slider is a user-controlled comparison divider over two aligned images.
+- Image galleries navigate discrete items; Image Sequence Scrubber maps continuous progress to frames from one ordered sequence and does not autoplay by default.
+- Page Transition Loader is a loading state; Shared Element Transition connects the same stable visual identity between source and destination layouts without intercepting navigation.
+- Drag Handle is an input affordance and Drag-to-Reorder changes item order; Resizable Split Pane changes the actual allocation of adjacent panels with separator semantics.
+- Swipe-to-Delete acts on one item; Pull-to-Refresh is scoped to the top edge of a scrollable feed and calls a caller-owned async refresh operation.
+- Loading Button reports an async action state and Press Feedback acknowledges a press; Hold-to-Confirm requires a bounded sustained input and includes keyboard/assistive-technology alternatives.
 
 ## Build rule
 
