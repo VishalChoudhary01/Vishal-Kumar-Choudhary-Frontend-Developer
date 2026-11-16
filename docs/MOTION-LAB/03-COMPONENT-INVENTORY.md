@@ -211,6 +211,7 @@ Each listed component has one individual specification file. Similar names with 
 - Drag Handle is an input affordance and Drag-to-Reorder changes item order; Resizable Split Pane changes the actual allocation of adjacent panels with separator semantics.
 - Swipe-to-Delete acts on one item; Pull-to-Refresh is scoped to the top edge of a scrollable feed and calls a caller-owned async refresh operation.
 - Loading Button reports an async action state and Press Feedback acknowledges a press; Hold-to-Confirm requires a bounded sustained input and includes keyboard/assistive-technology alternatives.
+- Signature Pad captures user-authored handwriting as normalized vector strokes with undo/clear and optional path playback; it is not a preset SVG path animation, a scroll-scrubbed diagram, or a general freeform canvas.
 
 ## Build rule
 
