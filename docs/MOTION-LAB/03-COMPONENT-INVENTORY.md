@@ -129,7 +129,7 @@ Each listed component has one individual specification file. Similar names with 
 | Drag Handle | [drag-handle.md](./components/06-controls/drag-handle.md) |
 | Swipe-to-Delete | [swipe-to-delete.md](./components/06-controls/swipe-to-delete.md) |
 | Form Validation Feedback | [form-validation-feedback.md](./components/06-controls/form-validation-feedback.md) |
-| Before/After Comparison Slider | [before-after-comparison-slider.md](./components/09-effects/before-after-comparison-slider.md) |
+| Before/After Comparison Slider | [before-after-comparison-slider.md](./components/06-controls/before-after-comparison-slider.md) |
 
 ## 7. Loading and progress
 
