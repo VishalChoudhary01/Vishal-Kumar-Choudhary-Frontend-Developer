@@ -951,52 +951,52 @@ export const projects = [
             },
         },
     },
-     {
+    {
         id: "trailorride",
         number: "04",
         name: "Trailor Ride",
-        // slug: "trailorride",
-        category: "Landing",
-        categoryLabel: "Landing",
+        slug: "trailorride",
+        category: "landing-page",
+        categoryLabel: "Landing Page",
 
         description:
-        "A modern motorcycle landing page built with Next.js and TypeScript, featuring immersive visuals, custom motion interactions, responsive layouts, and engaging brand-focused content.",
+            "A modern motorcycle marketplace landing page built with Next.js and TypeScript, combining immersive visuals, responsive layouts, and custom motion interactions to create a clear, engaging brand experience.",
 
-    role: "Frontend Developer",
+        role: "Frontend Developer",
+        year: "2025",
 
-    year: "2025",
+        technologies: [
+            "Next.js",
+            "React",
+            "TypeScript",
+            "Tailwind CSS",
+            "Motion",
+            "Lenis",
+            "React Icons",
+        ],
 
-    technologies: [
-        "Next.js",
-        "React",
-        "TypeScript",
-        "Tailwind CSS",
-        "Motion",
-        "Lenis",
-        "React Icons",
-    ],
+        contribution:
+            "Implemented the landing page from desktop design references using Next.js and TypeScript. Independently designed and developed the tablet and mobile layouts, added custom animations and scroll-based interactions with Motion, refined reusable UI components, and replaced placeholder Lorem Ipsum content with meaningful copy aligned with the Trailor Ride experience.",
 
-    contribution:
-        "Developed the landing page from desktop design references using Next.js and TypeScript. Independently designed and implemented responsive layouts for tablet and mobile devices, created custom animations and scroll-based interactions using Motion, refined UI components for a consistent experience, and replaced placeholder Lorem Ipsum with meaningful, brand-focused content aligned with the TailorRide identity.",
         features: [
-            "Reusable React UI components",
-            "Responsive Next.js layouts",
-            "Tailwind CSS responsive styling",
-            "Centralized application state with Redux Toolkit",
-            "Motion-based interface interactions",
+            "Responsive motorcycle marketplace landing page",
+            "Tablet and mobile layouts independently designed from desktop references",
+            "Reusable React components and responsive Tailwind CSS styling",
+            "Custom Motion-based interactions and scroll animations",
             "Smooth scrolling with Lenis",
-            "Lightweight icon system with Lucide React and React Icons",
+            "Meaningful brand-focused content replacing placeholder copy",
         ],
 
         media: {
             type: "image",
             src: "/projects/trailorride/trailorride.webp",
-            alt: "Trailor Ride responsive landing page interface",
+            alt: "Trailor Ride motorcycle marketplace landing page",
         },
 
         links: {
             live: "https://trailor-trade.vercel.app",
-            
+            github: "https://github.com/VishalChoudhary01/Trailor-Trade-",
+            figma: "https://www.figma.com/design/Z3IQPsEokQ9c2ho1n1wDTC/NextJS-Assignment--Part-1--by-webbywolf--Community---Copy-?node-id=31-6&t=CpdVgMzHMfwUGzZB-1",
         },
 
         presentation: {
@@ -1031,130 +1031,115 @@ export const projects = [
         story: {
             context: {
                 statement:
-                    "Reusable interfaces, responsive layouts, and a polished interaction layer.",
+                    "A motorcycle marketplace experience shaped around clear storytelling, responsive design, and engaging interactions.",
 
                 body: [
-                    "Next.js Master is a frontend application built around reusable UI patterns, centralized application state, and responsive layouts, with a dedicated animation and smooth-scrolling layer.",
+                    "Trailor Ride is a motorcycle-focused landing page created from a desktop Figma design reference. The implementation translates the supplied visual direction into a working Next.js experience while adapting the layout for tablet and mobile screens.",
+                    "Beyond matching the desktop reference, the work involved making responsive design decisions independently, refining the content, and adding motion details that support the browsing experience.",
                 ],
             },
 
             approach: [
                 {
-                    title: "Component-driven development",
+                    title: "Translate the desktop design",
                     body:
-                        "The application is built around reusable React components so interface patterns can be shared instead of repeatedly implemented as isolated markup.",
+                        "Used the supplied Figma reference as the visual foundation, translating its page structure, typography, imagery, and content hierarchy into reusable React components.",
                 },
-
                 {
-                    title: "Next.js application structure",
+                    title: "Design the missing breakpoints",
                     body:
-                        "Next.js provides the application framework and routing structure while React handles the component architecture and interactive UI.",
+                        "The supplied reference focused on desktop. Tablet and mobile layouts were independently designed and implemented to preserve the content hierarchy and usability at narrower widths.",
                 },
-
                 {
-                    title: "Centralized state",
+                    title: "Make the content meaningful",
                     body:
-                        "Redux Toolkit and React Redux provide the state-management layer for application-level state that needs to be shared across components.",
+                        "Replaced placeholder Lorem Ipsum with readable, brand-focused copy so the page communicates a coherent motorcycle marketplace experience.",
                 },
-
                 {
-                    title: "Interaction layer",
+                    title: "Add purposeful interaction",
                     body:
-                        "Motion and Lenis provide the animation and scrolling layer, allowing the interface to have richer transitions without changing the underlying component structure.",
+                        "Introduced Motion-based transitions and scroll interactions to make the experience feel more engaging while keeping the content and primary actions clear.",
                 },
             ],
 
             design: {
                 statement:
-                    "Reusable components and interaction quality working together.",
+                    "A desktop-led visual direction adapted into a coherent responsive experience.",
 
                 body:
-                    "The interface keeps layout, responsive behavior, and interactive states within a consistent component system.",
+                    "The implementation follows the supplied Figma direction for the desktop layout, including its blue action accents, typography hierarchy, visual sections, and image-led composition. Tablet and mobile layouts were designed to maintain that identity while adapting spacing, stacking, and content flow to smaller screens.",
             },
 
             engineering: [
                 {
-                    title: "Next.js and React",
+                    title: "Next.js and TypeScript",
                     body:
-                        "The application uses Next.js 16.3.3 with React 19.2.8 as its core frontend framework and component architecture.",
+                        "Built the frontend with Next.js and TypeScript, using React components to keep the page structure modular and maintainable.",
                 },
-
                 {
-                    title: "Tailwind CSS",
+                    title: "Reusable UI components",
                     body:
-                        "Tailwind CSS 4.3.3 provides the styling and responsive layout system used throughout the application.",
+                        "Structured repeated page patterns as reusable components to make the implementation easier to refine and keep consistent.",
                 },
-
                 {
-                    title: "Redux Toolkit",
+                    title: "Responsive styling",
                     body:
-                        "Redux Toolkit and React Redux provide centralized state management for shared application state.",
+                        "Used Tailwind CSS to implement desktop, tablet, and mobile layouts, including the responsive decisions that were not supplied in the original design reference.",
                 },
-
                 {
-                    title: "Motion",
+                    title: "Motion interactions",
                     body:
-                        "Motion is included as the animation system for interface transitions and interactive movement.",
+                        "Used Motion for interface transitions and scroll-based animation, adding feedback and pacing without making animation the focus of the content.",
                 },
-
                 {
                     title: "Smooth scrolling",
                     body:
-                        "Lenis is included to provide the smooth-scrolling layer used by the application.",
-                },
-
-                {
-                    title: "Interface utilities",
-                    body:
-                        "Lucide React and React Icons provide the project's iconography while ESLint and the Next.js ESLint configuration support code-quality checks.",
+                        "Integrated Lenis to provide the smooth-scrolling behavior used by the landing page.",
                 },
             ],
 
             motion: {
                 statement:
-                    "Component-level animation combined with smooth scrolling for a more polished experience.",
+                    "Custom motion details give the page a more engaging rhythm.",
 
                 body:
-                    "Motion provides the animation layer while Lenis handles smooth scrolling. Together they form an interaction system around the application's React and Next.js architecture.",
+                    "Motion is used to support the page's visual storytelling through entrance transitions, scroll-linked reveals, and interactive feedback. The effects complement the responsive layout rather than replacing or delaying access to the content.",
             },
 
             responsive: {
                 desktop:
-                    "The desktop experience uses the available viewport width for the application's full layout and component hierarchy.",
+                    "The desktop implementation follows the supplied Figma composition, including its wide hero, image-led sections, and multi-column content layouts.",
 
                 tablet:
-                    "Layouts and spacing adapt at intermediate viewport sizes while maintaining the main content hierarchy.",
+                    "Tablet layouts were designed independently, adjusting widths, spacing, and section composition so the desktop content remains clear and balanced.",
 
                 mobile:
-                    "The interface reorganizes into a compact mobile layout while retaining the primary functionality and interaction patterns.",
+                    "Mobile layouts were also designed independently, reorganizing desktop sections into a compact vertical flow with readable typography and accessible actions.",
             },
 
             showcase: [
                 {
                     type: "image",
-                    src: "/projects/nextjs-master/gallery/feature.webp",
-                    alt: "Next.js Master application overview",
+                    src: "/projects/trailorride/trailorride.webp",
+                    alt: "Trailor Ride landing page overview",
                     caption:
-                        "Next.js Master — application overview.",
+                        "Trailor Ride — responsive motorcycle marketplace landing page.",
                 },
-
-                
             ],
 
             reflection: {
                 statement:
-                    "Reusable components, centralized state, responsive styling, and motion.",
+                    "Turning a desktop-only reference into a complete responsive landing page.",
 
                 worked: [
-                    "Reusable components provide a consistent foundation for the interface.",
-
-                    "Redux Toolkit provides a centralized approach for shared application state.",
-
-                    "Motion and Lenis add a dedicated interaction layer without changing the core frontend architecture.",
+                    "The desktop reference provided a clear visual foundation for implementation.",
+                    "Designing tablet and mobile layouts independently extended the work beyond direct desktop translation.",
+                    "Replacing placeholder content made the page feel more coherent and aligned with its subject.",
+                    "Motion interactions added visual polish while preserving the page's core browsing flow.",
                 ],
 
                 improve:
-                    "Further improvements would depend on the application's actual product requirements, particularly around expanding reusable patterns and documenting the component and state architecture as the project grows.",
+                    "The next improvements could include richer project-specific showcase captures across breakpoints and documenting additional interaction details to make the responsive and motion decisions easier to review.",
             },
         },
     },
