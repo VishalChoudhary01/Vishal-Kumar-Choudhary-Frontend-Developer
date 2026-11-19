@@ -951,4 +951,211 @@ export const projects = [
             },
         },
     },
+     {
+        id: "trailorride",
+        number: "04",
+        name: "Trailor Ride",
+        // slug: "trailorride",
+        category: "Landing",
+        categoryLabel: "Landing",
+
+        description:
+        "A modern motorcycle landing page built with Next.js and TypeScript, featuring immersive visuals, custom motion interactions, responsive layouts, and engaging brand-focused content.",
+
+    role: "Frontend Developer",
+
+    year: "2025",
+
+    technologies: [
+        "Next.js",
+        "React",
+        "TypeScript",
+        "Tailwind CSS",
+        "Motion",
+        "Lenis",
+        "React Icons",
+    ],
+
+    contribution:
+        "Developed the landing page from desktop design references using Next.js and TypeScript. Independently designed and implemented responsive layouts for tablet and mobile devices, created custom animations and scroll-based interactions using Motion, refined UI components for a consistent experience, and replaced placeholder Lorem Ipsum with meaningful, brand-focused content aligned with the TailorRide identity.",
+        features: [
+            "Reusable React UI components",
+            "Responsive Next.js layouts",
+            "Tailwind CSS responsive styling",
+            "Centralized application state with Redux Toolkit",
+            "Motion-based interface interactions",
+            "Smooth scrolling with Lenis",
+            "Lightweight icon system with Lucide React and React Icons",
+        ],
+
+        media: {
+            type: "image",
+            src: "/projects/trailorride/trailorride.webp",
+            alt: "Trailor Ride responsive landing page interface",
+        },
+
+        links: {
+            live: "https://trailor-trade.vercel.app",
+            
+        },
+
+        presentation: {
+            mode: "product",
+            variant: "interface",
+            emphasis: "interface",
+            density: "comfortable",
+        },
+
+        motion: {
+            entrance: "productReveal",
+            media: "mediaReveal",
+            hover: "mediaScale",
+            scroll: "softDepth",
+        },
+
+        status: "published",
+        order: 4,
+        featured: false,
+
+        content: {
+            context: true,
+            approach: true,
+            design: true,
+            engineering: true,
+            motion: true,
+            responsive: true,
+            showcase: true,
+            reflection: true,
+        },
+
+        story: {
+            context: {
+                statement:
+                    "Reusable interfaces, responsive layouts, and a polished interaction layer.",
+
+                body: [
+                    "Next.js Master is a frontend application built around reusable UI patterns, centralized application state, and responsive layouts, with a dedicated animation and smooth-scrolling layer.",
+                ],
+            },
+
+            approach: [
+                {
+                    title: "Component-driven development",
+                    body:
+                        "The application is built around reusable React components so interface patterns can be shared instead of repeatedly implemented as isolated markup.",
+                },
+
+                {
+                    title: "Next.js application structure",
+                    body:
+                        "Next.js provides the application framework and routing structure while React handles the component architecture and interactive UI.",
+                },
+
+                {
+                    title: "Centralized state",
+                    body:
+                        "Redux Toolkit and React Redux provide the state-management layer for application-level state that needs to be shared across components.",
+                },
+
+                {
+                    title: "Interaction layer",
+                    body:
+                        "Motion and Lenis provide the animation and scrolling layer, allowing the interface to have richer transitions without changing the underlying component structure.",
+                },
+            ],
+
+            design: {
+                statement:
+                    "Reusable components and interaction quality working together.",
+
+                body:
+                    "The interface keeps layout, responsive behavior, and interactive states within a consistent component system.",
+            },
+
+            engineering: [
+                {
+                    title: "Next.js and React",
+                    body:
+                        "The application uses Next.js 16.3.3 with React 19.2.8 as its core frontend framework and component architecture.",
+                },
+
+                {
+                    title: "Tailwind CSS",
+                    body:
+                        "Tailwind CSS 4.3.3 provides the styling and responsive layout system used throughout the application.",
+                },
+
+                {
+                    title: "Redux Toolkit",
+                    body:
+                        "Redux Toolkit and React Redux provide centralized state management for shared application state.",
+                },
+
+                {
+                    title: "Motion",
+                    body:
+                        "Motion is included as the animation system for interface transitions and interactive movement.",
+                },
+
+                {
+                    title: "Smooth scrolling",
+                    body:
+                        "Lenis is included to provide the smooth-scrolling layer used by the application.",
+                },
+
+                {
+                    title: "Interface utilities",
+                    body:
+                        "Lucide React and React Icons provide the project's iconography while ESLint and the Next.js ESLint configuration support code-quality checks.",
+                },
+            ],
+
+            motion: {
+                statement:
+                    "Component-level animation combined with smooth scrolling for a more polished experience.",
+
+                body:
+                    "Motion provides the animation layer while Lenis handles smooth scrolling. Together they form an interaction system around the application's React and Next.js architecture.",
+            },
+
+            responsive: {
+                desktop:
+                    "The desktop experience uses the available viewport width for the application's full layout and component hierarchy.",
+
+                tablet:
+                    "Layouts and spacing adapt at intermediate viewport sizes while maintaining the main content hierarchy.",
+
+                mobile:
+                    "The interface reorganizes into a compact mobile layout while retaining the primary functionality and interaction patterns.",
+            },
+
+            showcase: [
+                {
+                    type: "image",
+                    src: "/projects/nextjs-master/gallery/feature.webp",
+                    alt: "Next.js Master application overview",
+                    caption:
+                        "Next.js Master — application overview.",
+                },
+
+                
+            ],
+
+            reflection: {
+                statement:
+                    "Reusable components, centralized state, responsive styling, and motion.",
+
+                worked: [
+                    "Reusable components provide a consistent foundation for the interface.",
+
+                    "Redux Toolkit provides a centralized approach for shared application state.",
+
+                    "Motion and Lenis add a dedicated interaction layer without changing the core frontend architecture.",
+                ],
+
+                improve:
+                    "Further improvements would depend on the application's actual product requirements, particularly around expanding reusable patterns and documenting the component and state architecture as the project grows.",
+            },
+        },
+    },
 ];
