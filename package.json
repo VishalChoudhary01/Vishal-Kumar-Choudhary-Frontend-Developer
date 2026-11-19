@@ -43,7 +43,7 @@
     "test:mobile-menu-resume-icon": "node --test tests/mobile-menu-resume-icon.test.mjs"
   },
   "dependencies": {
-    "@animateicons/react": "^0.13.0",
+    "@animateicons/react": "0.13.0",
     "@better-auth/infra": "^0.4.26",
     "@better-auth/mongo-adapter": "^1.7.15",
     "@monaco-editor/react": "4.7.0",
