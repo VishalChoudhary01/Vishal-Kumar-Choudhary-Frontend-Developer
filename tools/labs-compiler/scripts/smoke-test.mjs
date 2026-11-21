@@ -123,14 +123,20 @@ const generatedPosterFixture = { src: "/generated-poster.png", mediaKind: "image
 const uploadedImageFixture = { src: "https://media.example/uploaded.webp", mediaKind: "image", contentType: "image/webp" };
 const uploadedGifFixture = { src: "https://media.example/uploaded.gif", mediaKind: "image", contentType: "image/gif" };
 const uploadedVideoFixture = { src: "https://media.example/uploaded.mp4", mediaKind: "video", contentType: "video/mp4" };
+function matchesPreview(actual, expected) {
+  return actual?.src === expected.src &&
+    actual?.mediaKind === expected.mediaKind &&
+    actual?.contentType === expected.contentType &&
+    actual?.fit === "contain";
+}
 const imageSelection = resolveGalleryPreviewSelection({ uploadedPreview: uploadedImageFixture, generatedPoster: generatedPosterFixture });
-if (imageSelection.galleryVisual !== uploadedImageFixture || imageSelection.thumbnail !== uploadedImageFixture) throw new Error("An uploaded image must replace the generated poster.");
+if (!matchesPreview(imageSelection.galleryVisual, uploadedImageFixture) || !matchesPreview(imageSelection.thumbnail, uploadedImageFixture)) throw new Error("An uploaded image must replace the generated poster.");
 const gifSelection = resolveGalleryPreviewSelection({ uploadedPreview: uploadedGifFixture, generatedPoster: generatedPosterFixture });
-if (gifSelection.galleryVisual !== uploadedGifFixture || gifSelection.thumbnail !== uploadedGifFixture) throw new Error("An uploaded GIF must replace the generated poster.");
+if (!matchesPreview(gifSelection.galleryVisual, uploadedGifFixture) || !matchesPreview(gifSelection.thumbnail, uploadedGifFixture)) throw new Error("An uploaded GIF must replace the generated poster.");
 const videoSelection = resolveGalleryPreviewSelection({ uploadedPreview: uploadedVideoFixture, generatedPoster: generatedPosterFixture });
-if (videoSelection.galleryVisual !== uploadedVideoFixture || videoSelection.thumbnail !== generatedPosterFixture) throw new Error("Uploaded video must drive the visual while the generated still remains the metadata thumbnail.");
+if (!matchesPreview(videoSelection.galleryVisual, uploadedVideoFixture) || !matchesPreview(videoSelection.thumbnail, generatedPosterFixture)) throw new Error("Uploaded video must drive the visual while the generated still remains the metadata thumbnail.");
 const automaticSelection = resolveGalleryPreviewSelection({ generatedPoster: generatedPosterFixture });
-if (automaticSelection.galleryVisual !== generatedPosterFixture || automaticSelection.thumbnail !== generatedPosterFixture) throw new Error("A generated poster must be selected when no upload exists.");
+if (!matchesPreview(automaticSelection.galleryVisual, generatedPosterFixture) || !matchesPreview(automaticSelection.thumbnail, generatedPosterFixture)) throw new Error("A generated poster must be selected when no upload exists.");
 const artworkSelection = resolveGalleryPreviewSelection({});
 if (artworkSelection.galleryVisual !== null || artworkSelection.thumbnail !== null) throw new Error("Missing media must retain the artwork fallback.");
 if (
