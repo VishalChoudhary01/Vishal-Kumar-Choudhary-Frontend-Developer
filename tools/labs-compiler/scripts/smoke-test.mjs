@@ -525,9 +525,7 @@ try {
   if (!tsMain) throw new Error("The TSX adapter did not generate src/main.tsx.");
   tsMain.content = tsMain.content
     .replace('import App from "./App.tsx";', 'import { ReactLenis } from "lenis/react";\nimport "lenis/dist/lenis.css";\nimport App from "./App.tsx";')
-    .replace("    <App />", '    <ReactLenis root options={{ autoRaf: true, anchors: true }}>
-      <App />
-    </ReactLenis>');
+    .replace("    <App />", '    <ReactLenis root options={{ autoRaf: true, anchors: true }}>\n      <App />\n    </ReactLenis>');
   for (const required of ["src/experiment.tsx", "src/main.tsx", "src/App.tsx", "src/index.css", "src/vite-env.d.ts", "index.html"]) {
     if (!tsFiles.some((file) => file.path === required)) {
       throw new Error("The TSX adapter did not generate " + required + ".");
