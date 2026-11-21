@@ -230,7 +230,7 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
         </button>
       </div>
 
-      <div className={["relative flex min-h-0 flex-1 justify-center overflow-hidden bg-background p-2", isExpanded ? "min-h-0" : "min-h-[420px]"].join(" ")}>
+      <div className={["relative flex min-h-0 flex-1 justify-center overflow-hidden bg-background p-2", isExpanded ? "min-h-0" : "min-h-[280px]"].join(" ")}>
         {run?.previewUrl ? (
           <iframe
             key={run.runId}
@@ -249,7 +249,7 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
             style={{ width: viewport === "mobile" ? "375px" : "100%", maxWidth: "100%" }}
           />
         ) : (
-          <div className="grid min-h-[400px] w-full place-items-center rounded-[3px] border border-dashed border-border px-5 text-center">
+          <div className="grid h-full min-h-0 w-full place-items-center rounded-[3px] border border-dashed border-border px-5 text-center">
             <div>
               <Play size={20} className="mx-auto text-text-tertiary" aria-hidden="true" />
               <p className="mt-3 text-xs font-semibold">Preview is not running</p>
@@ -309,7 +309,7 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
           </div>
         </div>
         {consoleExpanded ? (
-          <div className="max-h-36 min-h-12 overflow-y-auto bg-surface-inset px-3 py-2">
+          <div className="max-h-28 min-h-12 overflow-y-auto bg-surface-inset px-3 py-2">
           {logs.length ? logs.map((entry) => (
             <p key={entry.id} className={["whitespace-pre-wrap break-words py-0.5 font-mono text-[10px]", entry.level === "error" ? "text-error" : entry.level === "warn" ? "text-warning" : "text-text-secondary"].join(" ")}>
               <span className="mr-2 opacity-60">{entry.level}</span>{entry.message}

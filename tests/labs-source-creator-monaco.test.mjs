@@ -148,6 +148,13 @@ test("the source workspace keeps files, editor and preview as independent mounte
   assert.match(editor, /<LabMediaLibrary/);
 });
 
+test("normal preview preserves room for the console in the fixed workspace height", () => {
+  assert.match(runPreview, /isExpanded \? "min-h-0" : "min-h-\[280px\]"/);
+  assert.match(runPreview, /grid h-full min-h-0 w-full place-items-center/);
+  assert.match(runPreview, /max-h-28 min-h-12 overflow-y-auto/);
+  assert.match(runPreview, /shrink-0 border-t border-border/);
+});
+
 test("expanded preview keeps the same isolated iframe and locks page scrolling", () => {
   assert.match(runPreview, /const \[isExpanded, setIsExpanded\] = useState\(false\)/);
   assert.match(runPreview, /document\.body\.style\.overflow = "hidden"/);
