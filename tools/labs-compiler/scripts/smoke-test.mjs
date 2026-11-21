@@ -379,8 +379,8 @@ const files = prepareReactProject(source);
 const jsxMain = files.find((file) => file.path === "src/main.jsx");
 if (!jsxMain) throw new Error("The JSX adapter did not generate src/main.jsx.");
 jsxMain.content = jsxMain.content
-  .replace('import App from "./App.jsx";', 'import { ReactLenis } from "lenis/react";\\nimport "lenis/dist/lenis.css";\\nimport App from "./App.jsx";')
-  .replace("    <App />", '    <ReactLenis root options={{ autoRaf: true, anchors: true }}>\\n      <App />\\n    </ReactLenis>');
+  .replace('import App from "./App.jsx";', 'import { ReactLenis } from "lenis/react";\nimport "lenis/dist/lenis.css";\nimport App from "./App.jsx";')
+  .replace("    <App />", '    <ReactLenis root options={{ autoRaf: true, anchors: true }}>\n      <App />\n    </ReactLenis>');
 if (!files.some((file) => file.path === "src/new-file.jsx")) {
   throw new Error("The JSX adapter did not normalize src/new-file.js to src/new-file.jsx.");
 }
@@ -465,11 +465,11 @@ try {
 
   const privateLenisFiles = files.map((file) => ({ ...file }));
   const privateLenisComponent = privateLenisFiles.find((file) => file.path === "src/new-file.jsx");
-  privateLenisComponent.content = 'import privateLenisEntry from "lenis/dist/internal.js";\\n' + privateLenisComponent.content;
+  privateLenisComponent.content = 'import privateLenisEntry from "lenis/dist/internal.js";\n' + privateLenisComponent.content;
   await writeInput(negativeInput, privateLenisFiles.map(({ path: filePath, content }) => ({ path: filePath, content })));
   const privateLenis = runBuild(negativeInput, negativeRoot, negativeOutput);
   if (privateLenis.status === 0 || !String(privateLenis.stderr).includes("Lenis imports in Labs are limited")) {
-    process.stderr.write(privateLenis.stderr || "Private Lenis entry points were not rejected.\\n");
+    process.stderr.write(privateLenis.stderr || "Private Lenis entry points were not rejected.\n");
     process.exit(1);
   }
 
@@ -524,8 +524,10 @@ try {
   const tsMain = tsFiles.find((file) => file.path === "src/main.tsx");
   if (!tsMain) throw new Error("The TSX adapter did not generate src/main.tsx.");
   tsMain.content = tsMain.content
-    .replace('import App from "./App.tsx";', 'import { ReactLenis } from "lenis/react";\\nimport "lenis/dist/lenis.css";\\nimport App from "./App.tsx";')
-    .replace("    <App />", '    <ReactLenis root options={{ autoRaf: true, anchors: true }}>\\n      <App />\\n    </ReactLenis>');
+    .replace('import App from "./App.tsx";', 'import { ReactLenis } from "lenis/react";\nimport "lenis/dist/lenis.css";\nimport App from "./App.tsx";')
+    .replace("    <App />", '    <ReactLenis root options={{ autoRaf: true, anchors: true }}>
+      <App />
+    </ReactLenis>');
   for (const required of ["src/experiment.tsx", "src/main.tsx", "src/App.tsx", "src/index.css", "src/vite-env.d.ts", "index.html"]) {
     if (!tsFiles.some((file) => file.path === required)) {
       throw new Error("The TSX adapter did not generate " + required + ".");
