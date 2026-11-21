@@ -109,7 +109,14 @@ function configureReactLenisStarter(templates, mainPath, appPath, appImport) {
     .replace('import { useState } from "react";', 'import { useState } from "react";\nimport { useLenis } from "lenis/react";')
     .replace("const reduceMotion = useReducedMotion();", "const reduceMotion = useReducedMotion();\n  const lenis = useLenis();")
     .replace('<main className="', '<main id="top" className="')
-    .replace("min-h-screen", "min-h-screen flex-col");
+    .replace(
+      'className="grid min-h-screen place-items-center',
+      'className="flex min-h-screen flex-col items-center justify-center',
+    )
+    .replace(
+      'className="relative flex min-h-screen items-center justify-center',
+      'className="relative flex min-h-screen flex-col items-center justify-center',
+    );
 
   const sectionMarker = "      </motion.section>\n    </main>";
   const sectionReplacement = '      </motion.section>\n      <section className="grid min-h-[70vh] place-items-center bg-slate-950 text-white">\n        <button type="button" onClick={() => lenis?.scrollTo("#top")} className="rounded-[2px] bg-teal-300 px-4 py-3 font-semibold text-slate-950">Smooth scroll to top</button>\n      </section>\n    </main>';
