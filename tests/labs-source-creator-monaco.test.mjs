@@ -82,3 +82,19 @@ test("source editor and metadata controls lock while save, restore or publish is
   assert.match(editor, /disabled=\{Boolean\(busy\)\}[\s\S]*?onChange=\{\(event\) => updateSelected\(\{ language:/);
   assert.match(editor, /readOnly=\{Boolean\(busy\)\}/);
 });
+const createForm = await readFile(
+  new URL("../src/app/components/labs/admin/LabExperimentCreateForm.js", import.meta.url),
+  "utf8",
+);
+
+test("creating an experiment navigates directly to the source editor for the created slug", () => {
+  assert.match(createForm, /fetch\("\/api\/v1\/admin\/labs\/experiments"/);
+  assert.match(createForm, /const createdSlug = payload\?\.data\?\.slug/);
+  assert.match(createForm, /const expectedWorkspaceUrl =/);
+  assert.match(createForm, /"\/admin\/labs\/sources\/" \+ encodeURIComponent\(createdSlug\)/);
+  assert.match(createForm, /workspaceUrl !== expectedWorkspaceUrl/);
+  assert.match(createForm, /router\.push\(workspaceUrl\)/);
+  assert.doesNotMatch(createForm, /router\.refresh\(\)/);
+  assert.match(createForm, /if \(busy\) return/);
+});
+
