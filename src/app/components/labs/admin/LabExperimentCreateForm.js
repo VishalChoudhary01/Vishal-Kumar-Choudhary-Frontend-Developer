@@ -29,8 +29,11 @@ export default function LabExperimentCreateForm() {
 
   async function submit(event) {
     event.preventDefault();
+    if (busy) return;
+
     setBusy(true);
     setError("");
+    let navigationStarted = false;
 
     try {
       const response = await fetch("/api/v1/admin/labs/experiments", {
@@ -48,17 +51,27 @@ export default function LabExperimentCreateForm() {
         }),
       });
       const payload = await response.json().catch(() => ({}));
-      if (!response.ok || !payload?.data?.slug) {
+      const createdSlug = payload?.data?.slug;
+      const workspaceUrl = payload?.data?.workspaceUrl;
+      const expectedWorkspaceUrl =
+        typeof createdSlug === "string"
+          ? "/admin/labs/sources/" + encodeURIComponent(createdSlug)
+          : "";
+
+      if (!response.ok || !createdSlug || workspaceUrl !== expectedWorkspaceUrl) {
         throw new Error(payload?.error?.message || "The experiment could not be created.");
       }
+
       showToast("success", "Experiment workspace created.");
-      router.push(payload.data.workspaceUrl);
-      router.refresh();
+      navigationStarted = true;
+      router.push(workspaceUrl);
     } catch (reason) {
-      setError(reason.message || "The experiment could not be created.");
-      showToast("error", reason.message || "The experiment could not be created.");
+      const message = reason?.message || "The experiment could not be created.";
+      setError(message);
+      showToast("error", message);
     } finally {
-      setBusy(false);
+      // Keep the submit button locked until the source editor has mounted.
+      if (!navigationStarted) setBusy(false);
     }
   }
 
