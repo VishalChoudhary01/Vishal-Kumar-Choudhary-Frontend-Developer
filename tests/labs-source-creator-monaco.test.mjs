@@ -98,3 +98,18 @@ test("creating an experiment navigates directly to the source editor for the cre
   assert.match(createForm, /if \(busy\) return/);
 });
 
+
+ 
+test("React JS and TSX offer an optional shared Lenis provider starter", () => {
+  assert.ok(editor.includes("function configureReactLenisStarter("));
+  assert.ok(editor.includes("function createReactStarter({ withLenis = false } = {})"));
+  assert.ok(editor.includes("function createReactTsStarter({ withLenis = false } = {})"));
+  assert.ok(editor.includes("React JS + Lenis"));
+  assert.ok(editor.includes("React TSX + Lenis"));
+  assert.ok(editor.includes('import { ReactLenis } from "lenis/react"'));
+  assert.ok(editor.includes('import { useLenis } from "lenis/react"'));
+  assert.ok(editor.includes('import "lenis/dist/lenis.css"'));
+  assert.ok(editor.includes("ReactLenis root options={{ autoRaf: true, anchors: true }}"));
+  assert.ok(editor.includes('lenis?.scrollTo("#top")'));
+  assert.ok(editor.includes("min-h-[70vh]"));
+});
