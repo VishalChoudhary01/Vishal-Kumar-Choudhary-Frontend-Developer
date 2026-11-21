@@ -94,6 +94,33 @@ function formatTimestamp(value, fallback) {
   return date.toISOString().slice(0, 19).replace("T", " ") + " UTC";
 }
 
+function configureReactLenisStarter(templates, mainPath, appPath, appImport) {
+  const mainFile = templates.find((file) => file.path === mainPath);
+  const appFile = templates.find((file) => file.path === appPath);
+  if (!mainFile || !appFile || !mainFile.content.includes(appImport)) {
+    throw new Error("The React Lenis starter is missing a required entry file.");
+  }
+
+  mainFile.content = mainFile.content
+    .replace(appImport, 'import { ReactLenis } from "lenis/react";\nimport "lenis/dist/lenis.css";\n' + appImport)
+    .replace("    <App />", '    <ReactLenis root options={{ autoRaf: true, anchors: true }}>\n      <App />\n    </ReactLenis>');
+
+  appFile.content = appFile.content
+    .replace('import { useState } from "react";', 'import { useState } from "react";\nimport { useLenis } from "lenis/react";')
+    .replace("const reduceMotion = useReducedMotion();", "const reduceMotion = useReducedMotion();\n  const lenis = useLenis();")
+    .replace('<main className="', '<main id="top" className="')
+    .replace("min-h-screen", "min-h-screen flex-col");
+
+  const sectionMarker = "      </motion.section>\n    </main>";
+  const sectionReplacement = '      </motion.section>\n      <section className="grid min-h-[70vh] place-items-center bg-slate-950 text-white">\n        <button type="button" onClick={() => lenis?.scrollTo("#top")} className="rounded-md bg-teal-300 px-4 py-3 font-semibold text-slate-950">Smooth scroll to top</button>\n      </section>\n    </main>';
+  if (!appFile.content.includes(sectionMarker)) {
+    throw new Error("The React Lenis starter is missing its scroll demonstration section.");
+  }
+  appFile.content = appFile.content.replace(sectionMarker, sectionReplacement);
+
+  return templates;
+}
+
 export default function LabSourceEditor({ initialSource, initialVersions, initialAudit }) {
   const router = useRouter();
   const { showToast } = useActionToast();
@@ -265,7 +292,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
     showToast("success", "HTML/CSS starter added.");
   }
 
-  function createReactStarter() {
+  function createReactStarter({ withLenis = false } = {}) {
     const templates = [
       {
         path: "index.html",
@@ -289,6 +316,10 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
       },
     ];
 
+    if (withLenis) {
+      configureReactLenisStarter(templates, "src/main.jsx", "src/App.jsx", 'import App from "./App.jsx";');
+    }
+
     if (files.length + templates.filter((template) => !files.some((file) => file.path === template.path)).length > 40) {
       setError("There is not enough room for the React starter files. Remove unused files and try again.");
       return;
@@ -299,10 +330,10 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
     commitFiles(nextFiles);
     setSelectedIndex(Math.max(0, nextFiles.findIndex((file) => file.path === "src/App.jsx")));
     setError("");
-    setMessage(additions.length ? "React starter added. Edit src/App.jsx and press Run to execute it." : "The React starter entry files already exist.");
+    setMessage(additions.length ? (withLenis ? "React JS + Lenis starter added. Edit src/App.jsx and press Run." : "React starter added. Edit src/App.jsx and press Run to execute it.") : "The React starter entry files already exist.");
   }
 
-  function createReactTsStarter() {
+  function createReactTsStarter({ withLenis = false } = {}) {
     const templates = [
       {
         path: "index.html",
@@ -325,6 +356,10 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
         content: "@import \"tailwindcss\";\n\n:root { color-scheme: dark; font-synthesis: none; text-rendering: optimizeLegibility; }\nhtml, body, #root { min-height: 100%; }\nbody { margin: 0; }\n",
       },
     ];
+
+    if (withLenis) {
+      configureReactLenisStarter(templates, "src/main.tsx", "src/App.tsx", 'import App from "./App.tsx";');
+    }
 
     if (files.length + templates.filter((template) => !files.some((file) => file.path === template.path)).length > 40) {
       setError("There is not enough room for the TypeScript starter files. Remove unused files and try again.");
@@ -881,12 +916,14 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                     <button type="button" onClick={createHtmlStarter} className="rounded-[2px] inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none">
                       HTML/CSS
                     </button>
-                    <button type="button" onClick={createReactStarter} className="rounded-[2px] inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none">
+                    <button type="button" onClick={() => createReactStarter()} className="rounded-[2px] inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none">
                       React JS
                     </button>
-                    <button type="button" onClick={createReactTsStarter} className="rounded-[2px] inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none">
+                    <button type="button" onClick={() => createReactTsStarter()} className="rounded-[2px] inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none">
                       React TSX
                     </button>
+                    <button type="button" onClick={() => createReactStarter({ withLenis: true })} className="rounded-[2px] inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none">React JS + Lenis</button>
+                    <button type="button" onClick={() => createReactTsStarter({ withLenis: true })} className="rounded-[2px] inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none">React TSX + Lenis</button>
                   </>
                 ) : null}
                 <button
