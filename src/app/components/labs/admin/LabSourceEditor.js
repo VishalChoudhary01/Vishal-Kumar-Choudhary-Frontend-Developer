@@ -371,7 +371,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
     commitFiles(nextFiles);
     setSelectedIndex(Math.max(0, nextFiles.findIndex((file) => file.path === "src/App.tsx")));
     setError("");
-    setMessage(additions.length ? "React TypeScript starter added. Edit src/App.tsx and press Run to type-check and execute it." : "The React TypeScript starter entry files already exist.");
+    setMessage(additions.length ? (withLenis ? "React TSX + Lenis starter added. Edit src/App.tsx and press Run to type-check and preview." : "React TypeScript starter added. Edit src/App.tsx and press Run to type-check and execute it.") : "The React TypeScript starter entry files already exist.");
     showToast("success", "React TypeScript starter added.");
   }
 
