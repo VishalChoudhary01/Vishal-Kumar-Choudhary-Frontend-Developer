@@ -112,7 +112,7 @@ function configureReactLenisStarter(templates, mainPath, appPath, appImport) {
     .replace("min-h-screen", "min-h-screen flex-col");
 
   const sectionMarker = "      </motion.section>\n    </main>";
-  const sectionReplacement = '      </motion.section>\n      <section className="grid min-h-[70vh] place-items-center bg-slate-950 text-white">\n        <button type="button" onClick={() => lenis?.scrollTo("#top")} className="rounded-md bg-teal-300 px-4 py-3 font-semibold text-slate-950">Smooth scroll to top</button>\n      </section>\n    </main>';
+  const sectionReplacement = '      </motion.section>\n      <section className="grid min-h-[70vh] place-items-center bg-slate-950 text-white">\n        <button type="button" onClick={() => lenis?.scrollTo("#top")} className="rounded-[2px] bg-teal-300 px-4 py-3 font-semibold text-slate-950">Smooth scroll to top</button>\n      </section>\n    </main>';
   if (!appFile.content.includes(sectionMarker)) {
     throw new Error("The React Lenis starter is missing its scroll demonstration section.");
   }
