@@ -149,9 +149,9 @@ test("the source workspace keeps files, editor and preview as independent mounte
 });
 
 test("normal preview preserves room for the console in the fixed workspace height", () => {
-  assert.match(runPreview, /isExpanded \? "min-h-0" : "min-h-\[280px\]"/);
+  assert.match(runPreview, /isExpanded \? "min-h-0" : "min-h-\[200px\]"/);
   assert.match(runPreview, /grid h-full min-h-0 w-full place-items-center/);
-  assert.match(runPreview, /max-h-28 min-h-12 overflow-y-auto/);
+  assert.match(runPreview, /max-h-24 min-h-12 overflow-y-auto/);
   assert.match(runPreview, /shrink-0 border-t border-border/);
 });
 

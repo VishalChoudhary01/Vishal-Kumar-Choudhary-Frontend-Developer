@@ -230,7 +230,7 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
         </button>
       </div>
 
-      <div className={["relative flex min-h-0 flex-1 justify-center overflow-hidden bg-background p-2", isExpanded ? "min-h-0" : "min-h-[280px]"].join(" ")}>
+      <div className={["relative flex min-h-0 flex-1 justify-center overflow-hidden bg-background p-2", isExpanded ? "min-h-0" : "min-h-[200px]"].join(" ")}>
         {run?.previewUrl ? (
           <iframe
             key={run.runId}
@@ -309,7 +309,7 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
           </div>
         </div>
         {consoleExpanded ? (
-          <div className="max-h-28 min-h-12 overflow-y-auto bg-surface-inset px-3 py-2">
+          <div className="max-h-24 min-h-12 overflow-y-auto bg-surface-inset px-3 py-2">
           {logs.length ? logs.map((entry) => (
             <p key={entry.id} className={["whitespace-pre-wrap break-words py-0.5 font-mono text-[10px]", entry.level === "error" ? "text-error" : entry.level === "warn" ? "text-warning" : "text-text-secondary"].join(" ")}>
               <span className="mr-2 opacity-60">{entry.level}</span>{entry.message}
