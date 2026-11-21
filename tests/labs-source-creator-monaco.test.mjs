@@ -166,3 +166,21 @@ test("expanded preview keeps the same isolated iframe and locks page scrolling",
   assert.match(runPreview, /h-full min-h-0 rounded-\[2px\] border border-border bg-white/);
   assert.match(runPreview, /getWorkingFiles/);
 });
+
+
+test("Labs workspace keeps Files, Monaco and Console scrolling native inside the Lenis document", () => {
+  assert.match(workspace, /data-lenis-prevent className=\{\[styles\.pane, styles\.filesPane\]/);
+  assert.match(workspace, /data-lenis-prevent className=\{\[styles\.pane, styles\.editorPane\]/);
+  assert.match(workspaceStyles, /overscroll-behavior: contain/);
+  assert.match(runPreview, /data-lenis-prevent className="max-h-24 min-h-12 overflow-y-auto/);
+});
+
+test("fullscreen preview pauses and safely restores the existing Lenis instance", () => {
+  assert.match(runPreview, /const lenis = window\.lenis/);
+  assert.match(runPreview, /const shouldResumeLenis = Boolean\(lenis && !lenis\.isStopped\)/);
+  assert.match(runPreview, /if \(shouldResumeLenis\) lenis\.stop\(\)/);
+  assert.match(runPreview, /window\.lenis === lenis && lenis\.isStopped/);
+  assert.match(runPreview, /lenis\.start\(\)/);
+  assert.match(runPreview, /document\.body\.style\.overflow = previousOverflow/);
+  assert.match(runPreview, /data-lenis-prevent=\{isExpanded \? "" : undefined\}/);
+});

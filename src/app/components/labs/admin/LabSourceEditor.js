@@ -1314,7 +1314,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
       </div>
 
       {previewVersion ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4" role="presentation">
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4" role="presentation" data-lenis-prevent>
           <section
             role="dialog"
             aria-modal="true"
@@ -1409,7 +1409,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
       ) : null}
 
       {confirmPublish ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" role="presentation">
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" role="presentation" data-lenis-prevent>
           <section role="dialog" aria-modal="true" aria-labelledby="publish-title" className="rounded-[4px] w-full max-w-md border border-border bg-surface-1 p-5 shadow-2xl">
             <div className="flex items-center gap-2 text-brand">
               <AnimatedUpload ref={publishDialogIconRef} size={17} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
@@ -1463,7 +1463,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
       ) : null}
 
       {confirmUnpublish ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" role="presentation">
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" role="presentation" data-lenis-prevent>
           <section role="dialog" aria-modal="true" aria-labelledby="unpublish-title" className="rounded-[4px] w-full max-w-md border border-border bg-surface-1 p-5 shadow-2xl">
             <div className="flex items-center gap-2 text-warning">
               <AnimatedLockOpen ref={unpublishDialogIconRef} size={17} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
@@ -1483,7 +1483,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
         </div>
       ) : null}
       {confirmDelete ? (
-        <div className="fixed inset-0 z-[80] grid place-items-center bg-black/70 p-4" role="presentation">
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-black/70 p-4" role="presentation" data-lenis-prevent>
           <section role="dialog" aria-modal="true" aria-labelledby="delete-project-title" className="w-full max-w-md rounded-[4px] border border-error/30 bg-surface-1 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.48)]">
             <div className="flex items-center gap-2 text-error">
               <AnimatedTrash ref={deleteDialogIconRef} size={16} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />

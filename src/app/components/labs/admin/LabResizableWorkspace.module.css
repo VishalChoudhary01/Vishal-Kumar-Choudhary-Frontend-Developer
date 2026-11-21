@@ -54,6 +54,12 @@
   scrollbar-gutter: stable;
 }
 
+/* Preserve native nested scrolling and prevent scroll chaining into Lenis. */
+.pane[data-lenis-prevent] {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
 .filesPane {
   grid-column: 1;
   grid-row: 1;

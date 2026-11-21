@@ -72,7 +72,12 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
     if (!isExpanded) return undefined;
 
     const previousOverflow = document.body.style.overflow;
+    const lenis = window.lenis;
+    const shouldResumeLenis = Boolean(lenis && !lenis.isStopped);
+
     document.body.style.overflow = "hidden";
+    if (shouldResumeLenis) lenis.stop();
+
     const onKeyDown = (event) => {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -83,6 +88,13 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
 
     return () => {
       document.body.style.overflow = previousOverflow;
+
+      // Do not restart a Lenis instance that was already stopped, or a
+      // different instance that replaced it during a route transition.
+      if (shouldResumeLenis && window.lenis === lenis && lenis.isStopped) {
+        lenis.start();
+      }
+
       window.removeEventListener("keydown", onKeyDown);
       expandButtonRef.current?.focus?.();
     };
@@ -156,6 +168,7 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
       role={isExpanded ? "dialog" : "complementary"}
       aria-label="Live experiment preview"
       aria-modal={isExpanded ? "true" : undefined}
+      data-lenis-prevent={isExpanded ? "" : undefined}
       className={isExpanded ? "fixed inset-0 z-[100] flex h-[100dvh] w-screen min-w-0 flex-col rounded-none border-0 bg-surface-1" : "flex h-full min-h-0 min-w-0 flex-col rounded-[3px] border border-border bg-surface-1"}
     >
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-3">
@@ -309,7 +322,7 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
           </div>
         </div>
         {consoleExpanded ? (
-          <div className="max-h-24 min-h-12 overflow-y-auto bg-surface-inset px-3 py-2">
+          <div data-lenis-prevent className="max-h-24 min-h-12 overflow-y-auto bg-surface-inset px-3 py-2">
           {logs.length ? logs.map((entry) => (
             <p key={entry.id} className={["whitespace-pre-wrap break-words py-0.5 font-mono text-[10px]", entry.level === "error" ? "text-error" : entry.level === "warn" ? "text-warning" : "text-text-secondary"].join(" ")}>
               <span className="mr-2 opacity-60">{entry.level}</span>{entry.message}

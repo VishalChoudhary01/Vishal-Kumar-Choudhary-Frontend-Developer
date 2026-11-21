@@ -269,7 +269,7 @@ export default function LabResizableWorkspace({ files, editor, preview = null })
             : setLayout((current) => ({ ...current, filesVisible: false }))}
         />
 
-        <div className={[styles.pane, styles.filesPane].join(" ")}>{files}</div>
+        <div data-lenis-prevent className={[styles.pane, styles.filesPane].join(" ")}>{files}</div>
 
         <div
           className={[styles.resizeHandle, styles.filesResize].join(" ")}
@@ -288,7 +288,7 @@ export default function LabResizableWorkspace({ files, editor, preview = null })
           onKeyDown={(event) => resizeWithKeyboard("files", event)}
         />
 
-        <div className={[styles.pane, styles.editorPane].join(" ")}>{editor}</div>
+        <div data-lenis-prevent className={[styles.pane, styles.editorPane].join(" ")}>{editor}</div>
 
         {hasPreview ? (
           <>
