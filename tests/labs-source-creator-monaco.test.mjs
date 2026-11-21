@@ -10,6 +10,14 @@ const runPreview = await readFile(
   new URL("../src/app/components/labs/admin/LabSourceLivePreview.js", import.meta.url),
   "utf8",
 );
+const workspace = await readFile(
+  new URL("../src/app/components/labs/admin/LabResizableWorkspace.js", import.meta.url),
+  "utf8",
+);
+const workspaceStyles = await readFile(
+  new URL("../src/app/components/labs/admin/LabResizableWorkspace.module.css", import.meta.url),
+  "utf8",
+);
 
 test("owner source creator uses editable shared Monaco instead of a textarea", () => {
   assert.match(editor, /<LabCodeEditor/);
@@ -112,4 +120,39 @@ test("React JS and TSX offer an optional shared Lenis provider starter", () => {
   assert.ok(editor.includes("ReactLenis root options={{ autoRaf: true, anchors: true }}"));
   assert.ok(editor.includes('lenis?.scrollTo("#top")'));
   assert.ok(editor.includes("min-h-[70vh]"));
+});
+
+
+test("the source workspace keeps files, editor and preview as independent mounted panels", () => {
+  assert.match(editor, /<LabResizableWorkspace[\s\S]*?files=\{[\s\S]*?editor=\{[\s\S]*?preview=\{/);
+  assert.match(workspace, /<div className=\{\[styles\.pane, styles\.filesPane\]\.join\(" " \)\}>\{files\}<\/div>/);
+  assert.match(workspace, /<div className=\{\[styles\.pane, styles\.editorPane\]\.join\(" " \)\}>\{editor\}<\/div>/);
+  assert.match(workspace, /<div className=\{\[styles\.pane, styles\.previewPane\]\.join\(" " \)\}>\{preview\}<\/div>/);
+  assert.match(workspace, /setPointerCapture/);
+  assert.match(workspace, /onPointerMove=\{moveResize\}/);
+  assert.match(workspace, /onKeyDown=\{\(event\) => resizeWithKeyboard/);
+  assert.match(workspace, /localStorage\.setItem\(STORAGE_KEY/);
+  assert.match(workspaceStyles, /grid-template-columns: var\(--files-track/);
+  assert.match(workspaceStyles, /@media \(min-width: 768px\) and \(max-width: 1279px\)/);
+  assert.match(workspaceStyles, /@media \(max-width: 767px\)/);
+  assert.match(workspaceStyles, /mobileTabs/);
+  assert.match(editor, /function addFile\(/);
+  assert.match(editor, /async function importFile\(/);
+  assert.match(editor, /function moveFile\(/);
+  assert.match(editor, /async function saveDraft\(/);
+  assert.match(editor, /async function publishDraft\(/);
+  assert.match(editor, /async function restoreVersion\(/);
+  assert.match(editor, /<LabMediaLibrary/);
+});
+
+test("expanded preview keeps the same isolated iframe and locks page scrolling", () => {
+  assert.match(runPreview, /const \[isExpanded, setIsExpanded\] = useState\(false\)/);
+  assert.match(runPreview, /document\.body\.style\.overflow = "hidden"/);
+  assert.match(runPreview, /event\.key === "Escape"/);
+  assert.match(runPreview, /key=\{run\.runId\}/);
+  assert.equal((runPreview.match(/<iframe/g) || []).length, 1);
+  assert.match(runPreview, /aria-expanded=\{isExpanded\}/);
+  assert.match(runPreview, /setConsoleExpanded/);
+  assert.match(runPreview, /h-full min-h-0 rounded-\[2px\] border border-border bg-white/);
+  assert.match(runPreview, /getWorkingFiles/);
 });

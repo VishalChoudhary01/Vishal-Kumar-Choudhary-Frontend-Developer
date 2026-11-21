@@ -10,6 +10,7 @@ import { useTheme } from "next-themes";
 import { useActionToast } from "@/app/providers/ActionToastProvider";
 import AdminBreadcrumbs from "./AdminBreadcrumbs";
 import LabSourceLivePreview from "./LabSourceLivePreview";
+import LabResizableWorkspace from "./LabResizableWorkspace";
 import LabCodeEditor from "@/app/components/labs/code/LabCodeEditor";
 import { updateSourceFileContent } from "@/app/lib/labs/source-editor-state.mjs";
 import LabMediaLibrary from "./LabMediaLibrary";
@@ -816,8 +817,8 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
   }
 
   return (
-    <main className="min-h-screen bg-background px-5 py-8 text-text-primary sm:px-8 lg:px-12">
-      <div className="mx-auto w-full max-w-[1440px]">
+    <main className="min-h-screen bg-background px-3 py-5 text-text-primary sm:px-5 sm:py-7 xl:px-6 2xl:px-8">
+      <div className="mx-auto w-full max-w-[1920px]">
         <AdminBreadcrumbs items={[{ href: "/admin/labs/sources", label: "Source Library" }, { label: source.title }]} />
 
         <header className="mt-8 flex flex-wrap items-start justify-between gap-5 border-b border-border pb-6">
@@ -893,13 +894,9 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
         {message ? <p role="status" className="mt-4 border border-brand/30 bg-brand-soft/30 px-3 py-2 text-xs text-brand">{message}</p> : null}
         {error ? <p role="alert" className="rounded-[2px] mt-4 border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning">{error}</p> : null}
 
-        <section className={[
-          "mt-6 grid gap-5",
-          source.isCustom
-            ? "xl:grid-cols-[240px_minmax(0,1.2fr)_minmax(340px,0.9fr)]"
-            : "xl:grid-cols-[280px_minmax(0,1fr)]",
-        ].join(" ")}>
-          <aside className="rounded-[2px] border border-border bg-surface-1 p-4">
+        <LabResizableWorkspace
+          files={
+            <aside className="rounded-[2px] border border-border bg-surface-1 p-4">
             <div className="flex flex-col items-stretch gap-3">
               <div>
                 <h2 className="text-sm font-semibold">Files</h2>
@@ -1022,8 +1019,9 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
               <p className="mt-1 tabular-nums">{(totalBytes / 1024).toFixed(1)} KB / 1000 KB</p>
             </div>
           </aside>
-
-          <div className="min-w-0 rounded-[2px] border border-border bg-surface-1 p-4 sm:p-5">
+          }
+          editor={
+            <div className="min-w-0 rounded-[2px] border border-border bg-surface-1 p-4 sm:p-5">
             {selectedFile ? (
               <>
                 <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_160px_auto]">
@@ -1084,7 +1082,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                     minimap={false}
                     keepCurrentModel
                     ariaLabel={"Editable source code: " + selectedFile.path}
-                    className="h-[min(680px,72svh)] min-h-[520px] w-full border-0"
+                    className="h-[min(680px,calc(100dvh-470px))] min-h-[420px] w-full border-0"
                   />
                 </div>
               </>
@@ -1215,9 +1213,10 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                 </button>
               </div>
             ) : null}
-          </div>
-          {source.isCustom ? <LabSourceLivePreview slug={source.slug} files={files} getWorkingFiles={() => filesRef.current} /> : null}
-        </section>
+            </div>
+          }
+          preview={source.isCustom ? <LabSourceLivePreview slug={source.slug} files={files} getWorkingFiles={() => filesRef.current} /> : null}
+        />
 
         {source.isCustom ? <LabMediaLibrary slug={source.slug} /> : null}
 

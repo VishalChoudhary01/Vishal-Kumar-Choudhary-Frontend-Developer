@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useActionToast } from "@/app/providers/ActionToastProvider";
-import { AlertTriangle, Play, RefreshCw, Terminal } from "lucide-react";
+import { AlertTriangle, Play, RefreshCw, Terminal, Maximize2, Minimize2, ChevronDown, ChevronUp } from "lucide-react";
 import { MonitorIcon as AnimatedMonitor } from "@animateicons/react/lucide/monitor-icon";
 import { SmartphoneIcon as AnimatedSmartphone } from "@animateicons/react/lucide/smartphone-icon";
 import { PlayIcon as AnimatedPlay } from "@animateicons/react/lucide/play-icon";
@@ -18,7 +18,10 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [runtimeError, setRuntimeError] = useState("");
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [consoleExpanded, setConsoleExpanded] = useState(true);
   const frameRef = useRef(null);
+  const expandButtonRef = useRef(null);
   const prefersReducedMotion = useReducedMotion();
   const runIconRef = useRef(null);
   const retryIconRef = useRef(null);
@@ -64,6 +67,26 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
   }, [frameOrigin, run?.runId, status]);
+
+  useEffect(() => {
+    if (!isExpanded) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setIsExpanded(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+      expandButtonRef.current?.focus?.();
+    };
+  }, [isExpanded]);
 
   useEffect(() => {
     if (!run?.runId || (status !== "starting" && status !== "loading")) return undefined;
@@ -129,7 +152,7 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
   const expiresAt = run?.expiresAt ? new Date(run.expiresAt) : null;
 
   return (
-    <aside className="min-w-0 self-start rounded-[3px] border border-border bg-surface-1 xl:sticky xl:top-5">
+    <aside aria-label="Live experiment preview" className={isExpanded ? "fixed inset-0 z-[100] flex h-[100dvh] w-screen min-w-0 flex-col rounded-none border-0 bg-surface-1" : "flex h-full min-h-0 min-w-0 flex-col rounded-[3px] border border-border bg-surface-1"}>
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -155,6 +178,17 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
             className={["grid h-8 w-8 place-items-center rounded-[2px] border transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transition-none", viewport === "desktop" ? "border-brand bg-brand-soft text-brand" : "border-border text-text-tertiary hover:bg-surface-2"].join(" ")}
           >
             <AnimatedMonitor ref={desktopIconRef} size={14} duration={0.62} isAnimated={!prefersReducedMotion} aria-hidden="true" />
+          </button>
+          <button
+            ref={expandButtonRef}
+            type="button"
+            onClick={() => setIsExpanded((value) => !value)}
+            aria-label={isExpanded ? "Exit expanded preview" : "Expand preview"}
+            aria-expanded={isExpanded}
+            title={isExpanded ? "Exit expanded preview" : "Expand preview"}
+            className="grid h-8 w-8 place-items-center rounded-[2px] border border-border text-text-tertiary transition-colors hover:border-brand/40 hover:bg-surface-2 hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transition-none"
+          >
+            {isExpanded ? <Minimize2 size={14} aria-hidden="true" /> : <Maximize2 size={14} aria-hidden="true" />}
           </button>
           <button
             type="button"
@@ -191,7 +225,7 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
         </button>
       </div>
 
-      <div className="relative flex min-h-[420px] justify-center overflow-hidden bg-background p-2">
+      <div className={["relative flex min-h-0 flex-1 justify-center overflow-hidden bg-background p-2", isExpanded ? "min-h-0" : "min-h-[420px]"].join(" ")}>
         {run?.previewUrl ? (
           <iframe
             key={run.runId}
@@ -206,7 +240,7 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
               setStatus("failed");
               setRuntimeError("The isolated preview could not be loaded.");
             }}
-            className="h-[520px] rounded-[2px] border border-border bg-white"
+            className="h-full min-h-0 rounded-[2px] border border-border bg-white"
             style={{ width: viewport === "mobile" ? "375px" : "100%", maxWidth: "100%" }}
           />
         ) : (
@@ -255,12 +289,13 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
         </p>
       ) : null}
 
-      <section className="border-t border-border">
+      <section className="shrink-0 border-t border-border">
         <div className="flex items-center justify-between gap-2 px-3 py-2">
-          <div className="flex items-center gap-2">
+          <button type="button" onClick={() => setConsoleExpanded((value) => !value)} aria-expanded={consoleExpanded} className="flex items-center gap-2 text-left">
             <Terminal size={13} className="text-text-tertiary" aria-hidden="true" />
             <h3 className="text-[11px] font-semibold">Console</h3>
-          </div>
+            {consoleExpanded ? <ChevronDown size={12} className="text-text-tertiary" aria-hidden="true" /> : <ChevronUp size={12} className="text-text-tertiary" aria-hidden="true" />}
+          </button>
           <div className="flex items-center gap-2">
             <span className="text-[9px] text-text-tertiary">
               {status === "ready" ? "Ready" : status === "building" ? "Building" : status === "starting" || status === "loading" ? "Starting" : status === "failed" ? "Preview failed" : "Idle"}
@@ -268,7 +303,8 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
             <button type="button" onClick={() => setLogs([])} className="text-[10px] text-text-tertiary hover:text-text-primary">Clear</button>
           </div>
         </div>
-        <div className="max-h-36 min-h-12 overflow-y-auto bg-surface-inset px-3 py-2">
+        {consoleExpanded ? (
+          <div className="max-h-36 min-h-12 overflow-y-auto bg-surface-inset px-3 py-2">
           {logs.length ? logs.map((entry) => (
             <p key={entry.id} className={["whitespace-pre-wrap break-words py-0.5 font-mono text-[10px]", entry.level === "error" ? "text-error" : entry.level === "warn" ? "text-warning" : "text-text-secondary"].join(" ")}>
               <span className="mr-2 opacity-60">{entry.level}</span>{entry.message}
@@ -276,7 +312,8 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
           )) : (
             <p className="font-mono text-[10px] text-text-tertiary">No console output.</p>
           )}
-        </div>
+          </div>
+        ) : null}
       </section>
     </aside>
   );
