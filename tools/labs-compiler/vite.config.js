@@ -7,6 +7,7 @@ const allowedPackages = new Set([
   "react",
   "react-dom",
   "motion",
+  "lenis",
   "lucide-react",
   "react-icons",
   "clsx",
@@ -36,6 +37,9 @@ function labsSourcePolicy() {
         }
         if (packageName === "motion" && source !== "motion/react") {
           this.error("Import Motion from motion/react.");
+        }
+        if (packageName === "lenis" && !["lenis", "lenis/react", "lenis/dist/lenis.css"].includes(source)) {
+          this.error("Lenis imports in Labs are limited to lenis, lenis/react and lenis/dist/lenis.css.");
         }
         return null;
       }
