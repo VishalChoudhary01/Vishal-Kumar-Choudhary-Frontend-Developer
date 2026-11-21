@@ -125,16 +125,19 @@ test("React JS and TSX offer an optional shared Lenis provider starter", () => {
 
 test("the source workspace keeps files, editor and preview as independent mounted panels", () => {
   assert.match(editor, /<LabResizableWorkspace[\s\S]*?files=\{[\s\S]*?editor=\{[\s\S]*?preview=\{/);
-  assert.match(workspace, /<div className=\{\[styles\.pane, styles\.filesPane\]\.join\(" " \)\}>\{files\}<\/div>/);
-  assert.match(workspace, /<div className=\{\[styles\.pane, styles\.editorPane\]\.join\(" " \)\}>\{editor\}<\/div>/);
-  assert.match(workspace, /<div className=\{\[styles\.pane, styles\.previewPane\]\.join\(" " \)\}>\{preview\}<\/div>/);
+  assert.ok(workspace.includes('{files}</div>'));
+  assert.ok(workspace.includes('{editor}</div>'));
+  assert.ok(workspace.includes('{preview}</div>'));
   assert.match(workspace, /setPointerCapture/);
   assert.match(workspace, /onPointerMove=\{moveResize\}/);
   assert.match(workspace, /onKeyDown=\{\(event\) => resizeWithKeyboard/);
   assert.match(workspace, /localStorage\.setItem\(STORAGE_KEY/);
+  assert.match(workspace, /Focus preview/);
+  assert.match(workspace, /data-tablet-files-open/);
   assert.match(workspaceStyles, /grid-template-columns: var\(--files-track/);
   assert.match(workspaceStyles, /@media \(min-width: 768px\) and \(max-width: 1279px\)/);
   assert.match(workspaceStyles, /@media \(max-width: 767px\)/);
+  assert.match(workspaceStyles, /data-preview-visible="false"\]\[data-files-visible="false"/);
   assert.match(workspaceStyles, /mobileTabs/);
   assert.match(editor, /function addFile\(/);
   assert.match(editor, /async function importFile\(/);

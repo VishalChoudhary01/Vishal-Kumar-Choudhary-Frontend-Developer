@@ -152,7 +152,12 @@ export default function LabSourceLivePreview({ slug, files, getWorkingFiles }) {
   const expiresAt = run?.expiresAt ? new Date(run.expiresAt) : null;
 
   return (
-    <aside aria-label="Live experiment preview" className={isExpanded ? "fixed inset-0 z-[100] flex h-[100dvh] w-screen min-w-0 flex-col rounded-none border-0 bg-surface-1" : "flex h-full min-h-0 min-w-0 flex-col rounded-[3px] border border-border bg-surface-1"}>
+    <aside
+      role={isExpanded ? "dialog" : "complementary"}
+      aria-label="Live experiment preview"
+      aria-modal={isExpanded ? "true" : undefined}
+      className={isExpanded ? "fixed inset-0 z-[100] flex h-[100dvh] w-screen min-w-0 flex-col rounded-none border-0 bg-surface-1" : "flex h-full min-h-0 min-w-0 flex-col rounded-[3px] border border-border bg-surface-1"}
+    >
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">

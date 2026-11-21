@@ -52,6 +52,8 @@ export default function LabResizableWorkspace({ files, editor, preview = null })
   const [hydrated, setHydrated] = useState(false);
   const [focusedPanel, setFocusedPanel] = useState(null);
   const [mobilePanel, setMobilePanel] = useState("editor");
+  const [isTablet, setIsTablet] = useState(false);
+  const [tabletFilesOpen, setTabletFilesOpen] = useState(false);
   const hasPreview = Boolean(preview);
 
   useEffect(() => {
@@ -66,6 +68,14 @@ export default function LabResizableWorkspace({ files, editor, preview = null })
       // Invalid or unavailable local storage must never block the editor.
     }
     setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 768px) and (max-width: 1279px)");
+    const update = () => setIsTablet(media.matches);
+    update();
+    media.addEventListener?.("change", update);
+    return () => media.removeEventListener?.("change", update);
   }, []);
 
   useEffect(() => {
@@ -115,9 +125,10 @@ export default function LabResizableWorkspace({ files, editor, preview = null })
     const current = layoutRef.current;
     const desktopFilesColumn = typeof window !== "undefined" && window.innerWidth >= 1280 && current.filesVisible;
     const minEditorWidth = 380;
-    const reserved = minEditorWidth + 16 + (desktopFilesColumn && drag.side === "preview" ? current.filesWidth : 0);
+    const previewReserve = hasPreview && current.previewVisible ? current.previewWidth + 8 : 0;
+    const reserved = minEditorWidth + 16 + (desktopFilesColumn ? current.filesWidth : 0);
     const maxWidth = drag.side === "files"
-      ? Math.min(420, drag.workspaceWidth - current.previewWidth - minEditorWidth - 16)
+      ? Math.min(420, drag.workspaceWidth - previewReserve - minEditorWidth - 16)
       : Math.min(760, drag.workspaceWidth - reserved);
     const minWidth = drag.side === "files" ? 180 : 320;
     const nextWidth = clamp(
@@ -154,6 +165,10 @@ export default function LabResizableWorkspace({ files, editor, preview = null })
 
   function toggleFiles() {
     setFocusedPanel(null);
+    if (isTablet) {
+      setTabletFilesOpen((current) => !current);
+      return;
+    }
     setLayout((current) => ({ ...current, filesVisible: !current.filesVisible }));
   }
 
@@ -185,8 +200,8 @@ export default function LabResizableWorkspace({ files, editor, preview = null })
           <span className="hidden text-[10px] text-text-tertiary sm:inline">Resize panels or focus a workspace area</span>
         </div>
         <div className={styles.toolbarActions}>
-          <button type="button" onClick={toggleFiles} aria-pressed={layout.filesVisible} title={layout.filesVisible ? "Collapse files panel" : "Show files panel"} className={toolButtonClass(layout.filesVisible)}>
-            {layout.filesVisible ? <PanelLeftClose size={13} aria-hidden="true" /> : <PanelLeftOpen size={13} aria-hidden="true" />}
+          <button type="button" onClick={toggleFiles} aria-pressed={isTablet ? tabletFilesOpen : layout.filesVisible} title={(isTablet ? tabletFilesOpen : layout.filesVisible) ? "Collapse files panel" : "Show files panel"} className={toolButtonClass(isTablet ? tabletFilesOpen : layout.filesVisible)}>
+            {(isTablet ? tabletFilesOpen : layout.filesVisible) ? <PanelLeftClose size={13} aria-hidden="true" /> : <PanelLeftOpen size={13} aria-hidden="true"/>}
             Files
           </button>
           <button type="button" onClick={() => focusPanel("editor")} aria-pressed={focusedPanel === "editor"} title="Focus source editor" className={toolButtonClass(focusedPanel === "editor")}>
@@ -194,10 +209,16 @@ export default function LabResizableWorkspace({ files, editor, preview = null })
             Focus editor
           </button>
           {hasPreview ? (
-            <button type="button" onClick={togglePreview} aria-pressed={layout.previewVisible} title={layout.previewVisible ? "Collapse preview panel" : "Show preview panel"} className={toolButtonClass(layout.previewVisible)}>
-              {layout.previewVisible ? <PanelRightClose size={13} aria-hidden="true" /> : <PanelRightOpen size={13} aria-hidden="true" />}
-              Preview
-            </button>
+            <>
+              <button type="button" onClick={togglePreview} aria-pressed={layout.previewVisible} title={layout.previewVisible ? "Collapse preview panel" : "Show preview panel"} className={toolButtonClass(layout.previewVisible)}>
+                {layout.previewVisible ? <PanelRightClose size={13} aria-hidden="true" /> : <PanelRightOpen size={13} aria-hidden="true" />}
+                Preview
+              </button>
+              <button type="button" onClick={() => focusPanel("preview")} aria-pressed={focusedPanel === "preview"} title="Focus live preview" className={toolButtonClass(focusedPanel === "preview")}>
+                <Monitor size={13} aria-hidden="true" />
+                Focus preview
+              </button>
+            </>
           ) : null}
           <button type="button" onClick={resetLayout} title="Reset panel sizes and visibility" className={toolButtonClass(false)}>
             <RotateCcw size={12} aria-hidden="true" />
@@ -232,6 +253,7 @@ export default function LabResizableWorkspace({ files, editor, preview = null })
         data-preview-visible={layout.previewVisible && hasPreview ? "true" : "false"}
         data-mobile-active={mobilePanel}
         data-has-preview={hasPreview ? "true" : "false"}
+        data-tablet-files-open={tabletFilesOpen ? "true" : "false"}
         style={{
           "--files-track": layout.filesWidth + "px",
           "--preview-track": layout.previewWidth + "px",
@@ -242,7 +264,9 @@ export default function LabResizableWorkspace({ files, editor, preview = null })
           className={styles.drawerBackdrop}
           aria-label="Close files drawer"
           tabIndex={-1}
-          onClick={() => setLayout((current) => ({ ...current, filesVisible: false }))}
+          onClick={() => isTablet
+            ? setTabletFilesOpen(false)
+            : setLayout((current) => ({ ...current, filesVisible: false }))}
         />
 
         <div className={[styles.pane, styles.filesPane].join(" ")}>{files}</div>

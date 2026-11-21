@@ -119,6 +119,54 @@
   display: none;
 }
 
+/* Return collapsed panel tracks to the visible panes. */
+.workspace[data-preview-visible="false"][data-files-visible="true"],
+.workspace[data-has-preview="false"][data-files-visible="true"] {
+  grid-template-columns: var(--files-track, 248px) 8px minmax(0, 1fr);
+}
+
+.workspace[data-preview-visible="false"][data-files-visible="true"] .editorPane,
+.workspace[data-has-preview="false"][data-files-visible="true"] .editorPane {
+  grid-column: 3;
+}
+
+.workspace[data-preview-visible="false"][data-files-visible="true"] .filesResize,
+.workspace[data-has-preview="false"][data-files-visible="true"] .filesResize {
+  display: block;
+  grid-column: 2;
+}
+
+.workspace[data-preview-visible="true"][data-files-visible="false"] {
+  grid-template-columns: minmax(0, 1fr) 8px var(--preview-track, 420px);
+}
+
+.workspace[data-preview-visible="true"][data-files-visible="false"] .editorPane {
+  grid-column: 1;
+}
+
+.workspace[data-preview-visible="true"][data-files-visible="false"] .previewResize {
+  display: block;
+  grid-column: 2;
+}
+
+.workspace[data-preview-visible="true"][data-files-visible="false"] .previewPane {
+  grid-column: 3;
+}
+
+.workspace[data-preview-visible="false"][data-files-visible="false"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.workspace[data-preview-visible="false"][data-files-visible="false"] .editorPane,
+.workspace[data-has-preview="false"][data-files-visible="false"] .editorPane {
+  grid-column: 1;
+}
+
+.workspace[data-has-preview="false"] .previewPane,
+.workspace[data-has-preview="false"] .previewResize {
+  display: none;
+}
+
 .workspace[data-focus="editor"] {
   grid-template-columns: minmax(0, 1fr);
 }
@@ -161,11 +209,11 @@
     box-shadow: 12px 0 40px rgb(0 0 0 / 25%);
   }
 
-  .workspace[data-files-visible="true"] .filesPane {
+  .workspace[data-tablet-files-open="true"] .filesPane {
     display: block;
   }
 
-  .workspace[data-files-visible="true"] .drawerBackdrop {
+  .workspace[data-tablet-files-open="true"] .drawerBackdrop {
     position: absolute;
     z-index: 11;
     inset: 0;
@@ -191,11 +239,12 @@
     grid-column: 3;
   }
 
-  .workspace[data-files-visible="true"] .filesPane {
+  .workspace[data-tablet-files-open="true"] .filesPane {
     display: block;
   }
 
-  .workspace[data-preview-visible="false"] {
+  .workspace[data-preview-visible="false"],
+  .workspace[data-has-preview="false"] {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -218,6 +267,11 @@
   .mobileReset {
     display: inline-flex;
     flex: 0 0 auto;
+  }
+
+  .workspace[data-has-preview="false"] .mobileTabs,
+  .mobileTabs:has(+ .workspace[data-has-preview="false"]) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .mobileTabs {
