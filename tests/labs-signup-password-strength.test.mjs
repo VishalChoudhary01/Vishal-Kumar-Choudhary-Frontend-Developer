@@ -17,15 +17,18 @@ test("signup password strength appears only while the password field has focus",
 test("password strength floats below the input without changing form layout height", async () => {
   const meter = await read("../src/app/components/labs/auth/PasswordStrengthMeter.js");
 
-  assert.ok(meter.includes("absolute inset-x-0 top-full"));
-  assert.ok(meter.includes("pointer-events-none"));
+  assert.ok(meter.includes("inline-flex items-center gap-1.5"));
+  assert.ok(meter.includes("text-[10px] font-semibold leading-none"));
+  assert.ok(!meter.includes("absolute"));
+  assert.ok(!meter.includes("pointer-events-none"));
   assert.ok(meter.includes("AnimatePresence"));
-  assert.ok(meter.includes("initial={reducedMotion ? false : { opacity: 0, y: -5, scale: 0.985 }}"));
-  assert.ok(meter.includes("exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -4, scale: 0.99 }}"));
+  assert.ok(meter.includes("initial={reducedMotion ? false : { opacity: 0, y: 3 }}"));
+  assert.ok(meter.includes("exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 2 }}"));
   assert.ok(meter.includes('role="meter"'));
   assert.ok(meter.includes("aria-valuenow={score}"));
   assert.ok(!meter.includes('height: "auto"'));
   assert.ok(!meter.includes("grid-cols-2"));
+  assert.ok(!meter.includes("Password strength"));
   assert.ok(!meter.includes("check.label"));
 });
 
