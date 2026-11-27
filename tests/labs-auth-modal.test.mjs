@@ -170,6 +170,6 @@ test("login and signup use tighter vertical rhythm without reducing auth control
   assert.ok(field.includes("sm:h-10"));
   assert.ok(social.includes("mt-2.5 sm:mt-3"));
   assert.ok(social.includes("sm:h-9"));
-  assert.ok(meter.includes("h-1 overflow-hidden rounded-full"));
+  assert.ok(meter.includes("h-1 w-2 overflow-hidden rounded-full"));
   assert.ok(!meter.includes('height: "auto"'));
 });
