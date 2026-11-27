@@ -20,6 +20,7 @@ export default function AuthField({
   disabled = false,
   inputMode,
   describedBy,
+  labelAccessory,
 }) {
   const isPassword = type === "password";
   const [visible, setVisible] = useState(false);
@@ -31,12 +32,15 @@ export default function AuthField({
 
   return (
     <div className="min-w-0">
-      <label
-        htmlFor={id}
-        className="mb-0.5 block text-xs font-medium text-text-primary sm:mb-1 sm:text-sm"
-      >
-        {label}
-      </label>
+      <div className="mb-0.5 flex min-h-[18px] items-center justify-between gap-2 sm:mb-1 sm:min-h-5">
+        <label
+          htmlFor={id}
+          className="text-xs font-medium leading-4 text-text-primary sm:text-sm sm:leading-5"
+        >
+          {label}
+        </label>
+        {labelAccessory ? <div className="flex shrink-0 items-center">{labelAccessory}</div> : null}
+      </div>
 
       <div className="relative">
         <input
