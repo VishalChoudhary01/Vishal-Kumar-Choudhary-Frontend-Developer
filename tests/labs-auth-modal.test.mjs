@@ -67,7 +67,9 @@ test("login and signup stay compact while retaining social login and password gu
   assert.ok(submit.includes("sm:h-[42px]"));
   assert.ok(social.includes("h-9 w-full"));
   assert.ok(social.includes("sm:h-9"));
-  assert.ok(signup.includes("<PasswordStrengthMeter password={password} />"));
+  assert.ok(signup.includes("visible={passwordFocused}"));
+  assert.ok(signup.includes('onFocus={() => setPasswordFocused(true)}'));
+  assert.ok(signup.includes('className={passwordFocused ? "relative z-20" : "relative z-0"}'));
 });
 
 
@@ -126,7 +128,9 @@ test("page and modal authentication surfaces are compact on mobile and retain de
   assert.ok(login.includes("space-y-2 sm:space-y-2.5"));
   assert.ok(signup.includes("space-y-2 sm:space-y-2.5"));
 
-  assert.ok(meter.includes("px-2.5 py-2 sm:space-y-2"));
+  assert.ok(meter.includes("absolute inset-x-0 top-full"));
+  assert.ok(meter.includes("pointer-events-none"));
+  assert.ok(meter.includes("px-2.5 py-2"));
 });
 
 
@@ -165,5 +169,6 @@ test("login and signup use tighter vertical rhythm without reducing auth control
   assert.ok(field.includes("sm:h-10"));
   assert.ok(social.includes("mt-2.5 sm:mt-3"));
   assert.ok(social.includes("sm:h-9"));
-  assert.ok(meter.includes("sm:px-3 sm:py-2.5"));
+  assert.ok(meter.includes("h-1 overflow-hidden rounded-full"));
+  assert.ok(!meter.includes('height: "auto"'));
 });
