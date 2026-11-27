@@ -60,6 +60,14 @@ A seven-day TTL index is created for `expiresAt`. Better Auth's post-verificatio
 
 Return destinations are restricted to local paths under `/labs`. External origins, protocol-relative values, malformed paths and auth routes are rejected by the return-to helper. Never use a request-provided URL as an unrestricted redirect target.
 
+## 3.3 Account-existence-safe signup and login UX
+
+The current signup endpoint and email/password login deliberately avoid disclosing whether an email address belongs to a Labs account. The UX improvement contract for signup confirmation, login failure guidance, recovery actions, duplicate-submit protection and release tests is documented in `../future/AUTH-ACCOUNT-EXISTENCE-UX.md`.
+
+Key security rule: a failed email/password login must not distinguish an unknown email from an incorrect password. It should provide a generic credential error and a clear **Create an account** action without claiming that the submitted address is unregistered. Likewise, the generic signup HTTP 202 response means the request was accepted for generic processing; it is not proof that a new account was created or that an email was delivered.
+
+The UX document is a future implementation contract. Its proposed confirmation and contextual login actions are not claimed as implemented until code changes and acceptance tests are completed.
+
 ## 4. Social provider contract
 
 Google and GitHub are optional and are added to the Better Auth config only when both credentials for the provider are present.
