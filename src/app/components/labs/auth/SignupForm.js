@@ -21,6 +21,7 @@ export default function SignupForm({
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -168,23 +169,34 @@ export default function SignupForm({
           disabled={loading}
         />
 
-        <AuthField
-          id="password"
-          label="Password"
-          type="password"
-          value={password}
-          onChange={(event) => {
-            const value = event.target.value;
-            setPassword(value);
-            if (submitted) setErrors((current) => ({ ...current, password: validate("password", value) }));
+        <div
+          onFocus={() => setPasswordFocused(true)}
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) {
+              setPasswordFocused(false);
+            }
           }}
-          onBlur={() => setErrors((current) => ({ ...current, password: validate("password", password) }))}
-          autoComplete="new-password"
-          helper="Use at least 8 characters."
-          error={errors.password}
-          disabled={loading}
-        />
-        <PasswordStrengthMeter password={password} />
+        >
+          <AuthField
+            id="password"
+            label="Password"
+            type="password"
+            value={password}
+            onChange={(event) => {
+              const value = event.target.value;
+              setPassword(value);
+              if (submitted) setErrors((current) => ({ ...current, password: validate("password", value) }));
+            }}
+            onBlur={() => setErrors((current) => ({ ...current, password: validate("password", password) }))}
+            autoComplete="new-password"
+            error={errors.password}
+            disabled={loading}
+            describedBy={passwordFocused ? "password-strength-meter" : undefined}
+            labelAccessory={
+              <PasswordStrengthMeter password={password} visible={passwordFocused} />
+            }
+          />
+        </div>
 
         <div className="pt-0.5">
           <div className="flex items-start gap-2">
