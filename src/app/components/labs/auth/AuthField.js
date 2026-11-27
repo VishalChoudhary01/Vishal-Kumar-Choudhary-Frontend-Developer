@@ -32,7 +32,7 @@ export default function AuthField({
 
   return (
     <div className="min-w-0">
-      <div className="mb-0.5 flex min-h-[18px] items-center justify-between gap-2 sm:mb-1 sm:min-h-5">
+      <div className="mb-0.5 flex min-h-4 items-center justify-between gap-2 sm:mb-1 sm:min-h-5">
         <label
           htmlFor={id}
           className="text-xs font-medium leading-4 text-text-primary sm:text-sm sm:leading-5"
