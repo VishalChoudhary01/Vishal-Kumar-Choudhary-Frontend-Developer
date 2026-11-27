@@ -1,5 +1,7 @@
 export const projects = [
 
+
+
 {
     id: "class-fuse",
     number: "01",
@@ -9,7 +11,7 @@ export const projects = [
     categoryLabel: "Developer Tool",
 
     description:
-        "A focused Tailwind CSS utility that transforms messy class strings into cleaner, more readable, and consistently organized code.",
+        "A component-first Tailwind CSS formatter that transforms complete React components into cleaner, consistently formatted code while preserving their original functionality.",
 
     role: "Frontend Developer",
 
@@ -19,37 +21,45 @@ export const projects = [
         "Next.js",
         "React",
         "JavaScript",
-        "Tailwind CSS",
+        "Tailwind CSS v4",
         "Redux Toolkit",
         "Motion",
         "Lenis",
         "next-themes",
+        "Prettier",
+        "Prettier Tailwind Plugin",
         "React Icons",
     ],
 
     contribution:
-        "Designed and developed a polished developer tool focused on simplifying Tailwind CSS cleanup through an intuitive workspace, responsive interface, and thoughtful interaction design.",
+        "Designed and developed ClassFuse from its product experience to its formatting workflow, building a complete developer tool with JSX/TSX parsing, Tailwind-aware class cleanup, a focused editor workspace, formatting history, and a responsive product landing page.",
 
     features: [
-        "Clean and format multiline Tailwind class lists",
-        "Improve readability of utility class strings",
-        "Organize classes into a consistent format",
-        "Present input and results in a focused workspace",
-        "Provide a simple paste, format, review, and reuse workflow",
-        "Support light and dark interface themes",
+        "Format complete React component source instead of manually cleaning individual class strings",
+        "Support both JSX and TSX through dedicated parser selection",
+        "Reorder supported Tailwind CSS utilities into a consistent format",
+        "Remove duplicate utility classes and normalize unnecessary whitespace",
+        "Keep formatting scoped to supported static class and className values",
+        "Preserve component structure, imports, props, hooks, event handlers, and application logic",
+        "Preserve dynamic expressions and component-specific configurations, including Motion props",
+        "Review original source and formatted output in a focused editor workspace",
+        "Handle unsupported or mismatched source input without replacing the original code",
+        "Keep recent formatting sessions available through private history",
+        "Support account-based access and a dedicated workspace experience",
+        "Provide light and dark themes",
         "Deliver responsive layouts across desktop, tablet, and mobile",
-        "Use purposeful motion to improve interaction feedback",
+        "Use purposeful motion and interaction feedback throughout the product",
     ],
 
     media: {
         type: "image",
         src: "/projects/classfuse/classfuse_hero.webp",
-        alt: "ClassFuse Tailwind CSS utility formatter interface",
+        alt: "ClassFuse developer tool showing its Tailwind CSS component formatting experience",
     },
 
     links: {
         live: "https://class-fuse.vercel.app/",
-       
+        github: "https://github.com/VishalChoudhary01/classFuse",
     },
 
     presentation: {
@@ -84,178 +94,213 @@ export const projects = [
     story: {
         context: {
             statement:
-                "Making Tailwind CSS class cleanup simpler and more intuitive.",
+                "Formatting a React component should not mean manually fixing every Tailwind CSS class.",
 
             body: [
-                "Working with long utility class strings can become tedious when code contains inconsistent formatting, unnecessary repetition, or difficult-to-scan class lists. These small issues can interrupt an otherwise smooth development workflow.",
+                "Tailwind CSS makes styling interfaces fast, but component source can become difficult to scan when utility classes are inconsistent, duplicated, spread across multiple lines, or arranged without a predictable order.",
 
-                "ClassFuse brings the cleanup experience into one focused workspace, helping developers turn cluttered class strings into cleaner, more readable output without unnecessary complexity.",
+                "Cleaning individual class strings is useful, but real development happens inside complete components. Developers also need to work around imports, JSX structure, props, conditional rendering, event handlers, hooks, and dynamic expressions.",
 
-                "The product focuses on a simple idea: make everyday code cleanup feel effortless while keeping the interface clear, responsive, and comfortable to use.",
+                "ClassFuse addresses this broader problem with a component-first formatting workflow. Developers can provide complete JSX or TSX source, format supported Tailwind class values, and review cleaner output without intentionally changing how their component works.",
             ],
         },
 
         approach: [
             {
-                title: "A focused workflow",
+                title: "Component-first formatting",
                 body:
-                    "The experience centers on entering class strings, processing them, and reviewing the result. Essential actions remain easy to discover so developers can concentrate on their code.",
+                    "Rather than limiting the experience to isolated class strings, ClassFuse works with complete React component source. This makes the workflow more relevant to everyday development tasks.",
             },
 
             {
-                title: "Clarity over complexity",
+                title: "Preserve what matters",
                 body:
-                    "The interface avoids unnecessary steps and visual distractions. The relationship between the original input and the resulting output remains at the heart of the experience.",
+                    "Formatting should improve readability without rewriting application behavior. The formatter keeps component logic, imports, props, hooks, handlers, and dynamic expressions intact while applying cleanup to supported static class values.",
             },
 
             {
-                title: "Readable results",
+                title: "Dedicated JSX and TSX parsing",
                 body:
-                    "The formatting experience emphasizes consistency and readability, helping developers inspect and reuse utility class strings with greater confidence.",
+                    "Separate parser configurations support JSX and TSX input. Developers can choose the appropriate source format instead of relying on a single parser configuration for every component.",
             },
 
             {
-                title: "Thoughtful interaction",
+                title: "Predictable Tailwind cleanup",
                 body:
-                    "Small interaction details provide feedback at the right moments, making the workflow feel responsive without adding friction to the core task.",
+                    "Tailwind-aware formatting organizes supported utility classes, removes duplicates, and normalizes unnecessary whitespace to make className values easier to scan and maintain.",
+            },
+
+            {
+                title: "A focused review workflow",
+                body:
+                    "The workspace keeps the original source and formatted result central to the experience. Developers can inspect the transformation before reusing the cleaned component.",
+            },
+
+            {
+                title: "Reliable failure handling",
+                body:
+                    "Unsupported or mismatched input should not silently replace the original source. The formatting workflow reports failures while keeping the user's original code intact.",
             },
         ],
 
         design: {
             statement:
-                "A refined developer workspace built around clarity and focus.",
+                "A focused developer workspace where code remains the primary visual element.",
 
             body:
-                "The visual direction balances a premium developer-tool aesthetic with practical usability. Clear typography, considered spacing, restrained surfaces, and strong contrast keep the code prominent. Supporting controls remain secondary, creating an interface that feels organized without becoming visually heavy.",
+                "The product design follows a clear hierarchy between the source editor, formatting actions, and resulting output. Typography, spacing, contrast, and restrained surface treatments help developers concentrate on their code rather than decorative interface elements. The same visual language carries across the landing page, formatter workspace, and supporting application screens. Light and dark themes maintain consistent readability and semantic contrast.",
         },
 
         engineering: [
             {
-                title: "Modern React architecture",
+                title: "Next.js application architecture",
                 body:
-                    "Built with Next.js and React, ClassFuse uses a component-based approach to create a maintainable and responsive application experience.",
+                    "Built with Next.js App Router, React, and JavaScript. The application separates its landing experience, formatter workspace, supporting pages, and server-side formatting functionality into maintainable parts.",
             },
 
             {
-                title: "Utility-first styling",
+                title: "JSX and TSX source parsing",
                 body:
-                    "Tailwind CSS provides the styling foundation, supporting consistent interface patterns and a cohesive visual language throughout the application.",
+                    "Dedicated parser configurations handle the two supported React source formats. Parser selection keeps source interpretation explicit and helps prevent mismatched input from being processed as the wrong syntax.",
             },
 
             {
-                title: "Reliable application experience",
+                title: "Component-safe formatting",
                 body:
-                    "The application stack includes tools for managing interface state and keeping interactions predictable as users work with their input and results.",
+                    "The formatter operates on complete component source while limiting Tailwind cleanup to supported static class and className values. Dynamic expressions, component logic, hooks, handlers, imports, and unrelated props are preserved.",
             },
 
             {
-                title: "Developer-focused tooling",
+                title: "Tailwind-aware class organization",
                 body:
-                    "The development workflow incorporates modern tools that support consistent code quality and a maintainable codebase.",
+                    "Tailwind CSS formatting uses its dedicated ordering integration to produce consistent utility sequences. Duplicate utilities and unnecessary whitespace are cleaned up without turning the formatter into a general application-code refactoring tool.",
+            },
+
+            {
+                title: "Workspace state and history",
+                body:
+                    "Redux Toolkit supports predictable application state across the workspace. Recent formatting sessions are retained in private history, allowing users to revisit previous source and formatted results.",
+            },
+
+            {
+                title: "Account and application experience",
+                body:
+                    "The application includes account access and supporting workspace routes, bringing the formatter into a more complete product experience rather than leaving it as an isolated utility.",
             },
 
             {
                 title: "Theme-aware interface",
                 body:
-                    "Light and dark themes allow the workspace to adapt to different preferences while preserving a consistent visual hierarchy and comfortable readability.",
+                    "Theme management supports light and dark experiences while keeping editor readability, semantic colors, and interface contrast consistent.",
             },
         ],
 
         motion: {
             statement:
-                "A cinematic product story that brings the code-cleanup experience to life.",
+                "Motion that explains the product, supports the workflow, and gives the interface a distinct identity.",
 
             body:
-                "Motion helps communicate the transformation from cluttered input to cleaner output. The project presentation can combine editor-style typing, subtle processing highlights, disappearing text effects, and connected scroll-driven scenes to make the product experience more tangible.",
+                "Motion is used as part of the product experience rather than as decoration. The landing page introduces the formatting problem and demonstrates the transformation through coordinated visual sequences. Within the interface, transitions and interaction feedback remain short and purposeful so that the code stays readable and the primary task remains uninterrupted.",
 
             principles: [
                 {
-                    title: "Editor-style typing",
+                    title: "Progressive product storytelling",
                     body:
-                        "Progressively reveal code inside a developer-inspired editor, using a subtle cursor and clear typography to establish the problem and draw attention to the content.",
+                        "The landing page introduces the problem, demonstrates the formatting experience, and guides visitors toward the tool through connected section transitions and carefully paced reveals.",
                 },
 
                 {
-                    title: "Processing feedback",
+                    title: "Transformation-focused demonstrations",
                     body:
-                        "Use a restrained shimmer or highlight to suggest activity before transitioning to the completed result. Keep the effect brief and visually consistent with the interface.",
+                        "Curated code examples communicate the difference between cluttered and organized Tailwind utilities through visual progression, keeping the transformation understandable without pretending that the demonstration is a live formatter execution.",
                 },
 
                 {
-                    title: "Text transformation",
+                    title: "Purposeful interaction feedback",
                     body:
-                        "Use a subtle dissolve or smoke-inspired effect to illustrate code cleanup, allowing the visual transition to communicate change without overwhelming the code itself.",
+                        "Buttons, navigation, icons, and interactive elements use restrained hover, focus, and press feedback. Animations reinforce interaction states rather than competing with the content.",
                 },
 
                 {
-                    title: "Scroll-driven storytelling",
+                    title: "Layered visual composition",
                     body:
-                        "Connect the introduction, workspace demonstration, transformation, and final result through progressive reveals, subtle parallax, and carefully paced scroll transitions.",
+                        "The landing page uses controlled depth, overlapping visual elements, and carefully arranged content layers to create a more engaging product presentation without unnecessary decoration.",
                 },
 
                 {
-                    title: "Purposeful animation",
+                    title: "Scroll-driven transitions",
                     body:
-                        "Use Motion for coordinated transitions and scroll-linked effects, with lightweight visual treatments where appropriate. Preserve readability, responsive behavior, and a reduced-motion experience.",
+                        "Motion connects important landing-page sections through subtle entrance reveals, controlled parallax, and progressive visual changes. The movement remains intentional rather than continuously animating every element.",
+                },
+
+                {
+                    title: "Performance and accessibility",
+                    body:
+                        "Animations respect reduced-motion preferences and avoid unnecessary looping or excessive movement. Responsive behavior and readable content remain priorities across screen sizes.",
                 },
             ],
         },
 
         responsive: {
             desktop:
-                "A spacious workspace gives the main input and output areas room to breathe, while the project presentation can use cinematic layouts and connected visual storytelling.",
+                "A spacious developer workspace gives the source editor, formatting controls, and resulting output enough room to remain clear and easy to compare. The landing page uses wider content compositions and layered product demonstrations without allowing sections to become unnecessarily stretched.",
 
             tablet:
-                "The layout adapts to narrower screens while maintaining a clear hierarchy and an intuitive relationship between the main workspace elements.",
+                "The layout adjusts editor proportions, navigation, section spacing, and supporting content for narrower viewports. Primary controls remain accessible and the source-to-output relationship stays understandable.",
 
             mobile:
-                "A compact, vertically organized experience prioritizes the main task and essential controls. Visual effects and scroll transitions remain restrained to preserve usability and performance.",
+                "A vertically organized experience prioritizes the source editor, formatting actions, and output. Navigation, controls, typography, and interactive elements adapt to smaller screens while animations remain restrained and readable.",
         },
 
         showcase: [
-
             {
                 type: "image",
                 src: "/projects/classfuse/gallery/feature.webp",
-                alt: "ClassFuse landing page demonstrating how Tailwind CSS utilities are deduplicated and reordered into a clean, consistent class string.",
+                alt: "ClassFuse landing page demonstrating the transformation from cluttered Tailwind CSS utilities to an organized className format.",
                 caption:
-                    "How ClassFuse cleans up and organizes Tailwind CSS utility classes.",
+                    "The formatting problem and how ClassFuse makes Tailwind utility classes easier to read.",
             },
             {
                 type: "image",
                 src: "/projects/classfuse/gallery/classfuse_tool.webp",
-                alt: "ClassFuse Tailwind CSS cleanup tool showing a multiline input editor and a one-line output panel.",
+                alt: "ClassFuse formatter workspace showing component source input and formatted React code output.",
                 caption:
-                    "The ClassFuse workspace for cleaning and formatting Tailwind CSS classes.",
+                    "A component-first workspace for formatting complete React source.",
             },
             {
                 type: "image",
                 src: "/projects/classfuse/gallery/duplication indication and easy to clean double click.webp",
-                alt: "ClassFuse code editor displaying Tailwind CSS utilities with duplicate removal, consistent class ordering, and a duplicate count indicator.",
+                alt: "ClassFuse editor showing duplicate Tailwind utility indication and the formatting cleanup workflow.",
                 caption:
-                    "Remove duplicate utilities, restore Tailwind class order, and see how many duplicates were removed.",
+                    "Identify duplicate utilities and clean up supported Tailwind class values.",
             },
         ],
 
         reflection: {
             statement:
-                "Making a small developer task feel clearer, faster, and more enjoyable.",
+                "A small formatting task becomes a more useful developer tool when the complete component workflow is considered.",
 
             worked: [
-                "Keeping the experience focused on a single developer task makes the product straightforward to understand.",
+                "Moving from isolated class-string cleanup to complete component formatting made the product more relevant to real React development workflows.",
 
-                "A restrained visual system helps maintain readability while giving the interface a distinctive identity.",
+                "Keeping formatting scoped to supported static class values helped establish a clear boundary between code formatting and application logic.",
 
-                "Thoughtful interaction feedback and motion make the workflow feel more polished without distracting from the code.",
+                "Dedicated JSX and TSX parser selection made source handling more explicit and improved the overall formatting workflow.",
 
-                "A connected product narrative communicates the value of the experience more effectively than a feature list alone.",
+                "A focused source-and-output workspace made it easier to understand, inspect, and reuse formatting results.",
+
+                "A consistent design system, responsive layouts, and restrained motion helped connect the landing page with the actual product experience.",
+
+                "Treating error handling and preservation of original source as part of the product experience made reliability a core design consideration.",
             ],
 
             improve:
-                "There is room to refine the overall developer experience, improve the clarity of transformation feedback, and explore additional ways to integrate code cleanup into everyday development workflows.",
+                "Future opportunities include deeper editor integrations, additional developer workflow integrations, and broader language and syntax support while maintaining the core principle: improve code readability without unexpectedly changing component behavior.",
         },
     },
-},
+}
+
+,
 
 {
     id: "spendwise",
