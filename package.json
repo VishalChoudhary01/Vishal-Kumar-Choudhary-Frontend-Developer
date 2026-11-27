@@ -53,6 +53,7 @@
     "@vercel/blob": "2.8.2",
     "@vercel/sandbox": "3.9.1",
     "better-auth": "^1.7.15",
+    "build": "^0.1.4",
     "chart.js": "4.6.1",
     "cloudinary": "^2.11.0",
     "clsx": "^2.1.1",
