@@ -35,7 +35,7 @@ test("password field supports the focused strength meter as an additional access
   const field = await read("../src/app/components/labs/auth/AuthField.js");
 
   assert.ok(field.includes("describedBy"));
-  assert.ok(field.includes("min-h-[18px]"));
+  assert.ok(field.includes("min-h-4"));
   assert.ok(field.includes("sm:min-h-5"));
   assert.ok(field.includes("labelAccessory"));
   assert.ok(field.includes("const descriptionIds = [errorId || helperId, describedBy]"));
