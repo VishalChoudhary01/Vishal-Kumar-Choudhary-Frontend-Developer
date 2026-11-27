@@ -128,9 +128,10 @@ test("page and modal authentication surfaces are compact on mobile and retain de
   assert.ok(login.includes("space-y-2 sm:space-y-2.5"));
   assert.ok(signup.includes("space-y-2 sm:space-y-2.5"));
 
-  assert.ok(meter.includes("absolute inset-x-0 top-full"));
-  assert.ok(meter.includes("pointer-events-none"));
-  assert.ok(meter.includes("px-2.5 py-2"));
+  assert.ok(meter.includes("inline-flex items-center gap-1.5"));
+  assert.ok(meter.includes("text-[10px] font-semibold leading-none"));
+  assert.ok(meter.includes("h-1 w-2 overflow-hidden rounded-full"));
+  assert.ok(!meter.includes("absolute"));
 });
 
 
