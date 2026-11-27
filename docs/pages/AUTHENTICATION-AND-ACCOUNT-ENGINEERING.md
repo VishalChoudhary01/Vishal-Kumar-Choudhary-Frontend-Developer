@@ -32,7 +32,8 @@ The app uses a local placeholder during static build initialization when the rea
 
 | Flow | UI route / endpoint | Current behavior |
 |---|---|---|
-| Login | `/labs/login` | Email/password and configured provider options; safe local return destination |
+| Login | `/labs/login` | Email/password and configured provider options; safe local return destination; unlinked OAuth identities receive an explicit account-linking explanation |
+| Account security | `/labs/account/security` | Verified signed-in users can view connected sign-in methods, connect configured Google/GitHub providers and disconnect a social provider while another method remains |
 | Signup | `/labs/signup` → `POST /api/labs/register` | Dedicated registration endpoint; generic response to avoid account enumeration |
 | Email verification | `/labs/verify-email` | Confirms Better Auth verification through server-side flow state |
 | Resend verification | `POST /api/labs/verification/resend` | Generic response; creates an opaque flow ID and requests another message |
@@ -79,13 +80,23 @@ Credential presence only proves that the code path can be configured. Provider a
 
 **Current code discrepancy:** `src/app/lib/labs/owner-access.js` still accepts a matching configured `LABS_OWNER_EMAIL` as an alternative to the ID. Remove that fallback before the current implementation is described as ID-only. Check deployed Preview/Production variables first; this documentation change does not alter the code or environment.
 
-## 6. Account capabilities that are not implemented
+## 6. Account capabilities and current scope
 
-The following PRD capabilities are not present as a complete user-account product in the current route tree:
+Implemented on the social-account-linking feature branch:
+- Account settings at `/labs/account/security` for verified signed-in users;
+- listing the account's linked Better Auth sign-in methods;
+- explicit Google/GitHub linking to the current Labs user;
+- social-provider disconnect when another sign-in method remains;
+- server-side verification guards for the Better Auth `/link-social` and `/unlink-account` endpoints;
+- implicit OAuth account linking disabled, with same-email account collisions directed to the original sign-in method and Account settings.
+
+Still not implemented as a complete user-account product:
 - account profile editing;
 - self-service account deletion;
 - personal user dashboard;
 - personal activity history, recently viewed labs or recently accessed components.
+
+The feature branch's automated source tests do not prove provider-console configuration or live OAuth callbacks. Complete the Preview browser acceptance checklist in `docs/future/SOCIAL-ACCOUNT-LINKING.md` before Production release.
 
 The owner Labs Analytics dashboard is not a substitute for a user dashboard. Privacy/account deletion requests are currently described on `/privacy` as requests made through the Contact channel; there is no self-service delete workflow documented as implemented.
 

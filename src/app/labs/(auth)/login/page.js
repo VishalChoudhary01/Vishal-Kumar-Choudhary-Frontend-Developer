@@ -28,18 +28,30 @@ export default async function LabsLoginPage({ searchParams }) {
   const initialError =
     query?.error === "session-expired"
       ? "Your session has expired. Please sign in again to continue."
-      : query?.error === "google"
-        ? "Google sign-in could not be completed. Please try again."
-        : query?.error === "github"
-          ? "GitHub sign-in could not be completed. Check that your GitHub account has a verified email address and try again."
-          : !isAuthRuntimeConfigured()
-          ? "Authentication is not configured yet."
-          : "";
+      : query?.error === "account_not_linked"
+        ? "This provider is not connected to your Labs account yet. Sign in with your original method, verify your email, then connect it from Account settings."
+        : query?.error === "email_not_verified"
+          ? "Your provider email must be verified before you can sign in."
+          : query?.provider === "google"
+            ? "Google sign-in could not be completed. Please try again."
+            : query?.provider === "github"
+              ? "GitHub sign-in could not be completed. Check that your GitHub account has a verified email address and try again."
+              : !isAuthRuntimeConfigured()
+                ? "Authentication is not configured yet."
+                : "";
 
   return (
     <>
       {initialError ? (
-        <AuthMessage title={query?.error === "session-expired" ? "Session expired" : "Authentication unavailable"}>
+        <AuthMessage title={
+          query?.error === "session-expired"
+            ? "Session expired"
+            : query?.error === "account_not_linked"
+              ? "Sign-in method not connected"
+              : query?.error === "email_not_verified"
+                ? "Email verification required"
+                : "Authentication unavailable"
+        }>
           {initialError}
         </AuthMessage>
       ) : null}

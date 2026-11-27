@@ -38,11 +38,13 @@ export default async function LabsSignupPage({ searchParams }) {
       googleEnabled={googleEnabled}
       githubEnabled={githubEnabled}
       initialError={
-        query?.error === "google"
-          ? "Google account creation could not be completed. Please try again."
-          : query?.error === "github"
-            ? "GitHub account creation could not be completed. Make sure your account has a verified email address, then try again."
-            : ""
+        query?.error === "account_not_linked"
+          ? "This provider is not connected to an existing Labs account. Sign in with your original method, then connect it from Account settings."
+          : query?.provider === "google"
+            ? "Google account creation could not be completed. Please try again."
+            : query?.provider === "github"
+              ? "GitHub account creation could not be completed. Make sure your account has a verified email address, then try again."
+              : ""
       }
     />
   );

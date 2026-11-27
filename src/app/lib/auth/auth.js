@@ -202,8 +202,12 @@ export const auth = betterAuth({
   account: {
     accountLinking: {
       enabled: true,
-      disableImplicitLinking: false,
+      // Users must explicitly connect providers from Account settings.
+      // Never attach a logged-out OAuth identity to an existing account silently.
+      disableImplicitLinking: true,
+      requireLocalEmailVerified: true,
       allowDifferentEmails: false,
+      allowUnlinkingAll: false,
     },
   },
   emailAndPassword: {

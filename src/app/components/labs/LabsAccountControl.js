@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronDown, MailCheck } from "lucide-react";
+import { ChevronDown, MailCheck, Settings2 } from "lucide-react";
 import LogOutAnimatedIcon from "@/app/components/ui/LogOutAnimatedIcon";
 
 import { getLabsAccountDisplayName } from "@/app/lib/labs/auth-user-presentation.mjs";
@@ -315,6 +315,17 @@ export default function LabsAccountControl({
           </>
         }
       >
+        {isVerified ? (
+          <Link
+            href="/labs/account/security"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="flex min-h-10 w-full items-center gap-2 rounded-[2px] border border-transparent px-2.5 text-left text-xs font-medium text-text-secondary transition-[color,background-color,border-color] duration-200 hover:border-border hover:bg-surface-2 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand motion-reduce:transition-none sm:px-3 sm:text-sm"
+          >
+            <Settings2 size={15} aria-hidden="true" />
+            <span className="min-w-0 flex-1">Account settings</span>
+          </Link>
+        ) : null}
         {!isVerified ? (
           <Link
             href={verifyHref}

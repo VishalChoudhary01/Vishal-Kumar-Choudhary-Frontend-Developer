@@ -52,7 +52,7 @@ export default function SocialAuthButtons({
         callbackURL: returnTo,
         errorCallbackURL:
           authPath +
-          "?error=" +
+          "?provider=" +
           provider +
           "&returnTo=" +
           encodeURIComponent(returnTo),
