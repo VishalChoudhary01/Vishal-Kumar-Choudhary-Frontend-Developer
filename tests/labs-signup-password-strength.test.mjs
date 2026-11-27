@@ -14,7 +14,7 @@ test("signup password strength appears only while the password field has focus",
   assert.ok(signup.includes('describedBy={passwordFocused ? "password-strength-meter" : undefined}'));
 });
 
-test("password strength floats below the input without changing form layout height", async () => {
+test("password strength sits inline with the password label without changing form layout height", async () => {
   const meter = await read("../src/app/components/labs/auth/PasswordStrengthMeter.js");
 
   assert.ok(meter.includes("inline-flex items-center gap-1.5"));
@@ -28,7 +28,6 @@ test("password strength floats below the input without changing form layout heig
   assert.ok(meter.includes("aria-valuenow={score}"));
   assert.ok(!meter.includes('height: "auto"'));
   assert.ok(!meter.includes("grid-cols-2"));
-  assert.ok(!meter.includes("Password strength"));
   assert.ok(!meter.includes("check.label"));
 });
 
@@ -36,6 +35,9 @@ test("password field supports the focused strength meter as an additional access
   const field = await read("../src/app/components/labs/auth/AuthField.js");
 
   assert.ok(field.includes("describedBy"));
+  assert.ok(field.includes("min-h-[18px]"));
+  assert.ok(field.includes("sm:min-h-5"));
+  assert.ok(field.includes("labelAccessory"));
   assert.ok(field.includes("const descriptionIds = [errorId || helperId, describedBy]"));
   assert.ok(field.includes("aria-describedby={descriptionIds}"));
 });
