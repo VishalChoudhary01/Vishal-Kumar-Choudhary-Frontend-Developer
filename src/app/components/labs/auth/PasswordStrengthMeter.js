@@ -36,9 +36,9 @@ export default function PasswordStrengthMeter({
   } = assessPasswordStrength(password);
   const tone = !password
     ? "neutral"
-    : score <= 1
+    : score <= 2
       ? "weak"
-      : score <= 3
+      : score === 3
         ? "fair"
         : score === 4
           ? "good"
@@ -61,7 +61,7 @@ export default function PasswordStrengthMeter({
           className="inline-flex min-w-0 items-center gap-1.5"
         >
           <AnimatePresence mode="wait" initial={false}>
-            <motion.span
+            {password ? <motion.span
               key={guidance}
               initial={reducedMotion ? false : { opacity: 0, y: 3 }}
               animate={{ opacity: 1, y: 0 }}
@@ -76,7 +76,7 @@ export default function PasswordStrengthMeter({
               title={guidance}
             >
               {guidance}
-            </motion.span>
+            </motion.span> : null}
           </AnimatePresence>
           <div
             id="password-strength-meter"
