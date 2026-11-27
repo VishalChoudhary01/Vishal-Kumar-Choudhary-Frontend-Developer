@@ -45,11 +45,26 @@ export function assessPasswordStrength(password = "") {
   const missingCharacters = Math.max(0, MINIMUM_LENGTH - value.length);
 
   let label = "Start typing";
-  if (missingCharacters > 0) label = "Too short";
-  else if (score <= 2) label = "Weak";
-  else if (score === 3) label = "Fair";
-  else if (score === 4) label = "Good";
-  else label = "Strong";
+  let tone = "neutral";
+
+  if (value && missingCharacters > 0) {
+    label = "Too short";
+    tone = "weak";
+  } else if (score <= 2) {
+    label = value ? "Weak" : "Start typing";
+    tone = value ? "weak" : "neutral";
+  } else if (score === 3) {
+    label = "Fair";
+    tone = "fair";
+  } else if (score === 4) {
+    // Four passed checks still means one requirement is missing. Avoid
+    // announcing "Good" while the guidance is asking for another requirement.
+    label = "Almost there";
+    tone = "good";
+  } else {
+    label = "Strong";
+    tone = "strong";
+  }
 
   const guidance = !value
     ? ""
@@ -61,6 +76,7 @@ export function assessPasswordStrength(password = "") {
     score,
     maximum: checks.length,
     label,
+    tone,
     checks,
     guidance,
     nextRequirementId: nextRequirement?.id || null,
