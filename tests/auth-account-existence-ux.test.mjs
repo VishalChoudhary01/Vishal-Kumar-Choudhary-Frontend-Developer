@@ -27,8 +27,9 @@ test("signup confirmation preserves returnTo for sign-in and password recovery",
   assert.ok(confirmation.includes("Continue to sign in"));
   assert.ok(confirmation.includes("Forgot password?"));
   assert.ok(confirmation.includes("Use another email"));
-  assert.ok(confirmation.includes('setEmail("")'));
-  assert.ok(confirmation.includes("setPassword(\"")") === false);
+  const signup = await read("../src/app/components/labs/auth/SignupForm.js");
+  assert.ok(signup.includes('setEmail("")'));
+  assert.ok(signup.includes('setPassword("")'));
 });
 
 test("signup confirmation is keyboard accessible and respects reduced motion", async () => {
