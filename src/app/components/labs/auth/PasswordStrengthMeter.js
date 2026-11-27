@@ -1,7 +1,6 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { Check, Circle } from "lucide-react";
 
 import useReducedMotion from "@/app/hooks/useReducedMotion";
 import { assessPasswordStrength } from "@/app/lib/auth/password-strength.mjs";
@@ -20,56 +19,59 @@ function getTone(score) {
   return "strong";
 }
 
-export default function PasswordStrengthMeter({ password = "" }) {
+export default function PasswordStrengthMeter({
+  password = "",
+  visible = false,
+}) {
   const reducedMotion = useReducedMotion();
   const { score, maximum, label, checks } = assessPasswordStrength(password);
-  const tone = getTone(score);
-  const toneClass = TONE_CLASSES[tone];
+  const toneClass = TONE_CLASSES[getTone(score)];
+  const displayLabel = password ? label : "At least 8 characters";
   const transition = reducedMotion
     ? { duration: 0.01 }
-    : { duration: 0.42, ease: [0.22, 1, 0.36, 1] };
+    : { duration: 0.2, ease: [0.22, 1, 0.36, 1] };
 
   return (
     <AnimatePresence initial={false}>
-      {password ? (
-        <motion.section
+      {visible ? (
+        <motion.div
           key="password-strength"
-          initial={reducedMotion ? false : { opacity: 0, height: 0, y: -6 }}
-          animate={{ opacity: 1, height: "auto", y: 0 }}
-          exit={{ opacity: 0, height: 0, y: -4 }}
+          initial={reducedMotion ? false : { opacity: 0, y: -5, scale: 0.985 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -4, scale: 0.99 }}
           transition={transition}
-          className="overflow-hidden"
-          aria-label="Password strength"
+          className="pointer-events-none absolute inset-x-0 top-full z-30 mt-1.5"
         >
-          <div className="space-y-1.5 border border-border-subtle bg-surface-1/70 px-2.5 py-2 sm:space-y-2 sm:px-3 sm:py-2.5">
+          <div className="rounded-sm border border-border bg-surface-elevated/95 px-2.5 py-2 shadow-[0_10px_28px_-18px_rgba(0,0,0,0.45)] backdrop-blur-md">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-[11px] font-medium tracking-wide text-text-secondary">
+              <span className="text-[10px] font-medium tracking-wide text-text-secondary">
                 Password strength
               </span>
               <motion.span
-                key={label}
-                initial={reducedMotion ? false : { opacity: 0, y: 5 }}
+                key={displayLabel}
+                initial={reducedMotion ? false : { opacity: 0, y: 3 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={transition}
-                className="text-[11px] font-semibold text-text-primary"
+                className="text-[10px] font-semibold text-text-primary"
                 aria-live="polite"
               >
-                {label}
+                {displayLabel}
               </motion.span>
             </div>
 
             <div
+              id="password-strength-meter"
               role="meter"
-              aria-label={"Password strength: " + label}
+              aria-label={"Password strength: " + displayLabel}
               aria-valuemin={0}
               aria-valuemax={maximum}
               aria-valuenow={score}
-              className="grid grid-cols-5 gap-1.5"
+              className="mt-1.5 grid grid-cols-5 gap-1"
             >
               {checks.map((check, index) => (
-                <div
+                <span
                   key={check.id}
-                  className="h-1.5 overflow-hidden rounded-full bg-surface-3"
+                  className="h-1 overflow-hidden rounded-full bg-surface-3"
                 >
                   <motion.span
                     className={"block h-full origin-left rounded-full " + toneClass}
@@ -80,37 +82,14 @@ export default function PasswordStrengthMeter({ password = "" }) {
                     }}
                     transition={{
                       ...transition,
-                      delay: reducedMotion ? 0 : index * 0.035,
+                      delay: reducedMotion ? 0 : index * 0.025,
                     }}
                   />
-                </div>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 sm:grid-cols-3 sm:gap-x-3 sm:gap-y-2">
-              {checks.map((check) => (
-                <motion.div
-                  key={check.id}
-                  layout
-                  className="flex min-w-0 items-center gap-1.5"
-                  transition={transition}
-                >
-                  {check.passed ? (
-                    <Check size={12} className="shrink-0 text-success" aria-hidden="true" />
-                  ) : (
-                    <Circle size={10} className="shrink-0 text-text-tertiary" aria-hidden="true" />
-                  )}
-                  <span className={
-                    "truncate text-[10px] " +
-                    (check.passed ? "text-text-secondary" : "text-text-tertiary")
-                  }>
-                    {check.label}
-                  </span>
-                </motion.div>
+                </span>
               ))}
             </div>
           </div>
-        </motion.section>
+        </motion.div>
       ) : null}
     </AnimatePresence>
   );
