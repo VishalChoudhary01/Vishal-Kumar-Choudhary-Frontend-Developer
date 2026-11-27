@@ -30,19 +30,11 @@ export default function PasswordStrengthMeter({
     score,
     maximum,
     label,
+    tone,
     checks,
     guidance,
     nextRequirementIsRequired,
   } = assessPasswordStrength(password);
-  const tone = !password
-    ? "neutral"
-    : score <= 2
-      ? "weak"
-      : score === 3
-        ? "fair"
-        : score === 4
-          ? "good"
-          : "strong";
   const toneClass = TONE_CLASSES[tone];
   const toneTextClass = TONE_TEXT_CLASSES[tone];
   const transition = reducedMotion
@@ -81,7 +73,8 @@ export default function PasswordStrengthMeter({
           <div
             id="password-strength-meter"
             role="meter"
-            aria-label={"Password strength: " + label}
+            aria-label="Password strength"
+            aria-valuetext={guidance ? label + ". " + guidance : label}
             aria-valuemin={0}
             aria-valuemax={maximum}
             aria-valuenow={score}
