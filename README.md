@@ -34,7 +34,7 @@ This is a personal frontend developer portfolio built with Next.js. The site pre
 ### SEO, email, and development tools
 
 - Next.js Metadata API plus project utilities generate metadata and JSON-LD; `scripts/validate-seo.cjs` checks project SEO data.
-- **Nodemailer** sends contact messages through Gmail SMTP in the contact API route. A Resend helper and dependency are also present, but the contact route uses Nodemailer.
+- **Nodemailer** sends portfolio contact messages through Gmail SMTP in the contact API route. Labs authentication emails use a separate SMTP configuration.
 - **ESLint** and `eslint-config-next` provide linting. React Compiler is enabled in the Next.js configuration.
 - **Puppeteer Core** and **axe-core** support local browser verification and accessibility scripts; **Tailwind CSS** and its PostCSS plugin are development dependencies.
 
@@ -95,7 +95,7 @@ Open [http://localhost:3000](http://localhost:3000) in a browser.
 
 The homepage can run without email credentials. To enable contact submissions, the current `/api/contact` implementation expects `GMAIL_USER`, `GMAIL_APP_PASSWORD`, and `CONTACT_TO_EMAIL` in the local environment. `NEXT_PUBLIC_SITE_URL` sets the canonical site origin and has a code-defined fallback.
 
-**Environment configuration note:** `.env.example` currently lists `RESEND_API_KEY`, optional `RESEND_FROM_EMAIL`, `CONTACT_TO_EMAIL`, and `NEXT_PUBLIC_SITE_URL`. The contact API currently uses Gmail SMTP instead of Resend, so the example does not list the two required Gmail variables. Keep credentials in an untracked local environment file and do not commit them.
+**Environment configuration:** `.env.example` lists `GMAIL_USER`, `GMAIL_APP_PASSWORD`, and `CONTACT_TO_EMAIL` for the contact form. `GMAIL_APP_PASSWORD` must be a Google App Password, not the normal Gmail password. Labs verification and password-reset emails use the separate `AUTH_SMTP_*` variables. Keep credentials in an untracked local environment file and do not commit them.
 
 ## Available Commands
 
