@@ -1,6 +1,6 @@
 # Labs Account Existence-Safe Signup and Login UX
 
-**Status:** UX and implementation contract — documentation first; UI/API changes are not part of this document commit.  
+**Status:** Implemented on `feature/auth-account-existence-ux`; automated regression coverage added. Local test/build execution and Preview browser verification are still pending.  
 **Target baseline:** `main`  
 **Scope:** Make signup and login outcomes understandable for new and returning users without exposing whether an email address is registered.
 
@@ -101,7 +101,7 @@ Do not show the confirmation view for non-success responses.
 
 Do not convert an actual email-delivery failure into a success state.
 
-## 5. Proposed login experience
+## 5. Login experience
 
 ### 5.1 Loading
 
