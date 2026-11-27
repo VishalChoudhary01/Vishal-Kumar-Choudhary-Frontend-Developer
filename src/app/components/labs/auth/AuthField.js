@@ -19,6 +19,8 @@ export default function AuthField({
   helper,
   disabled = false,
   inputMode,
+  describedBy,
+  labelAccessory,
 }) {
   const isPassword = type === "password";
   const [visible, setVisible] = useState(false);
@@ -26,15 +28,19 @@ export default function AuthField({
   const inputType = isPassword && visible ? "text" : type;
   const errorId = error ? id + "-error" : undefined;
   const helperId = helper && !error ? id + "-helper" : undefined;
+  const descriptionIds = [errorId || helperId, describedBy].filter(Boolean).join(" ") || undefined;
 
   return (
     <div className="min-w-0">
-      <label
-        htmlFor={id}
-        className="mb-0.5 block text-xs font-medium text-text-primary sm:mb-1 sm:text-sm"
-      >
-        {label}
-      </label>
+      <div className="mb-0.5 flex min-h-4 items-center justify-between gap-2 sm:mb-1 sm:min-h-5">
+        <label
+          htmlFor={id}
+          className="text-xs font-medium leading-4 text-text-primary sm:text-sm sm:leading-5"
+        >
+          {label}
+        </label>
+        {labelAccessory ? <div className="flex shrink-0 items-center">{labelAccessory}</div> : null}
+      </div>
 
       <div className="relative">
         <input
@@ -49,7 +55,7 @@ export default function AuthField({
           disabled={disabled}
           inputMode={inputMode}
           aria-invalid={Boolean(error)}
-          aria-describedby={errorId || helperId}
+          aria-describedby={descriptionIds}
           className={[
             "h-9 w-full rounded-sm border bg-transparent px-2.5 text-[13px] text-text-primary outline-none transition-colors sm:h-10 sm:px-3 sm:text-sm",
             "placeholder:text-text-tertiary hover:border-border-strong",
