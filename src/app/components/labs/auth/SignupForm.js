@@ -170,7 +170,6 @@ export default function SignupForm({
         />
 
         <div
-          className={passwordFocused ? "relative z-20" : "relative z-0"}
           onFocus={() => setPasswordFocused(true)}
           onBlur={(event) => {
             if (!event.currentTarget.contains(event.relatedTarget)) {
@@ -178,23 +177,25 @@ export default function SignupForm({
             }
           }}
         >
-        <AuthField
-          id="password"
-          label="Password"
-          type="password"
-          value={password}
-          onChange={(event) => {
-            const value = event.target.value;
-            setPassword(value);
-            if (submitted) setErrors((current) => ({ ...current, password: validate("password", value) }));
-          }}
-          onBlur={() => setErrors((current) => ({ ...current, password: validate("password", password) }))}
-          autoComplete="new-password"
-          error={errors.password}
-          disabled={loading}
-          describedBy={passwordFocused ? "password-strength-meter" : undefined}
-        />
-        <PasswordStrengthMeter password={password} visible={passwordFocused} />
+          <AuthField
+            id="password"
+            label="Password"
+            type="password"
+            value={password}
+            onChange={(event) => {
+              const value = event.target.value;
+              setPassword(value);
+              if (submitted) setErrors((current) => ({ ...current, password: validate("password", value) }));
+            }}
+            onBlur={() => setErrors((current) => ({ ...current, password: validate("password", password) }))}
+            autoComplete="new-password"
+            error={errors.password}
+            disabled={loading}
+            describedBy={passwordFocused ? "password-strength-meter" : undefined}
+            labelAccessory={
+              <PasswordStrengthMeter password={password} visible={passwordFocused} />
+            }
+          />
         </div>
 
         <div className="pt-0.5">
