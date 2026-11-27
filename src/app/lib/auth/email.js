@@ -5,11 +5,11 @@ import nodemailer from "nodemailer";
 function readSmtpConfig() {
   const host = process.env.AUTH_SMTP_HOST;
   const port = Number(process.env.AUTH_SMTP_PORT || 587);
-  const user = process.env.AUTH_SMTP_USER;
-  const pass = process.env.AUTH_SMTP_PASSWORD;
-  const from = process.env.AUTH_EMAIL_FROM;
+  const user = process.env.AUTH_SMTP_USER?.trim();
+  const configuredPassword = process.env.AUTH_SMTP_PASSWORD;
+  const from = process.env.AUTH_EMAIL_FROM?.trim();
 
-  if (!host || !Number.isFinite(port) || !user || !pass || !from) {
+  if (!host || !Number.isFinite(port) || !user || !configuredPassword || !from) {
     throw new Error("Authentication email delivery is not configured.");
   }
 
@@ -17,7 +17,11 @@ function readSmtpConfig() {
     host,
     port,
     user,
-    pass,
+    // Google displays App Passwords in groups; remove copied whitespace for Gmail SMTP.
+    // Preserve passwords unchanged for other SMTP providers.
+    pass: host.trim().toLowerCase() === "smtp.gmail.com"
+      ? configuredPassword.replace(/\s/g, "")
+      : configuredPassword,
     from,
     secure:
       process.env.AUTH_SMTP_SECURE === "true" ||
