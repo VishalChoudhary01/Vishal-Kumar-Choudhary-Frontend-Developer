@@ -11,6 +11,9 @@ test("signup password strength appears only while the password field has focus",
   assert.ok(signup.includes("const [passwordFocused, setPasswordFocused] = useState(false)"));
   assert.ok(signup.includes("onFocus={() => setPasswordFocused(true)}"));
   assert.ok(signup.includes("setPasswordFocused(false)"));
+  assert.ok(signup.includes('document.addEventListener("pointerdown", handleOutsidePointer)'));
+  assert.ok(signup.includes('document.removeEventListener("pointerdown", handleOutsidePointer)'));
+  assert.ok(signup.includes("ref={passwordFieldRef}"));
   assert.ok(signup.includes("visible={passwordFocused}"));
   assert.ok(signup.includes('describedBy={passwordFocused ? "password-strength-meter" : undefined}'));
 });
@@ -31,6 +34,9 @@ test("password strength sits inline with the password label without changing for
   assert.ok(meter.includes("exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 2 }}"));
   assert.ok(meter.includes('role="meter"'));
   assert.ok(meter.includes("aria-valuenow={score}"));
+  assert.ok(meter.includes("aria-valuetext={guidance ? label + \". \" + guidance : label}"));
+  assert.ok(meter.includes("tone,"));
+  assert.ok(!meter.includes("const tone = !password"));
   assert.ok(!meter.includes('height: "auto"'));
   assert.ok(!meter.includes("grid-cols-2"));
   assert.ok(!meter.includes("check.label"));
@@ -90,4 +96,8 @@ test("only the minimum eight-character rule is marked as required", () => {
   assert.equal(assessPasswordStrength("abcdefgh").nextRequirementIsRequired, false);
   assert.equal(assessPasswordStrength("abc").label, "Too short");
   assert.equal(assessPasswordStrength("abcdefgh").label, "Weak");
+  assert.equal(assessPasswordStrength("Abcdefgh1").label, "Almost there");
+  assert.equal(assessPasswordStrength("Abcdefgh1").tone, "good");
+  assert.equal(assessPasswordStrength("Abcdefgh1!").label, "Strong");
+  assert.equal(assessPasswordStrength("Abcdefgh1!").tone, "strong");
 });

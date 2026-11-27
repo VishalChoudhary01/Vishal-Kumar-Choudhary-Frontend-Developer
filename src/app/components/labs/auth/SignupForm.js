@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AuthField from "./AuthField";
 import AuthSubmit from "./AuthSubmit";
 import AuthMessage from "./AuthMessage";
 import AuthLink from "./AuthLink";
 import PasswordStrengthMeter from "./PasswordStrengthMeter";
 import SocialAuthButtons from "./SocialAuthButtons";
+import SignupConfirmation from "./SignupConfirmation";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -29,6 +30,23 @@ export default function SignupForm({
   const [complete, setComplete] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [privacyError, setPrivacyError] = useState(false);
+  const submitLockRef = useRef(false);
+  const passwordFieldRef = useRef(null);
+
+  useEffect(() => {
+    if (!passwordFocused) return undefined;
+
+    const handleOutsidePointer = (event) => {
+      if (!passwordFieldRef.current?.contains(event.target)) {
+        setPasswordFocused(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handleOutsidePointer);
+    return () => {
+      document.removeEventListener("pointerdown", handleOutsidePointer);
+    };
+  }, [passwordFocused]);
 
   const validate = (name, value) => {
     if (name === "email") {
@@ -47,6 +65,7 @@ export default function SignupForm({
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (submitLockRef.current) return;
     setSubmitted(true);
 
     const nextErrors = {
@@ -75,6 +94,7 @@ export default function SignupForm({
       return;
     }
 
+    submitLockRef.current = true;
     setLoading(true);
     setGlobalError("");
 
@@ -109,32 +129,26 @@ export default function SignupForm({
     } catch {
       setGlobalError("Unable to create your account right now. Please try again.");
     } finally {
+      submitLockRef.current = false;
       setLoading(false);
     }
   };
 
   if (complete) {
     return (
-      <div className="py-2 text-center sm:py-3">
-        <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-brand-soft text-brand" aria-hidden="true">
-          <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.6">
-            <path d="M3.5 6.5h17v11h-17z" />
-            <path d="m4 7 8 6 8-6" />
-            <path d="m8.5 12.5 2.2 2.2 4.8-5" />
-          </svg>
-        </div>
-        <h1 className="font-display text-[1.55rem] leading-tight tracking-[-0.025em] sm:text-[1.7rem]">
-          Check your email
-        </h1>
-        <p className="mt-2 text-xs leading-5 text-text-secondary sm:mt-3 sm:text-sm sm:leading-6">
-          If an account can be created with this address, you&apos;ll receive an email with the next steps.
-        </p>
-        <div className="mt-6">
-          <AuthLink href={"/labs/login?returnTo=" + encodeURIComponent(returnTo)}>
-            Back to sign in
-          </AuthLink>
-        </div>
-      </div>
+      <SignupConfirmation
+        returnTo={returnTo}
+        onUseAnotherEmail={() => {
+          setComplete(false);
+          setEmail("");
+          setPassword("");
+          setErrors({});
+          setSubmitted(false);
+          setPrivacyAccepted(false);
+          setPrivacyError(false);
+          setGlobalError("");
+        }}
+      />
     );
   }
 
@@ -151,7 +165,7 @@ export default function SignupForm({
 
       {globalError ? <AuthMessage title="Unable to create account">{globalError}</AuthMessage> : null}
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-2 sm:space-y-2.5">
+      <form onSubmit={handleSubmit} noValidate aria-busy={loading} className="space-y-2 sm:space-y-2.5">
         <AuthField
           id="email"
           label="Email address"
@@ -170,6 +184,7 @@ export default function SignupForm({
         />
 
         <div
+          ref={passwordFieldRef}
           onFocus={() => setPasswordFocused(true)}
           onBlur={(event) => {
             if (!event.currentTarget.contains(event.relatedTarget)) {

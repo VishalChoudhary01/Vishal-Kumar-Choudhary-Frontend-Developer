@@ -24,6 +24,7 @@ export default function LoginForm({
   const [loading, setLoading] = useState(false);
   const [globalError, setGlobalError] = useState(initialError || "");
   const [verificationRequired, setVerificationRequired] = useState(false);
+  const [credentialFailure, setCredentialFailure] = useState(false);
   const submitLockRef = useRef(false);
 
   const validate = (name, value) => {
@@ -62,6 +63,7 @@ export default function LoginForm({
     setLoading(true);
     setGlobalError("");
     setVerificationRequired(false);
+    setCredentialFailure(false);
 
     let navigationStarted = false;
 
@@ -72,12 +74,24 @@ export default function LoginForm({
       });
 
       if (result?.error) {
-        const requiresVerification = result.error.status === 403;
+        const status = Number(
+          result.error.status ?? result.error.statusCode ?? result.error.status_code ?? 0,
+        );
+        const requiresVerification = status === 403;
+        const rateLimited = status === 429;
+        const isCredentialFailure =
+          status >= 400 && status < 500 && !requiresVerification && !rateLimited;
+
         setVerificationRequired(requiresVerification);
+        setCredentialFailure(isCredentialFailure);
         setGlobalError(
           requiresVerification
             ? "Your email address is not verified yet. Verify it before signing in."
-            : "Check your email and password, then try again.",
+            : rateLimited
+              ? "Too many sign-in attempts. Please wait a moment before trying again."
+              : isCredentialFailure
+                ? "We couldn't sign you in with those details. Check your email and password, or reset your password."
+                : "Unable to sign in right now. Please try again.",
         );
         return;
       }
@@ -112,12 +126,23 @@ export default function LoginForm({
       </div>
 
       {globalError ? (
-        <AuthMessage title="Unable to sign in">
+        <AuthMessage title={verificationRequired ? "Verify your email first" : "Unable to sign in"}>
           {globalError}
           {verificationRequired ? (
             <span className="mt-2 block">
               <AuthLink href={"/labs/verify-email?returnTo=" + encodeURIComponent(returnTo)}>
                 Verify your email
+              </AuthLink>
+            </span>
+          ) : null}
+          {credentialFailure ? (
+            <span className="mt-2 block">
+              New to Labs?{" "}
+              <AuthLink
+                href={"/labs/signup?returnTo=" + encodeURIComponent(returnTo)}
+                className="font-semibold"
+              >
+                Create an account
               </AuthLink>
             </span>
           ) : null}
@@ -133,6 +158,11 @@ export default function LoginForm({
           onChange={(event) => {
             const value = event.target.value;
             setEmail(value);
+            if (credentialFailure || verificationRequired) {
+              setGlobalError("");
+              setCredentialFailure(false);
+              setVerificationRequired(false);
+            }
             if (submitted) setErrors((current) => ({ ...current, email: validate("email", value) }));
           }}
           onBlur={() => setErrors((current) => ({ ...current, email: validate("email", email) }))}
@@ -151,6 +181,11 @@ export default function LoginForm({
             onChange={(event) => {
               const value = event.target.value;
               setPassword(value);
+              if (credentialFailure || verificationRequired) {
+                setGlobalError("");
+                setCredentialFailure(false);
+                setVerificationRequired(false);
+              }
               if (submitted) setErrors((current) => ({ ...current, password: validate("password", value) }));
             }}
             onBlur={() => setErrors((current) => ({ ...current, password: validate("password", password) }))}
@@ -179,12 +214,14 @@ export default function LoginForm({
         onPendingChange={setLoading}
       />
 
-      <p className="mt-2 text-center text-xs text-text-secondary sm:mt-3 sm:text-sm">
-        Don&apos;t have an account?{" "}
-        <AuthLink href={"/labs/signup?returnTo=" + encodeURIComponent(returnTo)}>
-          Create an account
-        </AuthLink>
-      </p>
+      {!credentialFailure ? (
+        <p className="mt-2 text-center text-xs text-text-secondary sm:mt-3 sm:text-sm">
+          Don&apos;t have an account?{" "}
+          <AuthLink href={"/labs/signup?returnTo=" + encodeURIComponent(returnTo)}>
+            Create an account
+          </AuthLink>
+        </p>
+      ) : null}
     </>
   );
 }
