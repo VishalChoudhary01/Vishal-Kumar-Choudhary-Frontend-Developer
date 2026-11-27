@@ -109,7 +109,11 @@ test("verification and password-reset callbacks await SMTP delivery instead of h
   assert.match(source, /sendResetPassword: async \(\{ user, url \}\) => \{\s*await deliverAuthEmail\(/);
   assert.match(source, /sendVerificationEmail: async \(\{ user, url \}\) => \{\s*await deliverAuthEmail\(/);
   assert.equal(source.includes("scheduleEmail("), false);
-  assert.equal(source.includes('import { after } from "next/server"'), false);
+  assert.ok(source.includes('import { after } from "next/server"'));
+  assert.match(
+    source,
+    /backgroundTasks:\s*\{\s*handler:\s*\(promise\)\s*=>\s*after\(\(\)\s*=>\s*promise\),\s*\}/,
+  );
 });
 
 test("registration and verification resend surface email delivery failures without exposing account existence", async () => {
