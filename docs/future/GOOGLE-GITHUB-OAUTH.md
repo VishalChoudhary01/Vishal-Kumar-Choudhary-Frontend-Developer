@@ -1,6 +1,6 @@
 # Future Verification — Google and GitHub OAuth
 
-**Status:** CODE PRESENT; ENVIRONMENT CONFIGURATION AND END-TO-END VERIFICATION PENDING.  
+**Status:** PROVIDER CONFIG PRESENT; EXPLICIT ACCOUNT LINKING IMPLEMENTED ON FEATURE BRANCH; ENVIRONMENT CONFIGURATION AND END-TO-END VERIFICATION PENDING.  
 **Auth implementation:** src/app/lib/auth/auth.js using Better Auth and MongoDB adapter.  
 **Catch-all API:** src/app/api/auth/[...all]/route.js.
 
@@ -45,10 +45,14 @@ The custom loader:
 
 ## 2. Existing account/session policy
 
-Better Auth config currently includes:
+The account-linking feature branch changes Better Auth config to:
 - account linking enabled;
-- disableImplicitLinking false;
+- disableImplicitLinking true;
+- requireLocalEmailVerified true;
 - allowDifferentEmails false;
+- allowUnlinkingAll false.
+
+The user must sign in with an existing method and explicitly connect Google/GitHub from `/labs/account/security`. The Better Auth `/link-social` request is additionally guarded server-side: the request must have an active session and the local Labs email must be verified. Same-email OAuth login without an existing provider link is rejected and the login screen explains how to connect the provider.
 - email/password enabled;
 - requireEmailVerification true;
 - autoSignIn false;
