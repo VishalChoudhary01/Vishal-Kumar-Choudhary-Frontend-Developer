@@ -21,6 +21,7 @@ export default function SignupForm({
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -168,6 +169,15 @@ export default function SignupForm({
           disabled={loading}
         />
 
+        <div
+          className={passwordFocused ? "relative z-20" : "relative z-0"}
+          onFocus={() => setPasswordFocused(true)}
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) {
+              setPasswordFocused(false);
+            }
+          }}
+        >
         <AuthField
           id="password"
           label="Password"
@@ -180,11 +190,12 @@ export default function SignupForm({
           }}
           onBlur={() => setErrors((current) => ({ ...current, password: validate("password", password) }))}
           autoComplete="new-password"
-          helper="Use at least 8 characters."
           error={errors.password}
           disabled={loading}
+          describedBy={passwordFocused ? "password-strength-meter" : undefined}
         />
-        <PasswordStrengthMeter password={password} />
+        <PasswordStrengthMeter password={password} visible={passwordFocused} />
+        </div>
 
         <div className="pt-0.5">
           <div className="flex items-start gap-2">
