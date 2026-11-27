@@ -26,7 +26,14 @@ export default function PasswordStrengthMeter({
   visible = false,
 }) {
   const reducedMotion = useReducedMotion();
-  const { score, maximum, label, checks } = assessPasswordStrength(password);
+  const {
+    score,
+    maximum,
+    label,
+    checks,
+    guidance,
+    nextRequirementIsRequired,
+  } = assessPasswordStrength(password);
   const tone = !password
     ? "neutral"
     : score <= 1
@@ -38,10 +45,9 @@ export default function PasswordStrengthMeter({
           : "strong";
   const toneClass = TONE_CLASSES[tone];
   const toneTextClass = TONE_TEXT_CLASSES[tone];
-  const displayLabel = password ? label : "8+ chars";
   const transition = reducedMotion
     ? { duration: 0.01 }
-    : { duration: 0.18, ease: [0.22, 1, 0.36, 1] };
+    : { duration: 0.2, ease: [0.22, 1, 0.36, 1] };
 
   return (
     <AnimatePresence initial={false}>
@@ -52,19 +58,35 @@ export default function PasswordStrengthMeter({
           animate={{ opacity: 1, y: 0 }}
           exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 2 }}
           transition={transition}
-          className="inline-flex items-center gap-1.5"
+          className="inline-flex min-w-0 items-center gap-1.5"
         >
-          <span className={"text-[10px] font-semibold leading-none " + toneTextClass}>
-            {displayLabel}
-          </span>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={guidance}
+              initial={reducedMotion ? false : { opacity: 0, y: 3 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -3 }}
+              transition={transition}
+              aria-live="polite"
+              aria-atomic="true"
+              className={
+                "max-w-[170px] truncate text-[10px] font-semibold leading-none " +
+                toneTextClass
+              }
+              title={guidance}
+            >
+              {guidance}
+            </motion.span>
+          </AnimatePresence>
           <div
             id="password-strength-meter"
             role="meter"
-            aria-label={"Password strength: " + displayLabel}
+            aria-label={"Password strength: " + label}
             aria-valuemin={0}
             aria-valuemax={maximum}
             aria-valuenow={score}
-            className="flex items-center gap-0.5"
+            data-next-requirement-required={nextRequirementIsRequired}
+            className="flex shrink-0 items-center gap-0.5"
           >
             {checks.map((check, index) => (
               <span
@@ -75,8 +97,8 @@ export default function PasswordStrengthMeter({
                   className={"block h-full origin-left rounded-full " + toneClass}
                   initial={false}
                   animate={{
-                    scaleX: index < score ? 1 : 0,
-                    opacity: index < score ? 1 : 0.18,
+                    scaleX: check.passed ? 1 : 0,
+                    opacity: check.passed ? 1 : 0.18,
                   }}
                   transition={{
                     ...transition,
