@@ -19,6 +19,7 @@ export default function AuthField({
   helper,
   disabled = false,
   inputMode,
+  describedBy,
 }) {
   const isPassword = type === "password";
   const [visible, setVisible] = useState(false);
@@ -26,6 +27,7 @@ export default function AuthField({
   const inputType = isPassword && visible ? "text" : type;
   const errorId = error ? id + "-error" : undefined;
   const helperId = helper && !error ? id + "-helper" : undefined;
+  const descriptionIds = [errorId || helperId, describedBy].filter(Boolean).join(" ") || undefined;
 
   return (
     <div className="min-w-0">
@@ -49,7 +51,7 @@ export default function AuthField({
           disabled={disabled}
           inputMode={inputMode}
           aria-invalid={Boolean(error)}
-          aria-describedby={errorId || helperId}
+          aria-describedby={descriptionIds}
           className={[
             "h-9 w-full rounded-sm border bg-transparent px-2.5 text-[13px] text-text-primary outline-none transition-colors sm:h-10 sm:px-3 sm:text-sm",
             "placeholder:text-text-tertiary hover:border-border-strong",
