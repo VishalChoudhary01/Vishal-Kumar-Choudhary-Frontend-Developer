@@ -48,7 +48,9 @@ test("password field supports the focused strength meter as an additional access
 });
 
 test("password guidance names the exact missing requirement one at a time", () => {
-  assert.equal(assessPasswordStrength("").guidance, "Add 8 more characters");
+  assert.equal(assessPasswordStrength("").guidance, "");
+  assert.equal(assessPasswordStrength("       ").guidance, "Add 1 more character");
+  assert.equal(assessPasswordStrength("        ").guidance, "Missing a capital letter");
   assert.equal(assessPasswordStrength("abcdefg").guidance, "Add 1 more character");
 
   assert.equal(
@@ -86,4 +88,6 @@ test("password strength score tracks five distinct signup requirements", () => {
 test("only the minimum eight-character rule is marked as required", () => {
   assert.equal(assessPasswordStrength("abc").nextRequirementIsRequired, true);
   assert.equal(assessPasswordStrength("abcdefgh").nextRequirementIsRequired, false);
+  assert.equal(assessPasswordStrength("abc").label, "Too short");
+  assert.equal(assessPasswordStrength("abcdefgh").label, "Weak");
 });
