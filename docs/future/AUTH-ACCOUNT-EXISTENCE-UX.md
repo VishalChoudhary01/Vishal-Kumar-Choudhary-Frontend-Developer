@@ -54,7 +54,36 @@ The registration endpoint deliberately uses a generic HTTP 202 response for acco
 
 The current implementation therefore already avoids an explicit "account does not exist" response, but can do a better job guiding new visitors at the point of failure.
 
-## 4. Proposed signup experience
+## 2.1 Implementation delivered on this branch
+
+The first implementation pass includes:
+
+- A reusable `SignupConfirmation.js` view inside the existing auth page/modal, not a nested modal.
+- Generic accepted-request copy with sign-in, forgot-password and use-another-email actions.
+- Safe `returnTo` preservation, focus transfer and reduced-motion-aware transition.
+- A synchronous signup submit lock and `aria-busy` state.
+- Generic email/password login failure guidance with a contextual **Create an account** action.
+- Separate verification-required and rate-limit messages.
+- Regression tests in `tests/auth-account-existence-ux.test.mjs`, included in the build test chain.
+
+The registration API contract and social account-linking security policy remain unchanged.
+
+## 2.2 Password strength feedback consistency fix
+
+The signup password meter and validation utility now share a single derived tone/status assessment:
+
+- Fewer than eight characters: `Too short`, with the exact remaining-character guidance.
+- Eight or more characters with only some checks passed: `Weak` or `Fair`, with the first missing requirement.
+- Four of five checks passed: `Almost there` (not `Good`), with the exact missing requirement.
+- All five checks passed: `Strong` and `All requirements met`.
+
+The meter consumes the utility's tone rather than independently recalculating thresholds. Its accessible meter text includes both the status and current guidance.
+
+The inline meter remains visible only while the password field is focused. A document-level outside-pointer handler also closes it when the user clicks a non-focusable area or another element; the existing focus/blur handling remains for keyboard navigation. This avoids leaving stale strength feedback visible after the user leaves the field.
+
+Regression coverage was extended in `tests/labs-signup-password-strength.test.mjs` for the four-of-five state, shared tone, accessible value text and outside-pointer dismissal. The existing build script already runs this test file. Test execution and Preview browser verification are still pending.
+
+## 4. Signup experience
 
 ### 4.1 Submitting state
 
