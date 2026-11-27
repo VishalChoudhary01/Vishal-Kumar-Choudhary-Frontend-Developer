@@ -46,8 +46,8 @@ export function assessPasswordStrength(password = "") {
 
   let label = "Start typing";
   if (missingCharacters > 0) label = "Too short";
-  else if (score <= 1) label = "Weak";
-  else if (score <= 3) label = "Fair";
+  else if (score <= 2) label = "Weak";
+  else if (score === 3) label = "Fair";
   else if (score === 4) label = "Good";
   else label = "Strong";
 
