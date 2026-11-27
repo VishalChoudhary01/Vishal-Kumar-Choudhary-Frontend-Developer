@@ -3,6 +3,7 @@ import "server-only";
 import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
 import { betterAuth } from "better-auth";
+import { after } from "next/server";
 import { dash } from "@better-auth/infra";
 import { getAuthBaseURL, getAuthBaseURLConfig } from "./base-url";
 import { buildTrustedAuthOrigins } from "./trusted-origins.mjs";
@@ -305,6 +306,11 @@ export const auth = betterAuth({
     },
   },
   advanced: {
+    // Better Auth defers password-reset and verification emails to background tasks.
+    // Next.js after() keeps those tasks alive until they finish on Vercel Functions.
+    backgroundTasks: {
+      handler: (promise) => after(() => promise),
+    },
     database: { joins: true },
     useSecureCookies: process.env.NODE_ENV === "production",
     ipAddress: {

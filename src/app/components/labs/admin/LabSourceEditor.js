@@ -10,6 +10,7 @@ import { useTheme } from "next-themes";
 import { useActionToast } from "@/app/providers/ActionToastProvider";
 import AdminBreadcrumbs from "./AdminBreadcrumbs";
 import LabSourceLivePreview from "./LabSourceLivePreview";
+import LabResizableWorkspace from "./LabResizableWorkspace";
 import LabCodeEditor from "@/app/components/labs/code/LabCodeEditor";
 import { updateSourceFileContent } from "@/app/lib/labs/source-editor-state.mjs";
 import LabMediaLibrary from "./LabMediaLibrary";
@@ -92,6 +93,40 @@ function formatTimestamp(value, fallback) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return fallback;
   return date.toISOString().slice(0, 19).replace("T", " ") + " UTC";
+}
+
+function configureReactLenisStarter(templates, mainPath, appPath, appImport) {
+  const mainFile = templates.find((file) => file.path === mainPath);
+  const appFile = templates.find((file) => file.path === appPath);
+  if (!mainFile || !appFile || !mainFile.content.includes(appImport)) {
+    throw new Error("The React Lenis starter is missing a required entry file.");
+  }
+
+  mainFile.content = mainFile.content
+    .replace(appImport, 'import { ReactLenis } from "lenis/react";\nimport "lenis/dist/lenis.css";\n' + appImport)
+    .replace("    <App />", '    <ReactLenis root options={{ autoRaf: true, anchors: true }}>\n      <App />\n    </ReactLenis>');
+
+  appFile.content = appFile.content
+    .replace('import { useState } from "react";', 'import { useState } from "react";\nimport { useLenis } from "lenis/react";')
+    .replace("const reduceMotion = useReducedMotion();", "const reduceMotion = useReducedMotion();\n  const lenis = useLenis();")
+    .replace('<main className="', '<main id="top" className="')
+    .replace(
+      'className="grid min-h-screen place-items-center',
+      'className="flex min-h-screen flex-col items-center justify-center',
+    )
+    .replace(
+      'className="relative flex min-h-screen items-center justify-center',
+      'className="relative flex min-h-screen flex-col items-center justify-center',
+    );
+
+  const sectionMarker = "      </motion.section>\n    </main>";
+  const sectionReplacement = '      </motion.section>\n      <section className="grid min-h-[70vh] place-items-center bg-slate-950 text-white">\n        <button type="button" onClick={() => lenis?.scrollTo("#top")} className="rounded-[2px] bg-teal-300 px-4 py-3 font-semibold text-slate-950">Smooth scroll to top</button>\n      </section>\n    </main>';
+  if (!appFile.content.includes(sectionMarker)) {
+    throw new Error("The React Lenis starter is missing its scroll demonstration section.");
+  }
+  appFile.content = appFile.content.replace(sectionMarker, sectionReplacement);
+
+  return templates;
 }
 
 export default function LabSourceEditor({ initialSource, initialVersions, initialAudit }) {
@@ -265,7 +300,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
     showToast("success", "HTML/CSS starter added.");
   }
 
-  function createReactStarter() {
+  function createReactStarter({ withLenis = false } = {}) {
     const templates = [
       {
         path: "index.html",
@@ -289,6 +324,10 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
       },
     ];
 
+    if (withLenis) {
+      configureReactLenisStarter(templates, "src/main.jsx", "src/App.jsx", 'import App from "./App.jsx";');
+    }
+
     if (files.length + templates.filter((template) => !files.some((file) => file.path === template.path)).length > 40) {
       setError("There is not enough room for the React starter files. Remove unused files and try again.");
       return;
@@ -299,10 +338,10 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
     commitFiles(nextFiles);
     setSelectedIndex(Math.max(0, nextFiles.findIndex((file) => file.path === "src/App.jsx")));
     setError("");
-    setMessage(additions.length ? "React starter added. Edit src/App.jsx and press Run to execute it." : "The React starter entry files already exist.");
+    setMessage(additions.length ? (withLenis ? "React JS + Lenis starter added. Edit src/App.jsx and press Run." : "React starter added. Edit src/App.jsx and press Run to execute it.") : "The React starter entry files already exist.");
   }
 
-  function createReactTsStarter() {
+  function createReactTsStarter({ withLenis = false } = {}) {
     const templates = [
       {
         path: "index.html",
@@ -326,6 +365,10 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
       },
     ];
 
+    if (withLenis) {
+      configureReactLenisStarter(templates, "src/main.tsx", "src/App.tsx", 'import App from "./App.tsx";');
+    }
+
     if (files.length + templates.filter((template) => !files.some((file) => file.path === template.path)).length > 40) {
       setError("There is not enough room for the TypeScript starter files. Remove unused files and try again.");
       return;
@@ -336,7 +379,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
     commitFiles(nextFiles);
     setSelectedIndex(Math.max(0, nextFiles.findIndex((file) => file.path === "src/App.tsx")));
     setError("");
-    setMessage(additions.length ? "React TypeScript starter added. Edit src/App.tsx and press Run to type-check and execute it." : "The React TypeScript starter entry files already exist.");
+    setMessage(additions.length ? (withLenis ? "React TSX + Lenis starter added. Edit src/App.tsx and press Run to type-check and preview." : "React TypeScript starter added. Edit src/App.tsx and press Run to type-check and execute it.") : "The React TypeScript starter entry files already exist.");
     showToast("success", "React TypeScript starter added.");
   }
 
@@ -774,8 +817,8 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
   }
 
   return (
-    <main className="min-h-screen bg-background px-5 py-8 text-text-primary sm:px-8 lg:px-12">
-      <div className="mx-auto w-full max-w-[1440px]">
+    <main className="min-h-screen bg-background px-3 py-5 text-text-primary sm:px-5 sm:py-7 xl:px-6 2xl:px-8">
+      <div className="mx-auto w-full max-w-[1920px]">
         <AdminBreadcrumbs items={[{ href: "/admin/labs/sources", label: "Source Library" }, { label: source.title }]} />
 
         <header className="mt-8 flex flex-wrap items-start justify-between gap-5 border-b border-border pb-6">
@@ -851,13 +894,9 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
         {message ? <p role="status" className="mt-4 border border-brand/30 bg-brand-soft/30 px-3 py-2 text-xs text-brand">{message}</p> : null}
         {error ? <p role="alert" className="rounded-[2px] mt-4 border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning">{error}</p> : null}
 
-        <section className={[
-          "mt-6 grid gap-5",
-          source.isCustom
-            ? "xl:grid-cols-[240px_minmax(0,1.2fr)_minmax(340px,0.9fr)]"
-            : "xl:grid-cols-[280px_minmax(0,1fr)]",
-        ].join(" ")}>
-          <aside className="rounded-[2px] border border-border bg-surface-1 p-4">
+        <LabResizableWorkspace
+          files={
+            <aside className="rounded-[2px] border border-border bg-surface-1 p-4">
             <div className="flex flex-col items-stretch gap-3">
               <div>
                 <h2 className="text-sm font-semibold">Files</h2>
@@ -881,12 +920,14 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                     <button type="button" onClick={createHtmlStarter} className="rounded-[2px] inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none">
                       HTML/CSS
                     </button>
-                    <button type="button" onClick={createReactStarter} className="rounded-[2px] inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none">
+                    <button type="button" onClick={() => createReactStarter()} className="rounded-[2px] inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none">
                       React JS
                     </button>
-                    <button type="button" onClick={createReactTsStarter} className="rounded-[2px] inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none">
+                    <button type="button" onClick={() => createReactTsStarter()} className="rounded-[2px] inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none">
                       React TSX
                     </button>
+                    <button type="button" onClick={() => createReactStarter({ withLenis: true })} className="rounded-[2px] inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none">React JS + Lenis</button>
+                    <button type="button" onClick={() => createReactTsStarter({ withLenis: true })} className="rounded-[2px] inline-flex h-8 items-center gap-1 border border-brand/40 px-2 text-[11px] font-semibold text-brand hover:bg-brand-soft transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transform-none motion-reduce:transition-none">React TSX + Lenis</button>
                   </>
                 ) : null}
                 <button
@@ -978,8 +1019,9 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
               <p className="mt-1 tabular-nums">{(totalBytes / 1024).toFixed(1)} KB / 1000 KB</p>
             </div>
           </aside>
-
-          <div className="min-w-0 rounded-[2px] border border-border bg-surface-1 p-4 sm:p-5">
+          }
+          editor={
+            <div className="min-w-0 rounded-[2px] border border-border bg-surface-1 p-4 sm:p-5">
             {selectedFile ? (
               <>
                 <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_160px_auto]">
@@ -1040,7 +1082,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                     minimap={false}
                     keepCurrentModel
                     ariaLabel={"Editable source code: " + selectedFile.path}
-                    className="h-[min(680px,72svh)] min-h-[520px] w-full border-0"
+                    className="h-[min(680px,calc(100dvh-470px))] min-h-[420px] w-full border-0"
                   />
                 </div>
               </>
@@ -1171,9 +1213,10 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
                 </button>
               </div>
             ) : null}
-          </div>
-          {source.isCustom ? <LabSourceLivePreview slug={source.slug} files={files} getWorkingFiles={() => filesRef.current} /> : null}
-        </section>
+            </div>
+          }
+          preview={source.isCustom ? <LabSourceLivePreview slug={source.slug} files={files} getWorkingFiles={() => filesRef.current} /> : null}
+        />
 
         {source.isCustom ? <LabMediaLibrary slug={source.slug} /> : null}
 
@@ -1271,7 +1314,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
       </div>
 
       {previewVersion ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4" role="presentation">
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4" role="presentation" data-lenis-prevent>
           <section
             role="dialog"
             aria-modal="true"
@@ -1366,7 +1409,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
       ) : null}
 
       {confirmPublish ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" role="presentation">
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" role="presentation" data-lenis-prevent>
           <section role="dialog" aria-modal="true" aria-labelledby="publish-title" className="rounded-[4px] w-full max-w-md border border-border bg-surface-1 p-5 shadow-2xl">
             <div className="flex items-center gap-2 text-brand">
               <AnimatedUpload ref={publishDialogIconRef} size={17} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
@@ -1420,7 +1463,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
       ) : null}
 
       {confirmUnpublish ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" role="presentation">
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" role="presentation" data-lenis-prevent>
           <section role="dialog" aria-modal="true" aria-labelledby="unpublish-title" className="rounded-[4px] w-full max-w-md border border-border bg-surface-1 p-5 shadow-2xl">
             <div className="flex items-center gap-2 text-warning">
               <AnimatedLockOpen ref={unpublishDialogIconRef} size={17} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />
@@ -1440,7 +1483,7 @@ export default function LabSourceEditor({ initialSource, initialVersions, initia
         </div>
       ) : null}
       {confirmDelete ? (
-        <div className="fixed inset-0 z-[80] grid place-items-center bg-black/70 p-4" role="presentation">
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-black/70 p-4" role="presentation" data-lenis-prevent>
           <section role="dialog" aria-modal="true" aria-labelledby="delete-project-title" className="w-full max-w-md rounded-[4px] border border-error/30 bg-surface-1 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.48)]">
             <div className="flex items-center gap-2 text-error">
               <AnimatedTrash ref={deleteDialogIconRef} size={16} duration={0.68} isAnimated={!prefersReducedMotion} aria-hidden="true" />

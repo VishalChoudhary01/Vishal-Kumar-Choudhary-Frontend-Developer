@@ -257,3 +257,16 @@ Deletion is restricted to created automatic leaf snapshots that are not referenc
 This management surface is independent from visitor experiment execution, source compilation, artifact delivery and gallery posters. It does not delete named Sandbox records, drives, source versions or published artifacts.
 
 Implementation: `LabSnapshotStoragePanel.js`, `/api/v1/admin/labs/sandbox-snapshots`, `snapshot-storage-management.js` and `snapshot-storage-policy.mjs`. Operational details and verification command are in [LABS-PREVIEW-RECOVERY.md](../operations/LABS-PREVIEW-RECOVERY.md#14-owner-source-management--vercel-snapshot-storage-manager).
+
+
+## 15. Optional Lenis support in owner experiments — November 21, 2026
+
+The isolated compiler pins `lenis@1.3.27`. Lenis is installed only in `tools/labs-compiler`; it is not a dependency of the main Next.js application.
+
+The Vite package policy permits only `lenis`, `lenis/react`, and `lenis/dist/lenis.css`. All other Lenis package subpaths are rejected. No CDN loading or runtime package installation is permitted.
+
+The owner source editor retains the regular **React JS** and **React TSX** starters and adds **React JS + Lenis** and **React TSX + Lenis** options. Both add one root-level `ReactLenis` provider around the experiment app, import the Lenis stylesheet and demonstrate `useLenis()` from the child app. Existing source projects may opt in manually. Lenis is not initialized automatically for regular React or standalone HTML/CSS/JavaScript experiments.
+
+The integration uses `autoRaf: true` so Lenis owns its animation loop. Its built-in `prefers-reduced-motion` behavior remains enabled. Use Lenis prevention attributes on nested scroll regions that require native scrolling. A third-party iframe embedded inside an experiment may not forward wheel events to the outer Lenis instance.
+
+**Release dependency:** these changes alter the immutable compiler image. Run the compiler smoke test for both JSX and TSX, create and verify a new compiler snapshot, update only the intended Preview `LABS_COMPILER_SNAPSHOT_ID`, and redeploy that Preview. A Next.js deployment alone does not add Lenis to an existing compiler snapshot. Keep Production's compiler reference unchanged during a Preview-only rollout.

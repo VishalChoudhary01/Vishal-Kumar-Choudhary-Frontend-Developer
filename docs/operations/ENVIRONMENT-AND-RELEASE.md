@@ -2,7 +2,7 @@
 
 **Runtime target:** Vercel Node.js deployment; project configuration reports Node 22.x.  
 **Environment template:** .env.example.  
-**Important:** .env.example contains at least one stale contact-mail note (see section 4). Follow the actual route handler until that mismatch is resolved in a separate config-only change.
+**Important:** Portfolio contact mail and Labs authentication mail use separate SMTP configurations; configure the variables for the flow being tested.
 
 ## 1. Current scripts and build pipeline
 
@@ -99,18 +99,24 @@ The complete contact lifecycle—including client validation and status, POST /a
 
 NEXT_PUBLIC_SITE_URL is used for canonical site metadata and Portfolio Analytics host validation. In deployed auth flows, BETTER_AUTH_URL/trusted origins must be exact and match provider callback configuration.
 
-## 4. Confirmed stale .env.example mismatch
+## 4. Confirmed stale .env.example mi## 4. Email delivery configuration
 
-The current .env.example header says “Contact form email — Resend” and lists RESEND_API_KEY plus CONTACT_TO_EMAIL. The current src/app/api/contact/route.js does not use Resend; it imports Nodemailer and requires GMAIL_USER, GMAIL_APP_PASSWORD and CONTACT_TO_EMAIL.
+### Portfolio contact form
 
-This is a real config-documentation mismatch. During this docs-only task, application/environment files have not been changed. Until a separate authorized config cleanup resolves it:
-- use the route's required Gmail variable names for contact delivery;
-- do not assume RESEND_API_KEY powers the current contact route;
-- consider correcting .env.example and any unused Resend reference in a dedicated configuration change.
+The contact route at `src/app/api/contact/route.js` uses Nodemailer over Gmail SMTP and requires:
 
-Owner identity policy correction (7 November 2026): configure LABS_OWNER_USER_ID only. owner-access.js still contains a LABS_OWNER_EMAIL fallback in current code, but this is a known discrepancy against the accepted ID-only decision. Do not add LABS_OWNER_EMAIL to the template or rely on it as supported product policy. Before removing the code fallback, inspect Preview/Production owner provisioning and confirm LABS_OWNER_USER_ID is set correctly.
+- `GMAIL_USER`: Gmail account used as the sender.
+- `GMAIL_APP_PASSWORD`: Google App Password for that account; it is not the normal account password.
+- `CONTACT_TO_EMAIL`: inbox that receives portfolio contact messages.
 
-## 5. Database bootstrap and indexes
+These variables are listed in `.env.example` and must remain server-only.
+
+### Labs authentication email
+
+Better Auth verification and password-reset messages use the separate `AUTH_SMTP_HOST`, `AUTH_SMTP_PORT`, `AUTH_SMTP_USER`, `AUTH_SMTP_PASSWORD`, `AUTH_SMTP_SECURE`, and `AUTH_EMAIL_FROM` settings.
+
+Do not substitute the Labs authentication SMTP variables for the contact form's Gmail variables, or vice versa, unless the mail architecture is intentionally redesigned.
+
 
 Mongoose schema definitions declare indexes, but production indexes must be verified in MongoDB. Specific scripts exist for:
 - public Labs pagination indexes;

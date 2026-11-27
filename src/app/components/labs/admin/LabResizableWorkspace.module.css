@@ -1,0 +1,350 @@
+.shell {
+  width: 100%;
+  min-width: 0;
+}
+
+.toolbar {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.toolbarActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.mobileReset {
+  display: none;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 6px 8px;
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.mobileTabs {
+  display: none;
+}
+
+.workspace {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  min-height: 560px;
+  height: clamp(560px, calc(100dvh - 390px), 1000px);
+  grid-template-columns: var(--files-track, 248px) 8px minmax(0, 1fr) 8px var(--preview-track, 420px);
+  gap: 0;
+}
+
+.pane {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+/* Preserve native nested scrolling and prevent scroll chaining into Lenis. */
+.pane[data-lenis-prevent] {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.filesPane {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.editorPane {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.previewPane {
+  grid-column: 5;
+  grid-row: 1;
+  overflow: hidden;
+}
+
+.resizeHandle {
+  position: relative;
+  z-index: 2;
+  grid-row: 1;
+  width: 8px;
+  min-width: 8px;
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+}
+
+.resizeHandle::after {
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 2px;
+  height: 44px;
+  border-radius: 999px;
+  background: var(--border);
+  content: "";
+  transform: translateY(-50%);
+  transition: background-color 160ms ease, height 160ms ease;
+}
+
+.resizeHandle:hover::after,
+.resizeHandle:focus-visible::after {
+  height: 64px;
+  background: var(--brand);
+}
+
+.filesResize {
+  grid-column: 2;
+}
+
+.previewResize {
+  grid-column: 4;
+}
+
+.drawerBackdrop {
+  display: none;
+}
+
+.workspace[data-files-visible="false"] .filesPane,
+.workspace[data-preview-visible="false"] .previewPane,
+.workspace[data-files-visible="false"] .filesResize,
+.workspace[data-preview-visible="false"] .previewResize {
+  display: none;
+}
+
+/* Return collapsed panel tracks to the visible panes. */
+.workspace[data-preview-visible="false"][data-files-visible="true"],
+.workspace[data-has-preview="false"][data-files-visible="true"] {
+  grid-template-columns: var(--files-track, 248px) 8px minmax(0, 1fr);
+}
+
+.workspace[data-preview-visible="false"][data-files-visible="true"] .editorPane,
+.workspace[data-has-preview="false"][data-files-visible="true"] .editorPane {
+  grid-column: 3;
+}
+
+.workspace[data-preview-visible="false"][data-files-visible="true"] .filesResize,
+.workspace[data-has-preview="false"][data-files-visible="true"] .filesResize {
+  display: block;
+  grid-column: 2;
+}
+
+.workspace[data-preview-visible="true"][data-files-visible="false"] {
+  grid-template-columns: minmax(0, 1fr) 8px var(--preview-track, 420px);
+}
+
+.workspace[data-preview-visible="true"][data-files-visible="false"] .editorPane {
+  grid-column: 1;
+}
+
+.workspace[data-preview-visible="true"][data-files-visible="false"] .previewResize {
+  display: block;
+  grid-column: 2;
+}
+
+.workspace[data-preview-visible="true"][data-files-visible="false"] .previewPane {
+  grid-column: 3;
+}
+
+.workspace[data-preview-visible="false"][data-files-visible="false"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.workspace[data-preview-visible="false"][data-files-visible="false"] .editorPane,
+.workspace[data-has-preview="false"][data-files-visible="false"] .editorPane {
+  grid-column: 1;
+}
+
+.workspace[data-has-preview="false"] .previewPane,
+.workspace[data-has-preview="false"] .previewResize {
+  display: none;
+}
+
+.workspace[data-focus="editor"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.workspace[data-focus="editor"] .filesPane,
+.workspace[data-focus="editor"] .previewPane,
+.workspace[data-focus="editor"] .resizeHandle,
+.workspace[data-focus="preview"] .filesPane,
+.workspace[data-focus="preview"] .editorPane,
+.workspace[data-focus="preview"] .resizeHandle {
+  display: none;
+}
+
+.workspace[data-focus="editor"] .editorPane,
+.workspace[data-focus="preview"] .previewPane {
+  display: block;
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.workspace[data-focus="preview"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr) 8px var(--preview-track, 420px);
+    height: clamp(560px, calc(100dvh - 360px), 1000px);
+  }
+
+  .filesPane {
+    position: absolute;
+    z-index: 12;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    display: none;
+    width: min(340px, calc(100% - 48px));
+    background: var(--surface-1);
+    box-shadow: 12px 0 40px rgb(0 0 0 / 25%);
+  }
+
+  .workspace[data-tablet-files-open="true"] .filesPane {
+    display: block;
+  }
+
+  .workspace[data-tablet-files-open="true"] .drawerBackdrop {
+    position: absolute;
+    z-index: 11;
+    inset: 0;
+    display: block;
+    width: 100%;
+    border: 0;
+    background: rgb(0 0 0 / 32%);
+  }
+
+  .filesResize {
+    display: none;
+  }
+
+  .editorPane {
+    grid-column: 1;
+  }
+
+  .previewResize {
+    grid-column: 2;
+  }
+
+  .previewPane {
+    grid-column: 3;
+  }
+
+  .workspace[data-tablet-files-open="true"] .filesPane {
+    display: block;
+  }
+
+  .workspace[data-preview-visible="false"],
+  .workspace[data-has-preview="false"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .workspace[data-preview-visible="false"] .previewResize,
+  .workspace[data-preview-visible="false"] .previewPane {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .toolbar {
+    min-height: 34px;
+    margin-bottom: 6px;
+  }
+
+  .toolbarActions {
+    display: none;
+  }
+
+  .mobileReset {
+    display: inline-flex;
+    flex: 0 0 auto;
+  }
+
+  .workspace[data-has-preview="false"] .mobileTabs,
+  .mobileTabs:has(+ .workspace[data-has-preview="false"]) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mobileTabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-1);
+    padding: 4px;
+  }
+
+  .mobileTab,
+  .mobileTabActive {
+    display: inline-flex;
+    min-width: 0;
+    min-height: 36px;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .mobileTabActive {
+    border-color: var(--brand);
+    background: var(--brand-soft);
+    color: var(--brand);
+  }
+
+  .workspace {
+    display: block;
+    min-height: 520px;
+    height: min(78dvh, 900px);
+  }
+
+  .pane,
+  .workspace[data-files-visible="false"] .filesPane,
+  .workspace[data-preview-visible="false"] .previewPane {
+    display: none;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+  }
+
+  .workspace[data-mobile-active="files"] .filesPane,
+  .workspace[data-mobile-active="editor"] .editorPane,
+  .workspace[data-mobile-active="preview"] .previewPane {
+    display: block;
+  }
+
+  .resizeHandle,
+  .drawerBackdrop {
+    display: none !important;
+  }
+
+  .workspace[data-focus="editor"],
+  .workspace[data-focus="preview"] {
+    display: block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resizeHandle::after {
+    transition: none;
+  }
+}

@@ -273,6 +273,7 @@ async function main() {
       react: "19.2.8",
       reactDom: "19.2.8",
       motion: "13.2.0",
+      lenis: "1.3.27",
       tailwind: "4.3.3",
       tailwindPostcss: "4.3.3",
       esbuild: "0.28.2",

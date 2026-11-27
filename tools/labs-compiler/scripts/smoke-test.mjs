@@ -123,14 +123,20 @@ const generatedPosterFixture = { src: "/generated-poster.png", mediaKind: "image
 const uploadedImageFixture = { src: "https://media.example/uploaded.webp", mediaKind: "image", contentType: "image/webp" };
 const uploadedGifFixture = { src: "https://media.example/uploaded.gif", mediaKind: "image", contentType: "image/gif" };
 const uploadedVideoFixture = { src: "https://media.example/uploaded.mp4", mediaKind: "video", contentType: "video/mp4" };
+function matchesPreview(actual, expected) {
+  return actual?.src === expected.src &&
+    actual?.mediaKind === expected.mediaKind &&
+    actual?.contentType === expected.contentType &&
+    actual?.fit === "contain";
+}
 const imageSelection = resolveGalleryPreviewSelection({ uploadedPreview: uploadedImageFixture, generatedPoster: generatedPosterFixture });
-if (imageSelection.galleryVisual !== uploadedImageFixture || imageSelection.thumbnail !== uploadedImageFixture) throw new Error("An uploaded image must replace the generated poster.");
+if (!matchesPreview(imageSelection.galleryVisual, uploadedImageFixture) || !matchesPreview(imageSelection.thumbnail, uploadedImageFixture)) throw new Error("An uploaded image must replace the generated poster.");
 const gifSelection = resolveGalleryPreviewSelection({ uploadedPreview: uploadedGifFixture, generatedPoster: generatedPosterFixture });
-if (gifSelection.galleryVisual !== uploadedGifFixture || gifSelection.thumbnail !== uploadedGifFixture) throw new Error("An uploaded GIF must replace the generated poster.");
+if (!matchesPreview(gifSelection.galleryVisual, uploadedGifFixture) || !matchesPreview(gifSelection.thumbnail, uploadedGifFixture)) throw new Error("An uploaded GIF must replace the generated poster.");
 const videoSelection = resolveGalleryPreviewSelection({ uploadedPreview: uploadedVideoFixture, generatedPoster: generatedPosterFixture });
-if (videoSelection.galleryVisual !== uploadedVideoFixture || videoSelection.thumbnail !== generatedPosterFixture) throw new Error("Uploaded video must drive the visual while the generated still remains the metadata thumbnail.");
+if (!matchesPreview(videoSelection.galleryVisual, uploadedVideoFixture) || !matchesPreview(videoSelection.thumbnail, generatedPosterFixture)) throw new Error("Uploaded video must drive the visual while the generated still remains the metadata thumbnail.");
 const automaticSelection = resolveGalleryPreviewSelection({ generatedPoster: generatedPosterFixture });
-if (automaticSelection.galleryVisual !== generatedPosterFixture || automaticSelection.thumbnail !== generatedPosterFixture) throw new Error("A generated poster must be selected when no upload exists.");
+if (!matchesPreview(automaticSelection.galleryVisual, generatedPosterFixture) || !matchesPreview(automaticSelection.thumbnail, generatedPosterFixture)) throw new Error("A generated poster must be selected when no upload exists.");
 const artworkSelection = resolveGalleryPreviewSelection({});
 if (artworkSelection.galleryVisual !== null || artworkSelection.thumbnail !== null) throw new Error("Missing media must retain the artwork fallback.");
 if (
@@ -343,14 +349,16 @@ const source = [
     content: [
       'import { useState } from "react";',
       'import { motion, useReducedMotion } from "motion/react";',
+      'import { useLenis } from "lenis/react";',
       'import { ArrowUpRight, Sparkles } from "lucide-react";',
       'const externalImageUrl = "https://images.unsplash.com/photo-1794066171454-631d426ceeaf?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D";',
       "",
       "export default function Experiment() {",
       "  const [count, setCount] = useState(0);",
       "  const reduceMotion = useReducedMotion();",
+      "  const lenis = useLenis();",
       "  return (",
-      '    <main className="grid min-h-screen place-items-center bg-slate-950 p-8 text-white">',
+      '    <main id="top" className="grid min-h-screen place-items-center bg-slate-950 p-8 text-white">',
       "      <motion.section",
       "        initial={reduceMotion ? false : { opacity: 0, y: 20 }}",
       "        animate={{ opacity: 1, y: 0 }}",
@@ -363,6 +371,9 @@ const source = [
       '          Count {count} <ArrowUpRight aria-hidden="true" />',
       "        </button>",
       "      </motion.section>",
+      '      <section className="grid min-h-[70vh] place-items-center bg-slate-950 text-white">',
+      '        <button type="button" onClick={() => lenis?.scrollTo("#top")}>Smooth scroll to top</button>',
+      "      </section>",
       "    </main>",
       "  );",
       "}",
@@ -371,6 +382,11 @@ const source = [
 ];
 
 const files = prepareReactProject(source);
+const jsxMain = files.find((file) => file.path === "src/main.jsx");
+if (!jsxMain) throw new Error("The JSX adapter did not generate src/main.jsx.");
+jsxMain.content = jsxMain.content
+  .replace('import App from "./App.jsx";', 'import { ReactLenis } from "lenis/react";\nimport "lenis/dist/lenis.css";\nimport App from "./App.jsx";')
+  .replace("    <App />", '    <ReactLenis root options={{ autoRaf: true, anchors: true }}>\n      <App />\n    </ReactLenis>');
 if (!files.some((file) => file.path === "src/new-file.jsx")) {
   throw new Error("The JSX adapter did not normalize src/new-file.js to src/new-file.jsx.");
 }
@@ -421,7 +437,7 @@ try {
   if (!result.success || !/^[a-f0-9]{64}$/.test(result.buildHash || "")) {
     throw new Error("The compiler did not produce a valid immutable build hash.");
   }
-  for (const key of ["react", "reactDom", "motion", "tailwind"]) {
+  for (const key of ["react", "reactDom", "motion", "lenis", "tailwind"]) {
     if (!result.compiler?.[key]) throw new Error("The build manifest is missing compiler version: " + key);
   }
 
@@ -430,6 +446,7 @@ try {
   if (!cssFile || !jsFile) throw new Error("The build did not emit JavaScript and CSS bundles.");
 
   const css = await fs.readFile(path.join(output, cssFile.path), "utf8");
+  if (!css.includes(".lenis")) throw new Error("The Lenis stylesheet was not emitted in the JSX CSS bundle.");
   for (const token of [".bg-slate-950", ".text-3xl", ".font-bold"]) {
     if (!css.includes(token)) throw new Error("Tailwind v4 did not emit utility: " + token);
   }
@@ -452,6 +469,16 @@ try {
     process.exit(1);
   }
 
+  const privateLenisFiles = files.map((file) => ({ ...file }));
+  const privateLenisComponent = privateLenisFiles.find((file) => file.path === "src/new-file.jsx");
+  privateLenisComponent.content = 'import privateLenisEntry from "lenis/dist/internal.js";\n' + privateLenisComponent.content;
+  await writeInput(negativeInput, privateLenisFiles.map(({ path: filePath, content }) => ({ path: filePath, content })));
+  const privateLenis = runBuild(negativeInput, negativeRoot, negativeOutput);
+  if (privateLenis.status === 0 || !String(privateLenis.stderr).includes("Lenis imports in Labs are limited")) {
+    process.stderr.write(privateLenis.stderr || "Private Lenis entry points were not rejected.\n");
+    process.exit(1);
+  }
+
   const remoteCssImportFiles = files.map((file) => ({ ...file }));
   const remoteCssEntry = remoteCssImportFiles.find((file) => file.path === "src/index.css");
   if (!remoteCssEntry) throw new Error("The React smoke fixture is missing src/index.css.");
@@ -470,6 +497,7 @@ try {
       content: [
         'import { useState } from "react";',
         'import { motion, useReducedMotion } from "motion/react";',
+        'import { useLenis } from "lenis/react";',
         'import { Sparkles } from "lucide-react";',
         'import { FiActivity } from "react-icons/fi";',
         "type CardProps = { title: string; count: number };",
@@ -479,8 +507,9 @@ try {
         "export default function Experiment() {",
         "  const [count, setCount] = useState<number>(0);",
         "  const reduceMotion = useReducedMotion();",
+        "  const lenis = useLenis();",
         "  return (",
-        '    <main className="grid min-h-screen place-items-center bg-slate-950 p-8 text-white">',
+        '    <main id="top" className="grid min-h-screen place-items-center bg-slate-950 p-8 text-white">',
         "      <motion.section initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} className=\"border border-white/10 p-8\">",
         '        <Sparkles aria-hidden="true" />',
         '        <FiActivity aria-hidden="true" />',
@@ -488,6 +517,9 @@ try {
         "        <Card title=\"Typed state\" count={count} />",
         '        <button className="mt-4 bg-teal-300 px-4 py-2 text-slate-950" onClick={() => setCount((value) => value + 1)}>Count {count}</button>',
         "      </motion.section>",
+        '      <section className="grid min-h-[70vh] place-items-center bg-slate-950 text-white">',
+        '        <button type="button" onClick={() => lenis?.scrollTo("#top")}>Smooth scroll to top</button>',
+        "      </section>",
         "    </main>",
         "  );",
         "}",
@@ -495,6 +527,11 @@ try {
     },
   ];
   const tsFiles = prepareReactProject(tsSource);
+  const tsMain = tsFiles.find((file) => file.path === "src/main.tsx");
+  if (!tsMain) throw new Error("The TSX adapter did not generate src/main.tsx.");
+  tsMain.content = tsMain.content
+    .replace('import App from "./App.tsx";', 'import { ReactLenis } from "lenis/react";\nimport "lenis/dist/lenis.css";\nimport App from "./App.tsx";')
+    .replace("    <App />", '    <ReactLenis root options={{ autoRaf: true, anchors: true }}>\n      <App />\n    </ReactLenis>');
   for (const required of ["src/experiment.tsx", "src/main.tsx", "src/App.tsx", "src/index.css", "src/vite-env.d.ts", "index.html"]) {
     if (!tsFiles.some((file) => file.path === required)) {
       throw new Error("The TSX adapter did not generate " + required + ".");
@@ -514,9 +551,11 @@ try {
     process.exit(1);
   }
   const tsManifest = JSON.parse(await fs.readFile(path.join(tsOutput, "labs-build-result.json"), "utf8"));
+  if (tsManifest.compiler?.lenis !== "1.3.27") throw new Error("The TSX build manifest is missing the pinned Lenis version.");
   const tsCssFile = tsManifest.outputFiles.find((file) => file.path.endsWith(".css"));
   if (!tsCssFile) throw new Error("The TSX build did not emit a Tailwind CSS bundle.");
   const tsCss = await fs.readFile(path.join(tsOutput, tsCssFile.path), "utf8");
+  if (!tsCss.includes(".lenis")) throw new Error("The Lenis stylesheet was not emitted in the TSX CSS bundle.");
   for (const token of [".bg-slate-950", ".text-3xl", ".font-bold"]) {
     if (!tsCss.includes(token)) throw new Error("Tailwind v4 did not emit TSX utility: " + token);
   }
@@ -843,7 +882,7 @@ try {
   }
 
   process.stdout.write(
-    "PASS: published Labs list projection/eligibility, artifact-specific immutable Blob paths, upload-vs-generated gallery precedence, idempotent sandbox input setup, nested Fluid Gradient HTML with inline CSS/Canvas JavaScript, static HTML/CSS/JS builds, CSS-only builds, JSX + TSX type checking, React 19, Motion, Lucide, React Icons, Tailwind v4, CSP, isolated preview HTTP server/bridge, traversal blocking and invalid-type rejection.\n",
+    "PASS: published Labs list projection/eligibility, artifact-specific immutable Blob paths, upload-vs-generated gallery precedence, idempotent sandbox input setup, nested Fluid Gradient HTML with inline CSS/Canvas JavaScript, static HTML/CSS/JS builds, CSS-only builds, JSX + TSX type checking, React 19, Motion, Lenis 1.3.27, Lucide, React Icons, Tailwind v4, CSP, isolated preview HTTP server/bridge, traversal blocking and invalid-type rejection.\n",
   );
 } finally {
   await Promise.all([

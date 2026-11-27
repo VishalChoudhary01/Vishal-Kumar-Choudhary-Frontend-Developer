@@ -582,15 +582,15 @@ The client adapter extracts the first field error from `errors` when present, th
 
 These values are read only in `src/app/api/contact/route.js`. They must remain server-side. Never prefix them with `NEXT_PUBLIC_`, serialize them into client props, or expose them through an API response.
 
-### Current .env.example mismatch
+### Contact email environment configuration
 
-The audited `.env.example` still has a “Contact form email — Resend” block with `RESEND_API_KEY`, `CONTACT_TO_EMAIL` and comments about `RESEND_FROM_EMAIL`.
+The root `.env.example` documents the same three server-only variables required by the contact route:
 
-The actual current contact route imports Nodemailer and requires `GMAIL_USER`, `GMAIL_APP_PASSWORD` and `CONTACT_TO_EMAIL`. The route does not import or call Resend.
+- `GMAIL_USER`
+- `GMAIL_APP_PASSWORD`
+- `CONTACT_TO_EMAIL`
 
-This mismatch is confirmed and should be corrected in a separate configuration change. Until then, use the route's actual Gmail variable names. Do not assume the Resend variables activate the current contact form.
-
-The repository already records this mismatch in `operations/ENVIRONMENT-AND-RELEASE.md`; this document gives the complete contact-specific explanation.
+The contact route uses Nodemailer over Gmail SMTP. `GMAIL_APP_PASSWORD` must be a Google App Password, not the normal Google account password. The Labs authentication email flow is separate and uses the `AUTH_SMTP_*` variables; do not substitute one flow's credentials for the other.
 
 ## 13. Verified limitations and security review items
 
@@ -729,7 +729,7 @@ A visitor receipt would be a second email with different content and deliverabil
 - [ ] Privacy Policy link resolves to `/privacy`.
 - [ ] Contact form works on the canonical production origin.
 - [ ] Gmail variables are present only in server-side deployment environment.
-- [ ] Resend placeholder in `.env.example` is corrected in a dedicated configuration change.
+- [ ] `.env.example` defines the Gmail SMTP variables required by the contact route.
 - [ ] No email body or visitor personal data is added to application logs.
 
 ## 16. Source-of-truth rules

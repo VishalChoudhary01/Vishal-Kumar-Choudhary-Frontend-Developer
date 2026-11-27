@@ -7,11 +7,12 @@ Private build worker for Labs React and standalone HTML/CSS/JavaScript experimen
 - Vite 8.3.5
 - React and React DOM 19.2.8
 - Motion 13.2.0, imported from `motion/react`
+- Lenis 1.3.27, imported from `lenis` and `lenis/react`
 - Tailwind CSS and `@tailwindcss/postcss` 4.3.3
 - esbuild 0.28.2
 - lucide-react 0.577.0
 - Playwright 1.65.0 with Chromium 158.0.8127.18 installed in the immutable compiler snapshot
-- Fixed import allowlist: `react`, `react-dom`, `motion/react`, `lucide-react`, `clsx`, and `tailwind-merge`
+- Fixed import allowlist: `react`, `react-dom`, `motion/react`, `lenis`, `lenis/react`, `lenis/dist/lenis.css`, `lucide-react`, `clsx`, and `tailwind-merge`
 
 ## Input contract
 
@@ -33,6 +34,12 @@ All modes use the fixed, pinned compiler image and the same isolated build bound
 
 The app layer also accepts one JavaScript/JSX component file. When its editor language is JSX, the app adapter normalizes a `.js` filename to `.jsx` in memory and creates the missing React entry files. The saved editor source is unchanged.
 
+### Optional Lenis integration
+
+The owner source editor offers separate **React JS + Lenis** and **React TSX + Lenis** starters. Both wrap the experiment app in one root `<ReactLenis root options={{ autoRaf: true, anchors: true }}>` provider, import `lenis/dist/lenis.css`, and demonstrate `useLenis()` in the child app. Existing projects can opt in by adding the same imports and wrapper manually. Lenis remains optional; regular React starters and standalone HTML/CSS/JavaScript projects do not initialize it automatically.
+
+The only permitted package entry points are `lenis`, `lenis/react`, and `lenis/dist/lenis.css`; private package subpaths are rejected. Lenis retains its built-in `prefers-reduced-motion` behavior. Use Lenis prevention attributes on nested scroll regions that need native scrolling. A third-party iframe embedded inside an experiment may not forward wheel events to the outer Lenis instance.
+
 ## Security and resource policy
 
 The build rejects path traversal, hidden paths, oversized snapshots, duplicate files, missing entry points, remote JavaScript/module imports, Node built-ins, unknown packages, `require`, `eval`, `Function`, dynamic expression imports, app parent/cookie/storage access and remote CSS `@import`. HTTPS URLs used as image resources in React/HTML or CSS image declarations (for example, `background-image: url("https://...")`) are allowed; the browser loads them directly at preview time. The generated preview/published CSP permits HTTPS only under `img-src`. External scripts, stylesheets, fonts, media, frames and fetch/XHR connections remain restricted, and the compiler Sandbox keeps `networkPolicy: "deny-all"`. It does not accept user package manifests, install user dependencies or execute user package scripts.
@@ -41,7 +48,7 @@ The generated document uses a restrictive Content Security Policy. Preview sessi
 
 ## Smoke test
 
-Run `npm install` followed by `npm run test:smoke`. The test compiles a single `src/new-file.js` file marked as JSX using React state, Motion, lucide-react icons and Tailwind v4 utilities. It verifies emitted HTML/JS/CSS, the build hash, CSP and rejection of an unsupported package.
+Run `npm install` followed by `npm run test:smoke`. The test compiles React JavaScript/JSX and TypeScript/TSX fixtures using ReactLenis, useLenis, the Lenis stylesheet, React state, Motion, icons and Tailwind v4 utilities. It also verifies that private Lenis package paths remain blocked. It verifies emitted HTML/JS/CSS, the build hash, CSP and rejection of an unsupported package.
 
 The immutable release build calls the poster capture worker after compiled output is uploaded. It uses Playwright 1.65.0 + Chromium 158.0.8127.18, a local-only artifact server, blocked external requests, reduced-motion capture and strict PNG/signature/dimensions/size/hash validation. The result is stored as `LabBuildArtifact.previewPoster`, separate from `outputFiles`, and is bound to the exact source version and artifact. Capture is attempted once per release build, never on owner Run or a public page request; failure is non-blocking and leaves the poster unavailable so the gallery can fall back to generic artwork. The browser executable and required Linux libraries must be pre-installed in the immutable compiler snapshot. This is not a substitute for deployed owner publish/browser QA, accessibility QA or the full release-pipeline checks.
 

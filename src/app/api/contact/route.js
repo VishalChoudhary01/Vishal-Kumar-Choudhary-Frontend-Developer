@@ -108,7 +108,7 @@ export async function POST(request) {
       secure: true,
       auth: {
         user,
-        pass: appPassword.replace(/\\s/g, ""),
+       pass: appPassword.replace(/\s/g, ""),
       },
       connectionTimeout: 10000,
       greetingTimeout: 10000,
