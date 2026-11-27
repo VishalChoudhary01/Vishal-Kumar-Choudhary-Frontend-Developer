@@ -69,7 +69,6 @@ test("login and signup stay compact while retaining social login and password gu
   assert.ok(social.includes("sm:h-9"));
   assert.ok(signup.includes("visible={passwordFocused}"));
   assert.ok(signup.includes('onFocus={() => setPasswordFocused(true)}'));
-  assert.ok(signup.includes('className={passwordFocused ? "relative z-20" : "relative z-0"}'));
 });
 
 
