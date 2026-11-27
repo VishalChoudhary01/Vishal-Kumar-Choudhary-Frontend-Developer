@@ -21,7 +21,7 @@ const RULES = Object.freeze([
     id: "number",
     label: "A number",
     guidance: "Add at least one number",
-    test: (value) => /\\d/.test(value),
+    test: (value) => /\d/.test(value),
   },
   {
     id: "symbol",
