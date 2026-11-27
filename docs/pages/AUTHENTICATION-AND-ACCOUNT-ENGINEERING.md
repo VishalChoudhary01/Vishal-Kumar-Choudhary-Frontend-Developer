@@ -66,7 +66,7 @@ The current signup endpoint and email/password login deliberately avoid disclosi
 
 Key security rule: a failed email/password login must not distinguish an unknown email from an incorrect password. It should provide a generic credential error and a clear **Create an account** action without claiming that the submitted address is unregistered. Likewise, the generic signup HTTP 202 response means the request was accepted for generic processing; it is not proof that a new account was created or that an email was delivered.
 
-The UX document is a future implementation contract. Its proposed confirmation and contextual login actions are not claimed as implemented until code changes and acceptance tests are completed.
+The implementation is present on `feature/auth-account-existence-ux`; automated regression tests have been added. See `../future/AUTH-ACCOUNT-EXISTENCE-UX.md` for delivered behavior and remaining CI/Preview verification.
 
 ## 4. Social provider contract
 
