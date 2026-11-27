@@ -18,7 +18,7 @@ test("signup password strength appears only while the password field has focus",
 test("password strength sits inline with the password label without changing form layout height", async () => {
   const meter = await read("../src/app/components/labs/auth/PasswordStrengthMeter.js");
 
-  assert.ok(meter.includes("inline-flex items-center gap-1.5"));
+  assert.ok(meter.includes("inline-flex min-w-0 items-center gap-1.5"));
   assert.ok(meter.includes("text-[10px] font-semibold leading-none"));
   assert.ok(meter.includes("key={guidance}"));
   assert.ok(meter.includes("aria-live=\"polite\""));
