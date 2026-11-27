@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AuthField from "./AuthField";
 import AuthSubmit from "./AuthSubmit";
 import AuthMessage from "./AuthMessage";
@@ -31,6 +31,22 @@ export default function SignupForm({
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [privacyError, setPrivacyError] = useState(false);
   const submitLockRef = useRef(false);
+  const passwordFieldRef = useRef(null);
+
+  useEffect(() => {
+    if (!passwordFocused) return undefined;
+
+    const handleOutsidePointer = (event) => {
+      if (!passwordFieldRef.current?.contains(event.target)) {
+        setPasswordFocused(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handleOutsidePointer);
+    return () => {
+      document.removeEventListener("pointerdown", handleOutsidePointer);
+    };
+  }, [passwordFocused]);
 
   const validate = (name, value) => {
     if (name === "email") {
@@ -168,6 +184,7 @@ export default function SignupForm({
         />
 
         <div
+          ref={passwordFieldRef}
           onFocus={() => setPasswordFocused(true)}
           onBlur={(event) => {
             if (!event.currentTarget.contains(event.relatedTarget)) {
