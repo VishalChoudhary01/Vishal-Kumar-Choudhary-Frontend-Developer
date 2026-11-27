@@ -34,6 +34,26 @@ export async function POST(request) {
    * account-specific outcomes.
    */
   const pathname = new URL(request.url).pathname.replace(/\/+$/, "");
+  if (pathname.endsWith("/link-social") || pathname.endsWith("/unlink-account")) {
+    const session = await auth.api.getSession({ headers: request.headers });
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: { code: "UNAUTHORIZED", message: "Sign in before connecting an account." } },
+        { status: 401, headers: { "Cache-Control": "no-store" } },
+      );
+    }
+
+    // The settings page also checks this, but the API guard is authoritative:
+    // a client cannot bypass email verification by calling Better Auth directly.
+    if (session.user.emailVerified !== true) {
+      return NextResponse.json(
+        { error: { code: "EMAIL_NOT_VERIFIED", message: "Verify your Labs email before connecting another sign-in method." } },
+        { status: 403, headers: { "Cache-Control": "no-store" } },
+      );
+    }
+  }
+
   if (pathname.endsWith("/sign-up/email")) {
     return NextResponse.json(
       { error: { code: "NOT_FOUND", message: "Not found." } },

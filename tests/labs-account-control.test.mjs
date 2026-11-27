@@ -95,6 +95,13 @@ test("mobile account trigger is avatar-only and keeps the owner dropdown inside 
   assert.ok(navbar.includes('"top-0.5 mx-2.5 h-[56px] rounded-full"'));
 });
 
+test("verified account dropdown links to the private account security page", async () => {
+  const account = await read("../src/app/components/labs/LabsAccountControl.js");
+  assert.ok(account.includes('href="/labs/account/security"'));
+  assert.ok(account.includes("Account settings"));
+  assert.ok(account.includes("Settings2"));
+});
+
 test("account sign-out action uses its animated icon and respects reduced motion", async () => {
   const account = await read("../src/app/components/labs/LabsAccountControl.js");
   const icon = await read("../src/app/components/ui/LogOutAnimatedIcon.js");
