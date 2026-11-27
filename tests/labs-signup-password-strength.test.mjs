@@ -47,25 +47,39 @@ test("password field supports the focused strength meter as an additional access
   assert.ok(field.includes("aria-describedby={descriptionIds}"));
 });
 
-test("password guidance advances one unmet requirement at a time", () => {
-  assert.equal(assessPasswordStrength("").guidance, "Use 8+ characters");
-  assert.equal(assessPasswordStrength("abc").guidance, "Use 8+ characters");
-
-  const minimumPassed = assessPasswordStrength("abcdefgh");
-  assert.equal(minimumPassed.guidance, "For extra strength: 12+ characters");
-  assert.equal(minimumPassed.nextRequirementIsRequired, false);
+test("password guidance names the exact missing requirement one at a time", () => {
+  assert.equal(assessPasswordStrength("").guidance, "Add 8 more characters");
+  assert.equal(assessPasswordStrength("abcdefg").guidance, "Add 1 more character");
 
   assert.equal(
-    assessPasswordStrength("abcdefgh1234").guidance,
-    "Mix uppercase + lowercase",
+    assessPasswordStrength("abcdefgh").guidance,
+    "Missing a capital letter",
   );
   assert.equal(
-    assessPasswordStrength("Abcdefgh1234").guidance,
-    "Add at least one symbol",
+    assessPasswordStrength("Abcdefgh").guidance,
+    "Missing a number",
   );
   assert.equal(
-    assessPasswordStrength("Abcdefgh1234!").guidance,
-    "All strength checks passed",
+    assessPasswordStrength("Abcdefgh1").guidance,
+    "Missing a special character",
+  );
+  assert.equal(
+    assessPasswordStrength("ABCDEFGH1").guidance,
+    "Missing a lowercase letter",
+  );
+  assert.equal(
+    assessPasswordStrength("Abcdefgh1!").guidance,
+    "All requirements met",
+  );
+});
+
+test("password strength score tracks five distinct signup requirements", () => {
+  const result = assessPasswordStrength("Abcdefgh1!");
+  assert.equal(result.maximum, 5);
+  assert.equal(result.score, 5);
+  assert.deepEqual(
+    result.checks.map((check) => check.id),
+    ["minimum", "uppercase", "lowercase", "number", "symbol"],
   );
 });
 
