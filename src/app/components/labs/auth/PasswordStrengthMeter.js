@@ -27,7 +27,15 @@ export default function PasswordStrengthMeter({
 }) {
   const reducedMotion = useReducedMotion();
   const { score, maximum, label, checks } = assessPasswordStrength(password);
-  const tone = !password ? "neutral" : score <= 1 ? "weak" : score <= 3 ? "fair" : score === 4 ? "good" : "strong";
+  const tone = !password
+    ? "neutral"
+    : score <= 1
+      ? "weak"
+      : score <= 3
+        ? "fair"
+        : score === 4
+          ? "good"
+          : "strong";
   const toneClass = TONE_CLASSES[tone];
   const toneTextClass = TONE_TEXT_CLASSES[tone];
   const displayLabel = password ? label : "8+ chars";
