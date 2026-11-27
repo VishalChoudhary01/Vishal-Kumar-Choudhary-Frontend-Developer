@@ -28,7 +28,7 @@ const RULES = Object.freeze([
     id: "symbol",
     label: "A special character",
     guidance: "Missing a special character",
-    test: (value) => /[^A-Za-z0-9]/.test(value),
+    test: (value) => /[^A-Za-z0-9\s]/.test(value),
   },
 ]);
 
@@ -51,9 +51,11 @@ export function assessPasswordStrength(password = "") {
   else if (score === 4) label = "Good";
   else label = "Strong";
 
-  const guidance = nextRequirement?.id === "minimum"
-    ? `Add ${missingCharacters} more ${missingCharacters === 1 ? "character" : "characters"}`
-    : nextRequirement?.guidance || "All requirements met";
+  const guidance = !value
+    ? ""
+    : nextRequirement?.id === "minimum"
+      ? `Add ${missingCharacters} more ${missingCharacters === 1 ? "character" : "characters"}`
+      : nextRequirement?.guidance || "All requirements met";
 
   return {
     score,
